@@ -56,9 +56,13 @@ fortuneRandom filename rng
       fortunesList <- fortunesParse filename
       return (getRandItem fortunesList rng)
 
--- | Given a RNG, return a random fortune from the fortune files
-randFortune :: (RandomGen a) => a -> IO (String, a)
-randFortune rng = join (liftM (uncurry fortuneRandom) $ fileRandom rng)
+-- | Given a RNG and optionally a fortune section, return a random fortune
+--   from the all the fortune files or the given section, respectively.
+randFortune :: (RandomGen a) => (Maybe FilePath) -> a -> IO (String, a)
+randFortune section rng =
+    let randomF f = join (liftM (uncurry fortuneRandom) $ f)
+    in case section of Nothing -> randomF (fileRandom rng)
+	               Just fname -> randomF (return $ (path ++ fname, rng))
 
 -- | Split a fortune file into a list of fortures by breaking it up on
 --   the '%' characters

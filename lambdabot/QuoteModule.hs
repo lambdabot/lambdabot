@@ -34,7 +34,7 @@ instance Module QuoteModule where
         case maybemyref of
                         Just myref -> do modstate <- liftIO (readIORef myref)
                                          let quotefun = case cmd of
-                                                                 "fortune" -> randFortune
+                                                                 "fortune" -> randFortune Nothing
                                                                  "yow"     -> yowRandom
                                                                  "arr"     -> arrRandom
                                                                  _ -> error "QuoteModule: bad string"
