@@ -101,7 +101,8 @@ getFileRequires _ = return []
 getStartupModules :: MonadIO m => m [String]
 getStartupModules = return [
         "dummy", "state","topic","karma","type","seen",
-        "dict","quote","eval", "pl","plugs","babel","version"
+        "dict","quote","eval", "pl","plugs","babel","version",
+        "more"
         ] --,"fact","more","haddock"]
 
 -- for the MoreModule, how many lines to show at a time

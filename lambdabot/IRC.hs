@@ -27,7 +27,7 @@ import Posix
 import System.IO.Error
 #endif
 
-import Data.Char                (toLower, isAlphaNum)
+import Data.Char                (toLower, isAlphaNum, isSpace)
 import Data.List
 import Data.Dynamic             (Typeable, toDyn, fromDynamic)
 import Data.IORef               (newIORef, IORef)
@@ -278,7 +278,7 @@ ircPrivmsg who msg
           do let msglines  = mlines msg
                  morelines = drop maxLines msglines
                  thislines = take maxLines msglines
-                 sendlines = if ((length morelines) > 1)
+                 sendlines = if (length morelines > 0)
                              then thislines ++ ["[" ++ show (length morelines) 
                                             ++ " @more lines]"]
                              else thislines
@@ -292,15 +292,15 @@ mlines			:: String -> [String]
 mlines ""		=  []
 mlines s		=  let (l, s') = mbreak (0::Int) (== '\n') s
 			   in  l : case s' of
-					[]     	-> []
-					(_:s'') -> mlines s''
+					[]  -> []
+					s'' -> mlines s''
 
 mbreak :: (Num a, Ord a) => a -> (Char -> Bool) -> [Char] -> ([Char], [Char])
 mbreak _ _ xs@[] = (xs, xs)
 mbreak n p xs@(x:xs')
-    | n == 80  =  ([],xs)
-    | n > 70 && not (isAlphaNum x) = ([x], xs)
-    | p x	=  ([],xs)
+    | n == 80  =  ([],dropWhile isSpace xs)
+    | n > 70 && not (isAlphaNum x) = ([x], dropWhile isSpace xs')
+    | p x	=  ([],xs')
     | otherwise	=  let (ys,zs) = mbreak (n+1) p xs' in (x:ys,zs)
 
 {- yes it's ugly, but... -}

@@ -7,13 +7,16 @@ import Data.IORef
 
 newtype MoreModule = MoreModule ()
 
+theModule :: MODULE
 theModule = MODULE moreModule
+
+moreModule :: MoreModule
 moreModule = MoreModule ()
 
 instance Module MoreModule where
-    moduleName   m = return "more"
-    moduleSticky m = False
-    commands     m = return ["more"]
+    moduleName   _ = return "more"
+    moduleSticky _ = False
+    commands     _ = return ["more"]
     process      m msg target cmd rest
       = do 
         maybemyref <- gets (\s -> lookupFM (ircModuleState s) "more")
@@ -26,7 +29,7 @@ instance Module MoreModule where
 	    Nothing ->
 		do liftLB $ moduleInit m
 		   process m msg target cmd rest
-    moduleInit   m = 
+    moduleInit   _ = 
         do s <- get
            newRef <- liftIO . newIORef $ ModuleState [""]
            let stateMap = ircModuleState s
