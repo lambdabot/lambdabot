@@ -108,7 +108,7 @@ partCB msg
 	         do case xs \\ (ircchannel msg) of
 		        [] -> do ct <- time
 			         let fm' = M.insert lcnick
-					     (NotPresent ct (listToStr xs)) fm
+					     (NotPresent ct (listToStr "and" xs)) fm
 			         writeMS fm' 
 			ys -> writeMS $ M.insert lcnick 
 						(Present mct ys) fm
@@ -120,7 +120,7 @@ partCB msg
 		  Present mct xs -> 
 		      case xs \\ cs of
 			  [] -> do ct <- time
-				   return (nick', WasPresent ct (listToStr cs))
+				   return (nick', WasPresent ct (listToStr "and" cs))
 			  ys -> return (nick', Present mct ys)
 		  _other -> return (nick', us)
 
@@ -199,12 +199,6 @@ ircchannel msg
         in map (\(x:xs) -> if x == ':' then xs else (x:xs)) (splitter cstr)
                 -- solves what seems to be an inconsistency in the parser
 
-listToStr :: [Channel] -> String
-listToStr [] = []
-listToStr (x:xs) = x ++ listToStr' xs
-    where listToStr' [] = []
-          listToStr' [y] = " and " ++ y
-          listToStr' (y:ys) = ", " ++ y ++ listToStr' ys
 
 -- annoying
 timeDiffPretty :: TimeDiff -> String

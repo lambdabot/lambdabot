@@ -12,6 +12,7 @@ module Util (
      debugStr,
      debugStrLn,
      lowerCaseString,
+     listToStr,
      Accessor (..),
      Serializer (..), stdSerializer, mapSerializer,
      readFM, writeFM, deleteFM,
@@ -133,6 +134,17 @@ debugStrLn x = debugStr ( x ++ "\n" )
 lowerCaseString :: String -> String
 lowerCaseString = map toLower
 
+
+-- | Form a list of terms using a single conjunction. Example:
+--
+-- > listToStr "and" ["a", "b", "c"] ===> "a, b and c"
+listToStr :: String -> [String] -> String
+listToStr _    []           = []
+listToStr conj (item:items) =
+  let listToStr' [] = []
+      listToStr' [y] = concat [" ", conj, " ", y]
+      listToStr' (y:ys) = concat [", ", y, listToStr' ys]
+  in  item ++ listToStr' items
 
 data Accessor m s = Accessor { reader :: m s, writer :: s -> m () }
 
