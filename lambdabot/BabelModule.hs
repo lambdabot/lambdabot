@@ -25,16 +25,14 @@ import BabelBot.BabelFish
 import IRC
 import Util (debugStrLn)
 
--- import Text.Regex               ( matchRegex, mkRegex )         
 import Data.Char
 import Data.List
 import Data.FiniteMap
--- import Data.IORef               ( readIORef, writeIORef )
 import Data.Maybe
--- import Control.Monad.State      ( gets )
 import Control.Monad.Trans      ( liftIO, MonadIO )
--- import Control.Monad            ( when )
 import Control.Exception
+
+import Posix
 
 import System.Random            ( getStdRandom, Random(randomR) )
 
@@ -56,7 +54,7 @@ babelModule = BabelModule ()
 instance Module BabelModule where
         moduleName   _ = return "babel"
         moduleSticky _ = False
-        commands     _ = return ["babel", "remember", "quote" ]
+        commands     _ = return ["babel", "remember", "quote", "timein" ]
 
 {-
         moduleInit _   = liftIO $ do
@@ -71,6 +69,14 @@ instance Module BabelModule where
         process _ _ _src "remember"  s = run_remember  s
         process _ _ src "quote"     s = run_quote    src s
 --      process _ _ src "last"  s     = run_last  src s
+
+        -- totally unrelated :}
+        process _ _ src "timein" s =
+          if s == "help"
+            then ircPrivmsg src "  http://www.timeanddate.com"
+            else do (o,_,_) <- liftIO $ popen "timein" [s] Nothing
+                    ircPrivmsg src $ "  " ++ o
+
         process _ _ _   _ _ = error "BabelBot: Invalid cmd"
 
 --
