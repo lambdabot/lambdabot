@@ -1,0 +1,48 @@
+----------------------------------------------------------------------------
+This document describes various style recommendations for the lambdabot
+code. Yet, the source code does not respect this document, but it is the
+goal that it should eventually. Therefore, you are encouraged to change
+source code such that it fits the style inside this document.
+----------------------------------------------------------------------------
+
+*** Placement of $Id .. $ tags
+
+$Id .. $ tags should be placed right before the module keyword like this:
+{{{
+--      $Id: QuoteModule.hs,v 1.1 2003/07/29 13:41:48 eleganesh Exp $
+
+module QuoteModule where
+}}}
+
+*** Order of imports
+
+Imports should be ordered as so:
+{{{
+        Local application
+        Local application qualified/as
+
+        Old-style Haskell2 modules
+        Data.*
+        Control.*
+        System.*
+
+        GHC.*
+}}}
+
+*** Don't use Haskell2 modules
+
+Haskell2 module imports should be replaced with their hierachial module
+counterpart. For instance, the List module should be replaced with
+Data.List.
+
+*** Don't use deprecated modules
+
+Modules deprecated should be removed and replaced with their no-deprecated
+counterparts. This is especially important to avoid bitrot in the code.
+
+*** Minimalize namespace
+
+Try to minimalize the namespace. Only import what you are going to use and
+use qualified imports to keep the module namespace simple.
+
+
