@@ -211,7 +211,7 @@ initialise = do
         -- more hard coded evil
         mapM_ (\n -> loadObject (n++".o"))
               ["BotConfig","ErrorUtils","ExceptionError",
-               "MonadException","Util","DeepSeq","IRC"]
+               "MonadException","Util","DeepSeq","Map","IRC"]
 
 {-
 getModule :: FilePath -> IO MODULE

@@ -4,16 +4,14 @@ module PlModule.Transform (
   ) where
 
 import PlModule.Common
-
-import Data.FiniteMap
-import Control.Monad.State
-
 import PlModule.Rules
 import PlModule.PrettyPrinter
-import Data.Graph
-
 import qualified PlModule.Set as S
 --import qualified Data.Set as S
+
+import Data.Graph
+import Data.FiniteMap
+import Control.Monad.State
 
 import Data.List hiding (union)
 
