@@ -21,9 +21,11 @@ import System.IO        (Handle, hGetLine, hPutStr, hClose, hSetBuffering, Buffe
 
 #if __GLASGOW_HASKELL__ >= 600
 import System.IO.Error hiding (try)
-#ifndef mingw32_HOST_OS
+
+# ifndef mingw32_HOST_OS
 import System.Posix.Signals
-#endif
+# endif
+
 #else
 import Posix
 import System.IO.Error

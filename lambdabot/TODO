@@ -1,5 +1,4 @@
 Don's Todo:
-* exception on startup
 * get rid of deprecations
 * @uptime
 * partition core and plugins.

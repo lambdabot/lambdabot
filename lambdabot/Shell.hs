@@ -12,7 +12,6 @@ import Foreign
 import Foreign.C
 import Foreign.C.String
 import GHC.Handle
--- import GHC.Posix
 import System.Exit
 import System.IO
 import System.Posix.Types

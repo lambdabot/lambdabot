@@ -202,7 +202,7 @@ initialise = do
         initialiseRuntimeLoader
         mapM_ loadPackage
 #if   __GLASGOW_HASKELL__ >= 604
-          ["base","Cabal","haskell98","mtl","lang","parsec","network","unix","posix"]
+          ["base", "haskell98", "mtl", "parsec", "network", "unix"]
 #elif __GLASGOW_HASKELL__ >= 602
           ["base","haskell98","lang","parsec","network","unix","posix"]
 #else
@@ -211,7 +211,8 @@ initialise = do
         -- more hard coded evil
         mapM_ (\n -> loadObject (n++".o"))
               ["BotConfig","ErrorUtils","ExceptionError",
-               "MonadException","Util","DeepSeq","Map","IRC"]
+               "MonadException","Util","DeepSeq","Map","IRC","PosixCompat"]
+                
 
 {-
 getModule :: FilePath -> IO MODULE

@@ -3,15 +3,19 @@
 module QuoteModule.Fortune where
 
 import Data.List
+import Monad
+import System.Directory
+import System.Random
+import qualified Control.Exception as C (catch)
+
+--
+-- No good for win32
+--
 #if __GLASGOW_HASKELL__ >= 600
 import System.Posix
 #else
 import Posix
 #endif
-import Monad
-import System.Directory
-import System.Random
-import qualified Control.Exception as C (catch)
 
 -- 	$Id: Fortune.hs,v 1.3 2003/07/29 13:41:49 eleganesh Exp $	
 

@@ -8,7 +8,7 @@
 
 module TypeModule where
 
-import Posix (popen)
+import PosixCompat (popen)
 import Text.Regex
 import Maybe (mapMaybe)
 import Control.Monad.Trans (liftIO)

@@ -1,9 +1,7 @@
 module QuoteModule.Yow where
 
 import Data.List
--- import System.Posix
 import Monad
--- import System.Directory
 import System.Random
 import Util
 import qualified Control.Exception as C (catch)

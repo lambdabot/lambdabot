@@ -24,6 +24,7 @@ import BabelBot.BabelFish
 
 import IRC
 import Util (debugStrLn)
+import PosixCompat
 
 import Data.Char
 import Data.List
@@ -31,11 +32,7 @@ import Data.FiniteMap
 import Data.Maybe
 import Control.Monad.Trans      ( liftIO, MonadIO )
 import Control.Exception
-
-import Posix
-
 import System.Random            ( getStdRandom, Random(randomR) )
-
 
 import System.IO
 #if __GLASGOW_HASKELL__ < 603

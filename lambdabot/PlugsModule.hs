@@ -15,7 +15,7 @@
 module PlugsModule where
 
 import IRC      hiding ( clean ) 
-import Posix                    ( popen )
+import PosixCompat
 import Control.Monad.Trans      ( liftIO )
 
 newtype PlugsModule = PlugsModule ()
