@@ -1,6 +1,7 @@
-module Main where
 
 --      $Id: Main.hs,v 1.28 2003/07/29 15:46:41 eleganesh Exp $      
+
+module Main where
 
 import IRC
 import StaticModules

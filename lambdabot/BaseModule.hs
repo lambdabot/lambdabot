@@ -1,4 +1,3 @@
-{-# OPTIONS -fglasgow-exts #-}
 module BaseModule where
 
 import BotConfig

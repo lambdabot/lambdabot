@@ -1,4 +1,4 @@
-{-# OPTIONS -fglasgow-exts #-}
+
 module DummyModule (DummyModule, dummyModule, theModule) where
 
 import IRC

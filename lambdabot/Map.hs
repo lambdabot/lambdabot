@@ -1,4 +1,3 @@
-{-# OPTIONS -cpp #-}
 -- 
 -- Copyright (C) 2004-5 Don Stewart - http://www.cse.unsw.edu.au/~dons
 -- 
@@ -74,6 +73,9 @@ singleton = FM.unitFM
 insert :: Ord k => k -> a -> Map k a -> Map k a
 insert = \k e m -> FM.addToFM m k e
 
+insertWith :: Ord k => (a -> a -> a) -> k -> a -> Map k a -> Map k a
+insertWith f k e m = FM.addToFM_C f m k e
+
 delete :: Ord k => k -> Map k a -> Map k a
 delete = flip FM.delFromFM
 
@@ -100,9 +102,6 @@ keys = FM.keysFM
 
 addList :: (Ord k) => [(k, a)] -> Map k a -> Map k a
 addList = flip FM.addListToFM
-
-insertWith :: (Ord k) => (a -> a -> a) -> k -> a -> Map k a -> Map k a
-insertWith f k a fm = FM.addToFM_C f fm k a
 
 -- delListFromFM = \fm keys -> foldl delete fm keys
 

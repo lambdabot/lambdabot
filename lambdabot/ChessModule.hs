@@ -1,5 +1,7 @@
-module ChessModule where
 -- 	$Id: ChessModule.hs,v 1.5 2003/05/03 19:13:26 mlang Exp $	
+
+module ChessModule where
+
 import IRC
 import Data.FiniteMap
 import Control.Monad.State

@@ -1,4 +1,4 @@
-{-# OPTIONS -cpp -fffi #-}
+{-# OPTIONS -fffi #-}
 
 module Shell
     ( launch

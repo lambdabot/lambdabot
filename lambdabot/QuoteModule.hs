@@ -1,4 +1,4 @@
-{-# OPTIONS -fglasgow-exts #-}
+
 -- 	$Id: QuoteModule.hs,v 1.1 2003/07/29 13:41:48 eleganesh Exp $
 
 module QuoteModule where

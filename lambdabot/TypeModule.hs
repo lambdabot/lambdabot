@@ -1,4 +1,3 @@
-{-# OPTIONS -fglasgow-exts #-}
 --     The Type Module - another progressive plugin for lambdabot
 --    >>-------------------------------------------------------->>
 --     $Id: TypeModule.lhs,v 1.4 2003/07/29 13:03:02 eris Exp $

@@ -1,4 +1,3 @@
-{-# OPTIONS -cpp -fglasgow-exts #-}
 
 module DynamicModule (DynamicModule, dynamicModule) where
 

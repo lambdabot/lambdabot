@@ -1,4 +1,3 @@
-{-# OPTIONS -cpp -fglasgow-exts #-}
 {-|
 
    Load and unload\/Haskell modules at runtime.  This is not really \'dynamic

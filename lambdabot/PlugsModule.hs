@@ -1,17 +1,13 @@
-{-# OPTIONS -fglasgow-exts #-}
--- ^ For pattern guards
 --
 -- Copyright (c) 2004 Donald Bruce Stewart - http://www.cse.unsw.edu.au/~dons
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
 --
 
 --
+-- a Haskell evaluator for the pure part, using `plugs`
+--
 -- requires the 'runplugs' utility available with the hs-plugins library.
 -- in $hsplugins/examples/hmake/one-shot
---
-
---
--- a Haskell evaluator for the pure part, using `plugs`
 --
 
 module PlugsModule where

@@ -1,11 +1,7 @@
-{-# OPTIONS -cpp #-}
 {-# OPTIONS -fallow-overlapping-instances#-}
 -- ^ hack
 
-module GhciModule
-    ( ghciModule
-    , theModule
-    ) where
+module GhciModule (ghciModule, theModule) where
 
 import qualified Map as M
 

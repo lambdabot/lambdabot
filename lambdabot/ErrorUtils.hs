@@ -1,5 +1,7 @@
-module ErrorUtils where
 -- $Id: ErrorUtils.hs,v 1.1 2003/07/25 13:19:22 eleganesh Exp $
+
+module ErrorUtils where
+
 import Monad
 import Control.Monad.Error (MonadError (..))
 

@@ -1,4 +1,4 @@
-{-# OPTIONS -fglasgow-exts #-}
+
 module PlModule (theModule) where
 
 import PlModule.Common

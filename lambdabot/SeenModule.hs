@@ -1,5 +1,3 @@
-{-# OPTIONS -cpp -fglasgow-exts #-}
--- ^ instances hack!
 
 module SeenModule (
         SeenModule,

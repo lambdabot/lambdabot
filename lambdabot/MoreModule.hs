@@ -1,6 +1,8 @@
-{-# OPTIONS -fglasgow-exts #-}
-module MoreModule where
+
 -- 	$Id: MoreModule.hs,v 1.2 2003/07/25 13:19:22 eleganesh Exp $
+
+module MoreModule where
+
 import IRC
 import Control.Monad.State
 

@@ -1,7 +1,7 @@
-{-# OPTIONS -fglasgow-exts #-}
-module SystemModule where
 
 -- 	$Id: SystemModule.hs,v 1.4 2003/07/25 13:19:22 eleganesh Exp $
+
+module SystemModule where
 
 import IRC
 import Util

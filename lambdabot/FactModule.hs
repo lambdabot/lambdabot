@@ -1,16 +1,18 @@
-module FactModule where
 
 -- 	$Id: FactModule.hs,v 1.8 2003/07/29 13:03:02 eris Exp $
 
-{-
-copyright (c) 2003 Shae Erisson
-license: lGPL
-quick ugly hack to get factoids in lambdabot
-requires Database.PostgreSQL.HSQL from
-http://sf.net/projects/htoolkit/
+--
+-- copyright (c) 2003 Shae Erisson
+-- license: lGPL
+-- quick ugly hack to get factoids in lambdabot
+-- requires Database.PostgreSQL.HSQL from
+-- http://sf.net/projects/htoolkit/
+-- 
+-- assumes a postgresql database with a table named fact and fields named fact and value
+--
 
-assumes a postgresql database with a table named fact and fields named fact and value
--}
+module FactModule where
+
 import IRC
 import Util
 

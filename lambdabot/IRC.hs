@@ -1,8 +1,6 @@
-{-# OPTIONS -cpp -fglasgow-exts #-}
 
 --      $Id: IRC.hs,v 1.21 2003/07/31 19:13:15 eleganesh Exp $    
 
--- TODO need explicit export list
 module IRC (
     MODULE(..),
     Module(..),
@@ -19,8 +17,6 @@ module IRC (
 
     LB(..),
     MonadLB(..),
-
-
     ModuleRef(..),
 
     readMS,
@@ -42,16 +38,9 @@ module IRC (
     ircSignOn,
     ircRead,
 
-    clean,
-    checkPrivs,
-    mkCN,
-    handleIrc,
-    runIrc,
-    
-    
+    clean, checkPrivs, mkCN, handleIrc, runIrc,
 
   ) where
-
 
 import BotConfig        (getMyname, getMaxLines, getAdmins, getHost, getPort)
 import DeepSeq          (($!!), DeepSeq(..))

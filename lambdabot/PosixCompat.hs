@@ -1,4 +1,3 @@
-{-# OPTIONS -cpp #-}
 --
 -- Implement a Posix.popen compatibility mapping.
 --
@@ -7,7 +6,7 @@
 
 module PosixCompat (popen) where
 
-#if __GLASGOW_HASKELL__ >= 604 && defined(mingw32_HOST_OS)
+#if __GLASGOW_HASKELL__ >= 604
 import System.IO
 import System.Process
 #else
@@ -16,7 +15,7 @@ import qualified Posix as P
 
 import qualified Control.Exception
 
-#if __GLASGOW_HASKELL__ >= 604 && defined(mingw32_HOST_OS)
+#if __GLASGOW_HASKELL__ >= 604
 
 type ProcessID = ProcessHandle
 

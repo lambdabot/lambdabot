@@ -1,4 +1,4 @@
-{-# OPTIONS -cpp -fglasgow-exts -fno-warn-unused-binds #-}
+{-# OPTIONS -fno-warn-unused-binds #-}
 
 #include "config.h"
 

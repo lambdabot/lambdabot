@@ -1,4 +1,4 @@
-{-# OPTIONS -fglasgow-exts #-}
+
 module HelpModule where
 
 import IRC
