@@ -35,7 +35,7 @@ instance Module QuoteModule where
                         Just myref -> do modstate <- liftIO (readIORef myref)
                                          let quotefun = case cmd of
                                                                  "fortune" -> randFortune Nothing
-                                                                 "yow"     -> yowRandom
+                                                                 "yow"     -> randFortune (Just zippy)
                                                                  "arr"     -> arrRandom
                                                                  _ -> error "QuoteModule: bad string"
                                          (quote, newseed) <- liftIO (quotefun $ mkStdGen (stripMS modstate))
