@@ -212,13 +212,13 @@ initialise = do
         putStr "Loading package " >> hFlush stdout
         mapM_ loadPackage
 #if   __GLASGOW_HASKELL__ >= 604
-          ["base", "haskell98", "mtl", "parsec", "network", "unix", "lang", "posix"]
+          ["base", "haskell98", "mtl", "parsec", "network", "unix"]
 #elif __GLASGOW_HASKELL__ >= 602
           ["base","haskell98","lang","parsec","network","unix","posix"]
 #else /* hack */
           ["base", "haskell98", "parsec", "network", "unix", "posix"]
 #endif
-        putStrLn "."
+        putStrLn "... done."
         -- more hard coded evil
         mapM_ (\n -> loadObject (n++".o"))
               ["BotConfig","ErrorUtils","ExceptionError",
