@@ -57,6 +57,8 @@ instance (MonadException m,ExceptionError e) => Monad (ExceptionErrorT e m)
                   Left e -> return $ Left $ fromException e
                   Right v -> return v 
 
+instance Functor m => Functor (ExceptionErrorT e m) where
+  f `fmap` ExceptionErrorT m = ExceptionErrorT $ fmap f `fmap` m
 
 instance (MonadException m,ExceptionError e) 
       => MonadError e (ExceptionErrorT e m) 

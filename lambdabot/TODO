@@ -5,6 +5,11 @@ Don's Todo:
 * hs-plugins
 * make @karma persistent
 
+Thomas' Todo:
+* case .. of Just (ModuleRef ...) -> ... is a common pattern.
+* same for mapReaderT
+* don't import Control.Monad.Reader everywhere
+
 Todo:
 * FactModule - make "foo?" equal to "lambdabot: @fact foo"
 * fsbot-style factoid parsing, 
@@ -22,6 +27,7 @@ Todo:
 * update the README
 * send alternate nickname?
 * automatically filter out blanks lines, ie. in dictionary output
+* Fix babel not to bring lambdabot down when the proxy doesn't resolve
 
 2.0 release list:
 * @more needs to check for really really long lines

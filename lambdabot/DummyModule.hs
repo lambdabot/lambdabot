@@ -1,3 +1,4 @@
+{-# OPTIONS -fglasgow-exts #-}
 module DummyModule (DummyModule, dummyModule, theModule) where
 
 import IRC
@@ -11,7 +12,7 @@ theModule = MODULE dummyModule
 dummyModule :: DummyModule
 dummyModule = DummyModule ()
 
-instance Module DummyModule where
+instance Module DummyModule () where
   moduleName   _ = return "dummy"
   moduleSticky _ = False
 

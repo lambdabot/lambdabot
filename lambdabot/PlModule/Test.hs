@@ -83,7 +83,10 @@ myTest :: IO ()
 myTest = check quick propRoundTrip'
 
 qcTests :: IO ()
-qcTests = mapM_ quickCheck [propRoundTrip, propMonotonic1, propMonotonic2]
+qcTests = do
+  quickCheck propRoundTrip
+  quickCheck propMonotonic1
+  quickCheck propMonotonic2
 
 pf :: String -> IO ()
 pf inp = case parsePF inp of
@@ -118,6 +121,7 @@ lastTest = TestCase $ assertBool "" True
 
 unitTests :: Test
 unitTests = TestList [
+  unitTest "return x >> y" ["y"],
   -- What were they smoking when they decided >> should be infixl
   unitTest "a >>= \\_ -> b >>= \\_ -> return $ const (1 + 2) $ a + b" ["a >> (b >> return 3)"],
   unitTest "foo = m >>= \\x -> return 1" ["foo = m >> return 1"],

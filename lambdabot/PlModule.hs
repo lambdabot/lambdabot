@@ -1,16 +1,14 @@
-module PlModule where
+{-# OPTIONS -fglasgow-exts #-}
+module PlModule (theModule) where
 
 import PlModule.Common
 import PlModule.Parser
 import PlModule.PrettyPrinter
 import PlModule.Transform
-import System.IO.Unsafe (unsafePerformIO)
-import Data.IORef
 
 import Control.Concurrent
 import Control.Concurrent.Chan
 
-import Control.Monad
 import Control.Monad.Trans
 
 import GHC.Base
@@ -24,10 +22,7 @@ firstTimeout, maxTimeout :: Int
 firstTimeout =  3000000 --  3 seconds
 maxTimeout   = 15000000 -- 15 seconds
 
--- global mutable state ain't so evil.
-{-# NOINLINE resume #-}
-resume :: IORef (Maybe (Int, TopLevel))
-resume = unsafePerformIO $ newIORef Nothing
+type PlState = Maybe (Int, TopLevel)
 
 data PlModule = PlModule
 
@@ -37,40 +32,46 @@ theModule = MODULE plModule
 plModule :: PlModule
 plModule = PlModule
 
-instance Module PlModule where
+type Pl = ModuleT PlState
+
+instance Module PlModule PlState where
     moduleName _   = return "pl"
     moduleSticky _ = False
     moduleHelp _ "pl-resume" = return "@pl-resume - resume a suspended pointless transformation."
     moduleHelp _ _ = return "@pointless <expr> - play with pointfree code"
+
+    moduleInit _   = writeMS Nothing
+
     commands _     = return $ ["pointless","pl-resume","pl"]
+
     process _ _ target "pointless" rest = pf target rest
     process _ _ target "pl"        rest = pf target rest
     process _ _ target "pl-resume" _ = res target
     process _ _ target _ _ =
       ircPrivmsg target "pointless: sorry, I don't understand."
 
-res :: String -> IRC ()
+res :: String -> Pl IRC ()
 res target = do
-  d <- liftIO $ readIORef resume
+  d <- readMS
   case d of
     Nothing -> ircPrivmsg target "pointless: sorry, nothing to resume."
     Just d' -> optimizeTopLevel target d'
 
-pf :: String -> String -> IRC ()
+pf :: String -> String -> Pl IRC ()
 pf target inp = case parsePF inp of
   Right d -> optimizeTopLevel target (firstTimeout, mapTopLevel transform d)
   Left err -> ircPrivmsg target $ err
 
-optimizeTopLevel :: String -> (Int, TopLevel) -> IRC ()
+optimizeTopLevel :: String -> (Int, TopLevel) -> Pl IRC ()
 optimizeTopLevel target (to, d) = do
   let (e,decl) = getExpr d
   (e', finished) <- liftIO $ optimizeIO to e
   ircPrivmsg target $ show $ decl e'
   if finished
-    then liftIO $ writeIORef resume Nothing
+    then writeMS Nothing
     else do
       ircPrivmsg target "optimization suspended, use @pl-resume to continue."
-      liftIO $ writeIORef resume $ Just (min (2*to) maxTimeout, decl e')
+      writeMS $ Just (min (2*to) maxTimeout, decl e')
 
 optimizeIO :: Int -> Expr -> IO (Expr, Bool)
 optimizeIO to e = do

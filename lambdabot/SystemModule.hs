@@ -1,3 +1,4 @@
+{-# OPTIONS -fglasgow-exts #-}
 module SystemModule where
 
 -- 	$Id: SystemModule.hs,v 1.4 2003/07/25 13:19:22 eleganesh Exp $
@@ -7,13 +8,14 @@ import Util
 import qualified Map as M
 
 import Control.Monad.State
+import Control.Monad.Reader
 
 newtype SystemModule = SystemModule ()
 
 systemModule :: SystemModule
 systemModule = SystemModule ()
 
-instance Module SystemModule where
+instance Module SystemModule () where
     moduleName   _ = return "system"
     moduleHelp _ _ = return "system: irc commands"
     moduleSticky _ = False
@@ -22,10 +24,10 @@ instance Module SystemModule where
 			     "reconnect", "echo"]
     process      _ msg target cmd rest = doSystem msg target cmd rest
 
-doSystem :: IRCMessage -> String -> [Char] -> [Char] -> IRC ()
+doSystem :: MonadIRC m => IRCMessage -> String -> [Char] -> [Char] -> m ()
 doSystem msg target cmd rest
  = do
-   s <- get
+   s <- liftIRC get
    case cmd of
             "listchans"
                 -> ircPrivmsg target $ "I am on these channels: "
@@ -61,19 +63,17 @@ doSystem msg target cmd rest
                 -> ircPrivmsg target $ concat ["excuse me? ", show msg,
 					       show rest]
 
-list_all_commands :: IRCRWState -> String -> IRC ()
+list_all_commands :: MonadIRC m => IRCRWState -> String -> m ()
 list_all_commands state target
   = ircPrivmsg target $ "I react to the following commands: "
     ++ show (M.keys (ircCommands state))
 
-list_module_commands :: IRCRWState -> String -> String -> IRC ()
+list_module_commands :: MonadIRC m => IRCRWState -> String -> String -> m ()
 list_module_commands state target modname
-  = case M.lookup modname (ircModules state)
-         of
-         Just (MODULE m) -> do { cmds <- liftLB $ commands m ;
-                                 ircPrivmsg target $ concat
-                                   ["Module ", modname,
-                                    " provides the following commands: ",
-                                    show cmds] ; }
-         Nothing -> ircPrivmsg target $
+  = case M.lookup modname (ircModules state) of
+       Just (ModuleRef m ref) -> do
+         cmds <- liftLB $ commands m `runReaderT` ref
+         ircPrivmsg target $ concat ["Module ", modname,
+            " provides the following commands: ", show cmds]
+       Nothing -> ircPrivmsg target $
                     "No module \""++modname++"\" loaded"

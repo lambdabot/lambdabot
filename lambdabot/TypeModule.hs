@@ -1,3 +1,4 @@
+{-# OPTIONS -fglasgow-exts #-}
 --     The Type Module - another progressive plugin for lambdabot
 --    >>-------------------------------------------------------->>
 --     $Id: TypeModule.lhs,v 1.4 2003/07/29 13:03:02 eris Exp $
@@ -72,7 +73,7 @@ extract_result output
 --
 --     With this the command handler can be easily defined using popen:
 --
-query_ghci :: String -> String -> String -> IRC ()
+query_ghci :: String -> String -> String -> TrivIRC ()
 query_ghci src cmd expr =
        do
        (output, _, _) <- liftIO $ popen "ghci-6.4" ["-fglasgow-exts"]
@@ -84,7 +85,7 @@ query_ghci src cmd expr =
 --
 --     With this the command handler can be easily defined using popen:
 --
-run_ghci :: String -> String -> IRC ()
+run_ghci :: String -> String -> TrivIRC ()
 run_ghci src expr =
        do
        (output, _, _) <- liftIO $ popen "ghci" [] (Just expr)
@@ -101,7 +102,7 @@ theModule = MODULE typeModule
 typeModule :: TypeModule
 typeModule = TypeModule ()
 
-instance Module TypeModule where
+instance Module TypeModule () where
      moduleName   _ = return "type"
      moduleHelp _ "type" = return "@type: return the type of a value"
      moduleHelp _ "kind" = return "@kind: return the kind of a type (GHC)"

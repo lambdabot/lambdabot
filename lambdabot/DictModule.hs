@@ -1,3 +1,4 @@
+{-# OPTIONS -fglasgow-exts #-}
 -- DICT (RFC 2229) Lookup Module for lambdabot IRC robot
 -- Tom Moertel <tom@moertel.com>
 -- $Id: DictModule.hs,v 1.2 2003/07/31 19:13:15 eleganesh Exp $
@@ -22,7 +23,7 @@ dictModule = DictModule ()
 
 -- | This is the module handler.  Here we process commands from users.
 
-instance Module DictModule where
+instance Module DictModule () where
     moduleName _   = return "dict"
     moduleSticky _ = False
     moduleHelp _ _ = return (getHelp [])

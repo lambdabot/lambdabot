@@ -30,7 +30,7 @@ theModule = MODULE plugsModule
 plugsModule :: PlugsModule
 plugsModule = PlugsModule ()
 
-instance Module PlugsModule where
+instance Module PlugsModule () where
         moduleName   _ = return "plugs"
         moduleHelp _ _ = return "@plugs <expr>\nYou have Haskell, 3 seconds and no IO. Go nuts!"
         moduleSticky _ = False

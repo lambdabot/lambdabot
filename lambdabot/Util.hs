@@ -177,3 +177,4 @@ getRandItem mylist rng = (mylist !! index,newRng)
 --   explicitly.
 stdGetRandItem :: [a] -> IO a
 stdGetRandItem lst = getStdRandom $ getRandItem lst
+

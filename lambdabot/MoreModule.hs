@@ -1,7 +1,9 @@
+{-# OPTIONS -fglasgow-exts #-}
 module MoreModule where
 -- 	$Id: MoreModule.hs,v 1.2 2003/07/25 13:19:22 eleganesh Exp $
 import IRC
 import Control.Monad.State
+import Control.Monad.Reader
 import qualified Map as M
 import Data.IORef
 
@@ -13,7 +15,8 @@ theModule = MODULE moreModule
 moreModule :: MoreModule
 moreModule = MoreModule ()
 
-instance Module MoreModule where
+-- the @more state is handled centrally
+instance Module MoreModule () where
     moduleName   _ = return "more"
     moduleSticky _ = False
     moduleHelp _ _ = return "@more - return more bot output"
@@ -28,7 +31,7 @@ instance Module MoreModule where
 		   ircPrivmsg target (stripMS modstate)
 	    -- init state for this module if it doesn't exist
 	    Nothing ->
-		do liftLB $ moduleInit m
+		do mapReaderT liftLB $ moduleInit m
 		   process m msg target cmd rest
     moduleInit   _ =
         do s <- get

@@ -1,4 +1,4 @@
-{-# OPTIONS -cpp #-}
+{-# OPTIONS -fglasgow-exts -cpp #-}
 
 -- Copyright (c) 2005 Don Stewart - http://www.cse.unsw.edu.au/~dons
 
@@ -16,7 +16,7 @@ theModule = MODULE versionModule
 versionModule :: VersionModule
 versionModule = VersionModule ()
 
-instance Module VersionModule where
+instance Module VersionModule () where
     moduleName   _ = return "version"
     moduleSticky _ = False
     moduleHelp _ _ = return $ "Report the build date, ghc version "

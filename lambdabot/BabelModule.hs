@@ -1,4 +1,4 @@
-{-# OPTIONS -cpp #-}
+{-# OPTIONS -cpp -fglasgow-exts #-}
 --
 -- Copyright (c) 2004 Donald Bruce Stewart - http://www.cse.unsw.edu.au/~dons
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
@@ -48,7 +48,7 @@ theModule = MODULE babelModule
 babelModule :: BabelModule
 babelModule = BabelModule ()
 
-instance Module BabelModule where
+instance Module BabelModule () where
         moduleName   _ = return "babel"
         moduleSticky _ = False
 
@@ -92,7 +92,7 @@ instance Module BabelModule where
 --
 -- TODO add range/context. i.e. !f-3 or 5-4
 --
-run_babel :: String -> String -> IRC ()
+run_babel :: MonadIRC m => String -> String -> m ()
 
 run_babel src s = do
         let cmd = split ' ' 3 s
@@ -183,7 +183,7 @@ run_last src i = do
 -- the @remember command stores away a quotation by a user, for future
 -- use by @quote
 
-run_remember :: String -> IRC ()
+run_remember :: MonadIRC m => String -> m ()
 run_remember str = 
     liftIO $ handleJust ioErrors (debugStrLn . show) $ do
         let (name,q') = break (== ' ') str
@@ -200,7 +200,7 @@ run_remember str =
 --
 --  the @quote command, takes a user name to choose a random quote from
 -- 
-run_quote :: String -> String -> IRC ()
+run_quote :: MonadIRC m => String -> String -> m ()
 run_quote target name = do
     (nm,qs) <- liftIO $ handleJust ioErrors (\e -> print e >> return ("lambdabot",Nothing)) $ do
             s <- readFile quotesFile

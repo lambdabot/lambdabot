@@ -1,4 +1,4 @@
-
+{-# OPTIONS -fglasgow-exts #-}
 -- 	$Id: StateModule.hs,v 1.8 2003/07/29 13:03:02 eris Exp $
 
 module StateModule where
@@ -8,6 +8,7 @@ import qualified Map as M
 
 import Maybe
 import Control.Monad.State
+import Control.Monad.Reader
 import Data.IORef
 
 newtype StateModule = StateModule ()
@@ -18,7 +19,8 @@ theModule = MODULE stateModule
 stateModule :: StateModule
 stateModule = StateModule ()
 
-instance Module StateModule where
+-- TODO statify
+instance Module StateModule () where
     moduleName   _ = return "state"
     moduleSticky _ = False
     moduleHelp _ _ = return "@state - we all know it's evil"
@@ -39,5 +41,5 @@ instance Module StateModule where
 		   ircPrivmsg target (stripMS modstate)
 	    -- init state for this module if it doesn't exist
 	    Nothing ->
-		do liftLB $ moduleInit m
+		do mapReaderT liftLB $ moduleInit m
 		   process m msg target cmd rest

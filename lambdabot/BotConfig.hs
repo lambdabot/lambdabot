@@ -22,7 +22,8 @@ getAutojoins = return ["#haskell"]
 getAdmins :: MonadIO m => m [String]
 getAdmins = return ["Pseudonym","shapr","pesco","Riastradh","Darius",
                      "tmoertel","delYsid","polli","Heffalump","Igloo",
-                     "Marvin--","o3","o3_","phubuh","ddarius","bringert","dons"]
+                     "Marvin--","o3","o3_","phubuh","ddarius","bringert",
+                     "dons","TheHunter"]
 
 getVerbose :: MonadIO m => m Bool
 getVerbose = return True

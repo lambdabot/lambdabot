@@ -329,8 +329,8 @@ onceRewrites = Hard $ Or [
   rr concatE joinE,
   -- liftM --> fmap
   rr liftME fmapE,
-
-  
+  -- map --> fmap
+  rr mapE fmapE,
   -- subtract -> flip (-)
   rr  subtractE
       (flipE `a` minusE)
@@ -447,8 +447,6 @@ rules = [
 	(\_ -> zeroE)
   ],
   onceRewrites,
-  -- map --> fmap
-  rr mapE fmapE,
   -- join (fmap f x) --> f =<< x
   rr (\f x -> joinE `a` (fmapE `a` f `a` x))
      (\f x -> extE `a` f `a` x),
@@ -493,7 +491,7 @@ rules = [
   -- p >> q --> p >>= const q
   Hard $
   rr (\p q -> seqME `a` p `a` q)
-     (\p q -> bindE `a` p `a` (constE `a` q)),
+     (\p q -> extE `a` (constE `a` q) `a` p),
   -- list destructors
   Hard $ 
   If (Or [rr consE consE, rr nilE nilE]) $ Or [

@@ -1,3 +1,4 @@
+{-# OPTIONS -fglasgow-exts #-}
 --     $Id: TopicModule.hs,v 1.8 2003/07/29 13:03:02 eris Exp $
 
 module TopicModule (TopicModule, topicModule, theModule) where
@@ -16,7 +17,11 @@ theModule = MODULE topicModule
 topicModule :: TopicModule
 topicModule = TopicModule ()
 
-instance Module TopicModule where
+-- TODO statify
+type TopicState = ()
+type Topic = ModuleT TopicState
+
+instance Module TopicModule TopicState where
   moduleName   _ = return "topic"
   moduleSticky _ = False
   moduleHelp _ _ = return "Various commands for adjusting the channel topic"
@@ -36,17 +41,17 @@ instance Module TopicModule where
   process _ _ src cmd _
     = ircPrivmsg src ("Bug! someone forgot the handler for \""++cmd++"\"")
 
-topic_snoc :: String -> String -> IRC ()
+topic_snoc :: String -> String -> Topic IRC ()
 topic_snoc source cmdtext = alter_topic source chan (snoc topic_item)
   where
   (chan, topic_item) = split_first_word cmdtext
 
-topic_cons :: String -> String -> IRC ()
+topic_cons :: String -> String -> Topic IRC ()
 topic_cons source cmdtext = alter_topic source chan (topic_item:)
   where
   (chan, topic_item) = split_first_word cmdtext
 
-alter_topic :: String -> String -> ([String] -> [String]) -> IRC ()
+alter_topic :: String -> String -> ([String] -> [String]) -> Topic IRC ()
 alter_topic source chan f
   = do
     maybetopic <- gets (\s -> M.lookup (mkCN chan) (ircChannels s) )

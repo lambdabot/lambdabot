@@ -6,7 +6,7 @@ import Map (Map)
 import qualified Map as M hiding (Map)
 
 import Control.Monad.Error
-import Control.Monad.State
+import Control.Monad.Reader
 import Control.Monad.Trans
 import Control.Exception (Exception (..))
 import Data.Dynamic (fromDynamic)
@@ -34,6 +34,8 @@ data DLModules
     }
   deriving Typeable
 
+type Dyn a = MonadLB m => ModuleT DLModules m a
+
 #if __GLASGOW_HASKELL__ < 603
 empty :: Set a
 empty = emptySet
@@ -42,13 +44,14 @@ empty = emptySet
 initDLModules :: DLModules
 initDLModules = DLModules { objects = M.empty, packages = empty }
 
-instance Module DynamicModule where
+instance Module DynamicModule DLModules where
   moduleName   _ = return "dynamic"
   moduleHelp _ _ = return "@dynamic-(un|re)?load: interface to dynamic linker"
   moduleSticky _ = True
   commands     _ = return ["dynamic-load","dynamic-unload","dynamic-reload"]
-  moduleInit   _ = do liftIO $ initialise
-                      makeInitialState "dynamic" initDLModules
+  moduleInit   _ = do ref <- ask
+                      liftIO $ initialise
+                      liftIO $ writeIORef ref initDLModules
                       startupModules <- getStartupModules
                       mapM_ (handleRLEConsole . load) startupModules
                                     
@@ -68,10 +71,10 @@ instance Module DynamicModule where
   process _ _ _ _ _ = error "DynamicModule: Invalid command"
 
 
-handleRLEConsole :: LB () -> LB ()
+handleRLEConsole :: MonadLB m => m () -> m ()
 handleRLEConsole = handleErrorJust findRLEError (liftIO . print)
 
-handleRLE :: String -> IRC () -> IRC ()
+handleRLE :: MonadIRC m => String -> m () -> m ()
 handleRLE src = handleErrorJust findRLEError (ircPrivmsg src . show)
 
 findRLEError :: IRCError -> Maybe RuntimeLoaderException
@@ -83,17 +86,18 @@ data DLAccessor m
               , packagesA :: Accessor m (Set String)
               }
 
-dlGet :: MonadLB m => m (DLAccessor m)
-dlGet = do Just dlFMRef <- readFM ircModuleStateAccessor "dynamic"
+-- TODO Shrink that stuff
+dlGet :: (MonadReader (IORef DLModules) m, MonadLB m) => m (DLAccessor m)
+dlGet = do dlFMRef <- ask
            let dlA = dlAccessor dlFMRef
            return $ DLAccessor { objectsA  = objectsAccessor dlA
                                , packagesA = packagesAccessor dlA
                                }
 
-dlAccessor :: MonadIO m => IORef ModuleState -> Accessor m DLModules
+dlAccessor :: MonadIO m => IORef DLModules -> Accessor m DLModules
 dlAccessor ref 
- = Accessor { reader = liftIO $ liftM stripMS $ readIORef ref,
-              writer = \dl -> liftIO $ writeIORef ref (ModuleState dl) }
+ = Accessor { reader = liftIO $ readIORef ref,
+              writer = liftIO . writeIORef ref }
 
 objectsAccessor :: MonadIO m 
                 => Accessor m DLModules
@@ -113,7 +117,7 @@ packagesAccessor a
                                  writer a (s { packages = v })
              }
 
-load :: MonadLB m => String -> m ()
+load :: String -> Dyn ()
 load name
      = do 
           file <- getModuleFile name
@@ -126,7 +130,7 @@ load name
                liftLB $ ircInstallModule md)
            (\e -> do doUnloadObject file ; throwError e)
 
-unload :: (MonadLB m) => String -> m ()
+unload :: String -> Dyn ()
 unload name
      = do 
           _dl <- dlGet
@@ -134,11 +138,11 @@ unload name
           file <- getModuleFile name
           doUnloadObject file
 
-doLoadRequire :: (MonadLB m) => Require -> m ()
+doLoadRequire :: Require -> Dyn ()
 doLoadRequire (Object file) = doLoadObject file >> return ()
 doLoadRequire (Package name) = doLoadPackage name
 
-doLoadObject :: (MonadLB m) => String -> m RuntimeModule
+doLoadObject :: String -> Dyn RuntimeModule
 doLoadObject file
  = do dl <- dlGet
       requires <- getFileRequires file
@@ -151,7 +155,7 @@ doLoadObject file
         Just (object,n) -> do writeFM (objectsA dl) file (object,n+1)
                               return object
 
-doLoadPackage :: (MonadLB m) => String -> m ()
+doLoadPackage :: String -> Dyn ()
 doLoadPackage name
  = do dl <- dlGet
       loaded <- lookupSet (packagesA dl) name
@@ -159,14 +163,14 @@ doLoadPackage name
                             insertSet (packagesA dl) name
                 else return ()
 
-doUnloadRequire :: (MonadLB m) => Require -> m ()
+doUnloadRequire :: Require -> Dyn ()
 doUnloadRequire (Object file) = doUnloadObject file
 doUnloadRequire (Package name) = doUnloadPackage name
 
 doUnloadPackage :: (Monad m) => t -> m ()
 doUnloadPackage _ = return () -- can't unload packages
 
-doUnloadObject :: (MonadLB m) => String -> m ()
+doUnloadObject :: String -> Dyn ()
 doUnloadObject file
  = do dl <- dlGet
       loaded <- readFM (objectsA dl) file
@@ -178,7 +182,7 @@ doUnloadObject file
       requires <- getFileRequires file
       mapM_ doUnloadRequire requires      
 
-isLoadedObject :: (MonadLB m) => String -> m Bool
+isLoadedObject :: String -> Dyn Bool
 isLoadedObject file
  = do dl <- dlGet
       loaded <- readFM (objectsA dl) file

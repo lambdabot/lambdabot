@@ -1,3 +1,4 @@
+{-# OPTIONS -fglasgow-exts #-}
 module BaseModule where
 
 import BotConfig
@@ -8,6 +9,7 @@ import qualified Map as M
 import Data.List
 import Data.Maybe
 import Control.Monad.State
+import Control.Monad.Reader
 import Text.Regex
 
 
@@ -16,7 +18,7 @@ newtype BaseModule = BaseModule ()
 baseModule :: BaseModule
 baseModule = BaseModule ()
 
-instance Module BaseModule where
+instance Module BaseModule () where
     moduleName      _ = return "base"
     moduleSticky    _ = False
     moduleHelp  _ _   = return "base module"
@@ -61,130 +63,126 @@ instance Module BaseModule where
 
 
 
-doUNKNOWN :: IRCMessage -> IRC ()
+doUNKNOWN :: MonadIRC m => IRCMessage -> m ()
 doUNKNOWN msg
     = debugStrLn $ "UNKNOWN> <" ++ msgPrefix msg ++
       "> [" ++ msgCommand msg ++ "] " ++ show (msgParams msg)
 
-doIGNORE :: IRCMessage -> IRC ()
+doIGNORE :: MonadIRC m => IRCMessage -> m ()
 doIGNORE msg
   = debugStrLn $ show msg
  --   = debugStrLn $ "IGNORING> <" ++ msgPrefix msg ++
 --      "> [" ++ msgCommand msg ++ "] " ++ show (msgParams msg)
 
 
-doPING :: IRCMessage -> IRC ()
+doPING :: MonadIRC m => IRCMessage -> m ()
 doPING msg
     = debugStrLn $ "ERROR> <" ++ msgPrefix msg ++
       "> [" ++ msgCommand msg ++ "] " ++ show (msgParams msg)
 
-doNOTICE :: IRCMessage -> IRC ()
+doNOTICE :: MonadIRC m => IRCMessage -> m ()
 doNOTICE msg
     = debugStrLn $ "NOTICE: " ++ show (msgParams msg)
 
-doJOIN :: IRCMessage -> IRC ()
+doJOIN :: MonadIRC m => IRCMessage -> m ()
 doJOIN msg
   = do let (_, _:loc) = breakOnGlue ":" (head (msgParams msg))
        s <- get
        put (s { ircChannels = M.insert  (mkCN loc) "[currently unknown]" (ircChannels s)}) -- the empty topic causes problems
        ircGetTopic loc -- initialize topic
 
-doPART :: IRCMessage -> IRC ()
+doPART :: MonadIRC m => IRCMessage -> m ()
 doPART msg
   = do  let loc = head (msgParams msg)
         s <- get
         put (s { ircChannels = M.delete (mkCN loc) (ircChannels s) }) -- this must be a bug
 
-doNICK :: IRCMessage -> IRC ()
+doNICK :: MonadIRC m => IRCMessage -> m ()
 doNICK msg
   = doIGNORE msg
 
-doMODE :: IRCMessage -> IRC ()
+doMODE :: MonadIRC m => IRCMessage -> m ()
 doMODE msg
   = doIGNORE msg
 
 
-doTOPIC :: IRCMessage -> IRC ()
+doTOPIC :: MonadIRC m => IRCMessage -> m ()
 doTOPIC msg
     = do let loc = (head (msgParams msg))
          s <- get
          put (s { ircChannels = M.insert (mkCN loc) (tail $ head $ tail $ msgParams msg) (ircChannels s)})
 
-doRPL_WELCOME :: IRCMessage -> IRC ()
+doRPL_WELCOME :: MonadIRC m => IRCMessage -> m ()
 doRPL_WELCOME _msg
   = do autojoins <- getAutojoins
-       joinMany autojoins
-  where
-    joinMany :: [String] -> IRC ()
-    joinMany [] = return ()
-    joinMany (c:cs) = ircJoin c >> joinMany cs
+       mapM_ ircJoin autojoins
 
-doQUIT :: IRCMessage -> IRC ()
+doQUIT :: MonadIRC m => IRCMessage -> m ()
 doQUIT msg 
   = doIGNORE msg
 
-doRPL_YOURHOST :: IRCMessage -> IRC ()
+doRPL_YOURHOST :: MonadIRC m => IRCMessage -> m ()
 doRPL_YOURHOST _msg = return ()
 
-doRPL_CREATED :: IRCMessage -> IRC ()
+doRPL_CREATED :: MonadIRC m => IRCMessage -> m ()
 doRPL_CREATED _msg = return ()
 
-doRPL_MYINFO :: IRCMessage -> IRC ()
+doRPL_MYINFO :: MonadIRC m => IRCMessage -> m ()
 doRPL_MYINFO _msg = return ()
 
-doRPL_BOUNCE :: IRCMessage -> IRC ()
+doRPL_BOUNCE :: MonadIRC m => IRCMessage -> m ()
 doRPL_BOUNCE _msg = debugStrLn "BOUNCE!"
 
-doRPL_STATSCONN :: IRCMessage -> IRC ()
+doRPL_STATSCONN :: MonadIRC m => IRCMessage -> m ()
 doRPL_STATSCONN _msg = return ()
 
-doRPL_LUSERCLIENT :: IRCMessage -> IRC ()
+doRPL_LUSERCLIENT :: MonadIRC m => IRCMessage -> m ()
 doRPL_LUSERCLIENT _msg = return ()
 
-doRPL_LUSEROP :: IRCMessage -> IRC ()
+doRPL_LUSEROP :: MonadIRC m => IRCMessage -> m ()
 doRPL_LUSEROP _msg = return ()
 
-doRPL_LUSERUNKNOWN :: IRCMessage -> IRC ()
+doRPL_LUSERUNKNOWN :: MonadIRC m => IRCMessage -> m ()
 doRPL_LUSERUNKNOWN _msg = return ()
 
-doRPL_LUSERCHANNELS :: IRCMessage -> IRC ()
+doRPL_LUSERCHANNELS :: MonadIRC m => IRCMessage -> m ()
 doRPL_LUSERCHANNELS _msg = return ()
 
-doRPL_LUSERME :: IRCMessage -> IRC ()
+doRPL_LUSERME :: MonadIRC m => IRCMessage -> m ()
 doRPL_LUSERME _msg = return ()
 
-doRPL_LOCALUSERS :: IRCMessage -> IRC ()
+doRPL_LOCALUSERS :: MonadIRC m => IRCMessage -> m ()
 doRPL_LOCALUSERS _msg = return ()
 
-doRPL_GLOBALUSERS :: IRCMessage -> IRC ()
+doRPL_GLOBALUSERS :: MonadIRC m => IRCMessage -> m ()
 doRPL_GLOBALUSERS _msg = return ()
 
-doRPL_TOPIC :: IRCMessage -> IRC ()
+doRPL_TOPIC :: MonadIRC m => IRCMessage -> m ()
 doRPL_TOPIC msg -- nearly the same as doTOPIC but has our nick on the front of msgParams
     = do let loc = (msgParams msg) !! 1
          s <- get
          put (s { ircChannels = M.insert (mkCN loc) (tail $ last $ msgParams msg) (ircChannels s) })
 
-doRPL_NAMREPLY :: IRCMessage -> IRC ()
+doRPL_NAMREPLY :: MonadIRC m => IRCMessage -> m ()
 doRPL_NAMREPLY _msg = return ()
 
-doRPL_ENDOFNAMES :: IRCMessage -> IRC ()
+doRPL_ENDOFNAMES :: MonadIRC m => IRCMessage -> m ()
 doRPL_ENDOFNAMES _msg = return ()
 
-doRPL_MOTD :: IRCMessage -> IRC ()
+doRPL_MOTD :: MonadIRC m => IRCMessage -> m ()
 doRPL_MOTD _msg = return ()
 
-doRPL_MOTDSTART :: IRCMessage -> IRC ()
+doRPL_MOTDSTART :: MonadIRC m => IRCMessage -> m ()
 doRPL_MOTDSTART _msg = return ()
 
-doRPL_ENDOFMOTD :: IRCMessage -> IRC ()
+doRPL_ENDOFMOTD :: MonadIRC m => IRCMessage -> m ()
 doRPL_ENDOFMOTD _msg = return ()
 
-doPRIVMSG :: IRCMessage -> IRC ()
+doPRIVMSG :: MonadIRC m => IRCMessage -> m ()
 doPRIVMSG msg = do myname <- getMyname
                    doPRIVMSG' myname msg
 
-doPRIVMSG' :: String -> IRCMessage -> IRC ()
+doPRIVMSG' :: MonadIRC m => String -> IRCMessage -> m ()
 doPRIVMSG' myname msg
   | myname `elem` targets
     = let (cmd, params) = breakOnGlue " " text
@@ -207,8 +205,9 @@ doPRIVMSG' myname msg
         = do let (who, _) = breakOnGlue "!" (msgPrefix msg)
              maybecmd <- gets (\s -> M.lookup cmd (ircCommands s))
              case maybecmd of
-               Just (MODULE m) -> do debugStrLn (show msg)
-                                     handleIrc (ircPrivmsg who) (process m msg who cmd rest)
+               Just (ModuleRef m ref) -> do 
+                 debugStrLn (show msg)
+                 liftIRC $ handleIrc (ircPrivmsg who) (process m msg who cmd rest `runReaderT` ref)
                Nothing -> ircPrivmsg who "Sorry, I don't know that command."
     doPersonalMsg _ _
       = do  let (who, _) = breakOnGlue "!" (msgPrefix msg)
@@ -218,8 +217,9 @@ doPRIVMSG' myname msg
     doPublicMsg ('@':cmd) rest
      = do maybecmd <- gets (\s -> M.lookup cmd (ircCommands s))
           case maybecmd of
-            Just (MODULE m) -> do debugStrLn (show msg)
-                                  handleIrc (ircPrivmsg alltargets) (process m msg alltargets cmd rest)
+            Just (ModuleRef m ref) -> do 
+              debugStrLn (show msg)
+              liftIRC $ handleIrc (ircPrivmsg alltargets) (process m msg alltargets cmd rest `runReaderT` ref)
             Nothing         -> do
                 myname' <- getMyname
                 ircPrivmsg alltargets ("Sorry, I don't know the command \"" ++

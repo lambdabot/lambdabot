@@ -12,11 +12,14 @@ import Util
 import BotConfig
 import qualified Map as M
 
-import Data.List ((\\),nub)
-import Data.Char
-import Control.Monad.State
 import Data.Dynamic
 import Data.IORef
+import Data.List ((\\),nub)
+import Data.Char ()
+
+import Control.Monad.State
+import Control.Monad.Reader
+
 import System.Time
 
 ------------------------------------------------------------------------
@@ -58,7 +61,11 @@ usCon = mkTyCon "UserStatus"
 instance Typeable UserStatus where
     typeOf _ = myTy usCon []
 
-instance Module SeenModule where
+-- TODO statify
+type SeenState = ()
+type Seen = ModuleT SeenState
+
+instance Module SeenModule SeenState where
     moduleName _        = return "seen"
     moduleSticky _      = False
     moduleHelp _ _ = return "Report if a user has been seen by the bot"
@@ -71,15 +78,15 @@ instance Module SeenModule where
            let stateMap = ircModuleState s
            put (s { ircModuleState =
                     M.insert "seen" newRef stateMap })
-           ircSignalConnect "JOIN" $ joinCB
-           ircSignalConnect "PART" $ partCB
-           ircSignalConnect "QUIT" $ quitCB
-           ircSignalConnect "NICK" $ nickCB
-           ircSignalConnect "353" $ joinChanCB
-           ircSignalConnect "PRIVMSG" $ msgCB
+           ircSignalConnectR "JOIN" $ joinCB
+           ircSignalConnectR "PART" $ partCB
+           ircSignalConnectR "QUIT" $ quitCB
+           ircSignalConnectR "NICK" $ nickCB
+           ircSignalConnectR "353" $ joinChanCB
+           ircSignalConnectR "PRIVMSG" $ msgCB
 
     process m msg target cmd rest
-      = do seenRef <- gets (\s -> M.lookup "seen" (ircModuleState s))
+      = do seenRef <- liftIRC $ gets (\s -> M.lookup "seen" (ircModuleState s))
            myname <- getMyname
            case seenRef of
                Just seenFMRef ->
@@ -139,9 +146,9 @@ instance Module SeenModule where
                                       process m msg target cmd us
                                _ -> ircPrivmsg target $ "I haven't seen " 
                                                         ++ nick
-               _ -> liftLB (moduleInit m) >> process m msg target cmd rest
+               _ -> mapReaderT liftLB (moduleInit m) >> process m msg target cmd rest
 
-joinCB :: IRCMessage -> IRC () -- when somebody joins
+joinCB :: IRCMessage -> Seen IRC () -- when somebody joins
 joinCB msg
   = do myname <- getMyname
        when (nick /= myname) $
@@ -151,7 +158,7 @@ joinCB msg
             setSeenFM ref fm'
     where nick = ircnick msg
 
-partCB :: IRCMessage -> IRC () -- when somebody parts
+partCB :: IRCMessage -> Seen IRC () -- when somebody parts
 partCB msg
   = do myname <- getMyname
        withSeenFM $ \fm ref ->
@@ -179,7 +186,7 @@ partCB msg
 			  ys -> return (nick', Present mct ys)
 		  _other -> return (nick', us)
 
-quitCB :: IRCMessage -> IRC () -- when somebody quits
+quitCB :: IRCMessage -> Seen IRC () -- when somebody quits
 quitCB msg
   = withSeenFM $ \fm ref -> 
     do ct <- time
@@ -192,7 +199,7 @@ quitCB msg
                    in setSeenFM ref fm'
            _ -> debugStrLn "SeenModule> someone who isn't known has quit"
 
-nickCB :: IRCMessage -> IRC () -- when somebody changes his/her name
+nickCB :: IRCMessage -> Seen IRC () -- when somebody changes his/her name
 nickCB msg 
   = withSeenFM $ \fm ref ->
     case (M.lookup lcnick fm) of
@@ -206,7 +213,7 @@ nickCB msg
           nick = ircnick msg
           lcnick = lowerCaseString nick
 
-joinChanCB :: IRCMessage -> IRC () -- when the bot join a channel
+joinChanCB :: IRCMessage -> Seen IRC () -- when the bot join a channel
 joinChanCB msg
   = withSeenFM $ \fm ref -> do
     let l = msgParams msg
@@ -218,7 +225,7 @@ joinChanCB msg
     setSeenFM ref seenFM'
 
 -- when somebody speaks, update their clocktime
-msgCB :: IRCMessage -> IRC ()
+msgCB :: IRCMessage -> Seen IRC ()
 msgCB msg
     = withSeenFM $ \fm ref ->
         case M.lookup (lowerCaseString nick) fm of
@@ -233,7 +240,7 @@ msgCB msg
 unUserMode :: Nick -> Nick
 unUserMode nick = dropWhile (`elem` "@+") nick
 
-withSeenFM :: (M.Map Nick UserStatus -> IORef ModuleState -> IRC ()) -> IRC ()
+withSeenFM :: (M.Map Nick UserStatus -> IORef ModuleState -> Seen IRC ()) -> Seen IRC ()
 withSeenFM f =
   do maybeSeenFM <- getSeenFM
      case maybeSeenFM of
@@ -249,7 +256,7 @@ withSeenFM f =
                                  in return (Just (seenFM, seenFMRef))
                       _ -> return Nothing
 
-setSeenFM :: IORef ModuleState -> M.Map Nick UserStatus -> IRC ()
+setSeenFM :: IORef ModuleState -> M.Map Nick UserStatus -> Seen IRC ()
 setSeenFM ref fm = liftIO $ writeIORef ref $ ModuleState fm
 
 updateJ :: UserStatus -> UserStatus -> UserStatus
@@ -257,7 +264,7 @@ updateJ (Present _ct cs) (Present ct c) = Present ct $ nub (c ++ cs)
 updateJ _x y@(Present _ct _cs) = y
 updateJ x _ = x
 
-time :: IRC ClockTime
+time :: MonadIO m => m ClockTime
 time = liftIO getClockTime
 
 ircchannel :: IRCMessage -> [Channel]

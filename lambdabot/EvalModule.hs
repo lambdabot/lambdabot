@@ -1,4 +1,4 @@
-{-# OPTIONS -fallow-overlapping-instances #-}
+{-# OPTIONS -fglasgow-exts -fallow-overlapping-instances #-}
 
 module EvalModule (evalModule,theModule) where
 
@@ -44,7 +44,7 @@ definitionsFile = "definitions"
 outOfFuelMsg :: [Char]
 outOfFuelMsg = "out of fuel - use @resume to continue"
 
-instance Module EvalModule where
+instance Module EvalModule () where
     moduleName   _ = return "eval"
     moduleHelp   _ "eval" = return "@eval expr - evaluate the lambda calculus expression, expr"
     moduleHelp   _ "define" = return "@define name expr - define name to be expr"
