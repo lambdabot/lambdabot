@@ -5,6 +5,7 @@ import IRC
 import Util
 import qualified Map as M
 
+import Data.List
 import Data.Maybe
 import Control.Monad.State
 import Text.Regex
@@ -188,11 +189,11 @@ doPRIVMSG' myname msg
   | myname `elem` targets
     = let (cmd, params) = breakOnGlue " " text
       in doPersonalMsg cmd (dropWhile (== ' ') params)
-  | myname `prefix` text
+  | myname `isPrefixOf` text
     = let Just wholeCmd = maybeCommand myname text
 	  (cmd, params) = breakOnGlue " " wholeCmd
       in doPublicMsg cmd (dropWhile (==' ') params)
-  | ("@" `prefix` text)
+  | ("@" `isPrefixOf` text)
     = let (cmd, params) = breakOnGlue " " (dropWhile (==' ') text)
       in doPublicMsg cmd (dropWhile (==' ') params)
   | otherwise
@@ -227,25 +228,11 @@ doPRIVMSG' myname msg
       = do myname' <- getMyname
            ircPrivmsg alltargets ("Sorry, I'm not a very smart bot yet, try \""
                                         ++ myname' ++ ": @listcommands\"")
-after :: String -> String -> String
-after [] ys     = dropWhile (==' ') ys
-after (_:_) [] = error "after: (:) [] case"
-after (x:xs) (y:ys)
-  | x == y    = after xs ys
-  | otherwise = error "after: /= case"
-
-prefix :: String -> String -> Bool
-prefix [] _ = True
-prefix (_:_) [] = False
-prefix (x:xs) (y:ys)
-  = x == y && prefix xs ys
 
 maybeCommand :: String -> String -> Maybe String
 maybeCommand name text =
     let re = mkRegex (name ++ "[.:,]*[[:space:]]*")
-	res = matchRegexAll re text
-	Just (_, _, cmd, _) = res
-	in
-	if isJust res
-	then Just cmd
-	else Nothing
+    in case matchRegexAll re text of
+      Nothing -> Nothing
+      Just (_, _, cmd, _) -> Just cmd
+

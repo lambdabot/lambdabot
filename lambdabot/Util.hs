@@ -8,6 +8,7 @@ module Util (
      split,
      breakOnGlue,
      snoc,
+     after,
      split_first_word,
      debugStr,
      debugStrLn,
@@ -96,6 +97,22 @@ breakOnGlue glue rest@(x:xs)
 -- > snoc 3 [2, 1] ===> [2, 1, 3]
 snoc :: a -> [a] -> [a]
 snoc x xs = xs ++ [x]
+
+-- | 'after' takes 2 strings, called the prefix and data. A necessary
+--   precondition is that
+--
+--   > Data.List.isPrefixOf prefix data ===> True
+--
+--   'after' returns a string based on data, where the prefix has been
+--   removed as well as any excess space characters. Example:
+--
+--   > after "This is" "This is a string" ===> "a string"
+after :: String -> String -> String
+after [] ys     = dropWhile (==' ') ys
+after (_:_) [] = error "after: (:) [] case"
+after (x:xs) (y:ys)
+  | x == y    = after xs ys
+  | otherwise = error "after: /= case"
 
 -- | Break a String into it's first word, and the rest of the string. Example:
 --
