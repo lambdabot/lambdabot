@@ -198,16 +198,18 @@ isLoadedObject file
 -}
 -- You may then have to edit, and reorder things a bit to get the load order correct :/
 --
+-- Still need "posix" until PosixCompat works more reliably.
+--
 initialise :: IO ()
 initialise = do 
         initialiseRuntimeLoader
         mapM_ loadPackage
 #if   __GLASGOW_HASKELL__ >= 604
-          ["base", "haskell98", "mtl", "parsec", "network", "unix"]
+          ["base", "haskell98", "mtl", "parsec", "network", "unix", "lang", "posix"]
 #elif __GLASGOW_HASKELL__ >= 602
           ["base","haskell98","lang","parsec","network","unix","posix"]
-#else
-          []
+#else /* hack */
+          ["base", "haskell98", "parsec", "network", "unix", "posix"]
 #endif
         -- more hard coded evil
         mapM_ (\n -> loadObject (n++".o"))
