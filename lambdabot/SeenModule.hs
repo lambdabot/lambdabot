@@ -13,11 +13,9 @@ import BotConfig
 import qualified Map as M
 
 import Data.Dynamic
-import Data.IORef
 import Data.List ((\\),nub)
 import Data.Char ()
 
-import Control.Monad.State
 import Control.Monad.Reader
 
 import System.Time
@@ -62,7 +60,7 @@ instance Typeable UserStatus where
     typeOf _ = myTy usCon []
 
 -- TODO statify
-type SeenState = ()
+type SeenState = M.Map Nick UserStatus
 type Seen = ModuleT SeenState
 
 instance Module SeenModule SeenState where
@@ -71,13 +69,7 @@ instance Module SeenModule SeenState where
     moduleHelp _ _ = return "Report if a user has been seen by the bot"
     commands _          = return ["seen"]
     moduleInit _
-      = do s <- get
-           newRef <-
-               liftIO . newIORef $
-                      ModuleState (M.empty :: M.Map Nick UserStatus)
-           let stateMap = ircModuleState s
-           put (s { ircModuleState =
-                    M.insert "seen" newRef stateMap })
+      = do writeMS M.empty
            ircSignalConnectR "JOIN" $ joinCB
            ircSignalConnectR "PART" $ partCB
            ircSignalConnectR "QUIT" $ quitCB
@@ -85,94 +77,88 @@ instance Module SeenModule SeenState where
            ircSignalConnectR "353" $ joinChanCB
            ircSignalConnectR "PRIVMSG" $ msgCB
 
-    process m msg target cmd rest
-      = do seenRef <- liftIRC $ gets (\s -> M.lookup "seen" (ircModuleState s))
-           myname <- getMyname
-           case seenRef of
-               Just seenFMRef ->
-                   do seenFMState <- liftIO $ readIORef seenFMRef
-                      let (seenFM :: M.Map Nick UserStatus)
-                              = stripMS seenFMState
-                          nick = takeWhile (/=' ') rest
-                          lcnick = lowerCaseString nick
-                      if lcnick == lowerCaseString myname
-                         then ircPrivmsg target "Yes, I'm here"
-                         else case M.lookup lcnick seenFM of
-                               Just (Present mct cs) -> do {
-          ;now <- time
-          ;ircPrivmsg target $ nick ++ " is in " ++
-                  (listToStr cs) ++ "." ++
-                  (case mct of
-                     Nothing -> " I don't know when " ++ nick ++ " last spoke."
-                     Just ct ->
-                          " Last spoke " ++
-                          (let when' = toPretty $ diffClockTimes now ct
-                           in if null when' then "just now." else when' ++ "ago."
-                           ) )
-        }
+    process m msg target cmd rest = do 
+          seenFM <- readMS
+          myname <- getMyname
+          let nick = takeWhile (/=' ') rest
+              lcnick = lowerCaseString nick
+          if lcnick == lowerCaseString myname
+             then ircPrivmsg target "Yes, I'm here"
+             else case M.lookup lcnick seenFM of
+                   Just (Present mct cs) -> do {
+                      ;now <- time
+                      ;ircPrivmsg target $ nick ++ " is in " ++
+                              (listToStr cs) ++ "." ++
+                              (case mct of
+                                 Nothing -> " I don't know when " ++ nick ++ " last spoke."
+                                 Just ct ->
+                                      " Last spoke " ++
+                                      (let when' = toPretty $ diffClockTimes now ct
+                                       in if null when' then "just now." else when' ++ "ago."
+                                       ) )
+                    }
 
-                               Just (NotPresent ct chan) ->
-                                   do now <- time
-                                      ircPrivmsg target $ 
-                                                     "I saw " ++ nick ++ 
-                                                     " leaving " ++ 
-                                                     chan ++ " " ++ 
-                                                     (toPretty $ 
-                                                      diffClockTimes now ct) ++
-                                                     "ago."
-                               Just (WasPresent ct chan) ->
-                                   do now <- time
-                                      ircPrivmsg target $
-                                                     "Last time I saw " ++ 
-                                                     nick ++ 
-                                                     " was when I left " ++
-                                                     chan ++ " " ++ 
-                                                     (toPretty $ 
-                                                      diffClockTimes now ct) ++
-                                                     "ago."
-                               Just (NewNick newnick) ->
-                                   do let findfunc str = 
-                                            case (M.lookup (lowerCaseString str)) seenFM of
-                                                Just (NewNick str') -> 
-							findfunc str'
-                                                Just _ -> str
-                                                Nothing -> error "SeenModule: Nothing"
+                   Just (NotPresent ct chan) ->
+                       do now <- time
+                          ircPrivmsg target $ 
+                                         "I saw " ++ nick ++ 
+                                         " leaving " ++ 
+                                         chan ++ " " ++ 
+                                         (toPretty $ 
+                                          diffClockTimes now ct) ++
+                                         "ago."
+                   Just (WasPresent ct chan) ->
+                       do now <- time
+                          ircPrivmsg target $
+                                         "Last time I saw " ++ 
+                                         nick ++ 
+                                         " was when I left " ++
+                                         chan ++ " " ++ 
+                                         (toPretty $ 
+                                          diffClockTimes now ct) ++
+                                         "ago."
+                   Just (NewNick newnick) ->
+                       do let findfunc str = 
+                                case (M.lookup (lowerCaseString str)) seenFM of
+                                    Just (NewNick str') -> 
+                                            findfunc str'
+                                    Just _ -> str
+                                    Nothing -> error "SeenModule: Nothing"
 
-                                          us = findfunc newnick
-                                      ircPrivmsg target $
-                                                        nick ++ 
-                                                        " has changed nick to "
-                                                        ++ us ++ "." 
-                                      process m msg target cmd us
-                               _ -> ircPrivmsg target $ "I haven't seen " 
+                              us = findfunc newnick
+                          ircPrivmsg target $
+                                            nick ++ 
+                                            " has changed nick to "
+                                            ++ us ++ "." 
+                          process m msg target cmd us
+                   _ -> ircPrivmsg target $ "I haven't seen " 
                                                         ++ nick
-               _ -> mapReaderT liftLB (moduleInit m) >> process m msg target cmd rest
 
 joinCB :: IRCMessage -> Seen IRC () -- when somebody joins
 joinCB msg
   = do myname <- getMyname
        when (nick /= myname) $
-        withSeenFM $ \fm ref -> do
+        withSeenFM $ \fm -> do
             let newInfo = Present Nothing (ircchannel msg)
                 fm' = M.insertWith updateJ (lowerCaseString nick) newInfo fm
-            setSeenFM ref fm'
+            writeMS fm'
     where nick = ircnick msg
 
 partCB :: IRCMessage -> Seen IRC () -- when somebody parts
 partCB msg
   = do myname <- getMyname
-       withSeenFM $ \fm ref ->
+       withSeenFM $ \fm ->
         if nick == myname then -- when the bot parts
           do l <- mapM (botPart $ ircchannel msg) (M.toList fm)
-	     setSeenFM ref (M.fromList l)
+	     writeMS $ M.fromList l
         else case (M.lookup lcnick fm) of
                 Just (Present mct xs) ->
 	         do case xs \\ (ircchannel msg) of
 		        [] -> do ct <- time
 			         let fm' = M.insertWith (\_ x -> x) lcnick
 					     (NotPresent ct (listToStr xs)) fm
-			         setSeenFM ref fm' 
-			ys -> setSeenFM ref $ M.insertWith (\_ x -> x) lcnick 
+			         writeMS fm' 
+			ys -> writeMS $ M.insertWith (\_ x -> x) lcnick 
 						(Present mct ys) fm
                 _ -> debugStrLn "SeenModule> someone who isn't known parted"
     where nick = unUserMode (ircnick msg)
@@ -188,7 +174,7 @@ partCB msg
 
 quitCB :: IRCMessage -> Seen IRC () -- when somebody quits
 quitCB msg
-  = withSeenFM $ \fm ref -> 
+  = withSeenFM $ \fm -> 
     do ct <- time
        let nick = unUserMode (ircnick msg)
            lcnick = lowerCaseString nick
@@ -196,17 +182,17 @@ quitCB msg
            Just (Present _ct xs) -> 
                let fm' = M.insertWith (\_ x -> x) lcnick
                                (NotPresent ct (head xs)) fm
-                   in setSeenFM ref fm'
+                   in writeMS fm'
            _ -> debugStrLn "SeenModule> someone who isn't known has quit"
 
 nickCB :: IRCMessage -> Seen IRC () -- when somebody changes his/her name
 nickCB msg 
-  = withSeenFM $ \fm ref ->
+  = withSeenFM $ \fm ->
     case (M.lookup lcnick fm) of
         Just (Present mct xs) -> 
             let fm' = M.insertWith (\_ x -> x) lcnick (NewNick newnick) fm
                 fm'' = M.insert lcnewnick (Present mct xs) fm'
-                in setSeenFM ref fm''
+                in writeMS fm''
         _ -> debugStrLn "SeenModule> someone who isn't here changed nick"
     where newnick = drop 1 $ head (msgParams msg)
           lcnewnick = lowerCaseString newnick
@@ -215,24 +201,24 @@ nickCB msg
 
 joinChanCB :: IRCMessage -> Seen IRC () -- when the bot join a channel
 joinChanCB msg
-  = withSeenFM $ \fm ref -> do
+  = withSeenFM $ \fm -> do
     let l = msgParams msg
         chan = l !! 2
         chanUsers = words (drop 1 (l !! 3)) -- remove ':'
         fooFunc fm' u = M.insertWith updateJ
                               (lowerCaseString $ unUserMode u) (Present Nothing [chan]) fm'
         seenFM' = foldl fooFunc fm chanUsers
-    setSeenFM ref seenFM'
+    writeMS seenFM'
 
 -- when somebody speaks, update their clocktime
 msgCB :: IRCMessage -> Seen IRC ()
 msgCB msg
-    = withSeenFM $ \fm ref ->
+    = withSeenFM $ \fm ->
         case M.lookup (lowerCaseString nick) fm of
             Just (Present _ct xs) -> do
                 ct <- time
                 let fm' = M.insert (lowerCaseString nick) (Present (Just ct) xs) fm
-                setSeenFM ref fm'
+                writeMS fm'
             _ -> debugStrLn "SeenModule> someone who isn't here msg us"
     where nick = ircnick msg
 
@@ -240,24 +226,8 @@ msgCB msg
 unUserMode :: Nick -> Nick
 unUserMode nick = dropWhile (`elem` "@+") nick
 
-withSeenFM :: (M.Map Nick UserStatus -> IORef ModuleState -> Seen IRC ()) -> Seen IRC ()
-withSeenFM f =
-  do maybeSeenFM <- getSeenFM
-     case maybeSeenFM of
-         Just (fm, ref) -> f fm ref
-         _ -> debugStrLn "SeenModule> Couldn't lookup the user database"
-     where getSeenFM
-             = do seenRef <- gets (\s -> M.lookup "seen" (ircModuleState s))
-                  case seenRef of
-                      Just seenFMRef ->
-                          do seenFMState <- liftIO $ readIORef seenFMRef
-                             let (seenFM :: M.Map Nick UserStatus)
-                                     = stripMS seenFMState
-                                 in return (Just (seenFM, seenFMRef))
-                      _ -> return Nothing
-
-setSeenFM :: IORef ModuleState -> M.Map Nick UserStatus -> Seen IRC ()
-setSeenFM ref fm = liftIO $ writeIORef ref $ ModuleState fm
+withSeenFM :: (SeenState -> Seen IRC ()) -> Seen IRC ()
+withSeenFM f = f =<< readMS
 
 updateJ :: UserStatus -> UserStatus -> UserStatus
 updateJ (Present _ct cs) (Present ct c) = Present ct $ nub (c ++ cs)
