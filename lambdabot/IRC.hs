@@ -333,7 +333,7 @@ mbreak n p xs@(x:xs')
 
 ircPrivmsg' :: String -> String -> IRC ()
 ircPrivmsg' who msg
-  = ircWrite (mkIrcMessage "PRIVMSG" [who, ':' : clean_msg])
+  = ircWrite (mkIrcMessage "NOTICE" [who, ':' : clean_msg])
     -- merry christmas det
     where clean_msg = concatMap clean msg
 
