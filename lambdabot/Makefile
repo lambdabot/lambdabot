@@ -19,10 +19,27 @@ all: lambdabot modules
 
 FORCE:
 
+# If $(way) is set then we define $(way_) and $(_way) from it in the
+# obvious fashion.
+ifeq "$(way)" "p"
+  way_ := $(way)_
+  _way := _$(way)
+endif
+
+#
+# building the profiled way
+#
+ifeq "$(way)" "p"
+PROF_OPTS	= -prof -auto-all
+LD_OPTS		+= $(PROF_OPTS)
+HC_OPTS		+= $(PROF_OPTS)
+HC_OPTS 	+= -hisuf $(way_)hi -hcsuf $(way_)hc -osuf $(way_)o
+endif
+
 #
 # Link the bot (we use --make to extract the static objs form the mess)
 #
-lambdabot: $(SOURCES) ./Main.o 
+lambdabot: $(SOURCES) Main.$(way_)o
 	$(GHC) $(LD_OPTS) -v0 --make Main.hs -o $@
 
 #
@@ -33,7 +50,7 @@ depend: StaticModules.hs GHCLibraryPath.hs $(SOURCES)
 	@$(GHC) -cpp $(HC_OPTS) $(PKG_OPTS) $(HTOOLKIT) -M -optdep-f -optdepdepend $(SOURCES) || rm depend
 	@echo "done."
 
-modules: $(addsuffix Module.o,$(DYNMODS))
+modules: $(addsuffix Module.$(way_)o,$(DYNMODS))
 
 # 
 # Main rules, with support for 'way' management, from Yi.
