@@ -5,13 +5,9 @@ module QuoteModule.Random (
 
 import System.Random
 
-randomRange :: Integer
-randomRange = sum $ map (abs . fromIntegral) [minBound :: Int, maxBound :: Int]
-
-choose :: (Fractional b, Integral a1, Integral a) => a -> a1 -> b
-choose listLength randomInt
-        = (fromIntegral $ listLength) * (fromIntegral randomInt) / (fromIntegral randomRange)
-
+-- | 'getRandItem' takes as input a list and a random number generator. It
+--   then returns a random element from the list, paired with the altered
+--   state of the RNG
 getRandItem :: (RandomGen g) => [a] -> g -> (a, g)
 getRandItem mylist rng = (mylist !! index,newRng)
                          where
