@@ -67,8 +67,7 @@ getFileRequires "HaddockModule.o" = return [
                                             Object "haddock/BlockTable.o",
                                             Object "haddock/HaddockUtil.o"]
 
-getFileRequires "QuoteModule.o" = return [Object "QuoteModule/Yow.o",
-                                          Object "QuoteModule/Fortune.o",
+getFileRequires "QuoteModule.o" = return [Object "QuoteModule/Fortune.o",
                                           Object "QuoteModule/Random.o",
                                           Object "Map.o"]
 
