@@ -1,19 +1,16 @@
 # $Id: Makefile,v 1.6 2003/07/31 19:13:15 eleganesh Exp $
 
+include config.mk
 
 DYNMODS=Dict Dummy Eval Hello Karma Quote Seen State \
-        System Topic Type GHCi Cmafihe #Haddock
+        System Topic Type Cmafihe #Haddock GHCi
 
-EXCLUDES=ChessModule.hs SearchMailingList.hs SearchMLModule.hs EvalModule/tests.hs FactModule.hs HaddockModule.hs GenStaticModules.hs
+EXCLUDES=ChessModule.hs SearchMailingList.hs SearchMLModule.hs \
+	 EvalModule/tests.hs FactModule.hs HaddockModule.hs GenStaticModules.hs
 
-EXCLUDESFIND=$(addprefix ! -path ./,$(EXCLUDES))
+EXCLUDESFIND=	$(addprefix ! -path ./,$(EXCLUDES))
 
-SOURCES = $(shell find . -path './_darcs' -prune -depth -o $(EXCLUDESFIND) -name \*.hs -o -name \*.lhs)
-
-GHC=	ghc-6.4
-
-GHCFLAGS += -package posix -package network -package parsec
-LINKFLAGS = -lHSrts -lHSparsec 
+SOURCES=	$(shell find . -path './_darcs' -prune -depth -o $(EXCLUDESFIND) -name \*.hs -o -name \*.lhs)
 
 HTOOLKIT =
 
@@ -21,37 +18,51 @@ all: lambdabot modules
 
 FORCE:
 
+#
+# Link the bot (we use --make to extract the static objs form the mess)
+#
 lambdabot: ./Main.o
-	$(GHC) $(GHCFLAGS) $(LINKFLAGS) $(HTOOLKIT) --make Main.hs -o lambdabot
+	$(GHC) $(LD_OPTS) --make Main.hs -o $@
+
+#
+# Dependency generation
+#
+depend: StaticModules.hs GHCLibraryPath.hs $(SOURCES)
+	@echo -n "Rebuilding dependencies ..."
+	@$(GHC) -cpp $(HC_OPTS) $(PKG_OPTS) $(HTOOLKIT) -M -optdep-f -optdepdepend $(SOURCES) || rm depend
+	@echo "done."
 
 modules: $(addsuffix Module.o,$(DYNMODS))
 
-%.hi: %.o
-	@touch $@
+# 
+# Main rules, with support for 'way' management, from Yi.
+#
 
-%.o: %.hs
-	$(GHC) $(GHCFLAGS) -c $<
+%.$(way_)hi : %.$(way_)o
+	@:
 
-%.o: %.lhs
-	$(GHC) $(GHCFLAGS) -c $<
+%.$(way_)o: %.hs
+	$(GHC) $(HC_OPTS) $(PKG_OPTS) -c $< -o $@ -ohi $(basename $@).$(way_)hi
 
-GHCiModule.o: GHCiModule.hs Shell.o
-	$(GHC) $(GHCFLAGS) -c $<
+%.$(way_)o : %.lhs
+	$(GHC) $(HC_OPTS) $(PKG_OPTS) -c $< -o $@  -ohi $(basename $@).$(way_)hi
 
-GhciModule.o: GhciModule.hs Shell.o
-	$(GHC) $(GHCFLAGS) -c $<
+#
+# Dynamic modules need special treatment
+#
 
-Shell.o: shell_stub.o Shell.hs
-	$(GHC) $(GHCFLAGS) -fffi -c Shell.hs shell_stub.o 
+#GhciModule.o: Shell.o GhciModule.hs
+#	$(GHC) $(HC_OPTS) $(PKG_OPTS) -c $< -o $@  -ohi $(basename $@).$(way_)hi
 
 #FactModule.o: FactModule.hs
 #	$(GHC) $(GHCFLAGS) $(HTOOLKIT) -c $<
 
+
 GHCLibraryPath.hs: GHCLibraryPath.hs.in
-	@sed -e"s#@GHC_LIB_PATH@#`$(GHC) --print-libdir`#" < $< > $@
+	@sed -e"s,@GHC_LIB_PATH@,`$(GHC) --print-libdir`," < $< > $@
 
 genStaticModules: GenStaticModules.hs
-	$(GHC) GenStaticModules.hs -o genStaticModules
+	$(GHC) -o $@ $<
 
 StaticModules.hs: genStaticModules StaticModules.conf
 	@./genStaticModules
@@ -64,9 +75,7 @@ clean:
 	rm -f GHCLibraryPath.hs StaticModules.hs
 	rm depend
 
-depend: StaticModules.hs GHCLibraryPath.hs $(SOURCES)
-	@echo -n "Rebuilding dependencies ..."
-	@$(GHC) -cpp $(GHCFLAGS) $(HTOOLKIT) -M -optdep-f -optdepdepend $(SOURCES) || rm depend
-	@echo "done."
+distclean: clean
+	rm config.mk config.log config.status configure autom4te.cache
 
 include depend

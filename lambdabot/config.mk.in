@@ -1,0 +1,34 @@
+#
+# System-specific settings
+#
+
+PREFIX=         @prefix@
+BINDIR=         @prefix@/bin
+LIBDIR=         @prefix@/lib/$(PKG)
+DATADIR=        @prefix@/share/doc/$(PKG)
+MANDIR=         @prefix@/man
+IFACEDIR=       $(LIBDIR)/imports
+
+GHC=            @WithGhc@
+
+HC_OPTS=        -Wall -Werror -fno-warn-deprecations
+HC_OPTS+=       -funbox-strict-fields -O2 -fvia-C
+#HC_OPTS+=       -Onot -fasm -H64m
+
+PKG_OPTS=	-package posix -package network -package parsec
+LD_OPTS=	-lHSrts -lHSparsec 
+
+
+#HC_OPTS+=      -debug 
+#HC_OPTS+=	-fignore-asserts 
+
+GHC_VERSION=	@GHC_VERSION@
+GLASGOW_HASKELL=@GLASGOW_HASKELL@
+
+HADDOCK=        @HaddockCmd@
+HADDOCK_OPTS=   -h
+
+INSTALL=        sh $(TOPDIR)/install-sh -c
+INSTALL_PROGRAM=$(INSTALL) -m 755
+INSTALL_DATA=   $(INSTALL) -m 644
+INSTALL_DIR=    mkdir -p
