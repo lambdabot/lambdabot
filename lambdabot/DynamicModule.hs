@@ -85,7 +85,6 @@ data DLAccessor m
               , packagesA :: Accessor m (Set String)
               }
 
--- TODO Shrink that stuff
 dlGet :: (MonadReader (IORef DLModules) m, MonadLB m) => m (DLAccessor m)
 dlGet = do dlFMRef <- ask
            let dlA = dlAccessor dlFMRef

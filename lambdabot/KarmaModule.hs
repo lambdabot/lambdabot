@@ -2,14 +2,10 @@
 
 module KarmaModule where
 
-import qualified Map as M
 import IRC
 import Data.FiniteMap
-import Control.Monad.State
 import Control.Monad.Reader
-import Data.IORef
 -- import Util
-import Data.Typeable (Typeable)
 
 newtype KarmaModule = KarmaModule ()
 
@@ -19,8 +15,11 @@ theModule = MODULE karmaModule
 karmaModule :: KarmaModule
 karmaModule = KarmaModule ()
 
--- TODO: Extract state
-instance Module KarmaModule () where
+-- TODO: Port to Map
+type KarmaState = FiniteMap String Integer
+type Karma = ModuleT KarmaState
+
+instance Module KarmaModule KarmaState where
     moduleName   _ = return "karma"
 
     moduleHelp _ "karma"  = return "return a person's karma value"
@@ -31,34 +30,20 @@ instance Module KarmaModule () where
     moduleSticky _ = False
     commands     _ = return ["karma", "karma+", "karma-"]
     moduleInit   _ = lift $ makeInitialState "karma" (emptyFM :: FiniteMap String Integer)
-    process      m msg target cmd rest =
+    process      _ msg target cmd rest =
 	if (length $ words rest) == 0 then
 	   ircPrivmsg target "I can't find the karma of nobody."
         else
            do let nick = head $ words rest
-	      maybeKarmaFMRef <-
-		  gets (\s -> M.lookup "karma" (ircModuleState s))
-	      case maybeKarmaFMRef of
-		  Just karmaFMRef ->
-		      do karmaFMState <- liftIO $ readIORef karmaFMRef
-			 let (karmaFM :: FiniteMap String Integer) =
-				 stripMS karmaFMState
-			 case cmd of
-			    "karma"  ->
-				getKarma target sender nick karmaFM
-			    "karma+" ->
-				incKarma target sender nick
-					 karmaFMRef karmaFM
-			    "karma-" ->
-				decKarma target sender nick
-					 karmaFMRef karmaFM
-                            _ -> error "KarmaModule: can't happen"
-		  Nothing ->
-		      do mapReaderT liftLB $ moduleInit m
-			 process m msg target cmd rest
+              karmaFM <- readMS
+              case cmd of
+                 "karma"  -> getKarma target sender nick karmaFM
+                 "karma+" -> incKarma target sender nick karmaFM
+                 "karma-" -> decKarma target sender nick karmaFM
+                 _        -> error "KarmaModule: can't happen"
 	    where sender = ircnick msg
 
-getKarma :: (MonadIRC m, Num elt) => String -> [Char] -> [Char] -> FiniteMap [Char] elt -> m ()
+getKarma :: String -> String -> String -> KarmaState -> Karma IRC ()
 getKarma target sender nick karmaFM =
     if sender == nick then
        ircPrivmsg target $ "You have a karma of " ++ (show karma)
@@ -66,26 +51,18 @@ getKarma target sender nick karmaFM =
        ircPrivmsg target $ nick ++ " has a karma of " ++ (show karma)
     where karma = lookupWithDefaultFM karmaFM 0 nick
 
-incKarma :: (MonadIRC m, Num elt, Typeable (FiniteMap [Char] elt)) =>
-	    String
-	    -> [Char]
-	       -> [Char] -> IORef ModuleState -> FiniteMap [Char] elt -> m ()
-incKarma target sender nick karmaFMRef karmaFM =
+incKarma :: String -> String -> String -> KarmaState -> Karma IRC ()
+incKarma target sender nick karmaFM =
     if sender == nick then
        ircPrivmsg target "You can't change your own karma, silly."
     else
-       do liftIO . writeIORef karmaFMRef . ModuleState $
-		 addToFM_C (+) karmaFM nick 1
+       do writeMS $ addToFM_C (+) karmaFM nick 1
 	  ircPrivmsg target $ nick ++ "'s karma has been incremented."
 
-decKarma :: (MonadIRC m, Num a, Typeable (FiniteMap [Char] a)) =>
-	    String
-	    -> [Char]
-	       -> [Char] -> IORef ModuleState -> FiniteMap [Char] a -> m ()
-decKarma target sender nick karmaFMRef karmaFM =
+decKarma :: String -> String -> String -> KarmaState -> Karma IRC ()
+decKarma target sender nick karmaFM =
     if sender == nick then
        ircPrivmsg target "You can't change your own karma, silly."
     else
-       do liftIO . writeIORef karmaFMRef . ModuleState $
-		 addToFM_C (+) karmaFM nick $ -1
+       do writeMS $ addToFM_C (+) karmaFM nick $ -1
 	  ircPrivmsg target $ nick ++ "'s karma has been decremented."
