@@ -95,7 +95,7 @@ depend: $(ALL_SRCS)
 		-optdepdepend $(ALL_SRCS) || rm depend
 	@echo "done."
 
-StaticModules.hs: GenStaticModules.hs
+StaticModules.hs: GenStaticModules.hs StaticModules.conf
 	@echo -n "Generating static modules list ... "
 	@echo main | ghci -v0 GenStaticModules.hs
 	@echo "done."
@@ -104,8 +104,21 @@ StaticModules.hs: GenStaticModules.hs
 # Link the bot.
 # TODO: depends should only be $(BOT_OBJS), not plugins too.
 #
-lambdabot: $(ALL_OBJS)
-	$(GHC) $(LD_OPTS) -v0 --make Main.hs -o $@
+lambdabot: $(ALL_OBJS) ofiles
+	$(GHC) $(HC_OPTS) $(PKG_OPTS) $(LD_OPTS) -v0 --make Main.hs -o $@
+
+#
+# Profiling requires ln -s *.p_o to *.o so as not to confuse the dyn linker
+#
+.PHONY: ofiles
+ofiles:	$(ALL_OBJS)
+	@if test "x$(way)" = "xp" ; then \
+		for i in *.p_o ; do \
+			ln -f -s $$i `echo $$i | sed 's/p_//'` ; \
+		done ; \
+	fi
+
+# and for i in $(ALL_OBJS) ; do ln -s $i $i_p.o ...
 
 # 
 # Main rules, with support for 'way' management, from Yi.
@@ -123,11 +136,9 @@ lambdabot: $(ALL_OBJS)
 # clean rules
 #
 clean:
-	rm -f   *.o *.$(way_)o  *.$(way_)hi
-	rm -f   */*.$(way_)o  */*.$(way_)hi
+	rm -f *.o *.p_o  *.hi *.p_hi */*.o */*.p_o */*.hi */*.p_hi
 	rm -f *~ */*~
-	rm -f lambdabot
-	rm -f depend depend.bak
+	rm -f lambdabot depend depend.bak
 
 distclean: clean
 	rm -f config.mk config.h config.log config.status configure 

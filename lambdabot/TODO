@@ -44,3 +44,10 @@ Wishlist:
 * Some support for bot clients to be able to do their own request/response stuff
 
 * add your wishes here ...
+
+Profiling issues:
+
+* ln -s Map.o Map.p_o
+* dynloading won't work, as it requires prof versions of
+  HSfoo.o, which don't exist usually. So turn off dyn loading,
+  and link everything statically.
