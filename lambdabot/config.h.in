@@ -2,10 +2,10 @@
 
 #define GHC_VERSION     "@GHC_VERSION@"
 
-#define BUILD_DATE      "@BUILD_DATE@"
-
 #define PLATFORM        "@PLATFORM@"
 
 #define REPO_PATH	"@REPO_PATH@"
 
 #define GHC_LIB_PATH	"@GHC_LIB_PATH@"
+
+#define PATCH_COUNT     "@PATCH_COUNT@"

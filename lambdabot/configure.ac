@@ -78,14 +78,14 @@ if test -n "$WithGhc" ; then
 fi
 AC_SUBST(GHC_LIB_PATH)
 
-BUILD_DATE=`date`
-AC_SUBST(BUILD_DATE)
-
 PLATFORM=`uname -ms`
 AC_SUBST(PLATFORM)
 
 REPO_PATH=`sed -n 1p ../_darcs/prefs/repos`
 AC_SUBST(REPO_PATH)
+
+PATCH_COUNT=`darcs changes --xml-output | grep '^\<patch' | wc -l | sed 's/ *//g'`
+AC_SUBST(PATCH_COUNT)
 
 AC_CHECK_PROG(HaddockCmd,haddock,haddock)
 

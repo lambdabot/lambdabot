@@ -23,7 +23,8 @@ instance Module VersionModule where
                            ++ "and darcs repo of this bot"
     commands     _ = return ["version"]
     process      _ _ target _ _ =
-        ircPrivmsg target $ concat
-          [BUILD_DATE, ", ", "GHC ", GHC_VERSION,
-           " (", PLATFORM, ")", "\n", "darcs get ", REPO_PATH]
+        ircPrivmsg target $ concat 
+                ["lambdabot 2p", PATCH_COUNT, ", ", 
+                 "GHC ", GHC_VERSION, " (", PLATFORM, ")", 
+                 "\n", "darcs get ", REPO_PATH ]
 
