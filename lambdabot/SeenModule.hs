@@ -1,4 +1,4 @@
-{-# OPTIONS -cpp -fglasgow-exts -fallow-overlapping-instances #-}
+{-# OPTIONS -cpp -fglasgow-exts #-}
 -- ^ instances hack!
 
 module SeenModule (
@@ -14,7 +14,6 @@ import qualified Map as M
 
 import Data.Dynamic
 import Data.List ((\\),nub)
-import Data.Char ()
 
 import Control.Monad.Reader
 
