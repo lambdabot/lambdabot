@@ -59,6 +59,7 @@ instance Typeable UserStatus where
 instance Module SeenModule where
     moduleName _        = return "seen"
     moduleSticky _      = False
+    moduleHelp _ _ = return "Report if a user has been seen by the bot"
     commands _          = return ["seen"]
     moduleInit _ 
       = do s <- get

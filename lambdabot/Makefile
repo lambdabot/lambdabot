@@ -2,12 +2,22 @@
 
 include config.mk
 
-DYNMODS=Dict Dummy Eval Hello Karma Quote Seen State \
-        System Topic Type Cmafihe Plugs Babel Version More Pl #Haddock GHCi
+DYNMODS=Dict Dummy Eval Karma Quote Seen State System Topic \
+	Type Plugs Babel Version More Pl Help
 
-EXCLUDES=ChessModule.hs SearchMailingList.hs SearchMLModule.hs \
-	 EvalModule/tests.hs FactModule.hs HaddockModule.hs \
-	 GenStaticModules.hs PlModule/Test.hs
+# Not currently used, but keep building them:
+DYNMODS+=Hello Cmafihe
+
+# Not used, not built:
+# Shell GHCi Chess SearchML Fact Haddock
+
+# The following will not be built:
+EXCLUDES=ChessModule.hs \
+	EvalModule/tests.hs \
+	FactModule.hs \
+	HaddockModule.hs \
+	GenStaticModules.hs \
+	PlModule/Test.hs
 
 EXCLUDESFIND=	$(addprefix ! -path ./,$(EXCLUDES))
 
@@ -36,21 +46,26 @@ HC_OPTS		+= $(PROF_OPTS)
 HC_OPTS 	+= -hisuf $(way_)hi -hcsuf $(way_)hc -osuf $(way_)o
 endif
 
+.PHONY: modules
+PLUGIN_OBJS= $(addsuffix Module.$(way_)o,$(DYNMODS))
+modules: $(PLUGIN_OBJS)
+
 #
 # Link the bot (we use --make to extract the static objs form the mess)
 #
-lambdabot: $(SOURCES) Main.$(way_)o
+# This may cause depend to be regenerated, leading to a redundant
+# relink. It would be nicer if we could move all plugins somewhere else
+#
+lambdabot: $(filter-out $(PLUGIN_OBJS), $(SOURCES))
 	$(GHC) $(LD_OPTS) -v0 --make Main.hs -o $@
 
 #
 # Dependency generation
 #
 depend: StaticModules.hs GHCLibraryPath.hs $(SOURCES)
-	@echo -n "Rebuilding dependencies ..."
+	@echo -n "Rebuilding dependencies ... "
 	@$(GHC) -cpp $(HC_OPTS) $(PKG_OPTS) $(HTOOLKIT) -M -optdep-f -optdepdepend $(SOURCES) || rm depend
 	@echo "done."
-
-modules: $(addsuffix Module.$(way_)o,$(DYNMODS))
 
 # 
 # Main rules, with support for 'way' management, from Yi.
@@ -78,11 +93,16 @@ modules: $(addsuffix Module.$(way_)o,$(DYNMODS))
 GHCLibraryPath.hs: GHCLibraryPath.hs.in
 	@sed -e"s,@GHC_LIB_PATH@,`$(GHC) --print-libdir`," < $< > $@
 
-genStaticModules: GenStaticModules.hs
-	$(GHC) -o $@ $<
+#genStaticModules: GenStaticModules.hs
+#	$(GHC) -o $@ $<
 
-StaticModules.hs: genStaticModules StaticModules.conf
-	@./genStaticModules
+#StaticModules.hs: genStaticModules StaticModules.conf
+#	@./genStaticModules
+
+StaticModules.hs: GenStaticModules.hs StaticModules.conf
+	@echo -n "Generating static modules list ... "
+	@echo main | ghci -v0 GenStaticModules.hs
+	@echo "done."
 
 clean:
 	rm -f lambdabot genStaticModules

@@ -30,6 +30,7 @@ ircCmafihe = liftIO . cmafihe
 
 instance Module CmafiheModule where
     moduleName _ = return "cmafihe"
+    moduleHelp _ _ = return "cmafihe: I don't know what this module does"
     moduleSticky _ = False
     commands _ = return ["cmafihe"]
 

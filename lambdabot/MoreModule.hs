@@ -16,6 +16,7 @@ moreModule = MoreModule ()
 instance Module MoreModule where
     moduleName   _ = return "more"
     moduleSticky _ = False
+    moduleHelp _ _ = return "@more - return more bot output"
     commands     _ = return ["more"]
     process      m msg target cmd rest
       = do 

@@ -40,6 +40,7 @@ plModule = PlModule
 instance Module PlModule where
     moduleName _   = return "pl"
     moduleSticky _ = False
+    moduleHelp _ _ = return "@pointless <expr> - play with pointfree code"
     commands _     = return $ ["pointless","pl-resume"]
     process _ _ target "pointless" rest = pf target rest
     process _ _ target "pl-resume" _ = res target

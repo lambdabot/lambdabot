@@ -19,6 +19,7 @@ topicModule = TopicModule ()
 instance Module TopicModule where
   moduleName   _ = return "topic"
   moduleSticky _ = False
+  moduleHelp _ _ = return "Various commands for adjusting the channel topic"
   commands     _ = return ["topic-tell",
                            "topic-cons", "topic-snoc",
                            "topic-tail", "topic-init"]

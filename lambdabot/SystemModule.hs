@@ -1,6 +1,7 @@
 module SystemModule where
 
 -- 	$Id: SystemModule.hs,v 1.4 2003/07/25 13:19:22 eleganesh Exp $	
+
 import IRC
 import Util
 import qualified Map as M
@@ -14,6 +15,7 @@ systemModule = SystemModule ()
 
 instance Module SystemModule where
     moduleName   _ = return "system"
+    moduleHelp _ _ = return "system: irc commands"
     moduleSticky _ = False
     commands     _ = return ["listchans","listmodules","listcommands","join","leave","part","msg","quit","reconnect","echo"]
     process      _ msg target cmd rest = doSystem msg target cmd rest

@@ -102,6 +102,9 @@ typeModule = TypeModule ()
 
 instance Module TypeModule where
      moduleName   _ = return "type"
+     moduleHelp _ "type" = return "@type: return the type of a value"
+     moduleHelp _ "kind" = return "@kind: return the kind of a type (GHC)"
+     moduleHelp _ _      = return "@type,@kind: interact with the typechecker"
      moduleSticky _ = False
      commands     _ = return ["type", "kind"]
      process _ _ src "type" expr = query_ghci src ":t" expr

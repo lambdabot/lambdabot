@@ -14,6 +14,7 @@ baseModule = BaseModule ()
 instance Module BaseModule where
     moduleName      _ = return "base"
     moduleSticky    _ = False
+    moduleHelp  _ _   = return "base module"
     commands        _ = return []
     process _ _ _ _ _ = return ()
     moduleInit _m 

@@ -13,6 +13,15 @@ dummyModule = DummyModule ()
 instance Module DummyModule where
   moduleName   _ = return "dummy"
   moduleSticky _ = False
+
+  moduleHelp _ s = return $ case s of
+        "dummy"       -> "dummy module"
+        "wiki"        -> "wiki urls"
+        "learn"       -> "another url"
+        "eurohaskell" -> "urls are good"
+        "moo"         -> "vegan-friendly command"
+        _             -> "dummy module"
+
   commands     _ = return ["dummy","wiki","learn","eurohaskell","moo"]
   process _ _ src "dummy" _    = ircPrivmsg src "dummy"
   process _ _ src "eurohaskell" _ = ircPrivmsg src "less talks, more code!\nhttp://www.haskell.org/hawiki/EuroHaskell\nEuroHaskell - Haskell Hackfest - Summer 2005 - Gothenburg, Sweden"

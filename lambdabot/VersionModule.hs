@@ -19,6 +19,7 @@ versionModule = VersionModule ()
 instance Module VersionModule where
     moduleName   _ = return "version"
     moduleSticky _ = False
+    moduleHelp _ _ = return "Report the build date, ghc version and darcs repo of this bot"
     commands     _ = return ["version"]
     process      _ _ target _ _ =
         ircPrivmsg target $ 

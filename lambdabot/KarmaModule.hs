@@ -20,6 +20,12 @@ karmaModule = KarmaModule ()
 
 instance Module KarmaModule where
     moduleName   _ = return "karma"
+
+    moduleHelp _ "karma"  = return "return a person's karma value"
+    moduleHelp _ "karma+" = return "increment someone's karma"
+    moduleHelp _ "karma-" = return "decrement someone's karma"
+    moduleHelp m _        = moduleHelp m "karma" 
+
     moduleSticky _ = False
     commands     _ = return ["karma", "karma+", "karma-"]
     moduleInit   _ = makeInitialState "karma" (emptyFM :: FiniteMap String Integer)

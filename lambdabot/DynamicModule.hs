@@ -44,6 +44,7 @@ initDLModules = DLModules { objects = M.empty, packages = empty }
 
 instance Module DynamicModule where
   moduleName   _ = return "dynamic"
+  moduleHelp _ _ = return "@dynamic-(un|re)?load: interface to dynamic linker"
   moduleSticky _ = True
   commands     _ = return ["dynamic-load","dynamic-unload","dynamic-reload"]
   moduleInit   _ = do liftIO $ initialise

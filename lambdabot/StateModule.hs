@@ -21,6 +21,7 @@ stateModule = StateModule ()
 instance Module StateModule where
     moduleName   _ = return "state"
     moduleSticky _ = False
+    moduleHelp _ _ = return "@state - we all know it's evil"
     commands     _ = return ["state"]
     moduleInit   _ =
 	do s <- get

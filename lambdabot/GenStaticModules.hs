@@ -1,4 +1,5 @@
 module Main where
+
 import Char
 
 main = do modules <- readFile "StaticModules.conf"

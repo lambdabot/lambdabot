@@ -21,6 +21,10 @@ quoteModule = QuoteModule ()
 
 instance Module QuoteModule where
     moduleName   _ = return "quote"
+    moduleHelp _ "fortune" = return "Provide a random fortune"
+    moduleHelp _ "yow"     = return "Yow!"
+    moduleHelp _ "arr"     = return "Talk to a pirate"
+    moduleHelp _ _         = return "The quote module provides a range of quotes"
     moduleSticky _ = False
     commands     _ = return ["fortune","yow","arr"]
     process      m msg target cmd rest

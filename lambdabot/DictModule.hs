@@ -19,6 +19,27 @@ theModule = MODULE dictModule
 dictModule :: DictModule
 dictModule = DictModule ()
 
+-- | This is the module handler.  Here we process commands from users.
+
+instance Module DictModule where
+    moduleName _   = return "dict"
+    moduleSticky _ = False
+    moduleHelp _ _ = return (getHelp [])
+    commands _     = return $ "dict" : "dict-help" : dictNames
+    process _ _ target "dict" _ = do
+        ircPrivmsg target quickHelp
+    process _ _ target "dict-help" rest = do
+        ircPrivmsg target (getHelp (words rest))
+    process _ _ target cmd rest = do
+        results <- mapM doLookup (parseTerms rest)
+        ircPrivmsg target (concat results)
+        where
+        doLookup w = liftIO $ do
+            result <- lookupFn w
+            return $ either ("ERROR: " ++) id result
+        lookupFn = uncurry Dict.simpleDictLookup . fst $
+                   fromJust (lookup cmd dictTable)
+
 -- | Configuration.
 
 dictTable :: [(String, ((Dict.QueryConfig, String), String))]
@@ -52,26 +73,6 @@ dictNames :: [String]
 dictNames = sort (map fst dictTable)
 
 
--- | This is the module handler.  Here we process commands from users.
-
-instance Module DictModule where
-    moduleName _   = return "dict"
-    moduleSticky _ = False
-    commands _     = return $ "dict" : "dict-help" : dictNames
-    process _ _ target "dict" _ = do
-        ircPrivmsg target quickHelp
-    process _ _ target "dict-help" rest = do
-        ircPrivmsg target (getHelp (words rest))
-    process _ _ target cmd rest = do
-        results <- mapM doLookup (parseTerms rest)
-        ircPrivmsg target (concat results)
-        where
-        doLookup w = liftIO $ do
-            result <- lookupFn w
-            return $ either ("ERROR: " ++) id result
-        lookupFn = uncurry Dict.simpleDictLookup . fst $
-                   fromJust (lookup cmd dictTable)
-
 -- | Print out help.
 
 quickHelp :: String
@@ -84,6 +85,7 @@ getHelp :: [String] -> String
 getHelp []    = "I perform dictionary lookups via the following "
               ++ show (length dictNames) ++ " commands:\n"
               ++ (getHelp dictNames)
+
 getHelp dicts = unlines . map gH $ dicts
     where
     gH dict = case lookup dict' dictTable of
