@@ -311,6 +311,10 @@ ircPrivmsg who msg
              mapM_ (ircPrivmsg' who) sendlines
           else return ()
 
+{-# INLINE ircPrivmsg #-}
+
+------------------------------------------------------------------------
+
 {- yes it's ugly, but... -}
 
 mlines			:: String -> [String]
@@ -319,6 +323,7 @@ mlines s		=  let (l, s') = mbreak (0::Int) (== '\n') s
 			   in  l : case s' of
 					[]  -> []
 					s'' -> mlines s''
+{-# INLINE mlines #-}
 
 mbreak :: (Num a, Ord a) => a -> (Char -> Bool) -> [Char] -> ([Char], [Char])
 mbreak _ _ xs@[] = (xs, xs)
@@ -327,6 +332,7 @@ mbreak n p xs@(x:xs')
     | n > 70 && not (isAlphaNum x) = ([x], dropWhile isSpace xs')
     | p x	=  ([],xs')
     | otherwise	=  let (ys,zs) = mbreak (n+1) p xs' in (x:ys,zs)
+{-# INLINE mbreak #-}
 
 {- yes it's ugly, but... -}
 
@@ -497,6 +503,7 @@ readerLoop threadmain chanr chanw h
                     -> writeChan chanw (mkIrcMessage "PONG" [rest])
                 _   -> writeChan chanr (decodeMessage line')
            readerLoop'
+{-# INLINE readerLoop #-}
 
 writerLoop :: ThreadId -> Chan IRCMessage -> Handle -> IO ()
 writerLoop threadmain chanw h
@@ -511,6 +518,7 @@ writerLoop threadmain chanw h
       = do msg <- readChan chanw
            hPutStr h (encodeMessage msg "\r")
            writerLoop'
+{-# INLINE writerLoop #-}
 
 encodeMessage :: IRCMessage -> String -> String
 encodeMessage msg

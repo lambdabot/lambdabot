@@ -44,13 +44,13 @@ extra_libraries = extraLibraries
 type PkgConf = Package
 
 data Package
- = Package { name               :: String
+ = Package { name               :: !String
            , auto               :: Bool
            , import_dirs        :: [String]
            , source_dirs        :: [String]
-           , library_dirs       :: [String]
-           , hs_libraries       :: [String]
-           , extra_libraries    :: [String]
+           , library_dirs       :: ![String]
+           , hs_libraries       :: ![String]
+           , extra_libraries    :: ![String]
            , include_dirs       :: [String]
            , c_includes         :: [String]
            , package_deps       :: [String]

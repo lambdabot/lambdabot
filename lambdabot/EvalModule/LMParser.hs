@@ -21,6 +21,7 @@ tp :: P.TokenParser st
 tp = P.makeTokenParser 
         (emptyDef { reservedNames = 
                 ["if","then","else","True","False","head","tail","null"] })
+{-# INLINE tp #-}
 
 -- integer :: CharParser st Integer
 -- integer         = P.integer tp
@@ -147,6 +148,7 @@ term x = x <|> literal <|> ifEx <|> listOp <|>
 
 expr :: GenParser Char () Term'
 expr = buildExpressionParser table (term application)
+{-# INLINE expr #-}
 
 expr' :: GenParser Char () Term'
 expr' = buildExpressionParser table (term var)
@@ -164,8 +166,12 @@ table = [[Infix (op "." (\f g -> Lam "#x#" $ up2 App f $ up2 App g (up $ Var "#x
          [Infix (op "||" Or) AssocRight],
          [Infix (op "$" App) AssocRight]]
 
+--
+-- This gets hammered
+--
 op :: (Up f trm) => String -> (trm -> trm -> f trm) -> Parser (trm -> trm -> trm)
 op s o = try $ do symbol s; return (up2 o)
+{-# INLINE op #-}
 
 abstraction :: GenParser Char () Term'
 abstraction = do symbol "\\"

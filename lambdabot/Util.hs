@@ -76,6 +76,7 @@ split glue xs = split' xs
 
 -- | Break off the first piece of a list held together by glue,
 --   leaving the glue attached to the remainder of the list.  Example:
+--   Like break, but works with a [a] match.
 --
 -- > breakOnGlue ", " "one, two, three" ===> ("one", ", two, three")
 
@@ -86,7 +87,9 @@ breakOnGlue :: (Eq a) => [a] -- ^ Glue that holds pieces together
 breakOnGlue _ [] = ([],[])
 breakOnGlue glue rest@(x:xs)
     | glue `isPrefixOf` rest = ([], rest)
-    | otherwise = (x:piece, rest') where (piece, rest') = breakOnGlue glue xs
+    | otherwise = (x:piece, rest') 
+        where (piece, rest') = breakOnGlue glue xs
+{-# INLINE breakOnGlue #-}
 
 -- | Reverse cons. Add an element to the back of a list. Example:
 --
