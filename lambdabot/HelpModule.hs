@@ -27,7 +27,7 @@ instance Module HelpModule where
                                                 -- this nonsense is to avoid evaluating moduleHelp too early
                 helpString <- liftLB $ catchError (return () >>= \() -> moduleHelp md arg) $ \e ->
                                             case e of
-                                                IRCRaised (NoMethodError s) -> return "no help"
+                                                IRCRaised (NoMethodError _) -> return "no help"
                                                 _                           -> throwError e
                 ircPrivmsg target helpString
       where (arg:_) = words rest
