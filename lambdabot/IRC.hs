@@ -622,6 +622,9 @@ class Module m where
 
 data MODULE = forall m. (Module m) => MODULE m
 
+--
+-- | register a module in the irc state
+--
 ircInstallModule :: Module m => m -> LB ()
 ircInstallModule modn
   = do  s <- get
