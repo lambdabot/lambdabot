@@ -1,11 +1,11 @@
-{-# OPTIONS -fglasgow-exts #-}
-
 module KarmaModule where
 
 import IRC
-import Data.FiniteMap
+import Map (Map)
+import qualified Map as Map hiding (Map)
+
+import Data.Maybe           (fromMaybe)
 import Control.Monad.Reader
--- import Util
 
 newtype KarmaModule = KarmaModule ()
 
@@ -15,8 +15,7 @@ theModule = MODULE karmaModule
 karmaModule :: KarmaModule
 karmaModule = KarmaModule ()
 
--- TODO: Port to Map
-type KarmaState = FiniteMap String Integer
+type KarmaState = Map String Integer
 type Karma = ModuleT KarmaState
 
 instance Module KarmaModule KarmaState where
@@ -29,7 +28,7 @@ instance Module KarmaModule KarmaState where
 
     moduleSticky _ = False
     commands     _ = return ["karma", "karma+", "karma-"]
-    moduleInit   _ = writeMS emptyFM
+    moduleInit   _ = writeMS Map.empty
     process      _ msg target cmd rest =
 	if (length $ words rest) == 0 then
 	   ircPrivmsg target "I can't find the karma of nobody."
@@ -49,20 +48,18 @@ getKarma target sender nick karmaFM =
        ircPrivmsg target $ "You have a karma of " ++ (show karma)
     else
        ircPrivmsg target $ nick ++ " has a karma of " ++ (show karma)
-    where karma = lookupWithDefaultFM karmaFM 0 nick
+    where karma = fromMaybe 0 (Map.lookup nick karmaFM)
 
 incKarma :: String -> String -> String -> KarmaState -> Karma IRC ()
-incKarma target sender nick karmaFM =
+incKarma target sender nick state =
     if sender == nick then
        ircPrivmsg target "You can't change your own karma, silly."
-    else
-       do writeMS $ addToFM_C (+) karmaFM nick 1
-	  ircPrivmsg target $ nick ++ "'s karma has been incremented."
+    else do writeMS $ Map.insertWith (+) nick 1 state
+            ircPrivmsg target $ nick ++ "'s karma has been incremented"
 
 decKarma :: String -> String -> String -> KarmaState -> Karma IRC ()
-decKarma target sender nick karmaFM =
+decKarma target sender nick state =
     if sender == nick then
        ircPrivmsg target "You can't change your own karma, silly."
-    else
-       do writeMS $ addToFM_C (+) karmaFM nick $ -1
-	  ircPrivmsg target $ nick ++ "'s karma has been decremented."
+    else do writeMS $ Map.insertWith (+) nick (-1) state
+            ircPrivmsg target $ nick ++ "'s karma has been decremented"
