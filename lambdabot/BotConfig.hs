@@ -40,6 +40,7 @@ getModuleFile "seen"  = return "SeenModule.o"
 getModuleFile "dummy" = return "DummyModule.o"
 getModuleFile "ghci"  = return "GhciModule.o"
 getModuleFile "more"  = return "MoreModule.o"
+getModuleFile "plugs" = return "PlugsModule.o"
 getModuleFile "haddock"  = return "HaddockModule.o"
 getModuleFile "cmafihe"  = return "CmafiheModule.o"
 getModuleFile _ = error "unknown module"
@@ -74,6 +75,8 @@ getFileRequires "EvalModule/LMEngine.o"
                                           Object "EvalModule/LambdaTerm.o"
                                          ]
 getFileRequires "GHCiModule.o"  = return [Object "Shell.o"]
+getFileRequires "PlugsModule.o" = return [Object "PlugsModule/RunPlugs.o"]
+
 getFileRequires _ = return []
 
 getStartupModules :: MonadIO m => m [String]

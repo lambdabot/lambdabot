@@ -3,7 +3,7 @@
 include config.mk
 
 DYNMODS=Dict Dummy Eval Hello Karma Quote Seen State \
-        System Topic Type Cmafihe #Haddock GHCi
+        System Topic Type Cmafihe Plugs #Haddock GHCi
 
 EXCLUDES=ChessModule.hs SearchMailingList.hs SearchMLModule.hs \
 	 EvalModule/tests.hs FactModule.hs HaddockModule.hs GenStaticModules.hs
