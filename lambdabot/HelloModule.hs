@@ -1,6 +1,6 @@
 -- 	$Id: HelloModule.hs,v 1.5 2003/07/29 13:03:02 eris Exp $
 
-module HelloModule where
+module HelloModule (theModule) where
 
 import IRC
 

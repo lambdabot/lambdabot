@@ -1,7 +1,7 @@
 
 -- 	$Id: QuoteModule.hs,v 1.1 2003/07/29 13:41:48 eleganesh Exp $
 
-module QuoteModule where
+module QuoteModule (theModule) where
 
 import QuoteModule.Fortune      (randFortune)
 import Util                     (stdGetRandItem)

@@ -1,4 +1,4 @@
-module KarmaModule where
+module KarmaModule (theModule) where
 
 import IRC
 import Map (Map)

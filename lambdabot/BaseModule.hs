@@ -1,4 +1,4 @@
-module BaseModule where
+module BaseModule (baseModule) where
 
 import BotConfig
 import IRC
@@ -116,6 +116,7 @@ doQUIT :: IRCMessage -> IRC ()
 doQUIT msg 
   = doIGNORE msg
 
+{-
 doRPL_YOURHOST :: IRCMessage -> IRC ()
 doRPL_YOURHOST _msg = return ()
 
@@ -124,10 +125,12 @@ doRPL_CREATED _msg = return ()
 
 doRPL_MYINFO :: IRCMessage -> IRC ()
 doRPL_MYINFO _msg = return ()
+-}
 
 doRPL_BOUNCE :: IRCMessage -> IRC ()
 doRPL_BOUNCE _msg = debugStrLn "BOUNCE!"
 
+{-
 doRPL_STATSCONN :: IRCMessage -> IRC ()
 doRPL_STATSCONN _msg = return ()
 
@@ -151,6 +154,7 @@ doRPL_LOCALUSERS _msg = return ()
 
 doRPL_GLOBALUSERS :: IRCMessage -> IRC ()
 doRPL_GLOBALUSERS _msg = return ()
+-}
 
 doRPL_TOPIC :: IRCMessage -> IRC ()
 doRPL_TOPIC msg -- nearly the same as doTOPIC but has our nick on the front of msgParams
@@ -158,6 +162,7 @@ doRPL_TOPIC msg -- nearly the same as doTOPIC but has our nick on the front of m
          s <- get
          put (s { ircChannels = M.insert (mkCN loc) (tail $ last $ msgParams msg) (ircChannels s) })
 
+{-
 doRPL_NAMREPLY :: IRCMessage -> IRC ()
 doRPL_NAMREPLY _msg = return ()
 
@@ -172,6 +177,7 @@ doRPL_MOTDSTART _msg = return ()
 
 doRPL_ENDOFMOTD :: IRCMessage -> IRC ()
 doRPL_ENDOFMOTD _msg = return ()
+-}
 
 doPRIVMSG :: IRCMessage -> IRC ()
 doPRIVMSG msg = do myname <- getMyname

@@ -11,7 +11,7 @@
 -- assumes a postgresql database with a table named fact and fields named fact and value
 --
 
-module FactModule where
+module FactModule (theModule) where
 
 import IRC
 import Util

@@ -6,7 +6,7 @@
 --                                         .pesco hamburg 2003-04-05.    |
 --                                                                      /_\
 
-module TypeModule where
+module TypeModule (theModule) where
 
 import PosixCompat (popen)
 import Text.Regex
@@ -45,10 +45,12 @@ signature_regex
 
 --     through IRC.
 
+{-
 result_regex :: Regex
 result_regex
     = mkRegexWithOpts
       "^\\*?[A-Z][_a-zA-Z0-9]*(\\*?[A-Z][_a-zA-Z0-9]*)*> (.*)" True True
+-}
 
 exptab :: String -> String
 exptab []        = []
@@ -65,9 +67,11 @@ extract_signatures output
         = map exptab $ map last.mapMaybe (matchRegex signature_regex) $
                  (reverse $ tail $ reverse $ drop 7 $ lines output)
 
+{-
 extract_result :: String -> [String]
 extract_result output
         = head (map last.mapMaybe (matchRegex result_regex) $ (lines output)) : []
+-}
 
 --
 --     With this the command handler can be easily defined using popen:
@@ -81,6 +85,7 @@ query_ghci src cmd expr =
                 let ls = extract_signatures output
                 in if null ls then ["bzzt"] else ls
 
+{-
 --
 --     With this the command handler can be easily defined using popen:
 --
@@ -89,6 +94,7 @@ run_ghci src expr =
        do
        (output, _, _) <- liftIO $ popen "ghci" [] (Just expr)
        mapM_ (ircPrivmsg src) (extract_result output)
+-}
 
 --
 --     And thus the plugin:

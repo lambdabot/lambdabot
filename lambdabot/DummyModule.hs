@@ -1,5 +1,5 @@
 
-module DummyModule (DummyModule, dummyModule, theModule) where
+module DummyModule (theModule) where
 
 import IRC
 import Data.List

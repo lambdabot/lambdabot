@@ -1,7 +1,7 @@
 
 --     $Id: TopicModule.hs,v 1.8 2003/07/29 13:03:02 eris Exp $
 
-module TopicModule (TopicModule, topicModule, theModule) where
+module TopicModule (theModule) where
 
 import IRC
 import qualified Map as M

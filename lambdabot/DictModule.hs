@@ -3,9 +3,8 @@
 -- Tom Moertel <tom@moertel.com>
 -- $Id: DictModule.hs,v 1.2 2003/07/31 19:13:15 eleganesh Exp $
 
-module DictModule 
-    ( DictModule, dictModule, theModule )
-where
+module DictModule (theModule) where
+
 import qualified DictModule.DictLookup as Dict
 import IRC
 import Control.Monad.Trans (liftIO)

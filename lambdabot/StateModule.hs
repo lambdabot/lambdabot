@@ -1,7 +1,7 @@
 
 -- 	$Id: StateModule.hs,v 1.8 2003/07/29 13:03:02 eris Exp $
 
-module StateModule where
+module StateModule (theModule) where
 
 import IRC
 

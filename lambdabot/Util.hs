@@ -24,7 +24,6 @@ import qualified Map as M       (lookup, insert, delete)
 import Data.List                (intersperse, isPrefixOf)
 import Data.Set                 (elementOf, addToSet, delFromSet, Set)
 import Data.Char                (isSpace, toLower)
-import Data.Typeable
 import Control.Monad.State      (MonadIO(..))
 
 import System.Random hiding (split)
@@ -32,19 +31,6 @@ import System.Random hiding (split)
 ------------------------------------------------------------------------
 
 -- TODO: rename join, clashes with Monad.join
-
-finiteMapTyCon :: TyCon
-finiteMapTyCon = mkTyCon "Map"
-
-instance (Typeable key, Typeable elt) => Typeable (Map key elt) where
-    typeOf _ = mkMyTy finiteMapTyCon [typeOf (undefined :: key),
-			    	      typeOf (undefined :: elt)]
-        where
-#if __GLASGOW_HASKELL__ >= 603
-         mkMyTy = mkTyConApp
-#else
-         mkMyTy = mkAppTy
-#endif
 
 -- | Join lists with the given glue elements. Example:
 --

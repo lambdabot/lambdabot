@@ -1,4 +1,4 @@
-module HelpModule where
+module HelpModule (theModule) where
 
 import IRC
 import Control.Exception

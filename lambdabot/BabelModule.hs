@@ -14,11 +14,7 @@
 -- @last or @babel en de 10 to index sections of the history for profit
 --
 
-module BabelModule ( 
-        BabelModule, 
-        babelModule, 
-        theModule 
-   ) where
+module BabelModule (theModule) where
 
 import BabelBot.BabelFish
 

@@ -1,8 +1,4 @@
-module SeenModule (
-        SeenModule,
-        seenModule,
-        theModule,
-   ) where
+module SeenModule (theModule) where
 
 import IRC
 import Util

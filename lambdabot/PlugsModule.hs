@@ -10,7 +10,7 @@
 -- in $hsplugins/examples/hmake/one-shot
 --
 
-module PlugsModule where
+module PlugsModule (theModule) where
 
 import IRC      hiding ( clean )
 import PosixCompat

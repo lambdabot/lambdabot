@@ -2,7 +2,7 @@
 -- Copyright (c) 2005 Don Stewart - http://www.cse.unsw.edu.au/~dons
 --
 
-module VersionModule where
+module VersionModule (theModule) where
 
 import IRC
 

@@ -1,6 +1,6 @@
 -- 	$Id: EvalModule.hs,v 1.1 2003/07/29 13:41:48 eleganesh Exp $
 
-module EvalModule (evalModule,theModule) where
+module EvalModule (theModule) where
 
 import EvalModule.LMEngine (evaluate, define, resume, Environment)
 
