@@ -11,7 +11,11 @@ $Id .. $ tags should be placed right before the module keyword like this:
 {{{
 --      $Id: QuoteModule.hs,v 1.1 2003/07/29 13:41:48 eleganesh Exp $
 
-module QuoteModule where
+module QuoteModule (
+        Type(..),
+        value1,
+        value2,
+    )
 }}}
 
 *** Order of imports
