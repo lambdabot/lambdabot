@@ -3,13 +3,16 @@
 
 module EvalModule.LambdaTerm where
 
+import EvalModule.LangPack
+
+import Map (Map)
+import qualified Map as Map hiding (Map)
+
 import Control.Monad.Error
 import Control.Monad.State
 import Control.Monad.Reader
 import Control.Monad.Cont
-import Data.FiniteMap
 
-import EvalModule.LangPack
 import Data.Dynamic
 
 type Fun m = (m Dynamic -> m Dynamic)
@@ -19,7 +22,7 @@ data LambdaTerm term
    | App term term
    | Var !String
 
-type IState m = (Int,FiniteMap Int (m Dynamic),Int) -- record instead of tuple would be more robust
+type IState m = (Int,Map Int (m Dynamic),Int) -- record instead of tuple would be more robust
 type Ref = Int
 
 prjF :: (Typeable (m Dynamic), MonadError String m) => m Dynamic -> m (Fun m)
@@ -30,7 +33,7 @@ phiLambda :: (MonadError String m,
               Typeable (m Dynamic),
               Pause m (Either Dynamic b),
               Typeable b,
-              MonadReader (FiniteMap String (m Dynamic)) m) =>
+              MonadReader (Map String (m Dynamic)) m) =>
               LambdaTerm (m Dynamic) -> m Dynamic
 phiLambda (Var v) = do step; lookupEnv v
 {-
@@ -47,7 +50,7 @@ phiLambda (Lam v b) = do env <- ask
 -}
 phiLambda (Lam v b) = do env <- ask
                          return $ inj (\v' -> do rr <- thunkify v'
-                                                 inEnv (addToFM env v rr) b)
+                                                 inEnv (Map.insert v rr env) b)
 phiLambda (App f x) = do f' <- prjF f; env <- ask; f' (inEnv env x)
 
 thunkify :: (MonadState (IState m) m) => m Dynamic -> m (m Dynamic)
@@ -59,15 +62,15 @@ thunkify c = do
     writeRef loc thunk
     return (readRef loc)
 
-lookupEnv :: (MonadReader (FiniteMap String (m Dynamic)) m,
+lookupEnv :: (MonadReader (Map String (m Dynamic)) m,
               Typeable (m Dynamic),
               MonadError String m) => String -> m Dynamic
 lookupEnv k = do env <- ask
-                 let v = lookupFM env k
+                 let v = Map.lookup k env 
                  maybe (throwError ("unbound variable: "++k)) id v
 
-inEnv :: (MonadReader (FiniteMap String (m Dynamic)) m) =>
-      FiniteMap String (m Dynamic) -> m Dynamic -> m Dynamic
+inEnv :: (MonadReader (Map String (m Dynamic)) m) =>
+      Map String (m Dynamic) -> m Dynamic -> m Dynamic
 inEnv env b = local (const env) b
 
 step :: (MonadState (IState m) m, MonadError String m,
@@ -80,15 +83,15 @@ step = do (c,hp,fuel) <- get
 
 newRef :: (MonadState (IState m) m) => m Dynamic -> m Ref
 newRef v = do (c,hp,fuel) <- get
-              put (c+1,addToFM hp c v,fuel)
+              put (c+1,Map.insert c v hp,fuel)
               return c
 
 readRef :: (MonadState (IState m) m) => Ref -> m Dynamic
-readRef loc = do (_,hp,_) <- get; let {Just x = lookupFM hp loc}; x
+readRef loc = do (_,hp,_) <- get; let {Just x = Map.lookup loc hp}; x
 
 writeRef :: (MonadState (IState m) m) => Ref -> m Dynamic -> m ()
 writeRef loc v = do (c,hp,fuel) <- get
-                    put (c,addToFM hp loc v,fuel)
+                    put (c,Map.insert loc v hp,fuel)
 
 instance Functor LambdaTerm where
     fmap _ (Var v) = Var v

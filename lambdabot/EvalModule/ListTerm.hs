@@ -1,15 +1,13 @@
-{-# OPTIONS -fglasgow-exts #-}
--- Non-type variables in constraints
 
 module EvalModule.ListTerm where
 
+import EvalModule.LangPack
+import EvalModule.LambdaTerm
+import Map (Map)
+
+import Data.Dynamic
 import Control.Monad.Error
 import Control.Monad.Reader
-import EvalModule.LangPack
-import Data.Dynamic
-import Data.FiniteMap
-
-import EvalModule.LambdaTerm
 
 data ListTerm term
    = Nil
@@ -31,7 +29,7 @@ prjC :: (MonadError String m) => m Dynamic -> m Char
 prjC = prj'
 
 phiList :: (MonadError String m,
-            MonadReader (FiniteMap String (m Dynamic)) m,
+            MonadReader (Map String (m Dynamic)) m,
             Typeable (m Dynamic)) => ListTerm (m Dynamic) -> m Dynamic
 phiList Nil = return $ inj ()
 phiList (Character c) = return $ inj c

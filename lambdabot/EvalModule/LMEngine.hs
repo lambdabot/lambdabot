@@ -1,4 +1,4 @@
-{-# OPTIONS -cpp -fglasgow-exts #-}
+{-# OPTIONS -cpp #-}
 {-# OPTIONS -fallow-overlapping-instances #-}
 -- ^ until we fix it properly 
 
@@ -9,27 +9,31 @@ module EvalModule.LMEngine (
      resume
   ) where
 
-import Data.FiniteMap
-import Control.Monad.State
-import Control.Monad.Reader
-import Control.Monad.Error
-import Control.Monad.Cont
-import Control.Monad.Identity
-import Text.ParserCombinators.Parsec.Error (ParseError)
+import Map (Map)
+import qualified Map as Map hiding (Map)
 
 import EvalModule.LangPack
 import EvalModule.ArithTerm
 import EvalModule.LambdaTerm
 import EvalModule.RelTerm
 import EvalModule.ListTerm
-import Data.Dynamic
-
 import EvalModule.LMParser
 
--- temporarily
-import Maybe
+import Data.Maybe           (fromJust)
+import Data.Dynamic
+import Control.Monad.State
+import Control.Monad.Reader
+import Control.Monad.Error
+import Control.Monad.Cont
+import Control.Monad.Identity
 
+import Text.ParserCombinators.Parsec.Error (ParseError)
+
+-- temporarily
+-- import Maybe
 -- import Debug.Trace
+
+------------------------------------------------------------------------
 
 -- TODO: replace showTerm
 
@@ -39,7 +43,7 @@ evaluate s env fuel = eval env fuel $ parseTerm s
 define :: String -> Either String (EvalMonad Value)
 define = either (Left . show) (Right . fold phi) . parseTerm
 
-type Environment = FiniteMap String (EvalMonad Value)
+type Environment = Map String (EvalMonad Value)
 type Value = Dynamic
 type Result = Either Dynamic (Either String String)
 
@@ -57,16 +61,16 @@ phi (ListT x) = phiList x
 run :: EvalMonad Value -> Environment -> Int -> Result
 run m env fuel = flip runCont Right $
                  runErrorT $
-                 runReaderT (evalStateT (runEM (m >>= showDyn)) (0,emptyFM,fuel)) env
+                 runReaderT (evalStateT (runEM (m >>= showDyn)) (0,Map.empty,fuel)) env
 
 eval :: Environment -> Int -> Either ParseError (Fix Term) -> Either Dynamic String
 eval env fuel = either (Right . show) doit
     where doit x = -- trace (x `seq` showTerm x) $
                     res_or_str $ run (do env' <- startup
-                                         local (const $ listToFM env')
+                                         local (const $ Map.fromList env')
                                                (fold phi x))
-                                     emptyFM fuel
-          startup = foldFM mkThunk (return []) env
+                                     Map.empty fuel
+          startup = Map.foldWithKey mkThunk (return []) env
           mkThunk k c cs = do env' <- cs
                               rr <- thunkify c
                               return ((k,rr):env')
