@@ -97,13 +97,15 @@ getFileRequires "PlModule.o"    = return [Object "PlModule/Transform.o"
                                          ,Object "PlModule/Rules.o"
                                          ,Package "parsec"
                                          ]
+getFileRequires "HelpModule.o"  = return [Object "Map.o"]
 
 getFileRequires _ = return []
 
 getStartupModules :: MonadIO m => m [String]
 getStartupModules = return [
         "dummy", "state","topic","karma","type","seen",
-        "dict","quote","eval", "pl","plugs","babel","version"
+        "dict","quote","eval", "pl","plugs","babel","version",
+        "more","help"
         ] --,"fact","haddock"]
 
 -- for the MoreModule, how many lines to show at a time

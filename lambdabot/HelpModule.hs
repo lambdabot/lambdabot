@@ -24,6 +24,7 @@ instance Module HelpModule where
         case mmod of
             Nothing -> process m msg target cmd "help"
             Just (MODULE md) -> do
+                                                -- this nonsense is to avoid evaluating moduleHelp too early
                 helpString <- liftLB $ catchError (return () >>= \() -> moduleHelp md arg) $ \e ->
                                             case e of
                                                 IRCRaised (NoMethodError s) -> return "no help"
