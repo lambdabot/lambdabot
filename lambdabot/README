@@ -1,0 +1,16 @@
+INSTALL:
+
+Unpack the archive into a directory, put your own settings into BotConfig.hs
+then run:
+
+make
+
+KNOWN BUGS:
+* @topic often returns nothing, no idea why
+
+bug reports, patches, new modules etc, contact:
+Shae Erisson <shae@ScannedInAvian.com> 
+aka shapr on the #haskell on irc.freenode.net 
+
+check out our darcs repo at:
+http://www.ScannedInAvian.org/repos/hlibs/

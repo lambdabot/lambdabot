@@ -1,0 +1,4 @@
+module GHCLibraryPath (ghcLibraryPath) where
+
+ghcLibraryPath = "@GHC_LIB_PATH@/"
+

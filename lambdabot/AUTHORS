@@ -1,0 +1,27 @@
+Andrew J. Bromage <ajb@spamcop.net> aka Pseudonym on #haskell
+* the 'bot itself
+
+Shae M. Erisson <shae@ScannedInAvian.com> aka shapr on #haskell
+* FactModule
+* FortuneModule
+* StateModule
+* SystemModule
+
+Taylor Campbell <riastradh@users.sourceforge.net> aka Riastradh on #haskell
+* KarmaModule
+
+Derek Elkins <ddarius@users.sourceforge.net> aka Darius on #haskell
+* EvalModule
+
+Sven M. Hallberg <pesco@haquebright.de> aka pesco on #haskell
+* TopicModule
+
+Tom Moertel <tom@moertel.com> aka tmoertel on #haskell
+* DictModule
+
+Mats-Ola Persson <polli@users.sourceforge.net> aka polli on #haskell
+* rewrite of the plugin system
+
+Ganesh Sittampalam <ganesh@earth.li> aka Heffalump on #haskell
+* Various restructuring to improve bot robustness
+* Dynamic module loading
