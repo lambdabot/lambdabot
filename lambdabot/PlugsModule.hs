@@ -1,3 +1,5 @@
+{-# OPTIONS -fglasgow-exts #-}
+-- ^ For pattern guards
 --
 -- Copyright (c) 2004 Donald Bruce Stewart - http://www.cse.unsw.edu.au/~dons
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
@@ -16,7 +18,9 @@ module PlugsModule where
 
 import IRC      hiding ( clean ) 
 import PosixCompat
+
 import Control.Monad.Trans      ( liftIO )
+import Text.Regex
 
 newtype PlugsModule = PlugsModule ()
 
@@ -39,25 +43,60 @@ binary :: String
 binary = "runplugs"
 
 --
--- return stdout. ignore stderr. this might not be desirable
+-- Limit output to 2000 chars.
 --
 plugs :: String -> IO String
-plugs src =
-        do (o,p,_) <- popen binary [] (Just src)
-           let o' = clean o
-           return $ if null o' 
-                        then let p' = clean p 
-                             in if null p' then "bzzt\n"
-                                           else case p' of
-                                             'w':'a':'i':'t':'F':'o':'r':'P':'r':'o':'c':_ -> "Terminated\n"
-                                             _ -> p'
-                        else o'
+plugs src = do 
+    (out,err,_) <- popen binary [] (Just src)
+    let o = clean . take 2048 $ out
+        e = clean . take 2048 $ err
+    return $ case () of {_
+        | null o && null e -> "Terminated\n"
+        | null o           -> e
+        | otherwise        -> o
+    }
 
 --
--- didn't compile. could return a useful message.
+-- Clean up runplugs' output
 --
 clean :: String -> String
-clean s = case s of 
-        ('\n':'<':'P':'l':'u':'g':'i':'n':'s':_) -> []
-        _ -> s
+clean s | Just (pre,_,post,_) <- matchRegexAll filename s = pre ++ clean post
+        | Just _              <- matchRegex terminated  s = "Terminated\n"
+        | Just _              <- matchRegex stack_o_f   s = "Stack overflow\n"
+        | otherwise           = s
+    where
+        -- s/<[^>]*>:[^:]: //
+        filename   = mkRegex "\n<[^>]*>:[^:]*:\n? *"
+        terminated = mkRegex "waitForProc"
+        stack_o_f  = mkRegex "Stack space overflow"
 
+------------------------------------------------------------------------
+--
+-- Plugs tests:
+--  * too long, should be terminated.
+--      @plugs last [ 1 .. 100000000 ]
+--      @plugs last [ 1 .. ]
+--      @plugs product [1..]
+--      @plugs let loop () = loop () in loop () :: ()
+--      @plugs Data.Array.listArray (minBound::Int,maxBound) (repeat 0)
+--
+--  * stack oflow
+--      @plugs scanr (*) 1 [1..]
+--
+--  * type errors, or module scope errors
+--      @plugs unsafePerformIO (return 42)
+--      @plugs GHC.Exts.I# 1#
+--
+--  * syntax errors
+--      @plugs map foo bar
+--      @plugs $( [| 1 |] )
+--
+--  * success
+--      @plugs head [ 1 .. ]
+--      @plugs [1..]
+--      @plugs last $ sort [1..100000 ]
+--      @plugs let fibs = 1:1:zipWith (+) fibs (tail fibs) in take 20 fibs
+--      @plugs sort [1..10000]
+--      
+-- More at http://www.scannedinavian.org/~shae/joyXlogs.txt
+--
