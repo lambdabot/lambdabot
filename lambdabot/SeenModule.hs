@@ -1,10 +1,10 @@
 {-# OPTIONS -cpp -fglasgow-exts #-}
 
-module SeenModule 
-    (seenModule,
-     theModule,
-     SeenModule) 
-where
+module SeenModule (
+        seenModule,
+        theModule,
+        SeenModule
+    ) where
 
 import IRC
 import Util
@@ -30,11 +30,12 @@ seenModule = SeenModule ()
 type Channel = String
 type Nick = String
 
-data UserStatus = Present [Channel]            -- the user is in [Channel]
-                | NotPresent ClockTime Channel -- the user was last seen in Channel
-                | WasPresent ClockTime Channel -- if the bot parted Channel where a user was
-                | NewNick Nick                 -- the user has a new nick
-                deriving Show
+data UserStatus 
+        = Present (Maybe ClockTime) [Channel] -- last spoke, the user is in [Channel]
+        | NotPresent ClockTime Channel -- the user was last seen in Channel
+        | WasPresent ClockTime Channel -- if the bot parted Channel where a user was
+        | NewNick Nick                 -- the user has a new nick
+    deriving Show
 
 ctCon :: TyCon
 ctCon = mkTyCon "ClockTime"
@@ -72,6 +73,7 @@ instance Module SeenModule where
            ircSignalConnect "QUIT" $ quitCB
            ircSignalConnect "NICK" $ nickCB
            ircSignalConnect "353" $ joinChanCB
+           ircSignalConnect "PRIVMSG" $ msgCB
 
     process m msg target cmd rest 
       = do seenRef <- gets (\s -> M.lookup "seen" (ircModuleState s))
@@ -86,9 +88,19 @@ instance Module SeenModule where
                       if lcnick == map toLower myname 
                          then ircPrivmsg target "Yes, I'm here"
                          else case lookupFM seenFM lcnick of 
-                               Just (Present cs) ->
-                                   ircPrivmsg target $ nick ++ " is in " ++ 
-                                                  (listToStr cs) ++ "."
+                               Just (Present mct cs) -> do {
+          ;now <- time
+          ;ircPrivmsg target $ nick ++ " is in " ++ 
+                  (listToStr cs) ++ "." ++ 
+                  (case mct of
+                     Nothing -> " I don't know when " ++ nick ++ " last spoke."
+                     Just ct ->
+                          " Last spoke " ++ 
+                          (let when' = toPretty $ diffClockTimes now ct
+                           in if null when' then "just now." else when' ++ "ago."
+                           ) ) 
+        }
+
                                Just (NotPresent ct chan) ->
                                    do now <- time
                                       ircPrivmsg target $ 
@@ -131,10 +143,10 @@ joinCB :: IRCMessage -> IRC () -- when somebody joins
 joinCB msg 
   = do myname <- getMyname
        when (nick /= myname) $
-        withSeenFM $ \fm ref ->
-        let newInfo = Present (ircchannel msg)
-            fm' = addToFM_C updateJ fm (map toLower nick) newInfo
-            in (setSeenFM ref fm')
+        withSeenFM $ \fm ref -> do
+            let newInfo = Present Nothing (ircchannel msg)
+                fm' = addToFM_C updateJ fm (map toLower nick) newInfo
+            setSeenFM ref fm'
     where nick = ircnick msg
 
 partCB :: IRCMessage -> IRC () -- when somebody parts
@@ -145,24 +157,24 @@ partCB msg
           do l <- mapM (botPart $ ircchannel msg) (fmToList fm)
 	     setSeenFM ref (listToFM l)
         else case (lookupFM fm lcnick) of
-                Just (Present xs) -> 
+                Just (Present mct xs) -> 
 	         do case xs \\ (ircchannel msg) of 
 		        [] -> do ct <- time 
 			         let fm' = addToFM_C (\_ x -> x) fm lcnick 
 					     (NotPresent ct (listToStr xs))
 			         setSeenFM ref fm' 
 			ys -> setSeenFM ref $ addToFM_C (\_ x -> x) fm lcnick 
-						(Present ys)  
+						(Present mct ys)  
                 _ -> debugStrLn "SeenModule> someone who isn't known parted"
     where nick = unUserMode (ircnick msg)
           lcnick = map toLower nick
           botPart cs (nick', us) 
             = case us of
-		  Present xs -> 
+		  Present mct xs -> 
 		      case xs \\ cs of
 			  [] -> do ct <- time
 				   return (nick', WasPresent ct (listToStr cs))
-			  ys -> return (nick', Present ys)
+			  ys -> return (nick', Present mct ys)
 		  _other -> return (nick', us)
 
 quitCB :: IRCMessage -> IRC () -- when somebody quits
@@ -172,7 +184,7 @@ quitCB msg
        let nick = unUserMode (ircnick msg)
            lcnick = map toLower nick
        case (lookupFM fm lcnick) of
-           Just (Present xs) -> 
+           Just (Present _ct xs) -> 
                let fm' = addToFM_C (\_ x -> x) fm lcnick 
                                (NotPresent ct (head xs))
                    in setSeenFM ref fm'
@@ -182,9 +194,9 @@ nickCB :: IRCMessage -> IRC () -- when somebody changes his/her name
 nickCB msg 
   = withSeenFM $ \fm ref ->
     case (lookupFM fm lcnick) of
-        Just (Present xs) -> 
+        Just (Present mct xs) -> 
             let fm' = addToFM_C (\_ x -> x) fm lcnick (NewNick newnick)
-                fm'' = addToFM fm' lcnewnick (Present xs)
+                fm'' = addToFM fm' lcnewnick (Present mct xs)
                 in setSeenFM ref fm''
         _ -> debugStrLn "SeenModule> someone who isn't here changed nick"
     where newnick = drop 1 $ head (msgParams msg)
@@ -194,14 +206,26 @@ nickCB msg
 
 joinChanCB :: IRCMessage -> IRC () -- when the bot join a channel
 joinChanCB msg
-  = withSeenFM $ \fm ref ->
+  = withSeenFM $ \fm ref -> do
     let l = msgParams msg
         chan = l !! 2
         chanUsers = words (drop 1 (l !! 3)) -- remove ':'
-        fooFunc m u = addToFM_C updateJ m 
-                              (map toLower $ unUserMode u) (Present [chan])
+        fooFunc fm' u = addToFM_C updateJ fm'
+                              (map toLower $ unUserMode u) (Present Nothing [chan])
         seenFM' = foldl fooFunc fm chanUsers
-        in setSeenFM ref seenFM'
+    setSeenFM ref seenFM'
+
+-- when somebody speaks, update their clocktime
+msgCB :: IRCMessage -> IRC ()
+msgCB msg
+    = withSeenFM $ \fm ref ->
+        case lookupFM fm nick of
+            Just (Present _ct xs) -> do
+                ct <- time
+                let fm' = addToFM fm nick (Present (Just ct) xs)
+                setSeenFM ref fm'
+            _ -> debugStrLn "SeenModule> someone who isn't here msg us"
+    where nick = ircnick msg
 
 -- misc. functions
 unUserMode :: Nick -> Nick
@@ -227,8 +251,8 @@ setSeenFM :: IORef ModuleState -> FiniteMap Nick UserStatus -> IRC ()
 setSeenFM ref fm = liftIO $ writeIORef ref $ ModuleState fm
 
 updateJ :: UserStatus -> UserStatus -> UserStatus
-updateJ (Present cs) (Present c) = Present $ nub (c ++ cs)              
-updateJ _x y@(Present _cs) = y
+updateJ (Present _ct cs) (Present ct c) = Present ct $ nub (c ++ cs)              
+updateJ _x y@(Present _ct _cs) = y
 updateJ x _ = x
 
 time :: IRC ClockTime
