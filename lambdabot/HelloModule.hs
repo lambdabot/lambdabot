@@ -15,7 +15,6 @@ helloModule = HelloModule ()
 instance Module HelloModule where
     moduleName   _ = return "hello"
     moduleHelp   _ _ = return "hello world plugin"
-    moduleSticky _ = False
     commands     _ = return ["hello","goodbye"]
     process      _ _ target _ rest = ircPrivmsg target ("Hello world. " ++ rest)
 

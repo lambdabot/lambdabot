@@ -53,7 +53,6 @@ instance Module EvalModule EvalState where
     moduleHelp   _ "set-fuel" = return "@set-fuel ticks - how many ticks before @eval runs out of fuel"
     moduleHelp   _ "resume" = return "@resume - continue an expression that has run out of fuel"
     moduleHelp   _ cmd = return $ "EvalModule: don't know command "++cmd
-    moduleSticky _ = False
     commands     _ = return ["eval","define","get-definition","definitions",
                              "del-definition","dump","set-fuel","resume"]
     moduleInit   _ = do

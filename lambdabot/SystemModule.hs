@@ -18,7 +18,6 @@ systemModule = SystemModule ()
 instance Module SystemModule () where
     moduleName   _ = return "system"
     moduleHelp _ _ = return "system: irc commands"
-    moduleSticky _ = False
     commands     _ = return ["listchans", "listmodules", "listcommands",
 			     "join", "leave", "part", "msg", "quit",
 			     "reconnect", "echo"]

@@ -32,7 +32,6 @@ ircCmafihe = liftIO . cmafihe
 instance Module CmafiheModule where
     moduleName _ = return "cmafihe"
     moduleHelp _ _ = return "cmafihe: translate from lojban into english"
-    moduleSticky _ = False
     commands _ = return ["cmafihe"]
 
     process _ _ target _ []   = ircPrivmsg target "Nothing is universal."

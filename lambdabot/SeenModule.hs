@@ -61,7 +61,6 @@ type Seen = ModuleT SeenState
 
 instance Module SeenModule SeenState where
     moduleName _        = return "seen"
-    moduleSticky _      = False
     moduleHelp _ _ = return "Report if a user has been seen by the bot"
     commands _          = return ["seen"]
     moduleInit _

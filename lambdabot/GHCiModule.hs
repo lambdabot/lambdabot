@@ -35,7 +35,6 @@ myStripMS x = (stripMS x) :: (ThreadId, Chan String, Chan String)
 
 instance Module GHCiModule where
     moduleName _ = return "ghci"
-    moduleSticky _ = False
     commands _ = return ["ghci"]
     moduleInit _ = do inChan <- liftIO $ newChan
 		      outChan <- liftIO $ newChan

@@ -25,7 +25,6 @@ dictModule = DictModule ()
 
 instance Module DictModule () where
     moduleName _   = return "dict"
-    moduleSticky _ = False
     moduleHelp _ _ = return (getHelp [])
     commands _     = return $ "dict" : "dict-help" : dictNames
     process _ _ target "dict" _ = do

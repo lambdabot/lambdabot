@@ -22,7 +22,6 @@ initialChessState = ChessState emptyFM
 
 instance Module ChessModule where
     moduleName   m = return "chess"
-    moduleSticky m = False
     commands     m = return ["ply", "reset-chess","validmoves","board","flip-board"]
     moduleInit   m =
         do s <- get

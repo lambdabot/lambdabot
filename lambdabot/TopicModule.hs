@@ -22,7 +22,6 @@ type Topic = ModuleT TopicState
 
 instance Module TopicModule TopicState where
   moduleName   _ = return "topic"
-  moduleSticky _ = False
   moduleHelp _ _ = return "Various commands for adjusting the channel topic"
   commands     _ = return ["topic-tell",
                            "topic-cons", "topic-snoc",

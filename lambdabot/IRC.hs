@@ -682,8 +682,10 @@ class Module m s | m -> s where
     moduleExit      :: m -> ModuleT s LB ()
     -- msg target cmd rest
     process         :: m -> IRCMessage -> String -> String -> String -> ModuleT s IRC () 
-    moduleExit _  = return ()
-    moduleInit _  = return ()
+
+    moduleExit _   = return ()
+    moduleInit _   = return ()
+    moduleSticky _ = False
 
 data MODULE = forall m s. (Module m s) => MODULE m
 

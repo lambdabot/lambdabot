@@ -14,7 +14,6 @@ dummyModule = DummyModule ()
 
 instance Module DummyModule () where
   moduleName   _ = return "dummy"
-  moduleSticky _ = False
 
   moduleHelp _ s = return $ case s of
         "dummy"       -> "print a string constant"

@@ -29,7 +29,6 @@ plugsModule = PlugsModule ()
 instance Module PlugsModule () where
         moduleName   _ = return "plugs"
         moduleHelp _ _ = return "@plugs <expr>\nYou have Haskell, 3 seconds and no IO. Go nuts!"
-        moduleSticky _ = False
         commands     _ = return ["plugs"]
         process _ _ src "plugs" s = do o <- liftIO $ plugs s
                                        ircPrivmsg src o

@@ -36,7 +36,6 @@ type Pl = ModuleT PlState
 
 instance Module PlModule PlState where
     moduleName _   = return "pl"
-    moduleSticky _ = False
     moduleHelp _ "pl-resume" = return "@pl-resume - resume a suspended pointless transformation."
     moduleHelp _ _ = return "@pointless <expr> - play with pointfree code"
 

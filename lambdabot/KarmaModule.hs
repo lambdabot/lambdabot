@@ -26,7 +26,6 @@ instance Module KarmaModule KarmaState where
     moduleHelp _ "karma-" = return "decrement someone's karma"
     moduleHelp m _        = moduleHelp m "karma" 
 
-    moduleSticky _ = False
     commands     _ = return ["karma", "karma+", "karma-"]
     moduleInit   _ = writeMS Map.empty
     process      _ msg target cmd rest =

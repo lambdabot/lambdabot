@@ -49,7 +49,6 @@ babelModule = BabelModule ()
 
 instance Module BabelModule () where
         moduleName   _ = return "babel"
-        moduleSticky _ = False
 
         moduleHelp _ "babel"    = run_babel' ["help"] >>= return . concat
         moduleHelp _ "remember" = return "@remember <nick> quote - record some memorable phrase"

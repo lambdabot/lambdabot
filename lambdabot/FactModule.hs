@@ -28,7 +28,6 @@ factModule = FactModule ()
 
 instance Module FactModule where
     moduleName   m = return "fact"
-    moduleSticky m = False
     commands     m = return ["fact"]
     process      m _ target cmd rest
                  = do -- thanks Marvin--
