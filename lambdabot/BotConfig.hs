@@ -5,7 +5,7 @@ getMyname :: MonadIO m => m String
 getMyname = return "lambdabot"
 
 getMyuserinfo :: MonadIO m => m String
-getMyuserinfo = return "Lambda"
+getMyuserinfo = return "Lambda Robots - 100% Loyal"
 
 getHost :: MonadIO m => m String
 getHost = return "irc.eu.freenode.net"
@@ -14,12 +14,12 @@ getPort :: MonadIO m => m String
 getPort = return "6667"
 
 getAutojoins :: MonadIO m => m [String]
-getAutojoins = return ["#joy","#haskell"]
+getAutojoins = return ["#haskell"]
 
 getAdmins :: MonadIO m => m [String]
 getAdmins = return ["Pseudonym","shapr","pesco","Riastradh","Darius",
-                    "tmoertel","delYsid","polli","Heffalump","Igloo",
-                    "Marvin--","o3","o3_","phubuh","ddarius","bringert"]
+                     "tmoertel","delYsid","polli","Heffalump","Igloo",
+                     "Marvin--","o3","o3_","phubuh","ddarius","bringert","dons"]
 
 getVerbose :: MonadIO m => m Bool
 getVerbose = return True
@@ -90,8 +90,9 @@ getFileRequires "BabelModule.o" = return [Object "BabelBot/BabelFish.o",
 getFileRequires _ = return []
 
 getStartupModules :: MonadIO m => m [String]
-getStartupModules = return ["dummy","hello","state","topic","karma","more","haddock","cmafihe",
-                            "type","seen","dict","quote","eval","ghci","version"] --,"fact"]
+getStartupModules = return ["state","topic","karma","more","haddock",
+                            "type","seen","dict","quote","eval",
+                            "plugs","babel","version"] --,"fact"]
 
 -- for the MoreModule, how many lines to show at a time
 getMaxLines :: MonadIO m => m Int

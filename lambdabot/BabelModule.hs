@@ -92,7 +92,7 @@ run_babel src s = do
 
 -- help msg
 run_babel' :: (MonadIO m) => [[Char]] -> m [[Char]]
-run_babel' ["help"] = return ["usage: babel lang lang [n|!pat|phrase]"]
+run_babel' ["help"] = return ["usage: babel lang lang phrase"]
 
 -- translate last line
 -- run_babel' [f,t] = doHistory f t 1
@@ -191,8 +191,7 @@ run_remember str =
 -- 
 run_quote :: String -> String -> IRC ()
 run_quote target name = do
-    (nm,qs) <- liftIO $ handleJust ioErrors (\e -> print e >> return ("\\bot",Nothing)) $ do
-
+    (nm,qs) <- liftIO $ handleJust ioErrors (\e -> print e >> return ("lambdabot",Nothing)) $ do
             s <- readFile quotesFile
             eqs <- try $ evaluate $ (read s :: Quotes)
             let rs  = case eqs of Left _ -> [] ; Right rs' -> rs'
