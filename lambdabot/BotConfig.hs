@@ -72,7 +72,8 @@ getFileRequires "TopicModule.o" = return [Object "Map.o"]
 getFileRequires "StateModule.o" = return [Object "Map.o"]
 getFileRequires "SeenModule.o"  = return [Object "Map.o"]
 getFileRequires "DictModule.o"  = return [Object "DictModule/DictLookup.o"]
-getFileRequires "KarmaModule.o"  = return [Object "Map.o"]
+getFileRequires "KarmaModule.o" = return [Object "Map.o"]
+getFileRequires "MoreModule.o"  = return [Object "Map.o"]
 getFileRequires "EvalModule.o"  = return [Object "EvalModule/LMEngine.o",
                                           Object "Map.o"]
 getFileRequires "EvalModule/LMEngine.o" 
@@ -103,7 +104,7 @@ getStartupModules = return [
         "dummy", "state","topic","karma","type","seen",
         "dict","quote","eval", "pl","plugs","babel","version",
         "more"
-        ] --,"fact","more","haddock"]
+        ] --,"fact","haddock"]
 
 -- for the MoreModule, how many lines to show at a time
 getMaxLines :: MonadIO m => m Int
