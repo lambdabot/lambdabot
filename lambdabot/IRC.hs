@@ -3,14 +3,62 @@
 --      $Id: IRC.hs,v 1.21 2003/07/31 19:13:15 eleganesh Exp $    
 
 -- TODO need explicit export list
-module IRC where
+module IRC (
+    MODULE(..),
+    Module(..),
+    ModuleT,
+    TrivIRC,
+    TrivLB,
+
+    MonadIRC(..),
+    IRCMessage(..),
+    IRCRState(..),
+    IRCRWState(..),
+    IRCError(..),
+    IRC(..),
+
+    LB(..),
+    MonadLB(..),
+
+
+    ModuleRef(..),
+
+    readMS,
+    writeMS,
+
+    ircPrivmsg,
+    ircJoin,
+    ircPart,
+    ircQuit,
+    ircTopic,
+    ircReconnect,
+    ircGetTopic,
+    ircSignalConnect,
+    ircSignalConnectR,
+    ircInstallModule,
+    ircLoadModule,
+    ircUnloadModule,
+    ircnick,
+    ircSignOn,
+    ircRead,
+
+    clean,
+    checkPrivs,
+    mkCN,
+    handleIrc,
+    runIrc,
+    
+    
+
+  ) where
+
 
 import BotConfig        (getMyname, getMaxLines, getAdmins, getHost, getPort)
 import DeepSeq          (($!!), DeepSeq(..))
 import ErrorUtils
 import ExceptionError   (ExceptionError(..), ExceptionErrorT(..))
-import MonadException   (MonadException(throwM, handleM))
-import Util             (breakOnGlue, split)
+import MonadException   (MonadException(throwM))
+import Util             (breakOnGlue)
 
 import Map (Map)
 import qualified Map as M hiding (Map)
@@ -83,8 +131,10 @@ instance Show ChanName where
 mkCN :: String -> ChanName
 mkCN = ChanName . map toLower
 
+{-
 getCN :: ChanName -> String
 getCN (ChanName c) = c
+-}
 
 -- does the deriving Typeable do the right thing?
 newtype SignalException = SignalException Signal
@@ -160,10 +210,11 @@ data IRCError = IRCRaised Exception
               | SignalCaught Signal 
   deriving Show
 
-
+{-
 ircErrorMsg :: IRCError -> String
 ircErrorMsg (IRCRaised e) = show e
 ircErrorMsg (SignalCaught s) = "caught signal "++show s
+-}
 
 instance ExceptionError IRCError where
   fromException e 
@@ -205,11 +256,13 @@ instance DeepSeq IRCMessage where
 ircnick     :: IRCMessage -> String
 ircnick msg = fst $ breakOnGlue "!" (msgPrefix msg)
 
+{-
 ircuser     :: IRCMessage -> String
 ircuser msg = head $ split "@" $ (split "!" (msgPrefix msg)) !! 1
 
 irchost     :: IRCMessage -> String
 irchost msg = (split "@" (msgPrefix msg)) !! 1
+-}
 
 -- in monad LB we don't have a connection
 newtype LB a = LB { runLB :: IRCErrorT (StateT IRCRWState IO) a }
@@ -301,10 +354,12 @@ ircSignOn nick ircname = liftIRC $ do
     ircWrite (mkIrcMessage "USER" [nick, "localhost", server, ircname])
     ircWrite (mkIrcMessage "NICK" [nick])
 
+{-
 ircGetChannels :: MonadIRC m => m [String]
 ircGetChannels = do 
     chans <- gets ircChannels
     return $ map getCN (M.keys chans)
+-}
 
 -- evil hack to make the MoreModule work
 -- change this to an output filter when the new Module typeclass arrives
@@ -444,12 +499,13 @@ runIrc ini m
                         ircStayConnected = True
                     }
 
+{-
 traceError :: (MonadIO m,MonadError e m,Show e) => m a -> m a
 traceError = handleError (\e -> liftIO (print e) >> throwError e)
 
 traceException :: (MonadIO m,MonadException m) => m a -> m a
 traceException = handleM (\e -> liftIO (print e) >> throwM e)
-
+-}
 
 
 runIrc' :: IRC () -> LB ()
@@ -591,11 +647,12 @@ decodeMessage line
         decodeParams' param params (c:cs)
           = decodeParams' (c:param) params cs
 
-
+{-
 getFirstWord :: String -> String
 getFirstWord line = takeWhile (/=' ') line
+-}
 
-
+{-
 lowQuote :: String -> String
 lowQuote [] = []
 lowQuote ('\0':cs)   = '\020':'0'    : lowQuote cs
@@ -625,6 +682,7 @@ ctcpDequote ('\134':'a'   :cs) = '\001' : ctcpDequote cs
 ctcpDequote ('\134':'\134':cs) = '\134' : ctcpDequote cs
 ctcpDequote ('\134':cs)        = ctcpDequote cs
 ctcpDequote (c:cs)             = c : ctcpDequote cs
+-}
 
 class Module m s | m -> s where
     moduleName      :: m -> ModuleT s LB String
