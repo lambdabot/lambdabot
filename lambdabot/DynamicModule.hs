@@ -185,16 +185,33 @@ isLoadedObject file
         Just _ -> return True
         Nothing -> return False
 
+--
+-- This stuff sucks. What follows are hard-coded package deps.
+-- For a lambdabot compiled with a given GHC version, you can establish
+-- the runtime deps sort of like so:
+{-
+        for i in *Module.hi ; do 
+                ghc-6.4 --show-iface $i | sed -n '/package/{p;n;p;q;}' | sed 's/^[^:]*: //'
+        done | tr ' ' '\n' | sort | uniq | xargs | \
+                sed 's/-.\..//g;s/ /", "/g;s/^/["/;s/$/"]/'
+-}
+-- You may then have to edit, and reorder things a bit to get the load order correct :/
+--
 initialise :: IO ()
-initialise = do initialiseRuntimeLoader
-                mapM_ loadPackage ["base","haskell98","lang","network",
-#if __GLASGOW_HASKELL__ >= 600
-                                   "unix",
+initialise = do 
+        initialiseRuntimeLoader
+        mapM_ loadPackage
+#if   __GLASGOW_HASKELL__ >= 604
+          ["base","Cabal","haskell98","mtl","lang","parsec","network","unix","posix"]
+#elif __GLASGOW_HASKELL__ >= 602
+          ["base","haskell98","lang","parsec","network","unix","posix"]
+#else
+          []
 #endif
-                                   "posix"]
-                mapM_ (\n -> loadObject (n++".o"))
-                      ["BotConfig","ErrorUtils","ExceptionError",
-                       "MonadException","Util","DeepSeq","IRC"]
+        -- more hard coded evil
+        mapM_ (\n -> loadObject (n++".o"))
+              ["BotConfig","ErrorUtils","ExceptionError",
+               "MonadException","Util","DeepSeq","IRC"]
 
 {-
 getModule :: FilePath -> IO MODULE

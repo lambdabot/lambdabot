@@ -183,6 +183,9 @@ unsafeLoadPackage packageName = do
 loadSystemModule :: String -- ^ Name of the system module to load (e.g. \"concurrent\")
 	         -> IO ()
 loadSystemModule moduleName = do
+#if DEBUG
+   putStrLn $ "Loading package " ++ show moduleName
+#endif
    objects <- systemModuleName moduleName
    mapM_ loadObject objects
 

@@ -1,10 +1,46 @@
-{-# OPTIONS -w -fglasgow-exts #-}
+{-# OPTIONS -cpp -fglasgow-exts -fno-warn-unused-binds #-}
 
 module SystemModuleNaming (systemModuleName) where
 
 import GHCLibraryPath (ghcLibraryPath)
 import Monad
 import Directory
+import qualified Control.Exception as C (catch,throw)
+
+-- 
+-- We're trying to get a few fields from the package.conf files. How to
+-- do this differs depending on post-6.4 and pre-6.4 ghc.
+--
+
+#if __GLASGOW_HASKELL__  >= 604
+import Distribution.InstalledPackageInfo
+import Distribution.Package 
+
+-- What type is the stuff in package.conf files?
+type PkgConf = InstalledPackageInfo
+
+--
+-- we get accessor functions from our Package type, now, let's map those
+-- to Cabal field names.
+--
+name :: PkgConf -> String
+name = pkgName . package
+
+library_dirs :: PkgConf -> [String]
+library_dirs = libraryDirs
+
+hs_libraries :: PkgConf -> [String]
+hs_libraries = hsLibraries
+
+extra_libraries :: PkgConf -> [String]
+extra_libraries = extraLibraries
+
+#else /* GHC < 6.4 */
+--
+-- This is a pre-6.4 package.conf file. We need to define our own type
+-- for it.
+--
+type PkgConf = Package
 
 data Package 
  = Package { name               :: String
@@ -24,16 +60,22 @@ data Package
            , extra_frameworks   :: [String]
            }
   deriving Read
+#endif
 
-
+--
+-- Given a package name, e.g. 'concurrent', find the full path to that object
+--
 systemModuleName :: String -> IO [String]
-systemModuleName packageName
- = do (packages :: [Package]) <- liftM read $ readFile (ghcLibraryPath ++ "package.conf")
-      let package = head (filter (\p -> name p == packageName) packages)
-      liftM concat $ sequence $ 
-         map (libraryObject (map translate (library_dirs package)))
-             (hs_libraries package ++ extra_libraries package)
+systemModuleName packageName = do
 
+   (packages :: [PkgConf]) <- C.catch
+         (liftM read $ readFile $ ghcLibraryPath ++ "package.conf")
+         (\e -> putStrLn "Unable to read package.conf" >> C.throw e)
+
+   let pkg = head (filter (\p -> name p == packageName) packages)
+   liftM concat $ sequence $ 
+        map (libraryObject (map translate (library_dirs pkg)))
+            (hs_libraries pkg ++ extra_libraries pkg)
 
 translate :: [Char] -> [Char]
 translate ('$':'l':'i':'b':'d':'i':'r':rest) = init ghcLibraryPath ++ rest
