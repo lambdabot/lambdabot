@@ -1,6 +1,9 @@
+/* The following are used by the VersionModule */
 
 #define GHC_VERSION     "@GHC_VERSION@"
 
 #define BUILD_DATE      "@BUILD_DATE@"
 
 #define PLATFORM        "@PLATFORM@"
+
+#define REPO_PATH	"@REPO_PATH@"

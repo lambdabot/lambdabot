@@ -21,9 +21,9 @@ instance Module VersionModule where
     moduleSticky _ = False
     commands     _ = return ["version"]
     process      _ _ target _ _ =
-        ircPrivmsg target $ "lambdabot :: " ++ 
-                            "ghc-" ++ GHC_VERSION ++
-                            " (" ++ BUILD_DATE ++ ")" ++
-                            " (" ++ PLATFORM ++ ")" ++ "\n" ++
-                            "darcs get http://www.cse.unsw.edu.au/~dons/lambdabot"
+        ircPrivmsg target $ 
+            BUILD_DATE ++ ", " ++
+            "GHC " ++ GHC_VERSION ++
+            " (" ++ PLATFORM ++ ")" ++ "\n" ++
+            "darcs get " ++ REPO_PATH
 

@@ -73,6 +73,9 @@ AC_SUBST(BUILD_DATE)
 PLATFORM=`uname -ms`
 AC_SUBST(PLATFORM)
 
+REPO_PATH=`sed -n 1p ../_darcs/prefs/repos`
+AC_SUBST(REPO_PATH)
+
 AC_CHECK_PROG(HaddockCmd,haddock,haddock)
 
 AC_SUBST(SYMS)
