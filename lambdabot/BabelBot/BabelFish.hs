@@ -1,5 +1,5 @@
 
-module BabelBot.BabelFish(babelFish) where
+module BabelBot.BabelFish(babelFish, shortLangs) where
 
 import MiniHTTP
 

@@ -93,6 +93,7 @@ run_babel src s = do
 -- help msg
 run_babel' :: (MonadIO m) => [[Char]] -> m [[Char]]
 run_babel' ["help"] = return ["usage: babel lang lang phrase"]
+run_babel' ["languages"] = return $ [show shortLangs]
 
 -- translate last line
 -- run_babel' [f,t] = doHistory f t 1
