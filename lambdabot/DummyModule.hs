@@ -17,15 +17,17 @@ instance Module DummyModule where
   moduleHelp _ s = return $ case s of
         "dummy"       -> "dummy module"
         "wiki"        -> "wiki urls"
+        "paste"       -> "paste page url"
         "learn"       -> "another url"
         "eurohaskell" -> "urls are good"
         "moo"         -> "vegan-friendly command"
         _             -> "dummy module"
 
-  commands     _ = return ["dummy","wiki","learn","eurohaskell","moo"]
+  commands     _ = return ["dummy","wiki","paste","learn","eurohaskell","moo"]
   process _ _ src "dummy" _    = ircPrivmsg src "dummy"
   process _ _ src "eurohaskell" _ = ircPrivmsg src "less talks, more code!\nhttp://www.haskell.org/hawiki/EuroHaskell\nEuroHaskell - Haskell Hackfest - Summer 2005 - Gothenburg, Sweden"
   process _ _ src "wiki" rest  = ircPrivmsg src ("http://www.haskell.org/hawiki/" ++ rest)
+  process _ _ src "paste" _  = ircPrivmsg src "http://www.haskell.org/hawiki/HaskellIrcPastePage"
   process _ _ src "learn" _    = ircPrivmsg src "http://www.haskell.org/learning.html"
   process _ _ src "moo" _      = ircPrivmsg src $ unlines ["         (__)","         (oo)","   /------\\/","  / |    ||"," *  /\\---/\\","    ~~   ~~","....\"Have you mooed today?\"..." ]
 
