@@ -51,23 +51,18 @@ instance (Typeable key, Typeable elt) => Typeable (Map key elt) where
 -- | Join lists with the given glue elements. Example:
 --
 -- > join ", " ["one","two","three"] ===> "one, two, three"
-
-
 join :: [a]   -- ^ Glue to join with
      -> [[a]] -- ^ Elements to glue together
      -> [a]   -- ^ Result: glued-together list
-
 join glue xs = (concat . intersperse glue) xs
 
 
 -- | Split a list into pieces that were held together by glue.  Example:
 --
 -- > split ", " "one, two, three" ===> ["one","two","three"]
-
 split :: Eq a => [a] -- ^ Glue that holds pieces together
       -> [a]         -- ^ List to break into pieces
       -> [[a]]       -- ^ Result: list of pieces
-
 split glue xs = split' xs
     where
     split' [] = []
@@ -81,11 +76,9 @@ split glue xs = split' xs
 --   Like break, but works with a [a] match.
 --
 -- > breakOnGlue ", " "one, two, three" ===> ("one", ", two, three")
-
 breakOnGlue :: (Eq a) => [a] -- ^ Glue that holds pieces together
             -> [a]           -- ^ List from which to break off a piece
             -> ([a],[a])     -- ^ Result: (first piece, glue ++ rest of list)
-
 breakOnGlue _ [] = ([],[])
 breakOnGlue glue rest@(x:xs)
     | glue `isPrefixOf` rest = ([], rest)
@@ -96,7 +89,9 @@ breakOnGlue glue rest@(x:xs)
 -- | Reverse cons. Add an element to the back of a list. Example:
 --
 -- > snoc 3 [2, 1] ===> [2, 1, 3]
-snoc :: a -> [a] -> [a]
+snoc :: a -- ^ Element to be added 
+     -> [a] -- ^ List to add to
+     -> [a] -- ^ Result: List ++ [Element]
 snoc x xs = xs ++ [x]
 
 -- | 'after' takes 2 strings, called the prefix and data. A necessary
@@ -108,7 +103,10 @@ snoc x xs = xs ++ [x]
 --   removed as well as any excess space characters. Example:
 --
 --   > after "This is" "This is a string" ===> "a string"
-after :: String -> String -> String
+after :: String -- ^ Prefix string
+      -> String -- ^ Data string
+      -> String -- ^ Result: Data string with Prefix string and excess whitespace
+	        --     removed
 after [] ys     = dropWhile (==' ') ys
 after (_:_) [] = error "after: (:) [] case"
 after (x:xs) (y:ys)
@@ -118,20 +116,30 @@ after (x:xs) (y:ys)
 -- | Break a String into it's first word, and the rest of the string. Example:
 --
 -- > split_first_word "A fine day" ===> ("A", "fine day)
-split_first_word :: String -> (String, String)
+split_first_word :: String -- ^ String to be broken
+		 -> (String, String)
 split_first_word xs = (w, dropWhile isSpace xs')
   where (w, xs') = break isSpace xs
 
 -- refactor, might be good for logging to file later
-debugStr :: (MonadIO m) => String -> m ()
+-- | 'debugStr' checks if we have the verbose flag turned on. If we have
+--   it outputs the String given. Else, it is a no-op.
+debugStr :: (MonadIO m) => String -- ^ String to eventually output
+	 -> m ()
 debugStr x = do verbose <- getVerbose
                 if verbose then liftIO (putStr x) else return ()
 
+-- | 'debugStrLn' is a version of 'debugStr' that adds a newline to the end
+--   of the string outputted.
 debugStrLn :: (MonadIO m) => [Char] -> m ()
 debugStrLn x = debugStr ( x ++ "\n" )
 
+-- | 'lowerCaseString' transforms the string given to lower case.
+--
+-- > Example: lowerCaseString "MiXeDCaSe" ===> "mixedcase"
 lowerCaseString :: String -> String
 lowerCaseString = map toLower
+
 
 data Accessor m s = Accessor { reader :: m s, writer :: s -> m () }
 
@@ -164,7 +172,10 @@ deleteSet a e = do set <- reader a
 -- | 'getRandItem' takes as input a list and a random number generator. It
 --   then returns a random element from the list, paired with the altered
 --   state of the RNG
-getRandItem :: (RandomGen g) => [a] -> g -> (a, g)
+getRandItem :: (RandomGen g) =>
+	       [a] -- ^ The list to pick a random item from
+	    -> g   -- ^ The RNG to use
+	    -> (a, g) -- ^ A pair of the item, and the new RNG seed
 getRandItem mylist rng = (mylist !! index,newRng)
                          where
                          llen = length mylist
