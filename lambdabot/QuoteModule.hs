@@ -1,15 +1,18 @@
+-- 	$Id: QuoteModule.hs,v 1.1 2003/07/29 13:41:48 eleganesh Exp $
+
 module QuoteModule where
 
-import qualified Map as M
-import Control.Monad.State
-import Data.IORef
-import QuoteModule.Fortune
-import QuoteModule.Random
+import QuoteModule.Fortune      (randFortune)
+import Util                     (getRandItem)
 import IRC
-import Maybe
-import System.Random
+import qualified Map as M       (insert, lookup)
+
+import Data.IORef               (newIORef, readIORef, writeIORef)
+import Control.Monad.State
 import System.Time
--- 	$Id: QuoteModule.hs,v 1.1 2003/07/29 13:41:48 eleganesh Exp $
+import System.Random            (RandomGen(next), mkStdGen)
+
+------------------------------------------------------------------------
 
 newtype QuoteModule = QuoteModule ()
 
@@ -75,7 +78,7 @@ sub2int :: Integer -> Integer
 sub2int x = (x - (fromIntegral maxI) - (fromIntegral maxI))
 
 arrRandom :: (Monad m, RandomGen g) => g -> m ([Char], g)
-arrRandom rng = return (QuoteModule.Random.getRandItem arrList rng)
+arrRandom rng = return (getRandItem arrList rng)
 
 arrList :: [[Char]]
 arrList = [

@@ -1,6 +1,8 @@
 {-# OPTIONS -cpp -fglasgow-exts #-}
 -- Ambiguous type variables
 
+-- 	$Id: Util.hs,v 1.10 2003/07/31 19:13:15 eleganesh Exp $
+
 module Util (
       join
     , split
@@ -12,20 +14,22 @@ module Util (
     , Accessor (..)
     , readFM,writeFM,deleteFM
     , lookupSet,insertSet,deleteSet
+    , getRandItem
   ) where
-
--- 	$Id: Util.hs,v 1.10 2003/07/31 19:13:15 eleganesh Exp $
 
 import BotConfig                (getVerbose)
 import Map                      (Map)
 import qualified Map as M       (lookup, insert, delete)
 
-import List                     (intersperse, isPrefixOf)
+import Data.List                (intersperse, isPrefixOf)
 import Data.Set                 (elementOf, addToSet, delFromSet, Set)
 import Data.Char                (isSpace)
+import Data.Typeable
 import Control.Monad.State      (MonadIO(..))
 
-import Data.Typeable
+import System.Random hiding (split)
+
+------------------------------------------------------------------------
 
 -- TODO: rename join, clashes with Monad.join
 
@@ -130,3 +134,14 @@ insertSet a e = do set <- reader a
 deleteSet :: (Monad m,Ord e) => Accessor m (Set e) -> e -> m ()
 deleteSet a e = do set <- reader a
                    writer a $ delFromSet set e
+
+------------------------------------------------------------------------
+
+-- | 'getRandItem' takes as input a list and a random number generator. It
+--   then returns a random element from the list, paired with the altered
+--   state of the RNG
+getRandItem :: (RandomGen g) => [a] -> g -> (a, g)
+getRandItem mylist rng = (mylist !! index,newRng)
+                         where
+                         llen = length mylist
+                         (index, newRng) = randomR (0,llen - 1) rng

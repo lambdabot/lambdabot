@@ -2,13 +2,15 @@
 
 module QuoteModule.Fortune where
 
+import Util (getRandItem)
+import qualified Util hiding (getRandItem)
+
 import Data.List
-import Monad
-import System.Directory
+import Control.Monad
+
 import System.Random
+import System.Directory
 import qualified Control.Exception as C (catch)
-import QuoteModule.Random
-import qualified Util
 
 --
 -- No good for win32
