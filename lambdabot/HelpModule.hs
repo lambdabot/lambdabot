@@ -16,7 +16,7 @@ helpModule = HelpModule ()
 
 instance Module HelpModule where
     moduleName   _ = return "help"
-    moduleHelp   _ _ = return "@help <command>" -- default output
+    moduleHelp   _ _ = return " @help <command> - ask for help for <command>" -- default output
     moduleSticky _ = False
     commands     _ = return ["help"]
     process        = doHelp
