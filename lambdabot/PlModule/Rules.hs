@@ -1,4 +1,11 @@
-{-# OPTIONS -fglasgow-exts #-}
+{-# OPTIONS -fglasgow-exts -fno-warn-name-shadowing #-}
+--
+-- ^ 6.4 gives a name shadow warning I haven't tracked down.
+
+--
+-- This marvellous module contributed by Thomas J\344ger
+--
+
 module PlModule.Rules (RewriteRule(..), rules, fire, apE, liftM2E) where
 
 import Data.Array
