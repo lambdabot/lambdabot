@@ -75,7 +75,7 @@ extract_result output
 query_ghci :: String -> String -> String -> IRC ()
 query_ghci src cmd expr =
        do
-       (output, _, _) <- liftIO $ popen "ghci" ["-fglasgow-exts"] (Just (command cmd expr))
+       (output, _, _) <- liftIO $ popen "ghci-6.4" ["-fglasgow-exts"] (Just (command cmd expr))
        mapM_ (ircPrivmsg src) $
                 let ls = extract_signatures output
                 in if null ls then ["bzzt"] else ls
