@@ -26,7 +26,7 @@ import Posix
 --   this is /usr/share/games/fortune. Alter this to suit your configuration
 --
 --   TODO: Move this to a generic Config file
-path :: String
+path :: FilePath
 path = "/usr/share/games/fortune/"
 
 -- | The 'filelist' function returns a List of fortune files from the
