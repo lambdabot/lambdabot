@@ -31,6 +31,9 @@ AC_ARG_WITH(hc,
 	  AC_DEFINE(__NHC__, [], [Defined if compiling with nhc98])
 	  SYMS="$SYMS -D__NHC__"
     fi
+    if test ! -x "$WithGhc" ; then
+	    AC_MSG_ERROR([Cannot find a working GHC at: $WithGhc])
+    fi
   ],
   [
      # else autodetect
