@@ -6,7 +6,6 @@ import IRC
 import qualified Map as M
 
 import Control.Monad.State (gets)
-import Char (isSpace)
 import Util
 
 newtype TopicModule = TopicModule ()
