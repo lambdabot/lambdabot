@@ -219,10 +219,10 @@ joinChanCB msg
 msgCB :: IRCMessage -> IRC ()
 msgCB msg
     = withSeenFM $ \fm ref ->
-        case lookupFM fm nick of
+        case lookupFM fm (map toLower nick) of
             Just (Present _ct xs) -> do
                 ct <- time
-                let fm' = addToFM fm nick (Present (Just ct) xs)
+                let fm' = addToFM fm (map toLower nick) (Present (Just ct) xs)
                 setSeenFM ref fm'
             _ -> debugStrLn "SeenModule> someone who isn't here msg us"
     where nick = ircnick msg
