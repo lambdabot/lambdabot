@@ -1,4 +1,3 @@
-
 module SeenModule (
         SeenModule,
         seenModule,
@@ -10,10 +9,10 @@ import Util
 import BotConfig
 import qualified Map as M
 
-import Data.Dynamic
 import Data.List ((\\),nub)
 
-import Control.Monad.Reader
+import Control.Monad (when)
+import Control.Monad.Trans (liftIO, MonadIO)
 
 import System.Time
 
@@ -36,25 +35,6 @@ data UserStatus
         | WasPresent ClockTime Channel -- if the bot parted Channel where a user was
         | NewNick Nick                 -- the user has a new nick
     deriving Show
-
-ctCon :: TyCon
-ctCon = mkTyCon "ClockTime"
-
-myTy :: TyCon -> [TypeRep] -> TypeRep
-#if __GLASGOW_HASKELL__ < 603
-myTy = mkAppTy
-#else
-myTy = mkTyConApp
-#endif
-
-instance Typeable ClockTime where
-    typeOf _ = myTy ctCon []
-
-usCon :: TyCon
-usCon = mkTyCon "UserStatus"
-
-instance Typeable UserStatus where
-    typeOf _ = myTy usCon []
 
 type SeenState = M.Map Nick UserStatus
 type Seen = ModuleT SeenState

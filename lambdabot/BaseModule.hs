@@ -8,7 +8,6 @@ import qualified Map as M
 import Data.List
 import Data.Maybe
 import Control.Monad.State
-import Control.Monad.Reader
 import Text.Regex
 
 

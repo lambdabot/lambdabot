@@ -5,7 +5,6 @@ import Map (Map)
 import qualified Map as Map hiding (Map)
 
 import Data.Maybe           (fromMaybe)
-import Control.Monad.Reader
 
 newtype KarmaModule = KarmaModule ()
 
