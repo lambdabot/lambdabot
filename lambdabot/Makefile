@@ -4,12 +4,13 @@
 DYNMODS=Dict Dummy Eval Hello Karma Quote Seen State \
         System Topic Type GHCi Cmafihe #Haddock
 
-EXCLUDES=ChessModule.hs SearchMailingList.hs SearchMLModule.hs EvalModule/tests.hs FactModule.hs HaddockModule.hs
+EXCLUDES=ChessModule.hs SearchMailingList.hs SearchMLModule.hs EvalModule/tests.hs FactModule.hs HaddockModule.hs GenStaticModules.hs
 
 EXCLUDESFIND=$(addprefix -not -path ./,$(EXCLUDES))
 
-SOURCES = $(shell find . -path'./_darcs' -prune -depth -o $(EXCLUDESFIND) -name \*.hs -o -name \*.lhs) \
-          GHCLibraryPath.hs StaticModules.hs
+SOURCES = $(shell find . -path './_darcs' -prune -depth -o $(EXCLUDESFIND) -name \*.hs -o -name \*.lhs)
+
+GHC=	ghc
 
 # GHCFLAGS = -fglasgow-exts -cpp -lHSrts -package posix -package network -l
 GHCFLAGS = -fglasgow-exts -cpp -package posix -package network -lHSrts -lHSparsec -package parsec #-ihaddock
@@ -21,7 +22,7 @@ all: lambdabot modules
 FORCE:
 
 lambdabot: ./Main.o
-	ghc $(GHCFLAGS) $(HTOOLKIT) --make Main.hs -o lambdabot
+	$(GHC) $(GHCFLAGS) $(HTOOLKIT) --make Main.hs -o lambdabot
 
 modules: $(addsuffix Module.o,$(DYNMODS))
 
@@ -29,28 +30,28 @@ modules: $(addsuffix Module.o,$(DYNMODS))
 	touch $@
 
 %.o: %.hs
-	ghc $(GHCFLAGS) -c $<
+	$(GHC) $(GHCFLAGS) -c $<
 
 %.o: %.lhs
-	ghc $(GHCFLAGS) -c $<
+	$(GHC) $(GHCFLAGS) -c $<
 
 GHCiModule.o: GHCiModule.hs Shell.o
-	ghc $(GHCFLAGS) -c $<
+	$(GHC) $(GHCFLAGS) -c $<
 
 GhciModule.o: GhciModule.hs Shell.o
-	ghc $(GHCFLAGS) -c $<
+	$(GHC) $(GHCFLAGS) -c $<
 
 Shell.o: shell_stub.o Shell.hs
-	ghc $(GHCFLAGS) -fffi -c Shell.hs shell_stub.o 
+	$(GHC) $(GHCFLAGS) -fffi -c Shell.hs shell_stub.o 
 
 #FactModule.o: FactModule.hs
-#	ghc $(GHCFLAGS) $(HTOOLKIT) -c $<
+#	$(GHC) $(GHCFLAGS) $(HTOOLKIT) -c $<
 
 GHCLibraryPath.hs: GHCLibraryPath.hs.in
-	sed -e"s#@GHC_LIB_PATH@#`ghc --print-libdir`#" < $< > $@
+	sed -e"s#@GHC_LIB_PATH@#`$(GHC) --print-libdir`#" < $< > $@
 
 genStaticModules: GenStaticModules.hs
-	ghc --make GenStaticModules -o genStaticModules
+	$(GHC) --make GenStaticModules -o genStaticModules
 
 StaticModules.hs: genStaticModules StaticModules.conf
 	./genStaticModules
@@ -64,7 +65,7 @@ clean:
 	rm depend
 
 depend: $(SOURCES)
-	ghc $(GHCFLAGS) $(HTOOLKIT) -M -optdep-f -optdepdepend $(SOURCES) \
+	$(GHC) $(GHCFLAGS) $(HTOOLKIT) -M -optdep-f -optdepdepend $(SOURCES) \
 	    || rm depend
 
 include depend
