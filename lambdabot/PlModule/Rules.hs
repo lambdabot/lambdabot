@@ -103,7 +103,7 @@ instance RewriteC a => RewriteC (MExpr -> a) where
 transformM :: Int -> MExpr -> MExpr
 transformM _ (Quote e) = constE `a` Quote e
 transformM n (Hole n') = if n == n' then idE else constE `a` Hole n'
-transformM n e@(Quote (Var _ ".") `MApp` e1 `MApp` e2)
+transformM n (Quote (Var _ ".") `MApp` e1 `MApp` e2)
   | e1 `hasHole` n && not (e2 `hasHole` n) 
   = flipE `a` compE `a` e2 `c` transformM n e1
 transformM n e@(MApp e1 e2) 
