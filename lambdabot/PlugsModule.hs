@@ -66,7 +66,7 @@ clean s | Just (pre,_,post,_) <- matchRegexAll filename s = pre ++ clean post
         | otherwise           = s
     where
         -- s/<[^>]*>:[^:]: //
-        filename   = mkRegex "\n<[^>]*>:[^:]*:\n? *"
+        filename   = mkRegex "\n?<[^>]*>:[^:]*:\n* *"
         terminated = mkRegex "waitForProc"
         stack_o_f  = mkRegex "Stack space overflow"
 
