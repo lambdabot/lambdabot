@@ -3,16 +3,19 @@
 # author : Don Stewart
 # Tue Oct  5 12:24:58 EST 2004
 
-#
-# TODO: use MiniHTTP
-
 $page ='http://www.timeanddate.com/worldclock/results.html';
 
 $city = $ARGV[0];
 
 @results = `w3m -dump "$page?query=$city"`;
 
+$error = "Sorry, don't know this city";
+
 for (@results) {
+	if (/no matching cities/) {
+		print "$error\n";
+		exit 0;
+	}
         next if not /Current time/;
         s/^.*time\s*//;
         print;
