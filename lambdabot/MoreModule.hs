@@ -35,5 +35,6 @@ instance Module MoreModule where
            newRef <- liftIO . newIORef $ ModuleState [""]
            let stateMap = ircModuleState s
            put (s { ircModuleState =
-                    M.insert "more" newRef stateMap }
+                    M.insert "more" newRef stateMap })
+
 
