@@ -26,7 +26,7 @@ EXCLUDED_SRCS+= EvalModule/tests.hs PlModule/Test.hs Shell.hs GenStaticModules.h
 #
 # Generated at runtime
 #
-EXTRA_SRCS=	StaticModules.hs
+EXTRA_SRCS=
 
 #
 # Construct a list of buildable sources, based on $ALL_DIRS, and their
@@ -89,18 +89,13 @@ modules: $(ALL_OBJS)
 #
 # Dependency generation
 #
-depend: StaticModules.hs GenStaticModules.hs StaticModules.conf $(ALL_SRCS)
+depend: $(ALL_SRCS)
+	@echo -n "Generating static modules list ... "
+	@echo main | ghci -v0 GenStaticModules.hs
+	@echo "done."
 	@echo -n "Rebuilding dependencies ... "
 	@$(GHC) -cpp $(HC_OPTS) $(PKG_OPTS) $(HTOOLKIT) -M -optdep-f \
 		-optdepdepend $(ALL_SRCS) || rm depend
-	@echo "done."
-
-#
-# Script to generate a list of statically linked plugins
-#
-StaticModules.hs: GenStaticModules.hs StaticModules.conf
-	@echo -n "Generating static modules list ... "
-	@echo main | ghci -v0 GenStaticModules.hs
 	@echo "done."
 
 #
@@ -133,8 +128,8 @@ clean:
 	rm -f depend depend.bak
 
 distclean: clean
-	rm -f StaticModules.hs genStaticModules
 	rm -f config.mk config.h config.log config.status configure 
 	rm -rf autom4te.cache
+	rm -f StaticModules.hs genStaticModules
 
 -include depend
