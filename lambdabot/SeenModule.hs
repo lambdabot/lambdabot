@@ -12,6 +12,7 @@ import BotConfig
 import qualified Map as M
 
 import Data.FiniteMap
+import Data.Char
 import Control.Monad.State
 import Data.Dynamic
 import Data.IORef
@@ -81,8 +82,10 @@ instance Module SeenModule where
                       let (seenFM :: FiniteMap Nick UserStatus) 
                               = stripMS seenFMState
                           nick = takeWhile (/=' ') rest
-                      if nick == myname then ircPrivmsg target "Yes, I'm here"
-                         else case lookupFM seenFM nick of 
+                          lcnick = map toLower nick
+                      if lcnick == map toLower myname 
+                         then ircPrivmsg target "Yes, I'm here"
+                         else case lookupFM seenFM lcnick of 
                                Just (Present cs) ->
                                    ircPrivmsg target $ nick ++ " is in " ++ 
                                                   (listToStr cs) ++ "."
@@ -107,7 +110,8 @@ instance Module SeenModule where
                                                      "ago."
                                Just (NewNick newnick) ->
                                    do let findfunc str = 
-                                            case (lookupFM seenFM str) of
+                                            case (lookupFM seenFM 
+                                                    (map toLower str)) of
                                                 Just (NewNick str') -> 
 							findfunc str'
                                                 Just _ -> str
@@ -129,7 +133,7 @@ joinCB msg
        when (nick /= myname) $
         withSeenFM $ \fm ref ->
         let newInfo = Present (ircchannel msg)
-            fm' = addToFM_C updateJ fm nick newInfo
+            fm' = addToFM_C updateJ fm (map toLower nick) newInfo
             in (setSeenFM ref fm')
     where nick = ircnick msg
 
@@ -140,18 +144,18 @@ partCB msg
         if nick == myname then -- when the bot parts
           do l <- mapM (botPart $ ircchannel msg) (fmToList fm)
 	     setSeenFM ref (listToFM l)
-        else case (lookupFM fm nick) of
+        else case (lookupFM fm lcnick) of
                 Just (Present xs) -> 
 	         do case xs \\ (ircchannel msg) of 
 		        [] -> do ct <- time 
-			         let fm' = addToFM_C (\_ x -> x) fm nick 
+			         let fm' = addToFM_C (\_ x -> x) fm lcnick 
 					     (NotPresent ct (listToStr xs))
 			         setSeenFM ref fm' 
-			ys -> setSeenFM ref $ addToFM_C (\_ x -> x) fm nick 
+			ys -> setSeenFM ref $ addToFM_C (\_ x -> x) fm lcnick 
 						(Present ys)  
                 _ -> debugStrLn "SeenModule> someone who isn't known parted"
     where nick = unUserMode (ircnick msg)
-	  botPart cs (nick', us) 
+	  botPart cs (nick, us) 
             = case us of
 		  Present xs -> 
 		      case xs \\ cs of
@@ -165,9 +169,10 @@ quitCB msg
   = withSeenFM $ \fm ref -> 
     do ct <- time
        let nick = unUserMode (ircnick msg)
-       case (lookupFM fm nick) of
+           lcnick = map toLower nick
+       case (lookupFM fm lcnick) of
            Just (Present xs) -> 
-               let fm' = addToFM_C (\_ x -> x) fm nick 
+               let fm' = addToFM_C (\_ x -> x) fm lcnick 
                                (NotPresent ct (head xs))
                    in setSeenFM ref fm'
            _ -> debugStrLn "SeenModule> someone who isn't known has quit"
@@ -175,14 +180,16 @@ quitCB msg
 nickCB :: IRCMessage -> IRC () -- when somebody changes his/her name
 nickCB msg 
   = withSeenFM $ \fm ref ->
-    case (lookupFM fm nick) of
+    case (lookupFM fm lcnick) of
         Just (Present xs) -> 
-            let fm' = addToFM_C (\_ x -> x) fm nick (NewNick newnick)
-                fm'' = addToFM fm' newnick (Present xs)
+            let fm' = addToFM_C (\_ x -> x) fm lcnick (NewNick newnick)
+                fm'' = addToFM fm' lcnewnick (Present xs)
                 in setSeenFM ref fm''
         _ -> debugStrLn "SeenModule> someone who isn't here changed nick"
     where newnick = drop 1 $ head (msgParams msg)
+          lcnewnick = map toLower newnick
           nick = ircnick msg
+          lcnick = map toLower nick
 
 joinChanCB :: IRCMessage -> IRC () -- when the bot join a channel
 joinChanCB msg
@@ -190,7 +197,8 @@ joinChanCB msg
     let l = msgParams msg
         chan = l !! 2
         chanUsers = words (drop 1 (l !! 3)) -- remove ':'
-        fooFunc m u = addToFM_C updateJ m (unUserMode u) (Present [chan])
+        fooFunc fm u = addToFM_C updateJ fm 
+                              (unUserMode u) (Present [chan])
         seenFM' = foldl fooFunc fm chanUsers
         in setSeenFM ref seenFM'
 
