@@ -46,17 +46,29 @@ data IRCRState
 
 type Callback = IRCMessage -> IRC ()
 
-
 data IRCRWState
   = IRCRWState {
         ircPrivilegedUsers :: FiniteMap String Bool,
-        ircChannels        :: FiniteMap String String, -- channel_name topic
+        ircChannels        :: FiniteMap ChanName String, -- channel_name topic
         ircModules         :: FiniteMap String MODULE,
         ircCallbacks       :: FiniteMap String [Callback],
         ircCommands        :: FiniteMap String MODULE,
         ircModuleState     :: FiniteMap String (IORef ModuleState),
         ircStayConnected   :: Bool
   }
+
+newtype ChanName = ChanName String -- should be abstract, always lowercase
+  deriving (Eq, Ord)
+
+instance Show ChanName where
+  show (ChanName x) = show x
+
+-- only use the "smart constructor":
+mkCN :: String -> ChanName
+mkCN = ChanName . map toLower
+
+getCN :: ChanName -> String
+getCN (ChanName c) = c
 
 -- does the deriving Typeable do the right thing?
 newtype SignalException = SignalException Signal
@@ -244,7 +256,7 @@ ircSignOn nick ircname
 ircGetChannels :: IRC [String]
 ircGetChannels
   = do  chans <- gets ircChannels
-        return (keysFM chans)
+        return $ map getCN (keysFM chans)
 
 -- evil hack to make the MoreModule work
 -- change this to an output filter when the new Module typeclass arrives
@@ -298,6 +310,10 @@ clean x | x == '\CR'        = []
 ircTopic :: String -> String -> IRC ()
 ircTopic chan topic
   = ircWrite (mkIrcMessage "TOPIC" [chan, ':' : topic])
+
+ircGetTopic :: String -> IRC ()
+ircGetTopic chan
+  = ircWrite (mkIrcMessage "TOPIC" [chan])
 
 -- quit and reconnect wait 1s after sending a QUIT to give the connection
 -- a chance to close gracefully (and interrupt the wait with an exception)

@@ -20,11 +20,11 @@ instance Module TopicModule where
                            "topic-tail", "topic-init"]
   process _ _ src "topic-cons" text = topic_cons src text
   process _ _ src "topic-snoc" text = topic_snoc src text
-  process _ _ _   "topic-tail" chan = alter_topic chan tail
-  process _ _ _   "topic-init" chan = alter_topic chan init
+  process _ _ src "topic-tail" chan = alter_topic src chan tail
+  process _ _ src "topic-init" chan = alter_topic src chan init
   process _ _ src "topic-tell" chan =
     do
-    maybetopic <- gets (\s -> lookupFM (ircChannels s) chan)
+    maybetopic <- gets (\s -> lookupFM (ircChannels s) (mkCN chan))
     case maybetopic of
                     Just x  -> ircPrivmsg src x
                     Nothing -> ircPrivmsg src "don't know that channel"
@@ -32,7 +32,7 @@ instance Module TopicModule where
     = ircPrivmsg src ("Bug! someone forgot the handler for \""++cmd++"\"")
 
 topic_snoc :: String -> String -> IRC ()
-topic_snoc source cmdtext = alter_topic chan (snoc topic_item)
+topic_snoc source cmdtext = alter_topic source chan (snoc topic_item)
   where
   (chan, topic_item) = split_first_word cmdtext
 
@@ -40,7 +40,7 @@ snoc :: a -> [a] -> [a]
 snoc x xs = xs ++ [x]
 
 topic_cons :: String -> String -> IRC ()
-topic_cons source cmdtext = alter_topic chan (topic_item:)
+topic_cons source cmdtext = alter_topic source chan (topic_item:)
   where
   (chan, topic_item) = split_first_word cmdtext
 
@@ -48,14 +48,20 @@ split_first_word :: String -> (String, String)
 split_first_word xs = (w, dropWhile isSpace xs')
   where (w, xs') = break isSpace xs
   
-alter_topic :: String -> ([String] -> [String]) -> IRC ()
-alter_topic chan f
+alter_topic :: String -> String -> ([String] -> [String]) -> IRC ()
+alter_topic source chan f
   = do
-    maybetopic <- gets (\s -> lookupFM (ircChannels s) chan)
+    maybetopic <- gets (\s -> lookupFM (ircChannels s) (mkCN chan))
     case maybetopic
          of
          Just x -> case reads x
                         of
                         [(xs,"")] -> ircTopic chan (show $ f $ xs)
-                        _         -> ircPrivmsg chan "topic doesn't parse"
+                        [(xs,r)] | length r <= 2
+                                  -> -- probably bogus characters near end,
+                                     -- do anyway
+                                     do  ircPrivmsg source $ 
+                                           "ignoring bogus characters: " ++ r
+                                         ircTopic chan (show $ f $ xs)
+                        _         -> ircPrivmsg source "topic doesn't parse"
          Nothing -> ircPrivmsg chan "don't know that channel"

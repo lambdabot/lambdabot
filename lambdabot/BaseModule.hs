@@ -79,13 +79,14 @@ doJOIN :: IRCMessage -> IRC ()
 doJOIN msg
   = do let (_, _:loc) = breakOnGlue ":" (head (msgParams msg))
        s <- get
-       put (s { ircChannels = addToFM (ircChannels s) loc "" })
+       put (s { ircChannels = addToFM (ircChannels s) (mkCN loc) "[currently unknown]" }) -- the empty topic causes problems
+       ircGetTopic loc -- initialize topic
 
 doPART :: IRCMessage -> IRC ()
 doPART msg
   = do  let loc = head (msgParams msg)
         s <- get
-        put (s { ircChannels = delFromFM (ircChannels s) loc }) -- this must be a bug
+        put (s { ircChannels = delFromFM (ircChannels s) (mkCN loc) }) -- this must be a bug
 
 doNICK :: IRCMessage -> IRC ()
 doNICK msg
@@ -100,7 +101,7 @@ doTOPIC :: IRCMessage -> IRC ()
 doTOPIC msg
     = do let loc = (head (msgParams msg))
          s <- get
-         put (s { ircChannels = addToFM (ircChannels s) loc (tail $ head $ tail $ msgParams msg) })
+         put (s { ircChannels = addToFM (ircChannels s) (mkCN loc) (tail $ head $ tail $ msgParams msg) })
 
 doRPL_WELCOME :: IRCMessage -> IRC ()
 doRPL_WELCOME msg
@@ -155,7 +156,7 @@ doRPL_TOPIC :: IRCMessage -> IRC ()
 doRPL_TOPIC msg -- nearly the same as doTOPIC but has our nick on the front of msgParams
     = do let loc = (msgParams msg) !! 1
          s <- get
-         put (s { ircChannels = addToFM (ircChannels s) loc (tail $ last $ msgParams msg) })
+         put (s { ircChannels = addToFM (ircChannels s) (mkCN loc) (tail $ last $ msgParams msg) })
 
 doRPL_NAMREPLY :: IRCMessage -> IRC ()
 doRPL_NAMREPLY msg = return ()
@@ -212,9 +213,11 @@ doPRIVMSG' myname msg
           case maybecmd of
             Just (MODULE m) -> do debugStrLn (show msg)
                                   handleIrc (ircPrivmsg alltargets) (process m msg alltargets cmd rest)
-            Nothing         -> ircPrivmsg alltargets ("Sorry, I don't know the command \"" ++ cmd ++ "\", try \"lambdabot: @listcommands\"")
+            Nothing         -> do myname <- getMyname
+                                  ircPrivmsg alltargets ("Sorry, I don't know the command \"" ++ cmd ++ "\", try \"" ++ myname ++ ": @listcommands\"")
     doPublicMsg _ _
-      = ircPrivmsg alltargets "Sorry, I'm not a very smart bot yet, try \"lambdabot: @listcommands\""
+      = do myname <- getMyname
+           ircPrivmsg alltargets ("Sorry, I'm not a very smart bot yet, try \"" ++ myname ++ ": @listcommands\"")
                     
 after :: String -> String -> String
 after [] ys     = dropWhile (==' ') ys

@@ -13,8 +13,6 @@ import Util
 import StaticModules
 import BotConfig
 
-
-
 main :: IO ()
 main = runIrc ircInit ircMain
 
