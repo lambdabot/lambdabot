@@ -1,5 +1,7 @@
 {-# OPTIONS -cpp #-}
 
+-- Copyright (c) 2005 Don Stewart - http://www.cse.unsw.edu.au/~dons
+
 module VersionModule where
 
 import IRC
@@ -19,8 +21,9 @@ instance Module VersionModule where
     moduleSticky _ = False
     commands     _ = return ["version"]
     process      _ _ target _ _ =
-        ircPrivmsg target $ "lambdabot :" ++ 
-                            " ghc-" ++ GHC_VERSION ++
-                            " (" ++ BUILD_DATE ++ ") " ++
-                            " (" ++ PLATFORM ++ ")"
+        ircPrivmsg target $ "lambdabot :: " ++ 
+                            "ghc-" ++ GHC_VERSION ++
+                            " (" ++ BUILD_DATE ++ ")" ++
+                            " (" ++ PLATFORM ++ ")" ++ "\n" ++
+                            "darcs get http://www.cse.unsw.edu.au/~dons/lambdabot"
 
