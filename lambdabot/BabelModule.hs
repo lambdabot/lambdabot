@@ -222,7 +222,7 @@ run_quote target name = do
 
 
 quotesFile :: [Char]
-quotesFile = "/home/dons/.lambdabot-quotes"
+quotesFile = "lambdabot-quotes"
     
 type Quotes = [(String,[String])]
 
