@@ -55,6 +55,10 @@ getModuleFile _ = error "unknown module"
 
 data Require = Object String | Package String
 
+--
+-- Some of these 'requires' are already hardcoded in
+-- DynamicModule.initialise :/
+--
 getFileRequires                 :: MonadIO m => String -> m [Require]
 getFileRequires "HaddockModule.o" = return [
                                             Object "Map.o",
@@ -90,7 +94,6 @@ getFileRequires "EvalModule/LMEngine.o"
                                          ,Object "EvalModule/ArithTerm.o" 
                                          ,Object "EvalModule/LangPack.o" 
                                          ,Object "EvalModule/LambdaTerm.o"
-                                         ,Package "parsec"
                                          ]
 getFileRequires "GHCiModule.o"  = return [Object "Shell.o", Object "Map.o"]
 getFileRequires "BabelModule.o" = return [Object "BabelBot/BabelFish.o",
@@ -101,7 +104,6 @@ getFileRequires "PlModule.o"    = return [Object "PlModule/Transform.o"
                                          ,Object "PlModule/Common.o"
                                          ,Object "PlModule/Set.o"
                                          ,Object "PlModule/Rules.o"
-                                         ,Package "parsec"
                                          ]
 getFileRequires "HelpModule.o"  = return [Object "Map.o"]
 
