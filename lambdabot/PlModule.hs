@@ -42,8 +42,9 @@ instance Module PlModule where
     moduleSticky _ = False
     moduleHelp _ "pl-resume" = return "@pl-resume - resume a suspended pointless transformation."
     moduleHelp _ _ = return "@pointless <expr> - play with pointfree code"
-    commands _     = return $ ["pointless","pl-resume"]
+    commands _     = return $ ["pointless","pl-resume","pl"]
     process _ _ target "pointless" rest = pf target rest
+    process _ _ target "pl"        rest = pf target rest
     process _ _ target "pl-resume" _ = res target
     process _ _ target _ _ =
       ircPrivmsg target "pointless: sorry, I don't understand."
