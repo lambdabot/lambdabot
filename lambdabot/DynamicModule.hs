@@ -135,7 +135,6 @@ load name
 unload :: String -> Dyn ()
 unload name
      = do 
-          _dl <- dlGet
           liftLB $ ircUnloadModule name
           file <- getModuleFile name
           doUnloadObject file

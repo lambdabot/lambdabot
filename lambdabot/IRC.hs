@@ -714,23 +714,17 @@ ircLoadModule modname = withModule ircModules modname (return ()) (\m -> do
     moduleInit m)
 
 ircUnloadModule :: String -> LB ()
-ircUnloadModule modname = withModule ircModules modname (error "module not loaded") (\m ->
-    if moduleSticky m 
-    then error "module is sticky"
-    else do 
-      moduleExit m
-      ircUnloadModule' m)
-  where
-    ircUnloadModule' m
-        = do modnm <- moduleName m
-             cmds  <- commands m
-             s <- get
-             let modmap = ircModules s        -- :: Map String MODULE,
-                 cmdmap = ircCommands s        -- :: Map String MODULE
-                 in
-                 put (s { ircCommands = foldl (flip M.delete) cmdmap cmds }
-                        { ircModules = M.delete modnm modmap })
-
+ircUnloadModule modname = withModule ircModules modname (error "module not loaded") (\m -> do
+    when (moduleSticky m) $ error "module is sticky"
+    moduleExit m
+    modnm <- moduleName m
+    cmds  <- commands m
+    s <- get
+    let modmap = ircModules s
+        cmdmap = ircCommands s
+    put $ s { ircCommands = foldl (flip M.delete) cmdmap cmds }
+            { ircModules = M.delete modnm modmap }
+  )
 
 ircSignalConnect :: MonadLB m => String -> (IRCMessage -> IRC ()) -> m ()
 ircSignalConnect str f 
