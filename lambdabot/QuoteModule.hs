@@ -3,14 +3,10 @@
 module QuoteModule where
 
 import QuoteModule.Fortune      (randFortune)
-import Util                     (getRandItem)
+import Util                     (stdGetRandItem)
 import IRC
-import qualified Map as M       (insert, lookup)
 
-import Data.IORef               (newIORef, readIORef, writeIORef)
 import Control.Monad.State
-import System.Time
-import System.Random            (RandomGen(next), mkStdGen)
 
 ------------------------------------------------------------------------
 newtype QuoteModule = QuoteModule ()
@@ -39,7 +35,7 @@ instance Module QuoteModule where
 
 -- | Return a random arr-quote
 arrRandom :: IO String
-arrRandom = QuoteModule.Random.getRandItem arrList
+arrRandom = Util.stdGetRandItem arrList
 
 -- | A list of arr-quotes
 arrList :: [String]

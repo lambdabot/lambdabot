@@ -2,12 +2,11 @@
 
 module QuoteModule.Fortune where
 
-import Util (getRandItem)
+import Util (stdGetRandItem)
 import qualified Util hiding (getRandItem)
 
 import Data.List
 import Control.Monad
-import System.Random
 import System.Directory
 import qualified Control.Exception as C (catch)
 
@@ -40,7 +39,7 @@ filelist = do filelist'<- C.catch (getDirectoryContents path)
 
 -- | Select a random fortune file
 fileRandom :: IO FilePath
-fileRandom = filelist >>= getRandItem
+fileRandom = filelist >>= stdGetRandItem
 
 -- | Parse a file of fortunes into a list of the fortunes in the file.
 fortunesParse :: FilePath -> IO [String]
@@ -55,7 +54,7 @@ fortuneRandom :: FilePath -> IO String
 fortuneRandom filename
     = do
       fortunesList <- fortunesParse filename
-      getRandItem fortunesList
+      stdGetRandItem fortunesList
 
 -- | Given an optional fortune section, return a random fortune. If Nothing,
 --   then a random fortune from all fortune files is returned. If Just section,

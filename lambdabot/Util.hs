@@ -148,3 +148,11 @@ getRandItem mylist rng = (mylist !! index,newRng)
                          where
                          llen = length mylist
                          (index, newRng) = randomR (0,llen - 1) rng
+
+-- | 'stdGetRandItem' is the specialization of 'getRandItem' to the standard
+--   RNG embedded within the IO monad. The advantage of using this is that
+--   you use the Operating Systems provided RNG instead of rolling your own
+--   and the state of the RNG is hidden, so one don't need to pass it
+--   explicitly.
+stdGetRandItem :: [a] -> IO a
+stdGetRandItem lst = getStdRandom $ getRandItem lst
