@@ -70,6 +70,14 @@ if test -n "$WithGhc" ; then
 fi
 AC_SUBST(GLASGOW_HASKELL)
 
+# check ghc library path
+if test -n "$WithGhc" ; then
+    AC_MSG_CHECKING([for ghc library path])
+    GHC_LIB_PATH=`$WithGhc --print-libdir`
+    AC_MSG_RESULT([$GHC_LIB_PATH])
+fi
+AC_SUBST(GHC_LIB_PATH)
+
 BUILD_DATE=`date`
 AC_SUBST(BUILD_DATE)
 

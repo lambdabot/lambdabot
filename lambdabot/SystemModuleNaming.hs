@@ -1,8 +1,9 @@
 {-# OPTIONS -cpp -fglasgow-exts -fno-warn-unused-binds #-}
 
+#include "config.h"
+
 module SystemModuleNaming (systemModuleName) where
 
-import GHCLibraryPath (ghcLibraryPath)
 import Monad
 import Directory
 import qualified Control.Exception as C (catch,throw)
@@ -61,6 +62,10 @@ data Package
            }
   deriving Read
 #endif
+
+-- cpp'd:
+ghcLibraryPath :: String
+ghcLibraryPath = GHC_LIB_PATH ++ "/"
 
 --
 -- Given a package name, e.g. 'concurrent', find the full path to that object

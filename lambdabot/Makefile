@@ -62,9 +62,14 @@ lambdabot: $(filter-out $(PLUGIN_OBJS), $(SOURCES))
 #
 # Dependency generation
 #
-depend: StaticModules.hs GHCLibraryPath.hs $(SOURCES)
+depend: StaticModules.hs $(SOURCES)
 	@echo -n "Rebuilding dependencies ... "
 	@$(GHC) -cpp $(HC_OPTS) $(PKG_OPTS) $(HTOOLKIT) -M -optdep-f -optdepdepend $(SOURCES) || rm depend
+	@echo "done."
+
+StaticModules.hs: GenStaticModules.hs StaticModules.conf
+	@echo -n "Generating static modules list ... "
+	@echo main | ghci -v0 GenStaticModules.hs
 	@echo "done."
 
 # 
@@ -80,29 +85,17 @@ depend: StaticModules.hs GHCLibraryPath.hs $(SOURCES)
 %.$(way_)o : %.lhs
 	$(GHC) $(HC_OPTS) $(PKG_OPTS) -c $< -o $@  -ohi $(basename $@).$(way_)hi
 
-#
-# Dynamic modules need special treatment
-#
-
 #GhciModule.o: Shell.o GhciModule.hs
 #	$(GHC) $(HC_OPTS) $(PKG_OPTS) -c $< -o $@  -ohi $(basename $@).$(way_)hi
 
 #FactModule.o: FactModule.hs
 #	$(GHC) $(GHCFLAGS) $(HTOOLKIT) -c $<
 
-GHCLibraryPath.hs: GHCLibraryPath.hs.in
-	@sed -e"s,@GHC_LIB_PATH@,`$(GHC) --print-libdir`," < $< > $@
-
 #genStaticModules: GenStaticModules.hs
 #	$(GHC) -o $@ $<
 
 #StaticModules.hs: genStaticModules StaticModules.conf
 #	@./genStaticModules
-
-StaticModules.hs: GenStaticModules.hs StaticModules.conf
-	@echo -n "Generating static modules list ... "
-	@echo main | ghci -v0 GenStaticModules.hs
-	@echo "done."
 
 clean:
 	rm -f lambdabot genStaticModules
