@@ -603,6 +603,7 @@ ctcpDequote (c:cs)             = c : ctcpDequote cs
 
 class Module m where
     moduleName      :: m -> LB String
+    moduleHelp      :: m -> String -> LB String
     moduleSticky    :: m -> Bool
     commands        :: m -> LB [String]
     moduleInit      :: m -> LB ()

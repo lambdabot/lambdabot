@@ -46,6 +46,7 @@ getModuleFile "haddock" = return "HaddockModule.o"
 getModuleFile "cmafihe" = return "CmafiheModule.o"
 getModuleFile "babel" = return "BabelModule.o"
 getModuleFile "pl"    = return "PlModule.o"
+getModuleFile "help"    = return "HelpModule.o"
 getModuleFile _ = error "unknown module"
 
 data Require = Object String | Package String
@@ -102,8 +103,7 @@ getFileRequires _ = return []
 getStartupModules :: MonadIO m => m [String]
 getStartupModules = return [
         "dummy", "state","topic","karma","type","seen",
-        "dict","quote","eval", "pl","plugs","babel","version",
-        "more"
+        "dict","quote","eval", "pl","plugs","babel","version"
         ] --,"fact","haddock"]
 
 -- for the MoreModule, how many lines to show at a time
