@@ -23,16 +23,15 @@ module BabelModule (
 import BabelBot.BabelFish
 
 import IRC
-import Util (debugStrLn)
+import Util       (debugStrLn, stdGetRandItem)
 import PosixCompat
+import qualified Map as Map
 
 import Data.Char
 import Data.List
-import Data.FiniteMap
 import Data.Maybe
 import Control.Monad.Trans      ( liftIO, MonadIO )
 import Control.Exception
-import System.Random            ( getStdRandom, Random(randomR) )
 
 import System.IO
 #if __GLASGOW_HASKELL__ < 603
@@ -190,11 +189,13 @@ run_remember str =
             q = if null q' then q' else tail q'
         s <- readFile quotesFile
         eqs <- try $ evaluate $ (read s :: Quotes)
-        let qs = case eqs of Left _ -> [] ; Right qs' -> qs'
-        let fm  = listToFM qs
-            ss  = lookupWithDefaultFM fm [] name
-            fm' = addToFM fm name (q:ss)
-            s'  = fmToList fm'
+        let qs = either (const []) id eqs
+
+        let fm  = Map.fromList qs
+            ss  = fromMaybe [] (Map.lookup name fm)
+            fm' = Map.insert name (q:ss) fm
+            s'  = Map.toList fm'
+
         writeFile quotesFile (show (s' :: Quotes))
 
 --
@@ -206,23 +207,21 @@ run_quote target name = do
             s <- readFile quotesFile
             eqs <- try $ evaluate $ (read s :: Quotes)
             let rs  = case eqs of Left _ -> [] ; Right rs' -> rs'
-                fm  = listToFM rs
-                qs'= lookupFM fm name
+                fm  = Map.fromList rs
+                qs' = Map.lookup name fm
             if name /= [] 
                 then return (name,qs') -- (String, Maybe [String])
 
-                else do let ls = fmToList fm  -- random person
-                        i <- getStdRandom (randomR (0,length ls-1))
-                        let (nm,rs') = ls !! i
+                else do (nm,rs') <- stdGetRandItem (Map.toList fm) -- random person
                         return (nm, Just rs')
 
     case qs of
         Nothing   -> ircPrivmsg target $ nm ++ " hasn't said anything memorable"
 
-        Just msgs -> do i <- liftIO $ getStdRandom (randomR (0,(length msgs - 1)))
+        Just msgs -> do msg <- liftIO $ stdGetRandItem msgs
                         if name /= []
-                            then ircPrivmsg target $ "  " ++ (msgs !! i)
-                            else ircPrivmsg target $ nm++" says: " ++ (msgs !! i)
+                            then ircPrivmsg target $ "  " ++ msg
+                            else ircPrivmsg target $ nm++" says: " ++ msg
 
 
 quotesFile :: [Char]
