@@ -41,6 +41,7 @@ getModuleFile "dummy" = return "DummyModule.o"
 getModuleFile "ghci"  = return "GhciModule.o"
 getModuleFile "more"  = return "MoreModule.o"
 getModuleFile "plugs" = return "PlugsModule.o"
+getModuleFile "version" = return "VersionModule.o"
 getModuleFile "haddock"  = return "HaddockModule.o"
 getModuleFile "cmafihe"  = return "CmafiheModule.o"
 getModuleFile "babel" = return "BabelModule.o"
@@ -90,7 +91,7 @@ getFileRequires _ = return []
 
 getStartupModules :: MonadIO m => m [String]
 getStartupModules = return ["dummy","hello","state","topic","karma","more","haddock","cmafihe",
-                            "type","seen","dict","quote","eval","ghci"] --,"fact"]
+                            "type","seen","dict","quote","eval","ghci","version"] --,"fact"]
 
 -- for the MoreModule, how many lines to show at a time
 getMaxLines :: MonadIO m => m Int

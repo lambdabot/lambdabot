@@ -3,7 +3,7 @@
 include config.mk
 
 DYNMODS=Dict Dummy Eval Hello Karma Quote Seen State \
-        System Topic Type Cmafihe Plugs Babel #Haddock GHCi
+        System Topic Type Cmafihe Plugs Babel Version #Haddock GHCi
 
 EXCLUDES=ChessModule.hs SearchMailingList.hs SearchMLModule.hs \
 	 EvalModule/tests.hs FactModule.hs HaddockModule.hs GenStaticModules.hs
@@ -56,7 +56,6 @@ modules: $(addsuffix Module.o,$(DYNMODS))
 
 #FactModule.o: FactModule.hs
 #	$(GHC) $(GHCFLAGS) $(HTOOLKIT) -c $<
-
 
 GHCLibraryPath.hs: GHCLibraryPath.hs.in
 	@sed -e"s,@GHC_LIB_PATH@,`$(GHC) --print-libdir`," < $< > $@

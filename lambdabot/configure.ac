@@ -67,9 +67,16 @@ if test -n "$WithGhc" ; then
 fi
 AC_SUBST(GLASGOW_HASKELL)
 
+BUILD_DATE=`date`
+AC_SUBST(BUILD_DATE)
+
+PLATFORM=`uname -ms`
+AC_SUBST(PLATFORM)
+
 AC_CHECK_PROG(HaddockCmd,haddock,haddock)
 
 AC_SUBST(SYMS)
 
 AC_CONFIG_FILES([config.mk])
+AC_CONFIG_FILES([config.h])
 AC_OUTPUT
