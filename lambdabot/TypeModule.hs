@@ -4,7 +4,7 @@
 --
 --                                                                        .
 --                                         .pesco hamburg 2003-04-05.    |
---                                                                      /_\   
+--                                                                      /_\
 
 module TypeModule where
 
@@ -62,7 +62,7 @@ exptab (x:xs)    = x : exptab xs
 --
 extract_signatures :: String -> [String]
 extract_signatures output
-        = map exptab $ map last.mapMaybe (matchRegex signature_regex) $ 
+        = map exptab $ map last.mapMaybe (matchRegex signature_regex) $
                  (reverse $ tail $ reverse $ drop 7 $ lines output)
 
 extract_result :: String -> [String]
@@ -75,7 +75,8 @@ extract_result output
 query_ghci :: String -> String -> String -> IRC ()
 query_ghci src cmd expr =
        do
-       (output, _, _) <- liftIO $ popen "ghci-6.4" ["-fglasgow-exts"] (Just (command cmd expr))
+       (output, _, _) <- liftIO $ popen "ghci-6.4" ["-fglasgow-exts"]
+			                  (Just (command cmd expr))
        mapM_ (ircPrivmsg src) $
                 let ls = extract_signatures output
                 in if null ls then ["bzzt"] else ls
