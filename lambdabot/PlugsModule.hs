@@ -57,11 +57,12 @@ plugs src = do
 -- Clean up runplugs' output
 --
 clean :: String -> String
-clean s | Just (a,_,b,_) <- filename `matchRegexAll` s = a ++ clean b
-        | Just (a,_,b,_) <- filepath `matchRegexAll` s = a ++ clean b
-        | Just (_,m,_,_) <- hsplugins `matchRegexAll` s = m
+clean s | Just _         <- no_io      `matchRegex`   s = "No IO allowed\n"
         | Just _         <- terminated `matchRegex`   s = "Terminated\n"
         | Just _         <- stack_o_f  `matchRegex`   s = "Stack overflow\n"
+        | Just (a,_,b,_) <- filename `matchRegexAll`  s = a ++ clean b
+        | Just (a,_,b,_) <- filepath `matchRegexAll`  s = a ++ clean b
+        | Just (_,m,_,_) <- hsplugins `matchRegexAll` s = m
         | otherwise      = s
     where
         -- s/<[^>]*>:[^:]: //
@@ -70,6 +71,7 @@ clean s | Just (a,_,b,_) <- filename `matchRegexAll` s = a ++ clean b
         terminated = mkRegex "waitForProc"
         stack_o_f  = mkRegex "Stack space overflow"
         hsplugins  = mkRegex "Compiled, but didn't create object"
+        no_io      = mkRegex "No instance for \\(Show \\(IO"
 
 ------------------------------------------------------------------------
 --
