@@ -49,6 +49,7 @@ data Require = Object String | Package String
 
 getFileRequires                 :: MonadIO m => String -> m [Require]
 getFileRequires "HaddockModule.o" = return [
+                                            Object "Map.o",
                                             Object "haddock/HaddockHtml.o",
                                             Object "haddock/HaddockVersion.o",
                                             Object "haddock/HaddockTypes.o",
@@ -64,8 +65,13 @@ getFileRequires "HaddockModule.o" = return [
 getFileRequires "QuoteModule.o" = return [Object "QuoteModule/Yow.o",
                                           Object "QuoteModule/Fortune.o"]
 getFileRequires "FactModule.o"  = return [Package "HToolkit"]
+getFileRequires "TopicModule.o" = return [Object "Map.o"]
+getFileRequires "StateModule.o" = return [Object "Map.o"]
+getFileRequires "SeenModule.o"  = return [Object "Map.o"]
 getFileRequires "DictModule.o"  = return [Object "DictModule/DictLookup.o"]
-getFileRequires "EvalModule.o"  = return [Object "EvalModule/LMEngine.o"]
+getFileRequires "KarmaModule.o"  = return [Object "Map.o"]
+getFileRequires "EvalModule.o"  = return [Object "EvalModule/LMEngine.o",
+                                          Object "Map.o"]
 getFileRequires "EvalModule/LMEngine.o" 
                                 = return [Object "EvalModule/LMParser.o",
                                           Object "EvalModule/ListTerm.o",
@@ -74,7 +80,7 @@ getFileRequires "EvalModule/LMEngine.o"
                                           Object "EvalModule/LangPack.o",
                                           Object "EvalModule/LambdaTerm.o"
                                          ]
-getFileRequires "GHCiModule.o"  = return [Object "Shell.o"]
+getFileRequires "GHCiModule.o"  = return [Object "Shell.o", Object "Map.o"]
 getFileRequires "PlugsModule.o" = return [Object "PlugsModule/RunPlugs.o"]
 
 getFileRequires _ = return []
