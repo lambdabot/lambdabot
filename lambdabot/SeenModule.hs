@@ -90,8 +90,6 @@ instance Module SeenModule SeenState where
                   Just (NewNick newnick) -> nickIsNew newnick
                   _ -> ircPrivmsg target $ "I haven't seen " ++ nick
 
-
-
 joinCB :: IRCMessage -> Seen IRC () -- when somebody joins
 joinCB msg = do 
         let nick = ircnick msg

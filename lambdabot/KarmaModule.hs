@@ -20,7 +20,7 @@ instance Module KarmaModule KarmaState where
     moduleHelp _ "karma"  = return "return a person's karma value"
     moduleHelp _ "karma+" = return "increment someone's karma"
     moduleHelp _ "karma-" = return "decrement someone's karma"
-    moduleHelp m _        = moduleHelp m "karma" 
+    moduleHelp m _        = moduleHelp m "karma"
 
     moduleDefState  _ = return $ M.empty
     moduleSerialize _ = Just mapSerializer
