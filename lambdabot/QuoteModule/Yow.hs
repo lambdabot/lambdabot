@@ -6,6 +6,8 @@ import Monad
 -- import System.Directory
 import System.Random
 import Util
+import qualified Control.Exception as C (catch)
+
 -- 	$Id: Yow.hs,v 1.3 2003/07/29 13:41:50 eleganesh Exp $	
 
 -- find a cleaner way to write, this is too hard to read
@@ -34,8 +36,10 @@ path :: [Char]
 path = "yow.lines"
 
 yowParse :: FilePath -> IO [[Char]]
-yowParse filename = do rawfs <- readFile filename
-                       return ( Util.split "\00" rawfs)
+yowParse filename = do 
+        rawfs <- C.catch (readFile filename)
+                         (\_ -> return "Couldn't find yow file")
+        return ( Util.split "\00" rawfs)
 
 yowRandom :: (RandomGen g) => g -> IO ([Char], g)
 yowRandom rng

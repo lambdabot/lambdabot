@@ -11,10 +11,13 @@ import Posix
 import Monad
 import System.Directory
 import System.Random
+import qualified Control.Exception as C (catch)
+
 -- 	$Id: Fortune.hs,v 1.3 2003/07/29 13:41:49 eleganesh Exp $	
 
 filelist :: IO [String]
-filelist = do filelist' <- getDirectoryContents "/usr/share/games/fortunes"
+filelist = do filelist'<- C.catch (getDirectoryContents "/usr/share/games/fortunes")
+                                  (\_ -> return [])
               let files = filter (not . isSuffixOf ".dat") filelist'
               join (return (filterM isFile (map (path ++) files)))
 
@@ -39,8 +42,10 @@ path :: [Char]
 path = "/usr/share/games/fortunes/"
 
 fortunesParse :: FilePath -> IO [String]
-fortunesParse filename = do rawfs <- readFile filename
-                            return (map unlines $ splines $ lines rawfs)
+fortunesParse filename = do
+    rawfs <- C.catch (readFile filename)
+                     (\_ -> return "Couldn't find fortune file")
+    return (map unlines $ splines $ lines rawfs)
 
 fortuneRandom :: (RandomGen g) => FilePath -> g -> IO (String, g)
 fortuneRandom filename rng
