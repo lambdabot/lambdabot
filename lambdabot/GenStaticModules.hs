@@ -6,47 +6,40 @@ module Main where
 import Char
 
 main :: IO ()
-main = do contents <- readFile "StaticModules.conf"
-          let modules = map clean . filter isValid $ lines contents
-          writeFile "StaticModules.hs" $ unlines $ process modules
-          writeFile "StaticModules2.hs" $ unlines $ process2 modules
+main = do modules <- readFile "StaticModules.conf"
+          writeFile "StaticModules.hs" $ unlines $ process $ lines modules
 
-isValid :: String -> Bool
-isValid [] = False
-isValid ('#':_) = False
-isValid _ = True
+process :: [[Char]] -> [[Char]]
+process modules = process' (filter isValid modules)
+    where
+        isValid :: [Char] -> Bool
+        isValid [] = False
+        isValid ('#':_) = False
+        isValid _ = True
 
-clean :: String -> String
+        process' :: [[Char]] -> [[Char]]
+        process' modules = concat [begin, map doimport modules, 
+                                   middle, map doload modules]
+
+begin :: [[Char]]
+begin = ["module StaticModules (loadStaticModules) where",
+         "import IRC",
+         ""]
+
+doimport :: [Char] -> [Char]
+doimport name = "import " ++ (clean . upperise) name ++ "Module"
+
+upperise :: [Char] -> [Char]
+upperise (c:cs) = toUpper c:cs
+
+clean :: [Char] -> [Char]
 clean = reverse . dropWhile (== ' ') . reverse
 
-process :: [String] -> [String]
-process modules = concat [begin, map doimport modules, 
-                          middle, map doload modules] where
-  begin :: [String]
-  begin = ["module StaticModules (loadStaticModules) where",
-           "import IRC",
-           ""]
+middle :: [[Char]]
+middle = ["",
+          "loadStaticModules :: LB ()",
+          "loadStaticModules",
+          " = do"]
 
-  doimport :: String -> String
-  doimport name = "import " ++ (clean . upperise) name ++ "Module"
-
-  upperise :: String -> String
-  upperise (c:cs) = toUpper c:cs
-  upperise []     = []
-
-  middle :: [String]
-  middle = ["",
-            "loadStaticModules :: LB ()",
-            "loadStaticModules",
-            " = do"]
-
-  doload :: String -> String
-  doload name = " ircInstallModule " ++ name ++ "Module"
-
-process2 :: [String] -> [String]
-process2 modules = concat [begin, map doYes modules, end] where
-  begin = ["module StaticModules2 (isStaticModule) where",
-           "",
-           "isStaticModule :: String -> Bool"]
-  doYes name = "isStaticModule " ++ show name ++ " = True"
-  end = ["isStaticModule _ = False"]
+doload :: [Char] -> [Char]
+doload name = " ircInstallModule " ++ name ++ "Module"

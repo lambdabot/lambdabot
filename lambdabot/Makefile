@@ -26,7 +26,7 @@ EXCLUDED_SRCS+= EvalModule/tests.hs PlModule/Test.hs Shell.hs GenStaticModules.h
 #
 # Generated at runtime
 #
-EXTRA_SRCS=StaticModules.hs StaticModules2.hs
+EXTRA_SRCS=StaticModules.hs
 
 #
 # Construct a list of buildable sources, based on $ALL_DIRS, and their
@@ -145,6 +145,6 @@ clean:
 distclean: clean
 	rm -f config.mk config.h config.log config.status configure 
 	rm -rf autom4te.cache
-	rm -f StaticModules.hs StaticModules2.hs genStaticModules
+	rm -f StaticModules.hs genStaticModules
 
 -include depend

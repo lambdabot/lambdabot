@@ -97,15 +97,13 @@ getFileRequires "EvalModule/LMEngine.o"
                                          ]
 getFileRequires "GHCiModule.o"  = return [Object "Shell.o", Object "Map.o"]
 getFileRequires "BabelModule.o" = return [Object "BabelBot/BabelFish.o",
-                                          Object "MiniHTTP.o",
-                                          Object "Map.o"]
+                                          Object "MiniHTTP.o"]
 getFileRequires "PlModule.o"    = return [Object "PlModule/Transform.o" 
                                          ,Object "PlModule/PrettyPrinter.o"
                                          ,Object "PlModule/Parser.o"
                                          ,Object "PlModule/Common.o"
                                          ,Object "PlModule/Set.o"
                                          ,Object "PlModule/Rules.o"
-                                         ,Object "Map.o"
                                          ]
 getFileRequires "HelpModule.o"  = return [Object "Map.o"]
 

@@ -6,7 +6,6 @@ import BotConfig
 import RuntimeLoader
 import ErrorUtils
 import Util
-import StaticModules2 (isStaticModule)
 
 import Map (Map)
 import qualified Map as M hiding (Map)
@@ -123,7 +122,6 @@ packagesAccessor a
 load :: String -> Dyn ()
 load name
      = do 
-          when (isStaticModule name) $ error "can't load a static module"
           file <- getModuleFile name
           alreadyloaded <- isLoadedObject file
           when alreadyloaded $ error "already loaded"

@@ -49,7 +49,6 @@ import ErrorUtils
 import ExceptionError   (ExceptionError(..), ExceptionErrorT(..))
 import MonadException   (MonadException(throwM))
 import Util             (breakOnGlue)
-import StaticModules2   (isStaticModule)
 
 import Map (Map)
 import qualified Map as M hiding (Map)
@@ -717,7 +716,6 @@ ircLoadModule modname = withModule ircModules modname (return ()) (\m -> do
 ircUnloadModule :: String -> LB ()
 ircUnloadModule modname = withModule ircModules modname (error "module not loaded") (\m -> do
     when (moduleSticky m) $ error "module is sticky"
-    when (isStaticModule modname) $ error "can't unload a static module"
     moduleExit m
     modnm <- moduleName m
     cmds  <- commands m
