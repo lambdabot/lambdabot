@@ -17,7 +17,7 @@ instance Module DummyModule () where
   moduleSticky _ = False
 
   moduleHelp _ s = return $ case s of
-        "dummy"       -> "dummy module"
+        "dummy"       -> "print a string constant"
         "wiki"        -> "wiki urls"
         "paste"       -> "paste page url"
         "learn"       -> "another url"
