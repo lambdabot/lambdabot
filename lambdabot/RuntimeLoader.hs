@@ -11,17 +11,17 @@
    FIXME: Reformat this as a Haddock list
 
    To use this module:
-   
+
    1. call the 'initialiseRuntimeLoader' function
-   
+
    2. call 'loadObject' on the module(s) you wish to load
-   
+
    3. call 'resolveFunctions' to make the GHC runtime system
-      resolve the symbol table.  
+      resolve the symbol table.
 
    4. use 'loadFunction' to call the function from the module that you want to
       load
-   
+
    The RuntimeLoader performs no dependency tracking; i.e. if you have a module
    Foo which imports a module Bar, you must manually load Foo and Bar
    before calling 'resolveFunctions'.  I don\'t /want/ the basic RuntimeLoader
@@ -42,13 +42,13 @@
 
    * Make loadObject more intelligent about finding modules (try the given
      module name with a .o extension, etc)
-   
+
    * Module search paths?  Uh oh ...
-   
+
    * Get a list of all the currently loaded modules
 
    * Use module handles instead of direct module paths for e.g. loadFunction
-   
+
    * There's no dlclose()?
 
 -}
@@ -65,7 +65,7 @@ module RuntimeLoader (
    unloadObject,		-- :: RuntimeModule -> IO ()
    resolveFunctions,		-- :: IO ()
    loadFunction,  	        -- :: RuntimeModule -> String -> IO (Maybe a)
-   RuntimeLoaderException (..), -- 
+   RuntimeLoaderException (..), --
 ) where
 
 import SystemModuleNaming  ( systemModuleName )
@@ -91,7 +91,7 @@ import Data.Dynamic        ( toDyn, Typeable, mkTyCon, typeOf, mkAppTy )
 throwIO = ioError
 #endif
 
-data RuntimeLoaderException = FunctionNotFound String 
+data RuntimeLoaderException = FunctionNotFound String
                             | ModuleLoadFailed String
                             | ModuleUnloadFailed String
                             | ResolveFailed
@@ -240,7 +240,7 @@ findSymbol (RuntimeModule { name = moduleName }) functionName = do
    where
       symbolName = moduleName ++ "_" ++ functionName ++ "_closure"
 
-    
+
 
 {-|
 
