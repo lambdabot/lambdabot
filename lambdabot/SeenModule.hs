@@ -67,11 +67,9 @@ instance Module SeenModule SeenState where
                     }
 
              nickWasPresent ct chan =
-               do ircPrivmsg target $
-			   concat ["Last time I saw ", nick, "was when I left ",
-				   chan , " ", toPretty $ diffClockTimes now ct,
-				   "ago."]
-
+	       do ircMessage ["Last time I saw ", nick, "was when I left ",
+			      chan , " ", toPretty $ diffClockTimes now ct,
+			      "ago."]
              nickIsNew newnick =
                do let findFunc str =
                         case M.lookup (lowerCaseString str) seenFM of
@@ -79,7 +77,7 @@ instance Module SeenModule SeenState where
 	                  Just _              -> str
                           Nothing             -> error "SeenModule.nickIsNew: Nothing"
 		      us = findFunc newnick
-                  ircPrivmsg target $ concat [nick, " has changed nick to ", us, "."]
+                  ircMessage [nick, " has changed nick to ", us, "."]
                   process m msg target cmd us
          if lcnick == lowerCaseString myname
             then ircPrivmsg target "Yes, I'm here"
