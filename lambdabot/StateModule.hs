@@ -30,10 +30,10 @@ instance Module StateModule where
            put (s { ircModuleState =
 		    M.insert "state" newRef stateMap })
     process      m msg target cmd rest
-      = do 
+      = do
         maybemyref <- gets (\s -> M.lookup "state" (ircModuleState s))
         case maybemyref of
-            Just myref -> 
+            Just myref ->
                 do modstate <- liftIO (readIORef myref)
 		   liftIO (writeIORef myref (ModuleState rest))
 		   ircPrivmsg target (stripMS modstate)

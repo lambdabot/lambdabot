@@ -9,7 +9,8 @@ import qualified DictModule.DictLookup as Dict
 import IRC
 import Control.Monad.Trans (liftIO)
 import Maybe (fromJust)
-import Data.List (intersperse, sort)
+import Data.List (sort)
+import Util
 
 newtype DictModule = DictModule ()
 
@@ -77,7 +78,7 @@ dictNames = sort (map fst dictTable)
 
 quickHelp :: String
 quickHelp = unlines [ "Supported dictionary-lookup commands:"
-                    , "  " ++ join (map ('@':) dictNames)
+                    , "  " ++ join " " (map ('@':) dictNames)
                     , "Use \"@dict-help [cmd...]\" for more."
                     ]
 
@@ -115,8 +116,8 @@ parseTerms = pW . words
     where
     pW []  = []
     pW (w@(f:_):ws)
-        | f `elem` "'\"" = join qws : pW ws'
-        | last w == '\\' = let (w':rest) = pW ws in join [w, w'] : rest
+        | f `elem` "'\"" = join " " qws : pW ws'
+        | last w == '\\' = let (w':rest) = pW ws in join " " [w, w'] : rest
         | otherwise      = w : pW ws
         where
         (qws, ws') = case break isCloseQuotedWord (w:ws) of
@@ -128,5 +129,3 @@ parseTerms = pW . words
             _     -> False
     pW _ = error "DictModule: parseTerms: can't parse"
 
-join :: [String] -> String
-join = concat . intersperse " "

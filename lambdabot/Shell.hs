@@ -29,7 +29,8 @@ foreign import ccall get_i2 :: (Ptr Tuple_2_int) -> IO Int
 foreign import ccall get_i3 :: (Ptr Tuple_2_int) -> IO Int
 foreign import ccall get_pid :: (Ptr Tuple_2_int) -> IO CPid
 foreign import ccall delete_tuple_2_int :: (Ptr Tuple_2_int) -> IO ()
-foreign import ccall "launch" launchC :: CString -> (Ptr CString) -> IO (Ptr Tuple_2_int)
+foreign import ccall "launch" launchC :: CString -> (Ptr CString)
+				      -> IO (Ptr Tuple_2_int)
 foreign import ccall "wait_for_it" waitForIt :: Ptr Tuple_2_int -> IO Int
 
 defaultLaunch :: FilePath -> [String] -> IO (String, ExitCode)
