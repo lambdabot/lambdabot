@@ -33,13 +33,13 @@ Imports should be ordered as so:
         GHC.*
 }}}
 
-*** Don't use non-hierarchical modules
+*** Use hierarchical modules
 
 Old style non-hierarchical module imports should be replaced with their
 hierachial module counterpart. For instance, the List module should be
 replaced with Data.List.
 
-*** Don't use deprecated modules
+*** Use non-deprecated modules
 
 Modules deprecated should be removed and replaced with their no-deprecated
 counterparts. This is especially important to avoid bitrot in the code.
@@ -56,7 +56,9 @@ This should always be the case, as we require -Werror
 
 *** Haddock documentation
 
-Provide haddock comments for your exported functions.
+Provide haddock comments for your exported functions. Also, try to provide
+documentation for internal functions too. This way the code is much easier
+to read and work with.
 
 *** Portability
 
