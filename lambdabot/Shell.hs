@@ -1,3 +1,5 @@
+{-# OPTIONS -cpp #-}
+
 module Shell
     ( launch
     , launch' --Interactive IN/OUT/ERR launch of an application.

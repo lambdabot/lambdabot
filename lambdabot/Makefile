@@ -6,16 +6,14 @@ DYNMODS=Dict Dummy Eval Hello Karma Quote Seen State \
 
 EXCLUDES=ChessModule.hs SearchMailingList.hs SearchMLModule.hs EvalModule/tests.hs FactModule.hs HaddockModule.hs GenStaticModules.hs
 
-EXCLUDESFIND=$(addprefix -not -path ./,$(EXCLUDES))
+EXCLUDESFIND=$(addprefix ! -path ./,$(EXCLUDES))
 
 SOURCES = $(shell find . -path './_darcs' -prune -depth -o $(EXCLUDESFIND) -name \*.hs -o -name \*.lhs)
 
-GHC=	ghc
+GHC=	ghc-6.4
 
-# GHCFLAGS = -fglasgow-exts -cpp -lHSrts -package posix -package network -l
-GHCFLAGS =  -fglasgow-exts -cpp -fno-warn-deprecations
-GHCFLAGS += -package posix -package network -package parsec #-ihaddock
-GHCFLAGS += -lHSrts -lHSparsec 
+GHCFLAGS += -package posix -package network -package parsec
+LINKFLAGS = -lHSrts -lHSparsec 
 
 HTOOLKIT =
 
@@ -24,12 +22,12 @@ all: lambdabot modules
 FORCE:
 
 lambdabot: ./Main.o
-	$(GHC) $(GHCFLAGS) $(HTOOLKIT) --make Main.hs -o lambdabot
+	$(GHC) $(GHCFLAGS) $(LINKFLAGS) $(HTOOLKIT) --make Main.hs -o lambdabot
 
 modules: $(addsuffix Module.o,$(DYNMODS))
 
 %.hi: %.o
-	touch $@
+	@touch $@
 
 %.o: %.hs
 	$(GHC) $(GHCFLAGS) -c $<
@@ -50,13 +48,13 @@ Shell.o: shell_stub.o Shell.hs
 #	$(GHC) $(GHCFLAGS) $(HTOOLKIT) -c $<
 
 GHCLibraryPath.hs: GHCLibraryPath.hs.in
-	sed -e"s#@GHC_LIB_PATH@#`$(GHC) --print-libdir`#" < $< > $@
+	@sed -e"s#@GHC_LIB_PATH@#`$(GHC) --print-libdir`#" < $< > $@
 
 genStaticModules: GenStaticModules.hs
-	$(GHC) --make GenStaticModules -o genStaticModules
+	$(GHC) GenStaticModules.hs -o genStaticModules
 
 StaticModules.hs: genStaticModules StaticModules.conf
-	./genStaticModules
+	@./genStaticModules
 
 clean:
 	rm -f lambdabot genStaticModules
@@ -67,7 +65,8 @@ clean:
 	rm depend
 
 depend: StaticModules.hs GHCLibraryPath.hs $(SOURCES)
-	$(GHC) $(GHCFLAGS) $(HTOOLKIT) -M -optdep-f -optdepdepend $(SOURCES) \
-	    || rm depend
+	@echo -n "Rebuilding dependencies ..."
+	@$(GHC) -cpp $(GHCFLAGS) $(HTOOLKIT) -M -optdep-f -optdepdepend $(SOURCES) || rm depend
+	@echo "done."
 
 include depend

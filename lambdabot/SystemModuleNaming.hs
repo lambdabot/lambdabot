@@ -1,3 +1,5 @@
+{-# OPTIONS -fglasgow-exts #-}
+
 module SystemModuleNaming (systemModuleName) where
 
 import GHCLibraryPath (ghcLibraryPath)

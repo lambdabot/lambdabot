@@ -1,3 +1,5 @@
+{-# OPTIONS -cpp #-}
+
 module MonadException where
 -- 	$Id: MonadException.hs,v 1.3 2003/07/28 14:44:56 eleganesh Exp $
 
@@ -6,8 +8,7 @@ import Control.Exception
 import Control.Monad.Reader
 import Control.Monad.State
 
-#if __GLASGOW_HASKELL__ >= 600
-#else
+#if __GLASGOW_HASKELL__ < 600
 throwIO = ioError
 #endif
 

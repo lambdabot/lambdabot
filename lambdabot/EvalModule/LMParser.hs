@@ -1,4 +1,9 @@
+{-# OPTIONS -fglasgow-exts #-}
+-- multi-parameter type classes
+
+--
 -- screw modularity (at least temporarily)
+--
 module EvalModule.LMParser (parseTerm,Term(..)) where
 
 import Text.ParserCombinators.Parsec

@@ -1,3 +1,6 @@
+{-# OPTIONS -fglasgow-exts #-}
+-- Non-type variables in constraints
+
 module EvalModule.ListTerm where
 
 import Control.Monad.Error

@@ -1,6 +1,11 @@
+{-# OPTIONS -fglasgow-exts #-}
+-- ^ For multi-parameter classes
+--
 -- Based off of (ripping) ideas from 
 --          "Language Prototyping using Modular Monadic Semantics"
+--
 module EvalModule.LangPack where
+
 import Control.Monad.Error
 import Text.ParserCombinators.Parsec.Prim
 

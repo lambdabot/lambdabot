@@ -1,3 +1,5 @@
+{-# OPTIONS -cpp -fglasgow-exts #-}
+
 module DynamicModule (DynamicModule, dynamicModule) where
 
 import Map (Map)
@@ -30,6 +32,10 @@ data DLModules
                              --  (can't unload, so ref counting pointless)
     }
   deriving Typeable
+
+#if __GLASGOW_HASKELL__ < 603
+empty = emptySet
+#endif
 
 initDLModules = DLModules { objects = M.empty, packages = empty }
 

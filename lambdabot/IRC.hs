@@ -1,3 +1,5 @@
+{-# OPTIONS -cpp -fglasgow-exts #-}
+
 module IRC where
 
 import Map (Map)
@@ -602,7 +604,7 @@ ircLoadModule modname
       = do  cmds <- commands m
             s <- get
             let cmdmap = ircCommands s        -- :: Map String MODULE
-            put (s { ircCommands = M.union (M.fromList [ (cmd,(MODULE m)) | cmd <- cmds ]) cmdmap })
+            put (s { ircCommands = M.addList [ (cmd,(MODULE m)) | cmd <- cmds ] cmdmap })
 
 ircUnloadModule :: String -> LB ()
 ircUnloadModule modname

@@ -25,6 +25,7 @@
 module Map (
 #if __GLASGOW_HASKELL__ >= 604
         module Data.Map,
+        addList,
 #else
         Map,
         empty, 
@@ -33,20 +34,27 @@ module Map (
         lookup, 
         toList,
         fromList, 
+        addList,
         size, 
         elems, 
         singleton,
         member,
         keys,
-        map,
-        filter,
-        foldl,
+
+        mapWithKey,
+        filterWithKey,
+        foldWithKey,
 #endif
   ) where
 
 import Prelude hiding (lookup)
+
 #if __GLASGOW_HASKELL__ >= 604
 import Data.Map
+
+addList :: (Ord k) => [(k,a)] -> Map k a -> Map k a
+addList l m = union (fromList l) m
+
 #else
 --
 -- compatibility code for deprecated FiniteMap
@@ -89,17 +97,20 @@ member = FM.elemFM
 keys  :: Map k a -> [k] 
 keys = FM.keysFM
 
--- addListToFM   = \fm list -> union (fromList list) fm
+addList :: (Ord k) => [(k, a)] -> Map k a -> Map k a
+addList = flip FM.addListToFM
 
 -- delListFromFM = \fm keys -> foldl delete fm keys
 
-map :: (a -> b) -> Map k a -> Map k b
-map = FM.mapFM
+mapWithKey :: (k -> a -> b) -> Map k a -> Map k b
+mapWithKey = FM.mapFM
 
-filter :: Ord k => (a -> Bool) -> Map k a -> Map k a
-filter = FM.filterFM
+-- map f m == mapFM (const f)
 
-foldl :: (a -> b -> b) -> b -> Map k a -> b
-foldl = FM.foldFM
+filterWithKey :: Ord k => (k -> a -> Bool) -> Map k a -> Map k a
+filterWithKey = FM.filterFM
+
+foldWithKey :: (k -> a -> b -> b) -> b -> Map k a -> b
+foldWithKey = FM.foldFM
 
 #endif

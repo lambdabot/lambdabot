@@ -1,5 +1,8 @@
-module Util
-    ( join
+{-# OPTIONS -cpp -fglasgow-exts #-}
+-- Ambiguous type variables 
+
+module Util ( 
+      join
     , split
     , breakOnGlue
     , split_first_word
@@ -8,20 +11,19 @@ module Util
     , Accessor (..)
     , readFM,writeFM,deleteFM
     , lookupSet,insertSet,deleteSet
-    )
-where
-
-import Map (Map)
-import qualified Map as M
+  ) where
 
 -- 	$Id: Util.hs,v 1.10 2003/07/31 19:13:15 eleganesh Exp $	
 
-import List (intersperse, isPrefixOf)
+import BotConfig                (getVerbose)
+import Map                      (Map)
+import qualified Map as M       (lookup, insert, delete)
+
+import List                     (intersperse, isPrefixOf)
 import Data.Dynamic
-import Data.Set hiding ( split )
-import Data.Char
-import BotConfig
-import Control.Monad.State hiding ( join )
+import Data.Set                 (elementOf, addToSet, delFromSet, Set)
+import Data.Char                (Char, String, isSpace)
+import Control.Monad.State      (Monad(..), MonadIO(..))
 
 -- TODO: rename join, clashes with Monad.join
 
@@ -29,7 +31,7 @@ finiteMapTyCon = mkTyCon "Map"
 
 instance (Typeable key, Typeable elt) => Typeable (Map key elt) where
     typeOf _ = mkMyTy finiteMapTyCon [typeOf (undefined :: key),
-			    	typeOf (undefined :: elt)]
+			    	      typeOf (undefined :: elt)]
         where
 #if __GLASGOW_HASKELL__ >= 603
          mkMyTy = mkTyConApp

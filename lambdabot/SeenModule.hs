@@ -1,3 +1,5 @@
+{-# OPTIONS -cpp -fglasgow-exts #-}
+
 module SeenModule 
     (seenModule,
      theModule,

@@ -1,3 +1,4 @@
+{-# OPTIONS -cpp -fglasgow-exts #-}
 {-# OPTIONS -fallow-overlapping-instances #-}
 -- ^ until we fix it properly 
 

@@ -1,3 +1,5 @@
+{-# OPTIONS -cpp #-}
+
 module QuoteModule.Fortune where
 
 import Data.List

@@ -1,3 +1,5 @@
+{-# OPTIONS -fglasgow-exts #-}
+
 module KarmaModule where
 
 import qualified Map as M

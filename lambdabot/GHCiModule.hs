@@ -1,3 +1,4 @@
+{-# OPTIONS -cpp #-}
 {-# OPTIONS -fallow-overlapping-instances#-}
 -- ^ hack
 
