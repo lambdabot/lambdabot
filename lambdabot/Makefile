@@ -86,8 +86,8 @@ StaticModules.hs: genStaticModules StaticModules.conf
 
 clean:
 	rm -f lambdabot genStaticModules
-	rm -f   *.o   *.hi
-	rm -f */*.o */*.hi
+	rm -f   *.o *.$(way_)o  *.$(way_)hi
+	rm -f   */*.$(way_)o  */*.$(way_)hi
 	rm -f *~ */*~
 	rm -f GHCLibraryPath.hs StaticModules.hs
 	rm depend
