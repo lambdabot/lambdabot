@@ -151,10 +151,10 @@ partCB msg
                 Just (Present mct xs) ->
 	         do case xs \\ (ircchannel msg) of
 		        [] -> do ct <- time
-			         let fm' = M.insertWith (\_ x -> x) lcnick
+			         let fm' = M.insert lcnick
 					     (NotPresent ct (listToStr xs)) fm
 			         writeMS fm' 
-			ys -> writeMS $ M.insertWith (\_ x -> x) lcnick 
+			ys -> writeMS $ M.insert lcnick 
 						(Present mct ys) fm
                 _ -> debugStrLn "SeenModule> someone who isn't known parted"
     where nick = unUserMode (ircnick msg)
@@ -176,7 +176,7 @@ quitCB msg
            lcnick = lowerCaseString nick
        case (M.lookup lcnick fm) of
            Just (Present _ct xs) -> 
-               let fm' = M.insertWith (\_ x -> x) lcnick
+               let fm' = M.insert lcnick
                                (NotPresent ct (head xs)) fm
                    in writeMS fm'
            _ -> debugStrLn "SeenModule> someone who isn't known has quit"
@@ -186,7 +186,7 @@ nickCB msg
   = withSeenFM $ \fm ->
     case (M.lookup lcnick fm) of
         Just (Present mct xs) -> 
-            let fm' = M.insertWith (\_ x -> x) lcnick (NewNick newnick) fm
+            let fm' = M.insert lcnick (NewNick newnick) fm
                 fm'' = M.insert lcnewnick (Present mct xs) fm'
                 in writeMS fm''
         _ -> debugStrLn "SeenModule> someone who isn't here changed nick"
@@ -226,9 +226,10 @@ withSeenFM :: (SeenState -> Seen IRC ()) -> Seen IRC ()
 withSeenFM f = f =<< readMS
 
 updateJ :: UserStatus -> UserStatus -> UserStatus
-updateJ (Present _ct cs) (Present ct c) = Present ct $ nub (c ++ cs)
-updateJ _x y@(Present _ct _cs) = y
-updateJ x _ = x
+updateJ = flip updateJ' where
+  updateJ' (Present _ct cs) (Present ct c) = Present ct $ nub (c ++ cs)
+  updateJ' _x y@(Present _ct _cs) = y
+  updateJ' x _ = x
 
 time :: MonadIO m => m ClockTime
 time = liftIO getClockTime

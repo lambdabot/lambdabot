@@ -73,8 +73,9 @@ singleton = FM.unitFM
 insert :: Ord k => k -> a -> Map k a -> Map k a
 insert = \k e m -> FM.addToFM m k e
 
+-- | This function is pure evil. Avoid it if possible.
 insertWith :: Ord k => (a -> a -> a) -> k -> a -> Map k a -> Map k a
-insertWith f k e m = FM.addToFM_C f m k e
+insertWith f k e m = FM.addToFM_C (flip f) m k e
 
 delete :: Ord k => k -> Map k a -> Map k a
 delete = flip FM.delFromFM

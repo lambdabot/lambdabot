@@ -172,7 +172,7 @@ ifexpr = do
 
 term :: Bool -> Parser Expr
 term b = application <|> lambda <|> letbind <|> ifexpr <|>
-    (guard b >> notFollowedBy (noneOf ")") >> return (Var Pref ""))
+    (guard b >> (notFollowedBy (noneOf ")") >> return (Var Pref "")))
   <?> "simple term"
 
 application :: Parser Expr
