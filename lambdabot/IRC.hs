@@ -657,13 +657,12 @@ ircInstallModule modn
         put (s { ircModules = M.insert modname mod' modmap })
         ircLoadModule modname
 
--- TODO!!!
 ircLoadModule :: String -> LB ()
 ircLoadModule modname
   = do  maybemod   <- gets (\s -> M.lookup modname (ircModules s))
         case maybemod of
             Just (ModuleRef m ref) -> ircLoadModule' m `runReaderT` ref
-            Nothing              -> return ()
+            Nothing                -> return ()
   where
     ircLoadModule' m
       = do  cmds <- commands m

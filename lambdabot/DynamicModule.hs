@@ -49,9 +49,8 @@ instance Module DynamicModule DLModules where
   moduleHelp _ _ = return "@dynamic-(un|re)?load: interface to dynamic linker"
   moduleSticky _ = True
   commands     _ = return ["dynamic-load","dynamic-unload","dynamic-reload"]
-  moduleInit   _ = do ref <- ask
-                      liftIO $ initialise
-                      liftIO $ writeIORef ref initDLModules
+  moduleInit   _ = do liftIO initialise
+                      writeMS initDLModules
                       startupModules <- getStartupModules
                       mapM_ (handleRLEConsole . load) startupModules
                                     
