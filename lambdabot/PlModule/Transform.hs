@@ -9,11 +9,11 @@ import PlModule.PrettyPrinter
 import qualified PlModule.Set as S
 --import qualified Data.Set as S
 
-import Data.Graph
+import Data.Graph (stronglyConnComp, flattenSCC, flattenSCCs)
 import qualified Map as M
+
 import Control.Monad.State
 
-import Data.List hiding (union)
 
 type Set = S.Set
 

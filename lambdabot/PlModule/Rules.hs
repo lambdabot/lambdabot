@@ -8,12 +8,12 @@
 
 module PlModule.Rules (RewriteRule(..), rules, fire) where
 
-import Data.Array
-
 import PlModule.Common
-import Control.Monad.Fix
-import Data.List
+
+import Data.Array
 import qualified PlModule.Set as S
+
+import Control.Monad.Fix (fix)
 
 --import PlModule.PrettyPrinter
 
@@ -158,7 +158,7 @@ idE, flipE, bindE, extE, returnE, consE, appendE, nilE, foldrE, foldlE, fstE,
   sndE, dollarE, constE, uncurryE, compE, headE, tailE, sE, commaE, fixE,
   foldl1E, notE, equalsE, nequalsE, plusE, multE, zeroE, oneE, lengthE, sumE,
   productE, concatE, concatMapE, joinE, mapE, fmapE, fmapIE, subtractE, minusE,
-  liftME, apE, liftM2E :: MExpr
+  liftME, apE, liftM2E, seqME :: MExpr
 idE        = Quote $ Var Pref "id"
 flipE      = Quote $ Var Pref "flip"
 constE     = Quote $ Var Pref "const"
@@ -202,6 +202,7 @@ minusE     = Quote $ Var Inf  "-"
 liftME     = Quote $ Var Pref "liftM"
 liftM2E    = Quote $ Var Pref "liftM2"
 apE        = Quote $ Var Inf  "ap"
+seqME      = Quote $ Var Inf  ">>"
 
 
 
@@ -396,6 +397,9 @@ rules = [
   -- (const id . f) --> const id
   rr  (\f -> (constE `a` idE) `c` f)
       (\_ -> constE `a` idE),
+  -- const x . f --> const x
+  rr (\x f -> constE `a` x `c` f)
+     (\x _ -> constE `a` x),
   -- fix f --> f (fix x)
   Hard $
   rr0 (\f -> fixE `a` f)
@@ -482,6 +486,14 @@ rules = [
   rr (\f x -> bindE `a` x `c` flipE `a` (fmapE `c` f))
      (\f x -> liftM2E `a` f `a` x),
 
+  -- (=<<) const q --> flip (>>) q
+  Hard $ -- ??
+  rr (\q p -> extE `a` (constE `a` q) `a` p)
+     (\q p -> seqME `a` p `a` q),
+  -- p >> q --> p >>= const q
+  Hard $
+  rr (\p q -> seqME `a` p `a` q)
+     (\p q -> bindE `a` p `a` (constE `a` q)),
   -- list destructors
   Hard $ 
   If (Or [rr consE consE, rr nilE nilE]) $ Or [

@@ -15,12 +15,15 @@ module PlModule.Common (
   ) where
 
 import Data.Maybe (isJust, fromJust)
-import GHC.Base (assert)
 import Data.List (intersperse, minimumBy)
-import Control.Monad
 import qualified Map as M
-import Text.ParserCombinators.Parsec.Expr (Assoc(..))
+
+import Control.Monad
 import Control.Arrow (first, second, (***), (&&&), (|||), (+++))
+
+import Text.ParserCombinators.Parsec.Expr (Assoc(..))
+
+import GHC.Base (assert)
 import Debug.Trace (trace)
 
 

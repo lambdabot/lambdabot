@@ -2,8 +2,8 @@
 module Main where
 
 #if __GLASGOW_HASKELL__ > 602
-import Test.QuickCheck hiding (test)
 import Test.HUnit
+import Test.QuickCheck hiding (test)
 #else
 import HUnit
 import Debug.QuickCheck hiding (test)
@@ -14,13 +14,14 @@ import PlModule.Transform
 import PlModule.Parser
 import PlModule.PrettyPrinter
 
-import Control.Monad.Error
-import System.Environment
-import System.IO
-import Data.List
-import Data.Char
+import Data.List ((\\))
+import Data.Char (isSpace)
 
-import System.Console.Readline
+import Control.Monad.Error
+
+import System.IO (hSetBuffering, stdout, BufferMode(NoBuffering))
+import System.Environment (getArgs)
+import System.Console.Readline (readline, addHistory, initialize)
 
 instance Arbitrary Expr where
   arbitrary = sized $ \size -> frequency $ zipWith (,) [1,size,size]
@@ -82,7 +83,7 @@ myTest :: IO ()
 myTest = check quick propRoundTrip'
 
 qcTests :: IO ()
-qcTests = mapM_ quickCheck [propRoundTrip]
+qcTests = mapM_ quickCheck [propRoundTrip, propMonotonic1, propMonotonic2]
 
 pf :: String -> IO ()
 pf inp = case parsePF inp of
@@ -117,6 +118,10 @@ lastTest = TestCase $ assertBool "" True
 
 unitTests :: Test
 unitTests = TestList [
+  -- What were they smoking when they decided >> should be infixl
+  unitTest "a >>= \\_ -> b >>= \\_ -> return $ const (1 + 2) $ a + b" ["a >> (b >> return 3)"],
+  unitTest "foo = m >>= \\x -> return 1" ["foo = m >> return 1"],
+  unitTest "foo m = m >>= \\x -> return 1" ["foo = (>> return 1)"],
   unitTest "return (+) `ap` return 1 `ap` return 2" ["return 3"],
   unitTest "liftM2 (+) (return 1) (return 2)" ["return 3"],
   unitTest "(. ((return .) . (+))) . (>>=)" ["flip (fmap . (+))"],

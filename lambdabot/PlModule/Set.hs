@@ -18,8 +18,9 @@ module PlModule.Set  (
 
 
 #if __GLASGOW_HASKELL__ > 602
-import qualified Data.Set as S
 import Prelude (Ord,Bool,Int)
+import qualified Data.Set as S
+
 type Set = S.Set
 
 elems :: Set a -> [a]
