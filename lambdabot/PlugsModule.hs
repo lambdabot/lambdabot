@@ -60,12 +60,14 @@ plugs src = do
 -- Clean up runplugs' output
 --
 clean :: String -> String
-clean s | Just (pre,_,post,_) <- matchRegexAll filename s = pre ++ clean post
-        | Just _              <- matchRegex terminated  s = "Terminated\n"
-        | Just _              <- matchRegex stack_o_f   s = "Stack overflow\n"
-        | otherwise           = s
+clean s | Just (a,_,b,_) <- filename `matchRegexAll` s = a ++ clean b
+        | Just (a,_,b,_) <- filepath `matchRegexAll` s = a ++ clean b
+        | Just _         <- terminated `matchRegex`  s = "Terminated\n"
+        | Just _         <- stack_o_f  `matchRegex`  s = "Stack overflow\n"
+        | otherwise      = s
     where
         -- s/<[^>]*>:[^:]: //
+        filepath   = mkRegex "\n?/[^\\.]*.hs:[^:]*:\n* *"
         filename   = mkRegex "\n?<[^>]*>:[^:]*:\n* *"
         terminated = mkRegex "waitForProc"
         stack_o_f  = mkRegex "Stack space overflow"
@@ -86,6 +88,7 @@ clean s | Just (pre,_,post,_) <- matchRegexAll filename s = pre ++ clean post
 --  * type errors, or module scope errors
 --      @plugs unsafePerformIO (return 42)
 --      @plugs GHC.Exts.I# 1#
+--      @plugs $( Language.Haskell.THSyntax.Q (putStr "heya") >> [| 3 |] )
 --
 --  * syntax errors
 --      @plugs map foo bar
@@ -97,6 +100,8 @@ clean s | Just (pre,_,post,_) <- matchRegexAll filename s = pre ++ clean post
 --      @plugs last $ sort [1..100000 ]
 --      @plugs let fibs = 1:1:zipWith (+) fibs (tail fibs) in take 20 fibs
 --      @plugs sort [1..10000]
+--      @plugs ((error "throw me") :: ())
+--      @plugs Random.randomRs (0,747737437443734::Integer) (Random.mkStdGen 1122)
 --      
 -- More at http://www.scannedinavian.org/~shae/joyXlogs.txt
 --
