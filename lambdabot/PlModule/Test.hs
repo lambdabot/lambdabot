@@ -1,13 +1,12 @@
 {-# OPTIONS -cpp #-}
 module Main where
 
-import Debug.QuickCheck hiding (test)
-
-
 #if __GLASGOW_HASKELL__ > 602
+import Test.QuickCheck hiding (test)
 import Test.HUnit
 #else
 import HUnit
+import Debug.QuickCheck hiding (test)
 #endif
 
 import PlModule.Common
@@ -36,7 +35,7 @@ arbVar = oneof [(Var Pref . return) `fmap` choose ('a','z'),
 
 arbPat :: Gen Pattern
 arbPat = sized $ \size -> 
-  let -- Why can't where be used here, dammit!
+  let
     spat = resize (size `div` 5) arbPat
   in
     frequency $ zipWith (,) [1,size,size] [
@@ -112,7 +111,10 @@ lastTest = TestCase $ assertBool "" True
 
 unitTests :: Test
 unitTests = TestList [
---  unitTest "ap return" ["const id"],
+  unitTest "return (+) `ap` return 1 `ap` return 2" ["return 3"],
+  unitTest "liftM2 (+) (return 1) (return 2)" ["return 3"],
+  unitTest "(. ((return .) . (+))) . (>>=)" ["flip (fmap . (+))"],
+  unitTest "\\a b -> a >>= \\x -> b >>= \\y -> return $ x + y" ["liftM2 (+)"],
   unitTest "s (flip const . f)" ["id"],
   unitTest "uncurry (flip (const . flip (,) (snd t))) . s (,) id" ["flip (,) (snd t)"],
   unitTest "foo = (1, fst foo)" ["foo = (1, 1)"],

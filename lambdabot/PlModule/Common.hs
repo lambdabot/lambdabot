@@ -18,7 +18,7 @@ import Data.Maybe (isJust, fromJust)
 import GHC.Base (assert)
 import Data.List (intersperse, minimumBy)
 import Control.Monad
-import Data.FiniteMap
+import qualified Map as M
 import Text.ParserCombinators.Parsec.Expr (Assoc(..))
 import Control.Arrow (first, second, (***), (&&&), (|||), (+++))
 import Debug.Trace (trace)
@@ -125,11 +125,11 @@ opchars = "!@#$%^*./|=-+:?<>"
 reservedOps :: [String]
 reservedOps = ["->", "..", "="]
 
-opFM :: FiniteMap String (Assoc, Int)
-opFM = (listToFM $ concat operators)
+opFM :: M.Map String (Assoc, Int)
+opFM = (M.fromList $ concat operators)
 
 lookupOp :: String -> Maybe (Assoc, Int)
-lookupOp = lookupFM opFM
+lookupOp k = M.lookup k opFM
 
 lookupFix :: String -> (Assoc, Int)
 lookupFix str = case lookupOp $ str of

@@ -10,7 +10,7 @@ import qualified PlModule.Set as S
 --import qualified Data.Set as S
 
 import Data.Graph
-import Data.FiniteMap
+import qualified Map as M
 import Control.Monad.State
 
 import Data.List hiding (union)
@@ -56,15 +56,15 @@ unLet (Let ds e) = unLet $
 unLet (Lambda v e) = Lambda v (unLet e)
 unLet (Var f x) = Var f x
 
-type Env = FiniteMap String String
+type Env = M.Map String String
 
 -- It's a pity we still need that for the pointless transformation.
 -- Otherwise a newly created id/const/... could be bound by a lambda
 -- e.g. transform' (\id x -> x) ==> transform' (\id -> id) ==> id
 alphaRename :: Expr -> Expr
-alphaRename e = alpha e `evalState` emptyFM where
+alphaRename e = alpha e `evalState` M.empty where
   alpha :: Expr -> State Env Expr
-  alpha (Var f v) = do fm <- get; return $ Var f $ maybe v id (lookupFM fm v)
+  alpha (Var f v) = do fm <- get; return $ Var f $ maybe v id (M.lookup v fm)
   alpha (App e1 e2) = liftM2 App (alpha e1) (alpha e2)
   alpha (Let _ _) = assert False bt
   alpha (Lambda v e') = inEnv $ liftM2 Lambda (alphaPat v) (alpha e')
@@ -75,8 +75,8 @@ alphaRename e = alpha e `evalState` emptyFM where
 
   alphaPat (PVar v) = do
     fm <- get
-    let v' = "$" ++ show (sizeFM fm)
-    put $ addToFM fm v v'
+    let v' = "$" ++ show (M.size fm)
+    put $ M.insert v v' fm
     return $ PVar v'
   alphaPat (PTuple p1 p2) = liftM2 PTuple (alphaPat p1) (alphaPat p2)
   alphaPat (PCons p1 p2) = liftM2 PCons (alphaPat p1) (alphaPat p2)
@@ -177,7 +177,8 @@ sizeExpr' e = fromIntegral (length $ show e) + adjust e where
 		     | str == ">>="        = 0.05
 		     | str == "$"          = 0.01
 		     | str == "subtract"   = 0.01
-                     | str == "ap"         = 2
+                     | str == "ap"         = 3
+                     | str == "return"     = -2
   adjust (Lambda _ e') = adjust e'
   adjust (App e1 e2)  = adjust e1 + adjust e2
   adjust _ = 0

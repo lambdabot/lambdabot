@@ -103,6 +103,9 @@ instance RewriteC a => RewriteC (MExpr -> a) where
 transformM :: Int -> MExpr -> MExpr
 transformM _ (Quote e) = constE `a` Quote e
 transformM n (Hole n') = if n == n' then idE else constE `a` Hole n'
+transformM n e@(Quote (Var _ ".") `MApp` e1 `MApp` e2)
+  | e1 `hasHole` n && not (e2 `hasHole` n) 
+  = flipE `a` compE `a` e2 `c` transformM n e1
 transformM n e@(MApp e1 e2) 
   | fr1 && fr2 = sE `a` transformM n e1 `a` transformM n e2
   | fr1        = flipE `a` transformM n e1 `a` e2
@@ -206,6 +209,9 @@ apE        = Quote $ Var Inf  "ap"
 a, c :: MExpr -> MExpr -> MExpr
 a       = MApp
 c e1 e2 = compE `a` e1 `a` e2
+infixl 9 `a`
+infixr 8 `c`
+
 
 collapseLists :: Expr -> Maybe Expr
 collapseLists (Var _ "++" `App` e1 `App` e2)
@@ -444,14 +450,37 @@ rules = [
   -- (return . f) =<< m --> fmap f m
   rr (\f m -> extE `a` (returnE `c` f) `a` m)
      (\f m -> fmapIE `a` f `a` m),
-{-
+  -- (x >>=) . (return .) . f  --> flip (fmap . f) x
+  rr (\f x -> bindE `a` x `c` (compE `a` returnE) `c` f)
+     (\f x -> flipE `a` (fmapIE `c` f) `a` x),
   -- liftM2 f x --> ap (f `fmap` x)
+  Hard $
   rr (\f x -> liftM2E `a` f `a` x)
      (\f x -> apE `a` (fmapIE `a` f `a` x)),
-  -- mf `ap` mx --> (`fmap` x) =<< f
+  -- liftM2 f (return x) --> fmap (f x)
+  rr (\f x -> liftM2E `a` f `a` (returnE `a` x))
+     (\f x -> fmapIE `a` (f `a` x)),
+  -- f `fmap` return x --> return (f x)
+  rr (\f x -> fmapE `a` f `a` (returnE `a` x))
+     (\f x -> returnE `a` (f `a` x)),
+
+  -- return f `ap` x --> fmap f x
+  rr (\f x -> apE `a` (returnE `a` f) `a` x)
+     (\f x -> fmapIE `a` f `a` x),
+  -- ap (f `fmap` x) --> liftM2 f x
+  rr (\f x -> apE `a` (fmapIE `a` f `a` x))
+     (\f x -> liftM2E `a` f `a` x),
+  -- f `ap` x --> (`fmap` x) =<< f
+  Hard $
   rr (\f x -> apE `a` f `a` x)
      (\f x -> extE `a` (flipE `a` fmapIE `a` x) `a` f),
--}
+  -- (`fmap` x) =<< f --> f `ap` x
+  rr (\f x -> extE `a` (flipE `a` fmapIE `a` x) `a` f)
+     (\f x -> apE `a` f `a` x),
+  -- (x >>=) . flip (fmap . f) -> liftM2 f x
+  rr (\f x -> bindE `a` x `c` flipE `a` (fmapE `c` f))
+     (\f x -> liftM2E `a` f `a` x),
+
   -- list destructors
   Hard $ 
   If (Or [rr consE consE, rr nilE nilE]) $ Or [
