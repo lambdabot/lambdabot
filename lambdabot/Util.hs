@@ -4,18 +4,18 @@
 -- 	$Id: Util.hs,v 1.10 2003/07/31 19:13:15 eleganesh Exp $
 
 module Util (
-      join
-    , split
-    , breakOnGlue
-    , snoc
-    , split_first_word
-    , debugStr
-    , debugStrLn
-    , Accessor (..)
-    , readFM,writeFM,deleteFM
-    , lookupSet,insertSet,deleteSet
-    , getRandItem
-  ) where
+     join,
+     split,
+     breakOnGlue,
+     snoc,
+     split_first_word,
+     debugStr,
+     debugStrLn,
+     Accessor (..),
+     readFM, writeFM, deleteFM,
+     lookupSet, insertSet, deleteSet,
+     getRandItem, stdGetRandItem
+) where
 
 import BotConfig                (getVerbose)
 import Map                      (Map)
