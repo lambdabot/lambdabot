@@ -4,15 +4,19 @@
 --
 
 --
+-- requires the 'runplugs' utility available with the hs-plugins library.
+-- in $hsplugins/examples/hmake/one-shot
+--
+
+--
 -- a Haskell evaluator for the pure part, using `plugs`
 --
 
 module PlugsModule where
 
-import PlugsModule.RunPlugs
-
-import IRC
-import Control.Monad.Trans ( liftIO )
+import IRC      hiding ( clean ) 
+import Posix                    ( popen )
+import Control.Monad.Trans      ( liftIO )
 
 newtype PlugsModule = PlugsModule ()
 
@@ -29,4 +33,24 @@ instance Module PlugsModule where
         process _ _ src "plugs" s = do o <- liftIO $ plugs s 
                                        ircPrivmsg src o
         process _ _ _ _ _ = error "PlugsModule: invalid command"
+
+binary :: String
+binary = "runplugs"
+
+--
+-- return stdout. ignore stderr. this might not be desirable
+--
+plugs :: String -> IO String
+plugs src =
+        do (o,_,_) <- popen binary [] (Just src)
+           let o' = clean o
+           return $ if null o' then "bzzt\n" else o'
+
+--
+-- didn't compile. could return a useful message.
+--
+clean :: String -> String
+clean s = case s of 
+        ('\n':'<':'P':'l':'u':'g':'i':'n':'s':_) -> []
+        _ -> s
 
