@@ -69,8 +69,8 @@ foldList c n l = do
                  c f $ foldList c n r
 
 instance Functor ListTerm where
-    fmap f Nil = Nil
-    fmap f (Character c) = Character c
+    fmap _ Nil = Nil
+    fmap _ (Character c) = Character c
     fmap f (Head l) = Head (f l)
     fmap f (Tail l) = Tail (f l)
     fmap f (Null l) = Null (f l)

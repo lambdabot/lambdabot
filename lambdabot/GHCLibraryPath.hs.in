@@ -1,4 +1,5 @@
 module GHCLibraryPath (ghcLibraryPath) where
 
+ghcLibraryPath :: [Char]
 ghcLibraryPath = "@GHC_LIB_PATH@/"
 

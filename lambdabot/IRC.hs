@@ -1,44 +1,44 @@
 {-# OPTIONS -cpp -fglasgow-exts #-}
 
+--      $Id: IRC.hs,v 1.21 2003/07/31 19:13:15 eleganesh Exp $    
+
 module IRC where
 
-import Map (Map)
-import qualified Map as M
+import BotConfig        (getMyname, getMaxLines, getAdmins, getHost, getPort)
+import DeepSeq          (($!!), DeepSeq(..))
+import ErrorUtils
+import ExceptionError   (ExceptionError(..), ExceptionErrorT(..))
+import MonadException   (MonadException(throwM, handleM))
+import Util             (breakOnGlue, split, writeFM, Accessor(..))
 
---      $Id: IRC.hs,v 1.21 2003/07/31 19:13:15 eleganesh Exp $    
-import Network
-import Monad
-import Maybe
-import GHC.IO
-import GHC.IOBase (Handle, BufferMode(..))
-import GHC.Handle
-import System.Exit
+import Map (Map)
+import qualified Map as M hiding (Map)
+
+import Network          (withSocketsDo, connectTo, PortID(PortNumber))
+
+import System.IO        (Handle, hGetLine, hPutStr, hClose, hSetBuffering, BufferMode(NoBuffering))
+-- import System.Exit      {-instances only-}
+
 #if __GLASGOW_HASKELL__ >= 600
 import System.IO.Error hiding (try)
-#else
-import System.IO.Error
-#endif
-#if __GLASGOW_HASKELL__ >= 600
 import System.Posix.Signals
 #else
 import Posix
+import System.IO.Error
 #endif
+
+import Data.Char                (toLower, isAlphaNum)
+import Data.List
+import Data.Dynamic             (Typeable, toDyn, fromDynamic)
+import Data.IORef               (newIORef, IORef)
+
 import Control.Exception
 import Control.Concurrent
-import Control.Concurrent.Chan
 import Control.Monad.Reader
 import Control.Monad.State
 import Control.Monad.Error (MonadError (..))
-import Data.Char
-import Data.List
-import Data.Dynamic
-import Data.IORef
-import BotConfig
-import DeepSeq
-import Util
-import MonadException
-import ExceptionError
-import ErrorUtils
+
+------------------------------------------------------------------------
 
 data IRCRState
   = IRCRState {
@@ -100,6 +100,7 @@ withHandlerList sl h ss m = foldr (\s -> withHandler s (h s) ss) m sl
 
 -- be careful adding signals, some signals can't be caught and installHandler
 -- just raises an exception if you try
+ircSignalsToCatch :: [Signal]
 ircSignalsToCatch = [
 #if __GLASGOW_HASKELL__ >= 600
                      busError,
@@ -108,7 +109,8 @@ ircSignalsToCatch = [
                      keyboardSignal,softwareTermination,
                      keyboardTermination,lostConnection]
 
-ircSignalMessage s 
+ircSignalMessage :: Signal -> [Char]
+ircSignalMessage s
 #if __GLASGOW_HASKELL__ >= 600
                    | s==busError = "killed by SIGBUS"
 #endif
@@ -121,6 +123,7 @@ ircSignalMessage s
  -- with the list of signals caught
                    | otherwise = "killed by unknown signal"
 
+ircSignalHandler :: ThreadId -> Signal -> Handler
 ircSignalHandler threadid s
   = Catch $ throwTo threadid $ DynException $ toDyn $ SignalException s
 
@@ -133,6 +136,8 @@ data IRCError = IRCRaised Exception
               | SignalCaught Signal 
   deriving Show
 
+
+ircErrorMsg :: IRCError -> String
 ircErrorMsg (IRCRaised e) = show e
 ircErrorMsg (SignalCaught s) = "caught signal "++show s
 
@@ -155,7 +160,7 @@ handleIRCErrorT m
          Left (IRCRaised e) -> throwM e
          Left (SignalCaught s) -> liftIO $ raiseSignal s
 -- overlapped for now, but won't be if IRCError gets extended
-         Left e -> throwM $ ErrorCall (ircErrorMsg e)
+--       Left e -> throwM $ ErrorCall (ircErrorMsg e)
          Right v -> return v
 
 
@@ -285,12 +290,13 @@ ircPrivmsg who msg
 
 mlines			:: String -> [String]
 mlines ""		=  []
-mlines s		=  let (l, s') = mbreak 0 (== '\n') s
+mlines s		=  let (l, s') = mbreak (0::Int) (== '\n') s
 			   in  l : case s' of
 					[]     	-> []
 					(_:s'') -> mlines s''
 
-mbreak _ _ xs@[]		=  (xs, xs)
+mbreak :: (Num a, Ord a) => a -> (Char -> Bool) -> [Char] -> ([Char], [Char])
+mbreak _ _ xs@[] = (xs, xs)
 mbreak n p xs@(x:xs')
     | n == 80  =  ([],xs)
     | n > 70 && not (isAlphaNum x) = ([x], xs)
@@ -307,10 +313,10 @@ ircPrivmsg' who msg
     where clean_msg = concatMap clean msg
 
 --clean x | x `elem` specials = ['\\',x]
-clean x | x == '\CR'        = []
+clean :: Char -> [Char]
+clean x | x == '\CR' = []
         | otherwise         = [x]
-        where
-        specials = "\\"
+        -- where specials = "\\"
 
 ircTopic :: String -> String -> IRC ()
 ircTopic chan topic
@@ -368,11 +374,11 @@ handleIrc handler m
 
 
 runIrc :: LB () -> IRC () -> IO ()
-runIrc init m
+runIrc ini m
   = withSocketsDo $
        do admins <- getAdmins
           exc <- try $ evalLB
-                         (init >> withIrcSignalCatch (runIrc' m))
+                         (ini >> withIrcSignalCatch (runIrc' m))
                          (initState admins)
           case exc of
             Left exception -> putStrLn ("Exception: " ++ show exception)
@@ -441,10 +447,10 @@ runIrc' m
             = if isEOFError e && ioeGetHandle e == Just s
               then Just () else Nothing
 #endif        
-        isEOFon s _ = Nothing
+        isEOFon _ _ = Nothing
         isSignal (SignalCaught s) = Just s
         isSignal _ = Nothing
-        catchSignals m = catchErrorJust isSignal m 
+        catchSignals n = catchErrorJust isSignal n
                              (\s -> do tryError $ ircQuit (ircSignalMessage s)
                                        throwError (SignalCaught s))
                                     
@@ -505,12 +511,10 @@ decodeMessage line
     decodePrefix k (':':cs)
       = decodePrefix' k cs
       where
-        decodePrefix' k ""
-          = k "" ""
-        decodePrefix' k (' ':cs)
-          = k "" cs
-        decodePrefix' k (c:cs)
-          = decodePrefix' (\xs ys -> k (c:xs) ys) cs
+        decodePrefix' j ""       = j "" ""
+        decodePrefix' j (' ':ds) = j "" ds
+        decodePrefix' j (c:ds)   = decodePrefix' (\xs ys -> j (c:xs) ys) ds
+
     decodePrefix k cs
       = k "" cs
 
@@ -585,11 +589,11 @@ class Module m where
 data MODULE = forall m. (Module m) => MODULE m
 
 ircInstallModule :: Module m => m -> LB ()
-ircInstallModule mod
+ircInstallModule modn
   = do  s <- get
-        modname <- moduleName mod
+        modname <- moduleName modn
         let modmap = ircModules s
-        put (s { ircModules = M.insert modname (MODULE mod)  modmap })
+        put (s { ircModules = M.insert modname (MODULE modn)  modmap })
         ircLoadModule modname
 
 ircLoadModule :: String -> LB ()
@@ -618,14 +622,14 @@ ircUnloadModule modname
                        _ -> error "module not loaded"
     where
     ircUnloadModule' m
-        = do modname <- moduleName m
-             cmds    <- commands m
+        = do modnm <- moduleName m
+             cmds  <- commands m
              s <- get
              let modmap = ircModules s        -- :: Map String MODULE,
                  cmdmap = ircCommands s        -- :: Map String MODULE
                  in
                  put (s { ircCommands = foldl (flip M.delete) cmdmap cmds }
-                        { ircModules = M.delete modname modmap })
+                        { ircModules = M.delete modnm modmap })
 
 
 ircSignalConnect :: String -> (IRCMessage -> IRC ()) -> LB ()
@@ -639,24 +643,26 @@ ircSignalConnect str f
 
 
 --isAdmin     :: IRCMessage -> Bool
-checkPrivs msg target f = do 
+checkPrivs :: IRCMessage -> String -> IRC () -> IRC ()
+checkPrivs msg target f = do
                           maybepriv <- gets (\s -> M.lookup (ircnick msg) (ircPrivilegedUsers s) )
                           case maybepriv of
-                                         Just x  -> f
+                                         Just _  -> f
                                          Nothing -> ircPrivmsg target "not enough privileges"
 
+stripMS :: (Typeable a) => ModuleState -> a
 stripMS (ModuleState x) = case fromDynamic $ toDyn $ x of
                             Nothing -> error $ "wrong type ("++(show $ toDyn x)++") in ModuleState"
                             Just y -> y
 
 -- this belongs in the MoreModule, but causes cyclic imports
 
-moreStateSet lines = 
+moreStateSet :: (MonadIO m, MonadState IRCRWState m, Typeable a) => a -> m ()
+moreStateSet lns =
     do s <- get
-       newRef <- liftIO . newIORef $ ModuleState lines
+       newRef <- liftIO . newIORef $ ModuleState lns
        let stateMap = ircModuleState s
-       put (s { ircModuleState = 
-                M.insert "more" newRef stateMap })
+       put (s { ircModuleState = M.insert "more" newRef stateMap })
 
 ircModuleStateAccessor :: MonadState IRCRWState m 
                        => Accessor m (Map String (IORef ModuleState))

@@ -12,7 +12,11 @@ import Maybe (fromJust)
 import Data.List (intersperse, sort)
 
 newtype DictModule = DictModule ()
+
+theModule :: MODULE
 theModule = MODULE dictModule
+
+dictModule :: DictModule
 dictModule = DictModule ()
 
 -- | Configuration.
@@ -107,19 +111,20 @@ getHelp dicts = unlines . map gH $ dicts
 parseTerms :: String -> [String]
 parseTerms = pW . words
     where
-    pW [] = []
+    pW []  = []
     pW (w@(f:_):ws)
         | f `elem` "'\"" = join qws : pW ws'
         | last w == '\\' = let (w':rest) = pW ws in join [w, w'] : rest
         | otherwise      = w : pW ws
         where
         (qws, ws') = case break isCloseQuotedWord (w:ws) of
-            (qws, [])    -> (init qws ++ [last qws ++ [f]], [])
-            (qw, w:rest) -> (qw ++ [w], rest)
+            (qws', [])    -> (init qws' ++ [last qws' ++ [f]], [])
+            (qw, w':rest) -> (qw ++ [w'], rest)
         isCloseQuotedWord xs = case reverse xs of
             x:y:_ -> f == x && y /= '\\' -- quote doesn't count if escaped
             x:_   -> f == x
             _     -> False
+    pW _ = error "DictModule: parseTerms: can't parse"
 
 join :: [String] -> String
 join = concat . intersperse " "

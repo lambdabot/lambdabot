@@ -1,14 +1,19 @@
-{-# OPTIONS -fglasgow-exts #-}
+{-# OPTIONS -cpp -fglasgow-exts #-}
  
-module ExceptionError where
+--
 --  $Id: ExceptionError.hs,v 1.2 2003/07/26 15:51:42 eleganesh Exp $
+--
+module ExceptionError where
+
 import Control.Exception
-import Control.Monad.Trans
 import Control.Monad.Reader
 import Control.Monad.State
 import Control.Monad.Error (MonadError (..))
-import Data.Dynamic
 import MonadException
+
+#if __GLASGOW_HASKELL__ < 603
+import Control.Monad.Trans
+#endif
 
 -- ExceptionErrorT differs from Control.Monad.Error.ErrorT in two ways:
 -- (1) it doesn't implement the "fail" operation of Monad or the "mzero"

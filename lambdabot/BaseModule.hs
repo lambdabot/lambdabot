@@ -8,6 +8,7 @@ import qualified Map as M
 
 newtype BaseModule = BaseModule ()
 
+baseModule :: BaseModule
 baseModule = BaseModule ()
 
 instance Module BaseModule where
@@ -15,9 +16,9 @@ instance Module BaseModule where
     moduleSticky    _ = False
     commands        _ = return []
     process _ _ _ _ _ = return ()
-    moduleInit m 
+    moduleInit _m 
 	= do s <- get
-	     let cbsFM = ircCallbacks s 
+	     let _cbsFM = ircCallbacks s 
 	     ircSignalConnect "PING" 	doPING
 	     ircSignalConnect "NOTICE" 	doNOTICE 
 	     ircSignalConnect "PART" 	doPART
@@ -104,7 +105,7 @@ doTOPIC msg
          put (s { ircChannels = M.insert (mkCN loc) (tail $ head $ tail $ msgParams msg) (ircChannels s)})
 
 doRPL_WELCOME :: IRCMessage -> IRC ()
-doRPL_WELCOME msg
+doRPL_WELCOME _msg
   = do autojoins <- getAutojoins
        joinMany autojoins
   where
@@ -117,40 +118,40 @@ doQUIT msg
   = doIGNORE msg
 
 doRPL_YOURHOST :: IRCMessage -> IRC ()
-doRPL_YOURHOST msg = return ()
+doRPL_YOURHOST _msg = return ()
 
 doRPL_CREATED :: IRCMessage -> IRC ()
-doRPL_CREATED msg = return ()
+doRPL_CREATED _msg = return ()
 
 doRPL_MYINFO :: IRCMessage -> IRC ()
-doRPL_MYINFO msg = return ()
+doRPL_MYINFO _msg = return ()
 
 doRPL_BOUNCE :: IRCMessage -> IRC ()
-doRPL_BOUNCE msg = debugStrLn "BOUNCE!"
+doRPL_BOUNCE _msg = debugStrLn "BOUNCE!"
 
 doRPL_STATSCONN :: IRCMessage -> IRC ()
-doRPL_STATSCONN msg = return ()
+doRPL_STATSCONN _msg = return ()
 
 doRPL_LUSERCLIENT :: IRCMessage -> IRC ()
-doRPL_LUSERCLIENT msg = return ()
+doRPL_LUSERCLIENT _msg = return ()
 
 doRPL_LUSEROP :: IRCMessage -> IRC ()
-doRPL_LUSEROP msg = return ()
+doRPL_LUSEROP _msg = return ()
 
 doRPL_LUSERUNKNOWN :: IRCMessage -> IRC ()
-doRPL_LUSERUNKNOWN msg = return ()
+doRPL_LUSERUNKNOWN _msg = return ()
 
 doRPL_LUSERCHANNELS :: IRCMessage -> IRC ()
-doRPL_LUSERCHANNELS msg = return ()
+doRPL_LUSERCHANNELS _msg = return ()
 
 doRPL_LUSERME :: IRCMessage -> IRC ()
-doRPL_LUSERME msg = return ()
+doRPL_LUSERME _msg = return ()
 
 doRPL_LOCALUSERS :: IRCMessage -> IRC ()
-doRPL_LOCALUSERS msg = return ()
+doRPL_LOCALUSERS _msg = return ()
 
 doRPL_GLOBALUSERS :: IRCMessage -> IRC ()
-doRPL_GLOBALUSERS msg = return ()
+doRPL_GLOBALUSERS _msg = return ()
 
 doRPL_TOPIC :: IRCMessage -> IRC ()
 doRPL_TOPIC msg -- nearly the same as doTOPIC but has our nick on the front of msgParams
@@ -159,19 +160,19 @@ doRPL_TOPIC msg -- nearly the same as doTOPIC but has our nick on the front of m
          put (s { ircChannels = M.insert (mkCN loc) (tail $ last $ msgParams msg) (ircChannels s) })
 
 doRPL_NAMREPLY :: IRCMessage -> IRC ()
-doRPL_NAMREPLY msg = return ()
+doRPL_NAMREPLY _msg = return ()
 
 doRPL_ENDOFNAMES :: IRCMessage -> IRC ()
-doRPL_ENDOFNAMES msg = return ()
+doRPL_ENDOFNAMES _msg = return ()
 
 doRPL_MOTD :: IRCMessage -> IRC ()
-doRPL_MOTD msg = return ()
+doRPL_MOTD _msg = return ()
 
 doRPL_MOTDSTART :: IRCMessage -> IRC ()
-doRPL_MOTDSTART msg = return ()
+doRPL_MOTDSTART _msg = return ()
 
 doRPL_ENDOFMOTD :: IRCMessage -> IRC ()
-doRPL_ENDOFMOTD msg = return ()
+doRPL_ENDOFMOTD _msg = return ()
 
 doPRIVMSG :: IRCMessage -> IRC ()
 doPRIVMSG msg = do myname <- getMyname
@@ -213,22 +214,25 @@ doPRIVMSG' myname msg
           case maybecmd of
             Just (MODULE m) -> do debugStrLn (show msg)
                                   handleIrc (ircPrivmsg alltargets) (process m msg alltargets cmd rest)
-            Nothing         -> do myname <- getMyname
-                                  ircPrivmsg alltargets ("Sorry, I don't know the command \"" ++ cmd ++ "\", try \"" ++ myname ++ ": @listcommands\"")
+            Nothing         -> do 
+                myname' <- getMyname
+                ircPrivmsg alltargets ("Sorry, I don't know the command \"" ++ 
+                                        cmd ++ "\", try \"" ++ myname' ++ ": @listcommands\"")
     doPublicMsg _ _
-      = do myname <- getMyname
-           ircPrivmsg alltargets ("Sorry, I'm not a very smart bot yet, try \"" ++ myname ++ ": @listcommands\"")
+      = do myname' <- getMyname
+           ircPrivmsg alltargets ("Sorry, I'm not a very smart bot yet, try \"" 
+                                        ++ myname' ++ ": @listcommands\"")
                     
 after :: String -> String -> String
 after [] ys     = dropWhile (==' ') ys
-after (x:xs) [] = error "after: (:) [] case"
+after (_:_) [] = error "after: (:) [] case"
 after (x:xs) (y:ys)
   | x == y    = after xs ys
   | otherwise = error "after: /= case"
 
 prefix :: String -> String -> Bool
-prefix [] ys = True
-prefix (x:xs) [] = False
+prefix [] _ = True
+prefix (_:_) [] = False
 prefix (x:xs) (y:ys)
   = x == y && prefix xs ys
 

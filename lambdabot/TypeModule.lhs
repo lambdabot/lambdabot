@@ -1,3 +1,4 @@
+
       The Type Module - another progressive plugin for lambdabot
      >>-------------------------------------------------------->>
       $Id: TypeModule.lhs,v 1.4 2003/07/29 13:03:02 eris Exp $
@@ -6,12 +7,10 @@
 
 > import Posix (popen)
 > import Text.Regex
-> import Maybe (mapMaybe, fromMaybe)
+> import Maybe (fromMaybe)
 > import Control.Monad.Trans (liftIO)
 > import IRC -- (Module(..), IRC(..), ircPrivmsg)
 > import Util
-
-
 
       Greetings reader,
 
@@ -31,12 +30,15 @@
       In accordance with the KISS principle, the plan is to delegate all
       the hard work! To get the type of foo, pipe
 
+> command :: [Char] -> [Char]
 > command foo = ":t " ++ foo
 >
+> infocommand :: [Char] -> [Char]
 > infocommand foo = ":i " ++ foo
 
       into hugs and send any line matching
 
+> signature_regex :: Regex
 > signature_regex
 >   = mkRegexWithOpts
 >     ".*?^\\*?[A-Z][\\._a-zA-Z0-9]*(\\*?[A-Z][_a-zA-Z0-9]*)*> (.*)^\\*?[A-Z][\\._a-zA-Z0-9]*(\\*?[A-Z][_a-zA-Z0-9]*)*> "
@@ -49,9 +51,12 @@
       match each against the regex, and take the last substring match from
       each successfull match.
 
+> {-
+> extract_signatures :: String -> Maybe [String]
 > extract_signatures output
 >   = matchRegex signature_regex output
 >   -- = map last.mapMaybe (matchRegex signature_regex) $ lines output
+> -}
 
 
       With this the command handler can be easily defined using popen:
@@ -60,7 +65,7 @@
 > find_type expr =
 >      do 
 >      let bits = split "." expr
->          (args,item) = (\ (x:xs) -> (join "." $ reverse xs,x)) $ reverse bits
+>          (_args,_item) = (\ (x:xs) -> (join "." $ reverse xs,x)) $ reverse bits
 >      (output, _, _) <- popen "ghci" [] (Just (command expr))
 >      return (fromMaybe ["bzzt"] $ matchRegex signature_regex output)
 >      --return output
@@ -71,7 +76,7 @@
 > find_info expr =
 >      do 
 >      let bits = split "." expr
->          (args,item) = (\ (x:xs) -> (join "." $ reverse xs,x)) $ reverse bits
+>          (_args,_item) = (\ (x:xs) -> (join "." $ reverse xs,x)) $ reverse bits
 >      (output, _, _) <- popen "ghci" [] (Just (infocommand expr))
 >      return (fromMaybe ["bzzt"] $ matchRegex signature_regex output)
 
@@ -79,8 +84,10 @@
 
 > newtype TypeModule = TypeModule ()
 
+> theModule :: MODULE
 > theModule = MODULE typeModule
 
+> typeModule :: TypeModule
 > typeModule = TypeModule ()
 
 > instance Module TypeModule where
@@ -91,6 +98,7 @@
 >                                     mapM_ (ircPrivmsg src) strs
 >    process _ _ src "info" expr = do strs <- liftIO (find_info expr)
 >                                     mapM_ (ircPrivmsg src) strs
+>    process _ _ _ _ _ = error "TypeModule: invalid command"
 
 
 

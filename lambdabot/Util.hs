@@ -20,13 +20,15 @@ import Map                      (Map)
 import qualified Map as M       (lookup, insert, delete)
 
 import List                     (intersperse, isPrefixOf)
-import Data.Dynamic
 import Data.Set                 (elementOf, addToSet, delFromSet, Set)
-import Data.Char                (Char, String, isSpace)
-import Control.Monad.State      (Monad(..), MonadIO(..))
+import Data.Char                (isSpace)
+import Control.Monad.State      (MonadIO(..))
+
+import Data.Typeable
 
 -- TODO: rename join, clashes with Monad.join
 
+finiteMapTyCon :: TyCon
 finiteMapTyCon = mkTyCon "Map"
 
 instance (Typeable key, Typeable elt) => Typeable (Map key elt) where
@@ -62,8 +64,8 @@ split :: Eq a => [a] -- ^ Glue that holds pieces together
 split glue xs = split' xs
     where
     split' [] = []
-    split' xs = piece : split' (dropGlue rest)
-        where (piece, rest) = breakOnGlue glue xs
+    split' xs' = piece : split' (dropGlue rest)
+        where (piece, rest) = breakOnGlue glue xs'
     dropGlue = drop (length glue)
 
 
@@ -86,9 +88,11 @@ split_first_word xs = (w, dropWhile isSpace xs')
   where (w, xs') = break isSpace xs
   
 -- refactor, might be good for logging to file later
+debugStr :: (MonadIO m) => String -> m ()
 debugStr x = do verbose <- getVerbose
                 if verbose then liftIO (putStr x) else return ()
 
+debugStrLn :: (MonadIO m) => [Char] -> m ()
 debugStrLn x = debugStr ( x ++ "\n" )
 
 data Accessor m s = Accessor { reader :: m s, writer :: s -> m () }

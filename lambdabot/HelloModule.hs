@@ -4,13 +4,15 @@ import IRC
 
 newtype HelloModule = HelloModule ()
 
+theModule :: MODULE
 theModule = MODULE helloModule
+
+helloModule :: HelloModule
 helloModule = HelloModule ()
 
 instance Module HelloModule where
-    moduleName   m = return "hello"
-    moduleSticky m = False
-    commands     m = return ["hello","goodbye"]
-    process      m _ target cmd rest
-      = ircPrivmsg target ("Hello world. " ++ rest)
+    moduleName   _ = return "hello"
+    moduleSticky _ = False
+    commands     _ = return ["hello","goodbye"]
+    process      _ _ target _ rest = ircPrivmsg target ("Hello world. " ++ rest)
 

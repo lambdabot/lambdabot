@@ -3,7 +3,7 @@
 module DynamicModule (DynamicModule, dynamicModule) where
 
 import Map (Map)
-import qualified Map as M
+import qualified Map as M hiding (Map)
 
 import Control.Monad.Error
 import Control.Monad.State
@@ -23,6 +23,7 @@ import Util
 
 newtype DynamicModule = DynamicModule ()
 
+dynamicModule :: DynamicModule
 dynamicModule = DynamicModule ()
 
 data DLModules 
@@ -34,9 +35,11 @@ data DLModules
   deriving Typeable
 
 #if __GLASGOW_HASKELL__ < 603
+empty :: Set a
 empty = emptySet
 #endif
 
+initDLModules :: DLModules
 initDLModules = DLModules { objects = M.empty, packages = empty }
 
 instance Module DynamicModule where
@@ -61,8 +64,13 @@ instance Module DynamicModule where
                                               load rest
                                               ircPrivmsg src "module reloaded"
 
+  process _ _ _ _ _ = error "DynamicModule: Invalid command"
 
+
+handleRLEConsole :: LB () -> LB ()
 handleRLEConsole = handleErrorJust findRLEError (liftIO . print)
+
+handleRLE :: String -> IRC () -> IRC ()
 handleRLE src = handleErrorJust findRLEError (ircPrivmsg src . show)
 
 findRLEError :: IRCError -> Maybe RuntimeLoaderException
@@ -113,20 +121,23 @@ load name
           object <- doLoadObject file
           catchError 
            (do liftIO $ resolveFunctions
-               MODULE mod <- liftIO $ loadFunction object "theModule"
-               liftLB $ ircInstallModule mod)
-           (\e -> do doUnloadObject file
-                     throwError e)
+               MODULE md <- liftIO $ loadFunction object "theModule"
+               liftLB $ ircInstallModule md)
+           (\e -> do doUnloadObject file ; throwError e)
+
+unload :: (MonadLB m) => String -> m ()
 unload name
      = do 
-          dl <- dlGet
+          _dl <- dlGet
           liftLB $ ircUnloadModule name
           file <- getModuleFile name
           doUnloadObject file
 
+doLoadRequire :: (MonadLB m) => Require -> m ()
 doLoadRequire (Object file) = doLoadObject file >> return ()
 doLoadRequire (Package name) = doLoadPackage name
 
+doLoadObject :: (MonadLB m) => String -> m RuntimeModule
 doLoadObject file
  = do dl <- dlGet
       requires <- getFileRequires file
@@ -139,6 +150,7 @@ doLoadObject file
         Just (object,n) -> do writeFM (objectsA dl) file (object,n+1)
                               return object
 
+doLoadPackage :: (MonadLB m) => String -> m ()
 doLoadPackage name
  = do dl <- dlGet
       loaded <- lookupSet (packagesA dl) name
@@ -146,21 +158,26 @@ doLoadPackage name
                             insertSet (packagesA dl) name
                 else return ()
 
+doUnloadRequire :: (MonadLB m) => Require -> m ()
 doUnloadRequire (Object file) = doUnloadObject file
 doUnloadRequire (Package name) = doUnloadPackage name
 
+doUnloadPackage :: (Monad m) => t -> m ()
 doUnloadPackage _ = return () -- can't unload packages
 
+doUnloadObject :: (MonadLB m) => String -> m ()
 doUnloadObject file
  = do dl <- dlGet
       loaded <- readFM (objectsA dl) file
       case loaded of
-        Just (object,1) -> do liftIO $ unloadObject object
-                              deleteFM (objectsA dl) file
+        Just (object,1)       -> do liftIO $ unloadObject object
+                                    deleteFM (objectsA dl) file
         Just (object,n) | n>1 -> writeFM (objectsA dl) file (object,n-1)
+        _                     -> error "DynamicModule: Nothing"
       requires <- getFileRequires file
       mapM_ doUnloadRequire requires      
 
+isLoadedObject :: (MonadLB m) => String -> m Bool
 isLoadedObject file
  = do dl <- dlGet
       loaded <- readFM (objectsA dl) file
@@ -168,6 +185,7 @@ isLoadedObject file
         Just _ -> return True
         Nothing -> return False
 
+initialise :: IO ()
 initialise = do initialiseRuntimeLoader
                 mapM_ loadPackage ["base","haskell98","lang","network",
 #if __GLASGOW_HASKELL__ >= 600
@@ -178,6 +196,9 @@ initialise = do initialiseRuntimeLoader
                       ["BotConfig","ErrorUtils","ExceptionError",
                        "MonadException","Util","DeepSeq","IRC"]
 
+{-
+getModule :: FilePath -> IO MODULE
 getModule name = do object <- loadObject name
                     resolveFunctions
                     loadFunction object "theModule" :: IO MODULE
+-}

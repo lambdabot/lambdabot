@@ -1,4 +1,4 @@
-{-# OPTIONS -fglasgow-exts #-}
+{-# OPTIONS -w -fglasgow-exts #-}
 
 module SystemModuleNaming (systemModuleName) where
 
@@ -28,23 +28,21 @@ data Package
 
 systemModuleName :: String -> IO [String]
 systemModuleName packageName
- = do (packages :: [Package])
-           <- liftM read $ readFile (ghcLibraryPath ++ "package.conf")
+ = do (packages :: [Package]) <- liftM read $ readFile (ghcLibraryPath ++ "package.conf")
       let package = head (filter (\p -> name p == packageName) packages)
       liftM concat $ sequence $ 
          map (libraryObject (map translate (library_dirs package)))
              (hs_libraries package ++ extra_libraries package)
 
 
+translate :: [Char] -> [Char]
 translate ('$':'l':'i':'b':'d':'i':'r':rest) = init ghcLibraryPath ++ rest
 translate other = other
 
-libraryObject [] name = return []
-libraryObject (dir:dirs) name 
- = do let filename = dir ++ "/" ++ name ++ ".o"
-      exists <- doesFileExist filename
-      if exists then return [filename]
-                else libraryObject dirs name
-
-
+libraryObject :: [[Char]] -> [Char] -> IO [[Char]]
+libraryObject [] _ = return []
+libraryObject (dir:dirs) nm = do 
+	let filename = dir ++ "/" ++ nm ++ ".o"
+	exists <- doesFileExist filename
+	if exists then return [filename] else libraryObject dirs nm
 

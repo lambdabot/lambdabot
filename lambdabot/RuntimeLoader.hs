@@ -70,17 +70,10 @@ module RuntimeLoader (
 
 import SystemModuleNaming  ( systemModuleName )
 
---import CTypes		   ( CChar )
-import Directory
 import GHC.Ptr
-import Foreign.Ptr	   ( Ptr, nullPtr )
 import Foreign.C.String	   ( CString, newCString, peekCString, withCString )
---import PrelByteArr
---import PrelPack	   ( packString )
 import GHC.Exts		   ( addrToHValue# )
---import Ptr
 
--- import System.IO           ( ioError, userError )
 import Control.Monad       ( unless, when )
 #if __GLASGOW_HASKELL__ >= 600
 import Control.Exception   ( throwIO, Exception (..) )
@@ -160,6 +153,7 @@ initialiseRuntimeLoader = do
 
 -}
 
+initializeRuntimeLoader :: IO ()
 initializeRuntimeLoader = initialiseRuntimeLoader
 
 
@@ -238,8 +232,8 @@ findSymbol (RuntimeModule { name = moduleName }) functionName = do
          -- name.  If we fail looking for the symbol the first time, just
          -- try again ... (can you say 'ugh'?  I thought you could).  Ideally
 	 -- this should be done at compile time -- maybe via Template Haskell?
-	 ptr <- withCString ("_" ++ symbolName) c_lookupSymbol
-	 return ptr
+	 ptr' <- withCString ("_" ++ symbolName) c_lookupSymbol
+	 return ptr'
    where
       symbolName = moduleName ++ "_" ++ functionName ++ "_closure"
 
@@ -321,10 +315,9 @@ loadLibrary modulePath = do
    if maybeErrmsg == nullPtr
       then return (makeRuntimeModule LibraryFile modulePath)
       -- throw exception
-      else do modulePath <- peekCString maybeErrmsg
+      else do modulePath' <- peekCString maybeErrmsg
 	      -- TODO: Fix up this error message
-              ioError (userError ("Couldn't load library: " ++ modulePath))
-
+              ioError (userError ("Couldn't load library: " ++ modulePath'))
 
 {-
 

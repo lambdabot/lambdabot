@@ -33,8 +33,8 @@ doOp op l r
        (\_ -> catchError (do l' <- prjC l; r' <- prjC r; return $ inj (l' `op` r'))
         (\_ -> catchError (do l' <- prjB l; r' <- prjB r; return $ inj (l' `op` r'))
          (\_ -> catchError (do l' <- prjN l; r' <- prjN r; return $ inj (l' `op` r'))
-          (\_ -> catchError (do l' <- prjL l; r' <- prjN r; return $ inj False)
-           (\_ -> catchError (do l' <- prjN l; r' <- prjL r; return $ inj False)
+          (\_ -> catchError (do _ <- prjL l; _ <- prjN r; return $ inj False)
+           (\_ -> catchError (do _ <- prjN l; _ <- prjL r; return $ inj False)
             (\_ -> catchError (do (a,b) <- prjL l
                                   (x,y) <- prjL r
                                   s <- prjB $ doOp op a x
@@ -60,7 +60,7 @@ instance Functor RelTerm where
     fmap f (Not x) = Not (f x)
     fmap f (Or l r) = Or (f l) (f r)
     fmap f (And l r) = And (f l) (f r)
-    fmap f (Boolean b) = (Boolean b)
+    fmap _ (Boolean b) = (Boolean b)
     fmap f (IfE c t e) = IfE (f c) (f t) (f e)
     fmap f (Equal l r) = Equal (f l) (f r)
     fmap f (NotEqual l r) = NotEqual (f l) (f r)

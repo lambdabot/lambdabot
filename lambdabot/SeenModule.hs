@@ -20,7 +20,10 @@ import List ((\\),nub)
 
 newtype SeenModule = SeenModule ()
 
+theModule :: MODULE
 theModule = MODULE seenModule
+
+seenModule :: SeenModule
 seenModule = SeenModule ()
 
 type Channel = String
@@ -32,8 +35,10 @@ data UserStatus = Present [Channel]            -- the user is in [Channel]
                 | NewNick Nick                 -- the user has a new nick
                 deriving Show
 
+ctCon :: TyCon
 ctCon = mkTyCon "ClockTime"
 
+myTy :: TyCon -> [TypeRep] -> TypeRep
 #if __GLASGOW_HASKELL__ < 603
 myTy = mkAppTy
 #else
@@ -43,7 +48,9 @@ myTy = mkTyConApp
 instance Typeable ClockTime where
     typeOf _ = myTy ctCon []
 
+usCon :: TyCon
 usCon = mkTyCon "UserStatus"
+
 instance Typeable UserStatus where
     typeOf _ = myTy usCon []
 
@@ -103,8 +110,9 @@ instance Module SeenModule where
                                             case (lookupFM seenFM str) of
                                                 Just (NewNick str') -> 
 							findfunc str'
-                                                Just x -> 
-							str
+                                                Just _ -> str
+                                                Nothing -> error "SeenModule: Nothing"
+
                                           us = findfunc newnick
                                       ircPrivmsg target $
                                                         nick ++ 
@@ -143,14 +151,14 @@ partCB msg
 						(Present ys)  
                 _ -> debugStrLn "SeenModule> someone who isn't known parted"
     where nick = unUserMode (ircnick msg)
-	  botPart cs (nick, us) 
+	  botPart cs (nick', us) 
             = case us of
 		  Present xs -> 
 		      case xs \\ cs of
 			  [] -> do ct <- time
-				   return (nick, WasPresent ct (listToStr cs))
-			  ys -> return (nick, Present ys)
-		  other -> return (nick, us)
+				   return (nick', WasPresent ct (listToStr cs))
+			  ys -> return (nick', Present ys)
+		  _other -> return (nick', us)
 
 quitCB :: IRCMessage -> IRC () -- when somebody quits
 quitCB msg
@@ -182,8 +190,7 @@ joinChanCB msg
     let l = msgParams msg
         chan = l !! 2
         chanUsers = words (drop 1 (l !! 3)) -- remove ':'
-        fooFunc fm u = addToFM_C updateJ fm 
-                              (unUserMode u) (Present [chan])
+        fooFunc m u = addToFM_C updateJ m (unUserMode u) (Present [chan])
         seenFM' = foldl fooFunc fm chanUsers
         in setSeenFM ref seenFM'
 
@@ -212,7 +219,7 @@ setSeenFM ref fm = liftIO $ writeIORef ref $ ModuleState fm
 
 updateJ :: UserStatus -> UserStatus -> UserStatus
 updateJ (Present cs) (Present c) = Present $ nub (c ++ cs)              
-updateJ x y@(Present cs) = y
+updateJ _x y@(Present _cs) = y
 updateJ x _ = x
 
 time :: IRC ClockTime
@@ -231,8 +238,8 @@ listToStr :: [Channel] -> String
 listToStr [] = []
 listToStr (x:xs) = x ++ listToStr' xs
     where listToStr' [] = []
-          listToStr' [x] = " and " ++ x
-          listToStr' (x:xs) = ", " ++ x ++ listToStr' xs
+          listToStr' [y] = " and " ++ y
+          listToStr' (y:ys) = ", " ++ y ++ listToStr' ys
 
 -- annoying
 toPretty :: TimeDiff -> String

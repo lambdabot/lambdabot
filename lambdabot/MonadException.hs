@@ -84,7 +84,7 @@ instance MonadException IO where
   bracketM_ = bracket_
 
 instance MonadException m => MonadException (StateT s m) where
-  throwM e = StateT $ \s -> throwM e
+  throwM e = StateT $ \_ -> throwM e
 
   catchM (StateT c) handler
    = StateT $ \s -> catchM (c s) (\e -> runStateT (handler e) s)
@@ -96,7 +96,7 @@ instance MonadException m => MonadException (StateT s m) where
 
 
 instance MonadException m => MonadException (ReaderT r m) where
-  throwM e = ReaderT $ \r -> throwM e
+  throwM e = ReaderT $ \_ -> throwM e
 
   catchM (ReaderT c) handler
    = ReaderT $ \r -> catchM (c r) (\e -> runReaderT (handler e) r)

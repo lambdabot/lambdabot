@@ -7,16 +7,15 @@ module EvalModule.LMEngine (
      define,
      Environment,
      resume
-     ) where
-import Text.ParserCombinators.Parsec.Prim (parse)
-import Text.ParserCombinators.Parsec.Error (ParseError)
+  ) where
+
+import Data.FiniteMap
 import Control.Monad.State
 import Control.Monad.Reader
 import Control.Monad.Error
 import Control.Monad.Cont
 import Control.Monad.Identity
-import Data.FiniteMap
-import Data.List (intersperse)
+import Text.ParserCombinators.Parsec.Error (ParseError)
 
 import EvalModule.LangPack
 import EvalModule.ArithTerm
@@ -63,15 +62,17 @@ run m env fuel = flip runCont Right $
 eval :: Environment -> Int -> Either ParseError (Fix Term) -> Either Dynamic String
 eval env fuel = either (Right . show) doit
     where doit x = -- trace (x `seq` showTerm x) $
-                    res_or_str $ run (do env <- startup
-                                         local (const $ listToFM env)
+                    res_or_str $ run (do env' <- startup
+                                         local (const $ listToFM env')
                                                (fold phi x))
                                      emptyFM fuel
           startup = foldFM mkThunk (return []) env
-          mkThunk k c cs = do env <- cs
+          mkThunk k c cs = do env' <- cs
                               rr <- thunkify c
-                              return ((k,rr):env)
+                              return ((k,rr):env')
 
+
+res_or_str :: Either a (Either b b) -> Either a b
 res_or_str = either Left (either Right Right)
 
 
@@ -115,7 +116,8 @@ showListDyn sep (hd,tl) = do
        Nothing -> throwError "type error"
     }}
 
-
+{-
+showTerm :: Fix Term -> [Char]
 showTerm (In f) = showIn f
     where showIn (ArithT t) = showArithTerm t
           showIn (LambdaT t) = showLambdaTerm t
@@ -129,7 +131,7 @@ showTerm (In f) = showIn f
           showArithTerm (Div l r) = "(Div "++showTerm l++" "++showTerm r++")"
           showLambdaTerm (Var v) = "(Var "++v++")"
           showLambdaTerm (Lam v b) = "(Lam "++v++" "++showTerm b++")"
-          showLambdaTerm (App f x) = "(App "++showTerm f++" "++showTerm x++")"
+          showLambdaTerm (App f' x) = "(App "++showTerm f'++" "++showTerm x++")"
           showRelTerm (Not x) = "(Not "++showTerm x++")"
           showRelTerm (Or l r) = "(Or "++showTerm l++" "++showTerm r++")"
           showRelTerm (And l r) = "(And "++showTerm l++" "++showTerm r++")"
@@ -148,6 +150,7 @@ showTerm (In f) = showIn f
           showListTerm (Null l) = "(Null "++showTerm l++")"
           showListTerm (Cons l r) = "(Cons "++showTerm l++" "++showTerm r++")"
           showListTerm (Append l r) = "(Append "++showTerm l++" "++showTerm r++")"
+-}
 
 instance Pause EvalMonad Result where
     pause = EM . lift . lift . lift . Cont
@@ -158,6 +161,8 @@ instance Pause EvalMonad Result where
 -- Comment out what isn't true, uncomment what is
 
 {-# NOINLINE evalMonadTypeCon #-}
+
+evalMonadTypeCon :: TyCon
 evalMonadTypeCon = mkTyCon "EM"
 
 instance (Typeable a) => Typeable (EvalMonad a) where
@@ -173,7 +178,7 @@ instance Monad EvalMonad where
 
 -- TODO: make an appropriate instance
 instance MonadCont EvalMonad where
---     callCC = EM . callCC
+       callCC = error "EvalModule/LMEngine: no default instance for callCC"
 
 instance MonadError String EvalMonad where
     catchError (EM m) f = EM $ catchError m (runEM . f)

@@ -1,16 +1,19 @@
-module TopicModule (TopicModule, topicModule, theModule) where
 --     $Id: TopicModule.hs,v 1.8 2003/07/29 13:03:02 eris Exp $
+
+module TopicModule (TopicModule, topicModule, theModule) where
 
 import IRC
 import qualified Map as M
 
 import Control.Monad.State (gets)
-import Control.Exception (catchJust, errorCalls)
 import Char (isSpace)
 
 newtype TopicModule = TopicModule ()
 
+theModule :: MODULE
 theModule = MODULE topicModule
+
+topicModule :: TopicModule
 topicModule = TopicModule ()
 
 instance Module TopicModule where

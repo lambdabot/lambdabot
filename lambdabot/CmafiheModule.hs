@@ -4,13 +4,15 @@ module CmafiheModule where
 import Posix
 -- TODO migrate to System.Process
 
-import System
 import IRC
 import Control.Monad.Trans
 
 newtype CmafiheModule = CmafiheModule ()
 
+theModule :: MODULE
 theModule = MODULE cmafiheModule
+
+cmafiheModule :: CmafiheModule
 cmafiheModule = CmafiheModule ()
 
 type Word = String

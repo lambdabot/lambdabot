@@ -7,7 +7,6 @@ import qualified Map as M
 -- 	$Id: EvalModule.hs,v 1.1 2003/07/29 13:41:48 eleganesh Exp $
 import IRC
 import Util
-import BotConfig
 
 import Data.IORef
 import Control.Monad.State
@@ -18,13 +17,16 @@ import Data.List (groupBy,sort,isPrefixOf)
 import EvalModule.LMEngine (evaluate, define, resume, Environment)
 
 import Prelude hiding (catch)
-import Control.Exception (throw, catch, Exception(..), ioError, ioErrors, handleJust)
+import Control.Exception (throw, catch, Exception(..), ioErrors, handleJust)
 
 -- TODO: clear continuation IORef after -every- @eval?
 
 newtype EvalModule = EvalModule ()
 
+theModule :: MODULE
 theModule = MODULE evalModule
+
+evalModule :: EvalModule
 evalModule = EvalModule ()
 
 initFuel :: Int
@@ -36,16 +38,18 @@ initEnv = emptyFM
 initDefns :: FiniteMap String String
 initDefns = emptyFM
 
+definitionsFile :: [Char]
 definitionsFile = "definitions"
 
+outOfFuelMsg :: [Char]
 outOfFuelMsg = "out of fuel - use @resume to continue"
 
 instance Module EvalModule where
-    moduleName   m = return "eval"
-    moduleSticky m = False
-    commands     m = return ["eval","define","get-definition","definitions",
+    moduleName   _ = return "eval"
+    moduleSticky _ = False
+    commands     _ = return ["eval","define","get-definition","definitions",
                              "del-definition","dump","set-fuel","resume"]
-    moduleInit   m = do
+    moduleInit   _ = do
         r <- liftIO $ catch loadDefinitions
                     (io_or_pm $
                      newIORef $
@@ -54,7 +58,7 @@ instance Module EvalModule where
                                   initEnv,
                                   initDefns))
         modify (\s -> s { ircModuleState = M.insert  "eval" r (ircModuleState s)})
-    process      m msg target cmd rest = do
+    process      _ msg target cmd rest = do
        Just ref <- gets (\s -> M.lookup  "eval" (ircModuleState s))
        ms <- liftIO $ readIORef ref
        let (fuel, res, env, defns) = stripMS ms
@@ -134,9 +138,10 @@ instance Module EvalModule where
             _       -> ircPrivmsg target ("unknown command: "++cmd)
 
 
+io_or_pm :: a -> Exception -> a
 io_or_pm c (PatternMatchFail _) = c
 io_or_pm c (IOException _) = c
-io_or_pm c e = throw e -- ioError e (throw should work for both 5.04/5.05)
+io_or_pm _ e = throw e -- ioError e (throw should work for both 5.04/5.05)
 
 -- this is so ugly (at least it's only init)
 loadDefinitions :: IO (IORef ModuleState)

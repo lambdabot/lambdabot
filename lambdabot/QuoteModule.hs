@@ -2,9 +2,7 @@ module QuoteModule where
 
 import qualified Map as M
 import Control.Monad.State
-import Data.Dynamic
 import Data.IORef
-import Data.FiniteMap
 import QuoteModule.Fortune
 import QuoteModule.Yow
 import IRC
@@ -15,13 +13,16 @@ import System.Time
 
 newtype QuoteModule = QuoteModule ()
 
+theModule :: MODULE
 theModule = MODULE quoteModule
+
+quoteModule :: QuoteModule
 quoteModule = QuoteModule ()
 
 instance Module QuoteModule where
-    moduleName   m = return "quote"
-    moduleSticky m = False
-    commands     m = return ["fortune","yow","arr"]
+    moduleName   _ = return "quote"
+    moduleSticky _ = False
+    commands     _ = return ["fortune","yow","arr"]
     process      m msg target cmd rest
       = do 
         maybemyref <- gets (\s -> M.lookup "prngint" (ircModuleState s))
@@ -31,6 +32,7 @@ instance Module QuoteModule where
                                                                  "fortune" -> randFortune
                                                                  "yow"     -> yowRandom
                                                                  "arr"     -> arrRandom
+                                                                 _ -> error "QuoteModule: bad string"
                                          quoteGenPair <- liftIO (quotefun $ mkStdGen (stripMS modstate))
                                          liftIO (writeIORef myref (ModuleState ((genToInt . snd) quoteGenPair)))
                                          ircPrivmsg target (fst quoteGenPair)
@@ -44,26 +46,31 @@ instance Module QuoteModule where
                                          process m msg target cmd rest
 
 
+genToInt :: (RandomGen g) => g -> Int
 genToInt x = fst (next x)
 
 -- random seed from picoseconds, suggested by Marvin--
+maxI :: Int
 maxI = (maxBound :: Int)
 
+intGet :: IO Integer
 intGet = do calTime <- liftM toCalendarTime getClockTime
             bigNum <- liftM ctPicosec calTime
             return (until (< (fromIntegral maxI)) sub2int bigNum)
 
 castMe :: Integer -> Int
 castMe x = fromIntegral x
+
 sub2int :: Integer -> Integer
 sub2int x = (x - (fromIntegral maxI) - (fromIntegral maxI))
 
 -- TODO: refactor the list chooser code out of Yow/Fortune into a common piece of code
 --       figure out what the magic numbers do, and document them
 
-arrRandom rng
-    = do
-      return (QuoteModule.Yow.getRandItem arrList rng)
+arrRandom :: (Monad m, RandomGen g) => g -> m ([Char], g)
+arrRandom rng = return (QuoteModule.Yow.getRandItem arrList rng)
+
+arrList :: [[Char]]
 arrList = [
            "Avast!"
           ,"Shiver me timbers!"

@@ -91,6 +91,6 @@ writeRef loc v = do (c,hp,fuel) <- get
                     put (c,addToFM hp loc v,fuel)
 
 instance Functor LambdaTerm where
-    fmap f (Var v) = Var v
+    fmap _ (Var v) = Var v
     fmap f (Lam v b) = Lam v (f b)
     fmap f (App g x) = App (f g) (f x)

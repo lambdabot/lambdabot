@@ -1,22 +1,18 @@
 module Main where
 
 --      $Id: Main.hs,v 1.28 2003/07/29 15:46:41 eleganesh Exp $      
-import IRC
-import qualified Map as M
-import GHC.IO
-import Control.Concurrent
-import Control.Exception
-import Control.Monad.Trans
-import Control.Monad.Reader
-import Control.Monad.State
 
-import Util
+import IRC
 import StaticModules
 import BotConfig
+import qualified Map as M
+
+import Control.Monad.State
 
 main :: IO ()
 main = runIrc ircInit ircMain
 
+ircInit :: LB ()
 ircInit = loadStaticModules
 
 ircMain :: IRC ()

@@ -58,8 +58,10 @@ closeDictConnection conn = do
     readResponseLine conn -- ignore response
     hClose conn
 
+{-
 queryAllDicts :: DictConnection -> String -> IO LookupResult
 queryAllDicts = flip queryDict "*"
+-}
 
 queryDict :: DictConnection -> DictName -> String -> IO LookupResult
 queryDict conn dictnm query = do

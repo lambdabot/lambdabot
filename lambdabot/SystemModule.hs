@@ -9,16 +9,16 @@ import Control.Monad.State
 
 newtype SystemModule = SystemModule ()
 
+systemModule :: SystemModule
 systemModule = SystemModule ()
 
 instance Module SystemModule where
-    moduleName   m = return "system"
-    moduleSticky m = False
-    commands     m = return ["listchans","listmodules","listcommands","join","leave","part","msg","quit","reconnect","echo"]
-    process      m msg target cmd rest
-      = doSystem msg target cmd rest
+    moduleName   _ = return "system"
+    moduleSticky _ = False
+    commands     _ = return ["listchans","listmodules","listcommands","join","leave","part","msg","quit","reconnect","echo"]
+    process      _ msg target cmd rest = doSystem msg target cmd rest
 
-
+doSystem :: IRCMessage -> String -> [Char] -> [Char] -> IRC ()
 doSystem msg target cmd rest
  = do
    s <- get
@@ -49,7 +49,8 @@ doSystem msg target cmd rest
                           ircReconnect $ if rest=="" then "request" else rest
             "echo"
                 -> ircPrivmsg target $ "echo; msg:" ++ (show msg) ++ " rest:" ++ (show rest)
-            unknowncmd
+
+            _unknowncmd
                 -> ircPrivmsg target $ "excuse me? " ++ (show msg) ++ (show rest)
 
 list_all_commands :: IRCRWState -> String -> IRC ()

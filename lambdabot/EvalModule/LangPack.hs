@@ -7,7 +7,7 @@
 module EvalModule.LangPack where
 
 import Control.Monad.Error
-import Text.ParserCombinators.Parsec.Prim
+-- import Text.ParserCombinators.Parsec.Prim
 
 import Data.Dynamic
 

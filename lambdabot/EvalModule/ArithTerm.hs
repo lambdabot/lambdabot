@@ -36,7 +36,7 @@ phiArith (Div l r) = do l' <- prjI l
                                    else return $ inj (l' `div` r')
 
 instance Functor ArithTerm where
-    fmap f (Num n) = Num n
+    fmap _ (Num n) = Num n
     fmap f (Neg n) = Neg (f n)
     fmap f (Add l r) = Add (f l) (f r)
     fmap f (Sub l r) = Sub (f l) (f r)

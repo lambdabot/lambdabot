@@ -1,24 +1,28 @@
+
+-- 	$Id: StateModule.hs,v 1.8 2003/07/29 13:03:02 eris Exp $
+
 module StateModule where
 
 import IRC
 import qualified Map as M
 
 import Maybe
-import Data.FiniteMap
 import Control.Monad.State
 import Data.IORef
-import Data.Dynamic
--- 	$Id: StateModule.hs,v 1.8 2003/07/29 13:03:02 eris Exp $
+
 newtype StateModule = StateModule ()
 
+theModule :: MODULE
 theModule = MODULE stateModule
+
+stateModule :: StateModule
 stateModule = StateModule ()
 
 instance Module StateModule where
-    moduleName   m = return "state"
-    moduleSticky m = False
-    commands     m = return ["state"]
-    moduleInit   m =
+    moduleName   _ = return "state"
+    moduleSticky _ = False
+    commands     _ = return ["state"]
+    moduleInit   _ =
 	do s <- get
 	   newRef <- liftIO . newIORef $ ModuleState "nothing yet"
 	   let stateMap = ircModuleState s
