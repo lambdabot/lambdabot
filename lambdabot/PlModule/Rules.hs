@@ -6,7 +6,7 @@
 -- This marvellous module contributed by Thomas J\344ger
 --
 
-module PlModule.Rules (RewriteRule(..), rules, fire, apE, liftM2E) where
+module PlModule.Rules (RewriteRule(..), rules, fire) where
 
 import Data.Array
 
@@ -159,12 +159,12 @@ idE, flipE, bindE, extE, returnE, consE, appendE, nilE, foldrE, foldlE, fstE,
   foldl1E, notE, equalsE, nequalsE, plusE, multE, zeroE, oneE, lengthE, sumE,
   productE, concatE, concatMapE, joinE, mapE, fmapE, fmapIE, subtractE, minusE,
   liftME, apE, liftM2E :: MExpr
-idE        = Quote id'
-flipE      = Quote flip'
-constE     = Quote const'
-compE      = Quote comp
-sE         = Quote scomb
-fixE       = Quote fix'
+idE        = Quote $ Var Pref "id"
+flipE      = Quote $ Var Pref "flip"
+constE     = Quote $ Var Pref "const"
+compE      = Quote $ Var Inf "."
+sE         = Quote $ Var Pref "s"
+fixE       = Quote $ Var Pref "fix"
 bindE      = Quote $ Var Inf  ">>="
 extE       = Quote $ Var Inf  "=<<"
 returnE    = Quote $ Var Pref "return"
@@ -258,6 +258,7 @@ commutative ops (Var f op `App` e1 `App` e2)
 commutative ops (Var _ "flip" `App` e@(Var _ op)) | op `elem` ops = Just e
 commutative _ _ = Nothing
 
+{-# INLINE simplifies #-}
 simplifies :: RewriteRule
 simplifies = Or [
   -- (f . g) x --> f (g x)

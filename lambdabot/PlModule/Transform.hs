@@ -1,6 +1,6 @@
-{-# OPTIONS -fglasgow-exts #-}
+{-# OPTIONS -fglasgow-exts -cpp #-}
 module PlModule.Transform (
-    transform, optimize, alphaRename {- for testing -},
+    transform, optimize,
   ) where
 
 import PlModule.Common
@@ -125,19 +125,32 @@ class OrdMonadPlus m where
   mplusO  :: Ord a => m a -> m a -> m a
   mzeroO  ::          m a
   msumO   :: Ord a => [m a] -> m a
+#if __GLASGOW_HASKELL__ > 602
+  mapMono :: (a -> b) -> m a -> m b
+#else 
+  mapMono :: Ord b => (a -> b) -> m a -> m b
+#endif
 
 instance OrdMonadPlus S.Set where
+  {-# INLINE cut #-}
   cut x = case S.elems x of
     []    -> S.empty
     (y:_) -> S.singleton y
   isMZero = S.null
   nubM = id
   returnO = S.singleton
+  {-# INLINE extO #-}
   extO f x = S.unions (f `map` S.elems x)
   fmapO f x = S.fromList (f `map` S.elems x)
   mzeroO = S.empty
   mplusO = S.union
   msumO = S.unions
+#if __GLASGOW_HASKELL__ > 602
+  mapMono = S.mapMonotonic
+#else 
+  {-# INLINE mapMono #-}
+  mapMono f x = S.fromList (f `map` S.elems x)
+#endif
 
 {-
 instance OrdMonadPlus [] where
@@ -232,8 +245,8 @@ rewDeep rule e = rew rule e `mplusO` case e of
     Var _ _    -> mzeroO
     Lambda _ _ -> error "lambda: optimizer only works for closed expressions"
     Let _ _    -> error "let: optimizer only works for closed expressions"
-    App e1 e2  -> ((`App` e2) `fmapO` rewDeep rule e1) `mplusO` 
-		  ((e1 `App`) `fmapO` rewDeep rule e2)
+    App e1 e2  -> ((`App` e2) `mapMono` rewDeep rule e1) `mplusO` 
+		  ((e1 `App`) `mapMono` rewDeep rule e2)
 
 rew :: (?first :: Bool, OrdMonadPlus m) => RewriteRule -> Expr -> m Expr
 rew (RR r1 r2) e = toOrdMonadPlus $ fire r1 r2 e 

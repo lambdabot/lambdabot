@@ -23,6 +23,7 @@ data SExpr
   | Tuple ![SExpr]
   | Enum !Expr !(Maybe Expr) !(Maybe Expr)
 
+{-# INLINE toSExprHead #-}
 toSExprHead :: String -> [Expr] -> Maybe SExpr
 toSExprHead hd tl
   | all (==',') hd, length hd+1 == length tl 
@@ -113,7 +114,6 @@ instance Show Pattern where
   showsPrec p (PCons p1 p2) = showParen (p>5) $
     showsPrec 6 p1 . (':':) . showsPrec 5 p2
   
-
 isOperator :: String -> Bool
 isOperator = all (`elem` opchars)
 

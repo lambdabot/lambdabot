@@ -10,6 +10,9 @@ module PlModule.Set  (
     toList,
     union,
     insert,
+#if __GLASGOW_HASKELL__ > 602
+    mapMonotonic,
+#endif
     size
   ) where
 
@@ -48,6 +51,10 @@ insert = S.insert
 
 size :: Set a -> Int
 size = S.size
+
+mapMonotonic :: (a -> b) -> Set a -> Set b
+mapMonotonic = S.mapMonotonic
+
 #else
 import Prelude (Ord,Bool,Int,flip)
 import Data.Set

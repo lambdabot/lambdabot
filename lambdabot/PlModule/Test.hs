@@ -54,6 +54,12 @@ propRoundTrip' e = not (propRoundTrip e) ==> trace (show $ findMin e) False
     [] -> e'
     (x:_) -> findMin x
 
+propMonotonic1 :: Expr -> Expr -> Expr -> Bool
+propMonotonic1 e e1 e2 = App e e1 `compare` App e e2 == e1 `compare` e2
+
+propMonotonic2 :: Expr -> Expr -> Expr -> Bool
+propMonotonic2 e e1 e2 = App e1 e `compare` App e2 e == e1 `compare` e2
+
 subExpr :: Expr -> [Expr]
 subExpr (Var _ _) = []
 subExpr (Lambda v e) = [e] ++ Lambda v `map` subExpr e
