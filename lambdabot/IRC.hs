@@ -108,7 +108,8 @@ data IRCRWState
         ircCallbacks       :: Map String [Callback],
         ircCommands        :: Map String ModuleRef,
         ircMoreState       :: String,
-        ircStayConnected   :: Bool
+        ircStayConnected   :: Bool,
+        ircStaticModules   :: [String]
   }
 
 newtype ChanName = ChanName String -- should be abstract, always lowercase
@@ -469,7 +470,9 @@ runIrc ini m
   = withSocketsDo $
        do admins <- getAdmins
           exc <- try $ evalLB
-                         (ini >> withIrcSignalCatch (runIrc' m))
+                         (do ini
+                             modify $ \s -> s { ircStaticModules = M.keys $ ircModules s }
+                             withIrcSignalCatch (runIrc' m))
                          (initState admins)
           case exc of
             Left exception -> putStrLn ("Exception: " ++ show exception)
@@ -484,7 +487,8 @@ runIrc ini m
                         ircCallbacks = M.empty,
                         ircCommands = M.empty,
                         ircMoreState = "",
-                        ircStayConnected = True
+                        ircStayConnected = True,
+                        ircStaticModules  = []
                     }
 
 {-
@@ -708,7 +712,9 @@ ircLoadModule :: String -> LB ()
 ircLoadModule modname = withModule ircModules modname (return ()) (\m -> do
     cmds <- commands m
     s <- get
-    let cmdmap = ircCommands s        -- :: Map String MODULE
+    let cmdmap = ircCommands s
+        static = ircStaticModules s
+    when (modname `elem` static) $ error "can't load a static module"
     mod' <- asks $ ModuleRef m
     put (s { ircCommands = M.addList [ (cmd,mod') | cmd <- cmds ] cmdmap })
     moduleInit m)
@@ -716,6 +722,8 @@ ircLoadModule modname = withModule ircModules modname (return ()) (\m -> do
 ircUnloadModule :: String -> LB ()
 ircUnloadModule modname = withModule ircModules modname (error "module not loaded") (\m -> do
     when (moduleSticky m) $ error "module is sticky"
+    static <- gets ircStaticModules
+    when (modname `elem` static) $ error "can't unload a static module"
     moduleExit m
     modnm <- moduleName m
     cmds  <- commands m
