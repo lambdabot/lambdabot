@@ -76,25 +76,34 @@ getFileRequires "KarmaModule.o"  = return [Object "Map.o"]
 getFileRequires "EvalModule.o"  = return [Object "EvalModule/LMEngine.o",
                                           Object "Map.o"]
 getFileRequires "EvalModule/LMEngine.o" 
-                                = return [Object "EvalModule/LMParser.o",
-                                          Object "EvalModule/ListTerm.o",
-                                          Object "EvalModule/RelTerm.o",
-                                          Object "EvalModule/ArithTerm.o",
-                                          Object "EvalModule/LangPack.o",
-                                          Object "EvalModule/LambdaTerm.o"
+                                = return [Object "EvalModule/LMParser.o" 
+                                         ,Object "EvalModule/ListTerm.o" 
+                                         ,Object "EvalModule/RelTerm.o" 
+                                         ,Object "EvalModule/ArithTerm.o" 
+                                         ,Object "EvalModule/LangPack.o" 
+                                         ,Object "EvalModule/LambdaTerm.o"
+                                         ,Package "parsec"
                                          ]
 getFileRequires "GHCiModule.o"  = return [Object "Shell.o", Object "Map.o"]
-getFileRequires "PlugsModule.o" = return [Object "PlugsModule/RunPlugs.o"]
 getFileRequires "BabelModule.o" = return [Object "BabelBot/BabelFish.o",
                                           Object "MiniHTTP.o"]
+getFileRequires "PlModule.o"    = return [Object "PlModule/Transform.o" 
+                                         ,Object "PlModule/PrettyPrinter.o"
+                                         ,Object "PlModule/Parser.o"
+                                         ,Object "PlModule/Common.o"
+                                         ,Object "PlModule/Set.o"
+                                         ,Object "PlModule/Rules.o"
+                                         ,Package "parsec"
+                                         ]
 
 getFileRequires _ = return []
 
 getStartupModules :: MonadIO m => m [String]
-getStartupModules = return ["state","topic","karma","more","haddock",
-                            "type","seen","dict","quote","eval", "pl",
-                            "plugs","babel","version"] --,"fact"]
+getStartupModules = return [
+        "state","topic","karma","type","seen",
+        "dict","quote","eval", "pl","plugs","babel","version"
+        ] --,"fact","more","haddock"]
 
 -- for the MoreModule, how many lines to show at a time
 getMaxLines :: MonadIO m => m Int
-getMaxLines = return 9
+getMaxLines = return 7
