@@ -5,10 +5,6 @@ Don's Todo:
 * hs-plugins
 * make @karma persistent
 
-Thomas' Todo:
-* same for mapReaderT
-* don't import Control.Monad.Reader everywhere
-
 Todo:
 * FactModule - make "foo?" equal to "lambdabot: @fact foo"
 * fsbot-style factoid parsing, 

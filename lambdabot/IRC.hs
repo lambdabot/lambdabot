@@ -285,7 +285,7 @@ class (Monad m,MonadState IRCRWState m,MonadError IRCError m,MonadIO m)
    where
   liftLB :: LB a -> m a
 
-class (MonadLB m, MonadError IRCError m, MonadIO m) => MonadIRC m where
+class (MonadLB m) => MonadIRC m where
   liftIRC :: IRC a -> m a
   
 instance MonadIRC m => MonadIRC (ReaderT r m) where
@@ -368,8 +368,6 @@ ircPrivmsg who msg
              moreStateSet $ unlines morelines
              mapM_ (ircPrivmsg' who) sendlines
           else return ()
-
-{-# INLINE ircPrivmsg #-}
 
 ------------------------------------------------------------------------
 
@@ -707,19 +705,13 @@ ircInstallModule modn
         ircLoadModule modname
 
 ircLoadModule :: String -> LB ()
-ircLoadModule modname
-  = do  maybemod   <- gets (\s -> M.lookup modname (ircModules s))
-        case maybemod of
-            Just (ModuleRef m ref) -> ircLoadModule' m `runReaderT` ref
-            Nothing                -> return ()
-  where
-    ircLoadModule' m
-      = do  cmds <- commands m
-            s <- get
-            let cmdmap = ircCommands s        -- :: Map String MODULE
-            mod' <- asks $ ModuleRef m
-            put (s { ircCommands = M.addList [ (cmd,mod') | cmd <- cmds ] cmdmap })
-            moduleInit m
+ircLoadModule modname = withModule ircModules modname (return ()) (\m -> do
+    cmds <- commands m
+    s <- get
+    let cmdmap = ircCommands s        -- :: Map String MODULE
+    mod' <- asks $ ModuleRef m
+    put (s { ircCommands = M.addList [ (cmd,mod') | cmd <- cmds ] cmdmap })
+    moduleInit m)
 
 ircUnloadModule :: String -> LB ()
 ircUnloadModule modname = withModule ircModules modname (error "module not loaded") (\m ->
