@@ -3,8 +3,8 @@ module BaseModule where
 import BotConfig
 import IRC
 import Control.Monad.State
-import Data.FiniteMap
 import Util
+import qualified Map as M
 
 newtype BaseModule = BaseModule ()
 
@@ -79,14 +79,14 @@ doJOIN :: IRCMessage -> IRC ()
 doJOIN msg
   = do let (_, _:loc) = breakOnGlue ":" (head (msgParams msg))
        s <- get
-       put (s { ircChannels = addToFM (ircChannels s) (mkCN loc) "[currently unknown]" }) -- the empty topic causes problems
+       put (s { ircChannels = M.insert  (mkCN loc) "[currently unknown]" (ircChannels s)}) -- the empty topic causes problems
        ircGetTopic loc -- initialize topic
 
 doPART :: IRCMessage -> IRC ()
 doPART msg
   = do  let loc = head (msgParams msg)
         s <- get
-        put (s { ircChannels = delFromFM (ircChannels s) (mkCN loc) }) -- this must be a bug
+        put (s { ircChannels = M.delete (mkCN loc) (ircChannels s) }) -- this must be a bug
 
 doNICK :: IRCMessage -> IRC ()
 doNICK msg
@@ -101,7 +101,7 @@ doTOPIC :: IRCMessage -> IRC ()
 doTOPIC msg
     = do let loc = (head (msgParams msg))
          s <- get
-         put (s { ircChannels = addToFM (ircChannels s) (mkCN loc) (tail $ head $ tail $ msgParams msg) })
+         put (s { ircChannels = M.insert (mkCN loc) (tail $ head $ tail $ msgParams msg) (ircChannels s)})
 
 doRPL_WELCOME :: IRCMessage -> IRC ()
 doRPL_WELCOME msg
@@ -156,7 +156,7 @@ doRPL_TOPIC :: IRCMessage -> IRC ()
 doRPL_TOPIC msg -- nearly the same as doTOPIC but has our nick on the front of msgParams
     = do let loc = (msgParams msg) !! 1
          s <- get
-         put (s { ircChannels = addToFM (ircChannels s) (mkCN loc) (tail $ last $ msgParams msg) })
+         put (s { ircChannels = M.insert (mkCN loc) (tail $ last $ msgParams msg) (ircChannels s) })
 
 doRPL_NAMREPLY :: IRCMessage -> IRC ()
 doRPL_NAMREPLY msg = return ()
@@ -198,7 +198,7 @@ doPRIVMSG' myname msg
 
     doPersonalMsg ('@':cmd) rest
         = do let (who, _) = breakOnGlue "!" (msgPrefix msg)
-             maybecmd <- gets (\s -> lookupFM (ircCommands s) cmd)
+             maybecmd <- gets (\s -> M.lookup cmd (ircCommands s))
              case maybecmd of
                Just (MODULE m) -> do debugStrLn (show msg) 
                                      handleIrc (ircPrivmsg who) (process m msg who cmd rest)
@@ -209,7 +209,7 @@ doPRIVMSG' myname msg
             doUNKNOWN msg
     -- external modules are called in this next chunk
     doPublicMsg ('@':cmd) rest
-     = do maybecmd <- gets (\s -> lookupFM (ircCommands s) cmd)
+     = do maybecmd <- gets (\s -> M.lookup cmd (ircCommands s))
           case maybecmd of
             Just (MODULE m) -> do debugStrLn (show msg)
                                   handleIrc (ircPrivmsg alltargets) (process m msg alltargets cmd rest)

@@ -3,7 +3,7 @@
 -- $Id: DictLookup.hs,v 1.9 2003/07/29 13:41:49 eleganesh Exp $
 
 module DictModule.DictLookup
-    ( simpleDictLookup, QueryConfig(..), LookupResult(..) )
+    ( simpleDictLookup, QueryConfig(..), LookupResult )
 where
 
 {-

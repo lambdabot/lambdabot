@@ -13,7 +13,9 @@ SOURCES = $(shell find . -path './_darcs' -prune -depth -o $(EXCLUDESFIND) -name
 GHC=	ghc
 
 # GHCFLAGS = -fglasgow-exts -cpp -lHSrts -package posix -package network -l
-GHCFLAGS = -fglasgow-exts -cpp -package posix -package network -lHSrts -lHSparsec -package parsec #-ihaddock
+GHCFLAGS =  -fglasgow-exts -cpp -fno-warn-deprecations
+GHCFLAGS += -package posix -package network -package parsec #-ihaddock
+GHCFLAGS += -lHSrts -lHSparsec 
 
 HTOOLKIT =
 
@@ -64,7 +66,7 @@ clean:
 	rm -f GHCLibraryPath.hs StaticModules.hs
 	rm depend
 
-depend: $(SOURCES)
+depend: StaticModules.hs GHCLibraryPath.hs $(SOURCES)
 	$(GHC) $(GHCFLAGS) $(HTOOLKIT) -M -optdep-f -optdepdepend $(SOURCES) \
 	    || rm depend
 

@@ -7,6 +7,7 @@ where
 import IRC
 import Util
 import BotConfig
+import qualified Map as M
 
 import Data.FiniteMap
 import Control.Monad.State
@@ -30,12 +31,19 @@ data UserStatus = Present [Channel]            -- the user is in [Channel]
                 deriving Show
 
 ctCon = mkTyCon "ClockTime"
+
+#if __GLASGOW_HASKELL__ < 603
+myTy = mkAppTy
+#else
+myTy = mkTyConApp
+#endif
+
 instance Typeable ClockTime where
-    typeOf _ = mkAppTy ctCon []
+    typeOf _ = myTy ctCon []
 
 usCon = mkTyCon "UserStatus"
 instance Typeable UserStatus where
-    typeOf _ = mkAppTy usCon []
+    typeOf _ = myTy usCon []
 
 instance Module SeenModule where
     moduleName _        = return "seen"
@@ -48,7 +56,7 @@ instance Module SeenModule where
                       ModuleState (emptyFM :: FiniteMap Nick UserStatus)
            let stateMap = ircModuleState s
            put (s { ircModuleState =
-                    addToFM stateMap "seen" newRef })
+                    M.insert "seen" newRef stateMap })
            ircSignalConnect "JOIN" $ joinCB 
            ircSignalConnect "PART" $ partCB 
            ircSignalConnect "QUIT" $ quitCB
@@ -56,7 +64,7 @@ instance Module SeenModule where
            ircSignalConnect "353" $ joinChanCB
 
     process m msg target cmd rest 
-      = do seenRef <- gets (\s -> lookupFM (ircModuleState s) "seen")
+      = do seenRef <- gets (\s -> M.lookup "seen" (ircModuleState s))
            myname <- getMyname
            case seenRef of
                Just seenFMRef ->
@@ -188,7 +196,7 @@ withSeenFM f =
          Just (fm, ref) -> f fm ref
          _ -> debugStrLn "SeenModule> Couldn't lookup the user database"
      where getSeenFM 
-             = do seenRef <- gets (\s -> lookupFM (ircModuleState s) "seen")
+             = do seenRef <- gets (\s -> M.lookup "seen" (ircModuleState s))
                   case seenRef of
                       Just seenFMRef ->
                           do seenFMState <- liftIO $ readIORef seenFMRef

@@ -1,4 +1,9 @@
+{-# OPTIONS -fallow-overlapping-instances #-}
+
 module EvalModule (evalModule,theModule) where
+
+import qualified Map as M
+
 -- 	$Id: EvalModule.hs,v 1.1 2003/07/29 13:41:48 eleganesh Exp $
 import IRC
 import Util
@@ -48,9 +53,9 @@ instance Module EvalModule where
                                   Nothing :: Maybe Dynamic,
                                   initEnv,
                                   initDefns))
-        modify (\s -> s { ircModuleState = addToFM (ircModuleState s) "eval" r })
+        modify (\s -> s { ircModuleState = M.insert  "eval" r (ircModuleState s)})
     process      m msg target cmd rest = do
-       Just ref <- gets (\s -> lookupFM (ircModuleState s) "eval")
+       Just ref <- gets (\s -> M.lookup  "eval" (ircModuleState s))
        ms <- liftIO $ readIORef ref
        let (fuel, res, env, defns) = stripMS ms
        case cmd of

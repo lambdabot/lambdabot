@@ -1,11 +1,13 @@
 module DynamicModule (DynamicModule, dynamicModule) where
 
+import Map (Map)
+import qualified Map as M
+
 import Control.Monad.Error
 import Control.Monad.State
 import Control.Monad.Trans
 import Control.Exception (Exception (..))
 import Data.Dynamic (fromDynamic)
-import Data.FiniteMap
 import Data.Set
 import Data.IORef
 import Data.Dynamic (Typeable)
@@ -23,13 +25,13 @@ dynamicModule = DynamicModule ()
 
 data DLModules 
  = DLModules 
-    { objects :: FiniteMap String (RuntimeModule,Int)  -- object + use count
+    { objects :: Map String (RuntimeModule,Int)  -- object + use count
     , packages :: Set String -- which have been loaded? 
                              --  (can't unload, so ref counting pointless)
     }
   deriving Typeable
 
-initDLModules = DLModules { objects = emptyFM, packages = emptySet }
+initDLModules = DLModules { objects = M.empty, packages = empty }
 
 instance Module DynamicModule where
   moduleName   _ = return "dynamic"
@@ -62,14 +64,14 @@ findRLEError (IRCRaised (DynException e)) = fromDynamic e
 findRLEError _ = Nothing
 
 data DLAccessor m
- = DLAccessor { objectsA  :: Accessor m (FiniteMap String (RuntimeModule,Int))
+ = DLAccessor { objectsA  :: Accessor m (Map String (RuntimeModule,Int))
               , packagesA :: Accessor m (Set String)
               }
 
 dlGet :: MonadLB m => m (DLAccessor m)
 dlGet = do Just dlFMRef <- readFM ircModuleStateAccessor "dynamic"
            let dlA = dlAccessor dlFMRef
-           return $ DLAccessor { objectsA = objectsAccessor dlA
+           return $ DLAccessor { objectsA  = objectsAccessor dlA
                                , packagesA = packagesAccessor dlA
                                }
 
@@ -80,7 +82,7 @@ dlAccessor ref
 
 objectsAccessor :: MonadIO m 
                 => Accessor m DLModules
-                -> Accessor m (FiniteMap String (RuntimeModule,Int))
+                -> Accessor m (Map String (RuntimeModule,Int))
 objectsAccessor a
   = Accessor { reader = liftM objects (reader a)
              , writer = \v -> do s <- reader a

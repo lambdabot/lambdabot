@@ -1,6 +1,8 @@
 module StateModule where
 
 import IRC
+import qualified Map as M
+
 import Maybe
 import Data.FiniteMap
 import Control.Monad.State
@@ -21,10 +23,10 @@ instance Module StateModule where
 	   newRef <- liftIO . newIORef $ ModuleState "nothing yet"
 	   let stateMap = ircModuleState s
            put (s { ircModuleState =
-		    addToFM stateMap "state" newRef })
+		    M.insert "state" newRef stateMap })
     process      m msg target cmd rest
       = do 
-        maybemyref <- gets (\s -> lookupFM (ircModuleState s) "state")
+        maybemyref <- gets (\s -> M.lookup "state" (ircModuleState s))
         case maybemyref of
             Just myref -> 
                 do modstate <- liftIO (readIORef myref)

@@ -1,13 +1,14 @@
 module Main where
+
 --      $Id: Main.hs,v 1.28 2003/07/29 15:46:41 eleganesh Exp $      
 import IRC
+import qualified Map as M
 import GHC.IO
 import Control.Concurrent
 import Control.Exception
 import Control.Monad.Trans
 import Control.Monad.Reader
 import Control.Monad.State
-import Data.FiniteMap
 
 import Util
 import StaticModules
@@ -30,7 +31,7 @@ mainloop
   = do  msg <- ircRead
         let cmd = msgCommand msg
         s <- get
-        case lookupFM (ircCallbacks s) cmd of
+        case M.lookup cmd (ircCallbacks s) of
              Just cbs -> allCallbacks cbs msg
              _ -> return ()
         mainloop

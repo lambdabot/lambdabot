@@ -1,5 +1,8 @@
-module EvalModule.LMEngine
-    (evaluate,
+{-# OPTIONS -fallow-overlapping-instances #-}
+-- ^ until we fix it properly 
+
+module EvalModule.LMEngine (
+     evaluate,
      define,
      Environment,
      resume
@@ -157,7 +160,11 @@ instance Pause EvalMonad Result where
 evalMonadTypeCon = mkTyCon "EM"
 
 instance (Typeable a) => Typeable (EvalMonad a) where
+#if __GLASGOW_HASKELL__ >= 603
+    typeOf _ = mkTyConApp evalMonadTypeCon [typeOf (undefined :: a)]
+#else
     typeOf _ = mkAppTy evalMonadTypeCon [typeOf (undefined :: a)]
+#endif
 
 instance Monad EvalMonad where
     return = EM . return

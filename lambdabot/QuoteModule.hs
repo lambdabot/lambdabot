@@ -1,5 +1,6 @@
 module QuoteModule where
 
+import qualified Map as M
 import Control.Monad.State
 import Data.Dynamic
 import Data.IORef
@@ -23,7 +24,7 @@ instance Module QuoteModule where
     commands     m = return ["fortune","yow","arr"]
     process      m msg target cmd rest
       = do 
-        maybemyref <- gets (\s -> lookupFM (ircModuleState s) "prngint")
+        maybemyref <- gets (\s -> M.lookup "prngint" (ircModuleState s))
         case maybemyref of
                         Just myref -> do modstate <- liftIO (readIORef myref)
                                          let quotefun = case cmd of
@@ -39,7 +40,7 @@ instance Module QuoteModule where
                                          newref <- liftIO (newIORef (ModuleState (i :: Int)))
                                          let statemap = ircModuleState s
                                          put (s { ircModuleState 
-                                                  = addToFM statemap "prngint" newref })
+                                                  = M.insert "prngint" newref statemap })
                                          process m msg target cmd rest
 
 

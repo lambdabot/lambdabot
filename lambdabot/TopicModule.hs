@@ -2,8 +2,9 @@ module TopicModule (TopicModule, topicModule, theModule) where
 --     $Id: TopicModule.hs,v 1.8 2003/07/29 13:03:02 eris Exp $
 
 import IRC
+import qualified Map as M
+
 import Control.Monad.State (gets)
-import Data.FiniteMap (lookupFM)
 import Control.Exception (catchJust, errorCalls)
 import Char (isSpace)
 
@@ -24,7 +25,7 @@ instance Module TopicModule where
   process _ _ src "topic-init" chan = alter_topic src chan init
   process _ _ src "topic-tell" chan =
     do
-    maybetopic <- gets (\s -> lookupFM (ircChannels s) (mkCN chan))
+    maybetopic <- gets (\s -> M.lookup (mkCN chan) (ircChannels s) )
     case maybetopic of
                     Just x  -> ircPrivmsg src x
                     Nothing -> ircPrivmsg src "don't know that channel"
@@ -51,7 +52,7 @@ split_first_word xs = (w, dropWhile isSpace xs')
 alter_topic :: String -> String -> ([String] -> [String]) -> IRC ()
 alter_topic source chan f
   = do
-    maybetopic <- gets (\s -> lookupFM (ircChannels s) (mkCN chan))
+    maybetopic <- gets (\s -> M.lookup (mkCN chan) (ircChannels s) )
     case maybetopic
          of
          Just x -> case reads x

@@ -1,9 +1,11 @@
 module SystemModule where
+
 -- 	$Id: SystemModule.hs,v 1.4 2003/07/25 13:19:22 eleganesh Exp $	
 import IRC
-import Control.Monad.State
-import Data.FiniteMap
 import Util
+import qualified Map as M
+
+import Control.Monad.State
 
 newtype SystemModule = SystemModule ()
 
@@ -23,10 +25,10 @@ doSystem msg target cmd rest
    case cmd of
             "listchans" 
                 -> ircPrivmsg target $ "I am on these channels: "
-                   ++ show (keysFM (ircChannels s))
+                   ++ show (M.keys (ircChannels s))
             "listmodules" 
                 -> ircPrivmsg target $ "I have the following modules installed: " 
-                   ++ show (keysFM (ircModules s))
+                   ++ show (M.keys (ircModules s))
             "listcommands"
                 -> if null rest then list_all_commands s target
                    else list_module_commands s target rest
@@ -53,11 +55,11 @@ doSystem msg target cmd rest
 list_all_commands :: IRCRWState -> String -> IRC ()
 list_all_commands state target
   = ircPrivmsg target $ "I react to the following commands: " 
-    ++ show (keysFM (ircCommands state))
+    ++ show (M.keys (ircCommands state))
 
 list_module_commands :: IRCRWState -> String -> String -> IRC ()
 list_module_commands state target modname
-  = case lookupFM (ircModules state) modname
+  = case M.lookup modname (ircModules state)
          of
          Just (MODULE m) -> do { cmds <- liftLB $ commands m ;
                                  ircPrivmsg target $ "Module "++modname

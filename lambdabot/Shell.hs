@@ -57,9 +57,15 @@ launch' f pName pArgs = do
   output <- get_i2 tuple
   error <- get_i3 tuple
   pid <- get_pid tuple
-  inputH <- openFd (fromIntegral input) (Nothing) "test" WriteMode True False
-  outputH <- openFd (fromIntegral output) (Just RegularFile) "test" ReadMode True False
-  errorH <- openFd (fromIntegral error) (Just RegularFile) "test" ReadMode True False
+#if __GLASGOW_HASKELL__ < 603
+  inputH  <- openFd (fromIntegral input)  (Nothing)          "test" WriteMode True False
+  outputH <- openFd (fromIntegral output) (Just RegularFile) "test" ReadMode  True False
+  errorH  <- openFd (fromIntegral error)  (Just RegularFile) "test" ReadMode  True False
+#else
+  inputH  <- openFd (fromIntegral input)  (Nothing)          False "test" WriteMode True
+  outputH <- openFd (fromIntegral output) (Just RegularFile) False "test" ReadMode  True
+  errorH  <- openFd (fromIntegral error)  (Just RegularFile) False "test" ReadMode  True
+#endif
   x <- f pid inputH outputH errorH
   bracket 
     (throwErrnoIfMinus1 "system" (waitForIt tuple))

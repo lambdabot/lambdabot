@@ -1,5 +1,6 @@
 module KarmaModule where
 
+import qualified Map as M
 import IRC
 import Data.FiniteMap
 import Control.Monad.State
@@ -22,7 +23,7 @@ instance Module KarmaModule where
         else
            do let nick = head $ words rest
 	      maybeKarmaFMRef <-
-		  gets (\s -> lookupFM (ircModuleState s) "karma")
+		  gets (\s -> M.lookup "karma" (ircModuleState s))
 	      case maybeKarmaFMRef of
 		  Just karmaFMRef ->
 		      do karmaFMState <- liftIO $ readIORef karmaFMRef

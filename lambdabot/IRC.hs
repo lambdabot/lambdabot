@@ -1,4 +1,8 @@
 module IRC where
+
+import Map (Map)
+import qualified Map as M
+
 --      $Id: IRC.hs,v 1.21 2003/07/31 19:13:15 eleganesh Exp $    
 import Network
 import Monad
@@ -25,7 +29,6 @@ import Control.Monad.State
 import Control.Monad.Error (MonadError (..))
 import Data.Char
 import Data.List
-import Data.FiniteMap
 import Data.Dynamic
 import Data.IORef
 import BotConfig
@@ -48,12 +51,12 @@ type Callback = IRCMessage -> IRC ()
 
 data IRCRWState
   = IRCRWState {
-        ircPrivilegedUsers :: FiniteMap String Bool,
-        ircChannels        :: FiniteMap ChanName String, -- channel_name topic
-        ircModules         :: FiniteMap String MODULE,
-        ircCallbacks       :: FiniteMap String [Callback],
-        ircCommands        :: FiniteMap String MODULE,
-        ircModuleState     :: FiniteMap String (IORef ModuleState),
+        ircPrivilegedUsers :: Map String Bool,
+        ircChannels        :: Map ChanName String, -- channel_name topic
+        ircModules         :: Map String MODULE,
+        ircCallbacks       :: Map String [Callback],
+        ircCommands        :: Map String MODULE,
+        ircModuleState     :: Map String (IORef ModuleState),
         ircStayConnected   :: Bool
   }
 
@@ -256,7 +259,7 @@ ircSignOn nick ircname
 ircGetChannels :: IRC [String]
 ircGetChannels
   = do  chans <- gets ircChannels
-        return $ map getCN (keysFM chans)
+        return $ map getCN (M.keys chans)
 
 -- evil hack to make the MoreModule work
 -- change this to an output filter when the new Module typeclass arrives
@@ -376,12 +379,12 @@ runIrc init m
         initState admins' 
                   = IRCRWState {
                         ircPrivilegedUsers 
-                            = listToFM [ (user,True) | user <- admins' ],
-                        ircChannels = emptyFM,
-                        ircModules = emptyFM,
-                        ircCallbacks = emptyFM,
-                        ircCommands = emptyFM,
-                        ircModuleState = emptyFM,
+                            = M.fromList [ (user,True) | user <- admins' ],
+                        ircChannels = M.empty,
+                        ircModules = M.empty,
+                        ircCallbacks = M.empty,
+                        ircCommands = M.empty,
+                        ircModuleState = M.empty,
                         ircStayConnected = True
                     }
 
@@ -584,12 +587,12 @@ ircInstallModule mod
   = do  s <- get
         modname <- moduleName mod
         let modmap = ircModules s
-        put (s { ircModules = addToFM modmap modname (MODULE mod) })
+        put (s { ircModules = M.insert modname (MODULE mod)  modmap })
         ircLoadModule modname
 
 ircLoadModule :: String -> LB ()
 ircLoadModule modname
-  = do  maybemod   <- gets (\s -> lookupFM (ircModules s) modname)
+  = do  maybemod   <- gets (\s -> M.lookup modname (ircModules s))
         case maybemod of
             Just (MODULE m) -> do ircLoadModule' m
                                   moduleInit m
@@ -598,12 +601,12 @@ ircLoadModule modname
     ircLoadModule' m
       = do  cmds <- commands m
             s <- get
-            let cmdmap = ircCommands s        -- :: FiniteMap String MODULE
-            put (s { ircCommands = addListToFM cmdmap [ (cmd,(MODULE m)) | cmd <- cmds ] })
+            let cmdmap = ircCommands s        -- :: Map String MODULE
+            put (s { ircCommands = M.union (M.fromList [ (cmd,(MODULE m)) | cmd <- cmds ]) cmdmap })
 
 ircUnloadModule :: String -> LB ()
 ircUnloadModule modname
-    = do maybemod <- gets (\s -> lookupFM (ircModules s) modname)
+    = do maybemod <- gets (\s -> M.lookup modname (ircModules s))
          case maybemod of
                        Just (MODULE m)
                          -> if moduleSticky m 
@@ -616,26 +619,26 @@ ircUnloadModule modname
         = do modname <- moduleName m
              cmds    <- commands m
              s <- get
-             let modmap = ircModules s        -- :: FiniteMap String MODULE,
-                 cmdmap = ircCommands s        -- :: FiniteMap String MODULE
+             let modmap = ircModules s        -- :: Map String MODULE,
+                 cmdmap = ircCommands s        -- :: Map String MODULE
                  in
-                 put (s { ircCommands = delListFromFM cmdmap cmds }
-                        { ircModules = delFromFM modmap modname })
+                 put (s { ircCommands = foldl (flip M.delete) cmdmap cmds }
+                        { ircModules = M.delete modname modmap })
 
 
 ircSignalConnect :: String -> (IRCMessage -> IRC ()) -> LB ()
 ircSignalConnect str f 
     = do s <- get
          let cbs = (ircCallbacks s)
-         case (lookupFM cbs str) of 
-              Nothing -> put (s { ircCallbacks = addToFM cbs str [f]}) 
-              Just fs -> put (s { ircCallbacks = addToFM cbs str (f:fs)}) 
+         case (M.lookup str cbs) of 
+              Nothing -> put (s { ircCallbacks = M.insert str [f]    cbs }) 
+              Just fs -> put (s { ircCallbacks = M.insert str (f:fs) cbs}) 
 
 
 
 --isAdmin     :: IRCMessage -> Bool
 checkPrivs msg target f = do 
-                          maybepriv <- gets (\s -> lookupFM (ircPrivilegedUsers s) (ircnick msg))
+                          maybepriv <- gets (\s -> M.lookup (ircnick msg) (ircPrivilegedUsers s) )
                           case maybepriv of
                                          Just x  -> f
                                          Nothing -> ircPrivmsg target "not enough privileges"
@@ -651,10 +654,10 @@ moreStateSet lines =
        newRef <- liftIO . newIORef $ ModuleState lines
        let stateMap = ircModuleState s
        put (s { ircModuleState = 
-                addToFM stateMap "more" newRef })
+                M.insert "more" newRef stateMap })
 
 ircModuleStateAccessor :: MonadState IRCRWState m 
-                       => Accessor m (FiniteMap String (IORef ModuleState))
+                       => Accessor m (Map String (IORef ModuleState))
 ircModuleStateAccessor 
  = Accessor { reader = gets ircModuleState,
               writer = \v -> do s <- get

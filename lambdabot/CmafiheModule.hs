@@ -1,6 +1,9 @@
 
 module CmafiheModule where
+
 import Posix
+-- TODO migrate to System.Process
+
 import System
 import IRC
 import Control.Monad.Trans

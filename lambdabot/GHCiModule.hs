@@ -1,7 +1,12 @@
+{-# OPTIONS -fallow-overlapping-instances#-}
+-- ^ hack
+
 module GhciModule
     ( ghciModule
     , theModule
     ) where
+
+import qualified Map as M
 
 import Control.Concurrent
 import Control.Exception
@@ -38,7 +43,7 @@ instance Module GHCiModule where
 		      threadId <- liftIO $ forkIO $ (launchGHCi inChan outChan)
 		      makeInitialState "ghci" (threadId, inChan, outChan)
     moduleExit _ =
-	do mbEnvStateRef <- gets (\s -> lookupFM (ircModuleState s) "ghci")
+	do mbEnvStateRef <- gets (\s -> M.lookup "ghci" (ircModuleState s))
 	   case mbEnvStateRef
 		of Nothing -> return ()
 		   Just envStateRef ->
@@ -47,7 +52,7 @@ instance Module GHCiModule where
 			  liftIO $ putStrLn "Killing"
 			  liftIO $ killThread threadId
     process _ _ target "ghci" line =
-	do mbEnvStateRef <- gets (\s -> lookupFM (ircModuleState s) "ghci")
+	do mbEnvStateRef <- gets (\s -> M.lookup "ghci" (ircModuleState s))
 	   case mbEnvStateRef
 		of Nothing -> ircPrivmsg target "Something bad happened"
 		   Just envStateRef ->
@@ -142,11 +147,19 @@ wrap column str = f str []
 chanTc :: TyCon
 chanTc = mkTyCon "Chan"
 
+#if __GLASGOW_HASKELL__ < 603
+myTy = mkAppTy
+#else
+myTy = mkTyConApp
+#endif
+
 instance Typeable a => Typeable (Chan a) where
-    typeOf chan = mkAppTy chanTc [typeOf ((undefined :: Chan a -> a) chan)]
+    typeOf chan = myTy chanTc [typeOf ((undefined :: Chan a -> a) chan)]
 
 threadIdTc :: TyCon
 threadIdTc = mkTyCon "ThreadId"
 
+#if __GLASGOW_HASKELL__ < 603
 instance Typeable ThreadId where
     typeOf _ = mkAppTy threadIdTc []
+#endif

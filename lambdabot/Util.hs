@@ -11,25 +11,31 @@ module Util
     )
 where
 
+import Map (Map)
+import qualified Map as M
+
 -- 	$Id: Util.hs,v 1.10 2003/07/31 19:13:15 eleganesh Exp $	
 
 import List (intersperse, isPrefixOf)
 import Data.Dynamic
-import Data.FiniteMap
-import Data.Set
+import Data.Set hiding ( split )
 import Data.Char
 import BotConfig
 import Control.Monad.State hiding ( join )
 
 -- TODO: rename join, clashes with Monad.join
 
-finiteMapTyCon = mkTyCon "FiniteMap"
+finiteMapTyCon = mkTyCon "Map"
 
-instance (Typeable key, Typeable elt) => Typeable (FiniteMap key elt)
-    where
-    typeOf _ =
-	mkAppTy finiteMapTyCon [typeOf (undefined :: key),
-				typeOf (undefined :: elt)]
+instance (Typeable key, Typeable elt) => Typeable (Map key elt) where
+    typeOf _ = mkMyTy finiteMapTyCon [typeOf (undefined :: key),
+			    	typeOf (undefined :: elt)]
+        where
+#if __GLASGOW_HASKELL__ >= 603
+         mkMyTy = mkTyConApp
+#else
+         mkMyTy = mkAppTy
+#endif
 
 -- | Join lists with the given glue elements. Example:
 --
@@ -85,17 +91,17 @@ debugStrLn x = debugStr ( x ++ "\n" )
 
 data Accessor m s = Accessor { reader :: m s, writer :: s -> m () }
 
-readFM :: (Monad m,Ord k) => Accessor m (FiniteMap k e) -> k -> m (Maybe e)
+readFM :: (Monad m,Ord k) => Accessor m (Map k e) -> k -> m (Maybe e)
 readFM a k = do fm <- reader a
-                return $ lookupFM fm k
+                return $ M.lookup k fm 
 
-writeFM :: (Monad m,Ord k) => Accessor m (FiniteMap k e) -> k -> e -> m ()
+writeFM :: (Monad m,Ord k) => Accessor m (Map k e) -> k -> e -> m ()
 writeFM a k e = do fm <- reader a
-                   writer a $ addToFM fm k e
+                   writer a $ M.insert k e fm
 
-deleteFM :: (Monad m,Ord k) => Accessor m (FiniteMap k e) -> k -> m ()
+deleteFM :: (Monad m,Ord k) => Accessor m (Map k e) -> k -> m ()
 deleteFM a k = do fm <- reader a
-                  writer a $ delFromFM fm k
+                  writer a $ M.delete k fm
 
 lookupSet :: (Monad m,Ord e) => Accessor m (Set e) -> e -> m Bool
 lookupSet a e = do set <- reader a
