@@ -5,6 +5,8 @@ import IRC
 import Control.Monad.State
 import Util
 import qualified Map as M
+import Text.Regex
+import Data.Maybe
 
 newtype BaseModule = BaseModule ()
 
@@ -184,9 +186,9 @@ doPRIVMSG' myname msg
   | myname `elem` targets
     = let (cmd, params) = breakOnGlue " " text
       in doPersonalMsg cmd (dropWhile (== ' ') params)
-  | (myname ++ ":") `prefix` text
-    = let (cmd, params) = breakOnGlue " "
-                    (dropWhile (==' ') (after (myname ++ ":") text))
+  | myname `prefix` text
+    = let Just wholeCmd = maybeCommand myname text
+	  (cmd, params) = breakOnGlue " " wholeCmd
       in doPublicMsg cmd (dropWhile (==' ') params)
   | ("@" `prefix` text)
     = let (cmd, params) = breakOnGlue " " (dropWhile (==' ') text)
@@ -237,4 +239,12 @@ prefix (_:_) [] = False
 prefix (x:xs) (y:ys)
   = x == y && prefix xs ys
 
-
+maybeCommand :: String -> String -> Maybe String
+maybeCommand name text = 
+    let re = mkRegex (name ++ "[.:,]*[[:space:]]*")
+	res = matchRegexAll re text
+	Just (_, _, cmd, _) = res
+	in 
+	if isJust res
+	then Just cmd
+	else Nothing
