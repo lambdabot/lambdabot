@@ -1,10 +1,11 @@
-{-# OPTIONS -cpp -fglasgow-exts #-}
+{-# OPTIONS -cpp -fglasgow-exts -fallow-overlapping-instances #-}
+-- ^ instances hack!
 
 module SeenModule (
-    seenModule,
-    theModule,
-    SeenModule
-) where
+        SeenModule,
+        seenModule,
+        theModule,
+   ) where
 
 import IRC
 import Util
@@ -18,6 +19,7 @@ import Data.Dynamic
 import Data.IORef
 import System.Time
 
+------------------------------------------------------------------------
 
 newtype SeenModule = SeenModule ()
 
@@ -182,7 +184,7 @@ quitCB msg
   = withSeenFM $ \fm ref -> 
     do ct <- time
        let nick = unUserMode (ircnick msg)
-           lcnick = map lowerCaseString nick
+           lcnick = lowerCaseString nick
        case (M.lookup lcnick fm) of
            Just (Present _ct xs) -> 
                let fm' = M.insertWith (\_ x -> x) lcnick
