@@ -155,7 +155,8 @@ partCB msg
 						(Present ys)  
                 _ -> debugStrLn "SeenModule> someone who isn't known parted"
     where nick = unUserMode (ircnick msg)
-	  botPart cs (nick, us) 
+          lcnick = map toLower nick
+          botPart cs (nick', us) 
             = case us of
 		  Present xs -> 
 		      case xs \\ cs of
@@ -197,8 +198,8 @@ joinChanCB msg
     let l = msgParams msg
         chan = l !! 2
         chanUsers = words (drop 1 (l !! 3)) -- remove ':'
-        fooFunc fm u = addToFM_C updateJ fm 
-                              (unUserMode u) (Present [chan])
+        fooFunc m u = addToFM_C updateJ m 
+                              (map toLower $ unUserMode u) (Present [chan])
         seenFM' = foldl fooFunc fm chanUsers
         in setSeenFM ref seenFM'
 
