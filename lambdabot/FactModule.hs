@@ -12,6 +12,8 @@ http://sf.net/projects/htoolkit/
 assumes a postgresql database with a table named fact and fields named fact and value
 -}
 import IRC
+import Util
+
 import Data.List
 import Data.Char
 import Control.Monad.Reader
@@ -39,7 +41,7 @@ factoid rest
  | length (words rest) == 1 =  catchSql (factGet factKey) sqlHandler
  | otherwise                = return "empty factoid, BZZZT, thank you for playing!"
     where
-    factKey = (map toLower) $ clean $ head $ words rest
+    factKey = lowerCaseString $ clean $ head $ words rest
     factVal = clean $ snd $ break (== ' ') rest
 
 -- postgresql stuff under here
