@@ -100,7 +100,7 @@ getFileRequires _ = return []
 
 getStartupModules :: MonadIO m => m [String]
 getStartupModules = return [
-        "state","topic","karma","type","seen",
+        "dummy", "state","topic","karma","type","seen",
         "dict","quote","eval", "pl","plugs","babel","version"
         ] --,"fact","more","haddock"]
 
