@@ -126,14 +126,14 @@ lambdabot: $(ALL_OBJS)
 # clean rules
 #
 clean:
-	rm -f lambdabot genStaticModules
 	rm -f   *.o *.$(way_)o  *.$(way_)hi
 	rm -f   */*.$(way_)o  */*.$(way_)hi
 	rm -f *~ */*~
-	rm -f GHCLibraryPath.hs StaticModules.hs
+	rm -f lambdabot
 	rm -f depend depend.bak
 
 distclean: clean
+	rm -f StaticModules.hs genStaticModules
 	rm -f config.mk config.h config.log config.status configure 
 	rm -rf autom4te.cache
 
