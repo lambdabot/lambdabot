@@ -79,4 +79,4 @@ distclean: clean
 	rm config.mk config.log config.status configure 
 	rm -rf autom4te.cache
 
-include depend
+-include depend
