@@ -2,7 +2,7 @@ module MoreModule where
 -- 	$Id: MoreModule.hs,v 1.2 2003/07/25 13:19:22 eleganesh Exp $	
 import IRC
 import Control.Monad.State
-import Data.FiniteMap
+import qualified Map as M
 import Data.IORef
 
 newtype MoreModule = MoreModule ()
@@ -19,7 +19,7 @@ instance Module MoreModule where
     commands     _ = return ["more"]
     process      m msg target cmd rest
       = do 
-        maybemyref <- gets (\s -> lookupFM (ircModuleState s) "more")
+        maybemyref <- gets (\s -> M.lookup "more" (ircModuleState s))
         case maybemyref of
             Just myref -> 
                 do modstate <- liftIO (readIORef myref)
@@ -34,5 +34,5 @@ instance Module MoreModule where
            newRef <- liftIO . newIORef $ ModuleState [""]
            let stateMap = ircModuleState s
            put (s { ircModuleState = 
-                    addToFM stateMap "more" newRef })
+                    M.insert "more" newRef stateMap })
                     
