@@ -17,7 +17,8 @@ module IRC (
 
     LB(..),
     MonadLB(..),
-    ModuleRef(..),
+
+    withModule,
 
     readMS,
     writeMS,
@@ -456,7 +457,7 @@ ircWrite line = liftIRC $ do
 -- may wish to add more things to the things caught, or restructure things 
 -- a bit. Can't just catch everything - in particular EOFs from the socket
 -- loops get thrown to this thread and we musn't just ignore them.
-handleIrc :: (String -> IRC ()) -> IRC () -> IRC ()
+handleIrc :: (MonadError IRCError m) => (String -> m ()) -> m () -> m ()
 handleIrc handler m 
   = catchError m
                (\e -> case e of
@@ -721,16 +722,13 @@ ircLoadModule modname
             moduleInit m
 
 ircUnloadModule :: String -> LB ()
-ircUnloadModule modname
-    = do maybemod <- gets (\s -> M.lookup modname (ircModules s))
-         case maybemod of
-                       Just (ModuleRef m ref)
-                         -> if moduleSticky m 
-                            then error "module is sticky"
-                            else (do moduleExit m
-                                     ircUnloadModule' m) `runReaderT` ref
-                       _ -> error "module not loaded"
-    where
+ircUnloadModule modname = withModule ircModules modname (error "module not loaded") (\m ->
+    if moduleSticky m 
+    then error "module is sticky"
+    else do 
+      moduleExit m
+      ircUnloadModule' m)
+  where
     ircUnloadModule' m
         = do modnm <- moduleName m
              cmds  <- commands m
@@ -778,3 +776,11 @@ moreStateSet lns =
     do s <- get
        put (s { ircMoreState = lns })
 
+
+withModule :: MonadLB m => (IRCRWState -> Map String ModuleRef) ->
+  String -> m a -> (forall mod s. Module mod s => mod -> ModuleT s m a) -> m a
+withModule dict modname def f = do
+    maybemod <- gets (M.lookup modname . dict)
+    case maybemod of
+      Just (ModuleRef m ref) -> f m `runReaderT` ref
+      _                      -> def

@@ -197,29 +197,27 @@ doPRIVMSG' myname msg
     targets = split "," alltargets
     text = tail (head (tail (msgParams msg)))
 
-    doPersonalMsg ('@':cmd) rest
-        = do let (who, _) = breakOnGlue "!" (msgPrefix msg)
-             maybecmd <- gets (\s -> M.lookup cmd (ircCommands s))
-             case maybecmd of
-               Just (ModuleRef m ref) -> do 
-                 debugStrLn (show msg)
-                 liftIRC $ handleIrc (ircPrivmsg who) (process m msg who cmd rest `runReaderT` ref)
-               Nothing -> ircPrivmsg who "Sorry, I don't know that command."
+    doPersonalMsg ('@':cmd) rest = withModule ircCommands cmd
+        (ircPrivmsg who "Sorry, I don't know that command.") (\m -> do 
+           debugStrLn (show msg)
+           handleIrc (ircPrivmsg who) (process m msg who cmd rest)
+        )
+      where (who, _) = breakOnGlue "!" (msgPrefix msg)
+
     doPersonalMsg _ _
       = do  let (who, _) = breakOnGlue "!" (msgPrefix msg)
             ircPrivmsg who "Sorry, don't understand"
             doUNKNOWN msg
     -- external modules are called in this next chunk
-    doPublicMsg ('@':cmd) rest
-     = do maybecmd <- gets (\s -> M.lookup cmd (ircCommands s))
-          case maybecmd of
-            Just (ModuleRef m ref) -> do 
-              debugStrLn (show msg)
-              liftIRC $ handleIrc (ircPrivmsg alltargets) (process m msg alltargets cmd rest `runReaderT` ref)
-            Nothing         -> do
-                myname' <- getMyname
-                ircPrivmsg alltargets ("Sorry, I don't know the command \"" ++
-                                        cmd ++ "\", try \"" ++ myname' ++ ": @listcommands\"")
+    doPublicMsg ('@':cmd) rest = withModule ircCommands cmd (do
+          myname' <- getMyname
+          ircPrivmsg alltargets ("Sorry, I don't know the command \"" ++
+                                 cmd ++ "\", try \"" ++ myname' ++ ": @listcommands\"")
+        ) (\m -> do
+          debugStrLn (show msg)
+          handleIrc (ircPrivmsg alltargets) (process m msg alltargets cmd rest)
+        )
+
     doPublicMsg _ _
       = do myname' <- getMyname
            ircPrivmsg alltargets ("Sorry, I'm not a very smart bot yet, try \""

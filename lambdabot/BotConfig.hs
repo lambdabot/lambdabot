@@ -23,7 +23,7 @@ getAdmins :: MonadIO m => m [String]
 getAdmins = return ["Pseudonym","shapr","pesco","Riastradh","Darius",
                      "tmoertel","delYsid","polli","Heffalump","Igloo",
                      "Marvin--","o3","o3_","phubuh","ddarius","bringert",
-                     "dons","TheHunter"]
+                     "dons","TheHunter","jlouis"]
 
 getVerbose :: MonadIO m => m Bool
 getVerbose = return True

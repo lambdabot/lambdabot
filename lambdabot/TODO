@@ -6,7 +6,6 @@ Don's Todo:
 * make @karma persistent
 
 Thomas' Todo:
-* case .. of Just (ModuleRef ...) -> ... is a common pattern.
 * same for mapReaderT
 * don't import Control.Monad.Reader everywhere
 

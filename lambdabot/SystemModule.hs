@@ -37,7 +37,7 @@ doSystem msg target cmd rest
                      ++ show (M.keys (ircModules s))
             "listcommands"
                 -> if null rest then list_all_commands s target
-                   else list_module_commands s target rest
+                   else list_module_commands target rest
             "join"
                 -> checkPrivs msg target (ircJoin rest)
             "leave"
@@ -67,12 +67,9 @@ list_all_commands state target
   = ircPrivmsg target $ "I react to the following commands: "
     ++ show (M.keys (ircCommands state))
 
-list_module_commands :: MonadIRC m => IRCRWState -> String -> String -> m ()
-list_module_commands state target modname
-  = case M.lookup modname (ircModules state) of
-       Just (ModuleRef m ref) -> do
-         cmds <- liftLB $ commands m `runReaderT` ref
-         ircPrivmsg target $ concat ["Module ", modname,
-            " provides the following commands: ", show cmds]
-       Nothing -> ircPrivmsg target $
-                    "No module \""++modname++"\" loaded"
+list_module_commands :: MonadIRC m => String -> String -> m ()
+list_module_commands target modname = withModule ircCommands modname
+    (ircPrivmsg target $ "No module \""++modname++"\" loaded") (\m -> do
+      cmds <- mapReaderT liftLB $ commands m
+      ircPrivmsg target $ concat ["Module ", modname,
+         " provides the following commands: ", show cmds])
