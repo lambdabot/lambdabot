@@ -3,6 +3,7 @@ module CmafiheModule where
 
 import PosixCompat
 import IRC
+
 import Control.Monad.Trans
 
 newtype CmafiheModule = CmafiheModule ()
@@ -30,7 +31,7 @@ ircCmafihe = liftIO . cmafihe
 
 instance Module CmafiheModule where
     moduleName _ = return "cmafihe"
-    moduleHelp _ _ = return "cmafihe: I don't know what this module does"
+    moduleHelp _ _ = return "cmafihe: translate from lojban into english"
     moduleSticky _ = False
     commands _ = return ["cmafihe"]
 
