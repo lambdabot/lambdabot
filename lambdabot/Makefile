@@ -2,33 +2,64 @@
 
 include config.mk
 
-DYNMODS=Dict Dummy Eval Karma Quote Seen State System Topic \
-	Type Plugs Babel Version More Pl Help
+# 
+#  All directories to look for sources
+#
+ALL_DIRS=	.  DictModule EvalModule QuoteModule BabelBot PlModule
 
-# Not currently used, but keep building them:
-DYNMODS+=Hello Cmafihe
+#
+# Dynamically loaded modules. Not to be statically linked.
+# This var causes the module to be added to the compilation list, to
+# actually use them at runtime, you need to edit BotConfig.hs
+#
+DYNMODS=Dict Dummy Eval Karma Quote Seen State System \
+	Topic Type Plugs Babel Version More Pl Help
 
-# Not used, not built:
-# Shell GHCi Chess SearchML Fact Haddock
+# Not used, not built, bit dodgy as we are relying on ALL_DIRS to ignore
+# the subdirs of EXCLUDED_MODS
+EXCLUDED_MODS=	GHCi Chess SearchML Fact Haddock Hello Cmafihe
 
-# The following will not be built:
-EXCLUDES=ChessModule.hs \
-	EvalModule/tests.hs \
-	FactModule.hs \
-	HaddockModule.hs \
-	GenStaticModules.hs \
-	PlModule/Test.hs
+# The following additional srcs will not be built, along with the above modules.
+EXCLUDED_SRCS=	$(addsuffix Module.hs,$(EXCLUDED_MODS))
+EXCLUDED_SRCS+= EvalModule/tests.hs PlModule/Test.hs Shell.hs GenStaticModules.hs
 
-EXCLUDESFIND=	$(addprefix ! -path ./,$(EXCLUDES))
+#
+# Generated at runtime
+#
+EXTRA_SRCS=	StaticModules.hs
 
-SOURCES=	$(shell find . -path './_darcs' -prune -depth -o $(EXCLUDESFIND) -name \*.hs -o -name \*.lhs)
+#
+# Construct a list of buildable sources, based on $ALL_DIRS, and their
+# objects
+#
+ALL_SRCS=	$(filter-out $(EXCLUDED_SRCS), \
+			$(wildcard $(patsubst ./%, %, \
+			   $(patsubst %,%/*.hs,   $(ALL_DIRS)) \
+			   $(patsubst %,%/*.lhs,  $(ALL_DIRS)) ))) $(EXTRA_SRCS)
 
-HTOOLKIT =
+#
+# Just a list of the bot dependencies. Use ghci to trace the dependency
+# tree from Main.hs.
+#
+ALL_OBJS=	$(addsuffix .$(way_)o,$(basename $(ALL_SRCS)))
 
-all: lambdabot modules
+# Top-level plugin modules
+PLUGIN_OBJS=	$(addsuffix Module.$(way_)o, $(DYNMODS))
 
-FORCE:
+#
+# With this, 'make lambdabot' should only build the static code, and 'make
+# modules' only makes the plugins. However, we need to cache this somehow.
+#
+#BOT_SRCS=$(patsubst %, %.hs, \
+#		$(shell echo ":q" | \
+#		          ghci -v1 Main.hs $(PKG_OPTS) 2> /dev/null | \
+#			    sed -n '/Ok/{ s/.*://; s/,//g; s/.$$//; p; q;}' ))
+#
+#BOT_OBJS=	$(addsuffix .$(way_)o,$(basename $(BOT_SRCS)))
 
+#
+# way management
+#
 # If $(way) is set then we define $(way_) and $(_way) from it in the
 # obvious fashion.
 ifeq "$(way)" "p"
@@ -36,9 +67,7 @@ ifeq "$(way)" "p"
   _way := _$(way)
 endif
 
-#
 # building the profiled way
-#
 ifeq "$(way)" "p"
 PROF_OPTS	= -prof -auto-all
 LD_OPTS		+= $(PROF_OPTS)
@@ -46,36 +75,44 @@ HC_OPTS		+= $(PROF_OPTS)
 HC_OPTS 	+= -hisuf $(way_)hi -hcsuf $(way_)hc -osuf $(way_)o
 endif
 
-.PHONY: modules
-PLUGIN_OBJS= $(addsuffix Module.$(way_)o,$(DYNMODS))
-modules: $(PLUGIN_OBJS)
+#
+# Now, get down to business
+#
+all: lambdabot modules
 
 #
-# Link the bot (we use --make to extract the static objs form the mess)
+# TODO should be just PLUGIN_OBJS
 #
-# This may cause depend to be regenerated, leading to a redundant
-# relink. It would be nicer if we could move all plugins somewhere else
-#
-lambdabot: $(filter-out $(PLUGIN_OBJS), $(SOURCES))
-	$(GHC) $(LD_OPTS) -v0 --make Main.hs -o $@
+.PHONY: modules
+modules: $(ALL_OBJS)
 
 #
 # Dependency generation
 #
-depend: StaticModules.hs $(SOURCES)
+depend: StaticModules.hs GenStaticModules.hs StaticModules.conf $(ALL_SRCS)
 	@echo -n "Rebuilding dependencies ... "
-	@$(GHC) -cpp $(HC_OPTS) $(PKG_OPTS) $(HTOOLKIT) -M -optdep-f -optdepdepend $(SOURCES) || rm depend
+	@$(GHC) -cpp $(HC_OPTS) $(PKG_OPTS) $(HTOOLKIT) -M -optdep-f \
+		-optdepdepend $(ALL_SRCS) || rm depend
 	@echo "done."
 
+#
+# Script to generate a list of statically linked plugins
+#
 StaticModules.hs: GenStaticModules.hs StaticModules.conf
 	@echo -n "Generating static modules list ... "
 	@echo main | ghci -v0 GenStaticModules.hs
 	@echo "done."
 
+#
+# Link the bot.
+# TODO: depends should only be $(BOT_OBJS), not plugins too.
+#
+lambdabot: $(ALL_OBJS)
+	$(GHC) $(LD_OPTS) -v0 --make Main.hs -o $@
+
 # 
 # Main rules, with support for 'way' management, from Yi.
 #
-
 %.$(way_)hi : %.$(way_)o
 	@:
 
@@ -85,18 +122,9 @@ StaticModules.hs: GenStaticModules.hs StaticModules.conf
 %.$(way_)o : %.lhs
 	$(GHC) $(HC_OPTS) $(PKG_OPTS) -c $< -o $@  -ohi $(basename $@).$(way_)hi
 
-#GhciModule.o: Shell.o GhciModule.hs
-#	$(GHC) $(HC_OPTS) $(PKG_OPTS) -c $< -o $@  -ohi $(basename $@).$(way_)hi
-
-#FactModule.o: FactModule.hs
-#	$(GHC) $(GHCFLAGS) $(HTOOLKIT) -c $<
-
-#genStaticModules: GenStaticModules.hs
-#	$(GHC) -o $@ $<
-
-#StaticModules.hs: genStaticModules StaticModules.conf
-#	@./genStaticModules
-
+#
+# clean rules
+#
 clean:
 	rm -f lambdabot genStaticModules
 	rm -f   *.o *.$(way_)o  *.$(way_)hi
