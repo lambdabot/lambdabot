@@ -8,6 +8,7 @@ import System.Directory
 import System.Random
 import qualified Control.Exception as C (catch)
 import QuoteModule.Random
+import qualified Util
 
 --
 -- No good for win32
@@ -46,7 +47,7 @@ fortunesParse :: FilePath -> IO [String]
 fortunesParse filename = do
     rawfs <- C.catch (readFile filename)
                      (\_ -> return "Couldn't find fortune file")
-    return (map unlines $ splines $ lines rawfs)
+    return $ Util.split "%\n" rawfs
 
 -- | Given a FilePath of a fortune file, select a random fortune from it
 --   and return it along with the altered new seed of the RNG.
