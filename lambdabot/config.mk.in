@@ -15,9 +15,8 @@ HC_OPTS=        -Wall -Werror -fno-warn-deprecations
 HC_OPTS+=       -funbox-strict-fields -O2 -fvia-C
 #HC_OPTS+=       -Onot -fasm -H64m
 
-PKG_OPTS=	-package posix -package network -package parsec
-LD_OPTS=	-lHSrts -lHSparsec 
-
+# Until we use System.Process:
+PKG_OPTS=	-package posix
 
 #HC_OPTS+=      -debug 
 #HC_OPTS+=	-fignore-asserts 
