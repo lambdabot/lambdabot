@@ -7,6 +7,7 @@ import Monad
 import System.Directory
 import System.Random
 import qualified Control.Exception as C (catch)
+import QuoteModule.Random
 
 --
 -- No good for win32
@@ -17,33 +18,19 @@ import System.Posix
 import Posix
 #endif
 
--- 	$Id: Fortune.hs,v 1.3 2003/07/29 13:41:49 eleganesh Exp $	
+-- 	$Id: Fortune.hs,v 1.3 2003/07/29 13:41:49 eleganesh Exp $
+
+path :: String
+path = "/usr/share/games/fortunes/"
 
 filelist :: IO [String]
-filelist = do filelist'<- C.catch (getDirectoryContents "/usr/share/games/fortunes")
+filelist = do filelist'<- C.catch (getDirectoryContents path)
                                   (\_ -> return [])
               let files = filter (not . isSuffixOf ".dat") filelist'
               join (return (filterM isFile (map (path ++) files)))
 
-choose :: (Fractional b, Integral a1, Integral a) => a1 -> a -> b
-choose listLength randomInt
-        = ((fromIntegral randomInt) + 2147483647) * (fromIntegral listLength) / 4294967295
-
-getRandItem :: (RandomGen g) => [a] -> g -> (a, g)
-getRandItem mylist rng = ((mylist !! floor ((choose llen rndInt) :: Double)),newRng)
-                         where
-                         llen = length mylist
-                         rndInt = fst (next rng)
-                         newRng = snd (next rng)
-
 fileRandom :: (RandomGen a) => a -> IO (String, a)
-fileRandom rng
-    = do
-      randPair <- liftM2 getRandItem filelist (return rng)
-      return randPair
-
-path :: [Char]
-path = "/usr/share/games/fortunes/"
+fileRandom rng = liftM2 getRandItem filelist (return rng)
 
 fortunesParse :: FilePath -> IO [String]
 fortunesParse filename = do
@@ -60,21 +47,11 @@ fortuneRandom filename rng
 randFortune :: (RandomGen a) => a -> IO (String, a)
 randFortune rng = join (liftM (uncurry fortuneRandom) $ fileRandom rng)
 
-plines     :: String -> [String]
-plines ""   = []
-plines s    = let (l,s') = break ('\n'==) s
-             in l : case s' of []      -> []
-                               (_:s'') -> lines s''
 splines :: [[Char]] -> [[[Char]]]
 splines [[]] = []
-splines s    =  let 
-                (l,s') = break ("%"==) s
+splines s    =  let (l,s') = break ("%"==) s
                 in l : case s' of []      -> []
                                   (_:s'') -> splines s''
-
-
--- isFile x = do
---            liftM2 (==) (fileType x) (return RegularFile)
 
 isFile :: FilePath -> IO Bool
 isFile x = do

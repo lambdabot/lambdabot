@@ -5,11 +5,12 @@ import Control.Monad.State
 import Data.IORef
 import QuoteModule.Fortune
 import QuoteModule.Yow
+import QuoteModule.Random
 import IRC
 import Maybe
 import System.Random
 import System.Time
--- 	$Id: QuoteModule.hs,v 1.1 2003/07/29 13:41:48 eleganesh Exp $	
+-- 	$Id: QuoteModule.hs,v 1.1 2003/07/29 13:41:48 eleganesh Exp $
 
 newtype QuoteModule = QuoteModule ()
 
@@ -28,7 +29,7 @@ instance Module QuoteModule where
     moduleSticky _ = False
     commands     _ = return ["fortune","yow","arr"]
     process      m msg target cmd rest
-      = do 
+      = do
         maybemyref <- gets (\s -> M.lookup "prngint" (ircModuleState s))
         case maybemyref of
                         Just myref -> do modstate <- liftIO (readIORef myref)
@@ -37,15 +38,15 @@ instance Module QuoteModule where
                                                                  "yow"     -> yowRandom
                                                                  "arr"     -> arrRandom
                                                                  _ -> error "QuoteModule: bad string"
-                                         quoteGenPair <- liftIO (quotefun $ mkStdGen (stripMS modstate))
-                                         liftIO (writeIORef myref (ModuleState ((genToInt . snd) quoteGenPair)))
-                                         ircPrivmsg target (fst quoteGenPair)
+                                         (quote, newseed) <- liftIO (quotefun $ mkStdGen (stripMS modstate))
+                                         liftIO (writeIORef myref (ModuleState $ genToInt newseed))
+                                         ircPrivmsg target quote
                         -- init the state for this module if it doesn't exist
                         Nothing    -> do s <- get
                                          i <- liftIO (liftM castMe intGet)
                                          newref <- liftIO (newIORef (ModuleState (i :: Int)))
                                          let statemap = ircModuleState s
-                                         put (s { ircModuleState 
+                                         put (s { ircModuleState
                                                   = M.insert "prngint" newref statemap })
                                          process m msg target cmd rest
 
@@ -68,11 +69,8 @@ castMe x = fromIntegral x
 sub2int :: Integer -> Integer
 sub2int x = (x - (fromIntegral maxI) - (fromIntegral maxI))
 
--- TODO: refactor the list chooser code out of Yow/Fortune into a common piece of code
---       figure out what the magic numbers do, and document them
-
 arrRandom :: (Monad m, RandomGen g) => g -> m ([Char], g)
-arrRandom rng = return (QuoteModule.Yow.getRandItem arrList rng)
+arrRandom rng = return (QuoteModule.Random.getRandItem arrList rng)
 
 arrList :: [[Char]]
 arrList = [
