@@ -69,10 +69,12 @@ endif
 
 # building the profiled way
 ifeq "$(way)" "p"
-PROF_OPTS	= -prof -auto-all
+PROF_OPTS	= -prof -auto-all -DSTATIC=1
 LD_OPTS		+= $(PROF_OPTS)
 HC_OPTS		+= $(PROF_OPTS)
 HC_OPTS 	+= -hisuf $(way_)hi -hcsuf $(way_)hc -osuf $(way_)o
+
+# and statically link all the modules.
 endif
 
 #
