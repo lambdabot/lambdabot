@@ -29,7 +29,7 @@ instance Module KarmaModule KarmaState where
 
     moduleSticky _ = False
     commands     _ = return ["karma", "karma+", "karma-"]
-    moduleInit   _ = lift $ makeInitialState "karma" (emptyFM :: FiniteMap String Integer)
+    moduleInit   _ = writeMS emptyFM
     process      _ msg target cmd rest =
 	if (length $ words rest) == 0 then
 	   ircPrivmsg target "I can't find the karma of nobody."
