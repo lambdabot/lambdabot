@@ -21,7 +21,9 @@ import System.IO        (Handle, hGetLine, hPutStr, hClose, hSetBuffering, Buffe
 
 #if __GLASGOW_HASKELL__ >= 600
 import System.IO.Error hiding (try)
+#ifndef mingw32_HOST_OS
 import System.Posix.Signals
+#endif
 #else
 import Posix
 import System.IO.Error
@@ -39,6 +41,12 @@ import Control.Monad.State
 import Control.Monad.Error (MonadError (..))
 
 ------------------------------------------------------------------------
+
+#ifdef mingw32_HOST_OS
+type Signal = ()
+type Handler = ()
+type SignalSet = ()
+#endif
 
 data IRCRState
   = IRCRState {
@@ -85,10 +93,14 @@ withHandler :: (MonadIO m,MonadError e m)
             -> Maybe SignalSet 
             -> m () 
             -> m ()
+#ifdef mingw32_HOST_OS
+withHandler s h ss m = return ()
+#else
 withHandler s h ss m 
   = bracketError (liftIO $ installHandler s h ss)
                  (\oldh -> liftIO $ installHandler s oldh Nothing)
                  (\_ -> m)
+#endif
 
 withHandlerList :: (MonadError e m,MonadIO m)
                 => [Signal]
@@ -102,15 +114,19 @@ withHandlerList sl h ss m = foldr (\s -> withHandler s (h s) ss) m sl
 -- just raises an exception if you try
 ircSignalsToCatch :: [Signal]
 ircSignalsToCatch = [
+#ifndef mingw32_HOST_OS
 #if __GLASGOW_HASKELL__ >= 600
                      busError,
 #endif
                      segmentationViolation,
                      keyboardSignal,softwareTermination,
-                     keyboardTermination,lostConnection]
+                     keyboardTermination,lostConnection
+#endif                     
+                     ]
 
 ircSignalMessage :: Signal -> [Char]
 ircSignalMessage s
+#ifndef mingw32_HOST_OS
 #if __GLASGOW_HASKELL__ >= 600
                    | s==busError = "killed by SIGBUS"
 #endif
@@ -119,13 +135,18 @@ ircSignalMessage s
                    | s==softwareTermination = "killed by SIGTERM"
                    | s==keyboardTermination = "killed by SIGQUIT"
                    | s==lostConnection = "killed by SIGHUP"
+#endif
  -- this case shouldn't happen if the list of messages is kept up to date
  -- with the list of signals caught
                    | otherwise = "killed by unknown signal"
 
 ircSignalHandler :: ThreadId -> Signal -> Handler
 ircSignalHandler threadid s
+#ifdef mingw32_HOST_OS
+  = ()
+#else  
   = Catch $ throwTo threadid $ DynException $ toDyn $ SignalException s
+#endif  
 
 withIrcSignalCatch :: (MonadError e m,MonadIO m) => m () -> m ()
 withIrcSignalCatch m 
@@ -158,7 +179,9 @@ handleIRCErrorT m
   = do res <- runExceptionErrorT m
        case res of
          Left (IRCRaised e) -> throwM e
+#ifndef mingw32_HOST_OS         
          Left (SignalCaught s) -> liftIO $ raiseSignal s
+#endif         
 -- overlapped for now, but won't be if IRCError gets extended
 --       Left e -> throwM $ ErrorCall (ircErrorMsg e)
          Right v -> return v
