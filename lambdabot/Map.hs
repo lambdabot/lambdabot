@@ -11,12 +11,12 @@
 -- but WITHOUT ANY WARRANTY; without even the implied warranty of
 -- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 -- General Public License for more details.
--- 
+--
 -- You should have received a copy of the GNU General Public License
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
 -- 02111-1307, USA.
--- 
+--
 
 --
 -- Compatibility code between Data.FiniteMap and Data.Map
@@ -28,15 +28,16 @@ module Map (
         addList,
 #else
         Map,
-        empty, 
-        insert, 
-        delete, 
-        lookup, 
+        empty,
+        insert,
+        insertWith,
+        delete,
+        lookup,
         toList,
-        fromList, 
+        fromList,
         addList,
-        size, 
-        elems, 
+        size,
+        elems,
         singleton,
         member,
         keys,
@@ -68,7 +69,7 @@ empty  :: Map k a
 empty  = FM.emptyFM
 
 singleton :: k -> a -> Map k a
-singleton = FM.unitFM 
+singleton = FM.unitFM
 
 insert :: Ord k => k -> a -> Map k a -> Map k a
 insert = \k e m -> FM.addToFM m k e
@@ -94,11 +95,14 @@ elems = FM.eltsFM
 member :: Ord k => k -> Map k a -> Bool
 member = FM.elemFM
 
-keys  :: Map k a -> [k] 
+keys  :: Map k a -> [k]
 keys = FM.keysFM
 
 addList :: (Ord k) => [(k, a)] -> Map k a -> Map k a
 addList = flip FM.addListToFM
+
+insertWith :: (Ord k) => (a -> a -> a) -> k -> a -> Map k a -> Map k a
+insertWith f k a fm = FM.addToFM_C f fm k a
 
 -- delListFromFM = \fm keys -> foldl delete fm keys
 
