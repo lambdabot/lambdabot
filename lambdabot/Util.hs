@@ -12,6 +12,7 @@ module Util (
      split_first_word,
      debugStr,
      debugStrLn,
+     lowerCaseString,
      Accessor (..),
      readFM, writeFM, deleteFM,
      lookupSet, insertSet, deleteSet,
@@ -24,7 +25,7 @@ import qualified Map as M       (lookup, insert, delete)
 
 import Data.List                (intersperse, isPrefixOf)
 import Data.Set                 (elementOf, addToSet, delFromSet, Set)
-import Data.Char                (isSpace)
+import Data.Char                (isSpace, toLower)
 import Data.Typeable
 import Control.Monad.State      (MonadIO(..))
 
@@ -128,6 +129,9 @@ debugStr x = do verbose <- getVerbose
 
 debugStrLn :: (MonadIO m) => [Char] -> m ()
 debugStrLn x = debugStr ( x ++ "\n" )
+
+lowerCaseString :: String -> String
+lowerCaseString = map toLower
 
 data Accessor m s = Accessor { reader :: m s, writer :: s -> m () }
 
