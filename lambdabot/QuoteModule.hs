@@ -59,6 +59,7 @@ sub2int x = (x - (fromIntegral maxI) - (fromIntegral maxI))
 arrRandom :: (Monad m, RandomGen g) => g -> m ([Char], g)
 arrRandom rng = return (QuoteModule.Random.getRandItem arrList rng)
 
+-- | A list of arr-quotes
 arrList :: [[Char]]
 arrList = [
            "Avast!"

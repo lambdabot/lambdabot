@@ -38,8 +38,7 @@ filelist = do filelist'<- C.catch (getDirectoryContents path)
               let files = filter (not . isSuffixOf ".dat") filelist'
               join (return (filterM isFile (map (path ++) files)))
 
--- | Select a random fortune file by using the random number generator
---   given.
+-- | Select a random fortune file
 fileRandom :: IO FilePath
 fileRandom = filelist >>= getRandItem
 
@@ -50,16 +49,17 @@ fortunesParse filename = do
                      (\_ -> return "Couldn't find fortune file")
     return $ Util.split "%\n" rawfs
 
--- | Given a FilePath of a fortune file, select a random fortune from it
---   and return it along with the altered new seed of the RNG.
+-- | Given a FilePath of a fortune file, select and return a random fortune from
+--   it.
 fortuneRandom :: FilePath -> IO String
 fortuneRandom filename
     = do
       fortunesList <- fortunesParse filename
       getRandItem fortunesList
 
--- | Given a RNG and optionally a fortune section, return a random fortune
---   from the all the fortune files or the given section, respectively.
+-- | Given an optional fortune section, return a random fortune. If Nothing,
+--   then a random fortune from all fortune files is returned. If Just section,
+--   then a random fortune from the given section is returned.
 randFortune :: (Maybe FilePath) -> IO String
 randFortune section =
   case section of Nothing -> fortuneRandom =<< fileRandom
