@@ -1,6 +1,5 @@
 module QuoteModule.Random (
-    getRandItem,
-    choose
+    getRandItem
 ) where
 
 import System.Random
