@@ -90,10 +90,10 @@ clean:
 	rm -f   */*.$(way_)o  */*.$(way_)hi
 	rm -f *~ */*~
 	rm -f GHCLibraryPath.hs StaticModules.hs
-	rm depend
+	rm -f depend depend.bak
 
 distclean: clean
-	rm config.mk config.log config.status configure 
+	rm -f config.mk config.h config.log config.status configure 
 	rm -rf autom4te.cache
 
 -include depend
