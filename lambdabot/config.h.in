@@ -1,0 +1,6 @@
+
+#define GHC_VERSION     "@GHC_VERSION@"
+
+#define BUILD_DATE      "@BUILD_DATE@"
+
+#define PLATFORM        "@PLATFORM@"
