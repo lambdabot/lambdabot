@@ -288,7 +288,7 @@ mlines s		=  let (l, s') = mbreak 0 (== '\n') s
 mbreak _ _ xs@[]		=  (xs, xs)
 mbreak n p xs@(x:xs')
     | n == 80  =  ([],xs)
-    | n > 70 && not (isAlphaNum x) = ([], xs)
+    | n > 70 && not (isAlphaNum x) = ([x], xs)
     | p x	=  ([],xs)
     | otherwise	=  let (ys,zs) = mbreak (n+1) p xs' in (x:ys,zs)
 
