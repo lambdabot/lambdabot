@@ -7,7 +7,7 @@ module Util (
      dropSpace,
      snoc,
      after,
-     split_first_word,
+     splitFirstWord,
      firstWord,
      debugStr,
      debugStrLn,
@@ -104,9 +104,9 @@ after (x:xs) (y:ys)
 -- | Break a String into it's first word, and the rest of the string. Example:
 --
 -- > split_first_word "A fine day" ===> ("A", "fine day)
-split_first_word :: String -- ^ String to be broken
+splitFirstWord :: String -- ^ String to be broken
 		 -> (String, String)
-split_first_word xs = (w, dropWhile isSpace xs')
+splitFirstWord xs = (w, dropWhile isSpace xs')
   where (w, xs') = break isSpace xs
 
 -- | Get the first word of a string. Example:
