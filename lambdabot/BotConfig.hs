@@ -66,8 +66,12 @@ getFileRequires "HaddockModule.o" = return [
                                             Object "haddock/Digraph.o",
                                             Object "haddock/BlockTable.o",
                                             Object "haddock/HaddockUtil.o"]
+
 getFileRequires "QuoteModule.o" = return [Object "QuoteModule/Yow.o",
-                                          Object "QuoteModule/Fortune.o"]
+                                          Object "QuoteModule/Fortune.o",
+                                          Object "QuoteModule/Random.o",
+                                          Object "Map.o"]
+
 getFileRequires "FactModule.o"  = return [Package "HToolkit"]
 getFileRequires "TopicModule.o" = return [Object "Map.o"]
 getFileRequires "StateModule.o" = return [Object "Map.o"]
