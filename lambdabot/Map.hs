@@ -102,6 +102,13 @@ addList = flip FM.addListToFM
 
 -- delListFromFM = \fm keys -> foldl delete fm keys
 
+-- Posted by Gracjan Polak on haskell-cafe@
+-- note that we want the mapping the other way around.
+--
+-- deleteList list map = foldl (flip Data.Map.delete) map list
+-- insertList asclist map = union map (Data.Map.fromList asclist)
+--
+
 mapWithKey :: (k -> a -> b) -> Map k a -> Map k b
 mapWithKey = FM.mapFM
 
