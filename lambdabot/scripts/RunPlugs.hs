@@ -30,7 +30,7 @@ main = do
         setResourceLimit ResourceCPUTime (ResourceLimits rlimit rlimit)
         s <- getContents
         when (not . null $ s) $ do
-                s <- unsafeEval ("(show ("++s++"))") context
+                s <- unsafeEval ("(take 2048 (show ("++s++")))") context
                 when (isJust s) (putStrLn (fromJust s))
         exitWith ExitSuccess
 

@@ -42,14 +42,11 @@ instance Module PlugsModule where
 binary :: String
 binary = "runplugs"
 
---
--- Limit output to 2000 chars.
---
 plugs :: String -> IO String
 plugs src = do 
     (out,err,_) <- popen binary [] (Just src)
-    let o = clean . take 2048 $ out
-        e = clean . take 2048 $ err
+    let o = clean out
+        e = clean err
     return $ case () of {_
         | null o && null e -> "Terminated\n"
         | null o           -> e
@@ -82,7 +79,6 @@ clean s | Just (a,_,b,_) <- filename `matchRegexAll` s = a ++ clean b
 --      @plugs last [ 1 .. ]
 --      @plugs product [1..]
 --      @plugs let loop () = loop () in loop () :: ()
---      @plugs Data.Array.listArray (minBound::Int,maxBound) (repeat 0)
 --
 --  * stack oflow
 --      @plugs scanr (*) 1 [1..]
@@ -91,6 +87,7 @@ clean s | Just (a,_,b,_) <- filename `matchRegexAll` s = a ++ clean b
 --      @plugs unsafePerformIO (return 42)
 --      @plugs GHC.Exts.I# 1#
 --      @plugs $( Language.Haskell.THSyntax.Q (putStr "heya") >> [| 3 |] )
+--      @plugs Data.Array.listArray (minBound::Int,maxBound) (repeat 0)
 --
 --  * syntax errors
 --      @plugs map foo bar
