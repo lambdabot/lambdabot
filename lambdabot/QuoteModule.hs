@@ -4,7 +4,6 @@ import qualified Map as M
 import Control.Monad.State
 import Data.IORef
 import QuoteModule.Fortune
-import QuoteModule.Yow
 import QuoteModule.Random
 import IRC
 import Maybe
@@ -32,23 +31,29 @@ instance Module QuoteModule where
       = do
         maybemyref <- gets (\s -> M.lookup "prngint" (ircModuleState s))
         case maybemyref of
-                        Just myref -> do modstate <- liftIO (readIORef myref)
-                                         let quotefun = case cmd of
-                                                                 "fortune" -> randFortune Nothing
-                                                                 "yow"     -> randFortune (Just zippy)
-                                                                 "arr"     -> arrRandom
-                                                                 _ -> error "QuoteModule: bad string"
-                                         (quote, newseed) <- liftIO (quotefun $ mkStdGen (stripMS modstate))
-                                         liftIO (writeIORef myref (ModuleState $ genToInt newseed))
-                                         ircPrivmsg target quote
+          Just myref -> do modstate <- liftIO (readIORef myref)
+                           let quotefun =
+                                 case cmd of
+                                 "fortune" -> randFortune Nothing
+                                 "yow"     -> randFortune (Just "zippy")
+                                 "arr"     -> arrRandom
+                                 _ -> error "QuoteModule: bad string"
+                           (quote, newseed) <- liftIO
+                                                (quotefun $
+						  mkStdGen (stripMS modstate))
+                           liftIO (writeIORef myref
+				              (ModuleState $ genToInt newseed))
+                           ircPrivmsg target quote
                         -- init the state for this module if it doesn't exist
-                        Nothing    -> do s <- get
-                                         i <- liftIO (liftM castMe intGet)
-                                         newref <- liftIO (newIORef (ModuleState (i :: Int)))
-                                         let statemap = ircModuleState s
-                                         put (s { ircModuleState
-                                                  = M.insert "prngint" newref statemap })
-                                         process m msg target cmd rest
+          Nothing    -> do s <- get
+                           i <- liftIO (liftM castMe intGet)
+                           newref <- liftIO
+			               (newIORef (ModuleState (i :: Int)))
+                           let statemap = ircModuleState s
+                           put (s { ircModuleState = M.insert "prngint"
+				                              newref
+					                      statemap })
+                           process m msg target cmd rest
 
 
 genToInt :: (RandomGen g) => g -> Int
