@@ -1,6 +1,7 @@
 module DummyModule (DummyModule, dummyModule, theModule) where
 
 import IRC
+import Data.List
 
 newtype DummyModule = DummyModule ()
 
@@ -24,11 +25,23 @@ instance Module DummyModule where
         _             -> "dummy module"
 
   commands     _ = return ["dummy","wiki","paste","learn","eurohaskell","moo"]
-  process _ _ src "dummy" _    = ircPrivmsg src "dummy"
-  process _ _ src "eurohaskell" _ = ircPrivmsg src "less talks, more code!\nhttp://www.haskell.org/hawiki/EuroHaskell\nEuroHaskell - Haskell Hackfest - Summer 2005 - Gothenburg, Sweden"
-  process _ _ src "wiki" rest  = ircPrivmsg src ("http://www.haskell.org/hawiki/" ++ rest)
-  process _ _ src "paste" _  = ircPrivmsg src "http://www.haskell.org/hawiki/HaskellIrcPastePage"
-  process _ _ src "learn" _    = ircPrivmsg src "http://www.haskell.org/learning.html"
-  process _ _ src "moo" _      = ircPrivmsg src $ unlines ["         (__)","         (oo)","   /------\\/","  / |    ||"," *  /\\---/\\","    ~~   ~~","....\"Have you mooed today?\"..." ]
+  process _ _ src cmd rest = case Data.List.lookup cmd dummylst of
+			       Nothing -> error "Dummy: invalid command"
+                               Just f -> ircPrivmsg src $ f rest
 
-  process _ _ _ _ _ = error  "Dummy: invalid pattern"
+dummylst :: [(String, String -> String)]
+dummylst = [("dummy",       \_ -> "dummy"),
+	    ("eurohaskell", \_ -> unlines ["less talks, more code!",
+					   "http://www.haskell.org/hawiki/EuroHaskell",
+					   "EuroHaskell - Haskell Hackfest - Summer 2005 ",
+                                                "- Gothenburg, Sweden"]),
+	    ("wiki",        \x -> "http://www.haskell.org/hawiki/" ++ x),
+	    ("paste",       \_ -> "http://www.haskell.org/hawiki/HaskellIrcPastePage"),
+	    ("learn",       \_ -> "http://www.haskell.org/learning.html"),
+	    ("moo",         \_ -> unlines ["         (__)",
+					   "         (oo)",
+					   "   /------\\/",
+					   "  / |    ||",
+					   " *  /\\---/\\",
+					   "    ~~   ~~",
+					   "....\"Have you mooed today?\"..." ])]
