@@ -26,16 +26,16 @@ EXCLUDED_SRCS+= EvalModule/tests.hs PlModule/Test.hs Shell.hs GenStaticModules.h
 #
 # Generated at runtime
 #
-EXTRA_SRCS=
+EXTRA_SRCS=StaticModules.hs
 
 #
 # Construct a list of buildable sources, based on $ALL_DIRS, and their
 # objects
 #
-ALL_SRCS=	$(filter-out $(EXCLUDED_SRCS), \
-			$(wildcard $(patsubst ./%, %, \
-			   $(patsubst %,%/*.hs,   $(ALL_DIRS)) \
-			   $(patsubst %,%/*.lhs,  $(ALL_DIRS)) ))) $(EXTRA_SRCS)
+ALL_SRCS=$(filter-out $(EXCLUDED_SRCS) $(EXTRA_SRCS), \
+		$(wildcard $(patsubst ./%, %, \
+		   $(patsubst %,%/*.hs,   $(ALL_DIRS)) \
+		   $(patsubst %,%/*.lhs,  $(ALL_DIRS)) ))) $(EXTRA_SRCS)
 
 #
 # Just a list of the bot dependencies. Use ghci to trace the dependency
@@ -90,12 +90,14 @@ modules: $(ALL_OBJS)
 # Dependency generation
 #
 depend: $(ALL_SRCS)
-	@echo -n "Generating static modules list ... "
-	@echo main | ghci -v0 GenStaticModules.hs
-	@echo "done."
 	@echo -n "Rebuilding dependencies ... "
 	@$(GHC) -cpp $(HC_OPTS) $(PKG_OPTS) $(HTOOLKIT) -M -optdep-f \
 		-optdepdepend $(ALL_SRCS) || rm depend
+	@echo "done."
+
+StaticModules.hs: GenStaticModules.hs
+	@echo -n "Generating static modules list ... "
+	@echo main | ghci -v0 GenStaticModules.hs
 	@echo "done."
 
 #
