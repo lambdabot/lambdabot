@@ -59,7 +59,6 @@ usCon = mkTyCon "UserStatus"
 instance Typeable UserStatus where
     typeOf _ = myTy usCon []
 
--- TODO statify
 type SeenState = M.Map Nick UserStatus
 type Seen = ModuleT SeenState
 
