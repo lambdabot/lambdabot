@@ -5,6 +5,7 @@ module Util (
       join
     , split
     , breakOnGlue
+    , snoc
     , split_first_word
     , debugStr
     , debugStrLn
@@ -83,6 +84,15 @@ breakOnGlue glue rest@(x:xs)
     | glue `isPrefixOf` rest = ([], rest)
     | otherwise = (x:piece, rest') where (piece, rest') = breakOnGlue glue xs
 
+-- | Reverse cons. Add an element to the back of a list. Example:
+--
+-- > snoc 3 [2, 1] ===> [2, 1, 3]
+snoc :: a -> [a] -> [a]
+snoc x xs = xs ++ [x]
+
+-- | Break a String into it's first word, and the rest of the string. Example:
+--
+-- > split_first_word "A fine day" ===> ("A", "fine day)
 split_first_word :: String -> (String, String)
 split_first_word xs = (w, dropWhile isSpace xs')
   where (w, xs') = break isSpace xs

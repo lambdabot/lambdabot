@@ -7,6 +7,7 @@ import qualified Map as M
 
 import Control.Monad.State (gets)
 import Char (isSpace)
+import Util
 
 newtype TopicModule = TopicModule ()
 
@@ -41,18 +42,11 @@ topic_snoc source cmdtext = alter_topic source chan (snoc topic_item)
   where
   (chan, topic_item) = split_first_word cmdtext
 
-snoc :: a -> [a] -> [a]
-snoc x xs = xs ++ [x]
-
 topic_cons :: String -> String -> IRC ()
 topic_cons source cmdtext = alter_topic source chan (topic_item:)
   where
   (chan, topic_item) = split_first_word cmdtext
 
-split_first_word :: String -> (String, String)
-split_first_word xs = (w, dropWhile isSpace xs')
-  where (w, xs') = break isSpace xs
-  
 alter_topic :: String -> String -> ([String] -> [String]) -> IRC ()
 alter_topic source chan f
   = do
@@ -65,7 +59,7 @@ alter_topic source chan f
                         [(xs,r)] | length r <= 2
                                   -> -- probably bogus characters near end,
                                      -- do anyway
-                                     do  ircPrivmsg source $ 
+                                     do  ircPrivmsg source $
                                            "ignoring bogus characters: " ++ r
                                          ircTopic chan (show $ f $ xs)
                         _         -> ircPrivmsg source "topic doesn't parse"
