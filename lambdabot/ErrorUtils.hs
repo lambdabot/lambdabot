@@ -27,7 +27,7 @@ finallyError m after = do a <- catchError m (\e -> after >> throwError e)
                           return a
 
 bracketError :: MonadError e m => m a -> (a -> m b) -> (a -> m c) -> m c
-bracketError before after m 
+bracketError before after m
  = do v <- before
       finallyError (m v) (after v)
 
