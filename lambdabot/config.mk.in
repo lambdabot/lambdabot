@@ -18,6 +18,9 @@ HC_OPTS+=       -funbox-strict-fields -O2 -fvia-C
 #HC_OPTS+=      -debug 
 #HC_OPTS+=	-fignore-asserts 
 
+# user-specified
+HC_OPTS+=	$(EXTRA_HC_OPTS)
+
 GHC_VERSION=	@GHC_VERSION@
 GLASGOW_HASKELL=@GLASGOW_HASKELL@
 
