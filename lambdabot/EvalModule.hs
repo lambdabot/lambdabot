@@ -46,6 +46,15 @@ outOfFuelMsg = "out of fuel - use @resume to continue"
 
 instance Module EvalModule where
     moduleName   _ = return "eval"
+    moduleHelp   _ "eval" = return "@eval expr - evaluate the lambda calculus expression, expr"
+    moduleHelp   _ "define" = return "@define name expr - define name to be expr"
+    moduleHelp   _ "get-definition" = return "@get-definition name - get the expression defining name"                               
+    moduleHelp   _ "definitions" = return "@definitions [prefix] - get the definitions starting with prefix"
+    moduleHelp   _ "del-definition" = return "@del-definition name - delete name"
+    moduleHelp   _ "dump" = return "@dump - dump definitions to disk"
+    moduleHelp   _ "set-fuel" = return "@set-fuel ticks - how many ticks before @eval runs out of fuel"
+    moduleHelp   _ "resume" = return "@resume - continue an expression that has run out of fuel"
+    moduleHelp   _ cmd = return $ "EvalModule: don't know command "++cmd
     moduleSticky _ = False
     commands     _ = return ["eval","define","get-definition","definitions",
                              "del-definition","dump","set-fuel","resume"]
