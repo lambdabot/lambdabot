@@ -22,7 +22,7 @@ FORCE:
 # Link the bot (we use --make to extract the static objs form the mess)
 #
 lambdabot: ./Main.o
-	$(GHC) $(LD_OPTS) --make Main.hs -o $@
+	$(GHC) $(LD_OPTS) -v0 --make Main.hs -o $@
 
 #
 # Dependency generation
