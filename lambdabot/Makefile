@@ -6,7 +6,8 @@ DYNMODS=Dict Dummy Eval Hello Karma Quote Seen State \
         System Topic Type Cmafihe Plugs Babel Version #Haddock GHCi
 
 EXCLUDES=ChessModule.hs SearchMailingList.hs SearchMLModule.hs \
-	 EvalModule/tests.hs FactModule.hs HaddockModule.hs GenStaticModules.hs
+	 EvalModule/tests.hs FactModule.hs HaddockModule.hs \
+	 GenStaticModules.hs PlModule/Test.hs
 
 EXCLUDESFIND=	$(addprefix ! -path ./,$(EXCLUDES))
 
