@@ -16,7 +16,7 @@
 
 module PlugsModule where
 
-import IRC      hiding ( clean ) 
+import IRC      hiding ( clean )
 import PosixCompat
 
 import Control.Monad.Trans      ( liftIO )
@@ -35,7 +35,7 @@ instance Module PlugsModule where
         moduleHelp _ _ = return "@plugs <expr>\nYou have Haskell, 3 seconds and no IO. Go nuts!"
         moduleSticky _ = False
         commands     _ = return ["plugs"]
-        process _ _ src "plugs" s = do o <- liftIO $ plugs s 
+        process _ _ src "plugs" s = do o <- liftIO $ plugs s
                                        ircPrivmsg src o
         process _ _ _ _ _ = error "PlugsModule: invalid command"
 
@@ -43,7 +43,7 @@ binary :: String
 binary = "runplugs"
 
 plugs :: String -> IO String
-plugs src = do 
+plugs src = do
     (out,err,_) <- popen binary [] (Just src)
     let o = clean out
         e = clean err
@@ -103,6 +103,6 @@ clean s | Just _         <- no_io      `matchRegex`   s = "No IO allowed\n"
 --      @plugs sort [1..10000]
 --      @plugs ((error "throw me") :: ())
 --      @plugs Random.randomRs (0,747737437443734::Integer) (Random.mkStdGen 1122)
---      
+--
 -- More at http://www.scannedinavian.org/~shae/joyXlogs.txt
 --

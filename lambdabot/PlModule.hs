@@ -10,14 +10,14 @@ import Data.IORef
 import Control.Concurrent
 import Control.Concurrent.Chan
 
-import Control.Monad 
+import Control.Monad
 import Control.Monad.Trans
 
 import GHC.Base
 
 import IRC
 
--- firstTimeout is the timeout when the expression is simplified for the first 
+-- firstTimeout is the timeout when the expression is simplified for the first
 -- time. After each unsuccessful attempt, this number is doubled until it hits
 -- maxTimeout.
 firstTimeout, maxTimeout :: Int
@@ -45,7 +45,7 @@ instance Module PlModule where
     commands _     = return $ ["pointless","pl-resume"]
     process _ _ target "pointless" rest = pf target rest
     process _ _ target "pl-resume" _ = res target
-    process _ _ target _ _ = 
+    process _ _ target _ _ =
       ircPrivmsg target "pointless: sorry, I don't understand."
 
 res :: String -> IRC ()
@@ -65,7 +65,7 @@ optimizeTopLevel target (to, d) = do
   let (e,decl) = getExpr d
   (e', finished) <- liftIO $ optimizeIO to e
   ircPrivmsg target $ show $ decl e'
-  if finished 
+  if finished
     then liftIO $ writeIORef resume Nothing
     else do
       ircPrivmsg target "optimization suspended, use @pl-resume to continue."
@@ -79,7 +79,7 @@ optimizeIO to e = do
   return $ case result of
     Nothing -> (e', False)
     Just _  -> (e', True)
-   
+
 getChanLast :: Chan a -> a -> IO a
 getChanLast c x = do
   b <- isEmptyChan c
@@ -88,7 +88,7 @@ getChanLast c x = do
 -- stolen from
 -- http://www.haskell.org/pipermail/haskell-cafe/2005-January/008314.html
 parIO :: IO a -> IO a -> IO a
-parIO a1 a2 = do 
+parIO a1 a2 = do
   m <- newEmptyMVar
   c1 <- forkIO $ putMVar m =<< a1
   c2 <- forkIO $ putMVar m =<< a2

@@ -47,7 +47,7 @@ class Monad m => MonadException m where
   unblockM :: m a -> m a
 
   finallyM :: m a -> m b -> m a
-  finallyM comp after 
+  finallyM comp after
     = blockM $
          do a <- catchM (unblockM comp) (\e -> after >> throwM e)
             after
@@ -55,7 +55,7 @@ class Monad m => MonadException m where
 
 
   bracketM :: m a -> (a -> m b) -> (a -> m c) -> m c
-  bracketM before after comp 
+  bracketM before after comp
     = blockM $
          do v <- before
             a <- catchM (unblockM (comp v)) (\e -> after v >> throwM e)

@@ -5,7 +5,7 @@ module MiniHTTP (
 		 Proxy,
 		 mkPost,
 		 readPage,
-		 urlEncode, 
+		 urlEncode,
 		 urlDecode,
 		) where
 
@@ -18,7 +18,7 @@ import Data.Char
 
 type Proxy = Maybe (String, Integer)
 
--- HTTP specific stuff 
+-- HTTP specific stuff
 mkPost :: URI -> String -> [String]
 mkPost uri body = ["POST " ++ url ++ " HTTP/1.0",
 		   "Host: " ++ host,
@@ -34,12 +34,12 @@ hGetLines :: Handle -> IO [String]
 hGetLines h = do
 	      eof <- hIsEOF h
 	      if eof then return []
-		 else 
+		 else
 		 hGetLine h >>= \ln -> hGetLines h >>= \ls -> return (ln : ls)
 
 readPage :: Proxy -> URI -> [String] -> String -> IO [String]
 readPage proxy uri headers body =
-    withSocketsDo 
+    withSocketsDo
     $ do
       h <- connectTo host (PortNumber (fromInteger port))
       mapM (\s -> hPutStr h (s ++ "\r\n")) headers
@@ -48,7 +48,7 @@ readPage proxy uri headers body =
       contents <- hGetLines h
       hClose h
       return contents
-    where 
+    where
     (host, port) = fromMaybe (authority uri, 80) proxy
 
 -- from HTTP.hs
@@ -60,7 +60,7 @@ urlDecode (h:t) = h : urlDecode t
 urlDecode [] = []
 
 urlEncode (h:t) =
-    let str = if isReservedChar(ord h) then escape h else [h] 
+    let str = if isReservedChar(ord h) then escape h else [h]
     in str ++ urlEncode t
   where
         isReservedChar x
@@ -75,8 +75,8 @@ urlEncode (h:t) =
         -- wouldn't it be nice if the compiler
         -- optimised the above for us?
 
-        escape x = 
-            let y = ord x 
+        escape x =
+            let y = ord x
             in [ '%', intToDigit ((y `div` 16) .&. 0xf), intToDigit (y .&. 0xf) ]
 
 urlEncode [] = []

@@ -1,5 +1,5 @@
 {-# OPTIONS -cpp #-}
--- 
+--
 -- Implement a Posix.popen compatibility mapping.
 --
 -- TODO win32 pre-6.4 support.
@@ -31,7 +31,7 @@ type ProcessID = ProcessHandle
 popen :: FilePath -> [String] -> Maybe String -> IO (String,String,ProcessID)
 popen file args minput =
     Control.Exception.handle (\e -> return ([],show e,error (show e))) $ do
-       
+
     (inp,out,err,pid) <- runInteractiveProcess file args Nothing Nothing
 
     case minput of
