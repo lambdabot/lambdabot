@@ -2,6 +2,7 @@
 
 --      $Id: IRC.hs,v 1.21 2003/07/31 19:13:15 eleganesh Exp $    
 
+-- TODO need explicit export list
 module IRC where
 
 import BotConfig        (getMyname, getMaxLines, getAdmins, getHost, getPort)
@@ -9,7 +10,7 @@ import DeepSeq          (($!!), DeepSeq(..))
 import ErrorUtils
 import ExceptionError   (ExceptionError(..), ExceptionErrorT(..))
 import MonadException   (MonadException(throwM, handleM))
-import Util             (breakOnGlue, split, writeFM, Accessor(..))
+import Util             (breakOnGlue, split)
 
 import Map (Map)
 import qualified Map as M hiding (Map)
@@ -68,7 +69,7 @@ data IRCRWState
         ircModules         :: Map String ModuleRef,
         ircCallbacks       :: Map String [Callback],
         ircCommands        :: Map String ModuleRef,
-        ircModuleState     :: Map String (IORef ModuleState),
+        ircMoreState       :: String,
         ircStayConnected   :: Bool
   }
 
@@ -210,8 +211,6 @@ ircuser msg = head $ split "@" $ (split "!" (msgPrefix msg)) !! 1
 irchost     :: IRCMessage -> String
 irchost msg = (split "@" (msgPrefix msg)) !! 1
 
-data ModuleState = forall a. (Typeable a) => ModuleState a
-
 -- in monad LB we don't have a connection
 newtype LB a = LB { runLB :: IRCErrorT (StateT IRCRWState IO) a }
 #if __GLASGOW_HASKELL__ >= 600
@@ -260,7 +259,7 @@ type TrivLB = ModuleT () LB
 newtype IRC a 
   = IRC { runIRC :: IRCErrorT (ReaderT IRCRState (StateT IRCRWState IO)) a }
 #if __GLASGOW_HASKELL__ >= 600
-    deriving (Monad,MonadReader IRCRState,MonadState IRCRWState,
+    deriving (Monad,Functor,MonadReader IRCRState,MonadState IRCRWState,
               MonadError IRCError,MonadIO)
 #else
 instance Monad IRC where
@@ -441,7 +440,7 @@ runIrc ini m
                         ircModules = M.empty,
                         ircCallbacks = M.empty,
                         ircCommands = M.empty,
-                        ircModuleState = M.empty,
+                        ircMoreState = "",
                         ircStayConnected = True
                     }
 
@@ -715,12 +714,6 @@ checkPrivs msg target f = do
        Just _  -> f
        Nothing -> ircPrivmsg target "not enough privileges"
 
--- die, die, die my darling
-stripMS :: (Typeable a) => ModuleState -> a
-stripMS (ModuleState x) = case fromDynamic $ toDyn $ x of
-                            Nothing -> error $ "wrong type ("++(show $ toDyn x)++") in ModuleState"
-                            Just y -> y
-
 writeMS :: MonadIO m => s -> ModuleT s m ()
 writeMS s = do
   ref <- ask
@@ -731,22 +724,8 @@ readMS = liftIO . readIORef =<< ask
 
 -- this belongs in the MoreModule, but causes cyclic imports
 
-moreStateSet :: (MonadIRC m, Typeable a) => a -> m ()
+moreStateSet :: (MonadIRC m) => String -> m ()
 moreStateSet lns = 
     do s <- get
-       newRef <- liftIO . newIORef $ ModuleState lns
-       let stateMap = ircModuleState s
-       put (s { ircModuleState = M.insert "more" newRef stateMap })
-
-ircModuleStateAccessor :: MonadState IRCRWState m 
-                       => Accessor m (Map String (IORef ModuleState))
-ircModuleStateAccessor 
- = Accessor { reader = gets ircModuleState,
-              writer = \v -> do s <- get
-                                put (s {ircModuleState = v}) }
-                    
-makeInitialState :: Typeable a => String -> a -> LB ()
-makeInitialState modname initState 
-    = do newRef <- liftIO . newIORef $ ModuleState initState
-         writeFM ircModuleStateAccessor modname newRef
+       put (s { ircMoreState = lns })
 

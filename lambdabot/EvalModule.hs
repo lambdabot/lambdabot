@@ -2,13 +2,10 @@
 
 module EvalModule (evalModule,theModule) where
 
-import qualified Map as M
-
 -- 	$Id: EvalModule.hs,v 1.1 2003/07/29 13:41:48 eleganesh Exp $
 import IRC
 import Util
 
-import Data.IORef
 import Control.Monad.State
 import Data.FiniteMap
 import Data.Dynamic
@@ -44,7 +41,9 @@ definitionsFile = "definitions"
 outOfFuelMsg :: [Char]
 outOfFuelMsg = "out of fuel - use @resume to continue"
 
-instance Module EvalModule () where
+type EvalState = (Int, Maybe Dynamic, Environment, FiniteMap String String)
+
+instance Module EvalModule EvalState where
     moduleName   _ = return "eval"
     moduleHelp   _ "eval" = return "@eval expr - evaluate the lambda calculus expression, expr"
     moduleHelp   _ "define" = return "@define name expr - define name to be expr"
@@ -61,36 +60,31 @@ instance Module EvalModule () where
     moduleInit   _ = do
         r <- liftIO $ catch loadDefinitions
                     (io_or_pm $
-                     newIORef $
-                     ModuleState (initFuel,
-                                  Nothing :: Maybe Dynamic,
-                                  initEnv,
-                                  initDefns))
-        modify (\s -> s { ircModuleState = M.insert  "eval" r (ircModuleState s)})
+                     return (initFuel,
+                             Nothing :: Maybe Dynamic,
+                             initEnv,
+                             initDefns))
+        writeMS r
     process      _ msg target cmd rest = do
-       Just ref <- gets (\s -> M.lookup  "eval" (ircModuleState s))
-       ms <- liftIO $ readIORef ref
-       let (fuel, res, env, defns) = stripMS ms
+       (fuel, res, env, defns) <- readMS
        case cmd of
             "eval" -> do let r_or_s = evaluate rest env fuel
                          case r_or_s of
                             Right s -> ircPrivmsg target s
-                            Left nr -> do liftIO $ writeIORef ref $
-                                                    ModuleState (fuel,
-                                                                 Just nr,
-                                                                 env,
-                                                                 defns)
+                            Left nr -> do writeMS (fuel,
+                                                   Just nr,
+                                                   env,
+                                                   defns)
                                           ircPrivmsg target outOfFuelMsg
             "define" -> let rslt = define defn
                             (name,defn) = break (' '==) rest in
                           case rslt of
                                Left s -> ircPrivmsg target s
                                Right v -> do
-                                  liftIO $ writeIORef ref $
-                                    ModuleState (fuel,
-                                                 res,
-                                                 addToFM env name v,
-                                                 addToFM defns name defn)
+                                  writeMS (fuel,
+                                           res,
+                                           addToFM env name v,
+                                           addToFM defns name defn)
                                   ircPrivmsg target (name ++ " defined")
             "definitions" -> let names = keysFM defns in
                                     if null rest then
@@ -107,8 +101,7 @@ instance Module EvalModule () where
             "set-fuel" -> do case reads rest :: [(Int,String)] of
                                 [] -> checkPrivs msg target (ircPrivmsg target "not a number")
                                 ((x,_):_) -> checkPrivs msg target $
-                                 do liftIO $ writeIORef ref $
-                                                ModuleState (x,res,env,defns)
+                                 do writeMS (x,res,env,defns)
                                     ircPrivmsg target $ "fuel set to "++show x
             "dump" -> checkPrivs msg target $ do
                       mex <- liftIO $ handleJust ioErrors (return . Just) $
@@ -121,28 +114,25 @@ instance Module EvalModule () where
             "del-definition" -> case words rest of
                                  [] -> return ()
                                  (d:_) -> checkPrivs msg target $ do
-                                    liftIO $ writeIORef ref $
-                                                ModuleState (fuel,
-                                                             res,
-                                                             delFromFM env d,
-                                                             delFromFM defns d)
+                                    writeMS (fuel,
+                                             res,
+                                             delFromFM env d,
+                                             delFromFM defns d)
                                     ircPrivmsg target $ d++" removed"
             "resume" -> case res of
                             Nothing -> return ()
                             Just r -> case resume r fuel of
                                         Left nr -> do
-                                            liftIO $ writeIORef ref $
-                                                        ModuleState (fuel,
-                                                                     Just nr,
-                                                                     env,
-                                                                     defns)
+                                            writeMS (fuel,
+                                                     Just nr,
+                                                     env,
+                                                     defns)
                                             ircPrivmsg target outOfFuelMsg
                                         Right s -> do
-                                            liftIO $ writeIORef ref $
-                                                        ModuleState (fuel,
-                                                                     Nothing :: Maybe Dynamic,
-                                                                     env,
-                                                                     defns)
+                                            writeMS $ (fuel,
+                                                       Nothing :: Maybe Dynamic,
+                                                       env,
+                                                       defns)
                                             ircPrivmsg target s
             _       -> ircPrivmsg target ("unknown command: "++cmd)
 
@@ -153,7 +143,7 @@ io_or_pm c (IOException _) = c
 io_or_pm _ e = throw e -- ioError e (throw should work for both 5.04/5.05)
 
 -- this is so ugly (at least it's only init)
-loadDefinitions :: IO (IORef ModuleState)
+loadDefinitions :: IO EvalState
 loadDefinitions = do
     s <- readFile definitionsFile
     let ((fuel,rest):_) = reads s :: [(Int,String)]
@@ -163,7 +153,7 @@ loadDefinitions = do
                    mapFM (const $ define) the_d_FM :: Environment
         ks = keysFM the_e_FM
     fuel `seq` the_e_FM `seq` the_d_FM `seq`
-        (newIORef $ ModuleState (fuel,
-                                 Nothing :: Maybe Dynamic,
-                                 the_e_FM,
-                                 filterFM (\k _ -> k `elem` ks) the_d_FM))
+        (return (fuel,
+                 Nothing,
+                 the_e_FM,
+                 filterFM (\k _ -> k `elem` ks) the_d_FM))

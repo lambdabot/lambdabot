@@ -13,7 +13,6 @@ theModule = MODULE stateModule
 stateModule :: StateModule
 stateModule = StateModule ()
 
--- TODO statify
 instance Module StateModule String where
     moduleName   _ = return "state"
     moduleSticky _ = False

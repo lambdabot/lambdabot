@@ -17,7 +17,6 @@ theModule = MODULE topicModule
 topicModule :: TopicModule
 topicModule = TopicModule ()
 
--- TODO statify
 type TopicState = ()
 type Topic = ModuleT TopicState
 
