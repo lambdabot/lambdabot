@@ -12,12 +12,9 @@ KNOWN BUGS:
 
 Bug reports, patches, new modules etc, contact:
 
-	Shae Erisson <shae@ScannedInAvian.com> 
-	aka shapr on the #haskell on irc.freenode.net 
-	 or
 	Don Stewart <dons@cse.unsw.edu.au>
 	aka dons on #haskell
 
 Check out our darcs repo at:
-http://www.ScannedInAvian.org/repos/hlibs/
 http://www.cse.unsw.edu.au/~dons/lambdabot
+http://www.ScannedInAvian.org/repos/lambdabot
