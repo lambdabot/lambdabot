@@ -10,10 +10,11 @@ module PosixCompat (popen) where
 #if __GLASGOW_HASKELL__ >= 604 && defined(mingw32_HOST_OS)
 import System.IO
 import System.Process
-import qualified Control.Exception
 #else
 import qualified Posix as P
 #endif
+
+import qualified Control.Exception
 
 #if __GLASGOW_HASKELL__ >= 604 && defined(mingw32_HOST_OS)
 
@@ -48,7 +49,12 @@ popen file args minput =
 
 #else
 
+--
+-- catch(), so that we can deal with forkProcess failing gracefully.
+--
 popen :: FilePath -> [String] -> Maybe String -> IO (String,String,P.ProcessID)
-popen = P.popen
+popen f s m = Control.Exception.catch 
+                      (P.popen f s m) 
+                      (\e -> return ([], show e, error $ show e ))
 
 #endif

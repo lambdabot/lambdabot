@@ -62,8 +62,9 @@ plugs src = do
 clean :: String -> String
 clean s | Just (a,_,b,_) <- filename `matchRegexAll` s = a ++ clean b
         | Just (a,_,b,_) <- filepath `matchRegexAll` s = a ++ clean b
-        | Just _         <- terminated `matchRegex`  s = "Terminated\n"
-        | Just _         <- stack_o_f  `matchRegex`  s = "Stack overflow\n"
+        | Just (_,m,_,_) <- hsplugins `matchRegexAll` s = m
+        | Just _         <- terminated `matchRegex`   s = "Terminated\n"
+        | Just _         <- stack_o_f  `matchRegex`   s = "Stack overflow\n"
         | otherwise      = s
     where
         -- s/<[^>]*>:[^:]: //
@@ -71,6 +72,7 @@ clean s | Just (a,_,b,_) <- filename `matchRegexAll` s = a ++ clean b
         filename   = mkRegex "\n?<[^>]*>:[^:]*:\n* *"
         terminated = mkRegex "waitForProc"
         stack_o_f  = mkRegex "Stack space overflow"
+        hsplugins  = mkRegex "Compiled, but didn't create object"
 
 ------------------------------------------------------------------------
 --
