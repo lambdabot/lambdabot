@@ -17,14 +17,17 @@ import System.Posix.Resource    (setResourceLimit,
 
 rlimit = ResourceLimit 3
 
-context = dataB ++ dataB'
+context = prehier ++ datas ++ controls
 
-dataB = map (\x -> "Data."++ x) [
-        "Bits", "Bool", "Char", "Dynamic", "Either", 
-        "FiniteMap", "Graph", "Int", "Ix", "List", 
-        "Maybe", "Ratio", "Set", "Tree", "Tuple", "Typeable", "Word" ]
+prehier = ["Char", "List", "Maybe", "Numeric", "Random" ]
 
-dataB' = ["Char", "List", "Maybe", "Numeric", "Random" ]
+datas   = map ("Data." ++) [
+                "Bits", "Bool", "Char", "Dynamic", "Either", 
+                "FiniteMap", "Graph", "Int", "Ix", "List", 
+                "Maybe", "Ratio", "Set", "Tree", "Tuple", "Typeable", "Word" 
+              ]
+
+controls = map ("Control." ++) ["Monad", "Arrow"]
 
 main = do
         setResourceLimit ResourceCPUTime (ResourceLimits rlimit rlimit)
