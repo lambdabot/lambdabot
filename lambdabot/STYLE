@@ -29,11 +29,11 @@ Imports should be ordered as so:
         GHC.*
 }}}
 
-*** Don't use Haskell2 modules
+*** Don't use non-hierarchical modules
 
-Haskell2 module imports should be replaced with their hierachial module
-counterpart. For instance, the List module should be replaced with
-Data.List.
+Old style non-hierarchical module imports should be replaced with their
+hierachial module counterpart. For instance, the List module should be
+replaced with Data.List.
 
 *** Don't use deprecated modules
 
@@ -44,5 +44,21 @@ counterparts. This is especially important to avoid bitrot in the code.
 
 Try to minimalize the namespace. Only import what you are going to use and
 use qualified imports to keep the module namespace simple.
+-ddump-minimal-imports is useful for keeping a lid on this.
 
+*** Provide explicit type signatures
 
+This should always be the case, as we require -Werror
+
+*** Haddock documentation
+
+Provide haddock comments for your exported functions.
+
+*** Portability
+
+Make sure the code works with ghc >= 6.2.2.
+
+*** More references
+
+GHC has some coding guidelines I like, have a look at the ghc libraries,
+Data.Map is a good example.
