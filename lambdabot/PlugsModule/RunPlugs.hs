@@ -20,7 +20,7 @@ binary = "runplugs"
 --
 plugs :: String -> IO String
 plugs src =
-        do (o,_,_) <- popen "runplugs" [] (Just src)
+        do (o,_,_) <- popen binary [] (Just src)
            let o' = clean o
            return $ if null o' then "bzzt\n" else o'
 
