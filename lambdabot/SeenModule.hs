@@ -7,7 +7,7 @@ import qualified Map as M
 
 import Data.List ((\\),nub)
 
-import Control.Monad (when)
+import Control.Monad (when, liftM)
 import Control.Monad.Trans (liftIO, MonadIO)
 
 import System.Time
@@ -68,8 +68,7 @@ instance Module SeenModule SeenState where
 
              nickWasPresent ct chan =
 	       do ircMessage ["Last time I saw ", nick, "was when I left ",
-			      chan , " ", toPretty $ diffClockTimes now ct,
-			      "ago."]
+			      chan , " ", clockDifference ct, "ago."]
              nickIsNew newnick =
                do let findFunc str =
                         case M.lookup (lowerCaseString str) seenFM of
@@ -79,7 +78,7 @@ instance Module SeenModule SeenState where
 		      us = findFunc newnick
                   ircMessage [nick, " has changed nick to ", us, "."]
                   process m msg target cmd us
-         if lcnick == lowerCaseString myname
+         if lcnick == myname
             then ircPrivmsg target "Yes, I'm here"
             else case M.lookup lcnick seenFM of
                   Just (Present mct cs) -> nickPresent mct cs
@@ -208,23 +207,24 @@ listToStr (x:xs) = x ++ listToStr' xs
           listToStr' (y:ys) = ", " ++ y ++ listToStr' ys
 
 -- annoying
-toPretty :: TimeDiff -> String
-toPretty td = let secs = tdSec td 
-                  mins = secs `div` 60
-                  hours = mins `div` 60
-                  days = hours `div` 24
-                  months = days `div` 28
-                  years = months `div` 12
-                  in foldr1 (++) [foo years "year",
-                                  foo (months `mod` 12) "month",
-                                  foo (days `mod` 28) "day",
-                                  foo (hours `mod` 24) "hour",
-                                  foo (mins `mod` 60) "minute",
-                                  foo (secs `mod` 60) "second"]
-    where foo i str
-              | i > 0 = if i == 1 then "1 " ++ str ++ " "
-                           else (show i) ++ " " ++ str ++ "s "
-              | otherwise = []
+timeDiffPretty :: TimeDiff -> String
+timeDiffPretty td =
+  let secs = tdSec td
+      mins = secs `div` 60
+      hours = mins `div` 60
+      days = hours `div` 24
+      months = days `div` 28
+      years = months `div` 12
+  in foldr1 (++) [foo years "year",
+                  foo (months `mod` 12) "month",
+                  foo (days `mod` 28) "day",
+                  foo (hours `mod` 24) "hour",
+                  foo (mins `mod` 60) "minute",
+                  foo (secs `mod` 60) "second"]
+                   where foo i str
+                             | i > 0 = if i == 1 then "1 " ++ str ++ " "
+                                                 else (show i) ++ " " ++ str ++ "s "
+                             | otherwise = []
 
 
 
