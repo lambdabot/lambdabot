@@ -1,23 +1,23 @@
 {-# OPTIONS -cpp -fglasgow-exts #-}
 
 module SeenModule (
-        seenModule,
-        theModule,
-        SeenModule
-    ) where
+    seenModule,
+    theModule,
+    SeenModule
+) where
 
 import IRC
 import Util
 import BotConfig
 import qualified Map as M
 
-import Data.FiniteMap
+import Data.List ((\\),nub)
 import Data.Char
 import Control.Monad.State
 import Data.Dynamic
 import Data.IORef
-import Time
-import List ((\\),nub)
+import System.Time
+
 
 newtype SeenModule = SeenModule ()
 
@@ -30,7 +30,7 @@ seenModule = SeenModule ()
 type Channel = String
 type Nick = String
 
-data UserStatus 
+data UserStatus
         = Present (Maybe ClockTime) [Channel] -- last spoke, the user is in [Channel]
         | NotPresent ClockTime Channel -- the user was last seen in Channel
         | WasPresent ClockTime Channel -- if the bot parted Channel where a user was
@@ -61,45 +61,45 @@ instance Module SeenModule where
     moduleSticky _      = False
     moduleHelp _ _ = return "Report if a user has been seen by the bot"
     commands _          = return ["seen"]
-    moduleInit _ 
+    moduleInit _
       = do s <- get
            newRef <-
                liftIO . newIORef $
-                      ModuleState (emptyFM :: FiniteMap Nick UserStatus)
+                      ModuleState (M.empty :: M.Map Nick UserStatus)
            let stateMap = ircModuleState s
            put (s { ircModuleState =
                     M.insert "seen" newRef stateMap })
-           ircSignalConnect "JOIN" $ joinCB 
-           ircSignalConnect "PART" $ partCB 
+           ircSignalConnect "JOIN" $ joinCB
+           ircSignalConnect "PART" $ partCB
            ircSignalConnect "QUIT" $ quitCB
            ircSignalConnect "NICK" $ nickCB
            ircSignalConnect "353" $ joinChanCB
            ircSignalConnect "PRIVMSG" $ msgCB
 
-    process m msg target cmd rest 
+    process m msg target cmd rest
       = do seenRef <- gets (\s -> M.lookup "seen" (ircModuleState s))
            myname <- getMyname
            case seenRef of
                Just seenFMRef ->
                    do seenFMState <- liftIO $ readIORef seenFMRef
-                      let (seenFM :: FiniteMap Nick UserStatus) 
+                      let (seenFM :: M.Map Nick UserStatus)
                               = stripMS seenFMState
                           nick = takeWhile (/=' ') rest
-                          lcnick = map toLower nick
-                      if lcnick == map toLower myname 
+                          lcnick = lowerCaseString nick
+                      if lcnick == lowerCaseString myname
                          then ircPrivmsg target "Yes, I'm here"
-                         else case lookupFM seenFM lcnick of 
+                         else case M.lookup lcnick seenFM of
                                Just (Present mct cs) -> do {
           ;now <- time
-          ;ircPrivmsg target $ nick ++ " is in " ++ 
-                  (listToStr cs) ++ "." ++ 
+          ;ircPrivmsg target $ nick ++ " is in " ++
+                  (listToStr cs) ++ "." ++
                   (case mct of
                      Nothing -> " I don't know when " ++ nick ++ " last spoke."
                      Just ct ->
-                          " Last spoke " ++ 
+                          " Last spoke " ++
                           (let when' = toPretty $ diffClockTimes now ct
                            in if null when' then "just now." else when' ++ "ago."
-                           ) ) 
+                           ) )
         }
 
                                Just (NotPresent ct chan) ->
@@ -123,8 +123,7 @@ instance Module SeenModule where
                                                      "ago."
                                Just (NewNick newnick) ->
                                    do let findfunc str = 
-                                            case (lookupFM seenFM 
-                                                    (map toLower str)) of
+                                            case (M.lookup (lowerCaseString str)) seenFM of
                                                 Just (NewNick str') -> 
 							findfunc str'
                                                 Just _ -> str
@@ -141,34 +140,34 @@ instance Module SeenModule where
                _ -> liftLB (moduleInit m) >> process m msg target cmd rest
 
 joinCB :: IRCMessage -> IRC () -- when somebody joins
-joinCB msg 
+joinCB msg
   = do myname <- getMyname
        when (nick /= myname) $
         withSeenFM $ \fm ref -> do
             let newInfo = Present Nothing (ircchannel msg)
-                fm' = addToFM_C updateJ fm (map toLower nick) newInfo
+                fm' = M.insertWith updateJ (lowerCaseString nick) newInfo fm
             setSeenFM ref fm'
     where nick = ircnick msg
 
 partCB :: IRCMessage -> IRC () -- when somebody parts
-partCB msg 
+partCB msg
   = do myname <- getMyname
        withSeenFM $ \fm ref ->
         if nick == myname then -- when the bot parts
-          do l <- mapM (botPart $ ircchannel msg) (fmToList fm)
-	     setSeenFM ref (listToFM l)
-        else case (lookupFM fm lcnick) of
-                Just (Present mct xs) -> 
-	         do case xs \\ (ircchannel msg) of 
-		        [] -> do ct <- time 
-			         let fm' = addToFM_C (\_ x -> x) fm lcnick 
-					     (NotPresent ct (listToStr xs))
+          do l <- mapM (botPart $ ircchannel msg) (M.toList fm)
+	     setSeenFM ref (M.fromList l)
+        else case (M.lookup lcnick fm) of
+                Just (Present mct xs) ->
+	         do case xs \\ (ircchannel msg) of
+		        [] -> do ct <- time
+			         let fm' = M.insertWith (\_ x -> x) lcnick
+					     (NotPresent ct (listToStr xs)) fm
 			         setSeenFM ref fm' 
-			ys -> setSeenFM ref $ addToFM_C (\_ x -> x) fm lcnick 
-						(Present mct ys)  
+			ys -> setSeenFM ref $ M.insertWith (\_ x -> x) lcnick 
+						(Present mct ys) fm
                 _ -> debugStrLn "SeenModule> someone who isn't known parted"
     where nick = unUserMode (ircnick msg)
-          lcnick = map toLower nick
+          lcnick = lowerCaseString nick
           botPart cs (nick', us) 
             = case us of
 		  Present mct xs -> 
@@ -183,27 +182,27 @@ quitCB msg
   = withSeenFM $ \fm ref -> 
     do ct <- time
        let nick = unUserMode (ircnick msg)
-           lcnick = map toLower nick
-       case (lookupFM fm lcnick) of
+           lcnick = map lowerCaseString nick
+       case (M.lookup lcnick fm) of
            Just (Present _ct xs) -> 
-               let fm' = addToFM_C (\_ x -> x) fm lcnick 
-                               (NotPresent ct (head xs))
+               let fm' = M.insertWith (\_ x -> x) lcnick
+                               (NotPresent ct (head xs)) fm
                    in setSeenFM ref fm'
            _ -> debugStrLn "SeenModule> someone who isn't known has quit"
 
 nickCB :: IRCMessage -> IRC () -- when somebody changes his/her name
 nickCB msg 
   = withSeenFM $ \fm ref ->
-    case (lookupFM fm lcnick) of
+    case (M.lookup lcnick fm) of
         Just (Present mct xs) -> 
-            let fm' = addToFM_C (\_ x -> x) fm lcnick (NewNick newnick)
-                fm'' = addToFM fm' lcnewnick (Present mct xs)
+            let fm' = M.insertWith (\_ x -> x) lcnick (NewNick newnick) fm
+                fm'' = M.insert lcnewnick (Present mct xs) fm'
                 in setSeenFM ref fm''
         _ -> debugStrLn "SeenModule> someone who isn't here changed nick"
     where newnick = drop 1 $ head (msgParams msg)
-          lcnewnick = map toLower newnick
+          lcnewnick = lowerCaseString newnick
           nick = ircnick msg
-          lcnick = map toLower nick
+          lcnick = lowerCaseString nick
 
 joinChanCB :: IRCMessage -> IRC () -- when the bot join a channel
 joinChanCB msg
@@ -211,8 +210,8 @@ joinChanCB msg
     let l = msgParams msg
         chan = l !! 2
         chanUsers = words (drop 1 (l !! 3)) -- remove ':'
-        fooFunc fm' u = addToFM_C updateJ fm'
-                              (map toLower $ unUserMode u) (Present Nothing [chan])
+        fooFunc fm' u = M.insertWith updateJ
+                              (lowerCaseString $ unUserMode u) (Present Nothing [chan]) fm'
         seenFM' = foldl fooFunc fm chanUsers
     setSeenFM ref seenFM'
 
@@ -220,10 +219,10 @@ joinChanCB msg
 msgCB :: IRCMessage -> IRC ()
 msgCB msg
     = withSeenFM $ \fm ref ->
-        case lookupFM fm (map toLower nick) of
+        case M.lookup (lowerCaseString nick) fm of
             Just (Present _ct xs) -> do
                 ct <- time
-                let fm' = addToFM fm (map toLower nick) (Present (Just ct) xs)
+                let fm' = M.insert (lowerCaseString nick) (Present (Just ct) xs) fm
                 setSeenFM ref fm'
             _ -> debugStrLn "SeenModule> someone who isn't here msg us"
     where nick = ircnick msg
@@ -232,27 +231,27 @@ msgCB msg
 unUserMode :: Nick -> Nick
 unUserMode nick = dropWhile (`elem` "@+") nick
 
-withSeenFM :: (FiniteMap Nick UserStatus -> IORef ModuleState -> IRC ()) -> IRC ()
-withSeenFM f = 
+withSeenFM :: (M.Map Nick UserStatus -> IORef ModuleState -> IRC ()) -> IRC ()
+withSeenFM f =
   do maybeSeenFM <- getSeenFM
-     case maybeSeenFM of 
+     case maybeSeenFM of
          Just (fm, ref) -> f fm ref
          _ -> debugStrLn "SeenModule> Couldn't lookup the user database"
-     where getSeenFM 
+     where getSeenFM
              = do seenRef <- gets (\s -> M.lookup "seen" (ircModuleState s))
                   case seenRef of
                       Just seenFMRef ->
                           do seenFMState <- liftIO $ readIORef seenFMRef
-                             let (seenFM :: FiniteMap Nick UserStatus)
+                             let (seenFM :: M.Map Nick UserStatus)
                                      = stripMS seenFMState
                                  in return (Just (seenFM, seenFMRef))
                       _ -> return Nothing
 
-setSeenFM :: IORef ModuleState -> FiniteMap Nick UserStatus -> IRC ()
+setSeenFM :: IORef ModuleState -> M.Map Nick UserStatus -> IRC ()
 setSeenFM ref fm = liftIO $ writeIORef ref $ ModuleState fm
 
 updateJ :: UserStatus -> UserStatus -> UserStatus
-updateJ (Present _ct cs) (Present ct c) = Present ct $ nub (c ++ cs)              
+updateJ (Present _ct cs) (Present ct c) = Present ct $ nub (c ++ cs)
 updateJ _x y@(Present _ct _cs) = y
 updateJ x _ = x
 
