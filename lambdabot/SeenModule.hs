@@ -47,7 +47,7 @@ instance Module SeenModule SeenState where
 
     process m msg target cmd rest = do 
           seenFM <- readMS
-          let myname = name config
+          myname <- getMyname
           let nick = takeWhile (/=' ') rest
               lcnick = lowerCaseString nick
           if lcnick == lowerCaseString myname
@@ -66,41 +66,31 @@ instance Module SeenModule SeenState where
                                        ) )
                     }
 
-                   Just (NotPresent ct chan) ->
-                       do now <- time
-                          ircPrivmsg target $ 
-                                         "I saw " ++ nick ++ 
-                                         " leaving " ++ 
-                                         chan ++ " " ++ 
-                                         (toPretty $ 
-                                          diffClockTimes now ct) ++
-                                         "ago."
-                   Just (WasPresent ct chan) ->
-                       do now <- time
-                          ircPrivmsg target $
-                                         "Last time I saw " ++ 
-                                         nick ++ 
-                                         " was when I left " ++
-                                         chan ++ " " ++ 
-                                         (toPretty $ 
-                                          diffClockTimes now ct) ++
-                                         "ago."
-                   Just (NewNick newnick) ->
-                       do let findfunc str = 
-                                case (M.lookup (lowerCaseString str)) seenFM of
-                                    Just (NewNick str') -> 
-                                            findfunc str'
-                                    Just _ -> str
-                                    Nothing -> error "SeenModule: Nothing"
+             nickWasPresent ct chan =
+               do ircPrivmsg target $
+			   concat ["Last time I saw ", nick, "was when I left ",
+				   chan , " ", toPretty $ diffClockTimes now ct,
+				   "ago."]
 
-                              us = findfunc newnick
-                          ircPrivmsg target $
-                                            nick ++ 
-                                            " has changed nick to "
-                                            ++ us ++ "." 
-                          process m msg target cmd us
-                   _ -> ircPrivmsg target $ "I haven't seen " 
-                                                        ++ nick
+             nickIsNew newnick =
+               do let findFunc str =
+                        case M.lookup (lowerCaseString str) seenFM of
+	                  Just (NewNick str') -> findFunc str'
+	                  Just _              -> str
+                          Nothing             -> error "SeenModule.nickIsNew: Nothing"
+		      us = findFunc newnick
+                  ircPrivmsg target $ concat [nick, " has changed nick to ", us, "."]
+                  process m msg target cmd us
+         if lcnick == lowerCaseString myname
+            then ircPrivmsg target "Yes, I'm here"
+            else case M.lookup lcnick seenFM of
+                  Just (Present mct cs) -> nickPresent mct cs
+                  Just (NotPresent ct chan) -> nickNotPresent ct chan
+                  Just (WasPresent ct chan) -> nickWasPresent ct chan
+                  Just (NewNick newnick) -> nickIsNew newnick
+                  _ -> ircPrivmsg target $ "I haven't seen " ++ nick
+
+
 
 joinCB :: IRCMessage -> Seen IRC () -- when somebody joins
 joinCB msg = do 

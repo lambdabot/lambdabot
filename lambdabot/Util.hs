@@ -8,6 +8,7 @@ module Util (
      snoc,
      after,
      split_first_word,
+     firstWord,
      debugStr,
      debugStrLn,
      lowerCaseString,
@@ -107,6 +108,12 @@ split_first_word :: String -- ^ String to be broken
 		 -> (String, String)
 split_first_word xs = (w, dropWhile isSpace xs')
   where (w, xs') = break isSpace xs
+
+-- | Get the first word of a string. Example:
+--
+-- > first_word "This is a fine day" ===> "This"
+firstWord :: String -> String
+firstWord = takeWhile (/= ' ')
 
 -- refactor, might be good for logging to file later
 -- | 'debugStr' checks if we have the verbose flag turned on. If we have
