@@ -3,7 +3,7 @@
 module QuoteModule.Fortune where
 
 import Util (stdGetRandItem)
-import qualified Util hiding (getRandItem)
+import qualified Util hiding (stdGetRandItem)
 
 import Data.List
 import Control.Monad
