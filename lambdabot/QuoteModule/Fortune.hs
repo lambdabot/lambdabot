@@ -6,10 +6,9 @@ import Util (getRandItem)
 import qualified Util hiding (getRandItem)
 
 import Data.List
-import Control.Monad
-
-import System.Random
+import Monad
 import System.Directory
+import System.Random
 import qualified Control.Exception as C (catch)
 
 --
@@ -41,8 +40,8 @@ filelist = do filelist'<- C.catch (getDirectoryContents path)
 
 -- | Select a random fortune file by using the random number generator
 --   given.
-fileRandom :: (RandomGen a) => a -> IO (String, a)
-fileRandom rng = liftM2 getRandItem filelist (return rng)
+fileRandom :: IO FilePath
+fileRandom = filelist >>= getRandItem
 
 -- | Parse a file of fortunes into a list of the fortunes in the file.
 fortunesParse :: FilePath -> IO [String]
@@ -53,27 +52,18 @@ fortunesParse filename = do
 
 -- | Given a FilePath of a fortune file, select a random fortune from it
 --   and return it along with the altered new seed of the RNG.
-fortuneRandom :: (RandomGen g) => FilePath -> g -> IO (String, g)
-fortuneRandom filename rng
+fortuneRandom :: FilePath -> IO String
+fortuneRandom filename
     = do
       fortunesList <- fortunesParse filename
-      return (getRandItem fortunesList rng)
+      getRandItem fortunesList
 
 -- | Given a RNG and optionally a fortune section, return a random fortune
 --   from the all the fortune files or the given section, respectively.
-randFortune :: (RandomGen a) => (Maybe FilePath) -> a -> IO (String, a)
-randFortune section rng =
-    let randomF f = join (liftM (uncurry fortuneRandom) $ f)
-    in case section of Nothing -> randomF (fileRandom rng)
-	               Just fname -> randomF (return $ (path ++ fname, rng))
-
--- | Split a fortune file into a list of fortures by breaking it up on
---   the '%' characters
-splines :: [[Char]] -> [[[Char]]]
-splines [[]] = []
-splines s    =  let (l,s') = break ("%"==) s
-                in l : case s' of []      -> []
-                                  (_:s'') -> splines s''
+randFortune :: (Maybe FilePath) -> IO String
+randFortune section =
+  case section of Nothing -> fortuneRandom =<< fileRandom
+	          Just fname -> fortuneRandom =<< (return (path ++ fname))
 
 -- | 'isFile' is a predicate wheter or not a given FilePath is a file.
 isFile :: FilePath -> IO Bool

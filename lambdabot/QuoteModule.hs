@@ -2,17 +2,16 @@
 
 module QuoteModule where
 
-import QuoteModule.Fortune      (randFortune)
-import Util                     (getRandItem)
-import IRC
-import qualified Map as M       (insert, lookup)
-
-import Data.IORef               (newIORef, readIORef, writeIORef)
+import qualified Map as M
 import Control.Monad.State
+import Data.IORef
+import QuoteModule.Fortune
+import QuoteModule.Random
+import IRC
+import Maybe
+import System.Random
 import System.Time
-import System.Random            (RandomGen(next), mkStdGen)
-
-------------------------------------------------------------------------
+-- 	$Id: QuoteModule.hs,v 1.1 2003/07/29 13:41:48 eleganesh Exp $
 
 newtype QuoteModule = QuoteModule ()
 
@@ -30,33 +29,13 @@ instance Module QuoteModule where
     moduleHelp _ _         = return "The quote module provides a range of quotes"
     moduleSticky _ = False
     commands     _ = return ["fortune","yow","arr"]
-    process      m msg target cmd rest
-      = do
-        maybemyref <- gets (\s -> M.lookup "prngint" (ircModuleState s))
-        case maybemyref of
-          Just myref -> do modstate <- liftIO (readIORef myref)
-                           let quotefun =
-                                 case cmd of
-                                 "fortune" -> randFortune Nothing
-                                 "yow"     -> randFortune (Just "zippy")
-                                 "arr"     -> arrRandom
-                                 _ -> error "QuoteModule: bad string"
-                           (quote, newseed) <- liftIO
-                                                (quotefun $
-						  mkStdGen (stripMS modstate))
-                           liftIO (writeIORef myref
-				              (ModuleState $ genToInt newseed))
-                           ircPrivmsg target quote
-                        -- init the state for this module if it doesn't exist
-          Nothing    -> do s <- get
-                           i <- liftIO (liftM castMe intGet)
-                           newref <- liftIO
-			               (newIORef (ModuleState (i :: Int)))
-                           let statemap = ircModuleState s
-                           put (s { ircModuleState = M.insert "prngint"
-				                              newref
-					                      statemap })
-                           process m msg target cmd rest
+    process      _ _ target cmd _
+      = do quote <- liftIO $ case cmd of
+                      "fortune" -> randFortune Nothing
+                      "yow"     -> randFortune (Just "zippy")
+                      "arr"     -> arrRandom
+                      _ -> error "QuoteModule: bad string"
+           ircPrivmsg target quote
 
 
 genToInt :: (RandomGen g) => g -> Int
@@ -78,7 +57,7 @@ sub2int :: Integer -> Integer
 sub2int x = (x - (fromIntegral maxI) - (fromIntegral maxI))
 
 arrRandom :: (Monad m, RandomGen g) => g -> m ([Char], g)
-arrRandom rng = return (getRandItem arrList rng)
+arrRandom rng = return (QuoteModule.Random.getRandItem arrList rng)
 
 arrList :: [[Char]]
 arrList = [
