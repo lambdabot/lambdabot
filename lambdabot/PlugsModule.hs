@@ -42,9 +42,12 @@ binary = "runplugs"
 --
 plugs :: String -> IO String
 plugs src =
-        do (o,_,_) <- popen binary [] (Just src)
+        do (o,p,_) <- popen binary [] (Just src)
            let o' = clean o
-           return $ if null o' then "bzzt\n" else o'
+           return $ if null o' 
+                        then let p' = clean p 
+                             in if null p' then "bzzt\n" else p'
+                        else o'
 
 --
 -- didn't compile. could return a useful message.
