@@ -1,92 +1,84 @@
-{-|
-
-   Load and unload\/Haskell modules at runtime.  This is not really \'dynamic
-   loading\', as such -- that implies that you\'re working with proper shared
-   libraries, whereas this is far more simple and only loads object files.  But
-   it achieves the same goal: you can load a Haskell module at runtime, load a
-   function from it, and run the function.  I have no idea if this works for
-   types, but that doesn\'t mean that you can\'t try it :).
-
-   FIXME: Reformat this as a Haddock list
-
-   To use this module:
-
-   1. call the 'initialiseRuntimeLoader' function
-
-   2. call 'loadObject' on the module(s) you wish to load
-
-   3. call 'resolveFunctions' to make the GHC runtime system
-      resolve the symbol table.
-
-   4. use 'loadFunction' to call the function from the module that you want to
-      load
-
-   The RuntimeLoader performs no dependency tracking; i.e. if you have a module
-   Foo which imports a module Bar, you must manually load Foo and Bar
-   before calling 'resolveFunctions'.  I don\'t /want/ the basic RuntimeLoader
-   module to have any dependency tracking, since many people will not need it.
-   GHC doesn\'t compile the dependency information into object files anyway, so
-   it\'s quite hard to do.  In the future, I\'d imagine that a
-   AdvancedRuntimeLoader module will implement this feature for you.
-
-   Of course, the best thing would be for all this to go away and be
-   replaced with a real dynamic loader :).
-
--}
-
-
-{-
-
-   TODO:
-
-   * Make loadObject more intelligent about finding modules (try the given
-     module name with a .o extension, etc)
-
-   * Module search paths?  Uh oh ...
-
-   * Get a list of all the currently loaded modules
-
-   * Use module handles instead of direct module paths for e.g. loadFunction
-
-   * There's no dlclose()?
-
--}
-
 {-# OPTIONS -#include "Linker.h" #-}
+-- 
+--    Load and unload\/Haskell modules at runtime.  This is not really
+--    \'dynamic loading\', as such -- that implies that you\'re working
+--    with proper shared libraries, whereas this is far more simple and
+--    only loads object files.  But it achieves the same goal: you can
+--    load a Haskell module at runtime, load a function from it, and run
+--    the function.  I have no idea if this works for types, but that
+--    doesn\'t mean that you can\'t try it :).
+-- 
+--    FIXME: Reformat this as a Haddock list
+-- 
+--    To use this module:
+-- 
+--    1. call the 'initialiseRuntimeLoader' function
+-- 
+--    2. call 'loadObject' on the module(s) you wish to load
+-- 
+--    3. call 'resolveFunctions' to make the GHC runtime system
+--       resolve the symbol table.
+-- 
+--    4. use 'loadFunction' to call the function from the module that
+--    you want to load
+-- 
+--    The RuntimeLoader performs no dependency tracking; i.e. if you
+--    have a module Foo which imports a module Bar, you must manually
+--    load Foo and Bar before calling 'resolveFunctions'.  I don\'t
+--    /want/ the basic RuntimeLoader module to have any dependency
+--    tracking, since many people will not need it.  GHC doesn\'t
+--    compile the dependency information into object files anyway, so
+--    it\'s quite hard to do.  In the future, I\'d imagine that a
+--    AdvancedRuntimeLoader module will implement this feature for you.
+-- 
+--    Of course, the best thing would be for all this to go away and be
+--    replaced with a real dynamic loader :).
+-- 
+--    TODO:
+-- 
+--    * Make loadObject more intelligent about finding modules (try the given
+--      module name with a .o extension, etc)
+-- 
+--    * Module search paths?  Uh oh ...
+-- 
+--    * Get a list of all the currently loaded modules
+-- 
+--    * Use module handles instead of direct module paths for e.g. loadFunction
+-- 
+--    * There's no dlclose()?
+-- 
+--
+-- 
 
 module RuntimeLoader (
-   RuntimeModule,
-   initialiseRuntimeLoader,	-- :: IO ()
-   initializeRuntimeLoader,	-- :: IO ()
-   loadObject,			-- :: FilePath -> IO RuntimeModule
-   loadLibrary,		        -- :: FilePath -> IO RuntimeModule
-   loadPackage,		        -- :: String -> IO ()
-   unloadObject,		-- :: RuntimeModule -> IO ()
-   resolveFunctions,		-- :: IO ()
-   loadFunction,  	        -- :: RuntimeModule -> String -> IO (Maybe a)
-   RuntimeLoaderException (..), --
-) where
+        RuntimeModule,
+        initialiseRuntimeLoader,	-- :: IO ()
+        initializeRuntimeLoader,	-- :: IO ()
+        loadObject,			-- :: FilePath -> IO RuntimeModule
+        loadLibrary,		        -- :: FilePath -> IO RuntimeModule
+        loadPackage,		        -- :: String -> IO ()
+        unloadObject,		-- :: RuntimeModule -> IO ()
+        resolveFunctions,		-- :: IO ()
+        loadFunction,  	        -- :: RuntimeModule -> String -> IO (Maybe a)
+        RuntimeLoaderException (..), --
+   ) where
 
 import SystemModuleNaming  ( systemModuleName )
 
-import GHC.Ptr
+import System.IO           ( stdout, hFlush )
+import Control.Monad       ( unless, when )
 import Foreign.C.String	   ( CString, newCString, peekCString, withCString )
+
+import GHC.Ptr
 import GHC.Exts		   ( addrToHValue# )
 
-import Control.Monad       ( unless, when )
 #if __GLASGOW_HASKELL__ >= 600
 import Control.Exception   ( throwIO, Exception (..) )
-#else
-import Control.Exception   ( ioError, Exception (..) )
-#endif
-#if __GLASGOW_HASKELL__ >= 600
 import Data.Dynamic        ( toDyn, Typeable )
 #else
+import Control.Exception   ( ioError, Exception (..) )
 import Data.Dynamic        ( toDyn, Typeable, mkTyCon, typeOf, mkAppTy )
-#endif
 
-#if __GLASGOW_HASKELL__ >= 600
-#else
 throwIO = ioError
 #endif
 
@@ -169,9 +161,9 @@ loadPackage packageName = unsafeLoadPackage packageName
 
 unsafeLoadPackage :: String -> IO ()
 unsafeLoadPackage packageName = do
+   putStr (packageName ++ " ") >> hFlush stdout
    loadSystemModule packageName
    resolveFunctions
-
 
 {-|
 
@@ -182,9 +174,6 @@ unsafeLoadPackage packageName = do
 loadSystemModule :: String -- ^ Name of the system module to load (e.g. \"concurrent\")
 	         -> IO ()
 loadSystemModule moduleName = do
-#if DEBUG
-   putStrLn $ "Loading package " ++ show moduleName
-#endif
    objects <- systemModuleName moduleName
    mapM_ loadObject objects
 

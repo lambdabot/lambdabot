@@ -1,24 +1,29 @@
 
 module DynamicModule (DynamicModule, dynamicModule) where
 
-import Map (Map)
-import qualified Map as M hiding (Map)
-
-import Control.Monad.Error
-import Control.Monad.Reader
-import Control.Monad.Trans
-import Control.Exception (Exception (..))
-import Data.Dynamic (fromDynamic)
-import Data.Set
-import Data.IORef
-import Data.Dynamic (Typeable)
-import Maybe
-
 import IRC
 import BotConfig
 import RuntimeLoader
 import ErrorUtils
 import Util
+
+import Map (Map)
+import qualified Map as M hiding (Map)
+
+import Data.Dynamic (Typeable)
+import Data.Dynamic (fromDynamic)
+import Data.IORef
+import Data.Maybe
+import Data.Set
+
+import Control.Monad.Error
+import Control.Monad.Reader
+import Control.Monad.Trans
+import Control.Exception (Exception (..))
+
+import System.IO           ( stdout, hFlush )
+
+------------------------------------------------------------------------
 
 newtype DynamicModule = DynamicModule ()
 
@@ -204,6 +209,7 @@ isLoadedObject file
 initialise :: IO ()
 initialise = do 
         initialiseRuntimeLoader
+        putStr "Loading package " >> hFlush stdout
         mapM_ loadPackage
 #if   __GLASGOW_HASKELL__ >= 604
           ["base", "haskell98", "mtl", "parsec", "network", "unix", "lang", "posix"]
@@ -212,6 +218,7 @@ initialise = do
 #else /* hack */
           ["base", "haskell98", "parsec", "network", "unix", "posix"]
 #endif
+        putStrLn "."
         -- more hard coded evil
         mapM_ (\n -> loadObject (n++".o"))
               ["BotConfig","ErrorUtils","ExceptionError",
