@@ -2,11 +2,13 @@ module BaseModule where
 
 import BotConfig
 import IRC
-import Control.Monad.State
 import Util
 import qualified Map as M
-import Text.Regex
+
 import Data.Maybe
+import Control.Monad.State
+import Text.Regex
+
 
 newtype BaseModule = BaseModule ()
 
@@ -19,11 +21,11 @@ instance Module BaseModule where
     moduleHelp  _ _   = return "base module"
     commands        _ = return []
     process _ _ _ _ _ = return ()
-    moduleInit _m 
+    moduleInit _m
 	= do s <- get
-	     let _cbsFM = ircCallbacks s 
+	     let _cbsFM = ircCallbacks s
 	     ircSignalConnect "PING" 	doPING
-	     ircSignalConnect "NOTICE" 	doNOTICE 
+	     ircSignalConnect "NOTICE" 	doNOTICE
 	     ircSignalConnect "PART" 	doPART
 	     ircSignalConnect "JOIN"    doJOIN
 	     ircSignalConnect "NICK" 	doNICK
@@ -204,7 +206,7 @@ doPRIVMSG' myname msg
         = do let (who, _) = breakOnGlue "!" (msgPrefix msg)
              maybecmd <- gets (\s -> M.lookup cmd (ircCommands s))
              case maybecmd of
-               Just (MODULE m) -> do debugStrLn (show msg) 
+               Just (MODULE m) -> do debugStrLn (show msg)
                                      handleIrc (ircPrivmsg who) (process m msg who cmd rest)
                Nothing -> ircPrivmsg who "Sorry, I don't know that command."
     doPersonalMsg _ _
@@ -217,15 +219,14 @@ doPRIVMSG' myname msg
           case maybecmd of
             Just (MODULE m) -> do debugStrLn (show msg)
                                   handleIrc (ircPrivmsg alltargets) (process m msg alltargets cmd rest)
-            Nothing         -> do 
+            Nothing         -> do
                 myname' <- getMyname
-                ircPrivmsg alltargets ("Sorry, I don't know the command \"" ++ 
+                ircPrivmsg alltargets ("Sorry, I don't know the command \"" ++
                                         cmd ++ "\", try \"" ++ myname' ++ ": @listcommands\"")
     doPublicMsg _ _
       = do myname' <- getMyname
-           ircPrivmsg alltargets ("Sorry, I'm not a very smart bot yet, try \"" 
+           ircPrivmsg alltargets ("Sorry, I'm not a very smart bot yet, try \""
                                         ++ myname' ++ ": @listcommands\"")
-                    
 after :: String -> String -> String
 after [] ys     = dropWhile (==' ') ys
 after (_:_) [] = error "after: (:) [] case"
@@ -240,11 +241,11 @@ prefix (x:xs) (y:ys)
   = x == y && prefix xs ys
 
 maybeCommand :: String -> String -> Maybe String
-maybeCommand name text = 
+maybeCommand name text =
     let re = mkRegex (name ++ "[.:,]*[[:space:]]*")
 	res = matchRegexAll re text
 	Just (_, _, cmd, _) = res
-	in 
+	in
 	if isJust res
 	then Just cmd
 	else Nothing
