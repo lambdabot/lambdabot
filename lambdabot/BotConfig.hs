@@ -1,4 +1,7 @@
+{-# OPTIONS -cpp #-}
+
 module BotConfig where
+
 import Control.Monad.Trans
 
 getMyname :: MonadIO m => m String
@@ -103,13 +106,22 @@ getFileRequires "HelpModule.o"  = return [Object "Map.o"]
 
 getFileRequires _ = return []
 
+-- for the MoreModule, how many lines to show at a time
+getMaxLines :: MonadIO m => m Int
+getMaxLines = return 7
+
+--
+-- which modules to dynamically load.
+--
+
+#if STATIC
+getStartupModules :: MonadIO m => m [String]
+getStartupModules = return []
+#else
 getStartupModules :: MonadIO m => m [String]
 getStartupModules = return [
         "dummy", "state","topic","karma","type","seen",
         "dict","quote","eval", "pl","plugs","babel","version",
         "more","help"
         ] --,"fact","haddock"]
-
--- for the MoreModule, how many lines to show at a time
-getMaxLines :: MonadIO m => m Int
-getMaxLines = return 7
+#endif
