@@ -47,7 +47,10 @@ plugs src =
            let o' = clean o
            return $ if null o' 
                         then let p' = clean p 
-                             in if null p' then "bzzt\n" else p'
+                             in if null p' then "bzzt\n"
+                                           else case p' of
+                                             'w':'a':'i':'t':'F':'o':'r':'P':'r':'o':'c':_ -> "Terminated\n"
+                                             _ -> p'
                         else o'
 
 --
