@@ -2,17 +2,17 @@
 
 module QuoteModule where
 
-import qualified Map as M
-import Control.Monad.State
-import Data.IORef
-import QuoteModule.Fortune
-import QuoteModule.Random
+import QuoteModule.Fortune      (randFortune)
+import Util                     (getRandItem)
 import IRC
-import Maybe
-import System.Random
-import System.Time
--- 	$Id: QuoteModule.hs,v 1.1 2003/07/29 13:41:48 eleganesh Exp $
+import qualified Map as M       (insert, lookup)
 
+import Data.IORef               (newIORef, readIORef, writeIORef)
+import Control.Monad.State
+import System.Time
+import System.Random            (RandomGen(next), mkStdGen)
+
+------------------------------------------------------------------------
 newtype QuoteModule = QuoteModule ()
 
 theModule :: MODULE
@@ -37,30 +37,12 @@ instance Module QuoteModule where
                       _ -> error "QuoteModule: bad string"
            ircPrivmsg target quote
 
-
-genToInt :: (RandomGen g) => g -> Int
-genToInt x = fst (next x)
-
--- random seed from picoseconds, suggested by Marvin--
-maxI :: Int
-maxI = (maxBound :: Int)
-
-intGet :: IO Integer
-intGet = do calTime <- liftM toCalendarTime getClockTime
-            bigNum <- liftM ctPicosec calTime
-            return (until (< (fromIntegral maxI)) sub2int bigNum)
-
-castMe :: Integer -> Int
-castMe x = fromIntegral x
-
-sub2int :: Integer -> Integer
-sub2int x = (x - (fromIntegral maxI) - (fromIntegral maxI))
-
-arrRandom :: (Monad m, RandomGen g) => g -> m ([Char], g)
-arrRandom rng = return (QuoteModule.Random.getRandItem arrList rng)
+-- | Return a random arr-quote
+arrRandom :: IO String
+arrRandom = QuoteModule.Random.getRandItem arrList
 
 -- | A list of arr-quotes
-arrList :: [[Char]]
+arrList :: [String]
 arrList = [
            "Avast!"
           ,"Shiver me timbers!"
