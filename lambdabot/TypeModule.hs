@@ -103,9 +103,9 @@ typeModule = TypeModule ()
 instance Module TypeModule where
      moduleName   _ = return "type"
      moduleSticky _ = False
-     commands     _ = return ["type", "kind", "info" ]
+     commands     _ = return ["type", "kind"]
      process _ _ src "type" expr = query_ghci src ":t" expr
      process _ _ src "kind" expr = query_ghci src ":k" expr
-     process _ _ src "info" expr = query_ghci src ":info" expr
+--   process _ _ src "info" expr = query_ghci src ":info" expr
      process _ _ _ _ _ = error "TypeModule: invalid cmd"
 
