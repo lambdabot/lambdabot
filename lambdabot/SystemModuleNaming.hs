@@ -7,14 +7,14 @@ import Monad
 import Directory
 import qualified Control.Exception as C (catch,throw)
 
--- 
+--
 -- We're trying to get a few fields from the package.conf files. How to
 -- do this differs depending on post-6.4 and pre-6.4 ghc.
 --
 
 #if __GLASGOW_HASKELL__  >= 604
 import Distribution.InstalledPackageInfo
-import Distribution.Package 
+import Distribution.Package
 
 -- What type is the stuff in package.conf files?
 type PkgConf = InstalledPackageInfo
@@ -42,7 +42,7 @@ extra_libraries = extraLibraries
 --
 type PkgConf = Package
 
-data Package 
+data Package
  = Package { name               :: String
            , auto               :: Bool
            , import_dirs        :: [String]
@@ -73,7 +73,7 @@ systemModuleName packageName = do
          (\e -> putStrLn "Unable to read package.conf" >> C.throw e)
 
    let pkg = head (filter (\p -> name p == packageName) packages)
-   liftM concat $ sequence $ 
+   liftM concat $ sequence $
         map (libraryObject (map translate (library_dirs pkg)))
             (hs_libraries pkg ++ extra_libraries pkg)
 
@@ -83,7 +83,7 @@ translate other = other
 
 libraryObject :: [[Char]] -> [Char] -> IO [[Char]]
 libraryObject [] _ = return []
-libraryObject (dir:dirs) nm = do 
+libraryObject (dir:dirs) nm = do
 	let filename = dir ++ "/" ++ nm ++ ".o"
 	exists <- doesFileExist filename
 	if exists then return [filename] else libraryObject dirs nm
