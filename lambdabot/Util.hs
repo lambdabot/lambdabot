@@ -1,7 +1,7 @@
 {-# OPTIONS -cpp -fglasgow-exts #-}
--- Ambiguous type variables 
+-- Ambiguous type variables
 
-module Util ( 
+module Util (
       join
     , split
     , breakOnGlue
@@ -13,7 +13,7 @@ module Util (
     , lookupSet,insertSet,deleteSet
   ) where
 
--- 	$Id: Util.hs,v 1.10 2003/07/31 19:13:15 eleganesh Exp $	
+-- 	$Id: Util.hs,v 1.10 2003/07/31 19:13:15 eleganesh Exp $
 
 import BotConfig                (getVerbose)
 import Map                      (Map)
@@ -55,7 +55,7 @@ join glue xs = (concat . intersperse glue) xs
 
 -- | Split a list into pieces that were held together by glue.  Example:
 --
--- > split ", " "one, two, three" ===> ["one","two","three"] 
+-- > split ", " "one, two, three" ===> ["one","two","three"]
 
 split :: Eq a => [a] -- ^ Glue that holds pieces together
       -> [a]         -- ^ List to break into pieces
@@ -81,12 +81,12 @@ breakOnGlue :: (Eq a) => [a] -- ^ Glue that holds pieces together
 breakOnGlue _ [] = ([],[])
 breakOnGlue glue rest@(x:xs)
     | glue `isPrefixOf` rest = ([], rest)
-    | otherwise = (x:piece, rest') where (piece, rest') = breakOnGlue glue xs 
+    | otherwise = (x:piece, rest') where (piece, rest') = breakOnGlue glue xs
 
 split_first_word :: String -> (String, String)
 split_first_word xs = (w, dropWhile isSpace xs')
   where (w, xs') = break isSpace xs
-  
+
 -- refactor, might be good for logging to file later
 debugStr :: (MonadIO m) => String -> m ()
 debugStr x = do verbose <- getVerbose
@@ -99,7 +99,7 @@ data Accessor m s = Accessor { reader :: m s, writer :: s -> m () }
 
 readFM :: (Monad m,Ord k) => Accessor m (Map k e) -> k -> m (Maybe e)
 readFM a k = do fm <- reader a
-                return $ M.lookup k fm 
+                return $ M.lookup k fm
 
 writeFM :: (Monad m,Ord k) => Accessor m (Map k e) -> k -> e -> m ()
 writeFM a k e = do fm <- reader a
