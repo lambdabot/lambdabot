@@ -25,3 +25,9 @@ Mats-Ola Persson <polli@users.sourceforge.net> aka polli on #haskell
 Ganesh Sittampalam <ganesh@earth.li> aka Heffalump on #haskell
 * Various restructuring to improve bot robustness
 * Dynamic module loading
+
+Don Stewart <dons@cse.unsw.edu.au> aka dons on #haskell
+* New build system
+* 6.4 port
+* BabelModule, PlugsModule, VersionModule
+
