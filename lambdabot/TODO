@@ -6,26 +6,22 @@ Don's Todo:
 * make @karma persistent
 
 Todo:
-* fix FactModule to keep a persistent connection - will require Typeable connect, or some other way to save state
 * FactModule - make "foo?" equal to "lambdabot: @fact foo"
 * fsbot-style factoid parsing, 
 * ircPrivmsg should actually be an input collector of some type, that way output filters could be written
 * switch to using Arrows as much as possible
-* @help <cmd> - use (command, docstring) in [Commands]
 * real hostmask matching
 * move privileged commands out of @listcommands
 * refactor utility functions out of the modules ex. gets(\s -> lookupFM ...)
 * change @more and 'no self privmsg' to output plugins/filters
-* @uptime plugin
 * @fact-to ircnick key for sending factoids via privmsg
-* refactor to a single prngint state
-* use NOTICE instead of privmsg, to follow the IRC RFC
 * reformat/refill output to allow for fewer longer lines.
 * multiple servers
 * factor out an IRC library
 * delYsid suggested holding all per-module state in a tuple, thereby skipping the Typeable problem
 * update the README
 * send alternate nickname?
+* automatically filter out blanks lines, ie. in dictionary output
 
 2.0 release list:
 * @more needs to check for really really long lines
@@ -39,7 +35,6 @@ Wishlist:
 * search local database of researching paper by keyword (swish++ ?)
 * search haskell-wiki
 * channel statistics, logs, record of pasted urls
-* FortuneModule - allow users to enter their own fortunes
 * unit tests, quickcheck tests, written tests... ok, maybe not written
 * Some support for bot clients to be able to do their own request/response stuff
 
