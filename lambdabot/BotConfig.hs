@@ -1,4 +1,3 @@
-{-# OPTIONS -cpp #-}
 
 module BotConfig where
 
@@ -64,24 +63,8 @@ data Require = Object String | Package String
 -- DynamicModule.initialise :/
 --
 getFileRequires                 :: MonadIO m => String -> m [Require]
-getFileRequires "HaddockModule.o" = return [
-                                            Object "Map.o",
-                                            Object "haddock/HaddockHtml.o",
-                                            Object "haddock/HaddockVersion.o",
-                                            Object "haddock/HaddockTypes.o",
-                                            Object "haddock/HsSyn.o",
-                                            Object "haddock/Binary.o",
-                                            Object "haddock/FastMutInt.o",
-                                            Object "haddock/Html.o",
-                                            Object "haddock/HaddockHH.o",
-                                            Object "haddock/HaddockModuleTree.o",
-                                            Object "haddock/Digraph.o",
-                                            Object "haddock/BlockTable.o",
-                                            Object "haddock/HaddockUtil.o"]
 
-getFileRequires "QuoteModule.o" = return [Object "QuoteModule/Fortune.o",
-                                          Object "Map.o"]
-
+getFileRequires "HelpModule.o"  = return [Object "Map.o"]
 getFileRequires "FactModule.o"  = return [Package "HToolkit"]
 getFileRequires "TopicModule.o" = return [Object "Map.o"]
 getFileRequires "StateModule.o" = return [Object "Map.o"]
@@ -109,8 +92,6 @@ getFileRequires "PlModule.o"    = return [Object "PlModule/Transform.o"
                                          ,Object "PlModule/Rules.o"
                                          ]
 getFileRequires "HelpModule.o"  = return [Object "Map.o"]
-getFileRequires "GoogleModule.o" 
-                                = return [Object "MiniHTTP.o"]
 
 getFileRequires _ = return []
 
