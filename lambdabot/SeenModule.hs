@@ -91,17 +91,15 @@ instance Module SeenModule SeenState where
                   _ -> ircPrivmsg target $ "I haven't seen " ++ nick
 
 joinCB :: IRCMessage -> Seen IRC () -- when somebody joins
-joinCB msg = withSeenFM $ \fm _ct myname ->
-  let nick = lowerCaseString $ unUserMode (ircnick msg)
-  in if nick /= myname
-       then let newInfo = Present Nothing (ircchannel msg)
-            in  Left $ M.insertWith updateJ nick newInfo fm
-       else Left fm
+joinCB msg = withSeenFM msg $ \fm _ct myname nick ->
+  if nick /= myname
+     then let newInfo = Present Nothing (ircchannel msg)
+          in  Left $ M.insertWith updateJ nick newInfo fm
+     else Left fm
 
 partCB :: IRCMessage -> Seen IRC () -- when somebody parts
-partCB msg = withSeenFM $ \fm ct myname ->
-  let nick = lowerCaseString $ unUserMode (ircnick msg)
-      botPart cs (nick', us) =
+partCB msg = withSeenFM msg $ \fm ct myname nick ->
+  let botPart cs (nick', us) =
         case us of
           Present mct xs ->
             case xs \\ cs of
@@ -123,26 +121,23 @@ partCB msg = withSeenFM $ \fm ct myname ->
 	      _ -> Right "SeenModule> someone who isn't known parted"
 
 quitCB :: IRCMessage -> Seen IRC () -- when somebody quits
-quitCB msg = withSeenFM $ \fm ct _myname ->
-  let nick = lowerCaseString $ unUserMode (ircnick msg)
-  in case M.lookup nick fm of
-       Just (Present _ct xs) ->
-         Left $ M.insert nick (NotPresent ct (head xs)) fm
-       _ -> Right "SeenModule> someone who isn't known has quit"
+quitCB msg = withSeenFM msg $ \fm ct _myname nick ->
+  case M.lookup nick fm of
+    Just (Present _ct xs) -> Left $ M.insert nick (NotPresent ct (head xs)) fm
+    _ -> Right "SeenModule> someone who isn't known has quit"
 
 nickCB :: IRCMessage -> Seen IRC () -- when somebody changes his/her name
-nickCB msg = withSeenFM $ \fm _ct _myname ->
+nickCB msg = withSeenFM msg $ \fm _ct _myname nick ->
   let newnick = drop 1 $ head (msgParams msg)
       lcnewnick = lowerCaseString newnick
-      lcnick = lowerCaseString $ unUserMode (ircnick msg)
-  in case M.lookup lcnick fm of
+  in case M.lookup nick fm of
        Just (Present mct xs) ->
-         let fm' = M.insert lcnick (NewNick newnick) fm
+         let fm' = M.insert nick (NewNick newnick) fm
          in Left $ M.insert lcnewnick (Present mct xs) fm'
        _ -> Right "SeenModule> someone who isn't here changed nick"
 
 joinChanCB :: IRCMessage -> Seen IRC () -- when the bot join a channel
-joinChanCB msg = withSeenFM $ \fm _ct _myname ->
+joinChanCB msg = withSeenFM msg $ \fm _ct _myname _nick ->
   let l = msgParams msg
       chan = l !! 2
       chanUsers = words (drop 1 (l !! 3)) -- remove ':'
@@ -154,26 +149,28 @@ joinChanCB msg = withSeenFM $ \fm _ct _myname ->
 
 -- when somebody speaks, update their clocktime
 msgCB :: IRCMessage -> Seen IRC ()
-msgCB msg = withSeenFM $ \fm ct _myname ->
-  let nick = lowerCaseString $ unUserMode (ircnick msg)
-  in case M.lookup nick fm of
-       Just (Present _ct xs) ->
-         Left $ M.insert nick (Present (Just ct) xs) fm
-       _ -> Right "SeenModule> someone who isn't here msg us"
+msgCB msg = withSeenFM msg $ \fm ct _myname nick ->
+  case M.lookup nick fm of
+    Just (Present _ct xs) -> Left $ M.insert nick (Present (Just ct) xs) fm
+    _ -> Right "SeenModule> someone who isn't here msg us"
 
 -- misc. functions
 unUserMode :: Nick -> Nick
 unUserMode nick = dropWhile (`elem` "@+") nick
 
 
-withSeenFM :: (SeenState -> ClockTime -> String
-	       -> Either SeenState String) -> Seen IRC ()
-withSeenFM f = do state <- readMS
-                  ct <- time
-                  myname <- return $ (lowerCaseString . name) config
-                  case f state ct myname of
-                    Left newstate -> writeMS newstate
-                    Right err -> debugStrLn err
+withSeenFM :: IRCMessage
+              -> (SeenState -> ClockTime -> String -> Nick
+	          -> Either SeenState String)
+	      -> Seen IRC ()
+withSeenFM msg f = do nick <- return $ (lowerCaseString . unUserMode)
+                                         (ircnick msg)
+		      state <- readMS
+                      ct <- time
+                      myname <- return $ (lowerCaseString . name) config
+                      case f state ct myname nick of
+                        Left newstate -> writeMS newstate
+                        Right err -> debugStrLn err
 
 updateJ :: UserStatus -> UserStatus -> UserStatus
 updateJ = flip updateJ' where
