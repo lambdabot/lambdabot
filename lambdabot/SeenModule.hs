@@ -56,7 +56,7 @@ instance Module SeenModule SeenState where
 
     process m msg target cmd rest =
       do seenFM <- readMS
-	 now <- time
+	 now <- liftIO getClockTime
          myname <- return $ lowerCaseString (name config)
          let nick = firstWord rest
              lcnick = lowerCaseString nick
