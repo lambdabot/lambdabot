@@ -166,7 +166,7 @@ withSeenFM :: IRCMessage
 withSeenFM msg f = do nick <- return $ (lowerCaseString . unUserMode)
                                          (ircnick msg)
 		      state <- readMS
-                      ct <- time
+                      ct <- liftIO getClockTime
                       myname <- return $ (lowerCaseString . name) config
                       case f state ct myname nick of
                         Left newstate -> writeMS newstate
@@ -177,9 +177,6 @@ updateJ = flip updateJ' where
   updateJ' (Present _ct cs) (Present ct c) = Present ct $ nub (c ++ cs)
   updateJ' _x y@(Present _ct _cs) = y
   updateJ' x _ = x
-
-time :: MonadIO m => m ClockTime
-time = liftIO getClockTime
 
 ircchannel :: IRCMessage -> [Channel]
 ircchannel msg
