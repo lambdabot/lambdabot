@@ -16,24 +16,16 @@
 
 module BabelModule (theModule) where
 
-import BabelBot.BabelFish
-
+import BabelBot.BabelFish       (shortLangs, babelFish)
 import IRC
-import Util       (debugStrLn, stdGetRandItem)
-import PosixCompat
-import qualified Map as Map
+import Util                     (debugStrLn, stdGetRandItem)
+import PosixCompat              (popen)
+import qualified Map as Map     (fromList, lookup, insert, toList)
 
-import Data.Char
 import Data.List
-import Data.Maybe
-import Control.Monad.Trans      ( liftIO, MonadIO )
-import Control.Exception
-
-import System.IO
-#if __GLASGOW_HASKELL__ < 603
-                hiding (try)
-#endif
--- import System.Directory         ( doesFileExist )
+import Data.Maybe               (fromMaybe)
+import Control.Monad.Trans      (liftIO,MonadIO)
+import Control.Exception        (handleJust, ioErrors, try, evaluate)
 
 newtype BabelModule = BabelModule ()
 

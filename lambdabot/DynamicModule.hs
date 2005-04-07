@@ -4,27 +4,25 @@
 
 module DynamicModule (DynamicModule, dynamicModule) where
 
+import {-# SOURCE #-} Modules   (plugins)
+
 import IRC
 import Depends
 import RuntimeLoader
-import ErrorUtils
+import ErrorUtils               (handleErrorJust)
 import Util
 
-import {-# SOURCE #-} Modules                  (plugins)
-
 import Map (Map)
-import qualified Map as M hiding (Map)
+import qualified Map as M       (empty)
 
 import Data.Char                (toUpper)
 import Data.Dynamic             (Typeable,fromDynamic)
-import Data.IORef
-import Data.Maybe
-import Data.Set
+import Data.IORef               (readIORef, writeIORef, IORef)
+import Data.Set                 (emptySet, Set)
 
 import Control.Monad.Error
 import Control.Monad.Reader
-import Control.Monad.Trans
-import Control.Exception        (Exception (..))
+import Control.Exception        (Exception(DynException))
 
 import System.IO                (stdout, hFlush)
 
@@ -198,20 +196,6 @@ isLoadedObject file
         Just _ -> return True
         Nothing -> return False
 
---
--- This stuff sucks. What follows are hard-coded package deps.
--- For a lambdabot compiled with a given GHC version, you can establish
--- the runtime deps sort of like so:
-{-
-        for i in *Module.hi ; do 
-                ghc-6.4 --show-iface $i | sed -n '/package/{p;n;p;q;}' | sed 's/^[^:]*: //'
-        done | tr ' ' '\n' | sort | uniq | xargs | \
-                sed 's/-.\..//g;s/ /", "/g;s/^/["/;s/$/"]/'
--}
--- You may then have to edit, and reorder things a bit to get the load order correct :/
---
--- Still need "posix" until PosixCompat works more reliably.
---
 initialise :: IO ()
 initialise = do 
         initialiseRuntimeLoader

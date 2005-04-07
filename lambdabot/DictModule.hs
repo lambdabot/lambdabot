@@ -6,10 +6,11 @@ module DictModule (theModule) where
 
 import qualified DictModule.DictLookup as Dict
 import IRC
-import Control.Monad.Trans (liftIO)
-import Maybe (fromJust)
-import Data.List (sort)
 import Util
+
+import Data.Maybe               (fromJust)
+import Data.List                (sort)
+import Control.Monad.Trans (liftIO)
 
 newtype DictModule = DictModule ()
 

@@ -43,15 +43,12 @@ GHC_VERSION=	@GHC_VERSION@
 GLASGOW_HASKELL=@GLASGOW_HASKELL@
 
 # Comment out if you're on windows
-PKG_OPTS=	-package posix
 
 ifeq "$(GLASGOW_HASKELL)" "604"
 HC_OPTS+=	-threaded
-endif
-
-ifeq "$(GLASGOW_HASKELL)" "604"
 RECURSIVE_MODULE_SUFFIX=	hs-boot
 else
+PKG_OPTS=	-package posix
 RECURSIVE_MODULE_SUFFIX=	hi-boot
 endif
 

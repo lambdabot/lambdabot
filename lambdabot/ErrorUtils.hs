@@ -1,7 +1,7 @@
 
 module ErrorUtils where
 
-import Monad
+import Control.Monad       (liftM)
 import Control.Monad.Error (MonadError (..))
 
 catchErrorJust :: MonadError e m => (e -> Maybe b) -> m a -> (b -> m a) -> m a

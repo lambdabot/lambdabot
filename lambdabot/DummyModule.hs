@@ -2,7 +2,6 @@
 module DummyModule (theModule) where
 
 import IRC
-import Data.List
 
 newtype DummyModule = DummyModule ()
 
@@ -25,7 +24,7 @@ instance Module DummyModule () where
         _             -> "dummy module"
 
   commands     _ = return ["dummy","wiki","paste","learn","eurohaskell","moo"]
-  process _ _ src cmd rest = case Data.List.lookup cmd dummylst of
+  process _ _ src cmd rest = case lookup cmd dummylst of
 			       Nothing -> error "Dummy: invalid command"
                                Just f -> ircPrivmsg src $ f rest
 

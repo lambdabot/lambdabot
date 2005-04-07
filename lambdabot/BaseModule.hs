@@ -1,15 +1,13 @@
 module BaseModule (baseModule) where
 
-import Config
+import Config                   (config, Config(name, autojoin))
 import IRC
-import Util
-import qualified Map as M
+import Util                     (debugStrLn, breakOnGlue, split)
+import qualified Map as M       (insert, delete)
 
 import Data.List
-import Data.Maybe
-import Control.Monad.State
-import Text.Regex
-
+import Text.Regex               (mkRegex, matchRegexAll)
+import Control.Monad.State      (MonadState(..))
 
 newtype BaseModule = BaseModule ()
 

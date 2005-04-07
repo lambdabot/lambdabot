@@ -20,17 +20,13 @@ config :: Config
 config = Config { 
         name            = "lambdabot",
         userinfo        = "Lambda Robots - 100% Loyal",
---      host            = "irc.eu.freenode.net",
-
-        host            = "irc.slashnet.org",
+        host            = "irc.eu.freenode.net",
 
         port            = 6667,
         verbose         = True,
         moresize        = 7,
         proxy           = Nothing,
---      autojoin        = ["#haskell"],
-
-        autojoin        = ["#ad89random_lambdabot_testing"],
+        autojoin        = ["#haskell"],
 
         admins          = [
                 "Pseudonym",    "shapr",        "pesco",        "Riastradh",

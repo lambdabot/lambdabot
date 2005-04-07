@@ -4,11 +4,11 @@ module EvalModule (theModule) where
 import EvalModule.LMEngine (evaluate, define, resume, Environment)
 
 import IRC
-import Util
+import Util                             (debugStrLn)
 import Map (Map)
 import qualified Map as Map hiding (Map)
 
-import Data.Dynamic
+import Data.Dynamic                     (Dynamic)
 import Data.List                        (groupBy,sort,isPrefixOf)
 import Control.Monad.State
 import Control.Exception                (Exception(..))
