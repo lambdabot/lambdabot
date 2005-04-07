@@ -7,7 +7,7 @@ import qualified Map as M
 
 import Data.List ((\\),nub)
 
-import Control.Monad (when, liftM)
+import Control.Monad (when)
 import Control.Monad.Trans (liftIO, MonadIO)
 
 import System.Time
@@ -45,27 +45,31 @@ instance Module SeenModule SeenState where
            ircSignalConnect m "353" $ joinChanCB
            ircSignalConnect m "PRIVMSG" $ msgCB
 
-    process m msg target cmd rest = do 
-          seenFM <- readMS
-          myname <- getMyname
-          let nick = takeWhile (/=' ') rest
-              lcnick = lowerCaseString nick
-          if lcnick == lowerCaseString myname
-             then ircPrivmsg target "Yes, I'm here"
-             else case M.lookup lcnick seenFM of
-                   Just (Present mct cs) -> do {
-                      ;now <- time
-                      ;ircPrivmsg target $ nick ++ " is in " ++
-                              (listToStr cs) ++ "." ++
-                              (case mct of
-                                 Nothing -> " I don't know when " ++ nick ++ " last spoke."
-                                 Just ct ->
-                                      " Last spoke " ++
-                                      (let when' = toPretty $ diffClockTimes now ct
-                                       in if null when' then "just now." else when' ++ "ago."
-                                       ) )
-                    }
-
+    process m msg target cmd rest =
+      do seenFM <- readMS
+	 now <- time
+         myname <- return $ lowerCaseString (name config)
+         let nick = firstWord rest
+             lcnick = lowerCaseString nick
+	     ircMessage = ((ircPrivmsg target) . concat)
+	     clockDifference = timeDiffPretty . (diffClockTimes now)
+             nickPresent mct cs =
+               do ircPrivmsg target $
+                     concat [nick, " is in ", listToStr "and" cs, ".",
+			     case mct of
+				Nothing -> concat
+				            [" I don't know when ",
+					     nick,
+					     " last spoke."]
+			        Just ct -> concat
+			                    [" Last spoke ",
+					     let when' = clockDifference ct
+					     in if null when'
+					          then "just now."
+					          else when']]
+             nickNotPresent ct chan =
+	       do ircMessage ["I saw ", nick, " leaving ", chan, " ",
+			      clockDifference ct, "ago."]
              nickWasPresent ct chan =
 	       do ircMessage ["Last time I saw ", nick, "was when I left ",
 			      chan , " ", clockDifference ct, "ago."]
@@ -88,13 +92,14 @@ instance Module SeenModule SeenState where
                   _ -> ircPrivmsg target $ "I haven't seen " ++ nick
 
 joinCB :: IRCMessage -> Seen IRC () -- when somebody joins
-joinCB msg = do 
+joinCB msg = do
         let nick = ircnick msg
         when (nick /= name config) $
            withSeenFM $ \fm -> do
                let newInfo = Present Nothing (ircchannel msg)
                    fm' = M.insertWith updateJ (lowerCaseString nick) newInfo fm
                writeMS fm'
+
 
 partCB :: IRCMessage -> Seen IRC () -- when somebody parts
 partCB msg
