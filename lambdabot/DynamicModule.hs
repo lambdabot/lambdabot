@@ -18,7 +18,7 @@ import qualified Map as M       (empty)
 import Data.Char                (toUpper)
 import Data.Dynamic             (Typeable,fromDynamic)
 import Data.IORef               (readIORef, writeIORef, IORef)
-import Data.Set                 (emptySet, Set)
+import Data.Set
 
 import Control.Monad.Error
 import Control.Monad.Reader
