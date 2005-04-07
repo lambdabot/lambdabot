@@ -28,6 +28,9 @@ getAdmins = return ["Pseudonym","shapr","pesco","Riastradh","Darius",
 getVerbose :: MonadIO m => m Bool
 getVerbose = return True
 
+proxy :: Maybe ([Char], Integer)
+proxy = Just ("www-proxy", 3128)
+
 -- for DynamicModule
 -- Base, System, Dynamic, More modules shouldn't be dynloaded
 getModuleFile         :: MonadIO m => String -> m String
@@ -127,6 +130,6 @@ getStartupModules :: MonadIO m => m [String]
 getStartupModules = return [
         "dummy", "state","topic","karma","type","seen",
         "dict","quote","eval", "pl","plugs","babel","version",
-        "more","help"
+        "more","help","google"
         ] --,"fact","haddock"]
 #endif
