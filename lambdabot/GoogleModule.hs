@@ -1,13 +1,18 @@
-module GoogleModule (GoogleModule, googleModule, theModule) where
+--
+-- | Talk to google.
+--
+
+module GoogleModule (googleModule) where
 
 import IRC
-import BotConfig        (proxy)
+import Config                   (proxy)
 import MiniHTTP
 
-import Data.List (findIndex)
-import Control.Monad.State (MonadIO, liftIO)
-import Network.URI (parseURI)
+import Data.List                (findIndex)
+import Control.Monad.State      (MonadIO, liftIO)
+import Network.URI              (parseURI)
 
+------------------------------------------------------------------------
 
 newtype GoogleModule = GoogleModule ()
 
@@ -22,39 +27,45 @@ instance Module GoogleModule () where
     moduleSticky _ = False
 
     moduleHelp _ s = return $ case s of
-                     "google" -> "search google and show first hit"
-                     _        -> "module for googling"
+             "google" -> "search google and show url of first hit"
+             _        -> "module for googling"
     
     commands     _ = return ["google"]
     process _ _ src cmd rest = case cmd of
-                               "google" -> googleCmd src rest
-                               _        -> error "google: invalid command"
+               "google" -> googleCmd src rest
+               _        -> error "google: invalid command"
 
-queryUrl   :: String -> String
+------------------------------------------------------------------------
+
+googleCmd :: String -> String -> ModuleT s IRC ()
+googleCmd src rest = do 
+        result <- liftIO $ query rest
+        ircPrivmsg src (extractLoc $ tail result)
+
+queryUrl :: String -> String
 queryUrl q = "http://www.google.com/search?hl=en&q="
              ++ urlEncode q
              ++ "&btnI=I%27m+Feeling+Lucky"
 
-query   :: String -> IO [String]
+query :: String -> IO [String]
 query q = readPage proxy uri request ""
     where url = queryUrl q
           Just uri = parseURI url
           request = ["HEAD " ++ url ++ " HTTP/1.0", ""]
 
-extractLoc         :: [String] -> String
-extractLoc headers = case lookup "Location" $ concatMap f headers of
-                     Just x  -> x
-                     Nothing -> error "No matching header"
-    where f str = case findIndex (==':') str of
-                  Just n -> [(take n str, drop (n+2) str)]
-                  Nothing -> []
+extractLoc :: [String] -> String
+extractLoc headers = 
+        fromMaybe (error "No matching header") 
+                  (lookup "Location" $ concatMap f headers)
 
-googleCmd          :: String -> String -> ModuleT s IRC ()
-googleCmd src rest = do result <- liftIO $ query rest
-                        ircPrivmsg src (extractLoc $ tail result)
+        where f s = case findIndex (==':') s of
+                          Just n  -> [(take n str, drop (n+2) s)]
+                          Nothing -> []
 
+-- ---------------------------------------------------------------------
+-- Testing only
 
-#ifdef TESTING
+{-
 testHeaders :: [String]
 testHeaders =
     ["HTTP/1.0 302 Found\r",
@@ -72,4 +83,4 @@ testHeaders =
 
 testExtract :: String
 testExtract = extractLoc $ tail testHeaders
-#endif
+-}
