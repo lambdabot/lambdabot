@@ -1,49 +1,35 @@
-
---      $Id: IRC.hs,v 1.21 2003/07/31 19:13:15 eleganesh Exp $    
+--
+-- IRC protocol binding
+--
 
 module IRC (
-    MODULE(..),
-    Module(..),
-    ModuleT,
-    TrivIRC,
-    TrivLB,
+        MODULE(..), Module(..),
+        ModuleT,
+        TrivIRC, TrivLB,
 
-    MonadIRC(..),
-    IRCMessage(..),
-    IRCRState(..),
-    IRCRWState(..),
-    IRCError(..),
-    IRC(..),
+        MonadIRC(..), IRCMessage(..), 
+        IRCRState(..), IRCRWState(..), IRCError(..), 
+        IRC(..),
 
-    LB(..),
-    MonadLB(..),
+        LB(..), MonadLB(..),
 
-    withModule,
+        withModule,
 
-    readMS,
-    writeMS,
+        readMS, writeMS,
 
-    ircPrivmsg,
-    ircJoin,
-    ircPart,
-    ircQuit,
-    ircTopic,
-    ircReconnect,
-    ircGetTopic,
-    ircSignalConnect,
-    ircSignalConnectR,
-    ircInstallModule,
-    ircLoadModule,
-    ircUnloadModule,
-    ircnick,
-    ircSignOn,
-    ircRead,
+        ircPrivmsg,
+        ircJoin, ircPart, ircQuit, ircReconnect,
+        ircTopic, ircGetTopic,
+        ircSignalConnect, ircSignalConnectR,
+        ircInstallModule, ircLoadModule, ircUnloadModule,
+        ircnick, 
+        ircSignOn,
+        ircRead,
 
-    clean, checkPrivs, mkCN, handleIrc, runIrc,
-
+        clean, checkPrivs, mkCN, handleIrc, runIrc,
   ) where
 
-import BotConfig        (getMyname, getMaxLines, getAdmins, getHost, getPort)
+import Config           (config, name, moresize, admins, host, port)
 import DeepSeq          (($!!), DeepSeq(..))
 import ErrorUtils
 import ExceptionError   (ExceptionError(..), ExceptionErrorT(..))
@@ -55,8 +41,8 @@ import qualified Map as M hiding (Map)
 
 import Network          (withSocketsDo, connectTo, PortID(PortNumber))
 
-import System.IO        (Handle, hGetLine, hPutStr, hClose, hSetBuffering, BufferMode(NoBuffering))
--- import System.Exit      {-instances only-}
+import System.IO        (Handle, hGetLine, hPutStr, hClose, 
+                         hSetBuffering, BufferMode(NoBuffering))
 
 #if __GLASGOW_HASKELL__ >= 600
 import System.IO.Error hiding (try)
@@ -352,14 +338,16 @@ ircGetChannels = do
     return $ map getCN (M.keys chans)
 -}
 
+--
 -- evil hack to make the MoreModule work
 -- change this to an output filter when the new Module typeclass arrives
+--
 ircPrivmsg :: MonadIRC m => String -> String -> m ()
 ircPrivmsg who msg
-    = do myname <- getMyname
-         maxLines <- getMaxLines
-         if (who /= myname) then
-          do let msglines  = mlines msg
+    = do let myname   = name config
+             maxLines = moresize config
+         when (who /= myname) $ do
+             let msglines  = mlines msg
                  morelines = drop maxLines msglines
                  thislines = take maxLines msglines
                  sendlines = if (length morelines > 0)
@@ -368,7 +356,6 @@ ircPrivmsg who msg
                              else thislines
              moreStateSet $ unlines morelines
              mapM_ (ircPrivmsg' who) sendlines
-          else return ()
 
 ------------------------------------------------------------------------
 
@@ -438,8 +425,7 @@ ircPart :: MonadIRC m => String -> m ()
 ircPart loc
   = ircWrite (mkIrcMessage "PART" [loc])
 
-instance MonadIRC IRC where
-  liftIRC = id
+instance MonadIRC IRC where liftIRC = id
 
 ircRead :: MonadIRC m => m IRCMessage
 ircRead = liftIRC $ do 
@@ -453,43 +439,36 @@ ircWrite line = liftIRC $ do
     -- are caught now, rather than later on in the other thread
     liftIO (writeChan chanw $!! line)
 
--- may wish to add more things to the things caught, or restructure things 
+--
+-- May wish to add more things to the things caught, or restructure things 
 -- a bit. Can't just catch everything - in particular EOFs from the socket
 -- loops get thrown to this thread and we musn't just ignore them.
+--
 handleIrc :: (MonadError IRCError m) => (String -> m ()) -> m () -> m ()
-handleIrc handler m 
-  = catchError m
-               (\e -> case e of
-                        IRCRaised (ErrorCall s) -> handler s
-                        IRCRaised (PatternMatchFail s) -> handler s
-                        _ -> throwError e)
-
+handleIrc handler m = catchError m $ \e -> case e of
+        IRCRaised (ErrorCall s)        -> handler s
+        IRCRaised (PatternMatchFail s) -> handler s
+        _                              -> throwError e
 
 runIrc :: LB () -> IRC () -> IO ()
-runIrc ini m
-  = withSocketsDo $
-       do admins <- getAdmins
-          exc <- try $ evalLB
-                         (do ini
-                             modify $ \s -> s { ircStaticModules = M.keys $ ircModules s }
-                             withIrcSignalCatch (runIrc' m))
-                         (initState admins)
-          case exc of
-            Left exception -> putStrLn ("Exception: " ++ show exception)
-            Right result   -> return result
+runIrc initialise m = withSocketsDo $ do 
+        ex <- try $ evalLB
+                 (do initialise
+                     modify $ \s -> s { ircStaticModules = M.keys $ ircModules s }
+                     withIrcSignalCatch (runIrc' m))
+                 (initState (admins config))
+        either (\e->putStrLn ("runIRC: caught exception: "++show e)) (return) ex
       where
-        initState admins' 
-                  = IRCRWState {
-                        ircPrivilegedUsers 
-                            = M.fromList [ (user,True) | user <- admins' ],
-                        ircChannels = M.empty,
-                        ircModules = M.empty,
-                        ircCallbacks = M.empty,
-                        ircCommands = M.empty,
-                        ircMoreState = "",
-                        ircStayConnected = True,
-                        ircStaticModules  = []
-                    }
+        initState as = IRCRWState {
+                ircPrivilegedUsers = M.fromList [(a,True)|a <- as],
+                ircChannels        = M.empty,
+                ircModules         = M.empty,
+                ircCallbacks       = M.empty,
+                ircCommands        = M.empty,
+                ircMoreState       = [],
+                ircStayConnected   = True,
+                ircStaticModules   = []
+            }
 
 {-
 traceError :: (MonadIO m,MonadError e m,Show e) => m a -> m a
@@ -501,37 +480,37 @@ traceException = handleM (\e -> liftIO (print e) >> throwM e)
 
 
 runIrc' :: IRC () -> LB ()
-runIrc' m 
-  = do  hostname <- getHost
-        portnum <- liftM (fromIntegral . (read :: String -> Integer)) getPort
-        s <- liftIO $ connectTo hostname (PortNumber portnum)
-        tryErrorJust (isEOFon s) $
-         do liftIO $ hSetBuffering s NoBuffering
+runIrc' m = do  
+        let portnum  = PortNumber $ fromIntegral (port config)
+
+        s <- liftIO $ connectTo (host config) portnum
+
+        tryErrorJust (isEOFon s) $ do 
+            liftIO $ hSetBuffering s NoBuffering
             threadmain <- liftIO $ myThreadId
-            chanr <- liftIO $ newChan
-            chanw <- liftIO $ newChan
-            threadr <- liftIO $ forkIO $ readerLoop threadmain chanr chanw s
-            threadw <- liftIO $ forkIO $ writerLoop threadmain chanw s
-            let { chans = IRCRState {
-                    ircServer      = hostname,
-                    ircReadChan    = chanr,
-                    ircReadThread  = threadr,
-                    ircWriteChan   = chanw,
-                    ircWriteThread = threadw
-              } }
+            chanr      <- liftIO $ newChan
+            chanw      <- liftIO $ newChan
+            threadr    <- liftIO $ forkIO $ readerLoop threadmain chanr chanw s
+            threadw    <- liftIO $ forkIO $ writerLoop threadmain chanw s
+
+            let chans = IRCRState {
+                            ircServer      = host config,
+                            ircReadChan    = chanr,
+                            ircReadThread  = threadr,
+                            ircWriteChan   = chanw,
+                            ircWriteThread = threadw }
+
             finallyError 
-              (LB $ ExceptionErrorT $
-                 runReaderT (runExceptionErrorT $ runIRC $ catchSignals $
-                                               m >> ircQuit "terminated")
-                            chans
-              )
-              (do 
-                  liftIO $ killThread threadr
-                  liftIO $ killThread threadw
-                  liftIO $ hClose s)
+               (LB $ ExceptionErrorT $
+                     runReaderT (runExceptionErrorT $ runIRC $ catchSignals $
+                                       m >> ircQuit "terminated")
+                                chans)
+               (do liftIO $ killThread threadr
+                   liftIO $ killThread threadw
+                   liftIO $ hClose s)
 
         reconn <- gets ircStayConnected
-        if reconn then runIrc' m else return ()
+        when reconn $ runIrc' m
 
   where
 #if __GLASGOW_HASKELL__ >= 600

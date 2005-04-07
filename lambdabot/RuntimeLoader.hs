@@ -55,6 +55,7 @@ module RuntimeLoader (
         initialiseRuntimeLoader,	-- :: IO ()
         initializeRuntimeLoader,	-- :: IO ()
         loadObject,			-- :: FilePath -> IO RuntimeModule
+        loadObjFile,			-- :: FilePath -> IO RuntimeModule
         loadLibrary,		        -- :: FilePath -> IO RuntimeModule
         loadPackage,		        -- :: String -> IO ()
         unloadObject,		-- :: RuntimeModule -> IO ()
@@ -98,64 +99,53 @@ instance Typeable RuntimeLoaderException where
 #endif
 
 instance Show RuntimeLoaderException where
-  show (FunctionNotFound n) = "symbol \"" ++ n ++ "\" not found"
-  show (ModuleLoadFailed n) = "couldn't load module " ++ n
+  show (FunctionNotFound n)   = "symbol \"" ++ n ++ "\" not found"
+  show (ModuleLoadFailed n)   = "couldn't load module " ++ n
   show (ModuleUnloadFailed n) = "couldn't unload module " ++ n
-  show ResolveFailed = "symbol resolution failed"
-  show CantUnloadLibrary = "Can't unload a library"
+  show ResolveFailed          = "symbol resolution failed"
+  show CantUnloadLibrary      = "can't unload a library"
 
 throwRLE :: RuntimeLoaderException -> IO a
 throwRLE e = throwIO $ DynException $ toDyn e
 
-data RuntimeModule = RuntimeModule
-		     { path :: FilePath
-		     , name :: String
-		     , filetype :: ModuleFiletype
-		     }
+data RuntimeModule = RuntimeModule { 
+          path :: FilePath
+        , name :: String
+        , filetype :: ModuleFiletype
+    }
 #if __GLASGOW_HASKELL__ >= 600
-   deriving Typeable
+        deriving Typeable
 #else
-{-# NOTINLINE tyConRuntimeModule #-}
+
 tyConRuntimeModule = mkTyCon "RuntimeLoader.RuntimeModule"
+{-# NOTINLINE tyConRuntimeModule #-}
 
 instance Typeable RuntimeModule where
-  typeOf _ = mkAppTy tyConRuntimeModule []
+        typeOf _ = mkAppTy tyConRuntimeModule []
+
 #endif
 
 data ModuleFiletype = ObjectFile | LibraryFile
 
-{-|
-
-   Call the initialiseRuntimeLoader function first, before calling any of the
-   other functions in this module --- otherwise you\'ll get unresolved symbols.
-
--}
-
+--
+-- Call the initialiseRuntimeLoader function first, before calling any of the
+-- other functions in this module --- otherwise you\'ll get unresolved symbols.
+--
 initialiseRuntimeLoader :: IO ()
 initialiseRuntimeLoader = do
    c_initLinker
 -- unsafeLoadPackage "base"
 
-
-{-|
-
-   This is 'initialiseRuntimeLoader', for carbon-based lifeforms in North
-   America.
-
--}
-
+--   This is 'initialiseRuntimeLoader', for carbon-based lifeforms in North America.
 initializeRuntimeLoader :: IO ()
 initializeRuntimeLoader = initialiseRuntimeLoader
 
 
-{-|
-
-   Loads a GHC package, such as \"text\" or \"lang\".
-
--}
-
-loadPackage :: String -- ^ The name of the package to load
-	    -> IO ()
+--
+-- Loads a GHC package, such as \"text\" or \"lang\".
+-- String is the name of the package to load
+--
+loadPackage :: String -> IO ()
 loadPackage "std" = return ()
 loadPackage packageName = unsafeLoadPackage packageName
 
@@ -165,14 +155,11 @@ unsafeLoadPackage packageName = do
    loadSystemModule packageName
    resolveFunctions
 
-{-|
-
-   Loads a \"system module\", which is a module specified in package.conf
-
--}
-
-loadSystemModule :: String -- ^ Name of the system module to load (e.g. \"concurrent\")
-	         -> IO ()
+--
+-- Loads a \"system module\", which is a module specified in package.conf
+-- String is the name of the system module to load (e.g. \"concurrent\")
+--
+loadSystemModule :: String -> IO ()
 loadSystemModule moduleName = do
    objects <- systemModuleName moduleName
    mapM_ loadObject objects
@@ -242,12 +229,20 @@ findSymbol (RuntimeModule { name = moduleName }) functionName = do
 
 -}
 
-loadObject :: FilePath -- ^ Path to the GHC-compiled module that you want to load
-           -> IO RuntimeModule
+-- ^ Path to the GHC-compiled module that you want to load
+loadObject :: FilePath -> IO RuntimeModule
 loadObject modulePath = do
    r <- withCString modulePath c_loadObj
    unless r $ throwRLE $ ModuleLoadFailed modulePath
    return (makeRuntimeModule ObjectFile modulePath)
+
+-- ppr wrapper.
+loadObjFile :: FilePath -> IO RuntimeModule
+#if DEBUG
+loadObjFile o = putStr ((takeWhile (/= '.') o) ++ " ") >> hFlush stdout >> loadObject o
+#else
+loadObjFile = loadObject
+#endif
 
 makeRuntimeModule :: ModuleFiletype -> FilePath -> RuntimeModule
 makeRuntimeModule t p = (RuntimeModule

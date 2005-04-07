@@ -1,49 +1,36 @@
 
---      $Id: Main.hs,v 1.28 2003/07/29 15:46:41 eleganesh Exp $      
-
 module Main where
 
 import IRC
 import StaticModules
-import BotConfig
+import Config
 import qualified Map as M
 
 import Control.Monad.State
 
 main :: IO ()
 main = runIrc ircInit ircMain
-
-ircInit :: LB ()
-ircInit = loadStaticModules
-
-ircMain :: IRC ()
-ircMain
-  = do  myname <- getMyname
-        myuserinfo <- getMyuserinfo
-        ircSignOn myname myuserinfo
-        mainloop
+    where
+        ircInit = loadStaticModules
+        ircMain = ircSignOn (name config) (userinfo config) >> mainloop
 
 mainloop :: IRC ()
-mainloop
-  = do  msg <- ircRead
-        let cmd = msgCommand msg
-        s <- get
-        case M.lookup cmd (ircCallbacks s) of
+mainloop = do 
+        msg <- ircRead
+        s   <- get
+        case M.lookup (msgCommand msg) (ircCallbacks s) of
              Just cbs -> allCallbacks cbs msg
-             _ -> return ()
+             _        -> return ()
         mainloop
 
+--
 -- If an error reaches allCallbacks, then all we can sensibly do is
 -- write it on standard out. Hopefully BaseModule will have caught it already
 -- if it can see a better place to send it
 
 allCallbacks :: [IRCMessage -> IRC ()] -> IRCMessage -> IRC ()
 allCallbacks [] _ = return ()
-allCallbacks (f:fs) msg 
- = handleIrc (liftIO . putStrLn) (f msg) >> allCallbacks fs msg
+allCallbacks (f:fs) msg = do
+        handleIrc (liftIO . putStrLn) (f msg)
+        allCallbacks fs msg
 
-
-
--- Local Variables:
--- compile-command: "hmake -fglasgow-exts -package net -package HToolkit -package data Main && ./Main"
--- End:

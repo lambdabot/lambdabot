@@ -1,34 +1,79 @@
 
-module BotConfig where
+module Config where
 
-import Control.Monad.Trans
+import qualified Map
+import Data.Maybe               (fromMaybe)
 
-getMyname :: MonadIO m => m String
-getMyname = return "lambdabot"
+data Config = Config {
+        name      :: String,
+        userinfo  :: String,
+        host      :: String,
+        port      :: Int,
+        verbose   :: Bool,
+        moresize  :: Int,
+        autojoin  :: [String],
+        admins    :: [String]
+}
+        
+--
+-- Useful defaults for #haskell.
+--
+config :: Config
+config = Config { 
+        name            = "lambdabot",
+        userinfo        = "Lambda Robots - 100% Loyal",
+        host            = "irc.eu.freenode.net",
+        port            = 6667,
+        verbose         = True,
+        moresize        = 7,
+        autojoin        = ["#haskell"],
 
-getMyuserinfo :: MonadIO m => m String
-getMyuserinfo = return "Lambda Robots - 100% Loyal"
+        admins          = [
+                "Pseudonym",    "shapr",        "pesco",        "Riastradh",
+                "Darius",       "tmoertel",     "delYsid",      "polli", 
+                "Heffalump",    "Igloo",        "Marvin--",     "o3",     
+                "phubuh",       "ddarius",      "bringert",     "dons",     
+                "TheHunter",    "jlouis"
+        ]
+   }
 
-getHost :: MonadIO m => m String
-getHost = return "irc.eu.freenode.net"
+------------------------------------------------------------------------
+--
+-- the rest of this should be generated into Modules.hs by genModules...
+-- including the dependencies.
+--
 
-getPort :: MonadIO m => m String
-getPort = return "6667"
+getModuleFile :: String -> String
+getModuleFile s = 
+        fromMaybe (error "unknown module") (Map.lookup s modules)
 
-getAutojoins :: MonadIO m => m [String]
-getAutojoins = return ["#haskell"]
+modules :: Map.Map String String
+modules = Map.fromList
+        [("fact"   , "FactModule.o")
+        ,("hello"  , "HelloModule.o")
+        ,("state"  , "StateModule.o")
+        ,("topic"  , "TopicModule.o")
+        ,("karma"  , "KarmaModule.o")
+        ,("eval"   , "EvalModule.o")
+        ,("type"   , "TypeModule.o")
+        ,("dict"   , "DictModule.o")
+        ,("quote"  , "QuoteModule.o")
+        ,("seen"   , "SeenModule.o")
+        ,("dummy"  , "DummyModule.o")
+        ,("ghci"   , "GhciModule.o")
+        ,("more"   , "MoreModule.o")
+        ,("plugs"  , "PlugsModule.o")
+        ,("version", "VersionModule.o")
+        ,("haddock", "HaddockModule.o")
+        ,("cmafihe", "CmafiheModule.o")
+        ,("babel"  , "BabelModule.o")
+        ,("pl"     , "PlModule.o")
+        ,("help"   , "HelpModule.o")]
 
-getAdmins :: MonadIO m => m [String]
-getAdmins = return ["Pseudonym","shapr","pesco","Riastradh","Darius",
-                     "tmoertel","delYsid","polli","Heffalump","Igloo",
-                     "Marvin--","o3","o3_","phubuh","ddarius","bringert",
-                     "dons","TheHunter","jlouis"]
+------------------------------------------------------------------------
 
 getVerbose :: MonadIO m => m Bool
 getVerbose = return True
-
-proxy :: Maybe ([Char], Integer)
-proxy = Just ("www-proxy", 3128)
 
 -- for DynamicModule
 -- Base, System, Dynamic, More modules shouldn't be dynloaded
@@ -53,16 +98,17 @@ getModuleFile "cmafihe" = return "CmafiheModule.o"
 getModuleFile "babel" = return "BabelModule.o"
 getModuleFile "pl"    = return "PlModule.o"
 getModuleFile "help"    = return "HelpModule.o"
-getModuleFile "google"  = return "GoogleModule.o"
 getModuleFile _ = error "unknown module"
 
 data Require = Object String | Package String
 
 --
+-- todo, generate this too.
+--
+--
 -- Some of these 'requires' are already hardcoded in
 -- DynamicModule.initialise :/
 --
-getFileRequires                 :: MonadIO m => String -> m [Require]
 
 getFileRequires "HelpModule.o"  = return [Object "Map.o"]
 getFileRequires "FactModule.o"  = return [Package "HToolkit"]
@@ -93,24 +139,25 @@ getFileRequires "PlModule.o"    = return [Object "PlModule/Transform.o"
                                          ]
 getFileRequires "HelpModule.o"  = return [Object "Map.o"]
 
-getFileRequires _ = return []
+getFileRequires _ = []
 
--- for the MoreModule, how many lines to show at a time
-getMaxLines :: MonadIO m => m Int
-getMaxLines = return 7
-
+------------------------------------------------------------------------
 --
 -- which modules to dynamically load.
 --
 
 #if STATIC
-getStartupModules :: MonadIO m => m [String]
-getStartupModules = return []
+
+getStartupModules :: [String]
+getStartupModules = []
+
 #else
-getStartupModules :: MonadIO m => m [String]
-getStartupModules = return [
+
+getStartupModules :: [String]
+getStartupModules = [
         "dummy", "state","topic","karma","type","seen",
         "dict","quote","eval", "pl","plugs","babel","version",
         "more","help","google"
-        ] --,"fact","haddock"]
+        ]
+
 #endif

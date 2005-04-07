@@ -1,6 +1,6 @@
 module BaseModule (baseModule) where
 
-import BotConfig
+import Config
 import IRC
 import Util
 import qualified Map as M
@@ -108,13 +108,10 @@ doTOPIC msg
          put (s { ircChannels = M.insert (mkCN loc) (tail $ head $ tail $ msgParams msg) (ircChannels s)})
 
 doRPL_WELCOME :: IRCMessage -> IRC ()
-doRPL_WELCOME _msg
-  = do autojoins <- getAutojoins
-       mapM_ ircJoin autojoins
+doRPL_WELCOME _msg = mapM_ ircJoin (autojoin config)
 
 doQUIT :: IRCMessage -> IRC ()
-doQUIT msg 
-  = doIGNORE msg
+doQUIT msg = doIGNORE msg
 
 {-
 doRPL_YOURHOST :: IRCMessage -> IRC ()
@@ -180,8 +177,7 @@ doRPL_ENDOFMOTD _msg = return ()
 -}
 
 doPRIVMSG :: IRCMessage -> IRC ()
-doPRIVMSG msg = do myname <- getMyname
-                   doPRIVMSG' myname msg
+doPRIVMSG msg = doPRIVMSG' (name config) msg
 
 doPRIVMSG' :: String -> IRCMessage -> IRC ()
 doPRIVMSG' myname msg
@@ -215,7 +211,7 @@ doPRIVMSG' myname msg
             doUNKNOWN msg
     -- external modules are called in this next chunk
     doPublicMsg ('@':cmd) rest = withModule ircCommands cmd (do
-          myname' <- getMyname
+          let myname' = name config
           ircPrivmsg alltargets ("Sorry, I don't know the command \"" ++
                                  cmd ++ "\", try \"" ++ myname' ++ ": @listcommands\"")
         ) (\m -> do
@@ -224,13 +220,13 @@ doPRIVMSG' myname msg
         )
 
     doPublicMsg _ _
-      = do myname' <- getMyname
+      = do let myname' = name config
            ircPrivmsg alltargets ("Sorry, I'm not a very smart bot yet, try \""
                                         ++ myname' ++ ": @listcommands\"")
 
 maybeCommand :: String -> String -> Maybe String
-maybeCommand name text =
-    let re = mkRegex (name ++ "[.:,]*[[:space:]]*")
+maybeCommand nm text =
+    let re = mkRegex (nm ++ "[.:,]*[[:space:]]*")
     in case matchRegexAll re text of
       Nothing -> Nothing
       Just (_, _, cmd, _) -> Just cmd

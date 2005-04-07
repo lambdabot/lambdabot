@@ -5,7 +5,7 @@
 module DynamicModule (DynamicModule, dynamicModule) where
 
 import IRC
-import BotConfig
+import Config
 import RuntimeLoader
 import ErrorUtils
 import Util
@@ -56,10 +56,12 @@ instance Module DynamicModule DLModules where
   moduleHelp _ _ = return "@dynamic-(un|re)?load: interface to dynamic linker"
   moduleSticky _ = True
   commands     _ = return ["dynamic-load","dynamic-unload","dynamic-reload"]
-  moduleInit   _ = do liftIO initialise
-                      writeMS initDLModules
-                      startupModules <- getStartupModules
-                      mapM_ (handleRLEConsole . load) startupModules
+  moduleInit   _ = do 
+        liftIO initialise
+        writeMS initDLModules
+        liftIO $ putStr "Loading plugins\t" >> hFlush stdout
+        mapM_ (handleRLEConsole . load) getStartupModules
+        liftIO $ putStrLn "... done."
                                     
   process _ msg src "dynamic-load" rest 
     = checkPrivs msg src $ handleRLE src $ do load rest
@@ -85,7 +87,7 @@ handleRLE src = handleErrorJust findRLEError (ircPrivmsg src . show)
 
 findRLEError :: IRCError -> Maybe RuntimeLoaderException
 findRLEError (IRCRaised (DynException e)) = fromDynamic e
-findRLEError _ = Nothing
+findRLEError _                            = Nothing
 
 data DLAccessor m
  = DLAccessor { objectsA  :: Accessor m (Map String (RuntimeModule,Int))
@@ -123,53 +125,51 @@ packagesAccessor a
              }
 
 load :: String -> Dyn ()
-load name
-     = do 
-          file <- getModuleFile name
-          alreadyloaded <- isLoadedObject file
-          when alreadyloaded $ error "already loaded"
-          object <- doLoadObject file
-          catchError 
-           (do liftIO $ resolveFunctions
-               MODULE md <- liftIO $ loadFunction object "theModule"
-               liftLB $ ircInstallModule md)
-           (\e -> do doUnloadObject file ; throwError e)
+load nm = do let file = getModuleFile nm
+             alreadyloaded <- isLoadedObject file
+             when alreadyloaded $ error "already loaded"
+             object <- doLoadObject file
+             catchError 
+              (do liftIO $ resolveFunctions
+                  MODULE md <- liftIO $ loadFunction object "theModule"
+                  liftLB $ ircInstallModule md)
+              (\e -> do doUnloadObject file ; throwError e)
 
 unload :: String -> Dyn ()
-unload name
-     = do 
-          liftLB $ ircUnloadModule name
-          file <- getModuleFile name
-          doUnloadObject file
+unload nm = do liftLB $ ircUnloadModule nm
+               doUnloadObject (getModuleFile nm)
 
 doLoadRequire :: Require -> Dyn ()
 doLoadRequire (Object file) = doLoadObject file >> return ()
-doLoadRequire (Package name) = doLoadPackage name
+doLoadRequire (Package nm)  = doLoadPackage nm
 
 doLoadObject :: String -> Dyn RuntimeModule
 doLoadObject file
  = do dl <- dlGet
-      requires <- getFileRequires file
+      let requires = getFileRequires file
       mapM_ doLoadRequire requires      
       loaded <- readFM (objectsA dl) file
       case loaded of
-        Nothing -> do object <- liftIO $ loadObject file
-                      writeFM (objectsA dl) file (object,1)
-                      return object
-        Just (object,n) -> do writeFM (objectsA dl) file (object,n+1)
-                              return object
+        Nothing -> do 
+                object <- liftIO $ loadObjFile file
+                writeFM (objectsA dl) file (object,1)
+                return object
+
+        Just (object,n) -> do 
+                writeFM (objectsA dl) file (object,n+1)
+                return object
 
 doLoadPackage :: String -> Dyn ()
-doLoadPackage name
- = do dl <- dlGet
-      loaded <- lookupSet (packagesA dl) name
-      if not loaded then do liftIO $ loadPackage name
-                            insertSet (packagesA dl) name
-                else return ()
+doLoadPackage nm = do 
+      dl <- dlGet
+      loaded <- lookupSet (packagesA dl) nm
+      when (not loaded) $ do 
+            liftIO $ loadPackage nm
+            insertSet (packagesA dl) nm
 
 doUnloadRequire :: Require -> Dyn ()
 doUnloadRequire (Object file) = doUnloadObject file
-doUnloadRequire (Package name) = doUnloadPackage name
+doUnloadRequire (Package nm)  = doUnloadPackage nm
 
 doUnloadPackage :: (Monad m) => t -> m ()
 doUnloadPackage _ = return () -- can't unload packages
@@ -183,8 +183,7 @@ doUnloadObject file
                                     deleteFM (objectsA dl) file
         Just (object,n) | n>1 -> writeFM (objectsA dl) file (object,n-1)
         _                     -> error "DynamicModule: Nothing"
-      requires <- getFileRequires file
-      mapM_ doUnloadRequire requires      
+      mapM_ doUnloadRequire (getFileRequires file)
 
 isLoadedObject :: String -> Dyn Bool
 isLoadedObject file
@@ -221,10 +220,13 @@ initialise = do
           ["base", "haskell98", "parsec", "network", "unix", "posix"]
 #endif
         putStrLn "... done."
-        -- more hard coded evil
-        mapM_ (\n -> loadObject (n++".o"))
-              ["BotConfig","ErrorUtils","ExceptionError",
+
+        -- more hard coded evil. Abolish!
+        putStr "Loading core\t" >> hFlush stdout
+        mapM_ (\n -> loadObjFile (n++".o"))
+              ["Config","ErrorUtils","ExceptionError",
                "MonadException","Util","DeepSeq","Map","IRC","PosixCompat"]
+        putStrLn "... done."
                 
 
 {-

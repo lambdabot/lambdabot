@@ -22,7 +22,7 @@ EXCLUDED_MODS=	Fact Haddock Hello Cmafihe
 
 # The following additional srcs will not be built, along with the above modules.
 EXCLUDED_SRCS=	$(addsuffix Module.hs,$(EXCLUDED_MODS))
-EXCLUDED_SRCS+= EvalModule/tests.hs PlModule/Test.hs GenStaticModules.hs
+EXCLUDED_SRCS+= EvalModule/tests.hs PlModule/Test.hs GenModules.hs
 
 #
 # Generated at runtime
@@ -98,9 +98,9 @@ depend: $(ALL_SRCS)
 		-optdepdepend $(ALL_SRCS) || rm depend
 	@echo "done."
 
-StaticModules.hs: GenStaticModules.hs StaticModules.conf
-	@echo -n "Generating static modules list ... "
-	@echo main | ghci -v0 GenStaticModules.hs
+StaticModules.hs: GenModules.hs StaticModules.conf
+	@echo -n "Generating module list ... "
+	@echo main | ghci -v0 GenModules.hs
 	@echo "done."
 
 #

@@ -17,14 +17,14 @@ module Util (
      getRandItem, stdGetRandItem
 ) where
 
-import BotConfig                (getVerbose)
+import Config
 import Map                      (Map)
 import qualified Map as M       (lookup, insert, delete)
 
 import Data.List                (intersperse, isPrefixOf)
 import Data.Set                 (elementOf, addToSet, delFromSet, Set)
 import Data.Char                (isSpace, toLower)
-import Control.Monad.State      (MonadIO(..))
+import Control.Monad.State      (when,MonadIO(..))
 
 import System.Random hiding (split)
 
@@ -108,10 +108,9 @@ split_first_word xs = (w, dropWhile isSpace xs')
 -- refactor, might be good for logging to file later
 -- | 'debugStr' checks if we have the verbose flag turned on. If we have
 --   it outputs the String given. Else, it is a no-op.
-debugStr :: (MonadIO m) => String -- ^ String to eventually output
-	 -> m ()
-debugStr x = do verbose <- getVerbose
-                if verbose then liftIO (putStr x) else return ()
+
+debugStr :: (MonadIO m) => String -> m ()
+debugStr x = when (verbose config) $ liftIO (putStr x)
 
 -- | 'debugStrLn' is a version of 'debugStr' that adds a newline to the end
 --   of the string outputted.

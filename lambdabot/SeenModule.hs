@@ -2,7 +2,7 @@ module SeenModule (theModule) where
 
 import IRC
 import Util
-import BotConfig
+import Config
 import qualified Map as M
 
 import Data.List ((\\),nub)
@@ -50,7 +50,7 @@ instance Module SeenModule SeenState where
 
     process m msg target cmd rest = do 
           seenFM <- readMS
-          myname <- getMyname
+          let myname = name config
           let nick = takeWhile (/=' ') rest
               lcnick = lowerCaseString nick
           if lcnick == lowerCaseString myname
@@ -106,18 +106,17 @@ instance Module SeenModule SeenState where
                                                         ++ nick
 
 joinCB :: IRCMessage -> Seen IRC () -- when somebody joins
-joinCB msg
-  = do myname <- getMyname
-       when (nick /= myname) $
-        withSeenFM $ \fm -> do
-            let newInfo = Present Nothing (ircchannel msg)
-                fm' = M.insertWith updateJ (lowerCaseString nick) newInfo fm
-            writeMS fm'
-    where nick = ircnick msg
+joinCB msg = do 
+        let nick = ircnick msg
+        when (nick /= name config) $
+           withSeenFM $ \fm -> do
+               let newInfo = Present Nothing (ircchannel msg)
+                   fm' = M.insertWith updateJ (lowerCaseString nick) newInfo fm
+               writeMS fm'
 
 partCB :: IRCMessage -> Seen IRC () -- when somebody parts
 partCB msg
-  = do myname <- getMyname
+  = do let myname = name config
        withSeenFM $ \fm ->
         if nick == myname then -- when the bot parts
           do l <- mapM (botPart $ ircchannel msg) (M.toList fm)
