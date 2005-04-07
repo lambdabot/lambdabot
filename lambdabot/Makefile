@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.6 2003/07/31 19:13:15 eleganesh Exp $
+# Lambdabot makefile
 
 include config.mk
 
@@ -13,25 +13,21 @@ ALL_DIRS=	.  DictModule EvalModule QuoteModule BabelBot PlModule
 # actually use them at runtime, you need to edit BotConfig.hs
 #
 DYNMODS=Dict Dummy Eval Karma Quote Seen State System \
-	Topic Type Plugs Babel Version More Pl Help \
-	Google
+	Topic Type Plugs Babel Version More Pl Help
 
 # Not used, not built, bit dodgy as we are relying on ALL_DIRS to ignore
-# the subdirs of EXCLUDED_MODS
+# the subdirs of EXCLUDED_MODS. The following additional srcs will not be built
 EXCLUDED_MODS=	Fact Haddock Hello Cmafihe
-
-# The following additional srcs will not be built, along with the above modules.
 EXCLUDED_SRCS=	$(addsuffix Module.hs,$(EXCLUDED_MODS))
 EXCLUDED_SRCS+= EvalModule/tests.hs PlModule/Test.hs GenModules.hs
 
 #
-# Generated at runtime
+# Generated at build time
 #
-EXTRA_SRCS=StaticModules.hs
+EXTRA_SRCS=Modules.hs
 
 #
-# Construct a list of buildable sources, based on $ALL_DIRS, and their
-# objects
+# Construct a list of buildable sources, based on $ALL_DIRS, and their objects
 #
 ALL_SRCS=$(filter-out $(EXCLUDED_SRCS) $(EXTRA_SRCS), \
 		$(wildcard $(patsubst ./%, %, \
@@ -43,9 +39,6 @@ ALL_SRCS=$(filter-out $(EXCLUDED_SRCS) $(EXTRA_SRCS), \
 # tree from Main.hs.
 #
 ALL_OBJS=	$(addsuffix .$(way_)o,$(basename $(ALL_SRCS)))
-
-# Top-level plugin modules
-PLUGIN_OBJS=	$(addsuffix Module.$(way_)o, $(DYNMODS))
 
 #
 # With this, 'make lambdabot' should only build the static code, and 'make
@@ -98,9 +91,9 @@ depend: $(ALL_SRCS)
 		-optdepdepend $(ALL_SRCS) || rm depend
 	@echo "done."
 
-StaticModules.hs: GenModules.hs StaticModules.conf
+Modules.hs: GenModules.hs
 	@echo -n "Generating module list ... "
-	@echo main | ghci -v0 GenModules.hs
+	@echo ":set args P='$(PLUGINS)' S='$(STATICS)' main" | ghci -v0 GenModules.hs
 	@echo "done."
 
 #
@@ -146,6 +139,6 @@ clean:
 distclean: clean
 	rm -f config.mk config.h config.log config.status configure 
 	rm -rf autom4te.cache
-	rm -f StaticModules.hs genStaticModules
+	rm -f Modules.hs
 
 -include depend

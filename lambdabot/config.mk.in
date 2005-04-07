@@ -21,6 +21,24 @@ HC_OPTS+=       -funbox-strict-fields -O2 -fvia-C
 # user-specified
 HC_OPTS+=	$(EXTRA_HC_OPTS)
 
+# build statically?
+STATIC=NO
+
+#
+# List of modules to statically link, or to load dynamically
+#
+# edit this to change which modules you'd like to use.
+#
+ifeq "$(STATIC)" "NO"
+PLUGINS=       Dict Dummy Eval Karma Quote Seen State \
+               Topic Type Plugs Babel Version More Pl Help 
+STATICS=       Base System Dynamic
+else
+PLUGINS=
+STATICS=       Base System Dynamic Dict Dummy Eval Karma Quote Seen \
+               State Topic Type Plugs Babel Version More Pl Help
+endif
+
 GHC_VERSION=	@GHC_VERSION@
 GLASGOW_HASKELL=@GLASGOW_HASKELL@
 

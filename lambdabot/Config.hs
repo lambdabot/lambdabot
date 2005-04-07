@@ -157,7 +157,7 @@ getStartupModules :: [String]
 getStartupModules = [
         "dummy", "state","topic","karma","type","seen",
         "dict","quote","eval", "pl","plugs","babel","version",
-        "more","help","google"
+        "more","help"
         ]
 
 #endif

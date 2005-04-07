@@ -9,12 +9,13 @@ import Config
 import RuntimeLoader
 import ErrorUtils
 import Util
+import Modules                  (plugins)
 
 import Map (Map)
 import qualified Map as M hiding (Map)
 
-import Data.Dynamic (Typeable)
-import Data.Dynamic (fromDynamic)
+import Data.Dynamic             (Typeable)
+import Data.Dynamic             (fromDynamic)
 import Data.IORef
 import Data.Maybe
 import Data.Set
@@ -22,9 +23,7 @@ import Data.Set
 import Control.Monad.Error
 import Control.Monad.Reader
 import Control.Monad.Trans
-import Control.Exception (Exception (..))
-
-import System.IO           ( stdout, hFlush )
+import Control.Exception        (Exception (..))
 
 ------------------------------------------------------------------------
 
@@ -60,7 +59,7 @@ instance Module DynamicModule DLModules where
         liftIO initialise
         writeMS initDLModules
         liftIO $ putStr "Loading plugins\t" >> hFlush stdout
-        mapM_ (handleRLEConsole . load) getStartupModules
+        mapM_ (handleRLEConsole . load) plugins
         liftIO $ putStrLn "... done."
                                     
   process _ msg src "dynamic-load" rest 

@@ -2,8 +2,8 @@
 module Main where
 
 import IRC
-import StaticModules
 import Config
+import Modules
 import qualified Map as M
 
 import Control.Monad.State

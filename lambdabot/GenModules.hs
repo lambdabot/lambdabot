@@ -4,10 +4,20 @@
 module Main where
 
 import Char
+import System.Environment
+
+output = "Modules.hs"
 
 main :: IO ()
-main = do modules <- readFile "StaticModules.conf"
-          writeFile "StaticModules.hs" $ unlines $ process $ lines modules
+main = do 
+        (p:q:_) <- getArgs
+        let (ps,ss) = parse argv
+        writeFile output $ unlines $ process $ lines modules
+
+--
+-- input are 2 command line args
+--
+parse :: [String] -> ([String],[String])
 
 process :: [[Char]] -> [[Char]]
 process modules = process' (filter isValid modules)
