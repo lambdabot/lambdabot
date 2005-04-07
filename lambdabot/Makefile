@@ -13,7 +13,8 @@ ALL_DIRS=	.  DictModule EvalModule QuoteModule BabelBot PlModule
 # actually use them at runtime, you need to edit BotConfig.hs
 #
 DYNMODS=Dict Dummy Eval Karma Quote Seen State System \
-	Topic Type Plugs Babel Version More Pl Help
+	Topic Type Plugs Babel Version More Pl Help \
+	Google
 
 # Not used, not built, bit dodgy as we are relying on ALL_DIRS to ignore
 # the subdirs of EXCLUDED_MODS

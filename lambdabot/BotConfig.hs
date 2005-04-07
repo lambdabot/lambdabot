@@ -51,6 +51,7 @@ getModuleFile "cmafihe" = return "CmafiheModule.o"
 getModuleFile "babel" = return "BabelModule.o"
 getModuleFile "pl"    = return "PlModule.o"
 getModuleFile "help"    = return "HelpModule.o"
+getModuleFile "google"  = return "GoogleModule.o"
 getModuleFile _ = error "unknown module"
 
 data Require = Object String | Package String
@@ -105,6 +106,8 @@ getFileRequires "PlModule.o"    = return [Object "PlModule/Transform.o"
                                          ,Object "PlModule/Rules.o"
                                          ]
 getFileRequires "HelpModule.o"  = return [Object "Map.o"]
+getFileRequires "GoogleModule.o" 
+                                = return [Object "MiniHTTP.o"]
 
 getFileRequires _ = return []
 
