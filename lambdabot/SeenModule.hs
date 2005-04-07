@@ -112,16 +112,15 @@ joinCB msg = withSeenFM msg $ \fm _ct myname nick ->
 
 partCB :: IRCMessage -> Seen IRC () -- when somebody parts
 partCB msg = withSeenFM msg $ \fm ct myname nick ->
-  let botPart cs (nick', us) =
+  let botPart cs us =
         case us of
           Present mct xs ->
             case xs \\ cs of
-              [] -> (nick', WasPresent ct (listToStr "and" cs))
-              ys -> (nick', Present mct ys)
-          _ -> (nick', us)
+              [] -> WasPresent ct (listToStr "and" cs)
+              ys -> Present mct ys
+          _ -> us
   in if nick == myname
-       then let l = map (botPart $ ircchannel msg) (M.toList fm)
-            in Left $ M.fromList l
+       then Left $ M.mapWithKey (const (botPart $ ircChans msg)) fm
        else case M.lookup nick fm of
               Just (Present mct xs) ->
                 case xs \\ (ircchannel msg) of
