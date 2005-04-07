@@ -95,7 +95,6 @@ getFileRequires "EvalModule/LMEngine.o"
                                          ,Object "EvalModule/LangPack.o" 
                                          ,Object "EvalModule/LambdaTerm.o"
                                          ]
-getFileRequires "GHCiModule.o"  = return [Object "Shell.o", Object "Map.o"]
 getFileRequires "BabelModule.o" = return [Object "BabelBot/BabelFish.o",
                                           Object "MiniHTTP.o"]
 getFileRequires "PlModule.o"    = return [Object "PlModule/Transform.o" 

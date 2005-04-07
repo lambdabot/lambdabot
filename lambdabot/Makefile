@@ -17,11 +17,11 @@ DYNMODS=Dict Dummy Eval Karma Quote Seen State System \
 
 # Not used, not built, bit dodgy as we are relying on ALL_DIRS to ignore
 # the subdirs of EXCLUDED_MODS
-EXCLUDED_MODS=	GHCi Chess SearchML Fact Haddock Hello Cmafihe
+EXCLUDED_MODS=	Fact Haddock Hello Cmafihe
 
 # The following additional srcs will not be built, along with the above modules.
 EXCLUDED_SRCS=	$(addsuffix Module.hs,$(EXCLUDED_MODS))
-EXCLUDED_SRCS+= EvalModule/tests.hs PlModule/Test.hs Shell.hs GenStaticModules.hs
+EXCLUDED_SRCS+= EvalModule/tests.hs PlModule/Test.hs GenStaticModules.hs
 
 #
 # Generated at runtime
