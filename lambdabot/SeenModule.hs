@@ -18,14 +18,24 @@ newtype SeenModule = SeenModule ()
 theModule :: MODULE
 theModule = MODULE $ SeenModule ()
 
+-- | The type of channels
 type Channel = String
+-- | The type of nicknames
 type Nick = String
 
+-- | 'UserStatus' keeps track of the status of a given Nick name.
 data UserStatus
-        = Present (Maybe ClockTime) [Channel] -- last spoke, the user is in [Channel]
-        | NotPresent ClockTime Channel -- the user was last seen in Channel
-        | WasPresent ClockTime Channel -- if the bot parted Channel where a user was
-        | NewNick Nick                 -- the user has a new nick
+        = Present (Maybe ClockTime) [Channel] -- ^ Records when the nick last
+                                              --   spoke and that the nick is
+                                              --   currently in [Channel]
+        | NotPresent ClockTime Channel -- ^ The nick is not present and was
+                                       --   last seen at ClockTime in Channel
+        | WasPresent ClockTime Channel -- ^ The bot parted a channel where the
+                                       --   user was. The Clocktime records the
+                                       --   the time and Channel the channel
+                                       --   this happened in.
+        | NewNick Nick                 -- ^ The user changed nick to something
+                                       --   new.
     deriving Show
 
 type SeenState = M.Map Nick UserStatus
@@ -90,6 +100,9 @@ instance Module SeenModule SeenState where
                   Just (NewNick newnick) -> nickIsNew newnick
                   _ -> ircPrivmsg target $ "I haven't seen " ++ nick
 
+-- | Callback for when somebody joins. If it is not the bot that joins, record
+--   that we have a new user in our state tree and that we have never seen the
+--   user speaking.
 joinCB :: IRCMessage -> Seen IRC () -- when somebody joins
 joinCB msg = withSeenFM msg $ \fm _ct myname nick ->
   if nick /= myname
@@ -183,7 +196,6 @@ ircchannel msg
   = let cstr = head $ msgParams msg
     in map (\(x:xs) -> if x == ':' then xs else (x:xs)) (split "," cstr)
            -- solves what seems to be an inconsistency in the parser
-
 
 -- annoying
 timeDiffPretty :: TimeDiff -> String
