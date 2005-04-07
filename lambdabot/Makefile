@@ -87,7 +87,14 @@ depend: $(ALL_SRCS)
 # Slight magic. Note how we're passing values defined in config.mk
 # as commmand line args to GenModules.lhs
 #
-MODULE_HI_BOOT="module Modules where { plugins :: [[GHC.Base.Char]] }"
+# Modules is imported recursively, so we break the loop with a .hs-boot
+# file (.hi-boot with <604). That code is below:
+#
+ifeq "$(GLASGOW_HASKELL)" "604"
+MODULE_HI_BOOT="module Modules where { plugins::[[Char]] }"
+else
+MODULE_HI_BOOT="module Modules where { plugins::[[GHC.Base.Char]] }"
+endif
 
 Modules.hs: config.mk GenModules.hs
 	@echo -n "Generating module list ... "
