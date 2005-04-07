@@ -198,7 +198,7 @@ time = liftIO getClockTime
 ircchannel :: IRCMessage -> [Channel]
 ircchannel msg
   = let cstr = head $ msgParams msg
-    in map (\(x:xs) -> if x == ':' then xs else (x:xs)) (split cstr)
+    in map (\(x:xs) -> if x == ':' then xs else (x:xs)) (split "," cstr)
            -- solves what seems to be an inconsistency in the parser
 
 
