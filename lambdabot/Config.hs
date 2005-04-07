@@ -12,12 +12,12 @@ data Config = Config {
         admins    :: [String],
         proxy     :: Maybe ([Char], Integer)
 }
-        
+
 --
 -- Useful defaults for #haskell.
 --
 config :: Config
-config = Config { 
+config = Config {
         name            = "lambdabot",
         userinfo        = "Lambda Robots - 100% Loyal",
         host            = "irc.eu.freenode.net",
@@ -30,9 +30,9 @@ config = Config {
 
         admins          = [
                 "Pseudonym",    "shapr",        "pesco",        "Riastradh",
-                "Darius",       "tmoertel",     "delYsid",      "polli", 
-                "Heffalump",    "Igloo",        "Marvin--",     "o3",     
-                "phubuh",       "ddarius",      "bringert",     "dons",     
+                "Darius",       "tmoertel",     "delYsid",      "polli",
+                "Heffalump",    "Igloo",        "Marvin--",     "o3",
+                "phubuh",       "ddarius",      "bringert",     "dons",
                 "TheHunter",    "jlouis"
         ]
    }
