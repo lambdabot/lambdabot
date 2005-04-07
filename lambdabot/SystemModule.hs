@@ -1,14 +1,18 @@
-
--- 	$Id: SystemModule.hs,v 1.4 2003/07/25 13:19:22 eleganesh Exp $
+--
+-- | System module : IRC control functions
+--
 
 module SystemModule (systemModule) where
 
 import IRC
-import Util
-import qualified Map as M
+import Util                     (join, breakOnGlue)
+import qualified Map            (Map,keys,fromList,lookup)
 
-import Control.Monad.State
-import Control.Monad.Reader
+import Data.Maybe               (fromMaybe)
+import Control.Monad.State      (MonadState(get))
+import Control.Monad.Reader     (mapReaderT)
+
+------------------------------------------------------------------------
 
 newtype SystemModule = SystemModule ()
 
@@ -17,59 +21,71 @@ systemModule = SystemModule ()
 
 instance Module SystemModule () where
     moduleName   _ = return "system"
-    moduleHelp _ _ = return "system: irc commands"
-    commands     _ = return ["listchans", "listmodules", "listcommands",
-			     "join", "leave", "part", "msg", "quit",
-			     "reconnect", "echo"]
-    process      _ msg target cmd rest = doSystem msg target cmd rest
+    commands     _ = return (Map.keys syscmds)
+    moduleHelp _ s = return $ fromMaybe defaultHelp (Map.lookup s syscmds)
+    process      _ = doSystem
+
+------------------------------------------------------------------------
+
+syscmds :: Map.Map String String
+syscmds = Map.fromList
+       [("listchans",   "show channels bot has joined")
+       ,("listmodules", "show available plugins")
+       ,("listcommands","listcommands [module]\n"++
+                        "show all commands or command for [module]")
+       ,("join",        "join <channel>")
+       ,("leave",       "leave <channel>")
+       ,("part",        "part <channel>")
+       ,("msg",         "msg someone")
+       ,("quit",        "quit [msg]")
+       ,("reconnect",   "reconnect to channel")
+       ,("echo",        "echo irc protocol string")]
+
+defaultHelp :: String
+defaultHelp = "system : irc management"
 
 doSystem :: MonadIRC m => IRCMessage -> String -> [Char] -> [Char] -> m ()
-doSystem msg target cmd rest
- = do
+doSystem msg target cmd rest = do
    s <- liftIRC get
    case cmd of
-            "listchans"
-                -> ircPrivmsg target $ "I am on these channels: "
-                   ++ show (M.keys (ircChannels s))
-            "listmodules"
-                -> ircPrivmsg target $
-		     "I have the following modules installed: "
-                     ++ show (M.keys (ircModules s))
-            "listcommands"
-                -> if null rest then list_all_commands s target
-                   else list_module_commands target rest
-            "join"
-                -> checkPrivs msg target (ircJoin rest)
-            "leave"
-                -> checkPrivs msg target (ircPart rest)
-            "part"
-                -> checkPrivs msg target (ircPart rest)
-            "msg"
-                -> checkPrivs msg target
-                     (let (tgt, txt) = breakOnGlue " " rest
-                      in ircPrivmsg tgt (dropWhile (==' ') txt))
-            "quit"
-                -> checkPrivs msg target $
-                          ircQuit $ if rest=="" then "request" else rest
-            "reconnect"
-                -> checkPrivs msg target $
-                          ircReconnect $ if rest=="" then "request" else rest
-            "echo"
-                -> ircPrivmsg target $ concat ["echo; msg:", show msg,
-					       " rest:", show rest]
+      "listchans"   -> ircPrivmsg target $ "Channels: "++pprKeys (ircChannels s)
+      "listmodules" -> ircPrivmsg target $ "Modules: "++pprKeys (ircModules s)
+      "listcommands" | null rest -> listAll s target
+                     | otherwise -> listModule target rest
 
-            _unknowncmd
-                -> ircPrivmsg target $ concat ["excuse me? ", show msg,
-					       show rest]
+      "join"  -> checkPrivs msg target (ircJoin rest)
+      "leave" -> checkPrivs msg target (ircPart rest)
+      "part"  -> checkPrivs msg target (ircPart rest)
 
-list_all_commands :: MonadIRC m => IRCRWState -> String -> m ()
-list_all_commands state target
-  = ircPrivmsg target $ "I react to the following commands: "
-    ++ show (M.keys (ircCommands state))
+      "msg"   -> checkPrivs msg target $ ircPrivmsg tgt txt'
+                      where (tgt, txt) = breakOnGlue " " rest
+                            txt'       = dropWhile (== ' ') txt
 
-list_module_commands :: MonadIRC m => String -> String -> m ()
-list_module_commands target modname = withModule ircCommands modname
-    (ircPrivmsg target $ "No module \""++modname++"\" loaded") (\m -> do
-      cmds <- mapReaderT liftLB $ commands m
-      ircPrivmsg target $ concat ["Module ", modname,
-         " provides the following commands: ", show cmds])
+      "quit" -> checkPrivs msg target $
+              ircQuit $ if null rest then "requested" else rest
+
+      "reconnect" -> checkPrivs msg target $
+              ircReconnect $ if null rest then "request" else rest
+
+      "echo" -> ircPrivmsg target $ concat 
+              ["echo; msg:", show msg, " rest:", show rest]
+
+      _unknowncmd -> ircPrivmsg target $ 
+              concat ["unknown system command: ", show msg, show rest]
+
+------------------------------------------------------------------------
+
+listAll :: MonadIRC m => IRCRWState -> String -> m ()
+listAll state target = 
+        ircPrivmsg target $ "Commands: "++pprKeys (ircCommands state)
+
+listModule :: MonadIRC m => String -> String -> m ()
+listModule target modname = withModule ircCommands modname (ircPrivmsg target $ 
+        "No module \""++modname++"\" loaded") (\m -> do
+                cmds <- mapReaderT liftLB $ commands m
+                ircPrivmsg target $ concat 
+                        ["Module ", modname, 
+                         " provides the following commands: ", show cmds])
+
+pprKeys :: Show a => Map.Map a b -> String
+pprKeys = join " " . map (init . tail . show) . Map.keys
