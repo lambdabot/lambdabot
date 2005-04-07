@@ -64,7 +64,7 @@ module RuntimeLoader (
         RuntimeLoaderException (..), --
    ) where
 
-import SystemModuleNaming  ( systemModuleName )
+import ParsePkgConf        ( systemModuleName )
 
 import System.IO           ( stdout, hFlush )
 import Control.Monad       ( unless, when )

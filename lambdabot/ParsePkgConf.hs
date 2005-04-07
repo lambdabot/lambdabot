@@ -2,7 +2,7 @@
 
 #include "config.h"
 
-module SystemModuleNaming (systemModuleName) where
+module ParsePkgConf (systemModuleName) where
 
 import Monad
 import Directory
