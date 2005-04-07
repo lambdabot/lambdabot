@@ -31,12 +31,12 @@ STATIC=NO
 #
 ifeq "$(STATIC)" "NO"
 PLUGINS=       Dict Dummy Eval Karma Quote Seen State \
-               Topic Type Plugs Babel Version More Pl Help 
+               Topic Type Plugs Babel Version More Pl Help Google
 STATICS=       Base System Dynamic
 else
 PLUGINS=
 STATICS=       Base System Dynamic Dict Dummy Eval Karma Quote Seen \
-               State Topic Type Plugs Babel Version More Pl Help
+               State Topic Type Plugs Babel Version More Pl Help Google
 endif
 
 GHC_VERSION=	@GHC_VERSION@
@@ -47,6 +47,12 @@ PKG_OPTS=	-package posix
 
 ifeq "$(GLASGOW_HASKELL)" "604"
 HC_OPTS+=	-threaded
+endif
+
+ifeq "$(GLASGOW_HASKELL)" "604"
+RECURSIVE_MODULE_SUFFIX=	hs-boot
+else
+RECURSIVE_MODULE_SUFFIX=	hi-boot
 endif
 
 HADDOCK=        @HaddockCmd@

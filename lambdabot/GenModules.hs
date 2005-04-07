@@ -1,55 +1,67 @@
 --
 -- Preprocessor for setting which modules are statically linked
 --
+-- Generates a list of dynamic modules to load, and a static module with
+-- appropriate (static) imports. The input file is generated from the
+-- $(PLUGINS) and $(STATICS) vars passed on the command line via
+-- Makefile, from config.mk
+--
+-- TODO, would be nice to use a small, stable subset of TH to make this.
+--
 module Main where
 
 import Char
+import List                     ( isPrefixOf, intersperse )
 import System.Environment
 
-output = "Modules.hs"
+outfile = "Modules.hs"
 
 main :: IO ()
-main = do 
-        (p:q:_) <- getArgs
-        let (ps,ss) = parse argv
-        writeFile output $ unlines $ process $ lines modules
+main = do argv    <- getArgs
+          let (plugins,statics) = (\(a,b) -> (a,tail b)) (break (== ",") argv)
+              src               = unlines (process statics) ++ process2 plugins
+          writeFile outfile src
 
---
--- input are 2 command line args
---
-parse :: [String] -> ([String],[String])
+process :: [String] -> [String]
+process m = concat [begin, 
+                    map doimport m, 
+                    middle, 
+                    map doload m]
+ where
+    begin        = ["module Modules where", "import IRC", ""]
+    doimport name= "import " ++ (clean . upperise) name ++ "Module"
+    middle       = ["","loadStaticModules :: LB ()","loadStaticModules"," = do"]
+    doload name  = " ircInstallModule " ++ (clean . lowerise) name ++ "Module"
 
-process :: [[Char]] -> [[Char]]
-process modules = process' (filter isValid modules)
-    where
-        isValid :: [Char] -> Bool
-        isValid [] = False
-        isValid ('#':_) = False
-        isValid _ = True
+process2 :: [String] -> String
+process2 ms = "\nplugins :: [String]\n" ++ concat ("plugins = [" : 
+                        intersperse ", " 
+                           (map (quote.lowerise) ms)) ++ "]\n"
 
-        process' :: [[Char]] -> [[Char]]
-        process' modules = concat [begin, map doimport modules, 
-                                   middle, map doload modules]
+------------------------------------------------------------------------
 
-begin :: [[Char]]
-begin = ["module StaticModules (loadStaticModules) where",
-         "import IRC",
-         ""]
-
-doimport :: [Char] -> [Char]
-doimport name = "import " ++ (clean . upperise) name ++ "Module"
+quote  :: String -> String
+quote x = "\"" ++ x ++ "\""
 
 upperise :: [Char] -> [Char]
 upperise (c:cs) = toUpper c:cs
 
+lowerise :: [Char] -> [Char]
+lowerise (c:cs) = toLower c:cs
+
 clean :: [Char] -> [Char]
 clean = reverse . dropWhile (== ' ') . reverse
 
-middle :: [[Char]]
-middle = ["",
-          "loadStaticModules :: LB ()",
-          "loadStaticModules",
-          " = do"]
+split glue xs = split' xs
+  where
+    split' []  = []
+    split' xs' = let (as, bs) = breakOnGlue glue xs'
+                 in as : split' (dropGlue bs)
+    dropGlue = drop (length glue)
 
-doload :: [Char] -> [Char]
-doload name = " ircInstallModule " ++ name ++ "Module"
+breakOnGlue :: (Eq a) => [a] -> [a] -> ([a],[a])
+breakOnGlue _ []                = ([],[])
+breakOnGlue glue rest@(x:xs)
+    | glue `isPrefixOf` rest    = ([], rest)
+    | otherwise                 = (x:piece, rest') 
+        where (piece, rest') = breakOnGlue glue xs

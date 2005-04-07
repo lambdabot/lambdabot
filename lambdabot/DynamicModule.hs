@@ -9,13 +9,14 @@ import Config
 import RuntimeLoader
 import ErrorUtils
 import Util
-import Modules                  (plugins)
+
+import {-# SOURCE #-} Modules                  (plugins)
 
 import Map (Map)
 import qualified Map as M hiding (Map)
 
-import Data.Dynamic             (Typeable)
-import Data.Dynamic             (fromDynamic)
+import Data.Char                (toUpper)
+import Data.Dynamic             (Typeable,fromDynamic)
 import Data.IORef
 import Data.Maybe
 import Data.Set
@@ -24,6 +25,8 @@ import Control.Monad.Error
 import Control.Monad.Reader
 import Control.Monad.Trans
 import Control.Exception        (Exception (..))
+
+import System.IO                (stdout, hFlush)
 
 ------------------------------------------------------------------------
 
@@ -123,16 +126,20 @@ packagesAccessor a
                                  writer a (s { packages = v })
              }
 
+--
+-- simple name of a plugin, i.e. "google"
+-- load value "theModule" from each plugin.
+--
 load :: String -> Dyn ()
-load nm = do let file = getModuleFile nm
-             alreadyloaded <- isLoadedObject file
-             when alreadyloaded $ error "already loaded"
-             object <- doLoadObject file
-             catchError 
-              (do liftIO $ resolveFunctions
-                  MODULE md <- liftIO $ loadFunction object "theModule"
-                  liftLB $ ircInstallModule md)
-              (\e -> do doUnloadObject file ; throwError e)
+load nm = do 
+        let file = getModuleFile nm
+        alreadyloaded <- isLoadedObject file
+        when alreadyloaded $ error "already loaded"
+        object <- doLoadObject file
+        catchError (do liftIO $ resolveFunctions
+                       MODULE md <- liftIO $ loadFunction object "theModule"
+                       liftLB $ ircInstallModule md)
+                   (\e -> doUnloadObject file >> throwError e)
 
 unload :: String -> Dyn ()
 unload nm = do liftLB $ ircUnloadModule nm
@@ -143,20 +150,19 @@ doLoadRequire (Object file) = doLoadObject file >> return ()
 doLoadRequire (Package nm)  = doLoadPackage nm
 
 doLoadObject :: String -> Dyn RuntimeModule
-doLoadObject file
- = do dl <- dlGet
-      let requires = getFileRequires file
-      mapM_ doLoadRequire requires      
-      loaded <- readFM (objectsA dl) file
-      case loaded of
-        Nothing -> do 
-                object <- liftIO $ loadObjFile file
-                writeFM (objectsA dl) file (object,1)
-                return object
-
-        Just (object,n) -> do 
-                writeFM (objectsA dl) file (object,n+1)
-                return object
+doLoadObject file = do 
+        dl <- dlGet
+        let requires = getFileRequires file
+        mapM_ doLoadRequire requires      
+        loaded <- readFM (objectsA dl) file
+        case loaded of
+                Nothing -> do 
+                        object <- liftIO $ loadObjFile file
+                        writeFM (objectsA dl) file (object,1)
+                        return object
+                Just (object,n) -> do 
+                        writeFM (objectsA dl) file (object,n+1)
+                        return object
 
 doLoadPackage :: String -> Dyn ()
 doLoadPackage nm = do 
@@ -227,6 +233,12 @@ initialise = do
                "MonadException","Util","DeepSeq","Map","IRC","PosixCompat"]
         putStrLn "... done."
                 
+getModuleFile :: [Char] -> [Char]
+getModuleFile s = upperise s ++ "Module.o"
+    where
+        upperise :: [Char] -> [Char]
+        upperise []     = []
+        upperise (c:cs) = toUpper c:cs
 
 {-
 getModule :: FilePath -> IO MODULE

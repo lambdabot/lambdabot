@@ -2,12 +2,13 @@
 -- | Talk to google.
 --
 
-module GoogleModule (googleModule) where
+module GoogleModule (googleModule,theModule) where
 
 import IRC
 import Config                   (proxy, config)
 import MiniHTTP
 
+import Data.Maybe               (fromMaybe)
 import Data.List                (findIndex)
 import Control.Monad.State      (MonadIO, liftIO)
 import Network.URI              (parseURI)
@@ -59,7 +60,7 @@ extractLoc headers =
                   (lookup "Location" $ concatMap f headers)
 
         where f s = case findIndex (==':') s of
-                          Just n  -> [(take n str, drop (n+2) s)]
+                          Just n  -> [(take n s, drop (n+2) s)]
                           Nothing -> []
 
 -- ---------------------------------------------------------------------

@@ -83,9 +83,16 @@ depend: $(ALL_SRCS)
 		-optdepdepend $(ALL_SRCS) || rm depend
 	@echo "done."
 
-Modules.hs: GenModules.hs
+#
+# Slight magic. Note how we're passing values defined in config.mk
+# as commmand line args to GenModules.lhs
+#
+MODULE_HI_BOOT="module Modules where { plugins :: [[GHC.Base.Char]] }"
+
+Modules.hs: config.mk GenModules.hs
 	@echo -n "Generating module list ... "
-	@echo ":set args P='$(PLUGINS)' S='$(STATICS)' main" | ghci -v0 GenModules.hs
+	@echo $(MODULE_HI_BOOT) > Modules.$(RECURSIVE_MODULE_SUFFIX)
+	@echo ":set args $(PLUGINS) "," $(STATICS)\nmain" | ghci -v0 GenModules.hs
 	@echo "done."
 
 #
@@ -120,6 +127,14 @@ ofiles:	$(ALL_OBJS)
 %.$(way_)o : %.lhs
 	$(GHC) $(HC_OPTS) $(PKG_OPTS) -c $< -o $@  -ohi $(basename $@).$(way_)hi
 
+ifeq "$(GLASGOW_HASKELL)" "604"
+%.$(way_)o-boot : %.hs-boot
+	$(GHC) $(HC_OPTS) -c $< -o $@ -ohi $(basename $@).$(way_)hi-boot
+
+%.$(way_)hi-boot : %.$(way_)o-boot
+	@:
+endif
+
 #
 # clean rules
 #
@@ -131,6 +146,6 @@ clean:
 distclean: clean
 	rm -f config.mk config.h config.log config.status configure 
 	rm -rf autom4te.cache
-	rm -f Modules.hs
+	rm -f Modules.hs Modules.o-boot Modules.$(RECURSIVE_MODULE_SUFFIX)
 
 -include depend

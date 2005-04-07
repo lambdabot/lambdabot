@@ -1,9 +1,6 @@
 
 module Config where
 
-import qualified Map
-import Data.Maybe               (fromMaybe)
-
 data Config = Config {
         name      :: String,
         userinfo  :: String,
@@ -29,7 +26,6 @@ config = Config {
         moresize        = 7,
         proxy           = Nothing,
         autojoin        = ["#haskell"],
-
         admins          = [
                 "Pseudonym",    "shapr",        "pesco",        "Riastradh",
                 "Darius",       "tmoertel",     "delYsid",      "polli", 
@@ -41,44 +37,11 @@ config = Config {
 
 ------------------------------------------------------------------------
 --
--- the rest of this should be generated into Modules.hs by genModules...
--- including the dependencies.
+-- TODO generate this.
 --
-
-getModuleFile :: String -> String
-getModuleFile s = 
-        fromMaybe (error "unknown module") (Map.lookup s modules)
-
-modules :: Map.Map String String
-modules = Map.fromList
-        [("fact"   , "FactModule.o")
-        ,("hello"  , "HelloModule.o")
-        ,("state"  , "StateModule.o")
-        ,("topic"  , "TopicModule.o")
-        ,("karma"  , "KarmaModule.o")
-        ,("eval"   , "EvalModule.o")
-        ,("type"   , "TypeModule.o")
-        ,("dict"   , "DictModule.o")
-        ,("quote"  , "QuoteModule.o")
-        ,("seen"   , "SeenModule.o")
-        ,("dummy"  , "DummyModule.o")
-        ,("ghci"   , "GhciModule.o")
-        ,("more"   , "MoreModule.o")
-        ,("plugs"  , "PlugsModule.o")
-        ,("version", "VersionModule.o")
-        ,("haddock", "HaddockModule.o")
-        ,("cmafihe", "CmafiheModule.o")
-        ,("babel"  , "BabelModule.o")
-        ,("pl"     , "PlModule.o")
-        ,("help"   , "HelpModule.o")]
-
-------------------------------------------------------------------------
 
 data Require = Object String | Package String
 
---
--- todo, generate this too.
---
 --
 -- Some of these 'requires' are already hardcoded in
 -- DynamicModule.initialise :/
