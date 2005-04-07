@@ -5,7 +5,7 @@
 module GoogleModule (googleModule) where
 
 import IRC
-import Config                   (proxy)
+import Config                   (proxy, config)
 import MiniHTTP
 
 import Data.List                (findIndex)
@@ -48,7 +48,7 @@ queryUrl q = "http://www.google.com/search?hl=en&q="
              ++ "&btnI=I%27m+Feeling+Lucky"
 
 query :: String -> IO [String]
-query q = readPage proxy uri request ""
+query q = readPage (proxy config) uri request ""
     where url = queryUrl q
           Just uri = parseURI url
           request = ["HEAD " ++ url ++ " HTTP/1.0", ""]

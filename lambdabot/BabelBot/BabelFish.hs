@@ -2,7 +2,7 @@
 module BabelBot.BabelFish(babelFish, shortLangs) where
 
 import MiniHTTP
-import BotConfig                (proxy)
+import Config                (proxy,config)
 
 import Data.Char (toLower)
 import Maybe
@@ -83,7 +83,7 @@ babelFish :: String -> String -> String -> IO String
 babelFish inLang outLang string = do
     body <- either (\s -> error ("Error: " ++ s)) 
                    (\body -> return body) (mkBody inLang outLang string)
-    lins <- readPage proxy uri (mkPost uri body) body
+    lins <- readPage (proxy config) uri (mkPost uri body) body
     return (getBabel lins)
     where
     uri = (fromJust $ parseURI babelFishURL)
