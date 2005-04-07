@@ -96,11 +96,26 @@ else
 MODULE_HI_BOOT="module Modules where { plugins::[[GHC.Base.Char]] }"
 endif
 
-Modules.hs: config.mk GenModules.hs
+Modules.hs: config.mk GenModules
 	@echo -n "Generating module list ... "
 	@echo $(MODULE_HI_BOOT) > Modules.$(RECURSIVE_MODULE_SUFFIX)
-	@echo ":set args $(PLUGINS) "," $(STATICS)\nmain" | ghci -v0 GenModules.hs
+	@./GenModules $(PLUGINS) "," $(STATICS)
 	@echo "done."
+
+GenModules: GenModules.hs
+	@$(GHC) GenModules.hs -o GenModules
+
+
+#
+# If you ever add a module, you can use this target to regenerate the
+# Depends.hs file. Remember there are different depends for the ghc versions
+#
+.PHONY: dynamic-depends
+dynamic-depends:
+	@for i in *Module.hi ; do \
+		echo -n `echo "$$i"` ;\
+		$(GHC) --show-iface $$i | sed 's/\[boot\]//g;/orphans/{s/.*/#/;q;}' ;\
+	done | ./GenModules --depends
 
 #
 # Link the bot.
@@ -153,6 +168,6 @@ clean:
 distclean: clean
 	rm -f config.mk config.h config.log config.status configure 
 	rm -rf autom4te.cache
-	rm -f Modules.hs Modules.o-boot Modules.$(RECURSIVE_MODULE_SUFFIX)
+	rm -f GenModules Modules.hs Modules.o-boot Modules.$(RECURSIVE_MODULE_SUFFIX)
 
 -include depend

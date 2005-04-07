@@ -5,7 +5,7 @@
 module DynamicModule (DynamicModule, dynamicModule) where
 
 import IRC
-import Config
+import Depends
 import RuntimeLoader
 import ErrorUtils
 import Util
@@ -215,22 +215,13 @@ isLoadedObject file
 initialise :: IO ()
 initialise = do 
         initialiseRuntimeLoader
+
         putStr "Loading package " >> hFlush stdout
-        mapM_ loadPackage
-#if   __GLASGOW_HASKELL__ >= 604
-          ["base", "haskell98", "mtl", "parsec", "network", "unix"]
-#elif __GLASGOW_HASKELL__ >= 602
-          ["base","haskell98","lang","parsec","network","unix","posix"]
-#else /* hack */
-          ["base", "haskell98", "parsec", "network", "unix", "posix"]
-#endif
+        mapM_ loadPackage reqPackages
         putStrLn "... done."
 
-        -- more hard coded evil. Abolish!
         putStr "Loading core\t" >> hFlush stdout
-        mapM_ (\n -> loadObjFile (n++".o"))
-              ["Config","ErrorUtils","ExceptionError",
-               "MonadException","Util","DeepSeq","Map","IRC","PosixCompat"]
+        mapM_ (\n -> loadObjFile (n++".o")) corePlugins
         putStrLn "... done."
                 
 getModuleFile :: [Char] -> [Char]
@@ -239,10 +230,3 @@ getModuleFile s = upperise s ++ "Module.o"
         upperise :: [Char] -> [Char]
         upperise []     = []
         upperise (c:cs) = toUpper c:cs
-
-{-
-getModule :: FilePath -> IO MODULE
-getModule name = do object <- loadObject name
-                    resolveFunctions
-                    loadFunction object "theModule" :: IO MODULE
--}
