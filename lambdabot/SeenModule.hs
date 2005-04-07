@@ -198,11 +198,8 @@ time = liftIO getClockTime
 ircchannel :: IRCMessage -> [Channel]
 ircchannel msg
   = let cstr = head $ msgParams msg
-        splitter [] = []
-        splitter xs = let (chan, rest) = break (==',') xs
-                          in chan : splitter (drop 1 rest) -- get rid of ','
-        in map (\(x:xs) -> if x == ':' then xs else (x:xs)) (splitter cstr)
-                -- solves what seems to be an inconsistency in the parser
+    in map (\(x:xs) -> if x == ':' then xs else (x:xs)) (split cstr)
+           -- solves what seems to be an inconsistency in the parser
 
 
 -- annoying
