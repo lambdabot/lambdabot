@@ -5,11 +5,9 @@ goal that it should eventually. Therefore, you are encouraged to change
 source code such that it fits the style inside this document.
 ----------------------------------------------------------------------------
 
-*** Placement of $Id .. $ tags
+*** Import lists
 
-$Id .. $ tags should be placed right before the module keyword like this:
 {{{
---      $Id: QuoteModule.hs,v 1.1 2003/07/29 13:41:48 eleganesh Exp $
 
 module QuoteModule (
         Type(..),
@@ -17,6 +15,10 @@ module QuoteModule (
         value2,
     )
 }}}
+
+*** RCS tags
+
+$Id .. $ tags should be removed -- we're using darcs now.
 
 *** Order of imports
 
