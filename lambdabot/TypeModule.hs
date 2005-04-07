@@ -1,7 +1,5 @@
 --     The Type Module - another progressive plugin for lambdabot
 --    >>-------------------------------------------------------->>
---     $Id: TypeModule.lhs,v 1.4 2003/07/29 13:03:02 eris Exp $
---
 --                                                                        .
 --                                         .pesco hamburg 2003-04-05.    |
 --                                                                      /_\

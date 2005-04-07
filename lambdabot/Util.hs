@@ -1,6 +1,4 @@
 
--- 	$Id: Util.hs,v 1.10 2003/07/31 19:13:15 eleganesh Exp $
-
 module Util (
      join,
      split,

@@ -1,7 +1,5 @@
 > module DeepSeq where
 
-$Id: DeepSeq.lhs,v 1.1 2003/07/22 22:33:10 eleganesh Exp $
-
 Cut and paste from 
 http://www.haskell.org/pipermail/haskell/2001-August/007712.html
 

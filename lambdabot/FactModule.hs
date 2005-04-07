@@ -1,6 +1,4 @@
 
--- 	$Id: FactModule.hs,v 1.8 2003/07/29 13:03:02 eris Exp $
-
 --
 -- copyright (c) 2003 Shae Erisson
 -- license: lGPL

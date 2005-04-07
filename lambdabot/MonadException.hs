@@ -1,5 +1,3 @@
--- 	$Id: MonadException.hs,v 1.3 2003/07/28 14:44:56 eleganesh Exp $
-
 module MonadException where
 
 import Prelude hiding (catch)

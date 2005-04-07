@@ -1,7 +1,3 @@
- 
---
---  $Id: ExceptionError.hs,v 1.2 2003/07/26 15:51:42 eleganesh Exp $
---
 
 module ExceptionError where
 
