@@ -1,3 +1,6 @@
+--
+-- dynamic : interface to the runtime loader
+--
 
 module DynamicModule (DynamicModule, dynamicModule) where
 
