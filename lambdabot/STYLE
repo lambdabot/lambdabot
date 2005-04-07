@@ -1,8 +1,9 @@
 ----------------------------------------------------------------------------
-This document describes various style recommendations for the lambdabot
-code. Yet, the source code does not respect this document, but it is the
-goal that it should eventually. Therefore, you are encouraged to change
-source code such that it fits the style inside this document.
+This document describes various style recommendations for the
+lambdabot code. Yet, the source code does not respect this document,
+but it is the goal that it should eventually. Therefore, you are
+encouraged to change source code such that it fits the style inside
+this document.
 ----------------------------------------------------------------------------
 
 *** Import lists
@@ -37,9 +38,10 @@ Imports should be ordered as so:
 
 *** Naming conventions
 
-Function calls are written as words concatenated together without the use of
-``_''. The first word is all lowercase, while the first character in all following
-words is upper case. Examples of wrong and right:
+Function calls are written as words concatenated together without the
+use of ``_''. The first word is all lowercase, while the first
+character in all following words is upper case. Examples of wrong and
+right:
 
   WRONG: split_first_word
   RIGHT: splitFirstWord
@@ -49,19 +51,20 @@ words is upper case. Examples of wrong and right:
 
 *** Use hierarchical modules
 
-Old style non-hierarchical module imports should be replaced with their
-hierachial module counterpart. For instance, the List module should be
-replaced with Data.List.
+Old style non-hierarchical module imports should be replaced with
+their hierachial module counterpart. For instance, the List module
+should be replaced with Data.List.
 
 *** Use non-deprecated modules
 
-Modules deprecated should be removed and replaced with their no-deprecated
-counterparts. This is especially important to avoid bitrot in the code.
+Modules deprecated should be removed and replaced with their
+no-deprecated counterparts. This is especially important to avoid
+bitrot in the code.
 
 *** Minimalize namespace
 
-Try to minimalize the namespace. Only import what you are going to use and
-use qualified imports to keep the module namespace simple.
+Try to minimalize the namespace. Only import what you are going to use
+and use qualified imports to keep the module namespace simple.
 -ddump-minimal-imports is useful for keeping a lid on this.
 
 *** Provide explicit type signatures
@@ -70,9 +73,9 @@ This should always be the case, as we require -Werror
 
 *** Haddock documentation
 
-Provide haddock comments for your exported functions. Also, try to provide
-documentation for internal functions too. This way the code is much easier
-to read and work with.
+Provide haddock comments for your exported functions. Also, try to
+provide documentation for internal functions too. This way the code is
+much easier to read and work with.
 
 *** Portability
 
@@ -80,5 +83,5 @@ Make sure the code works with ghc >= 6.2.2.
 
 *** More references
 
-GHC has some coding guidelines I like, have a look at the ghc libraries,
-Data.Map is a good example.
+GHC has some coding guidelines I like, have a look at the ghc
+libraries, Data.Map is a good example.
