@@ -12,7 +12,8 @@ data Config = Config {
         verbose   :: Bool,
         moresize  :: Int,
         autojoin  :: [String],
-        admins    :: [String]
+        admins    :: [String],
+        proxy     :: Maybe ([Char], Integer)
 }
         
 --
@@ -26,6 +27,7 @@ config = Config {
         port            = 6667,
         verbose         = True,
         moresize        = 7,
+        proxy           = Nothing,
         autojoin        = ["#haskell"],
 
         admins          = [
@@ -72,34 +74,6 @@ modules = Map.fromList
 
 ------------------------------------------------------------------------
 
-getVerbose :: MonadIO m => m Bool
-getVerbose = return True
-
--- for DynamicModule
--- Base, System, Dynamic, More modules shouldn't be dynloaded
-getModuleFile         :: MonadIO m => String -> m String
-getModuleFile "fact"  = return "FactModule.o"
-getModuleFile "hello" = return "HelloModule.o"
-getModuleFile "state" = return "StateModule.o"
-getModuleFile "topic" = return "TopicModule.o"
-getModuleFile "karma" = return "KarmaModule.o"
-getModuleFile "eval"  = return "EvalModule.o"
-getModuleFile "type"  = return "TypeModule.o"
-getModuleFile "dict"  = return "DictModule.o"
-getModuleFile "quote" = return "QuoteModule.o"
-getModuleFile "seen"  = return "SeenModule.o"
-getModuleFile "dummy" = return "DummyModule.o"
-getModuleFile "ghci"  = return "GhciModule.o"
-getModuleFile "more"  = return "MoreModule.o"
-getModuleFile "plugs" = return "PlugsModule.o"
-getModuleFile "version" = return "VersionModule.o"
-getModuleFile "haddock" = return "HaddockModule.o"
-getModuleFile "cmafihe" = return "CmafiheModule.o"
-getModuleFile "babel" = return "BabelModule.o"
-getModuleFile "pl"    = return "PlModule.o"
-getModuleFile "help"    = return "HelpModule.o"
-getModuleFile _ = error "unknown module"
-
 data Require = Object String | Package String
 
 --
@@ -110,54 +84,42 @@ data Require = Object String | Package String
 -- DynamicModule.initialise :/
 --
 
-getFileRequires "HelpModule.o"  = return [Object "Map.o"]
-getFileRequires "FactModule.o"  = return [Package "HToolkit"]
-getFileRequires "TopicModule.o" = return [Object "Map.o"]
-getFileRequires "StateModule.o" = return [Object "Map.o"]
-getFileRequires "SeenModule.o"  = return [Object "Map.o"]
-getFileRequires "DictModule.o"  = return [Object "DictModule/DictLookup.o"]
-getFileRequires "KarmaModule.o" = return [Object "Map.o"]
-getFileRequires "MoreModule.o"  = return [Object "Map.o"]
-getFileRequires "EvalModule.o"  = return [Object "EvalModule/LMEngine.o",
-                                          Object "Map.o"]
-getFileRequires "EvalModule/LMEngine.o" 
-                                = return [Object "EvalModule/LMParser.o" 
-                                         ,Object "EvalModule/ListTerm.o" 
-                                         ,Object "EvalModule/RelTerm.o" 
-                                         ,Object "EvalModule/ArithTerm.o" 
-                                         ,Object "EvalModule/LangPack.o" 
-                                         ,Object "EvalModule/LambdaTerm.o"
-                                         ]
-getFileRequires "BabelModule.o" = return [Object "BabelBot/BabelFish.o",
-                                          Object "MiniHTTP.o"]
-getFileRequires "PlModule.o"    = return [Object "PlModule/Transform.o" 
-                                         ,Object "PlModule/PrettyPrinter.o"
-                                         ,Object "PlModule/Parser.o"
-                                         ,Object "PlModule/Common.o"
-                                         ,Object "PlModule/Set.o"
-                                         ,Object "PlModule/Rules.o"
-                                         ]
-getFileRequires "HelpModule.o"  = return [Object "Map.o"]
+getFileRequires :: String -> [Require]
+getFileRequires "DictModule.o"  = [Object "DictModule/DictLookup.o"]
+getFileRequires "QuoteModule.o" = [Object "QuoteModule/Fortune.o"]
+getFileRequires "EvalModule.o"  = [Object "EvalModule/LMEngine.o"]
+
+getFileRequires "EvalModule/LMEngine.o" =
+        [Object "EvalModule/LMParser.o" 
+        ,Object "EvalModule/ListTerm.o" 
+        ,Object "EvalModule/RelTerm.o" 
+        ,Object "EvalModule/ArithTerm.o" 
+        ,Object "EvalModule/LangPack.o" 
+        ,Object "EvalModule/LambdaTerm.o" ]
+
+getFileRequires "BabelModule.o" = 
+        [Object "BabelBot/BabelFish.o", Object "MiniHTTP.o"]
+
+getFileRequires "PlModule.o"    =
+        [Object "PlModule/Transform.o" 
+        ,Object "PlModule/PrettyPrinter.o"
+        ,Object "PlModule/Parser.o"
+        ,Object "PlModule/Common.o"
+        ,Object "PlModule/Set.o"
+        ,Object "PlModule/Rules.o" ]
+
+getFileRequires "HaddockModule.o" = [ 
+        Object "haddock/HaddockHtml.o",
+        Object "haddock/HaddockVersion.o",
+        Object "haddock/HaddockTypes.o",
+        Object "haddock/HsSyn.o",
+        Object "haddock/Binary.o",
+        Object "haddock/FastMutInt.o",
+        Object "haddock/Html.o",
+        Object "haddock/HaddockHH.o",
+        Object "haddock/HaddockModuleTree.o",
+        Object "haddock/Digraph.o",
+        Object "haddock/BlockTable.o",
+        Object "haddock/HaddockUtil.o"]
 
 getFileRequires _ = []
-
-------------------------------------------------------------------------
---
--- which modules to dynamically load.
---
-
-#if STATIC
-
-getStartupModules :: [String]
-getStartupModules = []
-
-#else
-
-getStartupModules :: [String]
-getStartupModules = [
-        "dummy", "state","topic","karma","type","seen",
-        "dict","quote","eval", "pl","plugs","babel","version",
-        "more","help"
-        ]
-
-#endif

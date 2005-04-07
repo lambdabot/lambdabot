@@ -7,14 +7,6 @@ include config.mk
 #
 ALL_DIRS=	.  DictModule EvalModule QuoteModule BabelBot PlModule
 
-#
-# Dynamically loaded modules. Not to be statically linked.
-# This var causes the module to be added to the compilation list, to
-# actually use them at runtime, you need to edit BotConfig.hs
-#
-DYNMODS=Dict Dummy Eval Karma Quote Seen State System \
-	Topic Type Plugs Babel Version More Pl Help
-
 # Not used, not built, bit dodgy as we are relying on ALL_DIRS to ignore
 # the subdirs of EXCLUDED_MODS. The following additional srcs will not be built
 EXCLUDED_MODS=	Fact Haddock Hello Cmafihe
