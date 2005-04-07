@@ -92,16 +92,15 @@ instance Module SeenModule SeenState where
 
 joinCB :: IRCMessage -> Seen IRC () -- when somebody joins
 joinCB msg = withSeenFM $ \fm _ct myname ->
-  let nick = ircnick msg
+  let nick = lowerCaseString $ unUserMode (ircnick msg)
   in if nick /= myname
        then let newInfo = Present Nothing (ircchannel msg)
-            in  Left $ M.insertWith updateJ (lowerCaseString nick) newInfo fm
+            in  Left $ M.insertWith updateJ nick newInfo fm
        else Left fm
 
 partCB :: IRCMessage -> Seen IRC () -- when somebody parts
 partCB msg = withSeenFM $ \fm ct myname ->
-  let nick = unUserMode (ircnick msg)
-      lcnick = lowerCaseString nick
+  let nick = lowerCaseString $ unUserMode (ircnick msg)
       botPart cs (nick', us) =
         case us of
           Present mct xs ->
@@ -112,32 +111,30 @@ partCB msg = withSeenFM $ \fm ct myname ->
   in if nick == myname
        then let l = map (botPart $ ircchannel msg) (M.toList fm)
             in Left $ M.fromList l
-       else case M.lookup lcnick fm of
+       else case M.lookup nick fm of
               Just (Present mct xs) ->
                 case xs \\ (ircchannel msg) of
-                  [] -> Left $ M.insert lcnick
+                  [] -> Left $ M.insert nick
 			                (NotPresent ct (listToStr "and" xs))
 					fm
-                  ys -> Left $ M.insert lcnick
+                  ys -> Left $ M.insert nick
                                         (Present mct ys)
 					fm
 	      _ -> Right "SeenModule> someone who isn't known parted"
 
 quitCB :: IRCMessage -> Seen IRC () -- when somebody quits
 quitCB msg = withSeenFM $ \fm ct _myname ->
-  let nick = unUserMode (ircnick msg)
-      lcnick = lowerCaseString nick
-  in case M.lookup lcnick fm of
+  let nick = lowerCaseString $ unUserMode (ircnick msg)
+  in case M.lookup nick fm of
        Just (Present _ct xs) ->
-         Left $ M.insert lcnick (NotPresent ct (head xs)) fm
+         Left $ M.insert nick (NotPresent ct (head xs)) fm
        _ -> Right "SeenModule> someone who isn't known has quit"
 
 nickCB :: IRCMessage -> Seen IRC () -- when somebody changes his/her name
 nickCB msg = withSeenFM $ \fm _ct _myname ->
   let newnick = drop 1 $ head (msgParams msg)
       lcnewnick = lowerCaseString newnick
-      nick = ircnick msg
-      lcnick = lowerCaseString nick
+      lcnick = lowerCaseString $ unUserMode (ircnick msg)
   in case M.lookup lcnick fm of
        Just (Present mct xs) ->
          let fm' = M.insert lcnick (NewNick newnick) fm
@@ -158,10 +155,10 @@ joinChanCB msg = withSeenFM $ \fm _ct _myname ->
 -- when somebody speaks, update their clocktime
 msgCB :: IRCMessage -> Seen IRC ()
 msgCB msg = withSeenFM $ \fm ct _myname ->
-  let nick = ircnick msg
-  in case M.lookup (lowerCaseString nick) fm of
+  let nick = lowerCaseString $ unUserMode (ircnick msg)
+  in case M.lookup nick fm of
        Just (Present _ct xs) ->
-         Left $ M.insert (lowerCaseString nick) (Present (Just ct) xs) fm
+         Left $ M.insert nick (Present (Just ct) xs) fm
        _ -> Right "SeenModule> someone who isn't here msg us"
 
 -- misc. functions
