@@ -22,7 +22,7 @@ module IRC (
         ircTopic, ircGetTopic,
         ircSignalConnect,
         ircInstallModule, ircUnloadModule,
-        ircnick, 
+        ircNick, ircChans,
         ircSignOn,
         ircRead,
 
@@ -36,7 +36,7 @@ import DeepSeq          (($!!), DeepSeq(..))
 import ErrorUtils
 import ExceptionError   (ExceptionError(..), ExceptionErrorT(..))
 import MonadException   (MonadException(throwM))
-import Util             (clean,breakOnGlue, Serializer(..))
+import Util             (breakOnGlue)
 
 import Map (Map)
 import qualified Map as M hiding (Map)
@@ -228,11 +228,18 @@ data IRCMessage
   deriving (Show)
 
 instance DeepSeq IRCMessage where
-  deepSeq m 
+  deepSeq m
     = deepSeq (msgPrefix m) . deepSeq (msgCommand m) . deepSeq (msgParams m)
 
-ircnick     :: IRCMessage -> String
-ircnick msg = fst $ breakOnGlue "!" (msgPrefix msg)
+ircNick     :: IRCMessage -> String
+ircNick msg = fst $ breakOnGlue "!" (msgPrefix msg)
+
+-- | 'ircChans' converts an IRCMessage to a list of channels.
+ircChans :: IRCMessage -> [String]
+ircChans msg
+  = let cstr = head $ msgParams msg
+    in map (\(x:xs) -> if x == ':' then xs else (x:xs)) (split "," cstr)
+           -- solves what seems to be an inconsistency in the parser
 
 {-
 ircuser     :: IRCMessage -> String
@@ -777,7 +784,7 @@ ircSignalConnect mod str f
 --isAdmin     :: IRCMessage -> Bool
 checkPrivs :: MonadIRC m => IRCMessage -> String -> m () -> m ()
 checkPrivs msg target f = do
-    maybepriv <- gets (\s -> M.lookup (ircnick msg) (ircPrivilegedUsers s) )
+    maybepriv <- gets (\s -> M.lookup (ircNick msg) (ircPrivilegedUsers s) )
     case maybepriv of
        Just _  -> f
        Nothing -> ircPrivmsg target "not enough privileges"

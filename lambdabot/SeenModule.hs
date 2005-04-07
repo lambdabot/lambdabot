@@ -106,7 +106,7 @@ instance Module SeenModule SeenState where
 joinCB :: IRCMessage -> Seen IRC () -- when somebody joins
 joinCB msg = withSeenFM msg $ \fm _ct myname nick ->
   if nick /= myname
-     then let newInfo = Present Nothing (ircchannel msg)
+     then let newInfo = Present Nothing (ircChans msg)
           in  Left $ M.insertWith updateJ nick newInfo fm
      else Left fm
 
@@ -123,7 +123,7 @@ partCB msg = withSeenFM msg $ \fm ct myname nick ->
        then Left $ M.mapWithKey (const (botPart $ ircChans msg)) fm
        else case M.lookup nick fm of
               Just (Present mct xs) ->
-                case xs \\ (ircchannel msg) of
+                case xs \\ (ircChans msg) of
                   [] -> Left $ M.insert nick
 			                (NotPresent ct (listToStr "and" xs))
 					fm
@@ -176,7 +176,7 @@ withSeenFM :: IRCMessage
 	          -> Either SeenState String)
 	      -> Seen IRC ()
 withSeenFM msg f = do nick <- return $ (lowerCaseString . unUserMode)
-                                         (ircnick msg)
+                                         (ircNick msg)
 		      state <- readMS
                       ct <- liftIO getClockTime
                       myname <- return $ (lowerCaseString . name) config
@@ -190,11 +190,6 @@ updateJ = flip updateJ' where
   updateJ' _x y@(Present _ct _cs) = y
   updateJ' x _ = x
 
-ircchannel :: IRCMessage -> [Channel]
-ircchannel msg
-  = let cstr = head $ msgParams msg
-    in map (\(x:xs) -> if x == ':' then xs else (x:xs)) (split "," cstr)
-           -- solves what seems to be an inconsistency in the parser
 
 -- annoying
 timeDiffPretty :: TimeDiff -> String

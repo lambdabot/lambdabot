@@ -36,7 +36,7 @@ instance Module KarmaModule KarmaState where
                  "karma+" -> incKarma target sender nick karmaFM
                  "karma-" -> decKarma target sender nick karmaFM
                  _        -> error "KarmaModule: can't happen"
-	    where sender = ircnick msg
+	    where sender = ircNick msg
 
 getKarma :: String -> String -> String -> KarmaState -> Karma IRC ()
 getKarma target sender nick karmaFM =
