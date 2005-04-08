@@ -94,8 +94,7 @@ data IRCRWState
         ircCallbacks       :: Map String [Callback],
         ircCommands        :: Map String ModuleRef,
         ircMoreState       :: String,
-        ircStayConnected   :: Bool,
-        ircStaticModules   :: [String]
+        ircStayConnected   :: Bool
   }
 
 newtype ChanName = ChanName String -- should be abstract, always lowercase
@@ -453,9 +452,7 @@ handleIrc handler m = catchError m $ \e -> case e of
 runIrc :: LB () -> IRC () -> IO ()
 runIrc initialise m = withSocketsDo $ do 
         ex <- try $ evalLB
-                 (do initialise
-                     modify $ \s -> s { ircStaticModules = M.keys $ ircModules s }
-                     withIrcSignalCatch (runIrc' m))
+                 (initialise >> withIrcSignalCatch (runIrc' m))
                  (initState (admins config))
         either (\e->putStrLn ("runIRC: caught exception: "++show e)) (return) ex
       where
@@ -466,8 +463,7 @@ runIrc initialise m = withSocketsDo $ do
                 ircCallbacks       = M.empty,
                 ircCommands        = M.empty,
                 ircMoreState       = [],
-                ircStayConnected   = True,
-                ircStaticModules   = []
+                ircStayConnected   = True
             }
 
 {-
@@ -692,8 +688,6 @@ ircLoadModule modname = withModule ircModules modname (return ()) (\m -> do
     cmds <- commands m
     s <- get
     let cmdmap = ircCommands s
-        static = ircStaticModules s
-    when (modname `elem` static) $ error "can't load a static module"
     mod' <- asks $ ModuleRef m
     put (s { ircCommands = M.addList [ (cmd,mod') | cmd <- cmds ] cmdmap })
     moduleInit m)
@@ -701,8 +695,6 @@ ircLoadModule modname = withModule ircModules modname (return ()) (\m -> do
 ircUnloadModule :: String -> LB ()
 ircUnloadModule modname = withModule ircModules modname (error "module not loaded") (\m -> do
     when (moduleSticky m) $ error "module is sticky"
-    static <- gets ircStaticModules
-    when (modname `elem` static) $ error "can't unload a static module"
     moduleExit m
     modnm <- moduleName m
     cmds  <- commands m

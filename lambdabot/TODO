@@ -5,6 +5,9 @@ Don's Todo:
 * hs-plugins
 * make @karma persistent
 
+Thomas' Todo:
+* persistence: karma, seen, state, quote, eval
+
 Todo:
 * FactModule - make "foo?" equal to "lambdabot: @fact foo"
 * fsbot-style factoid parsing, 

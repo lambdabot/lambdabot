@@ -143,8 +143,10 @@ load nm = do
                    (\e -> doUnloadObject file >> throwError e)
 
 unload :: String -> Dyn ()
-unload nm = do liftLB $ ircUnloadModule nm
-               doUnloadObject (getModuleFile nm)
+unload nm = do 
+        unless (nm `elem` plugins) $ error "unknown/static module"
+        liftLB $ ircUnloadModule nm
+        doUnloadObject (getModuleFile nm)
 
 doLoadRequire :: Require -> Dyn ()
 doLoadRequire (Object file) = doLoadObject file >> return ()
