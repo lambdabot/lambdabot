@@ -1,32 +1,34 @@
 module KarmaModule (theModule) where
 
 import IRC
-import Map (Map)
-import qualified Map as Map hiding (Map)
+import Util (Serializer(..), readM)
+import qualified Map as Map
 
 import Data.Maybe           (fromMaybe)
 
 newtype KarmaModule = KarmaModule ()
 
 theModule :: MODULE
-theModule = MODULE karmaModule
+theModule = MODULE $ KarmaModule ()
 
-karmaModule :: KarmaModule
-karmaModule = KarmaModule ()
-
-type KarmaState = Map String Integer
+type KarmaState = Map.Map String Integer
 type Karma = ModuleT KarmaState
 
 instance Module KarmaModule KarmaState where
-    moduleName   _ = return "karma"
+    moduleName   _ = "karma"
 
     moduleHelp _ "karma"  = return "return a person's karma value"
     moduleHelp _ "karma+" = return "increment someone's karma"
     moduleHelp _ "karma-" = return "decrement someone's karma"
     moduleHelp m _        = moduleHelp m "karma" 
 
-    commands     _ = return ["karma", "karma+", "karma-"]
-    moduleInit   _ = writeMS Map.empty
+    moduleDefState  _ = return $ Map.empty
+    moduleSerialize _ = return $ Serializer {
+        serialize = show . Map.toList,
+        deSerialize = fmap Map.fromList . readM
+      }
+
+    moduleCmds _ = return ["karma", "karma+", "karma-"]
     process      _ msg target cmd rest =
 	if (length $ words rest) == 0 then
 	   ircPrivmsg target "I can't find the karma of nobody."

@@ -21,14 +21,14 @@ diceModule :: DiceModule
 diceModule = DiceModule ()
 
 instance Module DiceModule () where
-  moduleName   _ = return "dice"
+  moduleName   _ = "dice"
   moduleSticky _ = False
 
   moduleHelp _ s = return $ case s of
         "dice"       -> "@dice <expr>. Throw dice. <expr> of the form 3d6+2."
         _             -> "dice module"
 
-  commands     _ = return ["dice"]
+  moduleCmds   _ = return ["dice"]
   process _ _ src "dice" rest = ircPrivmsg src =<< liftIO (dice rest)
   process _ _ _    _     _    = error "Dice: invalid command"
 
@@ -53,5 +53,5 @@ primExp = do v <- number
              return (v,d)
 
 number :: CharParser st Int
-number = many1 digit >>= (return . read)
+number = read `fmap` many1 digit
 

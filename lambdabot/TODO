@@ -10,7 +10,8 @@ Don's Todo:
   else. No 'core' modules should be in the static part.
 
 Thomas' Todo:
-* persistence: karma, seen, state, quote, eval
+* persistence: seen
+* documentation for Module typeclass
 
 Todo:
 * FactModule - make "foo?" equal to "lambdabot: @fact foo"

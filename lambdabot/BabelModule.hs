@@ -18,42 +18,34 @@ module BabelModule (theModule) where
 
 import BabelBot.BabelFish       (shortLangs, babelFish)
 import IRC
-import Util                     (debugStrLn, stdGetRandItem)
+import Util                     (stdGetRandItem, stdSerializer)
 import PosixCompat              (popen)
 import qualified Map as Map     (fromList, lookup, insert, toList)
 
 import Data.List
 import Data.Maybe               (fromMaybe)
 import Control.Monad.Trans      (liftIO,MonadIO)
-import Control.Exception        (handleJust, ioErrors, try, evaluate)
 
 newtype BabelModule = BabelModule ()
 
 theModule :: MODULE
-theModule = MODULE babelModule
+theModule = MODULE $ BabelModule ()
 
-babelModule :: BabelModule
-babelModule = BabelModule ()
+type Quotes = [(String,[String])]
 
-instance Module BabelModule () where
-        moduleName   _ = return "babel"
+instance Module BabelModule Quotes where
+        moduleName _            = "babel"
 
+        moduleSerialize _       = Just stdSerializer
+        moduleDefState  _       = return []
+       
         moduleHelp _ "babel"    = run_babel' ["help"] >>= return . concat
         moduleHelp _ "remember" = return "@remember <nick> quote - record some memorable phrase"
         moduleHelp _ "quote"    = return "@quote [nick] - quote somebody randomly"
         moduleHelp _ "timein"   = return "@timein <city>, report the local time in <city>"
         moduleHelp _ _          = return "@babel,@remember,@quote,@timein"
 
-        commands     _ = return ["babel", "remember", "quote", "timein" ]
-
-{-
-        moduleInit _   = liftIO $ do
-            f <- doesFileExist quotesFile
-            when (not f) $ do
-                h <- openFile quotesFile WriteMode
-                hPutStr h (show ([] :: Quotes)) 
-                hFlush h >> hClose h
--}
+        moduleCmds _            = return ["babel", "remember", "quote", "timein" ]
 
         process _ _ src "babel" s     = run_babel src s
         process _ _ _src "remember"  s = run_remember  s
@@ -169,37 +161,31 @@ run_last src i = do
 -- the @remember command stores away a quotation by a user, for future
 -- use by @quote
 
-run_remember :: MonadIRC m => String -> m ()
-run_remember str = 
-    liftIO $ handleJust ioErrors (debugStrLn . show) $ do
+run_remember :: MonadIRC m => String -> ModuleT Quotes m ()
+run_remember str = do
         let (name,q') = break (== ' ') str
             q = if null q' then q' else tail q'
-        s <- readFile quotesFile
-        eqs <- try $ evaluate $ (read s :: Quotes)
-        let qs = either (const []) id eqs
+        qs <- readMS
 
         let fm  = Map.fromList qs
             ss  = fromMaybe [] (Map.lookup name fm)
             fm' = Map.insert name (q:ss) fm
             s'  = Map.toList fm'
-
-        writeFile quotesFile (show (s' :: Quotes))
+        writeMS s'
 
 --
 --  the @quote command, takes a user name to choose a random quote from
 -- 
-run_quote :: MonadIRC m => String -> String -> m ()
+run_quote :: MonadIRC m => String -> String -> ModuleT Quotes m ()
 run_quote target name = do
-    (nm,qs) <- liftIO $ handleJust ioErrors (\e -> print e >> return ("lambdabot",Nothing)) $ do
-            s <- readFile quotesFile
-            eqs <- try $ evaluate $ (read s :: Quotes)
-            let rs  = case eqs of Left _ -> [] ; Right rs' -> rs'
-                fm  = Map.fromList rs
-                qs' = Map.lookup name fm
-            if name /= [] 
+    rs <- readMS
+    liftIO $ print rs
+    let fm  = Map.fromList rs
+        qs' = Map.lookup name fm
+    (nm,qs) <- if name /= [] 
                 then return (name,qs') -- (String, Maybe [String])
 
-                else do (nm,rs') <- stdGetRandItem (Map.toList fm) -- random person
+                else do (nm,rs') <- liftIO $ stdGetRandItem (Map.toList fm) -- random person
                         return (nm, Just rs')
 
     case qs of
@@ -211,10 +197,6 @@ run_quote target name = do
                             else ircPrivmsg target $ nm++" says: " ++ msg
 
 
-quotesFile :: [Char]
-quotesFile = "lambdabot-quotes"
-    
-type Quotes = [(String,[String])]
 
 ------------------------------------------------------------------------
 --

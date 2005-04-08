@@ -17,10 +17,7 @@ import System.Time
 newtype SeenModule = SeenModule ()
 
 theModule :: MODULE
-theModule = MODULE seenModule
-
-seenModule :: SeenModule
-seenModule = SeenModule ()
+theModule = MODULE $ SeenModule ()
 
 type Channel = String
 type Nick = String
@@ -36,12 +33,12 @@ type SeenState = M.Map Nick UserStatus
 type Seen = ModuleT SeenState
 
 instance Module SeenModule SeenState where
-    moduleName _        = return "seen"
-    moduleHelp _ _ = return "Report if a user has been seen by the bot"
-    commands _          = return ["seen"]
+    moduleName _        = "seen"
+    moduleHelp _ _      = return "Report if a user has been seen by the bot"
+    moduleCmds _        = return ["seen"]
+    moduleDefState _    = return M.empty
     moduleInit _
-      = do writeMS M.empty
-           ircSignalConnectR "JOIN" $ joinCB
+      = do ircSignalConnectR "JOIN" $ joinCB
            ircSignalConnectR "PART" $ partCB
            ircSignalConnectR "QUIT" $ quitCB
            ircSignalConnectR "NICK" $ nickCB

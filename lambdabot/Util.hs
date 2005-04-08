@@ -10,9 +10,11 @@ module Util (
      debugStrLn,
      lowerCaseString,
      Accessor (..),
+     Serializer (..), stdSerializer,
      readFM, writeFM, deleteFM,
      lookupSet, insertSet, deleteSet,
-     getRandItem, stdGetRandItem
+     getRandItem, stdGetRandItem,
+     readM
 ) where
 
 import Config
@@ -170,3 +172,19 @@ getRandItem mylist rng = (mylist !! index,newRng)
 stdGetRandItem :: [a] -> IO a
 stdGetRandItem lst = getStdRandom $ getRandItem lst
 
+-- | A Serializer provides a way for a type s to be written to and read from
+--   a string. 
+data Serializer s = Serializer {
+  serialize   :: s -> String,
+  deSerialize :: String -> Maybe s
+}
+
+stdSerializer :: (Show s, Read s) => Serializer s
+stdSerializer = Serializer show readM
+  
+-- | like read, but catches failure in a monad.
+readM :: (Monad m, Read a) => String -> m a
+readM s = case [x | (x,t) <- reads s, ("","") <- lex t] of
+        [x] -> return x
+        []  -> fail "PreludeExts.readM: no parse"
+        _   -> fail "PreludeExts.readM: ambiguous parse"

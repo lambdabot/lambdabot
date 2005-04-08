@@ -15,13 +15,10 @@ theModule = MODULE topicModule
 topicModule :: TopicModule
 topicModule = TopicModule ()
 
-type TopicState = ()
-type Topic = ModuleT TopicState
-
-instance Module TopicModule TopicState where
-  moduleName   _ = return "topic"
+instance Module TopicModule () where
+  moduleName   _ = "topic"
   moduleHelp _ _ = return "Various commands for adjusting the channel topic"
-  commands     _ = return ["topic-tell",
+  moduleCmds   _ = return ["topic-tell",
                            "topic-cons", "topic-snoc",
                            "topic-tail", "topic-init"]
   process _ _ src "topic-cons" text = topic_cons src text
@@ -37,17 +34,17 @@ instance Module TopicModule TopicState where
   process _ _ src cmd _
     = ircPrivmsg src ("Bug! someone forgot the handler for \""++cmd++"\"")
 
-topic_snoc :: String -> String -> Topic IRC ()
+topic_snoc :: String -> String -> TrivIRC ()
 topic_snoc source cmdtext = alter_topic source chan (snoc topic_item)
   where
   (chan, topic_item) = split_first_word cmdtext
 
-topic_cons :: String -> String -> Topic IRC ()
+topic_cons :: String -> String -> TrivIRC ()
 topic_cons source cmdtext = alter_topic source chan (topic_item:)
   where
   (chan, topic_item) = split_first_word cmdtext
 
-alter_topic :: String -> String -> ([String] -> [String]) -> Topic IRC ()
+alter_topic :: String -> String -> ([String] -> [String]) -> TrivIRC ()
 alter_topic source chan f
   = do
     maybetopic <- gets (\s -> M.lookup (mkCN chan) (ircChannels s) )

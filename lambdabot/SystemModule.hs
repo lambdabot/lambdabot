@@ -23,8 +23,8 @@ theModule :: MODULE
 theModule = MODULE systemModule
 
 instance Module SystemModule () where
-    moduleName   _ = return "system"
-    commands     _ = return (Map.keys syscmds)
+    moduleName   _ = "system"
+    moduleCmds   _ = return (Map.keys syscmds)
     moduleHelp _ s = return $ fromMaybe defaultHelp (Map.lookup s syscmds)
     process      _ = doSystem
 
@@ -85,7 +85,7 @@ listAll state target =
 listModule :: MonadIRC m => String -> String -> m ()
 listModule target modname = withModule ircCommands modname (ircPrivmsg target $ 
         "No module \""++modname++"\" loaded") (\m -> do
-                cmds <- mapReaderT liftLB $ commands m
+                cmds <- mapReaderT liftLB $ moduleCmds m
                 ircPrivmsg target $ concat 
                         ["Module ", modname, 
                          " provides the following commands: ", show cmds])

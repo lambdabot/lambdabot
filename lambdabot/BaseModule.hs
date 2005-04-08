@@ -18,9 +18,9 @@ theModule :: MODULE
 theModule = MODULE baseModule
 
 instance Module BaseModule () where
-    moduleName      _ = return "base"
+    moduleName      _ = "base"
     moduleHelp  _ _   = return "base module"
-    commands        _ = return []
+    moduleCmds      _ = return []
     process _ _ _ _ _ = return ()
     moduleInit _m
 	= do ircSignalConnect "PING" 	doPING

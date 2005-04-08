@@ -100,17 +100,14 @@ run_ghci src expr =
 newtype TypeModule = TypeModule ()
 
 theModule :: MODULE
-theModule = MODULE typeModule
-
-typeModule :: TypeModule
-typeModule = TypeModule ()
+theModule = MODULE $ TypeModule ()
 
 instance Module TypeModule () where
-     moduleName   _ = return "type"
+     moduleName   _ = "type"
      moduleHelp _ "type" = return "@type: return the type of a value"
      moduleHelp _ "kind" = return "@kind: return the kind of a type (GHC)"
      moduleHelp _ _      = return "@type,@kind: interact with the typechecker"
-     commands     _ = return ["type", "kind"]
+     moduleCmds        _ = return ["type", "kind"]
      process _ _ src "type" expr = query_ghci src ":t" expr
      process _ _ src "kind" expr = query_ghci src ":k" expr
 --   process _ _ src "info" expr = query_ghci src ":info" expr

@@ -24,14 +24,14 @@ googleModule :: GoogleModule
 googleModule = GoogleModule ()
 
 instance Module GoogleModule () where
-    moduleName   _ = return "google"
+    moduleName   _ = "google"
     moduleSticky _ = False
 
     moduleHelp _ s = return $ case s of
              "google" -> "search google and show url of first hit"
              _        -> "module for googling"
     
-    commands     _ = return ["google"]
+    moduleCmds   _ = return ["google"]
     process _ _ src cmd rest = case cmd of
                "google" -> googleCmd src rest
                _        -> error "google: invalid command"

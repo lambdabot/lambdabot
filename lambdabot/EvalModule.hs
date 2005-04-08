@@ -4,25 +4,20 @@ module EvalModule (theModule) where
 import EvalModule.LMEngine (evaluate, define, resume, Environment)
 
 import IRC
-import Util                             (debugStrLn)
+import Util                             (Serializer(..), readM)
 import Map (Map)
 import qualified Map as Map hiding (Map)
 
 import Data.Dynamic                     (Dynamic)
 import Data.List                        (groupBy,sort,isPrefixOf)
 import Control.Monad.State
-import Control.Exception                (Exception(..))
-import qualified Control.Exception as C (throw, catch, ioErrors, handleJust)
 
 -- TODO: clear continuation IORef after -every- @eval?
 
 newtype EvalModule = EvalModule ()
 
 theModule :: MODULE
-theModule = MODULE evalModule
-
-evalModule :: EvalModule
-evalModule = EvalModule ()
+theModule = MODULE $ EvalModule ()
 
 initFuel :: Int
 initFuel = 1000
@@ -33,35 +28,32 @@ initEnv = Map.empty
 initDefns :: Map String String
 initDefns = Map.empty
 
-definitionsFile :: [Char]
-definitionsFile = "definitions"
-
 outOfFuelMsg :: [Char]
 outOfFuelMsg = "out of fuel - use @resume to continue"
 
 type EvalState = (Int, Maybe Dynamic, Environment, Map String String)
 
 instance Module EvalModule EvalState where
-    moduleName   _ = return "eval"
+    moduleName   _ = "eval"
+
+    moduleDefState _ = return (initFuel, Nothing, initEnv, initDefns)
+    moduleSerialize _ = Just $ Serializer {
+      serialize = \(fuel,_,_,defns) -> 
+        show fuel ++ '\n': show (Map.toList defns),
+      deSerialize = loadDefinitions
+    }
+    
     moduleHelp   _ "eval" = return "@eval expr - evaluate the lambda calculus expression, expr"
     moduleHelp   _ "define" = return "@define name expr - define name to be expr"
     moduleHelp   _ "get-definition" = return "@get-definition name - get the expression defining name"                               
     moduleHelp   _ "definitions" = return "@definitions [prefix] - get the definitions starting with prefix"
     moduleHelp   _ "del-definition" = return "@del-definition name - delete name"
-    moduleHelp   _ "dump" = return "@dump - dump definitions to disk"
     moduleHelp   _ "set-fuel" = return "@set-fuel ticks - how many ticks before @eval runs out of fuel"
     moduleHelp   _ "resume" = return "@resume - continue an expression that has run out of fuel"
     moduleHelp   _ cmd = return $ "EvalModule: don't know command "++cmd
-    commands     _ = return ["eval","define","get-definition","definitions",
-                             "del-definition","dump","set-fuel","resume"]
-    moduleInit   _ = do
-        r <- liftIO $ C.catch loadDefinitions
-                    (io_or_pm $
-                     return (initFuel,
-                             Nothing :: Maybe Dynamic,
-                             initEnv,
-                             initDefns))
-        writeMS r
+    moduleCmds   _ = return ["eval","define","get-definition","definitions",
+                             "del-definition","set-fuel","resume"]
+
     process      _ msg target cmd rest = do
        (fuel, res, env, defns) <- readMS
        case cmd of
@@ -105,15 +97,6 @@ instance Module EvalModule EvalState where
                                 writeMS (x,res,env,defns)
                                 ircPrivmsg target $ "fuel set to "++show x
 
-            "dump" -> checkPrivs msg target $ do
-                      mex <- liftIO $ C.handleJust C.ioErrors (return . Just) $
-                              do writeFile definitionsFile
-                                   (show fuel ++ '\n': (show $ Map.toList defns))
-                                 return Nothing
-                      case mex of
-                          Nothing -> ircPrivmsg target "dumped"
-                          Just ex -> liftIO $ debugStrLn (show ex)
-
             "del-definition" -> case words rest of
                 [] -> return ()
                 (d:_) -> checkPrivs msg target $ do
@@ -142,38 +125,33 @@ instance Module EvalModule EvalState where
             _       -> ircPrivmsg target ("unknown command: "++cmd)
 
 
-io_or_pm :: a -> Exception -> a
-io_or_pm c (PatternMatchFail _) = c
-io_or_pm c (IOException _) = c
-io_or_pm _ e = C.throw e -- ioError e (throw should work for both 5.04/5.05)
-
 --
 -- this is so ugly (at least it's only init)
 --
 -- This stuff is slow
 --
-loadDefinitions :: IO EvalState
-loadDefinitions = do
-    s <- readFile definitionsFile
+loadDefinitions :: String -> Maybe EvalState
+loadDefinitions s = do
+  ((fuel,rest):_) <- return $ reads s
+  rests <- readM rest
+  let the_d_FM = Map.fromList $! rests
+      (the_e_FM :: Environment) = 
+        Map.mapWithKey (\_ (Right v) -> v) $
+           Map.filterWithKey (const $ either (const False) (flip seq True)) $
+               Map.mapWithKey (const $ define) the_d_FM
 
-    -- grab fuel val from definitions.
-    let ((fuel,rest):_) = reads s :: [(Int,String)]
-
-    -- rest is a list of paris of ids and rhs defins
-    let rests    = read rest :: [(String,String)]
-
-    -- parse the lot. :/
-    let the_d_FM = Map.fromList $! rests
-        (the_e_FM :: Environment) = 
-          Map.mapWithKey (\_ (Right v) -> v) $
-             Map.filterWithKey (const $ either (const False) (flip seq True)) $
-                 Map.mapWithKey (const $ define) the_d_FM
-
-    let keys = Map.keys the_e_FM
-
-    fuel `seq` the_e_FM `seq` the_d_FM `seq`
-        (return (fuel,
+      keys = Map.keys the_e_FM
+  
+  fuel `seq` the_e_FM `seq` the_d_FM `seq` return
+                (fuel,
                  Nothing,
                  the_e_FM,
-                 Map.filterWithKey (\k _ -> k `elem` keys) the_d_FM))
+                 Map.filterWithKey (\k _ -> k `elem` keys) the_d_FM) 
+  where
+    -- grab fuel val from definitions.
+
+    -- rest is a list of paris of ids and rhs defins
+
+    -- parse the lot. :/
+
 

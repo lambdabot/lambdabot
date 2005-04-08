@@ -14,9 +14,9 @@ moreModule = MoreModule ()
 
 -- the @more state is handled centrally
 instance Module MoreModule () where
-    moduleName   _ = return "more"
+    moduleName   _ = "more"
     moduleHelp _ _ = return "@more - return more bot output"
-    commands     _ = return ["more"]
+    moduleCmds   _ = return ["more"]
     process      _ _ target _ _
       = do
         morestate <- liftIRC $ ircMoreState `fmap` get

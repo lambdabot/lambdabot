@@ -55,10 +55,10 @@ initDLModules :: DLModules
 initDLModules = DLModules { objects = M.empty, packages = empty }
 
 instance Module DynamicModule DLModules where
-  moduleName   _ = return "dynamic"
+  moduleName   _ = "dynamic"
   moduleHelp _ _ = return "@dynamic-(un|re)?load: interface to dynamic linker"
   moduleSticky _ = True
-  commands     _ = return ["dynamic-load","dynamic-unload","dynamic-reload"]
+  moduleCmds   _ = return ["dynamic-load","dynamic-unload","dynamic-reload"]
   moduleInit   _ = do 
         liftIO initialise
         writeMS initDLModules

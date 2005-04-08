@@ -27,9 +27,9 @@ plugsModule :: PlugsModule
 plugsModule = PlugsModule ()
 
 instance Module PlugsModule () where
-        moduleName   _ = return "plugs"
+        moduleName   _ = "plugs"
         moduleHelp _ _ = return "@plugs <expr>\nYou have Haskell, 3 seconds and no IO. Go nuts!"
-        commands     _ = return ["plugs"]
+        moduleCmds   _ = return ["plugs"]
         process _ _ src "plugs" s = do o <- liftIO $ plugs s
                                        ircPrivmsg src o
         process _ _ _ _ _ = error "PlugsModule: invalid command"

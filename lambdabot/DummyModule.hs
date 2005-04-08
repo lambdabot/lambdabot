@@ -12,7 +12,7 @@ dummyModule :: DummyModule
 dummyModule = DummyModule ()
 
 instance Module DummyModule () where
-  moduleName   _ = return "dummy"
+  moduleName   _ = "dummy"
 
   moduleHelp _ s = return $ case s of
         "dummy"       -> "print a string constant"
@@ -23,7 +23,7 @@ instance Module DummyModule () where
         "moo"         -> "vegan-friendly command"
         _             -> "dummy module"
 
-  commands     _ = return ["dummy","wiki","paste","learn","eurohaskell","moo"]
+  moduleCmds   _ = return ["dummy","wiki","paste","learn","eurohaskell","moo"]
   process _ _ src cmd rest = case lookup cmd dummylst of
 			       Nothing -> error "Dummy: invalid command"
                                Just f -> ircPrivmsg src $ f rest

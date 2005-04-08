@@ -14,9 +14,9 @@ helpModule :: HelpModule
 helpModule = HelpModule ()
 
 instance Module HelpModule () where
-    moduleName   _ = return "help"
-    moduleHelp   _ _ = return " @help <command> - ask for help for <command>" -- default output
-    commands     _ = return ["help"]
+    moduleName   _ = "help"
+    moduleHelp _ _ = return " @help <command> - ask for help for <command>" -- default output
+    moduleCmds   _ = return ["help"]
     process        = doHelp
 
 doHelp :: HelpModule -> IRCMessage -> String -> String -> [Char] -> TrivIRC ()

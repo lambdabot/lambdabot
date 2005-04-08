@@ -11,16 +11,13 @@ import IRC
 newtype VersionModule = VersionModule ()
 
 theModule :: MODULE
-theModule = MODULE versionModule
-
-versionModule :: VersionModule
-versionModule = VersionModule ()
+theModule = MODULE $ VersionModule ()
 
 instance Module VersionModule () where
-    moduleName   _ = return "version"
+    moduleName   _ = "version"
     moduleHelp _ _ = return $ "Report the build date, ghc version "
                            ++ "and darcs repo of this bot"
-    commands     _ = return ["version"]
+    moduleCmds   _ = return ["version"]
     process      _ _ target _ _ =
         ircPrivmsg target $ concat 
                 ["lambdabot 2p", PATCH_COUNT, ", ", 

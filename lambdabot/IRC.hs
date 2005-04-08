@@ -29,12 +29,14 @@ module IRC (
         clean, checkPrivs, mkCN, handleIrc, runIrc,
   ) where
 
+import Prelude hiding   (mod, catch)
+
 import Config           (config, name, moresize, admins, host, port)
 import DeepSeq          (($!!), DeepSeq(..))
 import ErrorUtils
 import ExceptionError   (ExceptionError(..), ExceptionErrorT(..))
 import MonadException   (MonadException(throwM))
-import Util             (breakOnGlue)
+import Util             (breakOnGlue, Serializer(..))
 
 import Map (Map)
 import qualified Map as M hiding (Map)
@@ -45,7 +47,7 @@ import System.IO        (Handle, hGetLine, hPutStr, hClose,
                          hSetBuffering, BufferMode(NoBuffering))
 
 #if __GLASGOW_HASKELL__ >= 600
-import System.IO.Error hiding (try)
+import System.IO.Error  (isEOFError, ioeGetHandle)
 
 # ifndef mingw32_HOST_OS
 import System.Posix.Signals
@@ -474,7 +476,6 @@ traceException :: (MonadIO m,MonadException m) => m a -> m a
 traceException = handleM (\e -> liftIO (print e) >> throwM e)
 -}
 
-
 runIrc' :: IRC () -> LB ()
 runIrc' m = do  
         let portnum  = PortNumber $ fromIntegral (port config)
@@ -501,7 +502,8 @@ runIrc' m = do
                      runReaderT (runExceptionErrorT $ runIRC $ catchSignals $
                                        m >> ircQuit "terminated")
                                 chans)
-               (do liftIO $ killThread threadr
+               (do writeGlobalState
+                   liftIO $ killThread threadr
                    liftIO $ killThread threadw
                    liftIO $ hClose s)
 
@@ -652,23 +654,50 @@ ctcpDequote (c:cs)             = c : ctcpDequote cs
 -}
 
 class Module m s | m -> s where
-    moduleName      :: m -> ModuleT s LB String
+    moduleName      :: m -> String
+    moduleSerialize :: m -> Maybe (Serializer s)
+    moduleDefState  :: m -> LB s
     moduleHelp      :: m -> String -> ModuleT s LB String
     moduleSticky    :: m -> Bool
-    commands        :: m -> ModuleT s LB [String]
+    moduleCmds      :: m -> ModuleT s LB [String]
     moduleInit      :: m -> ModuleT s LB ()
     moduleExit      :: m -> ModuleT s LB ()
     -- msg target cmd rest
     process         :: m -> IRCMessage -> String -> String -> String -> ModuleT s IRC () 
 
-    moduleExit _   = return ()
-    moduleInit _   = return ()
-    moduleSticky _ = False
+    moduleExit _      = return ()
+    moduleInit _      = return ()
+    moduleSticky _    = False
+    moduleSerialize _ = Nothing
+    moduleDefState  _ = return $ error "state not initalized"
 
 data MODULE = forall m s. (Module m s) => MODULE m
 
 -- needs a better name
 data ModuleRef = forall m s. (Module m s) => ModuleRef m (IORef s)
+
+toFilename :: String -> String
+toFilename = ("State/"++)
+
+writeGlobalState :: LB ()
+writeGlobalState = do
+  mods <- gets $ M.elems . ircModules
+  (`mapM_` mods) $ \(ModuleRef mod ref) -> case moduleSerialize mod of
+    Nothing  -> return ()
+    Just ser -> liftIO $ writeFile (toFilename $ moduleName mod) =<<
+      (serialize ser `fmap` readIORef ref)
+
+-- Read the whole file so it'll be closed
+readFile' :: String -> IO String
+readFile' file = do
+  cont <- readFile file
+  last cont `seq` return cont
+
+readGlobalState :: String -> Serializer s -> IO (Maybe s)
+readGlobalState mod ser = do
+  state <- Just `fmap` readFile' (toFilename mod) `catch` \_ -> return Nothing
+  liftIO $ print state
+  return $ deSerialize ser =<< state
 
 --
 -- | register a module in the irc state
@@ -676,28 +705,32 @@ data ModuleRef = forall m s. (Module m s) => ModuleRef m (IORef s)
 ircInstallModule :: MODULE -> LB ()
 ircInstallModule (MODULE modn)
   = do  s <- get
-        ref <- liftIO $ newIORef (error "state not initalized")
-        modname <- moduleName modn `runReaderT` ref
+        let modname = moduleName modn
+        savedState <- case moduleSerialize modn of
+            Nothing  -> return Nothing
+            Just ser -> liftIO $ readGlobalState modname ser
+        state <- maybe (moduleDefState modn) return savedState
+        ref <- liftIO $ newIORef state
         let modmap = ircModules s
-        let mod' = ModuleRef modn ref
-        put (s { ircModules = M.insert modname mod' modmap })
+        let mod = ModuleRef modn ref
+        put (s { ircModules = M.insert modname mod modmap })
         ircLoadModule modname
 
 ircLoadModule :: String -> LB ()
 ircLoadModule modname = withModule ircModules modname (return ()) (\m -> do
-    cmds <- commands m
+    cmds <- moduleCmds m
     s <- get
     let cmdmap = ircCommands s
-    mod' <- asks $ ModuleRef m
-    put (s { ircCommands = M.addList [ (cmd,mod') | cmd <- cmds ] cmdmap })
+    mod <- asks $ ModuleRef m
+    put (s { ircCommands = M.addList [ (cmd,mod) | cmd <- cmds ] cmdmap })
     moduleInit m)
 
 ircUnloadModule :: String -> LB ()
 ircUnloadModule modname = withModule ircModules modname (error "module not loaded") (\m -> do
     when (moduleSticky m) $ error "module is sticky"
     moduleExit m
-    modnm <- moduleName m
-    cmds  <- commands m
+    let modnm = moduleName m
+    cmds  <- moduleCmds m
     s <- get
     let modmap = ircModules s
         cmdmap = ircCommands s

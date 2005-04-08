@@ -24,24 +24,21 @@ maxTimeout   = 15000000 -- 15 seconds
 
 type PlState = Maybe (Int, TopLevel)
 
-data PlModule = PlModule
+newtype PlModule = PlModule ()
 
 theModule :: MODULE
-theModule = MODULE plModule
-
-plModule :: PlModule
-plModule = PlModule
+theModule = MODULE $ PlModule ()
 
 type Pl = ModuleT PlState
 
 instance Module PlModule PlState where
-    moduleName _   = return "pl"
+    moduleName _   = "pl"
     moduleHelp _ "pl-resume" = return "@pl-resume - resume a suspended pointless transformation."
     moduleHelp _ _ = return "@pointless <expr> - play with pointfree code"
 
-    moduleInit _   = writeMS Nothing
+    moduleDefState _ = return Nothing
 
-    commands _     = return $ ["pointless","pl-resume","pl"]
+    moduleCmds _   = return $ ["pointless","pl-resume","pl"]
 
     process _ _ target "pointless" rest = pf target rest
     process _ _ target "pl"        rest = pf target rest

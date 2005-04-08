@@ -163,7 +163,7 @@ endif
 clean:
 	rm -f *.o *.p_o  *.hi *.p_hi */*.o */*.p_o */*.hi */*.p_hi
 	rm -f *~ */*~
-	rm -f lambdabot depend depend.bak
+	rm -f lambdabot lambdabot.prof depend depend.bak
 
 distclean: clean
 	rm -f config.mk config.h config.log config.status configure 
