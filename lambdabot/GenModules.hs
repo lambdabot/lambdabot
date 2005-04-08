@@ -127,9 +127,10 @@ process m = concat [begin,
                     map doload m]
  where
     begin        = ["module Modules where", "import IRC", ""]
-    doimport name= "import " ++ (clean . upperise) name ++ "Module"
+    doimport name= "import qualified " ++ (clean . upperise) name ++ "Module"
     middle       = ["","loadStaticModules :: LB ()","loadStaticModules"," = do"]
-    doload name  = " ircInstallModule " ++ (clean . lowerise) name ++ "Module"
+    doload name  = " ircInstallModule " ++ (clean . upperise) name ++ 
+                     "Module.theModule"
 
 process2 :: [String] -> String
 process2 ms = "\nplugins :: [String]\n" ++ concat ("plugins = [" : 

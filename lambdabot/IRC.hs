@@ -677,8 +677,8 @@ data ModuleRef = forall m s. (Module m s) => ModuleRef m (IORef s)
 --
 -- | register a module in the irc state
 --
-ircInstallModule :: Module m s => m -> LB ()
-ircInstallModule modn
+ircInstallModule :: MODULE -> LB ()
+ircInstallModule (MODULE modn)
   = do  s <- get
         ref <- liftIO $ newIORef (error "state not initalized")
         modname <- moduleName modn `runReaderT` ref

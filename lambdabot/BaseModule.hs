@@ -1,4 +1,4 @@
-module BaseModule (baseModule) where
+module BaseModule (theModule) where
 
 import Config                   (config, Config(name, autojoin))
 import IRC
@@ -13,6 +13,9 @@ newtype BaseModule = BaseModule ()
 
 baseModule :: BaseModule
 baseModule = BaseModule ()
+
+theModule :: MODULE
+theModule = MODULE baseModule
 
 instance Module BaseModule () where
     moduleName      _ = return "base"

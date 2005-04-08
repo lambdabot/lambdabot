@@ -2,7 +2,7 @@
 -- | Talk to google.
 --
 
-module GoogleModule (googleModule,theModule) where
+module GoogleModule (theModule) where
 
 import IRC
 import Config                   (proxy, config)

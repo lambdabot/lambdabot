@@ -2,7 +2,7 @@
 -- dynamic : interface to the runtime loader
 --
 
-module DynamicModule (DynamicModule, dynamicModule) where
+module DynamicModule (theModule) where
 
 import {-# SOURCE #-} Modules   (plugins)
 
@@ -32,6 +32,9 @@ newtype DynamicModule = DynamicModule ()
 
 dynamicModule :: DynamicModule
 dynamicModule = DynamicModule ()
+
+theModule :: MODULE
+theModule = MODULE dynamicModule
 
 data DLModules 
  = DLModules 
@@ -135,7 +138,7 @@ load nm = do
         when alreadyloaded $ error "already loaded"
         object <- doLoadObject file
         catchError (do liftIO $ resolveFunctions
-                       MODULE md <- liftIO $ loadFunction object "theModule"
+                       md <- liftIO $ loadFunction object "theModule"
                        liftLB $ ircInstallModule md)
                    (\e -> doUnloadObject file >> throwError e)
 

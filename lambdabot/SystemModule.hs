@@ -2,7 +2,7 @@
 -- | System module : IRC control functions
 --
 
-module SystemModule (systemModule) where
+module SystemModule (theModule) where
 
 import IRC
 import Util                     (join, breakOnGlue)
@@ -18,6 +18,9 @@ newtype SystemModule = SystemModule ()
 
 systemModule :: SystemModule
 systemModule = SystemModule ()
+
+theModule :: MODULE
+theModule = MODULE systemModule
 
 instance Module SystemModule () where
     moduleName   _ = return "system"
