@@ -75,7 +75,7 @@ instance Module SeenModule SeenState where
 					     let when' = clockDifference ct
 					     in if null when'
 					          then "just now."
-					          else when']]
+					          else when' ++ "ago."]]
              nickNotPresent ct chan =
 	       do ircMessage ["I saw ", nick, " leaving ", chan, " ",
 			      clockDifference ct, "ago."]
