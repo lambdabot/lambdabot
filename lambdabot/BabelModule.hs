@@ -18,12 +18,12 @@ module BabelModule (theModule) where
 
 import BabelBot.BabelFish       (shortLangs, babelFish)
 import IRC
-import Util                     (stdGetRandItem, stdSerializer)
+import Util                     (stdGetRandItem, Serializer(..), readM)
 import PosixCompat              (popen)
-import qualified Map as Map     (fromList, lookup, insert, toList)
+import qualified Map
 
 import Data.List
-import Data.Maybe               (fromMaybe)
+import Data.Maybe               (fromMaybe, catMaybes)
 import Control.Monad.Trans      (liftIO,MonadIO)
 
 newtype BabelModule = BabelModule ()
@@ -31,13 +31,16 @@ newtype BabelModule = BabelModule ()
 theModule :: MODULE
 theModule = MODULE $ BabelModule ()
 
-type Quotes = [(String,[String])]
+type Quotes = Map.Map String [String]
 
 instance Module BabelModule Quotes where
         moduleName _            = "babel"
 
-        moduleSerialize _       = Just stdSerializer
-        moduleDefState  _       = return []
+        moduleSerialize _       = Just $ Serializer {
+          serialize = unlines . map show . Map.toList,
+          deSerialize = Just . Map.fromList . catMaybes . map readM . lines
+        }
+        moduleDefState  _       = return Map.empty
        
         moduleHelp _ "babel"    = run_babel' ["help"] >>= return . concat
         moduleHelp _ "remember" = return "@remember <nick> quote - record some memorable phrase"
@@ -165,23 +168,19 @@ run_remember :: MonadIRC m => String -> ModuleT Quotes m ()
 run_remember str = do
         let (name,q') = break (== ' ') str
             q = if null q' then q' else tail q'
-        qs <- readMS
+        fm <- readMS
 
-        let fm  = Map.fromList qs
-            ss  = fromMaybe [] (Map.lookup name fm)
+        let ss  = fromMaybe [] (Map.lookup name fm)
             fm' = Map.insert name (q:ss) fm
-            s'  = Map.toList fm'
-        writeMS s'
+        writeMS fm'
 
 --
 --  the @quote command, takes a user name to choose a random quote from
 -- 
 run_quote :: MonadIRC m => String -> String -> ModuleT Quotes m ()
 run_quote target name = do
-    rs <- readMS
-    liftIO $ print rs
-    let fm  = Map.fromList rs
-        qs' = Map.lookup name fm
+    fm <- readMS
+    let qs' = Map.lookup name fm
     (nm,qs) <- if name /= [] 
                 then return (name,qs') -- (String, Maybe [String])
 
