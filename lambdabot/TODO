@@ -1,9 +1,13 @@
 Don's Todo:
-* get rid of deprecations
-* @uptime
+* @type's output shouldn't be so verbose on lines. reparse it into our
+  own Type type, and ppr it for irc use.
 * partition core and plugins.
-* hs-plugins
-* make @karma persistent
+* make dependency generation fully dynamic
+* have 'make prof' and 'make static' just work
+* reduce memory usage
+* reduce size of static core - like Yi, the static core should be a tiny
+  dyn loading module (and possibly network module) that loads everything
+  else. No 'core' modules should be in the static part.
 
 Thomas' Todo:
 * persistence: karma, seen, state, quote, eval
