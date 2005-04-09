@@ -21,7 +21,7 @@ module IRC (
         ircJoin, ircPart, ircQuit, ircReconnect,
         ircTopic, ircGetTopic,
         ircSignalConnect, ircSignalConnectR,
-        ircInstallModule, ircLoadModule, ircUnloadModule,
+        ircInstallModule, ircUnloadModule,
         ircnick, 
         ircSignOn,
         ircRead,
@@ -502,7 +502,7 @@ runIrc' m = do
                      runReaderT (runExceptionErrorT $ runIRC $ catchSignals $
                                        m >> ircQuit "terminated")
                                 chans)
-               (do writeGlobalState
+               (do exitModules
                    liftIO $ killThread threadr
                    liftIO $ killThread threadw
                    liftIO $ hClose s)
@@ -526,6 +526,11 @@ runIrc' m = do
         catchSignals n = catchErrorJust isSignal n
                              (\s -> do tryError $ ircQuit (ircSignalMessage s)
                                        throwError (SignalCaught s))
+
+        exitModules = do
+          mods <- gets $ M.elems . ircModules
+          (`mapM_` mods) $ \(ModuleRef mod ref) -> 
+            writeGlobalState mod `runReaderT` ref
                                     
 
 readerLoop :: ThreadId -> Chan IRCMessage -> Chan IRCMessage -> Handle -> IO ()
@@ -679,13 +684,13 @@ data ModuleRef = forall m s. (Module m s) => ModuleRef m (IORef s)
 toFilename :: String -> String
 toFilename = ("State/"++)
 
-writeGlobalState :: LB ()
-writeGlobalState = do
-  mods <- gets $ M.elems . ircModules
-  (`mapM_` mods) $ \(ModuleRef mod ref) -> case moduleSerialize mod of
+writeGlobalState :: Module m s => m -> ModuleT s LB ()
+writeGlobalState mod = do
+  state <- readMS
+  case moduleSerialize mod of
     Nothing  -> return ()
-    Just ser -> liftIO $ writeFile (toFilename $ moduleName mod) =<<
-      (serialize ser `fmap` readIORef ref)
+    Just ser -> liftIO $ writeFile 
+      (toFilename $ moduleName mod) (serialize ser state)
 
 -- Read the whole file so it'll be closed
 readFile' :: String -> IO String
@@ -696,7 +701,6 @@ readFile' file = do
 readGlobalState :: String -> Serializer s -> IO (Maybe s)
 readGlobalState mod ser = do
   state <- Just `fmap` readFile' (toFilename mod) `catch` \_ -> return Nothing
-  liftIO $ print state
   return $ deSerialize ser =<< state
 
 --
@@ -729,6 +733,7 @@ ircUnloadModule :: String -> LB ()
 ircUnloadModule modname = withModule ircModules modname (error "module not loaded") (\m -> do
     when (moduleSticky m) $ error "module is sticky"
     moduleExit m
+    writeGlobalState m
     let modnm = moduleName m
     cmds  <- moduleCmds m
     s <- get
