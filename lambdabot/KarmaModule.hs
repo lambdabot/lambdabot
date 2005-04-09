@@ -27,10 +27,9 @@ instance Module KarmaModule KarmaState where
 
     moduleCmds _ = return ["karma", "karma+", "karma-"]
     process      _ msg target cmd rest =
-	if (length $ words rest) == 0 then
-	   ircPrivmsg target "I can't find the karma of nobody."
-        else
-           do let nick = head $ words rest
+        case words rest of
+	  []       -> ircPrivmsg target "I can't find the karma of nobody."
+          (nick:_) -> do
               karmaFM <- readMS
               case cmd of
                  "karma"  -> getKarma target sender nick karmaFM

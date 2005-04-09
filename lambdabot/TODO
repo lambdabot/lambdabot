@@ -27,7 +27,6 @@ Todo:
 * update the README
 * send alternate nickname?
 * automatically filter out blanks lines, ie. in dictionary output
-* Fix babel not to bring lambdabot down when the proxy doesn't resolve
 
 2.0 release list:
 * @more needs to check for really really long lines

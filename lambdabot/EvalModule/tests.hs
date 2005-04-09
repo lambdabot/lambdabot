@@ -1,9 +1,13 @@
-import LMEngine (evaluate, define)
+import EvalModule.LMEngine (evaluate, define)
+#if __GLASGOW_HASKELL__ >= 604
+import Test.HUnit
+#else
 import HUnit
+#endif
 -- import QuickCheck
 -- import QuickCheckM 
 
-import Data.FiniteMap
+import qualified Map (empty)
 
 
 -- TODO: add tests for define, need to test List interactions (e.g. 1+head l)
@@ -30,7 +34,7 @@ tailMsg = "tail of empty list"
 headMsg = "head of empty list"
 
 infFuel = -1
-emptyEnv = emptyFM
+emptyEnv = Map.empty
 
 -- no label
 genericTest' :: String -> String -> Test
