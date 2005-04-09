@@ -10,6 +10,7 @@ import qualified Map as Map hiding (Map)
 
 import Data.Dynamic                     (Dynamic)
 import Data.List                        (groupBy,sort,isPrefixOf)
+import Data.Maybe                       (catMaybes)
 import Control.Monad.State
 
 -- TODO: clear continuation IORef after -every- @eval?
@@ -39,7 +40,7 @@ instance Module EvalModule EvalState where
     moduleDefState _ = return (initFuel, Nothing, initEnv, initDefns)
     moduleSerialize _ = Just $ Serializer {
       serialize = \(fuel,_,_,defns) -> 
-        show fuel ++ '\n': show (Map.toList defns),
+        unlines $ show fuel: map show (Map.toList defns),
       deSerialize = loadDefinitions
     }
     
@@ -132,8 +133,12 @@ instance Module EvalModule EvalState where
 --
 loadDefinitions :: String -> Maybe EvalState
 loadDefinitions s = do
-  ((fuel,rest):_) <- return $ reads s
-  rests <- readM rest
+  -- grab fuel val from definitions.
+  fuel':rest <- return $ lines s
+  fuel <- readM fuel'
+  -- rest is a list of paris of ids and rhs defins
+  let rests = catMaybes $ map readM rest
+  -- parse the lot. :/
   let the_d_FM = Map.fromList $! rests
       (the_e_FM :: Environment) = 
         Map.mapWithKey (\_ (Right v) -> v) $
@@ -147,11 +152,4 @@ loadDefinitions s = do
                  Nothing,
                  the_e_FM,
                  Map.filterWithKey (\k _ -> k `elem` keys) the_d_FM) 
-  where
-    -- grab fuel val from definitions.
-
-    -- rest is a list of paris of ids and rhs defins
-
-    -- parse the lot. :/
-
 
