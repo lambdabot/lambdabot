@@ -658,17 +658,41 @@ ctcpDequote ('\134':cs)        = ctcpDequote cs
 ctcpDequote (c:cs)             = c : ctcpDequote cs
 -}
 
+-- | The Module type class.
+-- Minimal complete definition: @moduleName@, @moduleHelp@, @moduleCmds@, 
+-- @process@.
 class Module m s | m -> s where
+-- | The name of the module. (This might be removed in a future version)
     moduleName      :: m -> String
+-- | If the module wants its state to be saves, this function a Serializer.
+--
+-- The default implementation returns Nothing.
     moduleSerialize :: m -> Maybe (Serializer s)
+-- | If the module maintains state, this method specifies the default state
+-- (for example in case the state can't be read from a state).
+--
+-- The default implementation returns an error and assumes the state is never
+-- accessed
     moduleDefState  :: m -> LB s
+-- | This method should return a help string for every command it defines.
     moduleHelp      :: m -> String -> ModuleT s LB String
+-- | Is the module sticky? Sticky modules (as well as static ones) can't be
+-- unloaded. By default, modules are not sticky.
     moduleSticky    :: m -> Bool
+-- | The commands the module listenes to.
     moduleCmds      :: m -> ModuleT s LB [String]
+-- | Initialize the module. The default implementation does nothing.
     moduleInit      :: m -> ModuleT s LB ()
+-- | Finalize the module. The default implementation does nothing.
     moduleExit      :: m -> ModuleT s LB ()
+-- | Process a command a user sent.
     -- msg target cmd rest
-    process         :: m -> IRCMessage -> String -> String -> String -> ModuleT s IRC () 
+    process         :: m -- ^ phantom
+        -> IRCMessage    -- ^ the message
+        -> String        -- ^ target
+        -> String        -- ^ command
+        -> String        -- ^ the arguments to the command
+        -> ModuleT s IRC () 
 
     moduleExit _      = return ()
     moduleInit _      = return ()
@@ -676,6 +700,7 @@ class Module m s | m -> s where
     moduleSerialize _ = Nothing
     moduleDefState  _ = return $ error "state not initalized"
 
+-- | An existential type holding a module.
 data MODULE = forall m s. (Module m s) => MODULE m
 
 -- needs a better name

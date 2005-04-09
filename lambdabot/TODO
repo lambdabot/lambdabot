@@ -11,13 +11,11 @@ Don's Todo:
 
 Thomas' Todo:
 * persistence: seen
-* documentation for Module typeclass
 
 Todo:
 * FactModule - make "foo?" equal to "lambdabot: @fact foo"
 * fsbot-style factoid parsing, 
 * ircPrivmsg should actually be an input collector of some type, that way output filters could be written
-* switch to using Arrows as much as possible
 * real hostmask matching
 * move privileged commands out of @listcommands
 * refactor utility functions out of the modules ex. gets(\s -> lookupFM ...)
@@ -26,7 +24,6 @@ Todo:
 * reformat/refill output to allow for fewer longer lines.
 * multiple servers
 * factor out an IRC library
-* delYsid suggested holding all per-module state in a tuple, thereby skipping the Typeable problem
 * update the README
 * send alternate nickname?
 * automatically filter out blanks lines, ie. in dictionary output
@@ -37,7 +34,6 @@ Todo:
 
 Wishlist:
 
-* search google
 * search ghc haddocks by function name and type name and ghc command line option searching ;-)
 * search Haskell 98 report
 * search citeseer
