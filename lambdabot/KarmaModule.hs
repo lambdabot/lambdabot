@@ -2,7 +2,7 @@ module KarmaModule (theModule) where
 
 import IRC
 import Util (mapSerializer)
-import qualified Map as Map
+import qualified Map as M
 
 import Data.Maybe           (fromMaybe)
 
@@ -11,7 +11,7 @@ newtype KarmaModule = KarmaModule ()
 theModule :: MODULE
 theModule = MODULE $ KarmaModule ()
 
-type KarmaState = Map.Map String Integer
+type KarmaState = M.Map String Integer
 type Karma = ModuleT KarmaState
 
 instance Module KarmaModule KarmaState where
@@ -22,7 +22,7 @@ instance Module KarmaModule KarmaState where
     moduleHelp _ "karma-" = return "decrement someone's karma"
     moduleHelp m _        = moduleHelp m "karma" 
 
-    moduleDefState  _ = return $ Map.empty
+    moduleDefState  _ = return $ M.empty
     moduleSerialize _ = Just mapSerializer
 
     moduleCmds _ = return ["karma", "karma+", "karma-"]
@@ -45,18 +45,18 @@ getKarma target sender nick karmaFM =
        ircPrivmsg target $ "You have a karma of " ++ (show karma)
     else
        ircPrivmsg target $ nick ++ " has a karma of " ++ (show karma)
-    where karma = fromMaybe 0 (Map.lookup nick karmaFM)
+    where karma = fromMaybe 0 (M.lookup nick karmaFM)
 
 incKarma :: String -> String -> String -> KarmaState -> Karma IRC ()
 incKarma target sender nick state =
     if sender == nick then
        ircPrivmsg target "You can't change your own karma, silly."
-    else do writeMS $ Map.insertWith (+) nick 1 state
+    else do writeMS $ M.insertWith (+) nick 1 state
             ircPrivmsg target $ nick ++ "'s karma has been incremented"
 
 decKarma :: String -> String -> String -> KarmaState -> Karma IRC ()
 decKarma target sender nick state =
     if sender == nick then
        ircPrivmsg target "You can't change your own karma, silly."
-    else do writeMS $ Map.insertWith (+) nick (-1) state
+    else do writeMS $ M.insertWith (+) nick (-1) state
             ircPrivmsg target $ nick ++ "'s karma has been decremented"

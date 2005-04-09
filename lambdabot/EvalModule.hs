@@ -5,8 +5,7 @@ import EvalModule.LMEngine (evaluate, define, resume, Environment)
 
 import IRC
 import Util                             (Serializer(..), readM)
-import Map (Map)
-import qualified Map as Map hiding (Map)
+import qualified Map as M
 
 import Data.Dynamic                     (Dynamic)
 import Data.List                        (groupBy,sort,isPrefixOf)
@@ -24,15 +23,15 @@ initFuel :: Int
 initFuel = 1000
 
 initEnv :: Environment
-initEnv = Map.empty
+initEnv = M.empty
 
-initDefns :: Map String String
-initDefns = Map.empty
+initDefns :: M.Map String String
+initDefns = M.empty
 
 outOfFuelMsg :: [Char]
 outOfFuelMsg = "out of fuel - use @resume to continue"
 
-type EvalState = (Int, Maybe Dynamic, Environment, Map String String)
+type EvalState = (Int, Maybe Dynamic, Environment, M.Map String String)
 
 instance Module EvalModule EvalState where
     moduleName   _ = "eval"
@@ -40,7 +39,7 @@ instance Module EvalModule EvalState where
     moduleDefState _ = return (initFuel, Nothing, initEnv, initDefns)
     moduleSerialize _ = Just $ Serializer {
       serialize = \(fuel,_,_,defns) -> 
-        unlines $ show fuel: map show (Map.toList defns),
+        unlines $ show fuel: map show (M.toList defns),
       deSerialize = loadDefinitions
     }
     
@@ -75,12 +74,12 @@ instance Module EvalModule EvalState where
                         Left s  -> ircPrivmsg target s
                         Right v -> do
                           writeMS (fuel, res,
-                                   Map.insert name v env,
-                                   Map.insert name defn defns)
+                                   M.insert name v env,
+                                   M.insert name defn defns)
                           ircPrivmsg target (name ++ " defined")
 
             "definitions" -> 
-                let names = Map.keys defns 
+                let names = M.keys defns 
                 in if null rest 
                     then ircPrivmsg target (unlines $ map show $
                                            groupBy (\(x:_) (y:_) -> x == y) $ names)
@@ -88,7 +87,7 @@ instance Module EvalModule EvalState where
                                 [x | x <- sort names, rest `isPrefixOf` x]
 
             "get-definition" -> 
-                let defn = Map.lookup rest defns 
+                let defn = M.lookup rest defns 
                     out = maybe (rest++" not defined") ((rest++" =")++) defn
                 in ircPrivmsg target out
 
@@ -103,8 +102,8 @@ instance Module EvalModule EvalState where
                 (d:_) -> checkPrivs msg target $ do
                     writeMS (fuel,
                              res,
-                             Map.delete d env,
-                             Map.delete d defns)
+                             M.delete d env,
+                             M.delete d defns)
                     ircPrivmsg target $ d++" removed"
 
             "resume" -> case res of
@@ -139,17 +138,17 @@ loadDefinitions s = do
   -- rest is a list of paris of ids and rhs defins
   let rests = catMaybes $ map readM rest
   -- parse the lot. :/
-  let the_d_FM = Map.fromList $! rests
+  let the_d_FM = M.fromList $! rests
       (the_e_FM :: Environment) = 
-        Map.mapWithKey (\_ (Right v) -> v) $
-           Map.filterWithKey (const $ either (const False) (flip seq True)) $
-               Map.mapWithKey (const $ define) the_d_FM
+        M.mapWithKey (\_ (Right v) -> v) $
+           M.filterWithKey (const $ either (const False) (flip seq True)) $
+               M.mapWithKey (const $ define) the_d_FM
 
-      keys = Map.keys the_e_FM
+      keys = M.keys the_e_FM
   
   fuel `seq` the_e_FM `seq` the_d_FM `seq` return
                 (fuel,
                  Nothing,
                  the_e_FM,
-                 Map.filterWithKey (\k _ -> k `elem` keys) the_d_FM) 
+                 M.filterWithKey (\k _ -> k `elem` keys) the_d_FM) 
 

@@ -6,7 +6,7 @@ module SystemModule (theModule) where
 
 import IRC
 import Util                     (join, breakOnGlue)
-import qualified Map            (Map,keys,fromList,lookup)
+import qualified Map as M       (Map,keys,fromList,lookup)
 
 import Data.Maybe               (fromMaybe)
 import Control.Monad.State      (MonadState(get))
@@ -24,14 +24,14 @@ theModule = MODULE systemModule
 
 instance Module SystemModule () where
     moduleName   _ = "system"
-    moduleCmds   _ = return (Map.keys syscmds)
-    moduleHelp _ s = return $ fromMaybe defaultHelp (Map.lookup s syscmds)
+    moduleCmds   _ = return (M.keys syscmds)
+    moduleHelp _ s = return $ fromMaybe defaultHelp (M.lookup s syscmds)
     process      _ = doSystem
 
 ------------------------------------------------------------------------
 
-syscmds :: Map.Map String String
-syscmds = Map.fromList
+syscmds :: M.Map String String
+syscmds = M.fromList
        [("listchans",   "show channels bot has joined")
        ,("listmodules", "show available plugins")
        ,("listcommands","listcommands [module]\n"++
@@ -90,5 +90,5 @@ listModule target modname = withModule ircCommands modname (ircPrivmsg target $
                         ["Module ", modname, 
                          " provides the following commands: ", show cmds])
 
-pprKeys :: Show a => Map.Map a b -> String
-pprKeys = join " " . map (init . tail . show) . Map.keys
+pprKeys :: Show a => M.Map a b -> String
+pprKeys = join " " . map (init . tail . show) . M.keys

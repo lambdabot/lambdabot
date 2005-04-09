@@ -20,7 +20,7 @@ import BabelBot.BabelFish       (shortLangs, babelFish)
 import IRC
 import Util                     (stdGetRandItem, mapSerializer)
 import PosixCompat              (popen)
-import qualified Map
+import qualified Map as M
 
 import Data.List
 import Data.Maybe               (fromMaybe)
@@ -31,13 +31,13 @@ newtype BabelModule = BabelModule ()
 theModule :: MODULE
 theModule = MODULE $ BabelModule ()
 
-type Quotes = Map.Map String [String]
+type Quotes = M.Map String [String]
 
 instance Module BabelModule Quotes where
         moduleName _            = "babel"
 
         moduleSerialize _       = Just mapSerializer
-        moduleDefState  _       = return Map.empty
+        moduleDefState  _       = return M.empty
        
         moduleHelp _ "babel"    = run_babel' ["help"] >>= return . concat
         moduleHelp _ "remember" = return "@remember <nick> quote - record some memorable phrase"
@@ -167,8 +167,8 @@ run_remember str = do
             q = if null q' then q' else tail q'
         fm <- readMS
 
-        let ss  = fromMaybe [] (Map.lookup name fm)
-            fm' = Map.insert name (q:ss) fm
+        let ss  = fromMaybe [] (M.lookup name fm)
+            fm' = M.insert name (q:ss) fm
         writeMS fm'
 
 --
@@ -177,11 +177,11 @@ run_remember str = do
 run_quote :: MonadIRC m => String -> String -> ModuleT Quotes m ()
 run_quote target name = do
     fm <- readMS
-    let qs' = Map.lookup name fm
+    let qs' = M.lookup name fm
     (nm,qs) <- if name /= [] 
                 then return (name,qs') -- (String, Maybe [String])
 
-                else do (nm,rs') <- liftIO $ stdGetRandItem (Map.toList fm) -- random person
+                else do (nm,rs') <- liftIO $ stdGetRandItem (M.toList fm) -- random person
                         return (nm, Just rs')
 
     case qs of
