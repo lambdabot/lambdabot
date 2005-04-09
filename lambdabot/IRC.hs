@@ -93,7 +93,7 @@ data IRCRWState
         ircPrivilegedUsers :: Map String Bool,
         ircChannels        :: Map ChanName String, -- channel_name topic
         ircModules         :: Map String ModuleRef,
-        ircCallbacks       :: Map String [Callback],
+        ircCallbacks       :: Map String [(String,Callback)],
         ircCommands        :: Map String ModuleRef,
         ircMoreState       :: String,
         ircStayConnected   :: Bool
@@ -764,22 +764,26 @@ ircUnloadModule modname = withModule ircModules modname (error "module not loade
     s <- get
     let modmap = ircModules s
         cmdmap = ircCommands s
+        cbs    = ircCallbacks s
     put $ s { ircCommands = foldl (flip M.delete) cmdmap cmds }
             { ircModules = M.delete modnm modmap }
+            { ircCallbacks = filter ((/=modname) . fst) `fmap` cbs }
   )
 
-ircSignalConnect :: MonadLB m => String -> (IRCMessage -> IRC ()) -> m ()
-ircSignalConnect str f 
+ircSignalConnect :: (Module mod s, MonadLB m) => 
+  mod -> String -> (IRCMessage -> IRC ()) -> m ()
+ircSignalConnect mod str f 
     = do s <- get
-         let cbs = (ircCallbacks s)
+         let cbs = ircCallbacks s
+         let n = moduleName mod
          case (M.lookup str cbs) of 
-              Nothing -> put (s { ircCallbacks = M.insert str [f]    cbs }) 
-              Just fs -> put (s { ircCallbacks = M.insert str (f:fs) cbs}) 
+              Nothing -> put (s { ircCallbacks = M.insert str [(n,f)]    cbs}) 
+              Just fs -> put (s { ircCallbacks = M.insert str ((n,f):fs) cbs}) 
 
-ircSignalConnectR :: MonadLB m => 
-  String -> (IRCMessage -> ReaderT s IRC ()) -> ReaderT s m ()
-ircSignalConnectR str f = ReaderT $ \ref -> 
-  ircSignalConnect str ((`runReaderT` ref) . f)
+ircSignalConnectR :: (Module mod s, MonadLB m) => 
+  mod -> String -> (IRCMessage -> ModuleT s IRC ()) -> ModuleT s m ()
+ircSignalConnectR mod str f = ReaderT $ \ref -> 
+  ircSignalConnect mod str ((`runReaderT` ref) . f)
 
 --isAdmin     :: IRCMessage -> Bool
 checkPrivs :: MonadIRC m => IRCMessage -> String -> m () -> m ()

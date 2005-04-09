@@ -194,5 +194,5 @@ mapSerializer = Serializer {
 readM :: (Monad m, Read a) => String -> m a
 readM s = case [x | (x,t) <- reads s, ("","") <- lex t] of
         [x] -> return x
-        []  -> fail "PreludeExts.readM: no parse"
-        _   -> fail "PreludeExts.readM: ambiguous parse"
+        []  -> fail "Util.readM: no parse"
+        _   -> fail "Util.readM: ambiguous parse"

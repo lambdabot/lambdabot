@@ -22,40 +22,40 @@ instance Module BaseModule () where
     moduleHelp  _ _   = return "base module"
     moduleCmds      _ = return []
     process _ _ _ _ _ = return ()
-    moduleInit _m
-	= do ircSignalConnect "PING" 	doPING
-	     ircSignalConnect "NOTICE" 	doNOTICE
-	     ircSignalConnect "PART" 	doPART
-	     ircSignalConnect "JOIN"    doJOIN
-	     ircSignalConnect "NICK" 	doNICK
-	     ircSignalConnect "MODE" 	doMODE
-	     ircSignalConnect "TOPIC" 	doTOPIC
-	     ircSignalConnect "QUIT" 	doQUIT
-	     ircSignalConnect "PRIVMSG" doPRIVMSG
-	     ircSignalConnect "001"	doRPL_WELCOME
+    moduleInit m
+	= do ircSignalConnect m "PING" 	doPING
+	     ircSignalConnect m "NOTICE" 	doNOTICE
+	     ircSignalConnect m "PART" 	doPART
+	     ircSignalConnect m "JOIN"    doJOIN
+	     ircSignalConnect m "NICK" 	doNICK
+	     ircSignalConnect m "MODE" 	doMODE
+	     ircSignalConnect m "TOPIC" 	doTOPIC
+	     ircSignalConnect m "QUIT" 	doQUIT
+	     ircSignalConnect m "PRIVMSG" doPRIVMSG
+	     ircSignalConnect m "001"	doRPL_WELCOME
 
-	  {- ircSignalConnect "002"	doRPL_YOURHOST
-	     ircSignalConnect "003"	doRPL_CREATED
-	     ircSignalConnect "004"	doRPL_MYINFO -}
+	  {- ircSignalConnect m "002"	doRPL_YOURHOST
+	     ircSignalConnect m "003"	doRPL_CREATED
+	     ircSignalConnect m "004"	doRPL_MYINFO -}
 
-	     ircSignalConnect "005" 	doRPL_BOUNCE
+	     ircSignalConnect m "005" 	doRPL_BOUNCE
 
-	  {- ircSignalConnect "250"	doRPL_STATSCONN
-	     ircSignalConnect "251"     doRPL_LUSERCLIENT
-	     ircSignalConnect "252"     doRPL_LUSEROP
-	     ircSignalConnect "253"     doRPL_LUSERUNKNOWN
-	     ircSignalConnect "254"     doRPL_LUSERCHANNELS
-	     ircSignalConnect "255"     doRPL_LUSERME
-	     ircSignalConnect "265"	doRPL_LOCALUSERS
-	     ircSignalConnect "266"	doRPL_GLOBALUSERS -}
+	  {- ircSignalConnect m "250"	doRPL_STATSCONN
+	     ircSignalConnect m "251"     doRPL_LUSERCLIENT
+	     ircSignalConnect m "252"     doRPL_LUSEROP
+	     ircSignalConnect m "253"     doRPL_LUSERUNKNOWN
+	     ircSignalConnect m "254"     doRPL_LUSERCHANNELS
+	     ircSignalConnect m "255"     doRPL_LUSERME
+	     ircSignalConnect m "265"	doRPL_LOCALUSERS
+	     ircSignalConnect m "266"	doRPL_GLOBALUSERS -}
 
-	     ircSignalConnect "332"	doRPL_TOPIC
+	     ircSignalConnect m "332"	doRPL_TOPIC
 
-	  {- ircSignalConnect "353"	doRPL_NAMRELY
-	     ircSignalConnect "366"     doRPL_ENDOFNAMES
-	     ircSignalConnect "372"	doRPL_MOTD
-	     ircSignalConnect "375"	doRPL_MOTDSTART
-	     ircSignalConnect "376"     doRPL_ENDOFMOTD -}
+	  {- ircSignalConnect m "353"	doRPL_NAMRELY
+	     ircSignalConnect m "366"     doRPL_ENDOFNAMES
+	     ircSignalConnect m "372"	doRPL_MOTD
+	     ircSignalConnect m "375"	doRPL_MOTDSTART
+	     ircSignalConnect m "376"     doRPL_ENDOFMOTD -}
 
 
 

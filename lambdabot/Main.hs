@@ -19,7 +19,7 @@ mainloop = do
         msg <- ircRead
         s   <- get
         case M.lookup (msgCommand msg) (ircCallbacks s) of
-             Just cbs -> allCallbacks cbs msg
+             Just cbs -> allCallbacks (map snd cbs) msg
              _        -> return ()
         mainloop
 

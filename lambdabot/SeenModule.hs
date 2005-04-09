@@ -37,13 +37,13 @@ instance Module SeenModule SeenState where
     moduleHelp _ _      = return "Report if a user has been seen by the bot"
     moduleCmds _        = return ["seen"]
     moduleDefState _    = return M.empty
-    moduleInit _
-      = do ircSignalConnectR "JOIN" $ joinCB
-           ircSignalConnectR "PART" $ partCB
-           ircSignalConnectR "QUIT" $ quitCB
-           ircSignalConnectR "NICK" $ nickCB
-           ircSignalConnectR "353" $ joinChanCB
-           ircSignalConnectR "PRIVMSG" $ msgCB
+    moduleInit m
+      = do ircSignalConnectR m "JOIN" $ joinCB
+           ircSignalConnectR m "PART" $ partCB
+           ircSignalConnectR m "QUIT" $ quitCB
+           ircSignalConnectR m "NICK" $ nickCB
+           ircSignalConnectR m "353" $ joinChanCB
+           ircSignalConnectR m "PRIVMSG" $ msgCB
 
     process m msg target cmd rest = do 
           seenFM <- readMS

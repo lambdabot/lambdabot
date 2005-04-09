@@ -62,7 +62,10 @@ addList l m = union (fromList l) m
 import Prelude hiding (lookup)
 import qualified Data.FiniteMap as FM
 
-type Map k a = FM.FiniteMap k a
+type Map = FM.FiniteMap
+
+instance Functor (Map k) where
+  fmap = FM.mapFM . const
 
 empty  :: Map k a
 empty  = FM.emptyFM

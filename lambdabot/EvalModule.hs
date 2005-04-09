@@ -19,8 +19,9 @@ newtype EvalModule = EvalModule ()
 theModule :: MODULE
 theModule = MODULE $ EvalModule ()
 
-initFuel :: Int
+initFuel, maxFuel :: Int
 initFuel = 1000
+maxFuel  = 500000 -- ~ 200M mem usage for "sum $ enumFrom 1"
 
 initEnv :: Environment
 initEnv = M.empty
@@ -91,11 +92,13 @@ instance Module EvalModule EvalState where
                     out = maybe (rest++" not defined") ((rest++" =")++) defn
                 in ircPrivmsg target out
 
-            "set-fuel" -> case reads rest :: [(Int,String)] of
-                [] -> checkPrivs msg target (ircPrivmsg target "not a number")
-                ((x,_):_) -> checkPrivs msg target $ do 
-                                writeMS (x,res,env,defns)
-                                ircPrivmsg target $ "fuel set to "++show x
+            "set-fuel" -> case readM rest of
+                Nothing -> checkPrivs msg target (ircPrivmsg target "not a number")
+                Just x  -> checkPrivs msg target $ case x > 0 && x <= maxFuel of
+                    True  -> do 
+                        writeMS (x,res,env,defns)
+                        ircPrivmsg target $ "fuel set to "++show x
+                    False -> ircPrivmsg target $ "can't set fuel above "++show maxFuel
 
             "del-definition" -> case words rest of
                 [] -> return ()
