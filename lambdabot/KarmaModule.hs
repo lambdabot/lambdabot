@@ -1,7 +1,7 @@
 module KarmaModule (theModule) where
 
 import IRC
-import Util (Serializer(..), readM)
+import Util (mapSerializer)
 import qualified Map as Map
 
 import Data.Maybe           (fromMaybe)
@@ -23,10 +23,7 @@ instance Module KarmaModule KarmaState where
     moduleHelp m _        = moduleHelp m "karma" 
 
     moduleDefState  _ = return $ Map.empty
-    moduleSerialize _ = return $ Serializer {
-        serialize = show . Map.toList,
-        deSerialize = fmap Map.fromList . readM
-      }
+    moduleSerialize _ = Just mapSerializer
 
     moduleCmds _ = return ["karma", "karma+", "karma-"]
     process      _ msg target cmd rest =

@@ -10,7 +10,7 @@ module Util (
      debugStrLn,
      lowerCaseString,
      Accessor (..),
-     Serializer (..), stdSerializer,
+     Serializer (..), stdSerializer, mapSerializer,
      readFM, writeFM, deleteFM,
      lookupSet, insertSet, deleteSet,
      getRandItem, stdGetRandItem,
@@ -19,9 +19,10 @@ module Util (
 
 import Config
 import Map                      (Map)
-import qualified Map as M       (lookup, insert, delete)
+import qualified Map as M       (lookup, insert, delete, toList, fromList)
 
 import Data.List                (intersperse, isPrefixOf)
+import Data.Maybe               (catMaybes)
 import Data.Set                 (elementOf, addToSet, delFromSet, Set)
 import Data.Char                (isSpace, toLower)
 import Control.Monad.State      (when,MonadIO(..))
@@ -182,6 +183,13 @@ data Serializer s = Serializer {
 stdSerializer :: (Show s, Read s) => Serializer s
 stdSerializer = Serializer show readM
   
+mapSerializer :: (Ord k, Show k, Show v, Read k, Read v) => Serializer (Map k v)
+mapSerializer = Serializer {
+  serialize = unlines . map show . M.toList,
+  deSerialize = Just . M.fromList . catMaybes . map readM . lines
+}
+
+
 -- | like read, but catches failure in a monad.
 readM :: (Monad m, Read a) => String -> m a
 readM s = case [x | (x,t) <- reads s, ("","") <- lex t] of

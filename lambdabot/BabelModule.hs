@@ -18,12 +18,12 @@ module BabelModule (theModule) where
 
 import BabelBot.BabelFish       (shortLangs, babelFish)
 import IRC
-import Util                     (stdGetRandItem, Serializer(..), readM)
+import Util                     (stdGetRandItem, mapSerializer)
 import PosixCompat              (popen)
 import qualified Map
 
 import Data.List
-import Data.Maybe               (fromMaybe, catMaybes)
+import Data.Maybe               (fromMaybe)
 import Control.Monad.Trans      (liftIO,MonadIO)
 
 newtype BabelModule = BabelModule ()
@@ -36,10 +36,7 @@ type Quotes = Map.Map String [String]
 instance Module BabelModule Quotes where
         moduleName _            = "babel"
 
-        moduleSerialize _       = Just $ Serializer {
-          serialize = unlines . map show . Map.toList,
-          deSerialize = Just . Map.fromList . catMaybes . map readM . lines
-        }
+        moduleSerialize _       = Just mapSerializer
         moduleDefState  _       = return Map.empty
        
         moduleHelp _ "babel"    = run_babel' ["help"] >>= return . concat
