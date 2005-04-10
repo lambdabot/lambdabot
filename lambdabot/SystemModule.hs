@@ -51,8 +51,8 @@ doSystem :: MonadIRC m => IRCMessage -> String -> [Char] -> [Char] -> m ()
 doSystem msg target cmd rest = do
    s <- liftIRC get
    case cmd of
-      "listchans"   -> ircPrivmsg target $ "Channels: "++pprKeys (ircChannels s)
-      "listmodules" -> ircPrivmsg target $ "Modules: "++pprKeys (ircModules s)
+      "listchans"   -> ircPrivmsg target $ pprKeys (ircChannels s)
+      "listmodules" -> ircPrivmsg target $ pprKeys (ircModules s)
       "listcommands" | null rest -> listAll s target
                      | otherwise -> listModule target rest
 

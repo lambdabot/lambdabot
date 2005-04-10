@@ -1,5 +1,6 @@
 --
 -- | Talk to hot chixxors.
+-- (c) Mark Wotton
 --
 
 module VixenModule where
@@ -14,6 +15,7 @@ import Control.Exception
 import Text.Regex
 import Maybe
 import GHC.IOBase (unsafePerformIO)
+
 ------------------------------------------------------------------------
 
 newtype VixenModule = VixenModule ()
