@@ -44,14 +44,17 @@ endif
 GHC_VERSION=	@GHC_VERSION@
 GLASGOW_HASKELL=@GLASGOW_HASKELL@
 
-# Comment out if you're on windows
-
-ifeq "$(GLASGOW_HASKELL)" "604"
-HC_OPTS+=	-threaded
-RECURSIVE_MODULE_SUFFIX=	hs-boot
-else
-PKG_OPTS=	-package posix
+#
+# Possibly this will be a problem in the future
+#
+ifeq "$(GLASGOW_HASKELL)" "602"
+PKG_OPTS=	                -package posix
 RECURSIVE_MODULE_SUFFIX=	hi-boot
+MODULE_HI_BOOT=             "module Modules where { plugins::[[GHC.Base.Char]] }"
+else
+HC_OPTS+=	                -threaded
+RECURSIVE_MODULE_SUFFIX=	hs-boot
+MODULE_HI_BOOT=             "module Modules where { plugins::[[Char]] }"
 endif
 
 HADDOCK=        @HaddockCmd@

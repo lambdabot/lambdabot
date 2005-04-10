@@ -90,11 +90,6 @@ depend: $(ALL_SRCS)
 # Modules is imported recursively, so we break the loop with a .hs-boot
 # file (.hi-boot with <604). That code is below:
 #
-ifeq "$(GLASGOW_HASKELL)" "604"
-MODULE_HI_BOOT="module Modules where { plugins::[[Char]] }"
-else
-MODULE_HI_BOOT="module Modules where { plugins::[[GHC.Base.Char]] }"
-endif
 
 Modules.hs: config.mk GenModules
 	@echo -n "Generating module list ... "
@@ -149,7 +144,7 @@ ofiles:	$(ALL_OBJS)
 %.$(way_)o : %.lhs
 	$(GHC) $(HC_OPTS) $(PKG_OPTS) -c $< -o $@  -ohi $(basename $@).$(way_)hi
 
-ifeq "$(GLASGOW_HASKELL)" "604"
+ifneq "$(GLASGOW_HASKELL)" "602"
 %.$(way_)o-boot : %.hs-boot
 	$(GHC) $(HC_OPTS) -c $< -o $@ -ohi $(basename $@).$(way_)hi-boot
 
@@ -168,6 +163,6 @@ clean:
 distclean: clean
 	rm -f config.mk config.h config.log config.status configure 
 	rm -rf autom4te.cache
-	rm -f GenModules Modules.hs Modules.o-boot Modules.$(RECURSIVE_MODULE_SUFFIX)
+	rm -f GenModules Modules.hs Modules.o-boot Modules.*-boot
 
 -include depend
