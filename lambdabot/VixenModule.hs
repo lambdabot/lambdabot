@@ -6,14 +6,18 @@
 module VixenModule where
 
 import IRC
+import Util                     (stdGetRandItem)
+
+import Data.Maybe               (isJust)
+
+import Control.Monad.State      (MonadIO, liftIO)
+import Control.Exception        (try,evaluate)
+
+import Text.Regex
 import qualified Text.ParserCombinators.Parsec.Token as P
 import Text.ParserCombinators.Parsec.Language
 import Text.ParserCombinators.Parsec
-import Control.Monad.State      (MonadIO, liftIO)
-import Random
-import Control.Exception
-import Text.Regex
-import Maybe
+
 import GHC.IOBase (unsafePerformIO)
 
 ------------------------------------------------------------------------
@@ -26,24 +30,25 @@ theModule = MODULE vixenModule
 vixenModule :: VixenModule
 vixenModule = VixenModule ()
 
-instance Module VixenModule () where
-    moduleName   _ = "vixenlove"
+instance Module VixenModule RespChoice where
+    moduleName   _ = "vixen"
     moduleSticky _ = False
 
     moduleHelp _ s = return $ case s of
              "vixenlove" -> "talk to me, big boy"
              _           -> "sergeant curry's lonely hearts club"
+
+    moduleDefState _ = liftIO readConfig
     
     moduleCmds     _ = return ["vixen"]
     process _ _ src cmd rest = case cmd of
                "vixen" -> vixenCmd src rest
                _       -> error "vixen error: i'm just a girl!"
 
-
 -- ideally, mkResponses state would be cached between calls - the file could be large.
-vixenCmd :: String -> String -> ModuleT s IRC ()
+vixenCmd :: String -> String -> ModuleT RespChoice IRC ()
 vixenCmd src rest = do 
-	state <-  liftIO $ readConfig
+	state <-  readMS
         result <- liftIO $ vixen (mkResponses state) rest
         ircPrivmsg src result
 
@@ -135,13 +140,8 @@ type RespChoice = [(Regex, WTree String)]
 randomWTreeElt :: WTree a -> IO a
 randomWTreeElt (Leaf a)  = return a
 randomWTreeElt (Node ls) = do
-  elt <- randomElt ls
+  elt <- stdGetRandItem ls
   randomWTreeElt elt
-
-randomElt :: [a] -> IO a
-randomElt ls = do
-  elt <- randomRIO (1,(length ls))
-  return $ ls !! (elt-1)
 
 -- use IO only for random, could remove it.
 vixen :: (String -> WTree String) -> String -> IO String
