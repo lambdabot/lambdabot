@@ -20,7 +20,7 @@ module IRC (
         ircPrivmsg,
         ircJoin, ircPart, ircQuit, ircReconnect,
         ircTopic, ircGetTopic,
-        ircSignalConnect, ircSignalConnectR,
+        ircSignalConnect,
         ircInstallModule, ircUnloadModule,
         ircnick, 
         ircSignOn,
@@ -282,10 +282,10 @@ instance MonadIRC m => MonadIRC (ReaderT r m) where
 instance MonadLB m => MonadLB (ReaderT r m) where
   liftLB = lift . liftLB
 
-type ModuleT s = ReaderT (IORef s)
+type ModuleT s m a = (?ref :: IORef s) => m a
 
-type TrivIRC = ModuleT () IRC
-type TrivLB = ModuleT () LB
+type TrivIRC a = ModuleT () IRC a
+type TrivLB a = ModuleT () LB a
 
 newtype IRC a 
   = IRC { runIRC :: IRCErrorT (ReaderT IRCRState (StateT IRCRWState IO)) a }
@@ -530,7 +530,7 @@ runIrc' m = do
         exitModules = do
           mods <- gets $ M.elems . ircModules
           (`mapM_` mods) $ \(ModuleRef mod ref) -> 
-            writeGlobalState mod `runReaderT` ref
+            let ?ref = ref in writeGlobalState mod
                                     
 
 readerLoop :: ThreadId -> Chan IRCMessage -> Chan IRCMessage -> Handle -> IO ()
@@ -750,7 +750,7 @@ ircLoadModule modname = withModule ircModules modname (return ()) (\m -> do
     cmds <- moduleCmds m
     s <- get
     let cmdmap = ircCommands s
-    mod <- asks $ ModuleRef m
+        mod = ModuleRef m ?ref
     put (s { ircCommands = M.addList [ (cmd,mod) | cmd <- cmds ] cmdmap })
     moduleInit m)
 
@@ -780,11 +780,6 @@ ircSignalConnect mod str f
               Nothing -> put (s { ircCallbacks = M.insert str [(n,f)]    cbs}) 
               Just fs -> put (s { ircCallbacks = M.insert str ((n,f):fs) cbs}) 
 
-ircSignalConnectR :: (Module mod s, MonadLB m) => 
-  mod -> String -> (IRCMessage -> ModuleT s IRC ()) -> ModuleT s m ()
-ircSignalConnectR mod str f = ReaderT $ \ref -> 
-  ircSignalConnect mod str ((`runReaderT` ref) . f)
-
 --isAdmin     :: IRCMessage -> Bool
 checkPrivs :: MonadIRC m => IRCMessage -> String -> m () -> m ()
 checkPrivs msg target f = do
@@ -794,12 +789,10 @@ checkPrivs msg target f = do
        Nothing -> ircPrivmsg target "not enough privileges"
 
 writeMS :: MonadIO m => s -> ModuleT s m ()
-writeMS s = do
-  ref <- ask
-  liftIO $ writeIORef ref $! s
+writeMS s = liftIO $ writeIORef ?ref $! s
 
 readMS :: MonadIO m => ModuleT s m s
-readMS = liftIO . readIORef =<< ask
+readMS = liftIO $ readIORef ?ref
 
 -- this belongs in the MoreModule, but causes cyclic imports
 
@@ -814,5 +807,5 @@ withModule :: MonadLB m => (IRCRWState -> Map String ModuleRef) ->
 withModule dict modname def f = do
     maybemod <- gets (M.lookup modname . dict)
     case maybemod of
-      Just (ModuleRef m ref) -> f m `runReaderT` ref
+      Just (ModuleRef m ref) -> let ?ref = ref in f m
       _                      -> def

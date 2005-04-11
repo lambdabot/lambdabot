@@ -30,7 +30,7 @@ data UserStatus
     deriving Show
 
 type SeenState = M.Map Nick UserStatus
-type Seen = ModuleT SeenState
+type Seen m a = ModuleT SeenState m a
 
 instance Module SeenModule SeenState where
     moduleName _        = "seen"
@@ -38,12 +38,12 @@ instance Module SeenModule SeenState where
     moduleCmds _        = return ["seen"]
     moduleDefState _    = return M.empty
     moduleInit m
-      = do ircSignalConnectR m "JOIN" $ joinCB
-           ircSignalConnectR m "PART" $ partCB
-           ircSignalConnectR m "QUIT" $ quitCB
-           ircSignalConnectR m "NICK" $ nickCB
-           ircSignalConnectR m "353" $ joinChanCB
-           ircSignalConnectR m "PRIVMSG" $ msgCB
+      = do ircSignalConnect m "JOIN" $ joinCB
+           ircSignalConnect m "PART" $ partCB
+           ircSignalConnect m "QUIT" $ quitCB
+           ircSignalConnect m "NICK" $ nickCB
+           ircSignalConnect m "353" $ joinChanCB
+           ircSignalConnect m "PRIVMSG" $ msgCB
 
     process m msg target cmd rest = do 
           seenFM <- readMS

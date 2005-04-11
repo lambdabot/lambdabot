@@ -97,8 +97,8 @@ data DLAccessor m
               , packagesA :: Accessor m (Set String)
               }
 
-dlGet :: (MonadReader (IORef DLModules) m, MonadLB m) => m (DLAccessor m)
-dlGet = do dlFMRef <- ask
+dlGet :: (MonadLB m) => ModuleT DLModules m (DLAccessor m)
+dlGet = do let dlFMRef = ?ref
            let dlA = dlAccessor dlFMRef
            return $ DLAccessor { objectsA  = objectsAccessor dlA
                                , packagesA = packagesAccessor dlA

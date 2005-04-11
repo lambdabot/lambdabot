@@ -29,7 +29,7 @@ newtype PlModule = PlModule ()
 theModule :: MODULE
 theModule = MODULE $ PlModule ()
 
-type Pl = ModuleT PlState
+type Pl m a = ModuleT PlState m a
 
 instance Module PlModule PlState where
     moduleName _   = "pl"

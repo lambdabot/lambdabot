@@ -12,7 +12,7 @@ theModule :: MODULE
 theModule = MODULE $ KarmaModule ()
 
 type KarmaState = M.Map String Integer
-type Karma = ModuleT KarmaState
+type Karma m a = ModuleT KarmaState m a
 
 instance Module KarmaModule KarmaState where
     moduleName   _ = "karma"

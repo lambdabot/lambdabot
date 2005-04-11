@@ -10,7 +10,6 @@ import qualified Map as M       (Map,keys,fromList,lookup)
 
 import Data.Maybe               (fromMaybe)
 import Control.Monad.State      (MonadState(get))
-import Control.Monad.Reader     (mapReaderT)
 
 ------------------------------------------------------------------------
 
@@ -85,7 +84,7 @@ listAll state target =
 listModule :: MonadIRC m => String -> String -> m ()
 listModule target modname = withModule ircCommands modname (ircPrivmsg target $ 
         "No module \""++modname++"\" loaded") (\m -> do
-                cmds <- mapReaderT liftLB $ moduleCmds m
+                cmds <- liftLB $ moduleCmds m
                 ircPrivmsg target $ concat 
                         ["Module ", modname, 
                          " provides the following commands: ", show cmds])
