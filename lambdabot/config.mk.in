@@ -32,13 +32,13 @@ STATIC=NO
 ifeq "$(STATIC)" "NO"
 PLUGINS=       Dict Dummy Eval Karma Quote Seen State \
                Topic Type Plugs Babel Version More Pl \
-	       Help Google Dice
+               Help Google Dice Wikipedia
 STATICS=       Base System Dynamic
 else
 PLUGINS=
 STATICS=       Base System Dynamic Dict Dummy Eval Karma \
-	       Quote Seen State Topic Type Plugs Babel \
-	       Version More Pl Help Google Help Dice
+               Quote Seen State Topic Type Plugs Babel \
+               Version More Pl Help Google Help Dice Wikipedia
 endif
 
 GHC_VERSION=	@GHC_VERSION@
