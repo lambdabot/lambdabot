@@ -38,7 +38,7 @@ else
 PLUGINS=
 STATICS=       Base System Dynamic Dict Dummy Eval Karma \
 	       Quote Seen State Topic Type Plugs Babel \
-	       Version More Pl Help Google Help Google Dice
+	       Version More Pl Help Google Help Dice
 endif
 
 GHC_VERSION=	@GHC_VERSION@
