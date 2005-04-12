@@ -36,7 +36,7 @@ import DeepSeq          (($!!), DeepSeq(..))
 import ErrorUtils
 import ExceptionError   (ExceptionError(..), ExceptionErrorT(..))
 import MonadException   (MonadException(throwM))
-import Util             (breakOnGlue)
+import Util             (split,clean,breakOnGlue, Serializer(..))
 
 import Map (Map)
 import qualified Map as M hiding (Map)
