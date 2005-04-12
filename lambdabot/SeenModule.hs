@@ -200,16 +200,17 @@ timeDiffPretty td =
       days = hours `div` 24
       months = days `div` 28
       years = months `div` 12
-  in foldr1 (++) [foo years "year",
-                  foo (months `mod` 12) "month",
-                  foo (days `mod` 28) "day",
-                  foo (hours `mod` 24) "hour",
-                  foo (mins `mod` 60) "minute",
-                  foo (secs `mod` 60) "second"]
-                   where foo i str
-                             | i > 0 = if i == 1 then "1 " ++ str ++ " "
-                                                 else (show i) ++ " " ++ str ++ "s "
-                             | otherwise = []
+  in foldr1 (++) [prettyP years "year",
+                  prettyP (months `mod` 12) "month",
+                  prettyP (days `mod` 28) "day",
+                  prettyP (hours `mod` 24) "hour",
+                  prettyP (mins `mod` 60) "minute",
+                  prettyP (secs `mod` 60) "second"]
+                   where prettyP i str
+                          | i > 0 = if i == 1
+                                then "1 " ++ str ++ " "
+                                else (show i) ++ " " ++ str ++ "s "
+                          | otherwise = []
 
 
 

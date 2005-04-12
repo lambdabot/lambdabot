@@ -13,23 +13,22 @@ module Main where
 import Char
 import List
 import System.Environment
-
 import Text.PrettyPrint
 
 outfile :: [Char]
 outfile = "Modules.hs"
 
 main :: IO ()
-main = do argv    <- getArgs
-          if argv /= ["--depends"] 
+main = do argv <- getArgs
+          if argv /= ["--depends"]
            -- write static/dynamic imports file
            then do
                 let (plugins,statics) = breakcsv "," argv
-                    src               = unlines (process statics) ++ process2 plugins
+                    src               = unlines (process statics)
+                                           ++ process2 plugins
                 writeFile outfile src
-
            -- generate a dependency tree. todo, do the sed fragment here too.
-           else do 
+           else do
                 raw <- getContents      -- list of ghc --show-iface output
 
                 let syn'      = parse raw
@@ -37,7 +36,7 @@ main = do argv    <- getArgs
                     packages  = nub . sort . foldr1 (++) $ ps
                     depends   = foldr1 intersect $ ds
                     syn       = map (\(a,b,c) -> (a, b \\  depends, c)) syn'
-                        
+
                 let cores = vcat [text "corePlugins :: [String]"
                                  ,text $ "corePlugins = " ++ show depends]
 
@@ -45,19 +44,19 @@ main = do argv    <- getArgs
                                  ,text $ "reqPackages = " ++ show packages]
 
                 let src =  "-- Generated via \"make dynamic-depends\"\n"
-                              ++ "module Depends where"
-                              ++ "\n\n"
-                              ++ "data Require = Object String | Package String"
-                              ++ "\n\n"
-                              ++ render cores
-                              ++ "\n\n"
-                              ++ render pkgs
-                              ++ "\n\n"
-                              ++ "getFileRequires :: String -> [Require]"
-                              ++ "\n\n"
-                              ++ (render . vcat . map ppr $ syn)
-                              ++ "\n\n"
-                              ++ "getFileRequires _ = []"
+                             ++ "module Depends where"
+                             ++ "\n\n"
+                             ++ "data Require = Object String | Package String"
+                             ++ "\n\n"
+                             ++ render cores
+                             ++ "\n\n"
+                             ++ render pkgs
+                             ++ "\n\n"
+                             ++ "getFileRequires :: String -> [Require]"
+                             ++ "\n\n"
+                             ++ (render . vcat . map ppr $ syn)
+                             ++ "\n\n"
+                             ++ "getFileRequires _ = []"
 
                 writeFile "Depends.hs" src
 
