@@ -21,7 +21,7 @@ instance Module QuoteModule () where
     moduleHelp _ "fortune" = return "Provide a random fortune"
     moduleHelp _ "yow"     = return "Yow!"
     moduleHelp _ "arr"     = return "Talk to a pirate"
-    moduleHelp _ _         = return "The quote module provides a range of quotes"
+    moduleHelp _ _         = return "The quote module provides random quotes"
     moduleCmds           _ = return ["fortune","yow","arr"]
     process      _ _ target cmd _
       = do quote <- liftIO $ case cmd of
