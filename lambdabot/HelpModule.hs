@@ -19,7 +19,7 @@ instance Module HelpModule () where
     moduleCmds   _ = return ["help"]
     process        = doHelp
 
-doHelp :: HelpModule -> IRCMessage -> String -> String -> [Char] -> TrivIRC ()
+doHelp :: HelpModule -> IRCMessage -> String -> String -> [Char] -> ModuleT () IRC ()
 
 doHelp m msg target cmd "" = doHelp m msg target cmd "help"
 

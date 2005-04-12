@@ -34,17 +34,17 @@ instance Module TopicModule () where
   process _ _ src cmd _
     = ircPrivmsg src ("Bug! someone forgot the handler for \""++cmd++"\"")
 
-topic_snoc :: String -> String -> TrivIRC ()
+topic_snoc :: String -> String -> IRC ()
 topic_snoc source cmdtext = alter_topic source chan (snoc topic_item)
   where
   (chan, topic_item) = splitFirstWord cmdtext
 
-topic_cons :: String -> String -> TrivIRC ()
+topic_cons :: String -> String -> IRC ()
 topic_cons source cmdtext = alter_topic source chan (topic_item:)
   where
   (chan, topic_item) = splitFirstWord cmdtext
 
-alter_topic :: String -> String -> ([String] -> [String]) -> TrivIRC ()
+alter_topic :: String -> String -> ([String] -> [String]) -> IRC ()
 alter_topic source chan f
   = do
     maybetopic <- gets (\s -> M.lookup (mkCN chan) (ircChannels s) )

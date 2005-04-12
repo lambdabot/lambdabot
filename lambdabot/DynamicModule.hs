@@ -85,7 +85,7 @@ instance Module DynamicModule DLModules where
 handleRLEConsole :: MonadLB m => m () -> m ()
 handleRLEConsole = handleErrorJust findRLEError (liftIO . print)
 
-handleRLE :: MonadIRC m => String -> m () -> m ()
+handleRLE :: String -> IRC () -> IRC ()
 handleRLE src = handleErrorJust findRLEError (ircPrivmsg src . show)
 
 findRLEError :: IRCError -> Maybe RuntimeLoaderException

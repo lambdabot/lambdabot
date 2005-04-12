@@ -19,5 +19,5 @@ instance Module MoreModule () where
     moduleCmds   _ = return ["more"]
     process      _ _ target _ _
       = do
-        morestate <- liftIRC $ ircMoreState `fmap` get
+        morestate <- gets ircMoreState
         ircPrivmsg target morestate

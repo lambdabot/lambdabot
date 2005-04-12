@@ -46,9 +46,9 @@ syscmds = M.fromList
 defaultHelp :: String
 defaultHelp = "system : irc management"
 
-doSystem :: MonadIRC m => IRCMessage -> String -> [Char] -> [Char] -> m ()
+doSystem :: IRCMessage -> String -> [Char] -> [Char] -> IRC ()
 doSystem msg target cmd rest = do
-   s <- liftIRC get
+   s <- get
    case cmd of
       "listchans"   -> ircPrivmsg target $ pprKeys (ircChannels s)
       "listmodules" -> ircPrivmsg target $ pprKeys (ircModules s)
@@ -77,11 +77,11 @@ doSystem msg target cmd rest = do
 
 ------------------------------------------------------------------------
 
-listAll :: MonadIRC m => IRCRWState -> String -> m ()
+listAll :: IRCRWState -> String -> IRC ()
 listAll state target = 
         ircPrivmsg target $ "Commands: "++pprKeys (ircCommands state)
 
-listModule :: MonadIRC m => String -> String -> m ()
+listModule :: String -> String -> IRC ()
 listModule target modname = withModule ircCommands modname (ircPrivmsg target $ 
         "No module \""++modname++"\" loaded") (\m -> do
                 cmds <- liftLB $ moduleCmds m

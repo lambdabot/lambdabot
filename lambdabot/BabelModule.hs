@@ -70,7 +70,7 @@ instance Module BabelModule Quotes where
 --
 -- TODO add range/context. i.e. !f-3 or 5-4
 --
-run_babel :: MonadIRC m => String -> String -> m ()
+run_babel :: String -> String -> IRC ()
 
 run_babel src s = do
         let cmd = split ' ' 3 s
@@ -161,7 +161,7 @@ run_last src i = do
 -- the @remember command stores away a quotation by a user, for future
 -- use by @quote
 
-run_remember :: MonadIRC m => String -> ModuleT Quotes m ()
+run_remember :: String -> ModuleT Quotes IRC ()
 run_remember str = do
         let (name,q') = break (== ' ') str
             q = if null q' then q' else tail q'
@@ -174,7 +174,7 @@ run_remember str = do
 --
 --  the @quote command, takes a user name to choose a random quote from
 -- 
-run_quote :: MonadIRC m => String -> String -> ModuleT Quotes m ()
+run_quote :: String -> String -> ModuleT Quotes IRC ()
 run_quote target name = do
     fm <- readMS
     let qs' = M.lookup name fm

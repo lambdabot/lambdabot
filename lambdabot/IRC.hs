@@ -5,9 +5,8 @@
 module IRC (
         MODULE(..), Module(..),
         ModuleT,
-        TrivIRC, TrivLB,
 
-        MonadIRC(..), IRCMessage(..), 
+        IRCMessage(..), 
         IRCRState(..), IRCRWState(..), IRCError(..), 
         IRC(..),
 
@@ -280,19 +279,7 @@ class (Monad m,MonadState IRCRWState m,MonadError IRCError m,MonadIO m)
    where
   liftLB :: LB a -> m a
 
-class (MonadLB m) => MonadIRC m where
-  liftIRC :: IRC a -> m a
-  
-instance MonadIRC m => MonadIRC (ReaderT r m) where
-  liftIRC = lift . liftIRC
-
-instance MonadLB m => MonadLB (ReaderT r m) where
-  liftLB = lift . liftLB
-
 type ModuleT s m a = (?ref :: IORef s) => m a
-
-type TrivIRC a = ModuleT () IRC a
-type TrivLB a = ModuleT () LB a
 
 newtype IRC a 
   = IRC { runIRC :: IRCErrorT (ReaderT IRCRState (StateT IRCRWState IO)) a }
@@ -333,8 +320,8 @@ mkIrcMessage :: String -> [String] -> IRCMessage
 mkIrcMessage cmd params
   = IRCMessage { msgPrefix = "", msgCommand = cmd, msgParams = params }
 
-ircSignOn :: MonadIRC m => String -> String -> m ()
-ircSignOn nick ircname = liftIRC $ do 
+ircSignOn :: String -> String -> IRC ()
+ircSignOn nick ircname = do 
     server <- asks ircServer
     ircWrite (mkIrcMessage "USER" [nick, "localhost", server, ircname])
     ircWrite (mkIrcMessage "NICK" [nick])
@@ -350,7 +337,7 @@ ircGetChannels = do
 -- evil hack to make the MoreModule work
 -- change this to an output filter when the new Module typeclass arrives
 --
-ircPrivmsg :: MonadIRC m => String -> String -> m ()
+ircPrivmsg :: String -> String -> IRC ()
 ircPrivmsg who msg
     = do let myname   = name config
              maxLines = moresize config
@@ -389,17 +376,17 @@ mbreak n p xs@(x:xs')
 {- yes it's ugly, but... -}
 
 
-ircPrivmsg' :: MonadIRC m => String -> String -> m ()
+ircPrivmsg' :: String -> String -> IRC ()
 ircPrivmsg' who msg
   = ircWrite (mkIrcMessage "NOTICE" [who, ':' : clean_msg])
     -- merry christmas det
     where clean_msg = concatMap clean msg
 
-ircTopic :: MonadIRC m => String -> String -> m ()
+ircTopic :: String -> String -> IRC ()
 ircTopic chan topic
   = ircWrite (mkIrcMessage "TOPIC" [chan, ':' : topic])
 
-ircGetTopic :: MonadIRC m => String -> m ()
+ircGetTopic :: String -> IRC ()
 ircGetTopic chan
   = ircWrite (mkIrcMessage "TOPIC" [chan])
 
@@ -408,34 +395,32 @@ ircGetTopic chan
 -- after that they return and the connection will probably be forcibly
 -- closed by the finallyError in runIrc'
 
-ircQuit :: MonadIRC m => String -> m ()
+ircQuit :: String -> IRC ()
 ircQuit msg = do 
     state <- get
     put (state { ircStayConnected = False })
     ircWrite (mkIrcMessage "QUIT" [':' : msg])
     liftIO $ threadDelay 1000
 
-ircReconnect :: MonadIRC m => String -> m ()
+ircReconnect :: String -> IRC ()
 ircReconnect msg = do ircWrite (mkIrcMessage "QUIT" [':' : msg])
                       liftIO $ threadDelay 1000
 
-ircJoin :: MonadIRC m => String -> m ()
+ircJoin :: String -> IRC ()
 ircJoin loc
   = ircWrite (mkIrcMessage "JOIN" [loc])
 
-ircPart :: MonadIRC m => String -> m ()
+ircPart :: String -> IRC ()
 ircPart loc
   = ircWrite (mkIrcMessage "PART" [loc])
 
-instance MonadIRC IRC where liftIRC = id
-
-ircRead :: MonadIRC m => m IRCMessage
-ircRead = liftIRC $ do 
+ircRead :: IRC IRCMessage
+ircRead = do 
     chanr <- asks ircReadChan
     liftIO (readChan chanr)
 
-ircWrite :: MonadIRC m => IRCMessage -> m ()
-ircWrite line = liftIRC $ do  
+ircWrite :: IRCMessage -> IRC ()
+ircWrite line = do  
     chanw <- asks ircWriteChan
     -- use DeepSeq's $!! to ensure that any Haskell errors in line
     -- are caught now, rather than later on in the other thread
@@ -782,7 +767,7 @@ ircSignalConnect mod str f
               Just fs -> put (s { ircCallbacks = M.insert str ((n,f):fs) cbs}) 
 
 --isAdmin     :: IRCMessage -> Bool
-checkPrivs :: MonadIRC m => IRCMessage -> String -> m () -> m ()
+checkPrivs :: IRCMessage -> String -> IRC () -> IRC ()
 checkPrivs msg target f = do
     maybepriv <- gets (\s -> M.lookup (ircNick msg) (ircPrivilegedUsers s) )
     case maybepriv of
@@ -797,7 +782,7 @@ readMS = liftIO $ readIORef ?ref
 
 -- this belongs in the MoreModule, but causes cyclic imports
 
-moreStateSet :: (MonadIRC m) => String -> m ()
+moreStateSet :: String -> IRC ()
 moreStateSet lns = 
     do s <- get
        put (s { ircMoreState = lns })

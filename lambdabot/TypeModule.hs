@@ -74,7 +74,7 @@ extract_result output
 --
 --     With this the command handler can be easily defined using popen:
 --
-query_ghci :: String -> String -> String -> TrivIRC ()
+query_ghci :: String -> String -> String -> IRC ()
 query_ghci src cmd expr =
        do
        (output, _, _) <- liftIO $ popen "ghci-6.4" ["-fglasgow-exts"]
@@ -87,7 +87,7 @@ query_ghci src cmd expr =
 --
 --     With this the command handler can be easily defined using popen:
 --
-run_ghci :: String -> String -> TrivIRC ()
+run_ghci :: String -> String -> IRC ()
 run_ghci src expr =
        do
        (output, _, _) <- liftIO $ popen "ghci" [] (Just expr)
