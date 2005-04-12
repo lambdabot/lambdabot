@@ -116,11 +116,14 @@ unitTest inp out = TestCase $ do
   let d' = mapTopLevel (last . optimize . transform) d
   foldr1 mplus [assertEqual (inp++" failed.") o (show d') | o <- out]
 
-lastTest :: Test
-lastTest = TestCase $ assertBool "" True
-
 unitTests :: Test
 unitTests = TestList [
+  unitTest "(=<<) id" ["join"],
+  unitTest "zipWith (,)" ["zip"],
+  unitTest "map fst . zip [1..]" ["zipWith const [1..]"],
+  unitTest "curry . uncurry" ["id"],
+  unitTest "uncurry . curry" ["id"],
+  unitTest "curry fst" ["const"],
   unitTest "return x >> y" ["y"],
   -- What were they smoking when they decided >> should be infixl
   unitTest "a >>= \\_ -> b >>= \\_ -> return $ const (1 + 2) $ a + b" ["a >> (b >> return 3)"],
@@ -176,8 +179,8 @@ unitTests = TestList [
   unitTest "p x = product [1,2,3,x]" ["p = (6 *)"],
   unitTest "(concat .) . map" ["(=<<)"],
   unitTest "let f ((a,b),(c,d)) = a + b + c + d in f ((1,2),(3,4))" ["10"],
-  unitTest "let x = const 3 y; y = const 4 x in x + y" ["7"], -- yay!
-  lastTest]
+  unitTest "let x = const 3 y; y = const 4 x in x + y" ["7"] -- yay!
+  ]
 
 main :: IO ()
 main = do 

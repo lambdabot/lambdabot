@@ -155,10 +155,10 @@ up   = fix . Up
 
 
 idE, flipE, bindE, extE, returnE, consE, appendE, nilE, foldrE, foldlE, fstE,
-  sndE, dollarE, constE, uncurryE, compE, headE, tailE, sE, commaE, fixE,
-  foldl1E, notE, equalsE, nequalsE, plusE, multE, zeroE, oneE, lengthE, sumE,
-  productE, concatE, concatMapE, joinE, mapE, fmapE, fmapIE, subtractE, minusE,
-  liftME, apE, liftM2E, seqME :: MExpr
+  sndE, dollarE, constE, uncurryE, curryE, compE, headE, tailE, sE, commaE, 
+  fixE, foldl1E, notE, equalsE, nequalsE, plusE, multE, zeroE, oneE, lengthE, 
+  sumE, productE, concatE, concatMapE, joinE, mapE, fmapE, fmapIE, subtractE, 
+  minusE, liftME, apE, liftM2E, seqME, zipE, zipWithE :: MExpr
 idE        = Quote $ Var Pref "id"
 flipE      = Quote $ Var Pref "flip"
 constE     = Quote $ Var Pref "const"
@@ -177,6 +177,7 @@ fstE       = Quote $ Var Pref "fst"
 sndE       = Quote $ Var Pref "snd"
 dollarE    = Quote $ Var Inf  "$"
 uncurryE   = Quote $ Var Pref "uncurry"
+curryE     = Quote $ Var Pref "curry"
 headE      = Quote $ Var Pref "head"
 tailE      = Quote $ Var Pref "tail"
 commaE     = Quote $ Var Inf  ","
@@ -203,6 +204,8 @@ liftME     = Quote $ Var Pref "liftM"
 liftM2E    = Quote $ Var Pref "liftM2"
 apE        = Quote $ Var Inf  "ap"
 seqME      = Quote $ Var Inf  ">>"
+zipE       = Quote $ Var Pref "zip"
+zipWithE   = Quote $ Var Pref "zipWith"
 
 
 
@@ -310,6 +313,8 @@ simplifies = Or [
   -- uncurry f . s (,) g --> s f g
   rr1 (\f g -> (uncurryE `a` f) `c` (sE `a` commaE `a` g))
       (\f g -> sE `a` f `a` g),
+  -- curry fst --> const
+  rr (curryE `a` fstE) (constE),
   -- s f g x --> f x (g x)
   rr0 (\f g x -> sE `a` f `a` g `a` x)
       (\f g x -> f `a` x `a` (g `a` x)),
@@ -360,9 +365,9 @@ rules = [
   -- (=<<) return --> id
   rr  (extE `a` returnE)
       idE,
-  -- (=<<) f . return -> f
-  rr  (\f -> (extE `a` f) `c` returnE)
-      (\f -> f),
+  -- (=<<) f (return x) -> f x
+  rr  (\f x -> extE `a` f `a` (returnE `a` x))
+      (\f x -> f `a` x),
   -- (=<<) ((=<<) f . g) --> (=<<) f . (=<<) g
   rr  (\f g -> extE `a` ((extE `a` f) `c` g))
       (\f g -> (extE `a` f) `c` (extE `a` g)),
@@ -394,6 +399,16 @@ rules = [
   -- s (f . fst) snd --> uncurry f
   rr  (\f -> sE `a` (f `c` fstE) `a` sndE)
       (\f -> uncurryE `a` f),
+  -- The next two are `simplifies', strictly speaking, but invoked rarely.
+  -- uncurry f (x,y) --> f x y
+  rr  (\f x y -> f `a` (commaE `a` x `a` y))
+      (\f x y -> f `a` x `a` y),
+  -- curry (uncurry f) --> f
+  rr (\f -> curryE `a` (uncurryE `a` f))
+     (\f -> f),
+  -- uncurry (curry f) --> f
+  rr (\f -> uncurryE `a` (curryE `a` f))
+     (\f -> f),
   -- (const id . f) --> const id
   rr  (\f -> (constE `a` idE) `c` f)
       (\_ -> constE `a` idE),
@@ -450,6 +465,8 @@ rules = [
   -- join (fmap f x) --> f =<< x
   rr (\f x -> joinE `a` (fmapE `a` f `a` x))
      (\f x -> extE `a` f `a` x),
+  -- (=<<) id --> join
+  rr (extE `a` idE) joinE,
   -- (return . f) =<< m --> fmap f m
   rr (\f m -> extE `a` (returnE `c` f) `a` m)
      (\f m -> fmapIE `a` f `a` m),
@@ -484,11 +501,18 @@ rules = [
   rr (\f x -> bindE `a` x `c` flipE `a` (fmapE `c` f))
      (\f x -> liftM2E `a` f `a` x),
 
+  -- map f (zip xs ys) --> zipWith (curry f) xs ys
+  Hard $
+  rr (\f xs ys -> mapE `a` f `a` (zipE `a` xs `a` ys))
+     (\f xs ys -> zipWithE `a` (curryE `a` f) `a` xs `a` ys),
+  -- zipWith (,) --> zip (,)
+  rr (zipWithE `a` commaE) zipE,
+
   -- (=<<) const q --> flip (>>) q
   Hard $ -- ??
   rr (\q p -> extE `a` (constE `a` q) `a` p)
      (\q p -> seqME `a` p `a` q),
-  -- p >> q --> p >>= const q
+  -- p >> q --> const q =<< p
   Hard $
   rr (\p q -> seqME `a` p `a` q)
      (\p q -> extE `a` (constE `a` q) `a` p),
