@@ -364,14 +364,14 @@ ircPrivmsg who msg
 
 mlines			:: String -> [String]
 mlines ""		=  []
-mlines s		=  let (l, s') = mbreak (0::Int) (== '\n') s
+mlines s		=  let (l, s') = mbreak 0 (== '\n') s
 			   in  l : case s' of
 					[]  -> []
 					s'' -> mlines s''
 -- Does that really make sense?
 {-# INLINE mlines #-}
 
-mbreak :: (Num a, Ord a) => a -> (Char -> Bool) -> [Char] -> ([Char], [Char])
+mbreak :: Int -> (Char -> Bool) -> [Char] -> ([Char], [Char])
 mbreak _ _ xs@[] = (xs, xs)
 mbreak n p xs@(x:xs')
     | n == 80  =  ([],dropWhile isSpace xs)
@@ -385,9 +385,12 @@ mbreak n p xs@(x:xs')
 
 ircPrivmsg' :: String -> String -> IRC ()
 ircPrivmsg' who msg
-  = ircWrite (mkIrcMessage "NOTICE" [who, ':' : clean_msg])
+  = ircWrite (mkIrcMessage "PRIVMSG" [who, ':' : clean_msg])
     -- merry christmas det
-    where clean_msg = concatMap clean msg
+    where clean_msg = case concatMap clean msg of
+              str@('@':_) -> ' ':str
+              str         -> str
+
 
 ircTopic :: String -> String -> IRC ()
 ircTopic chan topic
