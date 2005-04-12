@@ -39,6 +39,7 @@ getFileRequires "EvalModule.o" = [
     Object "EvalModule/LangPack.o" ]
 
 getFileRequires "GoogleModule.o" = [ Object "MiniHTTP.o" ]
+getFileRequires "VixenModule.o" = [ Object "Vixen.o" ]
 getFileRequires "PlModule.o" = [
     Object "PlModule/Transform.o" ,
     Object "PlModule/PrettyPrinter.o" ,
@@ -80,6 +81,7 @@ getFileRequires "EvalModule.o" = [
     Object "EvalModule/RelTerm.o" ]
 
 getFileRequires "GoogleModule.o" = [ Object "MiniHTTP.o" ]
+getFileRequires "VixenModule.o" = [ Object "Vixen.o" ]
 getFileRequires "PlModule.o" = [
     Object "PlModule/Common.o" ,
     Object "PlModule/Parser.o" ,
