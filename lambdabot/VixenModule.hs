@@ -6,7 +6,7 @@
 module VixenModule where
 
 import IRC
-import Vixen			(mkResponses,readConfig,vixen,RespChoice)
+import Vixen			(mkVixen)
 
 import Control.Monad.State      (MonadIO, liftIO)
 
@@ -23,7 +23,7 @@ vixenModule = VixenModule ()
 file :: String
 file = "data/vixenrc"
 
-instance Module VixenModule RespChoice where
+instance Module VixenModule (String -> IO String) where
     moduleName   _ = "vixen"
     moduleSticky _ = False
 
@@ -31,19 +31,18 @@ instance Module VixenModule RespChoice where
              "vixenlove" -> "talk to me, big boy"
              _           -> "sergeant curry's lonely hearts club"
 
-    moduleDefState _ = liftIO (readConfig file)
-    
+    moduleDefState _ = do
+                         f <- liftIO (readFile file)
+    			 return $ mkVixen f
+
     moduleCmds     _ = return ["vixen"]
     process _ _ src cmd rest = case cmd of
                "vixen" -> vixenCmd src rest
                _       -> error "vixen error: i'm just a girl!"
 
---
--- ideally, mkResponses state would be cached between calls - the file could be large.
---
-vixenCmd :: String -> String -> ModuleT RespChoice IRC ()
+vixenCmd :: String -> String -> ModuleT (String -> IO String) IRC ()
 vixenCmd src rest = do 
-	state <-  readMS
-        result <- liftIO $ vixen (mkResponses state) rest
+	responder <-  readMS
+        result <- liftIO $  responder rest
         ircPrivmsg src result
 

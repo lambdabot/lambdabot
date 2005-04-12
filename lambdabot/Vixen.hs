@@ -4,7 +4,7 @@
 -- | Talk to hot chixxors.
 --
 
-module Vixen (mkResponses,readConfig, vixen,RespChoice) where
+module Vixen (mkVixen) where
 
 import Util
 
@@ -18,18 +18,21 @@ import Text.Regex
 
 import GHC.IOBase (unsafePerformIO)
 
+
+mkVixen :: String -> String -> IO String
+mkVixen phraseBook question = do 
+  vixen (mkResponses $ readConfig phraseBook) question
 ----------------------------------------------------------------------
 
 -- format
 -- top:  (regex, wtree)
 -- wtr:  (wtr wtr ... )
 --    |   str
-readConfig :: String -> IO RespChoice
-readConfig fname = do
-  l <- readFile fname 
+readConfig :: String -> RespChoice
+readConfig l = do
   case (parse parseChoices "vixenlove" l) of
     Left a  -> error $ "Parse error at"++ show a
-    Right b -> return (b ++ [(mkRegex ".*", Leaf "If you see this, gentle sir, know that you are being trolled by a poorly configured VixenLove program")])
+    Right b -> (b ++ [(mkRegex ".*", Leaf "If you see this, gentle sir, know that you are being trolled by a poorly configured VixenLove program")])
   
 -- ----------------------------------------------------------------------------
 -- Parser
