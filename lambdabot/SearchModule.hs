@@ -1,9 +1,12 @@
 --
+-- (c) 2005 Samuel Bronson
+--
 -- | Search various things, Wikipedia and google for now.
 --
 
 module SearchModule (theModule) where
 
+import Util
 import IRC
 import Config                   (proxy, config)
 import MiniHTTP
@@ -33,16 +36,17 @@ instance Module SearchModule () where
     moduleSticky _ = False
 
     moduleHelp _ s = return $ case s of
-             "google"    -> "search google and show url of first hit"
-             "wikipedia" -> "search wikipedia and show url of first hit"
+             "google"    -> "@google <expr>, search google and show url of first hit"
+             "wikipedia" -> "@wikipedia <expr>, search wikipedia and show url of first hit"
              _           -> "module for doing searches"
     
     moduleCmds   _ = return (map fst engines)
-    process _ _ src cmd rest = searchCmd cmd src rest
+    process _ _ src cmd rest = searchCmd cmd src (dropSpace rest)
 
 ------------------------------------------------------------------------
 
 searchCmd :: String -> String -> String -> ModuleT s IRC ()
+searchCmd _ src [] = ircPrivmsg src "Empty search."
 searchCmd engine src rest = do 
         result <- liftIO $ query engine rest
         ircPrivmsg src (extractLoc result)
@@ -60,11 +64,9 @@ query engine q = readPage (proxy config) uri request ""
           request = ["HEAD " ++ url ++ " HTTP/1.0", ""]
 
 extractLoc :: [String] -> String
-extractLoc [] = error "got absolutely no lines of HTTP response, something wierd is up."
+extractLoc [] = error "No response, something weird is up."
 extractLoc (_:headers) = 
-        fromMaybe (error "search: No result found")
-                         --("couldn't find a \"Location:\" header: maybe there were no results?\n"
-                         -- ++"http status line was:"++show firstline)
+        fromMaybe (error "No result found.")
                   (lookup "Location" $ concatMap f headers)
 
         where f s = case findIndex (==':') s of
