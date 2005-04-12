@@ -1,22 +1,23 @@
+--
 -- BSD licence, author Mark Wotton (mwotton@gmail.com)
 --
 -- | Talk to hot chixxors.
 --
 
 module Vixen (mkResponses,readConfig, vixen,RespChoice) where
-import Maybe
+
 import Util
---import Random
 
+import Data.Maybe
 import Control.Exception
-
-import GHC.IOBase (unsafePerformIO)
 
 import qualified Text.ParserCombinators.Parsec.Token as P
 import Text.ParserCombinators.Parsec.Language
 import Text.ParserCombinators.Parsec
 import Text.Regex
-------------------------------------------------------------------------
+
+import GHC.IOBase (unsafePerformIO)
+
 ----------------------------------------------------------------------
 
 -- format
@@ -30,56 +31,48 @@ readConfig fname = do
     Left a  -> error $ "Parse error at"++ show a
     Right b -> return (b ++ [(mkRegex ".*", Leaf "If you see this, gentle sir, know that you are being trolled by a poorly configured VixenLove program")])
   
--------------------------------------------------------------------------------
+-- ----------------------------------------------------------------------------
 -- Parser
-
 
 lexer :: P.TokenParser st
 lexer = P.makeTokenParser haskellStyle
-parens :: CharParser st a
-	  -> CharParser st a
+
+parens :: CharParser st a -> CharParser st a
 parens = P.parens lexer
-stringLiteral :: CharParser st
-	       String
+
+stringLiteral :: CharParser st String
 stringLiteral = P.stringLiteral lexer
-lexeme :: CharParser st a
-	  -> CharParser st a
+
+lexeme :: CharParser st a -> CharParser st a
 lexeme = P.lexeme lexer
-lstring :: GenParser Char
-							st
-							String
+
+lstring :: GenParser Char st String
 lstring = lexeme stringLiteral <?> "lexeme"
+
 whiteSpace :: CharParser st ()
 whiteSpace = P.whiteSpace lexer
 
-parseChoices :: GenParser Char
-		          st
-		          [(Regex, WTree String)]
+parseChoices :: GenParser Char st [(Regex, WTree String)]
 parseChoices = do
   whiteSpace <?> "whitespace"
   l <- many parseMatch <?> "many parses"
   return [(a,b) | (Just a,b) <- l] 
 
-parseMatch :: GenParser Char
-							   st
-							   (Maybe Regex,
-							    WTree String)
+parseMatch :: GenParser Char st (Maybe Regex, WTree String)
 parseMatch = parens (do {
                r <- regexP <?> "r";
                wtr <- many wtreeP <?> "wtr" ; return (r,Node wtr) 
 	     }) <?> "parseMatch"
 
-mkRegexMaybe :: String -> Maybe Regex
 -- case insensitive match
+mkRegexMaybe :: String -> Maybe Regex
 mkRegexMaybe l = let r = mkRegexWithOpts l True False in 
 		 case unsafePerformIO $ Control.Exception.try (evaluate r) of
 		    Left  _  -> Nothing
                     Right s -> Just s
 		 
 		   
-regexP :: GenParser Char
-	            st
-		    (Maybe Regex)
+regexP :: GenParser Char st (Maybe Regex)
 regexP = do { l <- lstring <?> "lstring"; return $ mkRegexMaybe l } <?> "regexP"
 
 wtreeP :: CharParser st (WTree String)
@@ -88,8 +81,6 @@ wtreeP = lexeme (
   <|> (do l <- lstring; return $ Leaf l)
   <?> "wtree"
   )	  
-
-
 
 -- idea is that everything on a given level is 
 -- equally likely. Probably enough, could add a
@@ -101,6 +92,7 @@ wtreeP = lexeme (
 
 data WTree a = Leaf a | Node [WTree a]
   deriving Show
+
 type RespChoice = [(Regex, WTree String)]
 
 -- use IO only for random, could remove it.
