@@ -196,23 +196,28 @@ stdGetRandItem :: [a] -> IO a
 stdGetRandItem lst = getStdRandom $ getRandItem lst
 
 -- | A Serializer provides a way for a type s to be written to and read from
---   a string. 
+--   a string.
 data Serializer s = Serializer {
   serialize   :: s -> String,
   deSerialize :: String -> Maybe s
 }
 
+-- | The 'stdSerializer' serializes types t, which are instances of Read and
+--   Show, using these 2 type classes for serialisation and deserialization.
 stdSerializer :: (Show s, Read s) => Serializer s
 stdSerializer = Serializer show readM
-  
-mapSerializer :: (Ord k, Show k, Show v, Read k, Read v) => Serializer (Map k v)
+
+-- | 'mapSerializer' serializes a 'Map' type if both the key and the value
+--   are instances of Read and Show. The serialization is done by converting
+--   the map to and from lists.
+mapSerializer :: (Ord k, Show k, Show v, Read k, Read v)
+	      => Serializer (Map k v)
 mapSerializer = Serializer {
   serialize = unlines . map show . M.toList,
   deSerialize = Just . M.fromList . catMaybes . map readM . lines
 }
 
-
--- | like read, but catches failure in a monad.
+-- | 'readM' behaves like read, but catches failure in a monad.
 readM :: (Monad m, Read a) => String -> m a
 readM s = case [x | (x,t) <- reads s, ("","") <- lex t] of
         [x] -> return x
@@ -221,6 +226,10 @@ readM s = case [x | (x,t) <- reads s, ("","") <- lex t] of
 
 ------------------------------------------------------------------------
 
+-- | 'dropSpace' takes as input a String and strips spaces from the
+--   prefix as well as the postfix of the String. Example:
+--
+-- > dropSpace "   abc  " ===> "abc"
 dropSpace :: [Char] -> [Char]
 dropSpace = let f = reverse . dropWhile isSpace in f . f
 
