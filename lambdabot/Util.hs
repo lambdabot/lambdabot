@@ -3,6 +3,8 @@ module Util (
      join,
      split,
      breakOnGlue,
+     clean,
+     dropSpace,
      snoc,
      after,
      split_first_word,
@@ -197,3 +199,14 @@ readM s = case [x | (x,t) <- reads s, ("","") <- lex t] of
         [x] -> return x
         []  -> fail "Util.readM: no parse"
         _   -> fail "Util.readM: ambiguous parse"
+
+------------------------------------------------------------------------
+
+dropSpace :: [Char] -> [Char]
+dropSpace = let f = reverse . dropWhile isSpace in f . f
+
+--clean x | x `elem` specials = ['\\',x]
+clean :: Char -> [Char]
+clean x | x == '\CR' = []
+        | otherwise         = [x]
+        -- where specials = "\\"

@@ -36,7 +36,7 @@ import DeepSeq          (($!!), DeepSeq(..))
 import ErrorUtils
 import ExceptionError   (ExceptionError(..), ExceptionErrorT(..))
 import MonadException   (MonadException(throwM))
-import Util             (breakOnGlue, Serializer(..))
+import Util             (clean,breakOnGlue, Serializer(..))
 
 import Map (Map)
 import qualified Map as M hiding (Map)
@@ -387,12 +387,6 @@ ircPrivmsg' who msg
   = ircWrite (mkIrcMessage "NOTICE" [who, ':' : clean_msg])
     -- merry christmas det
     where clean_msg = concatMap clean msg
-
---clean x | x `elem` specials = ['\\',x]
-clean :: Char -> [Char]
-clean x | x == '\CR' = []
-        | otherwise         = [x]
-        -- where specials = "\\"
 
 ircTopic :: MonadIRC m => String -> String -> m ()
 ircTopic chan topic
