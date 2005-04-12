@@ -11,7 +11,7 @@ data Config = Config {
         host      :: String, -- ^ Host to join
         port      :: Int,    -- ^ The port number to use on the host
         verbose   :: Bool,   -- ^ Should lambdabot be verbose?
-        moresize  :: Int,    -- ^ How many lines is output before @more?
+        moresize  :: Int,    -- ^ How many lines is output before \@more?
         autojoin  :: [String], -- ^ List of channels to autojoin
         admins    :: [String], -- ^ List of nicknames that are admins
         proxy     :: Maybe ([Char], Integer) -- ^ An eventual proxy given as
