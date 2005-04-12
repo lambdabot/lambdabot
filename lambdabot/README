@@ -1,20 +1,27 @@
 INSTALL:
 
-Unpack the archive into a directory, put your own settings into BotConfig.hs
-then run:
+The following is a guide to install lambdabot on your computer. Begin by
+unpacking the lambdabot archive into a directory and modify the file
+Config.hs to suit your needs. Then run:
 
 	autoconf
 	./configure
 	make	(gmake on some systems)
 
 KNOWN BUGS:
-* @topic often returns nothing, no idea why
+
+The following bugs are currently known to the lambdabot developer team. We
+are working on them:
+
+* @topic often return nothing. We currently have no idea why.
 
 Bug reports, patches, new modules etc, contact:
 
 	Don Stewart <dons@cse.unsw.edu.au>
 	aka dons on #haskell
 
-Check out our darcs repo at:
+REPOSITORY:
+
+Our darcs repository is located at:
 http://www.cse.unsw.edu.au/~dons/lambdabot
 http://www.ScannedInAvian.org/repos/lambdabot

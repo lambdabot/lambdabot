@@ -1,9 +1,8 @@
 ----------------------------------------------------------------------------
 This document describes various style recommendations for the
-lambdabot code. Yet, the source code does not respect this document,
-but it is the goal that it should eventually. Therefore, you are
-encouraged to change source code such that it fits the style inside
-this document.
+lambdabot code. The goal is that all of the lambdabot source code should
+respect this style guide, although it is not yet the case. You are therefore
+encouraged to change source code such that it fits the style guide.
 ----------------------------------------------------------------------------
 
 *** Import lists
@@ -19,11 +18,11 @@ module QuoteModule (
 
 *** RCS tags
 
-$Id .. $ tags should be removed -- we're using darcs now.
+$Id .. $ tags should be removed, as we are using darcs now.
 
 *** Order of imports
 
-Imports should be ordered as so:
+import statements should be ordered as so:
 {{{
         Local application
         Local application qualified/as
@@ -36,52 +35,64 @@ Imports should be ordered as so:
         GHC.*
 }}}
 
-*** Naming conventions
+*** Function naming conventions
 
-Function calls are written as words concatenated together without the
-use of ``_''. The first word is all lowercase, while the first
-character in all following words is upper case. Examples of wrong and
-right:
+The convention for naming functions are as follows:
 
-  WRONG: split_first_word
-  RIGHT: splitFirstWord
+* Give meaningful names to functions. ``splitFirstWord'' is a good name,
+  but ``fooFunc'' is not.
 
-  WRONG: firstword
-  RIGHT: firstWord
+* When composing multiple words into a function name, do not separate them
+  with a underscore (``_'') character. Just concatenate the words together.
+
+* The first word is written in all lowercase. The words following are
+  capitalized.
+
+Thus one should write:
+
+splitFirstWord, join, breakOnGlue, debugStr, lookupSet, etc.
 
 *** Use hierarchical modules
 
 Old style non-hierarchical module imports should be replaced with
-their hierachial module counterpart. For instance, the List module
+their hierachial module counterpart. The List module, as an example,
 should be replaced with Data.List.
 
 *** Use non-deprecated modules
 
-Modules deprecated should be removed and replaced with their
-no-deprecated counterparts. This is especially important to avoid
-bitrot in the code.
+Deprecated modules should be replaced by their non-deprecated
+counterparts since it prevents bitrot of the source code.
 
 *** Minimalize namespace
 
-Try to minimalize the namespace. Only import what you are going to use
-and use qualified imports to keep the module namespace simple.
+The namespace of a module should be minimized. Restrict imports such
+that only used function calls and data types are imported. Furthermore
+use qualified imports to split of the namespace in comprehensible parts.
+
 -ddump-minimal-imports is useful for keeping a lid on this.
 
 *** Provide explicit type signatures
 
-This should always be the case, as we require -Werror
+We require all source code to build with -Werror. As a consequence
+explicit type signatures for all functions should be provided.
 
 *** Haddock documentation
 
-Provide haddock comments for your exported functions. Also, try to
-provide documentation for internal functions too. This way the code is
-much easier to read and work with.
+We use Haddock as an API documentation tool. You should therefore
+provide haddock comments for all exported functions, and preferably
+for internal functions too. Proper documentation in Haddock will
+provide other people an easier access to your modules, and will make
+it easier to spot intent or catch errors.
 
 *** Portability
 
-Make sure the code works with ghc >= 6.2.2.
+Provide portable source code that works with ghc >= 6.2.2. Lambdabot
+has a number of portability layer modules to ease the transition; the
+most prominent being Map.hs, as it provides a portability layer to
+Data.Map/Data.FiniteMap.
 
 *** More references
 
-GHC has some coding guidelines I like, have a look at the ghc
-libraries, Data.Map is a good example.
+We try to adopt the coding guidelines of the GHC project. Take a look at
+the GHC libraries, in particular Data.Map, as the library modules follows
+the guiding principles well.
