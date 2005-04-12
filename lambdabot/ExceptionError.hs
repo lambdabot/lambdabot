@@ -29,10 +29,10 @@ class ExceptionError e where
   fromException :: Exception -> e
 
 
-newtype ExceptionErrorT e m a 
+newtype ExceptionErrorT e m a
  = ExceptionErrorT { runExceptionErrorT :: m (Either e a) }
 
-translateException :: (MonadException m,ExceptionError e) 
+translateException :: (MonadException m,ExceptionError e)
                    => m a -> ExceptionErrorT e m a
 translateException m = ExceptionErrorT $
                         do res <- tryM m
@@ -40,7 +40,7 @@ translateException m = ExceptionErrorT $
                              Left e -> return $ Left $ fromException e
                              Right v -> return $ Right v
 
-instance (MonadException m,ExceptionError e) => Monad (ExceptionErrorT e m) 
+instance (MonadException m,ExceptionError e) => Monad (ExceptionErrorT e m)
  where
   return v = translateException $ return v
   m >>= f = ExceptionErrorT $
@@ -51,13 +51,13 @@ instance (MonadException m,ExceptionError e) => Monad (ExceptionErrorT e m)
                        Right v -> runExceptionErrorT $ f v
                  case res of
                   Left e -> return $ Left $ fromException e
-                  Right v -> return v 
+                  Right v -> return v
 
 instance Functor m => Functor (ExceptionErrorT e m) where
   f `fmap` ExceptionErrorT m = ExceptionErrorT $ fmap f `fmap` m
 
-instance (MonadException m,ExceptionError e) 
-      => MonadError e (ExceptionErrorT e m) 
+instance (MonadException m,ExceptionError e)
+      => MonadError e (ExceptionErrorT e m)
  where
   throwError e = ExceptionErrorT $ return $ Left e
   catchError m handler = ExceptionErrorT $
@@ -68,18 +68,18 @@ instance (MonadException m,ExceptionError e)
 
 
 instance (MonadException m,MonadReader r m,ExceptionError e)
-      => MonadReader r (ExceptionErrorT e m) 
+      => MonadReader r (ExceptionErrorT e m)
  where
   ask = translateException ask
   local f m = ExceptionErrorT $ local f $ runExceptionErrorT m
 
-instance (MonadException m,MonadState s m,ExceptionError e) 
-      => MonadState s (ExceptionErrorT e m) 
+instance (MonadException m,MonadState s m,ExceptionError e)
+      => MonadState s (ExceptionErrorT e m)
  where
   get = translateException get
   put s = translateException $ put s
 
 instance (MonadException m,MonadIO m,ExceptionError e)
-      => MonadIO (ExceptionErrorT e m) 
+      => MonadIO (ExceptionErrorT e m)
  where
   liftIO m = translateException $ liftIO m
