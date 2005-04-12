@@ -76,6 +76,7 @@ type Handler = ()
 type SignalSet = ()
 #endif
 
+-- | Global read-only state.
 data IRCRState
   = IRCRState {
         ircServer      :: String,
@@ -87,10 +88,11 @@ data IRCRState
 
 type Callback = IRCMessage -> IRC ()
 
+-- | Global read/write state.
 data IRCRWState
   = IRCRWState {
         ircPrivilegedUsers :: Map String Bool,
-        ircChannels        :: Map ChanName String, -- channel_name topic
+        ircChannels        :: Map ChanName String,
         ircModules         :: Map String ModuleRef,
         ircCallbacks       :: Map String [(String,Callback)],
         ircCommands        :: Map String ModuleRef,
@@ -248,7 +250,8 @@ irchost     :: IRCMessage -> String
 irchost msg = (split "@" (msgPrefix msg)) !! 1
 -}
 
--- in monad LB we don't have a connection
+-- | Lambdabot's basic monad. Doesn't assume that there is a connection to a
+--   server.
 newtype LB a = LB { runLB :: IRCErrorT (StateT IRCRWState IO) a }
 #if __GLASGOW_HASKELL__ >= 600
    deriving (Functor,Monad,MonadState IRCRWState,MonadError IRCError,MonadIO)
@@ -279,8 +282,12 @@ class (Monad m,MonadState IRCRWState m,MonadError IRCError m,MonadIO m)
    where
   liftLB :: LB a -> m a
 
+-- | This "transformer" encodes the additional information a module might need 
+--   to access its name or its state.
 type ModuleT s m a = (?ref :: IORef s, ?name :: String) => m a
 
+-- | The IRC Monad. The reader transformer hold information about the
+--   connection to the IRC server.
 newtype IRC a 
   = IRC { runIRC :: IRCErrorT (ReaderT IRCRState (StateT IRCRWState IO)) a }
 #if __GLASGOW_HASKELL__ >= 600
@@ -333,11 +340,11 @@ ircGetChannels = do
     return $ map getCN (M.keys chans)
 -}
 
---
--- evil hack to make the MoreModule work
--- change this to an output filter when the new Module typeclass arrives
---
-ircPrivmsg :: String -> String -> IRC ()
+-- | Send a message to a channel/user. If the message is too long, the rest
+--   of it is saved in the (global) more-state.
+ircPrivmsg :: String -- ^ The channel/user.
+   -> String         -- ^ The message.
+   -> IRC ()
 ircPrivmsg who msg
     = do let myname   = Config.name Config.config
              maxLines = Config.moresize Config.config
@@ -362,6 +369,7 @@ mlines s		=  let (l, s') = mbreak (0::Int) (== '\n') s
 			   in  l : case s' of
 					[]  -> []
 					s'' -> mlines s''
+-- Does that really make sense?
 {-# INLINE mlines #-}
 
 mbreak :: (Num a, Ord a) => a -> (Char -> Bool) -> [Char] -> ([Char], [Char])
@@ -645,8 +653,7 @@ ctcpDequote (c:cs)             = c : ctcpDequote cs
 -}
 
 -- | The Module type class.
--- Minimal complete definition: @moduleName@, @moduleHelp@, @moduleCmds@, 
--- @process@.
+-- Minimal complete definition: @moduleHelp@, @moduleCmds@, @process@.
 class Module m s | m -> s where
 -- | If the module wants its state to be saves, this function a Serializer.
 --
@@ -656,7 +663,7 @@ class Module m s | m -> s where
 -- (for example in case the state can't be read from a state).
 --
 -- The default implementation returns an error and assumes the state is never
--- accessed
+-- accessed.
     moduleDefState  :: m -> LB s
 -- | This method should return a help string for every command it defines.
     moduleHelp      :: m -> String -> ModuleT s LB String
@@ -687,7 +694,6 @@ class Module m s | m -> s where
 -- | An existential type holding a module.
 data MODULE = forall m s. (Module m s) => MODULE m
 
--- needs a better name
 data ModuleRef = forall m s. (Module m s) => ModuleRef m (IORef s)
 
 toFilename :: String -> String
@@ -736,6 +742,7 @@ ircLoadModule modname = withModule ircModules modname (return ()) (\m -> do
     put (s { ircCommands = M.addList [ (cmd,mod) | cmd <- cmds ] cmdmap })
     moduleInit m)
 
+-- | Unload a module.
 ircUnloadModule :: String -> LB ()
 ircUnloadModule modname = withModule ircModules modname (error "module not loaded") (\m -> do
     when (moduleSticky m) $ error "module is sticky"
@@ -759,7 +766,8 @@ ircSignalConnect str f
               Nothing -> put (s { ircCallbacks = M.insert str [(?name,f)]    cbs}) 
               Just fs -> put (s { ircCallbacks = M.insert str ((?name,f):fs) cbs}) 
 
---isAdmin     :: IRCMessage -> Bool
+-- | Checks if the given user has admin permissions and excecute the action
+--   only in this case.
 checkPrivs :: IRCMessage -> String -> IRC () -> IRC ()
 checkPrivs msg target f = do
     maybepriv <- gets (\s -> M.lookup (ircNick msg) (ircPrivilegedUsers s) )
@@ -767,22 +775,26 @@ checkPrivs msg target f = do
        Just _  -> f
        Nothing -> ircPrivmsg target "not enough privileges"
 
+-- | Update the module's private state.
 writeMS :: MonadIO m => s -> ModuleT s m ()
 writeMS s = liftIO $ writeIORef ?ref $! s
 
+-- | Read the module's private state.
 readMS :: MonadIO m => ModuleT s m s
 readMS = liftIO $ readIORef ?ref
-
--- this belongs in the MoreModule, but causes cyclic imports
 
 moreStateSet :: String -> IRC ()
 moreStateSet lns = 
     do s <- get
        put (s { ircMoreState = lns })
 
-
-withModule :: MonadLB m => (IRCRWState -> Map String ModuleRef) ->
-  String -> m a -> (forall mod s. Module mod s => mod -> ModuleT s m a) -> m a
+-- | interpret an expression in the context of a module.
+withModule :: MonadLB m => 
+     (IRCRWState -> Map String ModuleRef) -- ^ which map to use. @ircModules@ and @ircCommands@ are the only sensible arguments here.
+  -> String -- ^ The name of the module/command.
+  -> m a    -- ^ Action for the case that the lookup fails.
+  -> (forall mod s. Module mod s => mod -> ModuleT s m a) -- ^ Action if the lookup succeeds
+  -> m a
 withModule dict modname def f = do
     maybemod <- gets (M.lookup modname . dict)
     case maybemod of
