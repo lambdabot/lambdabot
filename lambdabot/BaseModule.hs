@@ -211,19 +211,13 @@ doPRIVMSG' myname msg
             ircPrivmsg who "Sorry, don't understand"
             doUNKNOWN msg
     -- external modules are called in this next chunk
-    doPublicMsg ('@':cmd) rest = withModule ircCommands cmd (do
-          let myname' = name config
-          ircPrivmsg alltargets ("Sorry, I don't know the command \"" ++
-                                 cmd ++ "\", try \"" ++ myname' ++ ": @listcommands\"")
-        ) (\m -> do
+    doPublicMsg ('@':cmd) rest = withModule ircCommands cmd 
+        (ircPrivmsg alltargets ("Unknown command.")) 
+        (\m -> do
           debugStrLn (show msg)
-          handleIrc (ircPrivmsg alltargets) (process m msg alltargets cmd rest)
-        )
+          handleIrc (ircPrivmsg alltargets) (process m msg alltargets cmd rest))
 
-    doPublicMsg _ _
-      = do let myname' = name config
-           ircPrivmsg alltargets ("Sorry, I'm not a very smart bot yet, try \""
-                                        ++ myname' ++ ": @listcommands\"")
+    doPublicMsg _ _ = ircPrivmsg alltargets ("Unknown command.")
 
 maybeCommand :: String -> String -> Maybe String
 maybeCommand nm text =
