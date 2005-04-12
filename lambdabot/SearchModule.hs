@@ -39,7 +39,7 @@ instance Module SearchModule () where
              "google"    -> "@google <expr>, search google and show url of first hit"
              "wikipedia" -> "@wikipedia <expr>, search wikipedia and show url of first hit"
              _           -> "module for doing searches"
-    
+
     moduleCmds   _ = return (map fst engines)
     process _ _ src cmd rest = searchCmd cmd src (dropSpace rest)
 
@@ -47,13 +47,13 @@ instance Module SearchModule () where
 
 searchCmd :: String -> String -> String -> ModuleT s IRC ()
 searchCmd _ src [] = ircPrivmsg src "Empty search."
-searchCmd engine src rest = do 
+searchCmd engine src rest = do
         result <- liftIO $ query engine rest
         ircPrivmsg src (extractLoc result)
 
 queryUrl :: String -> String -> String
 queryUrl engine q = prefix ++ urlEncode q ++ suffix
-    where 
+    where
     (prefix, suffix) = fromMaybe (error "search: invalid command")
                                  (lookup engine engines)
 
@@ -65,7 +65,7 @@ query engine q = readPage (proxy config) uri request ""
 
 extractLoc :: [String] -> String
 extractLoc [] = error "No response, something weird is up."
-extractLoc (_:headers) = 
+extractLoc (_:headers) =
         fromMaybe (error "No result found.")
                   (lookup "Location" $ concatMap f headers)
 
