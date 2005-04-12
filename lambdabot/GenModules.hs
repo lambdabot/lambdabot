@@ -10,8 +10,8 @@
 --
 module Main where
 
-import Char
-import List
+import Data.Char
+import Data.List
 import System.Environment
 import Text.PrettyPrint
 
