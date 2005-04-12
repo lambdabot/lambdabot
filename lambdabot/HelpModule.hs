@@ -1,9 +1,8 @@
 module HelpModule (theModule) where
 
 import IRC
-import Control.Exception
-import Control.Monad.Error
-import Control.Monad.Reader
+import Control.Exception   (Exception(..))
+import Control.Monad.Error (catchError, throwError)
 
 newtype HelpModule = HelpModule ()
 

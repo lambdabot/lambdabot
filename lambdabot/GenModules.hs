@@ -10,11 +10,8 @@
 --
 module Main where
 
-import Config
-import ParsePkgConf
-
-import Data.Char
-import Data.List
+import Char
+import List
 import System.Environment
 
 outfile, outfile' :: String

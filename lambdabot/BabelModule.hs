@@ -22,7 +22,6 @@ import Util                     (stdGetRandItem, mapSerializer)
 import PosixCompat              (popen)
 import qualified Map as M
 
-import Data.List
 import Data.Maybe               (fromMaybe)
 import Control.Monad.Trans      (liftIO,MonadIO)
 

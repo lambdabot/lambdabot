@@ -58,7 +58,6 @@ import System.IO.Error
 #endif
 
 import Data.Char                (toLower, isAlphaNum, isSpace)
-import Data.List
 import Data.Dynamic             (Typeable, toDyn, fromDynamic)
 import Data.IORef               (newIORef, IORef, readIORef, writeIORef)
 
@@ -239,7 +238,7 @@ ircNick msg = fst $ breakOnGlue "!" (msgPrefix msg)
 ircChans :: IRCMessage -> [String]
 ircChans msg
   = let cstr = head $ msgParams msg
-    in map (\(x:xs) -> if x == ':' then xs else (x:xs)) (split "," cstr)
+    in map (\(x:xs) -> if x == ':' then xs else x:xs) (split "," cstr)
            -- solves what seems to be an inconsistency in the parser
 
 {-
@@ -352,7 +351,7 @@ ircPrivmsg who msg
              let msglines  = mlines msg
                  morelines = drop maxLines msglines
                  thislines = take maxLines msglines
-                 sendlines = if (length morelines > 0)
+                 sendlines = if length morelines > 0
                              then thislines ++ ["[" ++ show (length morelines) 
                                             ++ " @more lines]"]
                              else thislines

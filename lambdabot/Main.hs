@@ -6,7 +6,7 @@ import Config
 import Modules
 import qualified Map as M
 
-import Control.Monad.State
+import Control.Monad.State (get, liftIO)
 
 main :: IO ()
 main = runIrc ircInit ircMain

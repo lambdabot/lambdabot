@@ -1,19 +1,17 @@
 
 module PlModule (theModule) where
 
-import PlModule.Common
-import PlModule.Parser
-import PlModule.PrettyPrinter
-import PlModule.Transform
-
-import Control.Concurrent
-import Control.Concurrent.Chan
-
-import Control.Monad.Trans
-
-import GHC.Base
-
 import IRC
+
+import PlModule.Common          (TopLevel, mapTopLevel, getExpr)
+import PlModule.Parser          (parsePF)
+import PlModule.PrettyPrinter   (Expr)
+import PlModule.Transform       (transform, optimize)
+
+import Control.Concurrent       (forkIO, killThread, threadDelay, newEmptyMVar, putMVar, takeMVar)
+import Control.Concurrent.Chan  (Chan, newChan, isEmptyChan, readChan, writeList2Chan)
+
+import Control.Monad.Trans      (liftIO)
 
 -- firstTimeout is the timeout when the expression is simplified for the first
 -- time. After each unsuccessful attempt, this number is doubled until it hits

@@ -9,12 +9,14 @@ module MiniHTTP (
 		 urlDecode,
 		) where
 
+import Data.Maybe (fromMaybe)
+import Data.Bits  ((.&.))
+import Data.Char  (ord, chr, digitToInt, intToDigit)
+
+import System.IO
+
 import Network
 import Network.URI
-import System.IO
-import Maybe
-import Data.Bits ((.&.))
-import Data.Char
 
 type Proxy = Maybe (String, Integer)
 

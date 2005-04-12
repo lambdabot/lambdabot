@@ -5,7 +5,7 @@ import IRC
 import Util                     (debugStrLn, breakOnGlue, split)
 import qualified Map as M       (insert, delete)
 
-import Data.List
+import Data.List                (isPrefixOf)
 import Text.Regex               (mkRegex, matchRegexAll)
 import Control.Monad.State      (MonadState(..))
 
