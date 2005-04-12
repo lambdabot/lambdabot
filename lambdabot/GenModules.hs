@@ -109,7 +109,7 @@ process m = concat [begin,
     doimport nm  = "import qualified " ++ (clean . upperise) nm ++ "Module"
     middle       = ["","loadStaticModules :: LB ()","loadStaticModules"," = do"]
     doload nm   = " ircInstallModule " ++ (clean . upperise) nm  ++ 
-                     "Module.theModule"
+                     "Module.theModule " ++ show (clean . upperise $ name)
 
 process2 :: [String] -> String
 process2 ms = "\nplugins :: [String]\n" ++ concat ("plugins = [" : 

@@ -10,7 +10,6 @@ theModule :: MODULE
 theModule = MODULE $ StateModule ()
 
 instance Module StateModule String where
-    moduleName      _ = "state"
     moduleHelp    _ _ = return "@state - we all know it's evil"
     moduleCmds      _ = return ["state"]
     moduleDefState  _ = return "nothing yet"

@@ -32,13 +32,12 @@ theModule = MODULE $ PlModule ()
 type Pl m a = ModuleT PlState m a
 
 instance Module PlModule PlState where
-    moduleName _   = "pl"
     moduleHelp _ "pl-resume" = return "@pl-resume - resume a suspended pointless transformation."
     moduleHelp _ _ = return "@pointless <expr> - play with pointfree code"
 
     moduleDefState _ = return Nothing
 
-    moduleCmds _   = return $ ["pointless","pl-resume","pl"]
+    moduleCmds _   = return ["pointless","pl-resume","pl"]
 
     process _ _ target "pointless" rest = pf target rest
     process _ _ target "pl"        rest = pf target rest
@@ -56,7 +55,7 @@ res target = do
 pf :: String -> String -> Pl IRC ()
 pf target inp = case parsePF inp of
   Right d -> optimizeTopLevel target (firstTimeout, mapTopLevel transform d)
-  Left err -> ircPrivmsg target $ err
+  Left err -> ircPrivmsg target err
 
 optimizeTopLevel :: String -> (Int, TopLevel) -> Pl IRC ()
 optimizeTopLevel target (to, d) = do

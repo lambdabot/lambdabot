@@ -15,15 +15,11 @@ import Control.Monad.Trans (liftIO)
 newtype DictModule = DictModule ()
 
 theModule :: MODULE
-theModule = MODULE dictModule
-
-dictModule :: DictModule
-dictModule = DictModule ()
+theModule = MODULE $ DictModule ()
 
 -- | This is the module handler.  Here we process commands from users.
 
 instance Module DictModule () where
-    moduleName _   = "dict"
     moduleHelp _ _ = return (getHelp [])
     moduleCmds _   = return $ "dict" : "dict-help" : dictNames
     process _ _ target "dict" _ = do

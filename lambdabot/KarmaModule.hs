@@ -15,8 +15,6 @@ type KarmaState = M.Map String Integer
 type Karma m a = ModuleT KarmaState m a
 
 instance Module KarmaModule KarmaState where
-    moduleName   _ = "karma"
-
     moduleHelp _ "karma"  = return "return a person's karma value"
     moduleHelp _ "karma+" = return "increment someone's karma"
     moduleHelp _ "karma-" = return "decrement someone's karma"

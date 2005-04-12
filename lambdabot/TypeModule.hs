@@ -103,7 +103,6 @@ theModule :: MODULE
 theModule = MODULE $ TypeModule ()
 
 instance Module TypeModule () where
-     moduleName   _ = "type"
      moduleHelp _ "type" = return "@type: return the type of a value"
      moduleHelp _ "kind" = return "@kind: return the kind of a type (GHC)"
      moduleHelp _ _      = return "@type,@kind: interact with the typechecker"

@@ -15,13 +15,9 @@ import Text.ParserCombinators.Parsec
 newtype DiceModule = DiceModule ()
 
 theModule :: MODULE
-theModule = MODULE diceModule
-
-diceModule :: DiceModule
-diceModule = DiceModule ()
+theModule = MODULE $ DiceModule ()
 
 instance Module DiceModule () where
-  moduleName   _ = "dice"
   moduleSticky _ = False
 
   moduleHelp _ s = return $ case s of

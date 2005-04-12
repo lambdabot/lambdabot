@@ -25,7 +25,6 @@ theModule = MODULE factModule
 factModule = FactModule ()
 
 instance Module FactModule where
-    moduleName   m = return "fact"
     commands     m = return ["fact"]
     process      m _ target cmd rest
                  = do -- thanks Marvin--

@@ -10,13 +10,9 @@ import Util
 newtype TopicModule = TopicModule ()
 
 theModule :: MODULE
-theModule = MODULE topicModule
-
-topicModule :: TopicModule
-topicModule = TopicModule ()
+theModule = MODULE $ TopicModule ()
 
 instance Module TopicModule () where
-  moduleName   _ = "topic"
   moduleHelp _ _ = return "Various commands for adjusting the channel topic"
   moduleCmds   _ = return ["topic-tell",
                            "topic-cons", "topic-snoc",

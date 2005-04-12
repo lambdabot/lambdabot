@@ -11,13 +11,9 @@ import Control.Monad.State
 newtype QuoteModule = QuoteModule ()
 
 theModule :: MODULE
-theModule = MODULE quoteModule
-
-quoteModule :: QuoteModule
-quoteModule = QuoteModule ()
+theModule = MODULE $ QuoteModule ()
 
 instance Module QuoteModule () where
-    moduleName   _ = "quote"
     moduleHelp _ "fortune" = return "Provide a random fortune"
     moduleHelp _ "yow"     = return "Yow!"
     moduleHelp _ "arr"     = return "Talk to a pirate"

@@ -34,8 +34,6 @@ theModule = MODULE $ BabelModule ()
 type Quotes = M.Map String [String]
 
 instance Module BabelModule Quotes where
-        moduleName _            = "babel"
-
         moduleSerialize _       = Just mapSerializer
         moduleDefState  _       = return M.empty
        

@@ -19,7 +19,7 @@ module IRC (
         ircPrivmsg,
         ircJoin, ircPart, ircQuit, ircReconnect,
         ircTopic, ircGetTopic,
-        ircSignalConnect,
+        ircSignalConnect, Callback,
         ircInstallModule, ircUnloadModule,
         ircNick, ircChans,
         ircSignOn,
@@ -30,7 +30,7 @@ module IRC (
 
 import Prelude hiding   (mod, catch)
 
-import Config           (config, name, moresize, admins, host, port)
+import qualified Config (config, name, moresize, admins, host, port)
 import DeepSeq          (($!!), DeepSeq(..))
 import ErrorUtils
 import ExceptionError   (ExceptionError(..), ExceptionErrorT(..))
@@ -279,7 +279,7 @@ class (Monad m,MonadState IRCRWState m,MonadError IRCError m,MonadIO m)
    where
   liftLB :: LB a -> m a
 
-type ModuleT s m a = (?ref :: IORef s) => m a
+type ModuleT s m a = (?ref :: IORef s, ?name :: String) => m a
 
 newtype IRC a 
   = IRC { runIRC :: IRCErrorT (ReaderT IRCRState (StateT IRCRWState IO)) a }
@@ -339,8 +339,8 @@ ircGetChannels = do
 --
 ircPrivmsg :: String -> String -> IRC ()
 ircPrivmsg who msg
-    = do let myname   = name config
-             maxLines = moresize config
+    = do let myname   = Config.name Config.config
+             maxLines = Config.moresize Config.config
          when (who /= myname) $ do
              let msglines  = mlines msg
                  morelines = drop maxLines msglines
@@ -441,7 +441,7 @@ runIrc :: LB () -> IRC () -> IO ()
 runIrc initialise m = withSocketsDo $ do 
         ex <- try $ evalLB
                  (initialise >> withIrcSignalCatch (runIrc' m))
-                 (initState (admins config))
+                 (initState (Config.admins Config.config))
         either (\e->putStrLn ("runIRC: caught exception: "++show e)) (return) ex
       where
         initState as = IRCRWState {
@@ -464,9 +464,9 @@ traceException = handleM (\e -> liftIO (print e) >> throwM e)
 
 runIrc' :: IRC () -> LB ()
 runIrc' m = do  
-        let portnum  = PortNumber $ fromIntegral (port config)
+        let portnum  = PortNumber $ fromIntegral (Config.port Config.config)
 
-        s <- liftIO $ connectTo (host config) portnum
+        s <- liftIO $ connectTo (Config.host Config.config) portnum
 
         tryErrorJust (isEOFon s) $ do 
             liftIO $ hSetBuffering s NoBuffering
@@ -477,7 +477,7 @@ runIrc' m = do
             threadw    <- liftIO $ forkIO $ writerLoop threadmain chanw s
 
             let chans = IRCRState {
-                            ircServer      = host config,
+                            ircServer      = Config.host Config.config,
                             ircReadChan    = chanr,
                             ircReadThread  = threadr,
                             ircWriteChan   = chanw,
@@ -514,9 +514,9 @@ runIrc' m = do
                                        throwError (SignalCaught s))
 
         exitModules = do
-          mods <- gets $ M.elems . ircModules
-          (`mapM_` mods) $ \(ModuleRef mod ref) -> 
-            let ?ref = ref in writeGlobalState mod
+          mods <- gets $ M.toList . ircModules
+          (`mapM_` mods) $ \(name, ModuleRef mod ref) -> 
+            let ?ref = ref; ?name = name in writeGlobalState mod name
                                     
 
 readerLoop :: ThreadId -> Chan IRCMessage -> Chan IRCMessage -> Handle -> IO ()
@@ -648,8 +648,6 @@ ctcpDequote (c:cs)             = c : ctcpDequote cs
 -- Minimal complete definition: @moduleName@, @moduleHelp@, @moduleCmds@, 
 -- @process@.
 class Module m s | m -> s where
--- | The name of the module. (This might be removed in a future version)
-    moduleName      :: m -> String
 -- | If the module wants its state to be saves, this function a Serializer.
 --
 -- The default implementation returns Nothing.
@@ -695,13 +693,12 @@ data ModuleRef = forall m s. (Module m s) => ModuleRef m (IORef s)
 toFilename :: String -> String
 toFilename = ("State/"++)
 
-writeGlobalState :: Module m s => m -> ModuleT s LB ()
-writeGlobalState mod = do
-  state <- readMS
-  case moduleSerialize mod of
-    Nothing  -> return ()
-    Just ser -> liftIO $ writeFile 
-      (toFilename $ moduleName mod) (serialize ser state)
+writeGlobalState :: Module m s => m -> String -> ModuleT s LB ()
+writeGlobalState mod name = case moduleSerialize mod of
+  Nothing  -> return ()
+  Just ser -> do
+    state <- readMS
+    liftIO $ writeFile (toFilename name) (serialize ser state)
 
 -- Read the whole file so it'll be closed
 readFile' :: String -> IO String
@@ -709,21 +706,20 @@ readFile' file = do
   cont <- readFile file
   last cont `seq` return cont
 
-readGlobalState :: String -> Serializer s -> IO (Maybe s)
-readGlobalState mod ser = do
-  state <- Just `fmap` readFile' (toFilename mod) `catch` \_ -> return Nothing
-  return $ deSerialize ser =<< state
+readGlobalState :: Module m s => m -> String -> IO (Maybe s)
+readGlobalState mod name = case moduleSerialize mod of
+  Nothing  -> return Nothing
+  Just ser -> do
+    state <- Just `fmap` readFile' name `catch` \_ -> return Nothing
+    return $ deSerialize ser =<< state
 
 --
 -- | register a module in the irc state
 --
-ircInstallModule :: MODULE -> LB ()
-ircInstallModule (MODULE modn)
+ircInstallModule :: MODULE -> String -> LB ()
+ircInstallModule (MODULE modn) modname
   = do  s <- get
-        let modname = moduleName modn
-        savedState <- case moduleSerialize modn of
-            Nothing  -> return Nothing
-            Just ser -> liftIO $ readGlobalState modname ser
+        savedState <- liftIO $ readGlobalState modn modname
         state <- maybe (moduleDefState modn) return savedState
         ref <- liftIO $ newIORef state
         let modmap = ircModules s
@@ -744,27 +740,24 @@ ircUnloadModule :: String -> LB ()
 ircUnloadModule modname = withModule ircModules modname (error "module not loaded") (\m -> do
     when (moduleSticky m) $ error "module is sticky"
     moduleExit m
-    writeGlobalState m
-    let modnm = moduleName m
+    writeGlobalState m modname
     cmds  <- moduleCmds m
     s <- get
     let modmap = ircModules s
         cmdmap = ircCommands s
         cbs    = ircCallbacks s
     put $ s { ircCommands = foldl (flip M.delete) cmdmap cmds }
-            { ircModules = M.delete modnm modmap }
+            { ircModules = M.delete modname modmap }
             { ircCallbacks = filter ((/=modname) . fst) `fmap` cbs }
   )
 
-ircSignalConnect :: (Module mod s, MonadLB m) => 
-  mod -> String -> (IRCMessage -> IRC ()) -> m ()
-ircSignalConnect mod str f 
+ircSignalConnect :: MonadLB m => String -> Callback -> ModuleT s m ()
+ircSignalConnect str f 
     = do s <- get
          let cbs = ircCallbacks s
-         let n = moduleName mod
-         case (M.lookup str cbs) of 
-              Nothing -> put (s { ircCallbacks = M.insert str [(n,f)]    cbs}) 
-              Just fs -> put (s { ircCallbacks = M.insert str ((n,f):fs) cbs}) 
+         case M.lookup str cbs of 
+              Nothing -> put (s { ircCallbacks = M.insert str [(?name,f)]    cbs}) 
+              Just fs -> put (s { ircCallbacks = M.insert str ((?name,f):fs) cbs}) 
 
 --isAdmin     :: IRCMessage -> Bool
 checkPrivs :: IRCMessage -> String -> IRC () -> IRC ()
@@ -793,5 +786,5 @@ withModule :: MonadLB m => (IRCRWState -> Map String ModuleRef) ->
 withModule dict modname def f = do
     maybemod <- gets (M.lookup modname . dict)
     case maybemod of
-      Just (ModuleRef m ref) -> let ?ref = ref in f m
+      Just (ModuleRef m ref) -> let ?ref = ref; ?name = modname in f m
       _                      -> def

@@ -35,8 +35,6 @@ outOfFuelMsg = "out of fuel - use @resume to continue"
 type EvalState = (Int, Maybe Dynamic, Environment, M.Map String String)
 
 instance Module EvalModule EvalState where
-    moduleName   _ = "eval"
-
     moduleDefState _ = return (initFuel, Nothing, initEnv, initDefns)
     moduleSerialize _ = Just $ Serializer {
       serialize = \(fuel,_,_,defns) -> 

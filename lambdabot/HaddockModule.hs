@@ -20,7 +20,6 @@ theModule = MODULE haddockModule
 haddockModule = HaddockModule ()
 
 instance IRC.Module HaddockModule where
-    moduleName   _ = return "type"
     commands     _ = return ["index"]
     moduleInit   _ = do strindex <- liftIO $ indxs ["GLUT.haddock","QuickCheck.haddock","haskell-src.haddock","network.haddock","readline.haddock","OpenGL.haddock","base.haddock","haskell98.haddock","parsec.haddock","unix.haddock"]
                         makeInitialState "haddock" strindex

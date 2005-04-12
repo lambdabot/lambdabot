@@ -33,12 +33,11 @@ empty :: Set a
 empty = emptySet
 #endif
 
-------------------------------------------------------------------------
-
-newtype DynamicModule = DynamicModule ()
+dynamicModule :: DynamicModule
+dynamicModule = DynamicModule ()
 
 theModule :: MODULE
-theModule = MODULE $ DynamicModule ()
+theModule = MODULE dynamicModule
 
 --
 -- keep track of loaded modules
@@ -62,8 +61,8 @@ depfile = "Depends.conf" -- created at build time
 ------------------------------------------------------------------------
 
 instance Module DynamicModule DLModules where
-
   moduleName   _ = "dynamic"
+  moduleHelp _ _ = return "@dynamic-(un|re)?load: interface to dynamic linker"
   moduleSticky _ = True
   moduleHelp _ _ = return "@dynamic-(un|re)?load <module>, interface to dynamic linker"
   moduleCmds   _ = return ["dynamic-load","dynamic-unload","dynamic-reload"]
@@ -163,7 +162,7 @@ load nm = do
         object <- doLoadObject file
         catchError (do liftIO $ resolveFunctions
                        md <- liftIO $ loadFunction object "theModule"
-                       liftLB $ ircInstallModule md)
+                       liftLB $ ircInstallModule md nm)
                    (\e -> doUnloadObject file >> throwError e)
 
 unload :: String -> Dyn ()

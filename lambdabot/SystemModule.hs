@@ -15,14 +15,10 @@ import Control.Monad.State      (MonadState(get))
 
 newtype SystemModule = SystemModule ()
 
-systemModule :: SystemModule
-systemModule = SystemModule ()
-
 theModule :: MODULE
-theModule = MODULE systemModule
+theModule = MODULE $ SystemModule ()
 
 instance Module SystemModule () where
-    moduleName   _ = "system"
     moduleCmds   _ = return (M.keys syscmds)
     moduleHelp _ s = return $ fromMaybe defaultHelp (M.lookup s syscmds)
     process      _ = doSystem

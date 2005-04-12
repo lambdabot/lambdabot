@@ -21,10 +21,7 @@ import Network.URI              (parseURI)
 newtype SearchModule = SearchModule ()
 
 theModule :: MODULE
-theModule = MODULE searchModule
-
-searchModule :: SearchModule
-searchModule = SearchModule ()
+theModule = MODULE $ SearchModule ()
 
 engines :: [(String, (String, String))]
 engines =  [("google",    ("http://www.google.com/search?hl=en&q=",
@@ -32,7 +29,6 @@ engines =  [("google",    ("http://www.google.com/search?hl=en&q=",
             ("wikipedia", ("http://en.wikipedia.org/wiki/Special:Search?search=", ""))]
 
 instance Module SearchModule () where
-    moduleName   _ = "search"
     moduleSticky _ = False
 
     moduleHelp _ s = return $ case s of

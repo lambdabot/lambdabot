@@ -21,13 +21,9 @@ import Text.Regex
 newtype PlugsModule = PlugsModule ()
 
 theModule :: MODULE
-theModule = MODULE plugsModule
-
-plugsModule :: PlugsModule
-plugsModule = PlugsModule ()
+theModule = MODULE $ PlugsModule ()
 
 instance Module PlugsModule () where
-        moduleName   _ = "plugs"
         moduleHelp _ _ = return "@plugs <expr>\nYou have Haskell, 3 seconds and no IO. Go nuts!"
         moduleCmds   _ = return ["plugs"]
         process _ _ src "plugs" s = do o <- liftIO $ plugs s

@@ -15,15 +15,12 @@ import Control.Monad.State      (MonadIO, liftIO)
 newtype VixenModule = VixenModule ()
 
 theModule :: MODULE
-theModule = MODULE vixenModule
-
-vixenModule :: VixenModule
-vixenModule = VixenModule ()
+theModule = MODULE $ VixenModule ()
 
 file :: String
 file = "data/vixenrc"
 
-instance Module VixenModule (String -> IO String) where
+instance Module VixenModule RespChoice where
     moduleName   _ = "vixen"
     moduleSticky _ = False
 

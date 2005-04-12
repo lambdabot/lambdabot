@@ -30,7 +30,7 @@ mkVixen phraseBook question = do
 --    |   str
 readConfig :: String -> RespChoice
 readConfig l = do
-  case (parse parseChoices "vixenlove" l) of
+  case parse parseChoices "vixenlove" l of
     Left a  -> error $ "Parse error at"++ show a
     Right b -> (b ++ [(mkRegex ".*", Leaf "If you see this, gentle sir, know that you are being trolled by a poorly configured VixenLove program")])
   

@@ -42,26 +42,25 @@ type SeenState = M.Map Nick UserStatus
 type Seen m a = ModuleT SeenState m a
 
 instance Module SeenModule SeenState where
-    moduleName _        = "seen"
     moduleHelp _ _      = return "Report if a user has been seen by the bot"
     moduleCmds _        = return ["seen"]
     moduleDefState _    = return M.empty
-    moduleInit m
-      = do ircSignalConnect m "JOIN" $ joinCB
-           ircSignalConnect m "PART" $ partCB
-           ircSignalConnect m "QUIT" $ quitCB
-           ircSignalConnect m "NICK" $ nickCB
-           ircSignalConnect m "353" $ joinChanCB
-           ircSignalConnect m "PRIVMSG" $ msgCB
+    moduleInit _
+      = do ircSignalConnect "JOIN"    joinCB
+           ircSignalConnect "PART"    partCB
+           ircSignalConnect "QUIT"    quitCB
+           ircSignalConnect "NICK"    nickCB
+           ircSignalConnect "353"     joinChanCB
+           ircSignalConnect "PRIVMSG" msgCB
 
     process m msg target cmd rest =
       do seenFM <- readMS
 	 now <- liftIO getClockTime
-         myname <- return $ lowerCaseString (name config)
-         let nick = firstWord rest
+         let myname = lowerCaseString (name config)
+             nick = firstWord rest
              lcnick = lowerCaseString nick
-	     ircMessage = ((ircPrivmsg target) . concat)
-	     clockDifference = timeDiffPretty . (diffClockTimes now)
+	     ircMessage = ircPrivmsg target . concat
+	     clockDifference = timeDiffPretty . diffClockTimes now
              nickPresent mct cs =
                do ircPrivmsg target $
                      concat [nick, " is in ", listToStr "and" cs, ".",
@@ -175,11 +174,11 @@ withSeenFM :: IRCMessage
               -> (SeenState -> ClockTime -> String -> Nick
 	          -> Either SeenState String)
 	      -> Seen IRC ()
-withSeenFM msg f = do nick <- return $ (lowerCaseString . unUserMode)
+withSeenFM msg f = do let nick = (lowerCaseString . unUserMode)
                                          (ircNick msg)
 		      state <- readMS
                       ct <- liftIO getClockTime
-                      myname <- return $ (lowerCaseString . name) config
+                      let myname = (lowerCaseString . name) config
                       case f state ct myname nick of
                         Left newstate -> writeMS newstate
                         Right err -> debugStrLn err

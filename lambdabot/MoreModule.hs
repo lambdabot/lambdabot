@@ -7,14 +7,10 @@ import Control.Monad.State
 newtype MoreModule = MoreModule ()
 
 theModule :: MODULE
-theModule = MODULE moreModule
-
-moreModule :: MoreModule
-moreModule = MoreModule ()
+theModule = MODULE $ MoreModule ()
 
 -- the @more state is handled centrally
 instance Module MoreModule () where
-    moduleName   _ = "more"
     moduleHelp _ _ = return "@more - return more bot output"
     moduleCmds   _ = return ["more"]
     process      _ _ target _ _

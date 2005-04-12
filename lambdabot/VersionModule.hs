@@ -14,7 +14,6 @@ theModule :: MODULE
 theModule = MODULE $ VersionModule ()
 
 instance Module VersionModule () where
-    moduleName   _ = "version"
     moduleHelp _ _ = return $ "Report the build date, ghc version "
                            ++ "and darcs repo of this bot"
     moduleCmds   _ = return ["version"]

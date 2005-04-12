@@ -8,13 +8,9 @@ import Control.Monad.Reader
 newtype HelpModule = HelpModule ()
 
 theModule :: MODULE
-theModule = MODULE helpModule
-
-helpModule :: HelpModule
-helpModule = HelpModule ()
+theModule = MODULE $ HelpModule ()
 
 instance Module HelpModule () where
-    moduleName   _ = "help"
     moduleHelp _ _ = return " @help <command> - ask for help for <command>" -- default output
     moduleCmds   _ = return ["help"]
     process        = doHelp

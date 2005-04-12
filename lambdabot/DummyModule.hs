@@ -6,14 +6,9 @@ import IRC
 newtype DummyModule = DummyModule ()
 
 theModule :: MODULE
-theModule = MODULE dummyModule
-
-dummyModule :: DummyModule
-dummyModule = DummyModule ()
+theModule = MODULE $ DummyModule ()
 
 instance Module DummyModule () where
-  moduleName   _ = "dummy"
-
   moduleHelp _ s = return $ case s of
         "dummy"       -> "print a string constant"
         "wiki"        -> "wiki urls"
