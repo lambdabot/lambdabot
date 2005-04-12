@@ -41,8 +41,11 @@ dice str = case parse expr "dice" (filter (not.isSpace) str) of
 eval :: [(Int, Int)] -> IO Int
 eval = foldM ef 0
     where ef acc (v,1) = return (acc+v)
-          ef acc (n,d) = do list <- replicateM n (randomRIO (1,d))
-                            return (acc + sum list)
+          ef acc (n,d) = if n > 100
+                            then return 0
+                            else do list <- replicateM n (randomRIO (1,d))
+                                    return (acc + sum list)
+
 
 expr :: CharParser st [(Int, Int)]
 expr = primExp `sepBy1` (char '+')
