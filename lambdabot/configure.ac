@@ -13,7 +13,7 @@ AC_ARG_WITH(hc,
  	[--with-hc=ARG],
 	[Use ARG as the path to a Haskell compiler [default=autodetect]])
 ],
-[ WithGhc="$withval" 
+[ WithGhc="$withval"
   if test "$WithGhc" = "nhc98"; then
 	AC_DEFINE(__NHC__, [], [Defined if compiling with nhc98])
 	SYMS="$SYMS -D__NHC__"
@@ -26,7 +26,7 @@ AC_ARG_WITH(hc,
    	[--with-ghc=ARG],
 	[Use ARG as the path to a Haskell compiler [default=autodetect]])
   ],
-  [ WithGhc="$withval" 
+  [ WithGhc="$withval"
     if test "$WithGhc" = "nhc98"; then
 	  AC_DEFINE(__NHC__, [], [Defined if compiling with nhc98])
 	  SYMS="$SYMS -D__NHC__"
