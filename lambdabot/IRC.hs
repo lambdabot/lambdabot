@@ -42,7 +42,7 @@ import qualified Map as M hiding (Map)
 
 import Network          (withSocketsDo, connectTo, PortID(PortNumber))
 
-import System.IO        (Handle, hGetLine, hPutStr, hClose, 
+import System.IO        (Handle, hGetLine, hPutStr, hClose,
                          hSetBuffering, BufferMode(NoBuffering))
 
 #if __GLASGOW_HASKELL__ >= 600
