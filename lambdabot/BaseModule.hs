@@ -224,7 +224,7 @@ doPRIVMSG' myname msg
           debugStrLn (show msg)
           handleIrc (ircPrivmsg alltargets) (process m msg alltargets cmd rest))
 
-    doPublicMsg _ _ = ircPrivmsg alltargets ("Unknown command.")
+    doPublicMsg _ _ = ircPrivmsg alltargets ("Not a command (no @).")
 
 maybeCommand :: String -> String -> Maybe String
 maybeCommand nm text =
