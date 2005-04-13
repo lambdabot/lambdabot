@@ -20,8 +20,7 @@ theModule = MODULE $ VixenModule ()
 file :: String
 file = "data/vixenrc"
 
-instance Module VixenModule RespChoice where
-    moduleName   _ = "vixen"
+instance Module VixenModule (String -> IO String) where
     moduleSticky _ = False
 
     moduleHelp _ s = return $ case s of

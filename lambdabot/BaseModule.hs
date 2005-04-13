@@ -176,6 +176,9 @@ doRPL_ENDOFMOTD _msg = return ()
 doPRIVMSG :: Callback
 doPRIVMSG msg = doPRIVMSG' (name config) msg
 
+--
+-- | What does the bot respond to?
+--
 doPRIVMSG' :: String -> IRCMessage -> IRC ()
 doPRIVMSG' myname msg
   | myname `elem` targets

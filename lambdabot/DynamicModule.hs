@@ -33,11 +33,12 @@ empty :: Set a
 empty = emptySet
 #endif
 
-dynamicModule :: DynamicModule
-dynamicModule = DynamicModule ()
+------------------------------------------------------------------------
+
+newtype DynamicModule = DynamicModule ()
 
 theModule :: MODULE
-theModule = MODULE dynamicModule
+theModule = MODULE $ DynamicModule ()
 
 --
 -- keep track of loaded modules
@@ -61,8 +62,6 @@ depfile = "Depends.conf" -- created at build time
 ------------------------------------------------------------------------
 
 instance Module DynamicModule DLModules where
-  moduleName   _ = "dynamic"
-  moduleHelp _ _ = return "@dynamic-(un|re)?load: interface to dynamic linker"
   moduleSticky _ = True
   moduleHelp _ _ = return "@dynamic-(un|re)?load <module>, interface to dynamic linker"
   moduleCmds   _ = return ["dynamic-load","dynamic-unload","dynamic-reload"]
