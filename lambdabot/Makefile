@@ -66,7 +66,7 @@ endif
 #
 # Now, get down to business
 #
-all: lambdabot modules
+all: lambdabot modules Depends.conf
 
 #
 # TODO should be just PLUGIN_OBJS
@@ -104,7 +104,7 @@ GenModules: GenModules.hs
 #
 # Recalculating dependencies depends on a correct build
 #
-Depends.conf: GenModules $(ALL_OBJS)
+Depends.conf: GenModules $(ALL_OBJS) lambdabot
 	@echo -n "Calculating dynamic dependencies ... "
 	@for i in *Module.hi ; do \
 		echo -n `echo "$$i"` ;\
@@ -117,7 +117,7 @@ Depends.conf: GenModules $(ALL_OBJS)
 # Link the bot.
 # TODO: depends should only be $(BOT_OBJS), not plugins too.
 #
-lambdabot: $(ALL_OBJS) Depends.conf
+lambdabot: $(ALL_OBJS)
 	@if test "x$(way)" = "xp" ; then \
 		for i in *.p_o ; do \
 			ln -f -s $$i `echo $$i | sed 's/p_//'` ; \
