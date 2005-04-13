@@ -40,15 +40,19 @@ main = do argv <- getArgs
                 let syn'      = parse raw
                     (_,ds,ps) = unzip3 syn'
 
-                -- problem, doesn't take into account dependencies
-                -- specified in package.confs. i.e. network->parsec
-                -- should read ParsePkgConf.depends and add to list
                 let pkgs' = (foldr1 (++) ps) \\ ["Cabal"]
+
+                -- now find any unspecified dependencies in the package.conf
                 deppkgs <- findDepends pkgs'
+
+                -- and just the packages we need are left, in the right order
                 let pkgs   = (nub . foldr1 (++) $ deppkgs ++ [pkgs']) \\ ["rts"]
     
+                -- a common subset of modules
                 let coremods  = foldr1 intersect $ ds
-                    deplist   = map (\(a,b,_) -> 
+
+                -- assoc list of modules to their imports
+                let deplist   = map (\(a,b,_) -> 
                                         (a++".o"
                                         ,map (\s -> (nodot s)++".o") (b \\  coremods))) syn'
 
