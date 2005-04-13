@@ -16,7 +16,7 @@ module Util (
      Accessor (..),
      Serializer (..), stdSerializer, mapSerializer,
      readFM, writeFM, deleteFM,
-     lookupSet, insertSet, deleteSet,
+     lookupSet, insertSet, deleteSet, lookupList,
      getRandItem, stdGetRandItem,
      readM
 ) where
@@ -26,7 +26,7 @@ import Map                      (Map)
 import qualified Map as M       (lookup, insert, delete, toList, fromList)
 
 import Data.List                (intersperse, isPrefixOf)
-import Data.Maybe               (catMaybes)
+import Data.Maybe               (catMaybes,fromMaybe)
 import Data.Set                 (elementOf, addToSet, delFromSet, Set)
 import Data.Char                (isSpace, toLower)
 import Control.Monad.State      (when,MonadIO(..))
@@ -146,6 +146,9 @@ listToStr conj (item:items) =
       listToStr' (y:ys) = concat [", ", y, listToStr' ys]
   in  item ++ listToStr' items
 
+------------------------------------------------------------------------
+-- More stuff for getting at state in DynamicModule.
+
 data Accessor m s = Accessor { reader :: m s, writer :: s -> m () }
 
 readFM :: (Monad m,Ord k) => Accessor m (Map k e) -> k -> m (Maybe e)
@@ -160,6 +163,8 @@ deleteFM :: (Monad m,Ord k) => Accessor m (Map k e) -> k -> m ()
 deleteFM a k = do fm <- reader a
                   writer a $ M.delete k fm
 
+------------------------------------------------------------------------
+
 lookupSet :: (Monad m,Ord e) => Accessor m (Set e) -> e -> m Bool
 lookupSet a e = do set <- reader a
                    return $ elementOf e set
@@ -171,6 +176,11 @@ insertSet a e = do set <- reader a
 deleteSet :: (Monad m,Ord e) => Accessor m (Set e) -> e -> m ()
 deleteSet a e = do set <- reader a
                    writer a $ delFromSet set e
+
+-- readList :: (Monad )
+lookupList :: (Monad m, Eq a1) => Accessor m [(a1, [a])] -> a1 -> m [a]
+lookupList a e = do ls <- reader a
+                    return $ fromMaybe [] (lookup e ls)
 
 ------------------------------------------------------------------------
 

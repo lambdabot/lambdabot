@@ -98,37 +98,32 @@ Modules.hs: config.mk GenModules
 	@echo "done."
 
 GenModules: GenModules.hs
-	@$(GHC) GenModules.hs -o GenModules
+	@$(GHC) $(HC_OPTS) --make GenModules.hs -o GenModules
 
 
 #
-# If you ever add a module, you can use this target to regenerate the
-# Depends.hs file. Remember there are different depends for the ghc versions
+# Recalculating dependencies depends on a correct build
 #
-.PHONY: dynamic-depends
-dynamic-depends:
+Depends.conf: GenModules $(ALL_OBJS)
+	@echo -n "Calculating dynamic dependencies ... "
 	@for i in *Module.hi ; do \
 		echo -n `echo "$$i"` ;\
-		$(GHC) --show-iface $$i | sed 's/\[boot\]//g;/orphans/{s/.*/#/;q;}' ;\
+		$(GHC) $(PKG_OPTS) --show-iface $$i | sed 's/\[boot\]//g;/orphans/{s/.*/#/;q;}' ;\
 	done | ./GenModules --depends
+	@touch Depends.conf
+	@echo "done."
 
 #
 # Link the bot.
 # TODO: depends should only be $(BOT_OBJS), not plugins too.
 #
-lambdabot: $(ALL_OBJS) ofiles
-	$(GHC) $(HC_OPTS) $(PKG_OPTS) $(LD_OPTS) -v0 --make Main.hs -o $@
-
-#
-# Profiling requires ln -s *.p_o to *.o so as not to confuse the dyn linker
-#
-.PHONY: ofiles
-ofiles:	$(ALL_OBJS)
+lambdabot: $(ALL_OBJS) Depends.conf
 	@if test "x$(way)" = "xp" ; then \
 		for i in *.p_o ; do \
 			ln -f -s $$i `echo $$i | sed 's/p_//'` ; \
 		done ; \
 	fi
+	$(GHC) $(HC_OPTS) $(PKG_OPTS) $(LD_OPTS) -v0 --make Main.hs -o $@
 
 # and for i in $(ALL_OBJS) ; do ln -s $i $i_p.o ...
 
@@ -164,5 +159,6 @@ distclean: clean
 	rm -f config.mk config.h config.log config.status configure 
 	rm -rf autom4te.cache
 	rm -f GenModules Modules.hs Modules.o-boot Modules.*-boot
+	rm Depends.conf
 
 -include depend

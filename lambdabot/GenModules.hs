@@ -10,13 +10,16 @@
 --
 module Main where
 
+import Config
+import ParsePkgConf
+
 import Data.Char
 import Data.List
 import System.Environment
-import Text.PrettyPrint
 
-outfile :: [Char]
-outfile = "Modules.hs"
+outfile, outfile' :: String
+outfile  = "Modules.hs"
+outfile' = "Depends.conf"
 
 main :: IO ()
 main = do argv <- getArgs
@@ -27,42 +30,41 @@ main = do argv <- getArgs
                     src               = unlines (process statics)
                                            ++ process2 plugins
                 writeFile outfile src
-           -- generate a dependency tree. todo, do the sed fragment here too.
+
+           -- generate a dependency tree.
+           -- must run after we've built the lambdabot.
            else do
                 raw <- getContents      -- list of ghc --show-iface output
 
                 let syn'      = parse raw
                     (_,ds,ps) = unzip3 syn'
-                    packages  = nub . sort . foldr1 (++) $ ps
-                    depends   = foldr1 intersect $ ds
-                    syn       = map (\(a,b,c) -> (a, b \\  depends, c)) syn'
 
-                let cores = vcat [text "corePlugins :: [String]"
-                                 ,text $ "corePlugins = " ++ show depends]
+                -- problem, doesn't take into account dependencies
+                -- specified in package.confs. i.e. network->parsec
+                -- should read ParsePkgConf.depends and add to list
+                let pkgs' = (foldr1 (++) ps) \\ ["Cabal"]
+                deppkgs <- findDepends pkgs'
+                let pkgs   = (nub . foldr1 (++) $ deppkgs ++ [pkgs']) \\ ["rts"]
+    
+                let coremods  = foldr1 intersect $ ds
+                    deplist   = map (\(a,b,_) -> 
+                                        (a++".o"
+                                        ,map (\s -> (nodot s)++".o") (b \\  coremods))) syn'
 
-                let pkgs  = vcat [text "reqPackages :: [String]"
-                                 ,text $ "reqPackages = " ++ show packages]
+                let deps      = Depends { reqObjs = coremods,
+                                          reqPkgs = pkgs,
+                                          depList = deplist }
 
-                let src =  "-- Generated via \"make dynamic-depends\"\n"
-                             ++ "module Depends where"
-                             ++ "\n\n"
-                             ++ "data Require = Object String | Package String"
-                             ++ "\n\n"
-                             ++ render cores
-                             ++ "\n\n"
-                             ++ render pkgs
-                             ++ "\n\n"
-                             ++ "getFileRequires :: String -> [Require]"
-                             ++ "\n\n"
-                             ++ (render . vcat . map ppr $ syn)
-                             ++ "\n\n"
-                             ++ "getFileRequires _ = []"
-
-                writeFile "Depends.hs" src
+                writeFile outfile' (show deps)
 
     where breakcsv p = (\(a,b) -> (a,tail b)) . (break (== p))
+          nodot []       = []
+          nodot ('.':cs) = '/':nodot cs
+          nodot (c:cs)   = c  :nodot cs
 
-------------------------------------------------------------------------
+-- ---------------------------------------------------------------------
+--
+-- parse output of ghc --show-iface
 
 parse :: String -> [(String, [String], [String])]
 parse s = map parseModule (split "#\n" s)
@@ -72,10 +74,10 @@ parseModule s =
         let (modname, bs) = breakOnGlue one s
             (_, cs)       = breakOnGlue "module dependencies: " bs
             ds            = drop (length two) cs
-            (depends,es)  = breakOnGlue "package dependencies: " ds
-            packages      = drop (length three) es
+            (deps,es)     = breakOnGlue "package dependencies: " ds
+            pkgs          = drop (length three) es
 
-        in (modname ,cleanls depends, map dropVersion (cleanls packages))
+        in (modname ,cleanls deps, map dropVersion (cleanls pkgs))
 
         where one     = ".hi"
               two     = "module dependencies: "
@@ -92,30 +94,8 @@ parseModule s =
 
               -- drop cabal vers string fromm, e.g, "base-1.0"
               dropVersion [] = []
-              dropVersion ('-':c:cs) | isDigit c = []
+              dropVersion ('-':c:_) | isDigit c = []
               dropVersion (c:cs) = c : dropVersion cs
-
-------------------------------------------------------------------------
---
--- For each module, generate a list of module and package dependencies.
---
--- Any modules that are shared by all modules, are considered core and
--- will get loaded in one go.
---
-ppr :: (String, [String], t) -> Doc
-ppr (_,[],_)     = empty
-ppr (mod,deps,_) =
-        hang (hcat [text "getFileRequires \"", text mod, text ".o\" = ["])
-             4 ((vcat $ intersperse comma $ 
-                        map (\s -> hcat ([text "Object \"", 
-                                         text (nodot s), 
-                                         text ".o\""])) deps)
-               $$ char ']')
-
-   where
-       nodot []       = []
-       nodot ('.':cs) = '/':nodot cs
-       nodot (c:cs)   = c  :nodot cs
 
 ------------------------------------------------------------------------
 
@@ -126,9 +106,9 @@ process m = concat [begin,
                     map doload m]
  where
     begin        = ["module Modules where", "import IRC", ""]
-    doimport name= "import qualified " ++ (clean . upperise) name ++ "Module"
+    doimport nm  = "import qualified " ++ (clean . upperise) nm ++ "Module"
     middle       = ["","loadStaticModules :: LB ()","loadStaticModules"," = do"]
-    doload name  = " ircInstallModule " ++ (clean . upperise) name ++ 
+    doload nm   = " ircInstallModule " ++ (clean . upperise) nm  ++ 
                      "Module.theModule"
 
 process2 :: [String] -> String
@@ -142,9 +122,11 @@ quote  :: String -> String
 quote x = "\"" ++ x ++ "\""
 
 upperise :: [Char] -> [Char]
+upperise [] = []
 upperise (c:cs) = toUpper c:cs
 
 lowerise :: [Char] -> [Char]
+lowerise [] = []
 lowerise (c:cs) = toLower c:cs
 
 clean :: [Char] -> [Char]

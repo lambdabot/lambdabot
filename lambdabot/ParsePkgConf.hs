@@ -2,10 +2,10 @@
 
 #include "config.h"
 
-module ParsePkgConf (systemModuleName) where
+module ParsePkgConf (systemModuleName,findDepends) where
 
-import Monad
-import Directory
+import Control.Monad
+import System.Directory
 import qualified Control.Exception as C (catch,throw)
 
 --
@@ -35,6 +35,9 @@ hs_libraries = hsLibraries
 
 extra_libraries :: PkgConf -> [String]
 extra_libraries = extraLibraries
+
+package_deps :: PkgConf -> [String]
+package_deps pkg = map pkgName (depends pkg)
 
 #else /* GHC < 6.4 */
 --
@@ -70,17 +73,29 @@ ghcLibraryPath = GHC_LIB_PATH ++ "/"
 --
 -- Given a package name, e.g. 'concurrent', find the full path to that object
 --
+readPkgConf :: IO [PkgConf]
+readPkgConf = do
+    let f = ghcLibraryPath ++ "package.conf"
+    C.catch
+        (liftM read $ readFile f)
+        (\e -> putStrLn "Unable to read package.conf" >> C.throw e)
+
 systemModuleName :: String -> IO [String]
 systemModuleName packageName = do
-
-   (packages :: [PkgConf]) <- C.catch
-         (liftM read $ readFile $ ghcLibraryPath ++ "package.conf")
-         (\e -> putStrLn "Unable to read package.conf" >> C.throw e)
-
+   (packages :: [PkgConf]) <- readPkgConf
    let pkg = head (filter (\p -> name p == packageName) packages)
    liftM concat $ sequence $
         map (libraryObject (map translate (library_dirs pkg)))
             (hs_libraries pkg ++ extra_libraries pkg)
+
+-- | Just find the package dependencies for the packages specified
+findDepends :: [String] -> IO [[String]]
+findDepends pkgs = do
+   (packages :: [PkgConf]) <- readPkgConf
+   mapM (\nm -> let pkg = head (filter (\p -> name p == nm) packages)
+                in return $ package_deps pkg) pkgs
+
+------------------------------------------------------------------------
 
 translate :: [Char] -> [Char]
 translate ('$':'l':'i':'b':'d':'i':'r':rest) = init ghcLibraryPath ++ rest

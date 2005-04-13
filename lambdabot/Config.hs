@@ -41,3 +41,17 @@ config = Config {
                 "TheHunter",    "jlouis"
         ]
    }
+
+--
+-- | This type describes object dependencies required at runtime.
+-- It is calculated at build time with 'make Depends.conf', and used
+-- by the Dynamic module, and GenModules
+--
+data Depends = Depends {
+        reqObjs :: [String],           -- a common subset of modules 
+        reqPkgs :: [String],           -- all required packages
+        depList :: [(String,[String])] -- assoc list of modules and their obj deps
+    }
+    deriving (Show,Read)
+
+type DepList = [(String,[String])]

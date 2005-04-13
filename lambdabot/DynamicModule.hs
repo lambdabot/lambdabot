@@ -6,8 +6,8 @@ module DynamicModule (theModule) where
 
 import {-# SOURCE #-} Modules   (plugins)
 
+import Config
 import IRC
-import Depends
 import RuntimeLoader
 import ErrorUtils               (handleErrorJust)
 import Util
@@ -28,59 +28,69 @@ import System.IO                (stdout, hFlush)
 
 ------------------------------------------------------------------------
 
-newtype DynamicModule = DynamicModule ()
-
-dynamicModule :: DynamicModule
-dynamicModule = DynamicModule ()
-
-theModule :: MODULE
-theModule = MODULE dynamicModule
-
-data DLModules 
- = DLModules 
-    { objects :: Map String (RuntimeModule,Int)  -- object + use count
-    , packages :: Set String -- which have been loaded? 
-                             --  (can't unload, so ref counting pointless)
-    }
-  deriving Typeable
-
-type Dyn a = MonadLB m => ModuleT DLModules m a
-
 #if __GLASGOW_HASKELL__ < 603
 empty :: Set a
 empty = emptySet
 #endif
 
+------------------------------------------------------------------------
+
+newtype DynamicModule = DynamicModule ()
+
+theModule :: MODULE
+theModule = MODULE $ DynamicModule ()
+
+--
+-- keep track of loaded modules
+--
+data DLModules 
+ = DLModules 
+    { objects  :: Map String (RuntimeModule,Int)  -- object + use count
+    , packages :: Set String    -- which have been loaded? (can't unload)
+    , depends  :: DepList
+    }
+  deriving Typeable
+
 initDLModules :: DLModules
-initDLModules = DLModules { objects = M.empty, packages = empty }
+initDLModules = DLModules { objects = M.empty, packages = empty, depends = [] }
+
+type Dyn a = MonadLB m => ModuleT DLModules m a
+
+depfile :: String
+depfile = "Depends.conf" -- created at build time
+
+------------------------------------------------------------------------
 
 instance Module DynamicModule DLModules where
+
   moduleName   _ = "dynamic"
-  moduleHelp _ _ = return "@dynamic-(un|re)?load: interface to dynamic linker"
   moduleSticky _ = True
+  moduleHelp _ _ = return "@dynamic-(un|re)?load <module>, interface to dynamic linker"
   moduleCmds   _ = return ["dynamic-load","dynamic-unload","dynamic-reload"]
+ 
   moduleInit   _ = do 
-        liftIO initialise
-        writeMS initDLModules
+        (ds :: Depends) <- liftIO (readFile depfile >>= readM)
+        liftIO $ initialise (reqPkgs ds) (reqObjs ds) 
+        writeMS (initDLModules { depends = depList ds })
         liftIO $ putStr "Loading plugins\t" >> hFlush stdout
         mapM_ (handleRLEConsole . load) plugins
         liftIO $ putStrLn "... done."
                                     
   process _ msg src "dynamic-load" rest 
-    = checkPrivs msg src $ handleRLE src $ do load rest
-                                              ircPrivmsg src "module loaded"
+    = checkPrivs msg src $ handleRLE src $
+            load rest >> ircPrivmsg src "module loaded"
 
   process _ msg src "dynamic-unload" rest
-    = checkPrivs msg src $ handleRLE src $ do unload rest
-                                              ircPrivmsg src "module unloaded"
+    = checkPrivs msg src $ handleRLE src $ 
+            unload rest >> ircPrivmsg src "module unloaded"
 
   process _ msg src "dynamic-reload" rest
-    = checkPrivs msg src $ handleRLE src $ do unload rest
-                                              load rest
-                                              ircPrivmsg src "module reloaded"
+    = checkPrivs msg src $ handleRLE src $ 
+            unload rest >> load rest >> ircPrivmsg src "module reloaded"
 
   process _ _ _ _ _ = error "DynamicModule: Invalid command"
 
+------------------------------------------------------------------------
 
 handleRLEConsole :: MonadLB m => m () -> m ()
 handleRLEConsole = handleErrorJust findRLEError (liftIO . print)
@@ -92,9 +102,14 @@ findRLEError :: IRCError -> Maybe RuntimeLoaderException
 findRLEError (IRCRaised (DynException e)) = fromDynamic e
 findRLEError _                            = Nothing
 
+-- ---------------------------------------------------------------------
+-- Getting at the state
+--
+
 data DLAccessor m
  = DLAccessor { objectsA  :: Accessor m (Map String (RuntimeModule,Int))
               , packagesA :: Accessor m (Set String)
+              , dependsA  :: Accessor m (DepList)
               }
 
 dlGet :: (MonadLB m) => ModuleT DLModules m (DLAccessor m)
@@ -102,6 +117,7 @@ dlGet = do let dlFMRef = ?ref
            let dlA = dlAccessor dlFMRef
            return $ DLAccessor { objectsA  = objectsAccessor dlA
                                , packagesA = packagesAccessor dlA
+                               , dependsA  = dependsAccessor dlA
                                }
 
 dlAccessor :: MonadIO m => IORef DLModules -> Accessor m DLModules
@@ -127,6 +143,14 @@ packagesAccessor a
                                  writer a (s { packages = v })
              }
 
+dependsAccessor :: MonadIO m => Accessor m DLModules -> Accessor m DepList
+dependsAccessor a
+  = Accessor { reader = liftM depends (reader a)
+             , writer = \v -> do s <- reader a
+                                 writer a (s { depends = v })
+             }
+
+-- ---------------------------------------------------------------------
 --
 -- simple name of a plugin, i.e. "google"
 -- load value "theModule" from each plugin.
@@ -148,15 +172,11 @@ unload nm = do
         liftLB $ ircUnloadModule nm
         doUnloadObject (getModuleFile nm)
 
-doLoadRequire :: Require -> Dyn ()
-doLoadRequire (Object file) = doLoadObject file >> return ()
-doLoadRequire (Package nm)  = doLoadPackage nm
-
 doLoadObject :: String -> Dyn RuntimeModule
 doLoadObject file = do 
         dl <- dlGet
-        let requires = getFileRequires file
-        mapM_ doLoadRequire requires      
+        requires <- lookupList (dependsA dl) file
+        mapM_ doLoadObject requires
         loaded <- readFM (objectsA dl) file
         case loaded of
                 Nothing -> do 
@@ -167,6 +187,8 @@ doLoadObject file = do
                         writeFM (objectsA dl) file (object,n+1)
                         return object
 
+{-
+-- We do no post-init dynamic loading of packages. Is this that bad?
 doLoadPackage :: String -> Dyn ()
 doLoadPackage nm = do 
       dl <- dlGet
@@ -174,13 +196,7 @@ doLoadPackage nm = do
       when (not loaded) $ do 
             liftIO $ loadPackage nm
             insertSet (packagesA dl) nm
-
-doUnloadRequire :: Require -> Dyn ()
-doUnloadRequire (Object file) = doUnloadObject file
-doUnloadRequire (Package nm)  = doUnloadPackage nm
-
-doUnloadPackage :: (Monad m) => t -> m ()
-doUnloadPackage _ = return () -- can't unload packages
+-}
 
 doUnloadObject :: String -> Dyn ()
 doUnloadObject file
@@ -191,7 +207,8 @@ doUnloadObject file
                                     deleteFM (objectsA dl) file
         Just (object,n) | n>1 -> writeFM (objectsA dl) file (object,n-1)
         _                     -> error "DynamicModule: Nothing"
-      mapM_ doUnloadRequire (getFileRequires file)
+      requires <- lookupList (dependsA dl) file
+      mapM_ doUnloadObject requires
 
 isLoadedObject :: String -> Dyn Bool
 isLoadedObject file
@@ -201,16 +218,22 @@ isLoadedObject file
         Just _ -> return True
         Nothing -> return False
 
-initialise :: IO ()
-initialise = do 
+-- ---------------------------------------------------------------------
+--
+-- | Load in required packages and objects. Arguments are list of
+-- packages and core modules to load, extracted from Depends.conf,
+-- produced by GenModules, via ghc --show-iface. Phew!
+--
+initialise :: [String] -> [String] -> IO ()
+initialise pkgs objs = do 
         initialiseRuntimeLoader
 
         putStr "Loading package " >> hFlush stdout
-        mapM_ loadPackage reqPackages
+        mapM_ loadPackage pkgs
         putStrLn "... done."
 
         putStr "Loading core\t" >> hFlush stdout
-        mapM_ (\n -> loadObjFile (n++".o")) corePlugins
+        mapM_ (\n -> loadObjFile (n++".o")) objs
         putStrLn "... done."
                 
 getModuleFile :: [Char] -> [Char]
@@ -219,3 +242,4 @@ getModuleFile s = upperise s ++ "Module.o"
         upperise :: [Char] -> [Char]
         upperise []     = []
         upperise (c:cs) = toUpper c:cs
+
