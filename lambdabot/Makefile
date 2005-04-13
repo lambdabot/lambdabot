@@ -2,14 +2,14 @@
 
 include config.mk
 
-# 
+#
 #  All directories to look for sources
 #
 ALL_DIRS=	.  DictModule EvalModule QuoteModule BabelBot PlModule
 
 # Not used, not built, bit dodgy as we are relying on ALL_DIRS to ignore
 # the subdirs of EXCLUDED_MODS. The following additional srcs will not be built
-EXCLUDED_MODS=	Fact Haddock Hello Cmafihe
+EXCLUDED_MODS=	Haddock Hello Cmafihe
 EXCLUDED_SRCS=	$(addsuffix Module.hs,$(EXCLUDED_MODS))
 EXCLUDED_SRCS+= EvalModule/tests.hs PlModule/Test.hs GenModules.hs
 
@@ -127,7 +127,7 @@ lambdabot: $(ALL_OBJS)
 
 # and for i in $(ALL_OBJS) ; do ln -s $i $i_p.o ...
 
-# 
+#
 # Main rules, with support for 'way' management, from Yi.
 #
 %.$(way_)hi : %.$(way_)o
@@ -156,7 +156,7 @@ clean:
 	rm -f lambdabot lambdabot.prof depend depend.bak
 
 distclean: clean
-	rm -f config.mk config.h config.log config.status configure 
+	rm -f config.mk config.h config.log config.status configure
 	rm -rf autom4te.cache
 	rm -f GenModules Modules.hs Modules.o-boot Modules.*-boot
 	rm Depends.conf
