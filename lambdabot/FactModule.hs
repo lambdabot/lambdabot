@@ -51,6 +51,6 @@ instance Module FactModule FactState where
 
 getFact :: M.Map String String -> String -> String
 getFact fm fact =
-  case M.lookup fact fm of
+  case M.lookup (lowerCaseString fact) fm of
     Nothing -> "I know nothing about " ++ fact ++ "."
     Just x  -> fact ++ ": " ++ x ++ "."
