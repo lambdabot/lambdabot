@@ -180,20 +180,26 @@ doRPL_ENDOFMOTD _msg = return ()
 doPRIVMSG :: IRCMessage -> IRC ()
 doPRIVMSG msg = doPRIVMSG' (name config) msg
 
+--
+-- | What does the bot respond to?
+--
 doPRIVMSG' :: String -> IRCMessage -> IRC ()
 doPRIVMSG' myname msg
   | myname `elem` targets
     = let (cmd, params) = breakOnGlue " " text
       in doPersonalMsg cmd (dropWhile (== ' ') params)
-  | myname `isPrefixOf` text
+
+  | (myname ++ ":") `isPrefixOf` text
     = let Just wholeCmd = maybeCommand myname text
 	  (cmd, params) = breakOnGlue " " wholeCmd
       in doPublicMsg cmd (dropWhile (==' ') params)
+
   | ("@" `isPrefixOf` text)
     = let (cmd, params) = breakOnGlue " " (dropWhile (==' ') text)
       in doPublicMsg cmd (dropWhile (==' ') params)
-  | otherwise
-    = doIGNORE msg
+
+  | otherwise = doIGNORE msg
+
   where
     alltargets = head (msgParams msg)
     targets = split "," alltargets
@@ -210,6 +216,7 @@ doPRIVMSG' myname msg
       = do  let (who, _) = breakOnGlue "!" (msgPrefix msg)
             ircPrivmsg who "Sorry, don't understand"
             doUNKNOWN msg
+
     -- external modules are called in this next chunk
     doPublicMsg ('@':cmd) rest = withModule ircCommands cmd 
         (ircPrivmsg alltargets ("Unknown command, try @listcommands.")) 
