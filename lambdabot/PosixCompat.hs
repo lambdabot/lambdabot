@@ -9,6 +9,7 @@ module PosixCompat (popen) where
 #if __GLASGOW_HASKELL__ >= 604
 import System.IO
 import System.Process
+import Control.Concurrent       (forkIO)
 #else
 import qualified Posix as P
 #endif
@@ -40,6 +41,14 @@ popen file args minput =
     -- Now, grab the input
     output <- hGetContents out
     errput <- hGetContents err
+
+    -- SimonM sez:
+    -- ... avoids blocking the main thread, but ensures that all the
+    -- data gets pulled as it becomes available. you have to force the
+    -- output strings before waiting for the process to terminate.
+    --
+    forkIO (Control.Exception.evaluate (length output) >> return ())
+    forkIO (Control.Exception.evaluate (length errput) >> return ())
 
     -- And now we wait. We must wait after we read, unsurprisingly.
     waitForProcess pid -- blocks without -threaded, you're warned.
