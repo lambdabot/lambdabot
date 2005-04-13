@@ -718,7 +718,7 @@ readGlobalState :: Module m s => m -> String -> IO (Maybe s)
 readGlobalState mod name = case moduleSerialize mod of
   Nothing  -> return Nothing
   Just ser -> do
-    state <- Just `fmap` readFile' name `catch` \_ -> return Nothing
+    state <- Just `fmap` readFile' (toFilename name) `catch` \_ -> return Nothing
     return $ deSerialize ser =<< state
 
 --
