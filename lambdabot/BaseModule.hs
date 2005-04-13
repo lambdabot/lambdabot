@@ -212,7 +212,7 @@ doPRIVMSG' myname msg
             doUNKNOWN msg
     -- external modules are called in this next chunk
     doPublicMsg ('@':cmd) rest = withModule ircCommands cmd 
-        (ircPrivmsg alltargets ("Unknown command.")) 
+        (ircPrivmsg alltargets ("Unknown command, try @listcommands.")) 
         (\m -> do
           debugStrLn (show msg)
           handleIrc (ircPrivmsg alltargets) (process m msg alltargets cmd rest))
