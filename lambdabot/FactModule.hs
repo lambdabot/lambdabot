@@ -25,7 +25,8 @@ type Fact m a = ModuleT FactState m a
 
 instance Module FactModule FactState where
   moduleHelp _ "fact" = return "Retrieve a fact from the database"
-  moduleHelp _ "fact-set" = return "Define a new fact"
+  moduleHelp _ "fact-set" = return "Define a new fact, guard if exists"
+  moduleHelp _ "fact-update" = return "Define a new fact, overwriting"
   moduleHelp _ "fact-delete" = return "Delete a fact from the database"
   moduleHelp _ "fact-cons" = return "cons information to fact"
   moduleHelp _ "fact-snoc" = return "snoc information to fact"
@@ -35,7 +36,7 @@ instance Module FactModule FactState where
   moduleSerialize _ = Just mapSerializer
 
   moduleCmds   _ = return ["fact", "fact-set", "fact-delete", "fact-cons",
-			   "fact-snoc"]
+			   "fact-snoc", "fact-update"]
 
   process _ _ target cmd rest =
     do factFM <- readMS
@@ -52,15 +53,22 @@ processCommand :: M.Map String String -> String -> String -> String
 processCommand factFM fact cmd dat =
   case cmd of
     "fact"     -> return $ getFact factFM fact
-    "fact-set" -> if M.member fact factFM
-                    then return "Fact is already existing, not updating"
-		    else do writeMS $ M.insert fact dat factFM
-                            return "Fact recorded."
+    "fact-set" -> updateFact True factFM fact dat
+    "fact-update" -> updateFact False factFM fact dat
     "fact-cons" -> alterFact ((dat ++ " ")++) factFM fact
     "fact-snoc" -> alterFact (++(" " ++ dat)) factFM fact
     "fact-delete" -> do writeMS $ M.delete fact factFM
 			return "Fact deleted."
     _          -> return "Unknown command."
+
+updateFact :: Bool -> M.Map String String -> String -> String
+	   -> Fact IRC String
+updateFact guard factFM fact dat =
+  let update = do writeMS $ M.insert fact dat factFM
+                  return "Fact recorded."
+  in if guard && M.member fact factFM
+        then return "Fact is already existing, not updating"
+        else update
 
 alterFact :: (String -> String) -> M.Map String String -> String
 	  -> Fact IRC String
