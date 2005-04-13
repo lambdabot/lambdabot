@@ -21,43 +21,38 @@ instance Module TopicModule () where
   moduleCmds   _ = return ["topic-tell",
                            "topic-cons", "topic-snoc",
                            "topic-tail", "topic-init"]
-  process _ _ src "topic-cons" text = topic_cons src text
-  process _ _ src "topic-snoc" text = topic_snoc src text
-  process _ _ src "topic-tail" chan = alter_topic src chan tail
-  process _ _ src "topic-init" chan = alter_topic src chan init
+  process _ _ src "topic-cons" text = topicSplit (:) src text
+  process _ _ src "topic-snoc" text = topicSplit snoc src text
+  process _ _ src "topic-tail" chan = alterTopic src chan tail
+  process _ _ src "topic-init" chan = alterTopic src chan init
   process _ _ src "topic-tell" chan =
-    do
-    maybetopic <- gets (\s -> M.lookup (mkCN chan) (ircChannels s) )
-    case maybetopic of
-                    Just x  -> ircPrivmsg src x
-                    Nothing -> ircPrivmsg src "don't know that channel"
+      lookupTopic chan (\maybetopic ->
+        case maybetopic of
+	  Just x -> ircPrivmsg src x
+	  Nothing -> ircPrivmsg src "do not know that channel")
   process _ _ src cmd _
     = ircPrivmsg src ("Bug! someone forgot the handler for \""++cmd++"\"")
 
-topic_snoc :: String -> String -> IRC ()
-topic_snoc source cmdtext = alter_topic source chan (snoc topic_item)
-  where
-  (chan, topic_item) = splitFirstWord cmdtext
+topicSplit :: (String -> [String] -> [String])
+	       -> String -> String -> IRC ()
+topicSplit f source cmdtext = alterTopic source chan (f topic_item)
+  where (chan, topic_item) = splitFirstWord cmdtext
 
-topic_cons :: String -> String -> IRC ()
-topic_cons source cmdtext = alter_topic source chan (topic_item:)
-  where
-  (chan, topic_item) = splitFirstWord cmdtext
+lookupTopic :: String -> (Maybe String -> IRC () ) -> IRC ()
+lookupTopic chan f =
+  do maybetopic <- gets (\s -> M.lookup (mkCN chan) (ircChannels s))
+     f maybetopic
 
-alter_topic :: String -> String -> ([String] -> [String]) -> IRC ()
-alter_topic source chan f
-  = do
-    maybetopic <- gets (\s -> M.lookup (mkCN chan) (ircChannels s) )
-    case maybetopic
-         of
-         Just x -> case reads x
-                        of
-                        [(xs,"")] -> ircTopic chan (show $ f $ xs)
-                        [(xs,r)] | length r <= 2
-                                  -> -- probably bogus characters near end,
-                                     -- do anyway
-                                     do  ircPrivmsg source $
-                                           "ignoring bogus characters: " ++ r
-                                         ircTopic chan (show $ f $ xs)
-                        _         -> ircPrivmsg source "topic doesn't parse"
-         Nothing -> ircPrivmsg chan "don't know that channel"
+alterTopic :: String -> String -> ([String] -> [String]) -> IRC ()
+alterTopic source chan f =
+  let p maybetopic =
+        case maybetopic of
+          Just x -> case reads x of
+                        [(xs, "")] -> ircTopic chan (show $ f $ xs)
+			[(xs, r)] | length r <= 2 
+				   -> do ircPrivmsg source $
+				              "ignoring bogus characters: " ++ r
+					 ircTopic chan (show $ f $ xs)
+			_          -> ircPrivmsg source "topic does not parse"
+	  Nothing -> ircPrivmsg chan "do not know that channel"
+  in lookupTopic chan p
