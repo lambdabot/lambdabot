@@ -71,7 +71,7 @@ all: lambdabot modules Depends.conf
 #
 # TODO should be just PLUGIN_OBJS
 #
-.PHONY: modules
+.PHONY: modules haddock
 modules: $(ALL_OBJS)
 
 #
@@ -160,5 +160,14 @@ distclean: clean
 	rm -rf autom4te.cache
 	rm -f GenModules Modules.hs Modules.o-boot Modules.*-boot
 	rm Depends.conf
+
+haddock:
+	@-mkdir haddock
+	@for i in `grep -l '\-\- |' *.hs */*.hs`; do \
+	    $(GHC) -D__HADDOCK__ -optP-P -E -cpp "$${i}" -o "$${i}pp"; \
+	done
+	@haddock -o haddock -h *.hspp */*.hspp
+	@#clean up immideately
+	@rm -f *.hspp */*.hspp
 
 -include depend

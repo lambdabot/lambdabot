@@ -183,7 +183,7 @@ sizeExpr' e = fromIntegral (length $ show e) + adjust e where
   -- x >>= f --> f =<< x
   -- f $ g x --> f (g x)
   adjust :: Expr -> Size
-  adjust (Var _ str) -- | Just n <- readM str = log (n*n+1) / 4
+  adjust (Var _ str) -- Just n <- readM str = log (n*n+1) / 4
                      | str == "uncurry"    = -4
 		     | str == "s"          = 5
                      | str == "flip"       = 0.1

@@ -87,7 +87,7 @@ data IRCRState
 
 type Callback = IRCMessage -> IRC ()
 
--- | Global read/write state.
+-- | Global read\/write state.
 data IRCRWState
   = IRCRWState {
         ircPrivilegedUsers :: Map String Bool,
@@ -253,7 +253,9 @@ irchost msg = (split "@" (msgPrefix msg)) !! 1
 --   server.
 newtype LB a = LB { runLB :: IRCErrorT (StateT IRCRWState IO) a }
 #if __GLASGOW_HASKELL__ >= 600
+#ifndef __HADDOCK__
    deriving (Functor,Monad,MonadState IRCRWState,MonadError IRCError,MonadIO)
+#endif
 #else
 instance Monad LB where
   return a = LB $ return a
@@ -290,8 +292,10 @@ type ModuleT s m a = (?ref :: IORef s, ?name :: String) => m a
 newtype IRC a 
   = IRC { runIRC :: IRCErrorT (ReaderT IRCRState (StateT IRCRWState IO)) a }
 #if __GLASGOW_HASKELL__ >= 600
+#ifndef __HADDOCK__
     deriving (Monad,Functor,MonadReader IRCRState,MonadState IRCRWState,
               MonadError IRCError,MonadIO)
+#endif
 #else
 instance Monad IRC where
   return a = IRC $ return a
@@ -339,9 +343,9 @@ ircGetChannels = do
     return $ map getCN (M.keys chans)
 -}
 
--- | Send a message to a channel/user. If the message is too long, the rest
+-- | Send a message to a channel\/user. If the message is too long, the rest
 --   of it is saved in the (global) more-state.
-ircPrivmsg :: String -- ^ The channel/user.
+ircPrivmsg :: String -- ^ The channel\/user.
    -> String         -- ^ The message.
    -> IRC ()
 ircPrivmsg who msg
@@ -657,29 +661,29 @@ ctcpDequote (c:cs)             = c : ctcpDequote cs
 -- | The Module type class.
 -- Minimal complete definition: @moduleHelp@, @moduleCmds@, @process@.
 class Module m s | m -> s where
--- | If the module wants its state to be saves, this function a Serializer.
---
--- The default implementation returns Nothing.
+    -- | If the module wants its state to be saves, this function should
+    --   return a Serializer.
+    --
+    --   The default implementation returns Nothing.
     moduleSerialize :: m -> Maybe (Serializer s)
--- | If the module maintains state, this method specifies the default state
--- (for example in case the state can't be read from a state).
---
--- The default implementation returns an error and assumes the state is never
--- accessed.
+    -- | If the module maintains state, this method specifies the default state
+    --   (for example in case the state can't be read from a state).
+    --
+    --   The default implementation returns an error and assumes the state is 
+    --   never accessed.
     moduleDefState  :: m -> LB s
--- | This method should return a help string for every command it defines.
+    -- | This method should return a help string for every command it defines.
     moduleHelp      :: m -> String -> ModuleT s LB String
--- | Is the module sticky? Sticky modules (as well as static ones) can't be
--- unloaded. By default, modules are not sticky.
+    -- | Is the module sticky? Sticky modules (as well as static ones) can't be
+    --   unloaded. By default, modules are not sticky.
     moduleSticky    :: m -> Bool
--- | The commands the module listenes to.
+    -- | The commands the module listenes to.
     moduleCmds      :: m -> ModuleT s LB [String]
--- | Initialize the module. The default implementation does nothing.
+    -- | Initialize the module. The default implementation does nothing.
     moduleInit      :: m -> ModuleT s LB ()
--- | Finalize the module. The default implementation does nothing.
+    -- | Finalize the module. The default implementation does nothing.
     moduleExit      :: m -> ModuleT s LB ()
--- | Process a command a user sent.
-    -- msg target cmd rest
+    -- | Process a command a user sent.
     process         :: m -- ^ phantom
         -> IRCMessage    -- ^ the message
         -> String        -- ^ target
@@ -790,17 +794,12 @@ moreStateSet lns =
     do s <- get
        put (s { ircMoreState = lns })
 
--- | Interpret an expression in the context of a module.
--- Arguments are which map to use (@ircModules@ and @ircCommands@ are
--- the only sensible arguments here), the name of the module/command,
--- action for the case that the lookup fails, action if the lookup
--- succeeds.
---
-withModule :: MonadLB m 
-  => (IRCRWState -> Map String ModuleRef)
-  -> String
-  -> m a 
-  -> (forall mod s. Module mod s => mod -> ModuleT s m a)
+-- | interpret an expression in the context of a module.
+withModule :: MonadLB m => 
+     (IRCRWState -> Map String ModuleRef) -- ^ which map to use. @ircModules@ and @ircCommands@ are the only sensible arguments here.
+  -> String -- ^ The name of the module/command.
+  -> m a    -- ^ Action for the case that the lookup fails.
+  -> (forall mod s. Module mod s => mod -> ModuleT s m a) -- ^ Action if the lookup succeeds
   -> m a
 
 withModule dict modname def f = do
