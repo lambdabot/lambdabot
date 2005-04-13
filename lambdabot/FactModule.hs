@@ -64,11 +64,10 @@ processCommand factFM fact cmd dat =
 updateFact :: Bool -> M.Map String String -> String -> String
 	   -> Fact IRC String
 updateFact guard factFM fact dat =
-  let update = do writeMS $ M.insert fact dat factFM
-                  return "Fact recorded."
-  in if guard && M.member fact factFM
-        then return "Fact is already existing, not updating"
-        else update
+  if guard && M.member fact factFM
+    then return "Fact is already existing, not updating"
+    else do writeMS $ M.insert fact dat factFM
+	    return "Fact recorded."
 
 alterFact :: (String -> String) -> M.Map String String -> String
 	  -> Fact IRC String
