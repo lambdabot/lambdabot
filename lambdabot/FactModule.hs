@@ -21,7 +21,7 @@ theModule :: MODULE
 theModule = MODULE $ FactModule()
 
 type FactState = M.Map String String
--- type Fact m a = ModuleT FactState m a
+type Fact m a = ModuleT FactState m a
 
 instance Module FactModule FactState where
   moduleHelp _ "fact" = return "Retrieve a fact from the database"
@@ -37,17 +37,20 @@ instance Module FactModule FactState where
     do factFM <- readMS
        result <- case words rest of
                    [] -> return "I can not handle empty facts."
-		   (fact:dat) -> let factlc = lowerCaseString fact
-                                 in case cmd of
-                                      "fact" -> return $ getFact factFM factlc
-                                      "fact-set" -> do writeMS $
-						         M.insert factlc
-							          (unwords dat)
-							          factFM
-						       return $
-                                                          "Fact recorded."
-		                      _ -> return "Unknown command."
+		   (fact:dat) -> processCommand factFM
+		                                (lowerCaseString fact)
+						cmd
+						(unwords dat)
        ircPrivmsg target result
+
+processCommand :: M.Map String String -> String -> String -> String
+	       -> Fact IRC String
+processCommand factFM fact cmd dat =
+  case cmd of
+    "fact"     -> return $ getFact factFM fact
+    "fact-set" -> do writeMS $ M.insert fact dat factFM
+                     return $ "Fact recorded."
+    _          -> return "Unknown command."
 
 getFact :: M.Map String String -> String -> String
 getFact fm fact =
