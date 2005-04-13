@@ -27,12 +27,15 @@ instance Module FactModule FactState where
   moduleHelp _ "fact" = return "Retrieve a fact from the database"
   moduleHelp _ "fact-set" = return "Define a new fact"
   moduleHelp _ "fact-delete" = return "Delete a fact from the database"
+  moduleHelp _ "fact-cons" = return "cons information to fact"
+  moduleHelp _ "fact-snoc" = return "snoc information to fact"
   moduleHelp _ _ = return "Store and retrieve facts from a database"
 
   moduleDefState _  = return $ M.empty
   moduleSerialize _ = Just mapSerializer
 
-  moduleCmds   _ = return ["fact", "fact-set", "fact-delete"]
+  moduleCmds   _ = return ["fact", "fact-set", "fact-delete", "fact-cons",
+			   "fact-snoc"]
 
   process _ _ target cmd rest =
     do factFM <- readMS
@@ -53,9 +56,21 @@ processCommand factFM fact cmd dat =
                     then return "Fact is already existing, not updating"
 		    else do writeMS $ M.insert fact dat factFM
                             return "Fact recorded."
+    "fact-cons" -> alterFact ((dat ++ " ")++) factFM fact
+    "fact-snoc" -> alterFact (++(" " ++ dat)) factFM fact
     "fact-delete" -> do writeMS $ M.delete fact factFM
 			return "Fact deleted."
     _          -> return "Unknown command."
+
+alterFact :: (String -> String) -> M.Map String String -> String
+	  -> Fact IRC String
+alterFact f factFM fact =
+  case M.lookup fact factFM of
+    Nothing -> return "Fact must exist alter it"
+    Just x -> do writeMS $ M.insert fact
+                                    (f x)
+                                    factFM
+		 return "Fact altered."
 
 getFact :: M.Map String String -> String -> String
 getFact fm fact =
