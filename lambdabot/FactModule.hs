@@ -49,10 +49,12 @@ processCommand :: M.Map String String -> String -> String -> String
 processCommand factFM fact cmd dat =
   case cmd of
     "fact"     -> return $ getFact factFM fact
-    "fact-set" -> do writeMS $ M.insert fact dat factFM
-                     return $ "Fact recorded."
+    "fact-set" -> if M.member fact factFM
+                    then return "Fact is already existing, not updating"
+		    else do writeMS $ M.insert fact dat factFM
+                            return "Fact recorded."
     "fact-delete" -> do writeMS $ M.delete fact factFM
-			return $ "Fact deleted."
+			return "Fact deleted."
     _          -> return "Unknown command."
 
 getFact :: M.Map String String -> String -> String
