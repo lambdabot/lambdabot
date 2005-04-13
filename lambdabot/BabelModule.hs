@@ -35,7 +35,7 @@ type Quotes = M.Map String [String]
 instance Module BabelModule Quotes where
         moduleSerialize _       = Just mapSerializer
         moduleDefState  _       = return M.empty
-       
+
         moduleHelp _ "babel"    = run_babel' ["help"] >>= return . concat
         moduleHelp _ "remember" = return "@remember <nick> quote - record some memorable phrase"
         moduleHelp _ "quote"    = return "@quote [nick] - quote somebody randomly"
@@ -86,8 +86,8 @@ run_babel' ["languages"] = return $ [show shortLangs]
 -- num-indexed history
 -- regex-indexed hitory
 -- phrase-immediate translation
-run_babel' [f,t,i] 
---      | isNum i    = doHistory f t (read i)  
+run_babel' [f,t,i]
+--      | isNum i    = doHistory f t (read i)
 --      | isLookup i = doLookup f t (tail i)    -- chop '!' flag
         | otherwise  = do p <- liftIO $ babelFish f t i ; return [p]
 
@@ -116,9 +116,9 @@ doHistory f t i = do
 doLookup :: String -> String -> String -> IRC [String]
 doLookup f t r = do
         ss <- getHistory 100 -- all the lines
-        case find matches (reverse ss) of 
+        case find matches (reverse ss) of
                 Nothing    -> return []
-                Just (n,v) -> do v' <- liftIO $ babelFish f t v 
+                Just (n,v) -> do v' <- liftIO $ babelFish f t v
                                  return $! indent ([n],[v'])
     where regex = mkRegex r
           matches (_nic,s) = isJust $ regex `matchRegex` s
@@ -146,7 +146,7 @@ run_last src [] = do hs <- getHistory 5
 
 -- otherwise, 'i' lines of history
 run_last src i = do
-        o <- if isNum i 
+        o <- if isNum i
              then do hs <- getHistory (read i)
                      return $! indent (unzip hs)
              else return ["bzzt."]
@@ -170,12 +170,12 @@ run_remember str = do
 
 --
 --  the @quote command, takes a user name to choose a random quote from
--- 
+--
 run_quote :: String -> String -> ModuleT Quotes IRC ()
 run_quote target name = do
     fm <- readMS
     let qs' = M.lookup name fm
-    (nm,qs) <- if name /= [] 
+    (nm,qs) <- if name /= []
                 then return (name,qs') -- (String, Maybe [String])
 
                 else do (nm,rs') <- liftIO $ stdGetRandItem (M.toList fm) -- random person
@@ -194,7 +194,7 @@ run_quote target name = do
 ------------------------------------------------------------------------
 --
 split :: Char -> Int -> String -> [String]
-split c i s = 
+split c i s =
         let fn 0 t = t:[]
             fn j t = let (xs,ys) = break (== c) t
                      in case ys of
