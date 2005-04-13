@@ -37,20 +37,20 @@ instance Module FactModule FactState where
     do factFM <- readMS
        result <- case words rest of
                    [] -> return "I can not handle empty facts."
-		   (fact:dat) -> case cmd of
-                                   "fact" -> return $ getFact factFM fact
-                                   "fact-set" -> do writeMS $
-						      M.insert fact
-							       (unwords dat)
-							       factFM
-						    return $
-                                                      "Fact recorded."
-		                   _ -> return "Unknown command."
+		   (fact:dat) -> let factlc = lowerCaseString fact
+                                 in case cmd of
+                                      "fact" -> return $ getFact factFM factlc
+                                      "fact-set" -> do writeMS $
+						         M.insert factlc
+							          (unwords dat)
+							          factFM
+						       return $
+                                                          "Fact recorded."
+		                      _ -> return "Unknown command."
        ircPrivmsg target result
-
 
 getFact :: M.Map String String -> String -> String
 getFact fm fact =
-  case M.lookup (lowerCaseString fact) fm of
+  case M.lookup fact fm of
     Nothing -> "I know nothing about " ++ fact ++ "."
     Just x  -> fact ++ ": " ++ x ++ "."
