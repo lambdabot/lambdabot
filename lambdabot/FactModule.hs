@@ -39,8 +39,8 @@ instance Module FactModule FactState where
                    [] -> return "I can not handle empty facts."
 		   (fact:dat) -> case cmd of
                                    "fact" -> return $ getFact factFM fact
-                                   "fact-set" -> do writeMS $ 
-						      M.insert fact 
+                                   "fact-set" -> do writeMS $
+						      M.insert fact
 							       (unwords dat)
 							       factFM
 						    return $
