@@ -26,12 +26,13 @@ type Fact m a = ModuleT FactState m a
 instance Module FactModule FactState where
   moduleHelp _ "fact" = return "Retrieve a fact from the database"
   moduleHelp _ "fact-set" = return "Define a new fact"
+  moduleHelp _ "fact-delete" = return "Delete a fact from the database"
   moduleHelp _ _ = return "Store and retrieve facts from a database"
 
   moduleDefState _  = return $ M.empty
   moduleSerialize _ = Just mapSerializer
 
-  moduleCmds   _ = return ["fact", "fact-set"]
+  moduleCmds   _ = return ["fact", "fact-set", "fact-delete"]
 
   process _ _ target cmd rest =
     do factFM <- readMS
@@ -50,6 +51,8 @@ processCommand factFM fact cmd dat =
     "fact"     -> return $ getFact factFM fact
     "fact-set" -> do writeMS $ M.insert fact dat factFM
                      return $ "Fact recorded."
+    "fact-delete" -> do writeMS $ M.delete fact factFM
+			return $ "Fact deleted."
     _          -> return "Unknown command."
 
 getFact :: M.Map String String -> String -> String
