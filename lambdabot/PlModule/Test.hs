@@ -32,7 +32,7 @@ instance Arbitrary Expr where
 
 arbVar :: Gen Expr
 arbVar = oneof [(Var Pref . return) `fmap` choose ('a','z'), 
-		(Var Inf .  return) `fmap` elements (opchars\\"=")]
+                (Var Inf .  return) `fmap` elements (opchars\\"=")]
 
 arbPat :: Gen Pattern
 arbPat = sized $ \size -> 

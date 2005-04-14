@@ -147,6 +147,7 @@ nickCB msg = withSeenFM msg $ \fm _ct _myname nick ->
          in Left $ M.insert lcnewnick (Present mct xs) fm'
        _ -> Right "SeenModule> someone who isn't here changed nick"
 
+-- use IRC.ircChans?
 joinChanCB :: IRCMessage -> Seen IRC () -- when the bot join a channel
 joinChanCB msg = withSeenFM msg $ \fm _ct _myname _nick ->
   let l = msgParams msg
@@ -199,17 +200,16 @@ timeDiffPretty td =
       days = hours `div` 24
       months = days `div` 28
       years = months `div` 12
-  in foldr1 (++) [prettyP years "year",
-                  prettyP (months `mod` 12) "month",
-                  prettyP (days `mod` 28) "day",
-                  prettyP (hours `mod` 24) "hour",
-                  prettyP (mins `mod` 60) "minute",
-                  prettyP (secs `mod` 60) "second"]
-                   where prettyP i str
-                          | i > 0 = if i == 1
-                                then "1 " ++ str ++ " "
-                                else (show i) ++ " " ++ str ++ "s "
-                          | otherwise = []
+  in concat [prettyP years "year",
+             prettyP (months `mod` 12) "month",
+             prettyP (days `mod` 28) "day",
+             prettyP (hours `mod` 24) "hour",
+             prettyP (mins `mod` 60) "minute",
+             prettyP (secs `mod` 60) "second"]
+              where prettyP i str
+                     | i == 0    = ""
+                     | i == 1    = "1 " ++ str ++ " " 
+                     | otherwise = show i ++ " " ++ str ++ "s "
 
 
 

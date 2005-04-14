@@ -6,10 +6,10 @@
 
 module Vixen (mkVixen) where
 
-import Util
+import Util (stdGetRandItem)
 
-import Data.Maybe
-import Control.Exception
+import Data.Maybe (isJust)
+import Control.Exception (try, evaluate)
 
 import qualified Text.ParserCombinators.Parsec.Token as P
 import Text.ParserCombinators.Parsec.Language

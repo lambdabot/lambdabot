@@ -2,10 +2,10 @@
 module QuoteModule (theModule) where
 
 import QuoteModule.Fortune      (randFortune)
-import Util                     (stdGetRandItem)
 import IRC
+import Util                     (stdGetRandItem)
 
-import Control.Monad.State
+import Control.Monad.Trans      (liftIO)
 
 ------------------------------------------------------------------------
 newtype QuoteModule = QuoteModule ()

@@ -6,12 +6,11 @@
 
 module TypeModule (theModule) where
 
-import Util                 (expandTab)
-import PosixCompat          (popen)
+import PosixCompat (popen)
 import Text.Regex
-import Maybe                (mapMaybe)
-import Control.Monad.Trans  (liftIO)
-import IRC
+import Maybe (mapMaybe)
+import Control.Monad.Trans (liftIO)
+import IRC -- (Module(..), IRC(..), ircPrivmsg)
 
 --     Greetings reader,
 

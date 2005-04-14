@@ -11,7 +11,7 @@ module PlModule.Rules (RewriteRule(..), rules, fire) where
 import PlModule.Common
 
 import Data.Array
-import qualified PlModule.Set as S
+import qualified Set as S
 
 import Control.Monad.Fix (fix)
 
@@ -435,31 +435,31 @@ rules = [
   If (Or [rr plusE plusE, rr minusE minusE, rr multE multE]) $ down $ Or [
     -- 0 + x --> x
     rr  (\x -> plusE `a` zeroE `a` x)
-	(\x -> x),
+        (\x -> x),
     -- 0 * x --> 0
     rr  (\x -> multE `a` zeroE `a` x)
-	(\_ -> zeroE),
+        (\_ -> zeroE),
     -- 1 * x --> x
     rr  (\x -> multE `a` oneE `a` x)
-	(\x -> x),
+        (\x -> x),
     -- x + (y - z) --> x + y - z
     rr  (\x y z -> plusE `a` x `a` (minusE `a` y `a` z))
-	(\x y z -> minusE `a` (plusE `a` x `a` y) `a` z),
+        (\x y z -> minusE `a` (plusE `a` x `a` y) `a` z),
     -- x - (y + z) --> x - y - z
     rr  (\x y z -> minusE `a` x `a` (plusE `a` y `a` z))
-	(\x y z -> minusE `a` (minusE `a` x `a` y) `a` z),
+        (\x y z -> minusE `a` (minusE `a` x `a` y) `a` z),
     -- x - (y - z) --> x + y - z
     rr  (\x y z -> minusE `a` x `a` (minusE `a` y `a` z))
-	(\x y z -> minusE `a` (plusE `a` x `a` y) `a` z),
+        (\x y z -> minusE `a` (plusE `a` x `a` y) `a` z),
     -- x - y + y --> x
     rr  (\y x -> plusE `a` (minusE `a` x `a` y) `a` y)
-	(\_ x -> x),
+        (\_ x -> x),
     -- x + y - y --> x
     rr  (\y x -> minusE `a` (plusE `a` x `a` y) `a` y)
-	(\_ x -> x),
+        (\_ x -> x),
     -- x - x --> 0
     rr  (\x -> minusE `a` x `a` x)
-	(\_ -> zeroE)
+        (\_ -> zeroE)
   ],
   onceRewrites,
   -- join (fmap f x) --> f =<< x
@@ -546,10 +546,10 @@ rules = [
     down $ Or [
       -- foldr f z (x:xs) --> f x (foldr f z xs)
       rr (\f x xs z -> (foldrE `a` f `a` z) `a` (consE `a` x `a` xs))
-	 (\f x xs z -> (f `a` x) `a` (foldrE `a` f `a` z `a` xs)),
+         (\f x xs z -> (f `a` x) `a` (foldrE `a` f `a` z `a` xs)),
       -- foldr f z [] --> z
       rr (\f z -> foldrE `a` f `a` z `a` nilE)
-	 (\_ z -> z)
+         (\_ z -> z)
     ],
     -- foldl elimination
     down $ Opt (CRR $ assocL ["."]) `Then` Or [
@@ -561,13 +561,13 @@ rules = [
          (\xs -> foldlE `a` multE `a` oneE `a` xs),
       -- foldl1 f (x:xs) --> foldl f x xs
       rr (\f x xs -> foldl1E `a` f `a` (consE `a` x `a` xs))
-	 (\f x xs -> foldlE `a` f `a` x `a` xs),
+         (\f x xs -> foldlE `a` f `a` x `a` xs),
       -- foldl f z (x:xs) --> foldl f (f z x) xs
       rr (\f z x xs -> (foldlE `a` f `a` z) `a` (consE `a` x `a` xs))
-	 (\f z x xs -> foldlE `a` f `a` (f `a` z `a` x) `a` xs),
+         (\f z x xs -> foldlE `a` f `a` (f `a` z `a` x) `a` xs),
       -- foldl f z [] --> z
       rr (\f z -> foldlE `a` f `a` z `a` nilE)
-	 (\_ z -> z),
+         (\_ z -> z),
       -- special rule:
       -- foldl f z [x] --> f z x
       rr (\f z x -> foldlE `a` f `a` z `a` (consE `a` x `a` nilE))
@@ -575,10 +575,10 @@ rules = [
     ] `OrElse` (
       -- (:) x --> (++) [x]
       Opt (rr0 (\x -> consE `a` x)
-	 (\x -> appendE `a` (consE `a` x `a` nilE))) `Then`
+         (\x -> appendE `a` (consE `a` x `a` nilE))) `Then`
       -- More special rule: (:) x . (++) ys --> (++) (x:ys)
       up (rr0 (\x ys -> (consE `a` x) `c` (appendE `a` ys))
-	 (\x ys -> appendE `a` (consE `a` x `a` ys)))
+         (\x ys -> appendE `a` (consE `a` x `a` ys)))
       )
   ],
 

@@ -55,7 +55,7 @@ table = addToFirst def $ map (map inf) operators where
       spaces
       let name' = if head name == '`' 
                   then tail . reverse . tail . reverse $ name 
-		  else name
+                  else name
       return $ \e1 e2 -> App (Var Inf name') e1 `App` e2
     ) assoc
 
@@ -88,9 +88,9 @@ lambda = do
 var :: Parser Expr
 var = try (makeVar `fmap` atomic <|> 
            parens (try rightSection <|> try (makeVar `fmap` many1 (char ',')) 
-	           <|> tuple) <|> list <|> (Var Pref . show) `fmap` charLiteral
-		   <|> stringVar `fmap` stringLiteral)
-	<?> "variable" where
+                   <|> tuple) <|> list <|> (Var Pref . show) `fmap` charLiteral
+                   <|> stringVar `fmap` stringLiteral)
+        <?> "variable" where
   makeVar v | Just _ <- lookupOp v = Var Inf v -- operators always want to
                                                -- be infixed
             | otherwise            = Var Pref v

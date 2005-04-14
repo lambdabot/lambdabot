@@ -6,8 +6,7 @@ module PlModule.Transform (
 import PlModule.Common
 import PlModule.Rules
 import PlModule.PrettyPrinter
-import qualified PlModule.Set as S
---import qualified Data.Set as S
+import qualified Set as S
 
 import Data.Graph (stronglyConnComp, flattenSCC, flattenSCCs)
 import qualified Map as M
@@ -101,7 +100,7 @@ transform' (Lambda (PCons p1 p2) e)
     s = Var Pref "tail" `App` Var Pref "z"
 transform' (Lambda (PVar v) e) = transform' $ getRidOfV e where
   getRidOfV (Var f v') | v == v'   = id'
-		       | otherwise = const' `App` Var f v'
+                       | otherwise = const' `App` Var f v'
   getRidOfV l@(Lambda pat _) = assert (not $ v `occursP` pat) $ 
     getRidOfV $ transform' l
   getRidOfV (Let {}) = assert False bt
@@ -185,14 +184,15 @@ sizeExpr' e = fromIntegral (length $ show e) + adjust e where
   adjust :: Expr -> Size
   adjust (Var _ str) -- Just n <- readM str = log (n*n+1) / 4
                      | str == "uncurry"    = -4
-		     | str == "s"          = 5
+                     | str == "s"          = 5
                      | str == "flip"       = 0.1
-		     | str == ">>="        = 0.05
-		     | str == "$"          = 0.01
-		     | str == "subtract"   = 0.01
+                     | str == ">>="        = 0.05
+                     | str == "$"          = 0.01
+                     | str == "subtract"   = 0.01
                      | str == "ap"         = 3
                      | str == "return"     = -2
                      | str == "zipWith"    = -4
+                     | str == "const"      = 0 -- -2
   adjust (Lambda _ e') = adjust e'
   adjust (App e1 e2)  = adjust e1 + adjust e2
   adjust _ = 0
@@ -208,7 +208,7 @@ optimize e = result where
     let chn = let ?first = True in boundedStep (snd t)
         chnn = let ?first = False in S.unions . map boundedStep $ S.elems chn
         new = minimumBy (comparing fst) . map (sizeExpr' &&& id) . S.elems $ 
-	        (snd t `S.insert` chn) `S.union` chnn
+                (snd t `S.insert` chn) `S.union` chnn
     guard $ fst new < fst t
     return new
 
@@ -220,7 +220,7 @@ boundedStep e = red (step e) where
   red xs | len <= mx = xs
 --         | trace (show len) False = bt
          | otherwise = S.fromList 
-	     [S.elems xs !! ((j*(len-1))`div`mx') | j <- [0..mx']]
+             [S.elems xs !! ((j*(len-1))`div`mx') | j <- [0..mx']]
     where len = S.size xs
 
 step :: (?first :: Bool) => Expr -> Set Expr
@@ -229,8 +229,8 @@ step e = msumO $ (\r -> rewrite r e) `map` rules
 rewrite :: (?first :: Bool, OrdMonadPlus m) => RewriteRule -> Expr -> m Expr
 rewrite rl e :: m a = case rl of
     Up r1 r2     -> let e'  :: m a = cut $ rewrite r1 e
-			e'' :: m a = rewrite r2 `extO` e'
-		    in if isMZero e'' then e' else e''
+                        e'' :: m a = rewrite r2 `extO` e'
+                    in if isMZero e'' then e' else e''
     OrElse r1 r2 -> let e'  :: m a = rewrite r1 e
                     in if isMZero e' then rewrite r2 e else e' 
     Then r1 r2   -> rewrite r2 `extO` nubM (rewrite r1 e)
@@ -247,7 +247,7 @@ rewDeep rule e = rew rule e `mplusO` case e of
     Lambda _ _ -> error "lambda: optimizer only works for closed expressions"
     Let _ _    -> error "let: optimizer only works for closed expressions"
     App e1 e2  -> ((`App` e2) `mapMono` rewDeep rule e1) `mplusO` 
-		  ((e1 `App`) `mapMono` rewDeep rule e2)
+                  ((e1 `App`) `mapMono` rewDeep rule e2)
 
 rew :: (?first :: Bool, OrdMonadPlus m) => RewriteRule -> Expr -> m Expr
 rew (RR r1 r2) e = toOrdMonadPlus $ fire r1 r2 e 

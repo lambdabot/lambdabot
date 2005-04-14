@@ -5,7 +5,7 @@ import IRC
 import qualified Map as M
 
 import Control.Monad.State (gets)
-import Util
+import Util                (snoc, splitFirstWord)
 
 newtype TopicModule = TopicModule ()
 

@@ -14,7 +14,7 @@ module IRC (
 
         withModule, getDictKeys,
 
-        readMS, writeMS,
+        readMS, writeMS, modifyMS,
 
         ircPrivmsg,
         ircJoin, ircPart, ircQuit, ircReconnect,
@@ -66,6 +66,7 @@ import Control.Concurrent
 import Control.Monad.Reader
 import Control.Monad.State
 import Control.Monad.Error (MonadError (..))
+import Control.Arrow       (first)
 
 ------------------------------------------------------------------------
 
@@ -283,11 +284,11 @@ class (Monad m,MonadState IRCRWState m,MonadError IRCError m,MonadIO m)
    where
   liftLB :: LB a -> m a
 
--- | This "transformer" encodes the additional information a module might need 
---   to access its name or its state.
+-- | This \"transformer\" encodes the additional information a module might 
+--   need to access its name or its state.
 type ModuleT s m a = (?ref :: IORef s, ?name :: String) => m a
 
--- | The IRC Monad. The reader transformer hold information about the
+-- | The IRC Monad. The reader transformer holds information about the
 --   connection to the IRC server.
 newtype IRC a 
   = IRC { runIRC :: IRCErrorT (ReaderT IRCRState (StateT IRCRWState IO)) a }
@@ -368,23 +369,15 @@ ircPrivmsg who msg
 
 mlines			:: String -> [String]
 mlines ""		=  []
-mlines s		=  let (l, s') = mbreak 0 (== '\n') s
-			   in  l : case s' of
-					[]  -> []
-					s'' -> mlines s''
--- Does that really make sense?
-{-# INLINE mlines #-}
-
-mbreak :: Int -> (Char -> Bool) -> [Char] -> ([Char], [Char])
-mbreak _ _ xs@[] = (xs, xs)
-mbreak n p xs@(x:xs')
-    | n == 80  =  ([],dropWhile isSpace xs)
-    | n > 70 && not (isAlphaNum x) = ([x], dropWhile isSpace xs')
-    | p x	=  ([],xs')
-    | otherwise	=  let (ys,zs) = mbreak (n+1) p xs' in (x:ys,zs)
-{-# INLINE mbreak #-}
-
-{- yes it's ugly, but... -}
+mlines s		=  let (l, s') = mbreak 0 (== '\n') s in l: mlines s'
+  where
+  mbreak :: Int -> (Char -> Bool) -> [Char] -> ([Char], [Char])
+  mbreak _ _ xs@[] = (xs, xs)
+  mbreak n p xs@(x:xs')
+      | n == 80   = ([],dropWhile isSpace xs)
+      | n > 70 && not (isAlphaNum x) = ([x], dropWhile isSpace xs')
+      | p x	  = ([],xs')
+      | otherwise = first (x:) $ mbreak (n+1) p xs'
 
 
 ircPrivmsg' :: String -> String -> IRC ()
@@ -788,6 +781,12 @@ writeMS s = liftIO $ writeIORef ?ref $! s
 -- | Read the module's private state.
 readMS :: MonadIO m => ModuleT s m s
 readMS = liftIO $ readIORef ?ref
+
+-- | Modify the module's private state.
+modifyMS :: MonadIO m => (s -> s) -> ModuleT s m ()
+modifyMS f = liftIO $ do
+  s <- readIORef ?ref
+  writeIORef ?ref $! f s -- It's a shame there's no modifyIORef'
 
 moreStateSet :: String -> IRC ()
 moreStateSet lns = 

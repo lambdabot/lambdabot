@@ -27,10 +27,10 @@ module Util (
 import Config
 import Map                      (Map)
 import qualified Map as M       (lookup, insert, delete, toList, fromList)
+import qualified Set as S       (member, insert, delete, Set)
 
 import Data.List                (intersperse, isPrefixOf,minimumBy)
 import Data.Maybe               (catMaybes,fromMaybe)
-import Data.Set                 (elementOf, addToSet, delFromSet, Set)
 import Data.Char                (isSpace, toLower)
 import Control.Monad.State      (when,MonadIO(..))
 
@@ -99,7 +99,7 @@ after :: String -- ^ Prefix string
       -> String -- ^ Data string
       -> String -- ^ Result: Data string with Prefix string and excess whitespace
 	        --     removed
-after [] ys     = dropWhile (==' ') ys
+after [] ys     = dropWhile isSpace ys
 after (_:_) [] = error "after: (:) [] case"
 after (x:xs) (y:ys)
   | x == y    = after xs ys
@@ -117,7 +117,7 @@ splitFirstWord xs = (w, dropWhile isSpace xs')
 --
 -- > first_word "This is a fine day" ===> "This"
 firstWord :: String -> String
-firstWord = takeWhile (/= ' ')
+firstWord = takeWhile (not . isSpace)
 
 -- refactor, might be good for logging to file later
 -- | 'debugStr' checks if we have the verbose flag turned on. If we have
@@ -168,17 +168,17 @@ deleteFM a k = do fm <- reader a
 
 ------------------------------------------------------------------------
 
-lookupSet :: (Monad m,Ord e) => Accessor m (Set e) -> e -> m Bool
+lookupSet :: (Monad m,Ord e) => Accessor m (S.Set e) -> e -> m Bool
 lookupSet a e = do set <- reader a
-                   return $ elementOf e set
+                   return $ e `S.member` set
 
-insertSet :: (Monad m,Ord e) => Accessor m (Set e) -> e -> m ()
+insertSet :: (Monad m,Ord e) => Accessor m (S.Set e) -> e -> m ()
 insertSet a e = do set <- reader a
-                   writer a $ addToSet set e
+                   writer a $ S.insert e set
 
-deleteSet :: (Monad m,Ord e) => Accessor m (Set e) -> e -> m ()
+deleteSet :: (Monad m,Ord e) => Accessor m (S.Set e) -> e -> m ()
 deleteSet a e = do set <- reader a
-                   writer a $ delFromSet set e
+                   writer a $ S.delete e set
 
 -- readList :: (Monad )
 lookupList :: (Monad m, Eq a1) => Accessor m [(a1, [a])] -> a1 -> m [a]

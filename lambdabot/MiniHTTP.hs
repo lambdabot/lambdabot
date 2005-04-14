@@ -13,6 +13,8 @@ import Data.Maybe (fromMaybe)
 import Data.Bits  ((.&.))
 import Data.Char  (ord, chr, digitToInt, intToDigit)
 
+import Control.Monad (liftM2)
+
 import System.IO
 
 import Network
@@ -37,14 +39,14 @@ hGetLines h = do
 	      eof <- hIsEOF h
 	      if eof then return []
 		 else
-		 hGetLine h >>= \ln -> hGetLines h >>= \ls -> return (ln : ls)
+		 liftM2 (:) (hGetLine h) (hGetLines h)
 
 readPage :: Proxy -> URI -> [String] -> String -> IO [String]
 readPage proxy uri headers body =
     withSocketsDo
     $ do
       h <- connectTo host (PortNumber (fromInteger port))
-      mapM (\s -> hPutStr h (s ++ "\r\n")) headers
+      mapM_ (\s -> hPutStr h (s ++ "\r\n")) headers
       hPutStr h body
       hFlush h
       contents <- hGetLines h

@@ -142,9 +142,9 @@ lookupFix str = case lookupOp $ str of
 -- This should be in the libs
 readM :: (Monad m, Read a) => String -> m a
 readM s       =  case [x | (x,t) <- reads s, ("","") <- lex t] of
-		      [x] -> return x
-		      []  -> fail "Prelude.read: no parse"
-		      _   -> fail "Prelude.read: ambiguous parse"
+                      [x] -> return x
+                      []  -> fail "Prelude.read: no parse"
+                      _   -> fail "Prelude.read: ambiguous parse"
 
 -- For Debugging
 trace' :: Show a => a -> a

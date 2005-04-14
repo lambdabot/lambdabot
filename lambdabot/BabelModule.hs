@@ -36,7 +36,7 @@ instance Module BabelModule Quotes where
         moduleSerialize _       = Just mapSerializer
         moduleDefState  _       = return M.empty
 
-        moduleHelp _ "babel"    = run_babel' ["help"] >>= return . concat
+        moduleHelp _ "babel"    = concat `fmap` run_babel' ["help"]
         moduleHelp _ "remember" = return "@remember <nick> quote - record some memorable phrase"
         moduleHelp _ "quote"    = return "@quote [nick] - quote somebody randomly"
         moduleHelp _ "timein"   = return "@timein <city>, report the local time in <city>"

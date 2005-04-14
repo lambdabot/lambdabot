@@ -14,24 +14,16 @@ import Util
 
 import Map (Map)
 import qualified Map as M       (empty)
+import qualified Set as S       (Set, empty)
 
 import Data.Char                (toUpper)
 import Data.Dynamic             (Typeable,fromDynamic)
-import Data.IORef               (readIORef, writeIORef, IORef)
-import Data.Set
 
 import Control.Monad.Error
 import Control.Monad.Reader
 import Control.Exception        (Exception(DynException))
 
 import System.IO                (stdout, hFlush)
-
-------------------------------------------------------------------------
-
-#if __GLASGOW_HASKELL__ < 603
-empty :: Set a
-empty = emptySet
-#endif
 
 ------------------------------------------------------------------------
 
@@ -46,13 +38,13 @@ theModule = MODULE $ DynamicModule ()
 data DLModules 
  = DLModules 
     { objects  :: Map String (RuntimeModule,Int)  -- object + use count
-    , packages :: Set String    -- which have been loaded? (can't unload)
+    , packages :: S.Set String    -- which have been loaded? (can't unload)
     , depends  :: DepList
     }
   deriving Typeable
 
 initDLModules :: DLModules
-initDLModules = DLModules { objects = M.empty, packages = empty, depends = [] }
+initDLModules = DLModules { objects = M.empty, packages = S.empty, depends = [] }
 
 type Dyn a = MonadLB m => ModuleT DLModules m a
 
@@ -106,47 +98,35 @@ findRLEError _                            = Nothing
 
 data DLAccessor m
  = DLAccessor { objectsA  :: Accessor m (Map String (RuntimeModule,Int))
-              , packagesA :: Accessor m (Set String)
+              , packagesA :: Accessor m (S.Set String)
               , dependsA  :: Accessor m (DepList)
               }
 
-dlGet :: (MonadLB m) => ModuleT DLModules m (DLAccessor m)
-dlGet = do let dlFMRef = ?ref
-           let dlA = dlAccessor dlFMRef
-           return $ DLAccessor { objectsA  = objectsAccessor dlA
-                               , packagesA = packagesAccessor dlA
-                               , dependsA  = dependsAccessor dlA
-                               }
+dlGet :: forall m. (MonadLB m) => ModuleT DLModules m (DLAccessor m)
+dlGet = return $ DLAccessor { objectsA  = objectsAccessor
+                            , packagesA = packagesAccessor
+                            , dependsA  = dependsAccessor
+                            }
+ where
+-- TODO: This cries for TH.
+-- It appears we need scoped type variables for that.
+--objectsAccessor :: Accessor m (Map String (RuntimeModule,Int))
+  objectsAccessor
+    = Accessor { reader = liftM objects readMS
+               , writer = \v -> modifyMS $ \s -> s { objects = v }
+               }
 
-dlAccessor :: MonadIO m => IORef DLModules -> Accessor m DLModules
-dlAccessor ref 
- = Accessor { reader = liftIO $ readIORef ref,
-              writer = liftIO . writeIORef ref }
+--packagesAccessor :: Accessor m (Set String)
+  packagesAccessor
+    = Accessor { reader = liftM packages readMS
+               , writer = \v -> modifyMS $ \s -> s { packages = v }
+               }
 
-objectsAccessor :: MonadIO m 
-                => Accessor m DLModules
-                -> Accessor m (Map String (RuntimeModule,Int))
-objectsAccessor a
-  = Accessor { reader = liftM objects (reader a)
-             , writer = \v -> do s <- reader a
-                                 writer a (s { objects = v })
-             }
-
-packagesAccessor :: MonadIO m 
-                 => Accessor m DLModules 
-                 -> Accessor m (Set String)
-packagesAccessor a
-  = Accessor { reader = liftM packages (reader a)
-             , writer = \v -> do s <- reader a
-                                 writer a (s { packages = v })
-             }
-
-dependsAccessor :: MonadIO m => Accessor m DLModules -> Accessor m DepList
-dependsAccessor a
-  = Accessor { reader = liftM depends (reader a)
-             , writer = \v -> do s <- reader a
-                                 writer a (s { depends = v })
-             }
+--dependsAccessor :: Accessor m DepList
+  dependsAccessor
+    = Accessor { reader = liftM depends readMS
+               , writer = \v -> modifyMS $ \s -> s { depends = v }
+               }
 
 -- ---------------------------------------------------------------------
 --
