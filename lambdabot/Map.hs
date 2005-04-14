@@ -114,7 +114,7 @@ keys  :: Map k a -> [k]
 keys = FM.keysFM
 
 assocs :: Map k a -> [(k, a)]
-assocs = fmToList
+assocs = FM.fmToList
 
 addList :: (Ord k) => [(k, a)] -> Map k a -> Map k a
 addList = flip FM.addListToFM
