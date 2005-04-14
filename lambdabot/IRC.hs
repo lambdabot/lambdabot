@@ -19,7 +19,7 @@ module IRC (
         ircPrivmsg,
         ircJoin, ircPart, ircQuit, ircReconnect,
         ircTopic, ircGetTopic,
-        ircSignalConnect, Callback,
+        ircSignalConnect, Callback, ircInstallOutputFilter, OutputFilter,
         ircInstallModule, ircUnloadModule,
         ircNick, ircChans,
         ircSignOn,
@@ -30,7 +30,7 @@ module IRC (
 
 import Prelude hiding   (mod, catch)
 
-import qualified Config (config, name, moresize, admins, host, port)
+import qualified Config (config, name, admins, host, port)
 import DeepSeq          (($!!), DeepSeq(..))
 import ErrorUtils
 import ExceptionError   (ExceptionError(..), ExceptionErrorT(..))
@@ -87,6 +87,9 @@ data IRCRState
   }
 
 type Callback = IRCMessage -> IRC ()
+-- | target, message
+type OutputFilter = String -> [String] -> IRC [String]
+-- type OutputFilter = String -> [String] -> ContT [String] IRC [String]
 
 -- | Global read\/write state.
 data IRCRWState
@@ -95,8 +98,8 @@ data IRCRWState
         ircChannels        :: Map ChanName String,
         ircModules         :: Map String ModuleRef,
         ircCallbacks       :: Map String [(String,Callback)],
+        ircOutputFilters   :: [(String,OutputFilter)], -- ^ Output filters, invoked from right to left
         ircCommands        :: Map String ModuleRef,
-        ircMoreState       :: String,
         ircStayConnected   :: Bool
   }
 
@@ -344,24 +347,20 @@ ircGetChannels = do
     return $ map getCN (M.keys chans)
 -}
 
+
+lineify :: OutputFilter
+lineify _ msg = return $ mlines $ unlines msg
+
 -- | Send a message to a channel\/user. If the message is too long, the rest
 --   of it is saved in the (global) more-state.
 ircPrivmsg :: String -- ^ The channel\/user.
    -> String         -- ^ The message.
    -> IRC ()
-ircPrivmsg who msg
-    = do let myname   = Config.name Config.config
-             maxLines = Config.moresize Config.config
-         when (who /= myname) $ do
-             let msglines  = mlines msg
-                 morelines = drop maxLines msglines
-                 thislines = take maxLines msglines
-                 sendlines = if length morelines > 0
-                             then thislines ++ ["[" ++ show (length morelines) 
-                                            ++ " @more lines]"]
-                             else thislines
-             moreStateSet $ unlines morelines
-             mapM_ (ircPrivmsg' who) sendlines
+ircPrivmsg who msg = when (Config.name Config.config /= who) $ do 
+  filters <- gets ircOutputFilters
+  sendlines <- foldr (\f -> (=<<) (f msg)) (return $ lines msg) $ map snd filters
+  -- Hardcoded defaults: maximal ten lines, maximal 80 chars/line
+  mapM_ (ircPrivmsg' who . take 80) $ take 10 sendlines
 
 ------------------------------------------------------------------------
 
@@ -456,8 +455,8 @@ runIrc initialise m = withSocketsDo $ do
                 ircChannels        = M.empty,
                 ircModules         = M.empty,
                 ircCallbacks       = M.empty,
+                ircOutputFilters   = [("",lineify)],
                 ircCommands        = M.empty,
-                ircMoreState       = [],
                 ircStayConnected   = True
             }
 
@@ -752,9 +751,11 @@ ircUnloadModule modname = withModule ircModules modname (error "module not loade
     let modmap = ircModules s
         cmdmap = ircCommands s
         cbs    = ircCallbacks s
+        ofs    = ircOutputFilters s
     put $ s { ircCommands = foldl (flip M.delete) cmdmap cmds }
             { ircModules = M.delete modname modmap }
             { ircCallbacks = filter ((/=modname) . fst) `fmap` cbs }
+            { ircOutputFilters = filter ((/=modname) . fst) ofs }
   )
 
 ircSignalConnect :: MonadLB m => String -> Callback -> ModuleT s m ()
@@ -764,6 +765,10 @@ ircSignalConnect str f
          case M.lookup str cbs of 
               Nothing -> put (s { ircCallbacks = M.insert str [(?name,f)]    cbs}) 
               Just fs -> put (s { ircCallbacks = M.insert str ((?name,f):fs) cbs}) 
+
+ircInstallOutputFilter :: MonadLB m => OutputFilter -> ModuleT s m ()
+ircInstallOutputFilter f = modify $ \s -> 
+  s { ircOutputFilters = (?name, f): ircOutputFilters s }
 
 -- | Checks if the given user has admin permissions and excecute the action
 --   only in this case.
@@ -787,11 +792,6 @@ modifyMS :: MonadIO m => (s -> s) -> ModuleT s m ()
 modifyMS f = liftIO $ do
   s <- readIORef ?ref
   writeIORef ?ref $! f s -- It's a shame there's no modifyIORef'
-
-moreStateSet :: String -> IRC ()
-moreStateSet lns = 
-    do s <- get
-       put (s { ircMoreState = lns })
 
 -- | interpret an expression in the context of a module.
 withModule :: MonadLB m => 
