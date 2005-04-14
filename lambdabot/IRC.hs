@@ -853,12 +853,17 @@ readGS :: MonadIO m => ModuleT (GlobalPrivate g p) m g
 readGS = global `liftM` readMS
 
 
--- | interpret an expression in the context of a module.
-withModule :: MonadLB m => 
-     (IRCRWState -> Map String ModuleRef) -- ^ which map to use. @ircModules@ and @ircCommands@ are the only sensible arguments here.
-  -> String -- ^ The name of the module/command.
-  -> m a    -- ^ Action for the case that the lookup fails.
-  -> (forall mod s. Module mod s => mod -> ModuleT s m a) -- ^ Action if the lookup succeeds
+-- | Interpret an expression in the context of a module.
+-- Arguments are which map to use (@ircModules@ and @ircCommands@ are
+-- the only sensible arguments here), the name of the module/command,
+-- action for the case that the lookup fails, action if the lookup
+-- succeeds.
+--
+withModule :: MonadLB m 
+  => (IRCRWState -> Map String ModuleRef)
+  -> String
+  -> m a 
+  -> (forall mod s. Module mod s => mod -> ModuleT s m a)
   -> m a
 
 withModule dict modname def f = do
