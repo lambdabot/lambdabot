@@ -5,7 +5,7 @@
 module SystemModule (theModule) where
 
 import IRC
-import Util                     (join, breakOnGlue)
+import Util                     (breakOnGlue,showClean)
 import qualified Map as M       (Map,keys,fromList,lookup)
 
 import Data.Maybe               (fromMaybe)
@@ -85,5 +85,5 @@ listModule target modname = withModule ircCommands modname (ircPrivmsg target $
                         ["Module ", modname, 
                          " provides the following commands: ", show cmds])
 
-pprKeys :: Show a => M.Map a b -> String
-pprKeys = join " " . map (init . tail . show) . M.keys
+pprKeys :: (Show k) => M.Map k a -> String
+pprKeys m = showClean (M.keys m)

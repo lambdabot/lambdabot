@@ -1,25 +1,26 @@
 
 module Util (
-     join,
-     split,
-     breakOnGlue,
-     clean,
-     dropSpace,
-     snoc,
-     after,
-     splitFirstWord,
-     firstWord,
-     debugStr,
-     debugStrLn,
-     lowerCaseString,
-     listToStr,
-     Accessor (..),
-     Serializer (..), stdSerializer, mapSerializer,
-     readFM, writeFM, deleteFM,
-     lookupSet, insertSet, deleteSet, lookupList,
-     getRandItem, stdGetRandItem,
-     readM
-) where
+        join,
+        split,
+        breakOnGlue,
+        clean,
+        dropSpace,
+        snoc,
+        after,
+        splitFirstWord,
+        firstWord,
+        debugStr,
+        debugStrLn,
+        lowerCaseString,
+        listToStr,
+        Accessor (..),
+        Serializer (..), stdSerializer, mapSerializer,
+        readFM, writeFM, deleteFM,
+        lookupSet, insertSet, deleteSet, lookupList,
+        getRandItem, stdGetRandItem,
+        readM,
+        showClean,
+    ) where
 
 import Config
 import Map                      (Map)
@@ -248,3 +249,9 @@ clean :: Char -> [Char]
 clean x | x == '\CR' = []
         | otherwise         = [x]
         -- where specials = "\\"
+
+------------------------------------------------------------------------
+
+-- | show a list without heavyweight formatting
+showClean :: (Show a) => [a] -> String
+showClean s = join " " (map (init . tail . show) s)
