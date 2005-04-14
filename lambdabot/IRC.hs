@@ -18,7 +18,7 @@ module IRC (
         readMS, writeMS, modifyMS,
 
         -- ** Utitlity functions for module's that need state for each target.
-        GlobalPrivate, mkGlobalPrivate, writePS, readPS, writeGS, readGS,
+        GlobalPrivate(global), mkGlobalPrivate, writePS, readPS, writeGS, readGS,
 
         ircPrivmsg,
         ircJoin, ircPart, ircQuit, ircReconnect,
@@ -813,11 +813,13 @@ mkGlobalPrivate g = GP {
   countGP = 0
 }
 
-writePS :: MonadIO m => Int -> String -> p -> ModuleT (GlobalPrivate g p) m ()
-writePS maxSize who p = do
+writePS :: MonadIO m => Int -> String -> Maybe p -> ModuleT (GlobalPrivate g p) m ()
+writePS maxSize who mp = do
   state <- readMS
   let newCount = countGP state + 1
-      newPrivate = M.insert who (newCount, p) $ private state
+      newPrivate = case mp of
+        Just p  -> M.insert who (newCount, p) $ private state
+        Nothing -> M.delete who $ private state
       newState = state {
         countGP = newCount,
         private = newPrivate

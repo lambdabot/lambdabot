@@ -32,6 +32,7 @@ initDefns = M.empty
 outOfFuelMsg :: [Char]
 outOfFuelMsg = "out of fuel - use @resume to continue"
 
+-- TODO: GlobalPrivate
 type EvalState = (Int, Maybe Dynamic, Environment, M.Map String String)
 
 instance Module EvalModule EvalState where

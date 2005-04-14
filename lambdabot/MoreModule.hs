@@ -9,19 +9,21 @@ newtype MoreModule = MoreModule ()
 theModule :: MODULE
 theModule = MODULE $ MoreModule ()
 
+type MoreState = GlobalPrivate () [String]
+
 -- the @more state is handled centrally
-instance Module MoreModule [String] where
+instance Module MoreModule MoreState where
     moduleHelp _ _ = return "@more - return more bot output"
     moduleCmds   _ = return ["more"]
     moduleInit   _ = ircInstallOutputFilter moreFilter
     process      _ _ target _ _ = do
-        morestate <- readMS
-        ircPrivmsg target $ unlines morestate
+        morestate <- readPS target
+        ircPrivmsg target $ maybe "more: empty buffer" unlines morestate
 
-moreFilter :: String -> [String] -> ModuleT [String] IRC [String]
-moreFilter _who msglines = do
+moreFilter :: String -> [String] -> ModuleT MoreState IRC [String]
+moreFilter target msglines = do
   let maxLines = Config.moresize Config.config
       morelines = drop maxLines msglines
       thislines = take maxLines msglines
-  writeMS $ morelines
+  writePS 15 target $ if null morelines then Nothing else Just morelines
   return thislines

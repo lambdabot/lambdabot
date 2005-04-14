@@ -20,7 +20,7 @@ firstTimeout, maxTimeout :: Int
 firstTimeout =  3000000 --  3 seconds
 maxTimeout   = 15000000 -- 15 seconds
 
-type PlState = Maybe (Int, TopLevel)
+type PlState = GlobalPrivate () (Int, TopLevel)
 
 newtype PlModule = PlModule ()
 
@@ -33,7 +33,7 @@ instance Module PlModule PlState where
     moduleHelp _ "pl-resume" = return "@pl-resume - resume a suspended pointless transformation."
     moduleHelp _ _ = return "@pointless <expr> - play with pointfree code"
 
-    moduleDefState _ = return Nothing
+    moduleDefState _ = return $ mkGlobalPrivate ()
 
     moduleCmds _   = return ["pointless","pl-resume","pl"]
 
@@ -45,7 +45,7 @@ instance Module PlModule PlState where
 
 res :: String -> Pl IRC ()
 res target = do
-  d <- readMS
+  d <- readPS target
   case d of
     Nothing -> ircPrivmsg target "pointless: sorry, nothing to resume."
     Just d' -> optimizeTopLevel target d'
@@ -61,10 +61,10 @@ optimizeTopLevel target (to, d) = do
   (e', finished) <- liftIO $ optimizeIO to e
   ircPrivmsg target $ show $ decl e'
   if finished
-    then writeMS Nothing
+    then writePS 10 target Nothing
     else do
       ircPrivmsg target "optimization suspended, use @pl-resume to continue."
-      writeMS $ Just (min (2*to) maxTimeout, decl e')
+      writePS 10 target $ Just (min (2*to) maxTimeout, decl e')
 
 optimizeIO :: Int -> Expr -> IO (Expr, Bool)
 optimizeIO to e = do
