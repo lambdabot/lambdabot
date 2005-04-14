@@ -12,7 +12,7 @@ module IRC (
 
         LB(..), MonadLB(..),
 
-        withModule,
+        withModule, getDictKeys,
 
         readMS, writeMS,
 
@@ -808,3 +808,7 @@ withModule dict modname def f = do
     case maybemod of
       Just (ModuleRef m ref) -> let ?ref = ref; ?name = modname in f m
       _                      -> def
+
+
+getDictKeys :: (MonadState s m) => (s -> Map k a) -> m [k]
+getDictKeys dict = gets (M.keys . dict)

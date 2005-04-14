@@ -21,13 +21,14 @@ module Util (
         readM,
         showClean,
         expandTab,
+        closest,
     ) where
 
 import Config
 import Map                      (Map)
 import qualified Map as M       (lookup, insert, delete, toList, fromList)
 
-import Data.List                (intersperse, isPrefixOf)
+import Data.List                (intersperse, isPrefixOf,minimumBy)
 import Data.Maybe               (catMaybes,fromMaybe)
 import Data.Set                 (elementOf, addToSet, delFromSet, Set)
 import Data.Char                (isSpace, toLower)
@@ -262,3 +263,62 @@ expandTab :: String -> String
 expandTab []        = []
 expandTab ('\t':xs) = ' ':' ':' ':' ':' ':' ':' ':' ':expandTab xs
 expandTab (x:xs)    = x : expandTab xs
+
+------------------------------------------------------------------------
+
+--
+-- | Find string in list with smallest levenshtein distance from first
+-- argument, return the string and the distance from pat it is.
+--
+closest :: String -> [String] -> (Int,String)
+closest pat ss = minimumBy (\(i,_)(j,_) -> compare i j) ls 
+    where
+        ls = map (\s -> (levenshtein pat s,s)) ss
+        
+--
+-- | Levenshtein edit-distance algorithm
+-- Transated from an Erlang version by Fredrik Svensson and Adam Lindberg
+--
+levenshtein :: String -> String -> Int
+levenshtein [] [] = 0
+levenshtein s  [] = length s
+levenshtein [] s  = length s
+levenshtein s  t  = lvn s t [0..length t] 1
+
+lvn :: String -> String -> [Int] -> Int -> Int
+lvn [] _ dl _ = last dl
+lvn (s:ss) t dl n = lvn ss t (lvn' t dl s [n] n) (n + 1)
+
+lvn' :: String -> [Int] -> Char -> [Int] -> Int -> [Int]
+lvn' [] _ _ ndl _ = ndl
+lvn' (t:ts) (dlh:dlt) c ndl ld | length dlt > 0 = lvn' ts dlt c (ndl ++ [m]) m
+    where
+        m = foldr1 min [ld + 1, head dlt + 1, dlh + (dif t c)]
+lvn' _ _ _ _  _  = error "levenshtein, ran out of numbers"
+
+dif :: Char -> Char -> Int
+dif s t = fromEnum (s /= t)
+
+{-
+--
+-- naive implementation, O(2^n)
+-- Too slow after around d = 8
+--
+-- V. I. Levenshtein. Binary codes capable of correcting deletions,
+-- insertions and reversals. Doklady Akademii Nauk SSSR 163(4) p845-848,
+-- 1965
+--
+-- A Guided Tour to Approximate String Matching, G. Navarro
+--
+levenshtein :: (Eq a) => [a] -> [a] -> Int
+levenshtein [] [] = 0
+levenshtein s  [] = length s
+levenshtein [] s  = length s
+levenshtein (s:ss) (t:ts)   = 
+    min3 (eq + (levenshtein  ss ts))
+         (1  + (levenshtein (ss++[s]) ts))
+         (1  + (levenshtein  ss (ts++[t])))
+        where
+          eq         = fromEnum (s /= t)
+          min3 a b c = min c (min a b)
+-}

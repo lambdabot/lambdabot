@@ -2,7 +2,7 @@ module BaseModule (theModule) where
 
 import Config                   (config, Config(name, autojoin))
 import IRC
-import Util                     (debugStrLn, breakOnGlue, split)
+import Util                     (debugStrLn, breakOnGlue, split, closest)
 import qualified Map as M       (insert, delete)
 
 import Data.List                (isPrefixOf)
@@ -214,11 +214,16 @@ doPRIVMSG' myname msg
             doUNKNOWN msg
 
     -- external modules are called in this next chunk
-    doPublicMsg ('@':cmd) rest = withModule ircCommands cmd 
-        (ircPrivmsg alltargets ("Unknown command, try @listcommands.")) 
-        (\m -> do
-          debugStrLn (show msg)
-          handleIrc (ircPrivmsg alltargets) (process m msg alltargets cmd rest))
+    doPublicMsg ('@':cmd) rest = do
+        allcmds <- getDictKeys ircCommands
+        let cmd' | (n,s) <- closest cmd allcmds, n <= 3 = s
+                 | otherwise                            = cmd
+        withModule ircCommands cmd'
+            (ircPrivmsg alltargets ("Unknown command, try @listcommands.")) 
+            (\m -> do
+              debugStrLn (show msg)
+              handleIrc (ircPrivmsg alltargets) 
+                        (process m msg alltargets cmd' rest))
 
     doPublicMsg _ _ = ircPrivmsg alltargets ("Not a command (no @).")
 
