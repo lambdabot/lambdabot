@@ -20,6 +20,7 @@ module Util (
         getRandItem, stdGetRandItem,
         readM,
         showClean,
+        expandTab,
     ) where
 
 import Config
@@ -255,3 +256,9 @@ clean x | x == '\CR' = []
 -- | show a list without heavyweight formatting
 showClean :: (Show a) => [a] -> String
 showClean s = join " " (map (init . tail . show) s)
+
+-- | untab an string
+expandTab :: String -> String
+expandTab []        = []
+expandTab ('\t':xs) = ' ':' ':' ':' ':' ':' ':' ':' ':expandTab xs
+expandTab (x:xs)    = x : expandTab xs

@@ -6,11 +6,12 @@
 
 module TypeModule (theModule) where
 
-import PosixCompat (popen)
+import Util                 (expandTab)
+import PosixCompat          (popen)
 import Text.Regex
-import Maybe (mapMaybe)
-import Control.Monad.Trans (liftIO)
-import IRC -- (Module(..), IRC(..), ircPrivmsg)
+import Maybe                (mapMaybe)
+import Control.Monad.Trans  (liftIO)
+import IRC
 
 --     Greetings reader,
 
@@ -50,11 +51,6 @@ result_regex
       "^\\*?[A-Z][_a-zA-Z0-9]*(\\*?[A-Z][_a-zA-Z0-9]*)*> (.*)" True True
 -}
 
-exptab :: String -> String
-exptab []        = []
-exptab ('\t':xs) = ' ':' ':' ':' ':' ':' ':' ':' ':exptab xs
-exptab (x:xs)    = x : exptab xs
-
 --
 --     To get any signature line from the hugs output, split it into lines,
 --     match each against the regex, and take the last substring match from
@@ -62,7 +58,7 @@ exptab (x:xs)    = x : exptab xs
 --
 extract_signatures :: String -> [String]
 extract_signatures output
-        = map exptab $ map last.mapMaybe (matchRegex signature_regex) $
+        = map expandTab $ map last.mapMaybe (matchRegex signature_regex) $
                  (reverse $ tail $ reverse $ drop 7 $ lines output)
 
 {-

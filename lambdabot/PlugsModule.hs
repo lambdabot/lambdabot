@@ -12,7 +12,8 @@
 
 module PlugsModule (theModule) where
 
-import IRC      hiding ( clean )
+import Util             (expandTab)
+import IRC      hiding  (clean)
 import PosixCompat
 
 import Control.Monad.Trans      ( liftIO )
@@ -36,8 +37,8 @@ binary = "runplugs"
 plugs :: String -> IO String
 plugs src = do
     (out,err,_) <- popen binary [] (Just src)
-    let o = clean out
-        e = clean err
+    let o = expandTab . clean $ out
+        e = expandTab . clean $ err
     return $ case () of {_
         | null o && null e -> "Terminated\n"
         | null o           -> e
