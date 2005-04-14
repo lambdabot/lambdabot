@@ -201,11 +201,15 @@ doPRIVMSG' myname msg
     targets = split "," alltargets
     text = tail (head (tail (msgParams msg)))
 
-    doPersonalMsg ('@':cmd) rest = withModule ircCommands cmd
-        (ircPrivmsg who "Sorry, I don't know that command.") (\m -> do 
-           debugStrLn (show msg)
-           handleIrc (ircPrivmsg who) (process m msg who cmd rest)
-        )
+    doPersonalMsg ('@':cmd) rest = do
+        allcmds <- getDictKeys ircCommands
+        let cmd' | (n,s) <- closest cmd allcmds, n <= 3 = s
+                 | otherwise                            = cmd
+        withModule ircCommands cmd'
+            (ircPrivmsg who "Sorry, I don't know that command.") 
+            (\m -> do 
+               debugStrLn (show msg)
+               handleIrc (ircPrivmsg who) (process m msg who cmd' rest))
       where (who, _) = breakOnGlue "!" (msgPrefix msg)
 
     doPersonalMsg _ _
