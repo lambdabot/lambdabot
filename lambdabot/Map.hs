@@ -31,6 +31,7 @@ module Map (
         insert,
         insertWith,
         delete,
+        update,
         lookup,
         toList,
         fromList,
@@ -40,6 +41,7 @@ module Map (
         singleton,
         member,
         keys,
+        assocs,
 
         mapWithKey,
         filterWithKey,
@@ -83,6 +85,13 @@ insertWith f k e m = FM.addToFM_C (flip f) m k e
 delete :: Ord k => k -> Map k a -> Map k a
 delete = flip FM.delFromFM
 
+update :: Ord k => (a -> Maybe a) -> k -> Map k a -> Map k a
+update f k m = case lookup k m of
+  Nothing -> m
+  Just v  -> case f v of
+    Nothing -> delete k m
+    Just v' -> insert k v' m
+
 lookup :: Ord k => k -> Map k a -> Maybe a
 lookup = flip FM.lookupFM
 
@@ -103,6 +112,9 @@ member = FM.elemFM
 
 keys  :: Map k a -> [k]
 keys = FM.keysFM
+
+assocs :: Map k a -> [(k, a)]
+assocs = fmToList
 
 addList :: (Ord k) => [(k, a)] -> Map k a -> Map k a
 addList = flip FM.addListToFM
