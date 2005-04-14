@@ -14,7 +14,11 @@ module IRC (
 
         withModule, getDictKeys,
 
+        -- ** Functions to access the module's state
         readMS, writeMS, modifyMS,
+
+        -- ** Utitlity functions for module's that need state for each target.
+        GlobalPrivate, mkGlobalPrivate, writePS, readPS, writeGS, readGS,
 
         ircPrivmsg,
         ircJoin, ircPart, ircQuit, ircReconnect,
@@ -57,6 +61,7 @@ import Posix
 import System.IO.Error
 #endif
 
+import Data.List                (minimumBy)
 import Data.Char                (toLower, isAlphaNum, isSpace)
 import Data.Dynamic             (Typeable, toDyn, fromDynamic)
 import Data.IORef               (newIORef, IORef, readIORef, writeIORef)
@@ -792,6 +797,59 @@ modifyMS :: MonadIO m => (s -> s) -> ModuleT s m ()
 modifyMS f = liftIO $ do
   s <- readIORef ?ref
   writeIORef ?ref $! f s -- It's a shame there's no modifyIORef'
+
+-- TODO: Document
+data GlobalPrivate g p = GP {
+  global :: !g,
+  private :: !(Map String (Integer, p)),
+  countGP :: !Integer
+  -- define usedCounts :: Map Integer String if you need better performance
+}
+
+mkGlobalPrivate :: g -> GlobalPrivate g p
+mkGlobalPrivate g = GP {
+  global = g,
+  private = M.empty,
+  countGP = 0
+}
+
+writePS :: MonadIO m => Int -> String -> p -> ModuleT (GlobalPrivate g p) m ()
+writePS maxSize who p = do
+  state <- readMS
+  let newCount = countGP state + 1
+      newPrivate = M.insert who (newCount, p) $ private state
+      newState = state {
+        countGP = newCount,
+        private = newPrivate
+      }
+  if M.size newPrivate > maxSize 
+    then do
+      let minCount = fst $ minimumBy (\(_,(x,_)) (_,(y,_)) -> compare x y) $ 
+            M.assocs newPrivate
+      writeMS $ newState { private = M.delete minCount newPrivate }
+    else writeMS newState
+
+readPS :: MonadIO m => String -> ModuleT (GlobalPrivate g p) m (Maybe p)
+readPS who = do
+  state <- readMS
+  let newCount = countGP state + 1
+      newPrivate = M.update (Just . first (const newCount)) who $ private state 
+      newState = state { 
+        countGP = newCount, 
+        private = newPrivate
+      }
+  writeMS newState
+  return $ snd `fmap` M.lookup who newPrivate
+  
+
+writeGS :: MonadIO m => g -> ModuleT (GlobalPrivate g p) m ()
+writeGS g = do
+  state <- readMS
+  writeMS $ state { global = g }
+
+readGS :: MonadIO m => ModuleT (GlobalPrivate g p) m g
+readGS = global `liftM` readMS
+
 
 -- | interpret an expression in the context of a module.
 withModule :: MonadLB m => 
