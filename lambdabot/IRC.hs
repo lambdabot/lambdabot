@@ -363,7 +363,7 @@ ircPrivmsg :: String -- ^ The channel\/user.
    -> IRC ()
 ircPrivmsg who msg = when (Config.name Config.config /= who) $ do 
   filters <- gets ircOutputFilters
-  sendlines <- foldr (\f -> (=<<) (f msg)) (return $ lines msg) $ map snd filters
+  sendlines <- foldr (\f -> (=<<) (f who)) (return $ lines msg) $ map snd filters
   -- Hardcoded defaults: maximal ten lines, maximal 80 chars/line
   mapM_ (ircPrivmsg' who . take 80) $ take 10 sendlines
 

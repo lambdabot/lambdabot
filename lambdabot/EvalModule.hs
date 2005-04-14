@@ -112,7 +112,7 @@ instance Module EvalModule EvalState where
                             writeRes $ Just nr
                             ircPrivmsg target outOfFuelMsg
                         Right s -> do
-                            writeRes $ Nothing
+                            writeRes Nothing
                             ircPrivmsg target s
 
             _       -> ircPrivmsg target ("unknown command: "++cmd)
