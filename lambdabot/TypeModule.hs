@@ -9,10 +9,8 @@ module TypeModule (theModule) where
 import IRC
 import Util                 (expandTab)
 import PosixCompat          (popen)
-import Text.Regex
 import Maybe (mapMaybe)
 import Control.Monad.Trans (liftIO)
-import PosixCompat         (popen)
 import Text.Regex          (Regex, mkRegexWithOpts, matchRegex)
 
 --     Greetings reader,
