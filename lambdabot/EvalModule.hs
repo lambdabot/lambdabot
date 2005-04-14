@@ -10,7 +10,6 @@ import qualified Map as M
 import Data.Dynamic                     (Dynamic)
 import Data.List                        (groupBy,sort,isPrefixOf)
 import Data.Maybe                       (catMaybes)
-import Control.Monad.State
 
 -- TODO: clear continuation IORef after -every- @eval?
 
@@ -32,15 +31,15 @@ initDefns = M.empty
 outOfFuelMsg :: [Char]
 outOfFuelMsg = "out of fuel - use @resume to continue"
 
--- TODO: GlobalPrivate
-type EvalState = (Int, Maybe Dynamic, Environment, M.Map String String)
+type EvalGlobal = (Int, Environment, M.Map String String)
+type EvalState = GlobalPrivate EvalGlobal Dynamic 
 
 instance Module EvalModule EvalState where
-    moduleDefState _ = return (initFuel, Nothing, initEnv, initDefns)
+    moduleDefState _ = return $ mkGlobalPrivate (initFuel, initEnv, initDefns)
     moduleSerialize _ = Just $ Serializer {
-      serialize = \(fuel,_,_,defns) -> 
-        unlines $ show fuel: map show (M.toList defns),
-      deSerialize = loadDefinitions
+      serialize = (\(fuel,_,defns) -> 
+        unlines $ show fuel: map show (M.toList defns)) . global,
+      deSerialize = fmap mkGlobalPrivate . loadDefinitions
     }
     
     moduleHelp   _ "eval" = return "@eval expr - evaluate the lambda calculus expression, expr"
@@ -55,16 +54,15 @@ instance Module EvalModule EvalState where
                              "del-definition","set-fuel","resume"]
 
     process      _ msg target cmd rest = do
-       (fuel, res, env, defns) <- readMS
+       let writeRes = writePS 10 target
+       (fuel, env, defns) <- readGS
+       res <- readPS target
        case cmd of
             "eval" -> do 
                  let r_or_s = evaluate rest env fuel
                  case r_or_s of
                     Right s -> ircPrivmsg target s
-                    Left nr -> do writeMS (fuel,
-                                           Just nr,
-                                           env,
-                                           defns)
+                    Left nr -> do writeRes $ Just nr
                                   ircPrivmsg target outOfFuelMsg
 
             "define" -> 
@@ -73,7 +71,7 @@ instance Module EvalModule EvalState where
                 in case rslt of
                         Left s  -> ircPrivmsg target s
                         Right v -> do
-                          writeMS (fuel, res,
+                          writeGS (fuel, 
                                    M.insert name v env,
                                    M.insert name defn defns)
                           ircPrivmsg target (name ++ " defined")
@@ -95,15 +93,14 @@ instance Module EvalModule EvalState where
                 Nothing -> checkPrivs msg target (ircPrivmsg target "not a number")
                 Just x  -> checkPrivs msg target $ case x > 0 && x <= maxFuel of
                     True  -> do 
-                        writeMS (x,res,env,defns)
+                        writeGS (x,env,defns)
                         ircPrivmsg target $ "fuel set to "++show x
                     False -> ircPrivmsg target $ "can't set fuel above "++show maxFuel
 
             "del-definition" -> case words rest of
                 [] -> return ()
                 (d:_) -> checkPrivs msg target $ do
-                    writeMS (fuel,
-                             res,
+                    writeGS (fuel,
                              M.delete d env,
                              M.delete d defns)
                     ircPrivmsg target $ d++" removed"
@@ -112,16 +109,10 @@ instance Module EvalModule EvalState where
                 Nothing -> return ()
                 Just r -> case resume r fuel of
                         Left nr -> do
-                            writeMS (fuel,
-                                     Just nr,
-                                     env,
-                                     defns)
+                            writeRes $ Just nr
                             ircPrivmsg target outOfFuelMsg
                         Right s -> do
-                            writeMS $ (fuel,
-                                       Nothing :: Maybe Dynamic,
-                                       env,
-                                       defns)
+                            writeRes $ Nothing
                             ircPrivmsg target s
 
             _       -> ircPrivmsg target ("unknown command: "++cmd)
@@ -132,7 +123,7 @@ instance Module EvalModule EvalState where
 --
 -- This stuff is slow
 --
-loadDefinitions :: String -> Maybe EvalState
+loadDefinitions :: String -> Maybe EvalGlobal
 loadDefinitions s = do
   -- grab fuel val from definitions.
   fuel':rest <- return $ lines s
@@ -150,7 +141,6 @@ loadDefinitions s = do
   
   fuel `seq` the_e_FM `seq` the_d_FM `seq` return
                 (fuel,
-                 Nothing,
                  the_e_FM,
                  M.filterWithKey (\k _ -> k `elem` keys) the_d_FM) 
 
