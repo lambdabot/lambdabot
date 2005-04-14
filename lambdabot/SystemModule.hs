@@ -81,9 +81,8 @@ listModule :: String -> String -> IRC ()
 listModule target modname = withModule ircCommands modname (ircPrivmsg target $ 
         "No module \""++modname++"\" loaded") (\m -> do
                 cmds <- liftLB $ moduleCmds m
-                ircPrivmsg target $ concat 
-                        ["Module ", modname, 
-                         " provides the following commands: ", show cmds])
+                ircPrivmsg target $ concat
+                        [modname, " provides: ", showClean cmds])
 
 pprKeys :: (Show k) => M.Map k a -> String
 pprKeys m = showClean (M.keys m)
