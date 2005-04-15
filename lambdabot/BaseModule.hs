@@ -206,10 +206,10 @@ doPRIVMSG' myname msg
         case closests cmd allcmds of
             (0,[_]) -> docmd cmd
             (n,[s]) | n < 4 
-                    -> do ircPrivmsg alltargets ("I assume you meant "++show s)
+                    -> do ircPrivmsg who ("I assume you meant "++show s)
                           docmd s
             (n,ss)  | n < 4 
-                    -> ircPrivmsg alltargets ("Perhaps you meant one of: "++showClean ss)
+                    -> ircPrivmsg who ("Perhaps you meant one of: "++showClean ss)
             _       -> docmd cmd
 
         where docmd c =
