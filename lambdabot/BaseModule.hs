@@ -216,7 +216,7 @@ doPRIVMSG' myname msg
         allcmds <- getDictKeys ircCommands
         case closests cmd allcmds of
           (0,[_]) -> docmd cmd
-          (n,[s]) | n < e -> ircmsg ("I assume you meant "++show s) >> docmd s
+          (n,[s]) | n < e -> docmd s
           (n,ss)  | n < e -> ircmsg ("Perhaps you meant one of: "++showClean ss)
           _       -> docmd cmd
       
