@@ -268,10 +268,12 @@ expandTab (x:xs)    = x : expandTab xs
 
 --
 -- | Find string in list with smallest levenshtein distance from first
--- argument, return the string and the distance from pat it is.
+-- argument, return the string and the distance from pat it is.  Will
+-- return the alphabetically first match if there are multiple matches
+-- (this may not be desirable, e.g. "mroe" -> "moo", not "more"
 --
 closest :: String -> [String] -> (Int,String)
-closest pat ss = minimumBy (\(i,_)(j,_) -> compare i j) ls 
+closest pat ss = minimum ls 
     where
         ls = map (\s -> (levenshtein pat s,s)) ss
         
