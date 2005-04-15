@@ -1,5 +1,7 @@
-
--- not written by sjw or dons
+--
+-- http://homepages.paradise.net.nz/warrickg/haskell/http/
+-- http://www.dtek.chalmers.se/~d00bring/haskell-xml-rpc/http.html
+--
 
 module MiniHTTP (
 		 Proxy,
