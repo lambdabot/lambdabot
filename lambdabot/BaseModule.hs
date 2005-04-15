@@ -53,12 +53,12 @@ instance Module BaseModule () where
 	     ircSignalConnect "375"	doRPL_MOTDSTART
 	     ircSignalConnect "376"     doRPL_ENDOFMOTD -}
 
-
-
+{-
 doUNKNOWN :: Callback
 doUNKNOWN msg
     = debugStrLn $ "UNKNOWN> <" ++ msgPrefix msg ++
       "> [" ++ msgCommand msg ++ "] " ++ show (msgParams msg)
+-}
 
 doIGNORE :: Callback
 doIGNORE msg
@@ -200,53 +200,33 @@ doPRIVMSG' myname msg
     alltargets = head (msgParams msg)
     targets = split "," alltargets
     text = tail (head (tail (msgParams msg)))
+    (who, _) = breakOnGlue "!" (msgPrefix msg)
 
-    doPersonalMsg ('@':cmd) rest = do
+    doPersonalMsg ('@':c) r = doMsg c r who
+    doPersonalMsg _ _       = ircPrivmsg who "Sorry, don't understand that."
+
+    doPublicMsg ('@':c) r   = doMsg c r alltargets
+    doPublicMsg _ _         = ircPrivmsg alltargets ("Not a command (no @).")
+
+    doMsg cmd rest towhere = do
+        let ircmsg = ircPrivmsg towhere
         allcmds <- getDictKeys ircCommands
         case closests cmd allcmds of
-            (0,[_]) -> docmd cmd
-            (n,[s]) | n < 4 
-                    -> do ircPrivmsg who ("I assume you meant "++show s)
-                          docmd s
-            (n,ss)  | n < 4 
-                    -> ircPrivmsg who ("Perhaps you meant one of: "++showClean ss)
-            _       -> docmd cmd
-
-        where docmd c =
+          (0,[_]) -> docmd cmd
+          (n,[s]) | n < e -> ircmsg ("I assume you meant "++show s) >> docmd s
+          (n,ss)  | n < e -> ircmsg ("Perhaps you meant one of: "++showClean ss)
+          _       -> docmd cmd
+      
+        where 
+            e = 3
+            docmd c =
                 withModule ircCommands c
-                    (ircPrivmsg who "Sorry, I don't know that command.") 
-                    (\m -> do 
-                       debugStrLn (show msg)
-                       handleIrc (ircPrivmsg who) (process m msg who c rest))
-
-              (who, _) = breakOnGlue "!" (msgPrefix msg)
-
-    doPersonalMsg _ _
-      = do  let (who, _) = breakOnGlue "!" (msgPrefix msg)
-            ircPrivmsg who "Sorry, don't understand"
-            doUNKNOWN msg
-
-    -- external modules are called in this next chunk
-    doPublicMsg ('@':cmd) rest = do
-        allcmds <- getDictKeys ircCommands
-        case closests cmd allcmds of
-            (0,[_]) -> docmd cmd
-            (n,[s]) | n < 4 
-                    -> do ircPrivmsg alltargets ("I assume you meant "++show s)
-                          docmd s
-            (n,ss)  | n < 4 
-                    -> ircPrivmsg alltargets ("Perhaps you meant one of: "++showClean ss)
-            _       -> docmd cmd
-        
-        where docmd c =
-                withModule ircCommands c
-                    (ircPrivmsg alltargets ("Unknown command, try @listcommands.")) 
+                    (ircPrivmsg towhere ("Unknown command, try @listcommands.")) 
                     (\m -> do
                       debugStrLn (show msg)
-                      handleIrc (ircPrivmsg alltargets) 
-                                (process m msg alltargets c rest))
+                      handleIrc (ircPrivmsg towhere) (process m msg towhere c rest))
 
-    doPublicMsg _ _ = ircPrivmsg alltargets ("Not a command (no @).")
+------------------------------------------------------------------------
 
 maybeCommand :: String -> String -> Maybe String
 maybeCommand nm text =
