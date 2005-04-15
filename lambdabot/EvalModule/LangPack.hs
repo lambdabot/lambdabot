@@ -1,7 +1,5 @@
-{-# OPTIONS -fglasgow-exts #-}
--- ^ For multi-parameter classes
 --
--- Based off of (ripping) ideas from 
+-- Based on (ripping) ideas from 
 --          "Language Prototyping using Modular Monadic Semantics"
 --
 module EvalModule.LangPack where

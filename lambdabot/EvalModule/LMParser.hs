@@ -1,5 +1,3 @@
-{-# OPTIONS -fglasgow-exts #-}
--- multi-parameter type classes
 
 --
 -- screw modularity (at least temporarily)

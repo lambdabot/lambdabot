@@ -1,4 +1,3 @@
-{-# OPTIONS -fglasgow-exts #-}
 module PlModule.Parser (parsePF) where
 
 import PlModule.Common

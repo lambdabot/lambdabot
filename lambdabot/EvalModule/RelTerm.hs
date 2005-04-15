@@ -1,5 +1,3 @@
-{-# OPTIONS -fglasgow-exts #-}
--- existential quantification
 
 module EvalModule.RelTerm where
 

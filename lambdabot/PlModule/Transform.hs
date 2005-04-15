@@ -1,4 +1,3 @@
-{-# OPTIONS -fglasgow-exts -cpp #-}
 module PlModule.Transform (
     transform, optimize,
   ) where

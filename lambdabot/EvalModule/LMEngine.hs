@@ -1,6 +1,5 @@
-{-# OPTIONS -cpp #-}
 {-# OPTIONS -fallow-overlapping-instances #-}
--- ^ until we fix it properly 
+-- until we fix it properly 
 
 module EvalModule.LMEngine (
      evaluate,

@@ -1,6 +1,6 @@
-{-# OPTIONS -fglasgow-exts -fno-warn-name-shadowing #-}
+{-# OPTIONS -fno-warn-name-shadowing #-}
 --
--- ^ 6.4 gives a name shadow warning I haven't tracked down.
+-- 6.4 gives a name shadow warning I haven't tracked down.
 
 --
 -- This marvellous module contributed by Thomas J\344ger
@@ -121,16 +121,22 @@ hasHole (MApp e1 e2) n = e1 `hasHole` n || e2 `hasHole` n
 hasHole (Quote _)   _ = False
 hasHole (Hole n')   n = n == n'
 
+--
+-- haddock doesn't like n+k patterns, so rewrite them
+--
 getVariants, getVariants' :: Rewrite -> [Rewrite]
-getVariants' r@(Rewrite _ 0)     = [r]
-getVariants' r@(Rewrite e (n+1)) = r: getVariants' (Rewrite e' n) where
-  e' = decHoles $ transformM 0 e
+getVariants' r@(Rewrite _ 0)  = [r]
+getVariants' r@(Rewrite e nk)
+    | nk >= 1    = r : getVariants (Rewrite e' (nk-1))
+    | otherwise  = error "getVariants' : nk went negative"
+    where
+        e' = decHoles $ transformM 0 e
 
-  decHoles (Hole n') = Hole (n'-1)
-  decHoles (MApp e1 e2) = decHoles e1 `MApp` decHoles e2
-  decHoles me = me
+        decHoles (Hole n')    = Hole (n'-1)
+        decHoles (MApp e1 e2) = decHoles e1 `MApp` decHoles e2
+        decHoles me           = me
 
-getVariants = getVariants' --r = trace (show vs) vs where vs = getVariants' r
+getVariants = getVariants' -- r = trace (show vs) vs where vs = getVariants' r
 
 rr, rr0, rr1, rr2 :: RewriteC a => a -> a -> RewriteRule
 -- use this rewrite rule and rewrite rules derived from it by iterated

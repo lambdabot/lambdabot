@@ -855,7 +855,7 @@ readGS = global `liftM` readMS
 
 -- | Interpret an expression in the context of a module.
 -- Arguments are which map to use (@ircModules@ and @ircCommands@ are
--- the only sensible arguments here), the name of the module/command,
+-- the only sensible arguments here), the name of the module\/command,
 -- action for the case that the lookup fails, action if the lookup
 -- succeeds.
 --

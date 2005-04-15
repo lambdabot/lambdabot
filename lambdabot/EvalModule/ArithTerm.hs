@@ -1,5 +1,3 @@
-{-# OPTIONS -fglasgow-exts #-}
--- Non tyvars in constraints
 
 module EvalModule.ArithTerm where
 

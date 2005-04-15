@@ -1,4 +1,3 @@
-{-# OPTIONS -cpp #-}
 
 module QuoteModule.Fortune where
 

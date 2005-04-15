@@ -1,4 +1,3 @@
-{-# OPTIONS -fglasgow-exts #-}
 module PlModule.PrettyPrinter (Expr) where -- Dummy export to make ghc -Wall happy
 
 import PlModule.Common

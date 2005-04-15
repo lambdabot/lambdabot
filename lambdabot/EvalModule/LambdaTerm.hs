@@ -1,5 +1,3 @@
-{-# OPTIONS -fglasgow-exts #-}
--- Non-type variables in constraints
 
 module EvalModule.LambdaTerm where
 

@@ -147,6 +147,41 @@ ifneq "$(GLASGOW_HASKELL)" "602"
 	@:
 endif
 
+%.raw-hs : %.hs
+	@$(GHC) $(HC_OPTS) $(PKG_OPTS) -D__HADDOCK__ -E -optP-P $< -o $@
+
+#
+# Building the haddocks (only if we have haddock)
+#
+.PHONY: docs
+
+ifneq "$(HADDOCK)" ""
+
+docs: .doc-stamp
+
+# break cyclic imports, and ones with tricky syntax extensions
+NO_DOCS=Modules.hs PlModule/Transform.hs
+
+HS_PPS= $(addsuffix .raw-hs, \
+            $(filter-out $(basename $(NO_DOCS)), \
+                $(basename $(ALL_SRCS))))
+
+DOCDIR=doc
+
+.doc-stamp: $(HS_PPS)
+	@rm -rf $(DOCDIR)
+	@-mkdir $(DOCDIR)
+	$(HADDOCK) $(HADDOCK_OPTS) -o $(DOCDIR) $(HS_PPS) -k lambdabot
+	@touch .doc-stamp
+	@rm -f $(HS_PPS)
+
+CLEANS+= $(HS_PPS) $(DOCDIR) .doc-stamp
+
+else
+# else no haddock, html is empty.
+docs :
+endif
+
 #
 # clean rules
 #
@@ -154,20 +189,12 @@ clean:
 	rm -f *.o *.p_o  *.hi *.p_hi */*.o */*.p_o */*.hi */*.p_hi
 	rm -f *~ */*~
 	rm -f lambdabot lambdabot.prof depend depend.bak
+	rm -rf $(CLEANS)
 
 distclean: clean
 	rm -f config.mk config.h config.log config.status configure
 	rm -rf autom4te.cache
 	rm -f GenModules Modules.hs Modules.o-boot Modules.*-boot
-	rm Depends.conf
-
-haddock:
-	@-mkdir haddock
-	@for i in `grep -l '\-\- |' *.hs */*.hs`; do \
-	    $(GHC) -D__HADDOCK__ -optP-P -E -cpp "$${i}" -o "$${i}pp"; \
-	done
-	@haddock -o haddock -h *.hspp */*.hspp
-	@#clean up immideately
-	@rm -f *.hspp */*.hspp
+	rm -f Depends.conf
 
 -include depend
