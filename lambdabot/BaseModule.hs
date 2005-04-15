@@ -8,7 +8,7 @@ import IRC
 import Util                 (debugStrLn,breakOnGlue,split,closests,showClean)
 import qualified Map as M   (insert, delete)
 
-import Data.List            (isPrefixOf)
+import Data.List            (isPrefixOf,nub)
 import Text.Regex           (mkRegex, matchRegexAll)
 import Control.Monad.State  (MonadState(..))
 
@@ -214,14 +214,17 @@ doPRIVMSG' myname msg
     doMsg cmd rest towhere = do
         let ircmsg = ircPrivmsg towhere
         allcmds <- getDictKeys ircCommands
-        case closests cmd allcmds of
-          (0,[_]) -> docmd cmd
-          (n,[s]) | n < e -> docmd s
-          (n,ss)  | n < e -> ircmsg ("Perhaps you meant one of: "++showClean ss)
-          _       -> docmd cmd
-      
+        let ms = filter (isPrefixOf cmd) allcmds
+        case ms of
+            [s] -> docmd s                  -- a unique prefix
+            _ | cmd `elem` ms -> docmd cmd  -- correct command (usual case)
+            _ | otherwise     -> case closests cmd allcmds of
+                  (n,[s]) | n < e ,  ms == [] -> docmd s -- unique edit match
+                  (n,ss)  | n < e || ms /= []            -- some possibilities
+                          -> ircmsg$ "Maybe you meant: "++showClean(nub(ms++ss))
+                  _ -> docmd cmd         -- no prefix, edit distance too far
         where 
-            e = 3
+            e = 3   -- edit distance cut off. Seems reasonable for small words
             docmd c =
                 withModule ircCommands c
                     (ircPrivmsg towhere ("Unknown command, try @listcommands.")) 
