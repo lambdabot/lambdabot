@@ -1,3 +1,6 @@
+--
+-- Set compatibility layer
+--
 module Set  ( 
 #if __GLASGOW_HASKELL__ > 602
     module Data.Set
