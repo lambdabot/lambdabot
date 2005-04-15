@@ -21,7 +21,7 @@ module Util (
         readM,
         showClean,
         expandTab,
-        closest,
+        closest, closests
     ) where
 
 import Config
@@ -29,7 +29,7 @@ import Map                      (Map)
 import qualified Map as M       (lookup, insert, delete, toList, fromList)
 import qualified Set as S       (member, insert, delete, Set)
 
-import Data.List                (intersperse, isPrefixOf,minimumBy)
+import Data.List                (intersperse, isPrefixOf)
 import Data.Maybe               (catMaybes,fromMaybe)
 import Data.Char                (isSpace, toLower)
 import Control.Monad.State      (when,MonadIO(..))
@@ -274,6 +274,13 @@ expandTab (x:xs)    = x : expandTab xs
 --
 closest :: String -> [String] -> (Int,String)
 closest pat ss = minimum ls 
+    where
+        ls = map (\s -> (levenshtein pat s,s)) ss
+
+closests :: String -> [String] -> (Int,[String])
+closests pat ss = 
+    let (m,_) = minimum ls
+    in (m, map snd (filter ((m ==) . fst) ls))
     where
         ls = map (\s -> (levenshtein pat s,s)) ss
         

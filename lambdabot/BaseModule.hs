@@ -1,13 +1,13 @@
 module BaseModule (theModule) where
 
-import Config                   (config, Config(name, autojoin))
+import Config               (config, Config(name, autojoin))
 import IRC
-import Util                     (debugStrLn, breakOnGlue, split, closest)
-import qualified Map as M       (insert, delete)
+import Util                 (debugStrLn,breakOnGlue,split,closests,showClean)
+import qualified Map as M   (insert, delete)
 
-import Data.List                (isPrefixOf)
-import Text.Regex               (mkRegex, matchRegexAll)
-import Control.Monad.State      (MonadState(..))
+import Data.List            (isPrefixOf)
+import Text.Regex           (mkRegex, matchRegexAll)
+import Control.Monad.State  (MonadState(..))
 
 newtype BaseModule = BaseModule ()
 
@@ -203,14 +203,23 @@ doPRIVMSG' myname msg
 
     doPersonalMsg ('@':cmd) rest = do
         allcmds <- getDictKeys ircCommands
-        let cmd' | (n,s) <- closest cmd allcmds, n <= 3 = s
-                 | otherwise                            = cmd
-        withModule ircCommands cmd'
-            (ircPrivmsg who "Sorry, I don't know that command.") 
-            (\m -> do 
-               debugStrLn (show msg)
-               handleIrc (ircPrivmsg who) (process m msg who cmd' rest))
-      where (who, _) = breakOnGlue "!" (msgPrefix msg)
+        case closests cmd allcmds of
+            (0,[_]) -> docmd cmd
+            (n,[s]) | n < 4 
+                    -> do ircPrivmsg alltargets ("I assume you meant "++show s)
+                          docmd s
+            (n,ss)  | n < 4 
+                    -> ircPrivmsg alltargets ("Perhaps you meant one of: "++showClean ss)
+            _       -> docmd cmd
+
+        where docmd c =
+                withModule ircCommands c
+                    (ircPrivmsg who "Sorry, I don't know that command.") 
+                    (\m -> do 
+                       debugStrLn (show msg)
+                       handleIrc (ircPrivmsg who) (process m msg who c rest))
+
+              (who, _) = breakOnGlue "!" (msgPrefix msg)
 
     doPersonalMsg _ _
       = do  let (who, _) = breakOnGlue "!" (msgPrefix msg)
@@ -220,14 +229,22 @@ doPRIVMSG' myname msg
     -- external modules are called in this next chunk
     doPublicMsg ('@':cmd) rest = do
         allcmds <- getDictKeys ircCommands
-        let cmd' | (n,s) <- closest cmd allcmds, n <= 3 = s
-                 | otherwise                            = cmd
-        withModule ircCommands cmd'
-            (ircPrivmsg alltargets ("Unknown command, try @listcommands.")) 
-            (\m -> do
-              debugStrLn (show msg)
-              handleIrc (ircPrivmsg alltargets) 
-                        (process m msg alltargets cmd' rest))
+        case closests cmd allcmds of
+            (0,[_]) -> docmd cmd
+            (n,[s]) | n < 4 
+                    -> do ircPrivmsg alltargets ("I assume you meant "++show s)
+                          docmd s
+            (n,ss)  | n < 4 
+                    -> ircPrivmsg alltargets ("Perhaps you meant one of: "++showClean ss)
+            _       -> docmd cmd
+        
+        where docmd c =
+                withModule ircCommands c
+                    (ircPrivmsg alltargets ("Unknown command, try @listcommands.")) 
+                    (\m -> do
+                      debugStrLn (show msg)
+                      handleIrc (ircPrivmsg alltargets) 
+                                (process m msg alltargets c rest))
 
     doPublicMsg _ _ = ircPrivmsg alltargets ("Not a command (no @).")
 
