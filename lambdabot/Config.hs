@@ -1,21 +1,24 @@
-
+--
+-- | Configuration data for lambdabot
+--
 module Config where
 
 -- | The 'Config' type provides configurations for lambdabot. It is used
 --   when lambdabot is started to determine the name of lambdabot, what
 --   IRC-network lambdabot should join, which channels lambdabot should
 --   join upon successful connection, etc.
+--
 data Config = Config {
-        name      :: String, -- ^ The nickname of lambdabot
-        userinfo  :: String, -- ^ The userinfo string for lambdabot
-        host      :: String, -- ^ Host to join
-        port      :: Int,    -- ^ The port number to use on the host
-        verbose   :: Bool,   -- ^ Should lambdabot be verbose?
-        moresize  :: Int,    -- ^ How many lines is output before \@more?
-        autojoin  :: [String], -- ^ List of channels to autojoin
-        admins    :: [String], -- ^ List of nicknames that are admins
+        name      :: String,        -- ^ The nickname of lambdabot
+        userinfo  :: String,        -- ^ The userinfo string for lambdabot
+        host      :: String,        -- ^ Host to join
+        port      :: Int,           -- ^ The port number to use on the host
+        verbose   :: Bool,          -- ^ Should lambdabot be verbose?
+        moresize  :: Int,           -- ^ How many lines is output before \@more?
+        autojoin  :: [String],      -- ^ List of channels to autojoin
+        admins    :: [String],      -- ^ List of nicknames that are admins
         proxy     :: Maybe ([Char], Integer) -- ^ An eventual proxy given as
-	                                     --   a pair of host and port.
+	                                         --   a pair of host and port.
 }
 
 --
@@ -48,10 +51,11 @@ config = Config {
 -- by the Dynamic module, and GenModules
 --
 data Depends = Depends {
-        reqObjs :: [String],           -- a common subset of modules 
-        reqPkgs :: [String],           -- all required packages
-        depList :: [(String,[String])] -- assoc list of modules and their obj deps
+        reqObjs :: [String],           -- ^ a common subset of modules 
+        reqPkgs :: [String],           -- ^ all required packages
+        depList :: [(String,[String])] -- ^ assoc list of modules and their obj deps
     }
     deriving (Show,Read)
 
+-- | An association between modules and their dependencies
 type DepList = [(String,[String])]

@@ -1,3 +1,6 @@
+--
+-- | Lambdabot base module. Controls message send and receive
+--
 module BaseModule (theModule) where
 
 import Config               (config, Config(name, autojoin))

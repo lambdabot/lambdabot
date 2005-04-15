@@ -1,9 +1,6 @@
 --
--- Implement a Posix.popen compatibility mapping.
+-- | A Posix.popen compatibility mapping.
 --
--- TODO win32 pre-6.4 support.
---
-
 module PosixCompat (popen) where
 
 #if __GLASGOW_HASKELL__ >= 604

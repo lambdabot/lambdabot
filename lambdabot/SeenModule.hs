@@ -1,3 +1,6 @@
+--
+-- | Keep track of IRC users.
+--
 module SeenModule (theModule) where
 
 import IRC

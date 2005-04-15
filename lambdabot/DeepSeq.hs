@@ -1,10 +1,11 @@
-module DeepSeq where
-
--- The 'DeepSeq' module provides 2 strict deep sequencing operators,
--- ``deepSeq'' and ``$!!''. 
+--
+-- | The 'DeepSeq' module provides 2 strict deep sequencing operators,
+-- 'deepSeq' and '$!!'. 
 --
 -- Cut and paste from
--- http://www.haskell.org/pipermail/haskell/2001-August/007712.html
+-- 'http:\/\/www.haskell.org\/pipermail\/haskell\/2001-August\/007712.html'
+--
+module DeepSeq where
 
 class DeepSeq a where
   deepSeq :: a -> b -> b

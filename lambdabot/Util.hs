@@ -1,4 +1,6 @@
-
+--
+-- | String and other utilities
+--
 module Util (
         join,
         split,

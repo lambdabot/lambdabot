@@ -3,7 +3,6 @@
 --
 -- | Talk to hot chixxors.
 --
-
 module Vixen (mkVixen) where
 
 import Util (stdGetRandItem)

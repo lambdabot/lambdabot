@@ -1,4 +1,6 @@
-
+--
+-- | Persistent state
+--
 module StateModule (theModule) where
 
 import IRC

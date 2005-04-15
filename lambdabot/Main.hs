@@ -1,4 +1,6 @@
-
+--
+-- | Let's go lambdabot!
+--
 module Main where
 
 import IRC

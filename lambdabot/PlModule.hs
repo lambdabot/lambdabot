@@ -1,4 +1,6 @@
-
+--
+-- | Pointfree programming fun
+--
 module PlModule (theModule) where
 
 import IRC

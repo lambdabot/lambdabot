@@ -1,9 +1,8 @@
 --
--- (c) 2005 Samuel Bronson
---
 -- | Search various things, Wikipedia and google for now.
 --
-
+-- (c) 2005 Samuel Bronson
+--
 module SearchModule (theModule) where
 
 import Util

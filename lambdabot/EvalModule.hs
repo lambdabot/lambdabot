@@ -1,4 +1,6 @@
-
+--
+-- | Lambda calculus interpreter
+--
 module EvalModule (theModule) where
 
 import EvalModule.LMEngine (evaluate, define, resume, Environment)

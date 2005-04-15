@@ -1,12 +1,10 @@
 --
--- Preprocessor for setting which modules are statically linked
+-- | Preprocessor for setting which modules are statically linked
 --
 -- Generates a list of dynamic modules to load, and a static module with
 -- appropriate (static) imports. The input file is generated from the
 -- $(PLUGINS) and $(STATICS) vars passed on the command line via
 -- Makefile, from config.mk
---
--- TODO, would be nice to use a small, stable subset of TH to make this.
 --
 module Main where
 

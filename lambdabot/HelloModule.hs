@@ -1,3 +1,6 @@
+--
+-- | Hello world plugin
+--
 module HelloModule (theModule) where
 
 import IRC

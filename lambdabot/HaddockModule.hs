@@ -1,3 +1,6 @@
+--
+-- | Interface to haddock
+--
 module HaddockModule where 
 
 import Control.Monad

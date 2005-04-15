@@ -1,5 +1,5 @@
 --
--- Set compatibility layer
+-- | Set compatibility layer
 --
 module Set  ( 
 #if __GLASGOW_HASKELL__ > 602

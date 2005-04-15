@@ -1,5 +1,6 @@
 --
 -- This module is for throwing dice for e.g. RPGs. (@dice 3d6+2)
+--
 -- Copyright Einar Karttunen <ekarttun@cs.helsinki.fi> 2005-04-06.
 --
 module DiceModule (theModule) where

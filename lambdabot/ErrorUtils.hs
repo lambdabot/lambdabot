@@ -1,4 +1,6 @@
-
+--
+-- | Error utilities
+--
 module ErrorUtils where
 
 import Control.Monad       (liftM)

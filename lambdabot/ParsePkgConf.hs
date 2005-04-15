@@ -2,16 +2,15 @@
 
 #include "config.h"
 
+--
+-- | We're trying to get a few fields from the package.conf files. How
+-- to do this differs depending on post-6.4 and pre-6.4 ghc.
+--
 module ParsePkgConf (systemModuleName,findDepends) where
 
 import Control.Monad
 import System.Directory
 import qualified Control.Exception as C (catch,throw)
-
---
--- We're trying to get a few fields from the package.conf files. How to
--- do this differs depending on post-6.4 and pre-6.4 ghc.
---
 
 #if __GLASGOW_HASKELL__  >= 604
 import Distribution.InstalledPackageInfo

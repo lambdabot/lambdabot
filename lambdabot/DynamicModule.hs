@@ -1,7 +1,6 @@
 --
--- dynamic : interface to the runtime loader
+-- | Dynamic module: interface to the runtime loader
 --
-
 module DynamicModule (theModule) where
 
 import {-# SOURCE #-} Modules   (plugins)

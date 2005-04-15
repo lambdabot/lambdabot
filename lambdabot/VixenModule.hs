@@ -1,8 +1,8 @@
 --
 -- | Talk to hot chixxors.
+--
 -- (c) Mark Wotton
 --
-
 module VixenModule where
 
 import IRC

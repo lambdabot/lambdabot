@@ -1,7 +1,7 @@
-
--- DICT (RFC 2229) Lookup Module for lambdabot IRC robot
+--
+-- | DICT (RFC 2229) Lookup Module for lambdabot IRC robot.
 -- Tom Moertel <tom@moertel.com>
-
+--
 module DictModule (theModule) where
 
 import qualified DictModule.DictLookup as Dict

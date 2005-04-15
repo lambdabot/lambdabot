@@ -1,4 +1,6 @@
-
+--
+-- | Simple template module
+--
 module DummyModule (theModule) where
 
 import IRC

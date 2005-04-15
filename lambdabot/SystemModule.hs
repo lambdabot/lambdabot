@@ -1,7 +1,6 @@
 --
 -- | System module : IRC control functions
 --
-
 module SystemModule (theModule) where
 
 import IRC

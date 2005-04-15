@@ -1,9 +1,22 @@
---     The Type Module - another progressive plugin for lambdabot
---    >>-------------------------------------------------------->>
---                                                                        .
---                                         .pesco hamburg 2003-04-05.    |
---                                                                      /_\
-
+--
+-- |   The Type Module - another progressive plugin for lambdabot
+--
+-- pesco hamburg 2003-04-05
+--
+--     Greetings reader,
+--
+--     whether you're a regular follower of the series or dropping in for
+--     the first time, let me present for your pleasure the Type Module:
+--
+--     One thing we enjoy on #haskell is throwing function types at each
+--     other instead of spelling out tiresome monologue about arguments
+--     or return values. Unfortunately such a toss often involves a local
+--     lookup of the type signature in question because one is seldom
+--     sure about the actual argument order.
+--
+--     Well, what do you know, this plugin enables lambdabot to automate
+--     that lookup for you and your fellow lambda hackers.
+--
 module TypeModule (theModule) where
 
 import IRC
@@ -12,21 +25,6 @@ import PosixCompat          (popen)
 import Maybe (mapMaybe)
 import Control.Monad.Trans (liftIO)
 import Text.Regex          (Regex, mkRegexWithOpts, matchRegex)
-
---     Greetings reader,
-
---     whether you're a regular follower of the series or dropping in for
---     the first time, let me present for your pleasure the Type Module:
-
---     One thing we enjoy on #haskell is throwing function types at each
---     other instead of spelling out tiresome monologue about arguments
---     or return values. Unfortunately such a toss often involves a local
---     lookup of the type signature in question because one is seldom
---     sure about the actual argument order.
-
---     Well, what do you know, this plugin enables lambdabot to automate
---     that lookup for you and your fellow lambda hackers.
-
 
 --     In accordance with the KISS principle, the plan is to delegate all
 --     the hard work! To get the type of foo, pipe

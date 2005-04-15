@@ -1,4 +1,6 @@
-
+--
+-- | more support
+--
 module MoreModule (theModule) where
 
 import IRC

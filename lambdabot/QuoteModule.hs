@@ -1,4 +1,6 @@
-
+--
+-- | Support for quotes
+--
 module QuoteModule (theModule) where
 
 import QuoteModule.Fortune      (randFortune)

@@ -1,7 +1,6 @@
 --
--- IRC protocol binding
+-- | IRC protocol binding
 --
-
 module IRC (
         MODULE(..), Module(..),
         ModuleT,

@@ -4,12 +4,11 @@
 --
 
 --
--- a Haskell evaluator for the pure part, using `plugs`
+-- | A Haskell evaluator for the pure part, using plugs
 --
 -- requires the 'runplugs' utility available with the hs-plugins library.
--- in $hsplugins/examples/hmake/one-shot
+-- in '$hsplugins/examples/hmake/one-shot'
 --
-
 module PlugsModule (theModule) where
 
 import Util             (expandTab)

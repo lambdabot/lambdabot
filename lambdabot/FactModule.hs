@@ -1,15 +1,13 @@
 --
--- Copyright (c) 2003 Shae Erisson
+-- | 
+-- Module    : FactModule
+-- Copyright : 2003 Shae Erisson
 --
--- license: lGPL
--- quick ugly hack to get factoids in lambdabot
--- requires Database.PostgreSQL.HSQL from
--- http://sf.net/projects/htoolkit/
+-- License:     lGPL
 --
--- This is a rewrite of Shaes originial code to use internal module
--- states. jlouis@.
+-- Quick ugly hack to get factoids in lambdabot.  This is a rewrite of
+-- Shaes originial code to use internal module states. jlouis
 --
-
 module FactModule (theModule) where
 
 import IRC

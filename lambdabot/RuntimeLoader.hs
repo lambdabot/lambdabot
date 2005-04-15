@@ -1,12 +1,12 @@
 {-# OPTIONS -#include "Linker.h" #-}
 -- 
---    Load and unload\/Haskell modules at runtime.  This is not really
---    \'dynamic loading\', as such -- that implies that you\'re working
---    with proper shared libraries, whereas this is far more simple and
---    only loads object files.  But it achieves the same goal: you can
---    load a Haskell module at runtime, load a function from it, and run
---    the function.  I have no idea if this works for types, but that
---    doesn\'t mean that you can\'t try it :).
+-- |  Load and unload\/Haskell modules at runtime.  This is not really
+-- \'dynamic loading\', as such -- that implies that you\'re working
+-- with proper shared libraries, whereas this is far more simple and
+-- only loads object files.  But it achieves the same goal: you can load
+-- a Haskell module at runtime, load a function from it, and run the
+-- function.  I have no idea if this works for types, but that doesn\'t
+-- mean that you can\'t try it :).
 -- 
 --    FIXME: Reformat this as a Haddock list
 -- 

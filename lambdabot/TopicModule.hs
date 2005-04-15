@@ -1,4 +1,6 @@
-
+--
+-- | Mess with the channel topic
+--
 module TopicModule (theModule) where
 
 import IRC

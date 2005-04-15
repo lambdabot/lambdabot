@@ -1,3 +1,6 @@
+--
+-- | Karma
+--
 module KarmaModule (theModule) where
 
 import IRC
