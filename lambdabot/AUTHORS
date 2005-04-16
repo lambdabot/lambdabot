@@ -28,7 +28,7 @@ Ganesh Sittampalam <ganesh@earth.li> aka Heffalump on #haskell
 
 Don Stewart <dons@cse.unsw.edu.au> aka dons on #haskell
 * New build system, 6.4 port
-* BabelModule, PlugsModule, VersionModule
+* BabelModule, PlugsModule, VersionModule, SpellModule
 * General hacking
 
 Jesper Louis Andersen <jlouis@mongers.org> aka jlouis on #haskell

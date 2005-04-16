@@ -62,8 +62,9 @@ instance Module DynamicModule DLModules where
         liftIO $ initialise (reqPkgs ds) (reqObjs ds) 
         writeMS (initDLModules { depends = depList ds })
         liftIO $ putStr "Loading plugins\t" >> hFlush stdout
-        mapM_ (handleRLEConsole . load) plugins
-        liftIO $ putStrLn "... done."
+        mapM_ (\p -> do (handleRLEConsole . load $ p)
+                        liftIO (putChar '.' >> hFlush stdout)) plugins
+        liftIO $ putStrLn "\tdone."
                                     
   process _ msg src "dynamic-load" rest 
     = checkPrivs msg src $ handleRLE src $
@@ -210,8 +211,8 @@ initialise pkgs objs = do
         putStrLn "... done."
 
         putStr "Loading core\t" >> hFlush stdout
-        mapM_ (\n -> loadObjFile (n++".o")) objs
-        putStrLn "... done."
+        mapM_ (\n -> loadObjFile (n++".o")  >> putChar '.' >> hFlush stdout) objs
+        putStrLn "\t\tdone."
                 
 getModuleFile :: [Char] -> [Char]
 getModuleFile s = upperise s ++ "Module.o"
