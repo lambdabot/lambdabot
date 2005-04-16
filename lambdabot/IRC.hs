@@ -447,6 +447,9 @@ handleIrc handler m = catchError m $ \e -> case e of
         IRCRaised (PatternMatchFail s) -> handler s
         _                              -> throwError e
 
+--
+-- | run the IRC monad
+--
 runIrc :: LB () -> IRC () -> IO ()
 runIrc initialise m = withSocketsDo $ do 
         ex <- try $ evalLB
