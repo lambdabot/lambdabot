@@ -4,8 +4,8 @@
 
 #define PLATFORM        "@PLATFORM@"
 
-#define REPO_PATH	"@REPO_PATH@"
+#define REPO_PATH       "@REPO_PATH@"
 
-#define GHC_LIB_PATH	"@GHC_LIB_PATH@"
+#define GHC_LIB_PATH    "@GHC_LIB_PATH@"
 
 #define PATCH_COUNT     "@PATCH_COUNT@"
