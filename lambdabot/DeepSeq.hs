@@ -3,7 +3,7 @@
 -- 'deepSeq' and '$!!'. 
 --
 -- Cut and paste from
--- 'http:\/\/www.haskell.org\/pipermail\/haskell\/2001-August\/007712.html'
+-- <http://www.haskell.org/pipermail/haskell/2001-August/007712.html>
 --
 module DeepSeq where
 

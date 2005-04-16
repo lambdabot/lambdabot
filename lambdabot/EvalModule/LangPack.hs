@@ -1,6 +1,6 @@
 --
--- Based on (ripping) ideas from 
---          "Language Prototyping using Modular Monadic Semantics"
+-- | Based on (ripping) ideas from 
+--          /Language Prototyping using Modular Monadic Semantics/
 --
 module EvalModule.LangPack where
 

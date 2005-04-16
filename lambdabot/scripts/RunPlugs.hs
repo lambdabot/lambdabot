@@ -3,6 +3,10 @@
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
 --
 
+--
+-- | Runplugs: use hs-plugins to run a Haskell expression under
+-- controlled conditions.
+--
 import Eval.Haskell             (unsafeEval)
 
 import Data.Maybe               (isJust, fromJust)

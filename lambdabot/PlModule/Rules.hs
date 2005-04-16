@@ -3,7 +3,7 @@
 -- 6.4 gives a name shadow warning I haven't tracked down.
 
 --
--- This marvellous module contributed by Thomas J\344ger
+-- | This marvellous module contributed by Thomas J\344ger
 --
 
 module PlModule.Rules (RewriteRule(..), rules, fire) where
