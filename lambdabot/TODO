@@ -1,12 +1,29 @@
 Don's Todo:
-* @type's output shouldn't be so verbose on lines. reparse it into our
-  own Type type, and ppr it for irc use.
 * partition core and plugins.
 * have 'make prof' and 'make static' just work
 * reduce memory usage
 * reduce size of static core - like Yi, the static core should be a tiny
   dyn loading module (and possibly network module) that loads everything
   else. No 'core' modules should be in the static part.
+
+    + problem with memory usage is that there all dependencies on
+    Main are statically linked, and then many are again reloaded
+    dynamically. The soln is to use hs-plugins and a static Boot
+    module, a la Yi. DynamicModule then becomes a binding to a
+    couple of hs-plugins functions. RuntimeLoader and Depends.conf
+    disappears. GenModules only is used for way=static. This would be
+    much cleaner. Main would be merged into the "core" modules, and
+    would simply become the dynamic entry point. It's not one
+    afternoon's work, but a couple of days would probably be enough.
+
+    + we then get a @reboot, that reloads all code, but maintains state
+    (probably)
+
+* Profiling issues:
+    * ln -s Map.o Map.p_o
+    * dynloading won't work, as it requires prof versions of
+      HSfoo.o, which don't exist usually. So turn off dyn loading,
+      and link everything statically.
 
 Thomas' Todo:
 * persistence: seen
@@ -42,10 +59,3 @@ Wishlist:
 * Some support for bot clients to be able to do their own request/response stuff
 
 * add your wishes here ...
-
-Profiling issues:
-
-* ln -s Map.o Map.p_o
-* dynloading won't work, as it requires prof versions of
-  HSfoo.o, which don't exist usually. So turn off dyn loading,
-  and link everything statically.
