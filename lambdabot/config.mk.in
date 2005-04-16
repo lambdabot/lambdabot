@@ -32,13 +32,14 @@ STATIC=NO
 ifeq "$(STATIC)" "NO"
 PLUGINS=       Dict Dummy Eval Karma Quote Seen State \
                Topic Type Plugs Babel Version More Pl \
-               Help Dice Search Vixen Fact
+               Help Dice Search Vixen Fact Spell
 STATICS=       Base System Dynamic
 else
 PLUGINS=
 STATICS=       Base System Dynamic Dict Dummy Eval Karma \
                Quote Seen State Topic Type Plugs Babel \
-               Version More Pl Help Dice Search Vixen Fact
+               Version More Pl Help Dice Search Vixen Fact \
+               Spell
 endif
 
 GHC_VERSION=	@GHC_VERSION@
@@ -59,6 +60,8 @@ endif
 
 HADDOCK=        @HaddockCmd@
 HADDOCK_OPTS=   -h
+
+ASPELL=         @AspellCmd@
 
 INSTALL=        sh $(TOPDIR)/install-sh -c
 INSTALL_PROGRAM=$(INSTALL) -m 755
