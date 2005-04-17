@@ -361,20 +361,20 @@ ircGetChannels = do
 -}
 
 
-lineify :: OutputFilter
+lineify, checkRecip, cleanOutput :: OutputFilter
 lineify _ msg = return $ mlines $ unlines msg
 
-checkRecip :: OutputFilter
 checkRecip who msg
   | who == Config.name Config.config = return []
   | "bot" `isSuffixOf` lowerCaseString who = return []
   | otherwise = return msg
 
 -- For now, this just checks for duplicate empty lines.
-cleanOutput :: OutputFilter
-cleanOutput _ msg = return $ concat $ zipWith cl msg (drop 1 msg) where
-  cl [] [] = []
+cleanOutput _ msg = return $ drop 1 $ concat $ zipWith cl ("":msg') (cycle msg') where 
+  cl "" "" = []
   cl x  _  = [x]
+
+  msg' = map (reverse . dropWhile isSpace . reverse) msg
 
 -- | Send a message to a channel\/user. If the message is too long, the rest
 --   of it is saved in the (global) more-state.
@@ -405,6 +405,7 @@ mlines s		=  let (l, s') = mbreak 0 (== '\n') s in l: mlines s'
 
 
 ircPrivmsg' :: String -> String -> IRC ()
+ircPrivmsg' who "" = ircPrivmsg' who " "
 ircPrivmsg' who msg
   = ircWrite (mkIrcMessage "PRIVMSG" [who, ':' : clean_msg])
     -- merry christmas det
@@ -741,7 +742,7 @@ writeGlobalState mod name = case moduleSerialize mod of
 readFile' :: String -> IO String
 readFile' file = do
   cont <- readFile file
-  last cont `seq` return cont
+  return $!! cont
 
 readGlobalState :: Module m s => m -> String -> IO (Maybe s)
 readGlobalState mod name = case moduleSerialize mod of
@@ -879,7 +880,7 @@ writePS maxSize who mp = do
   state <- readMS
   let newPrivate = take maxSize . maybe id (\x -> ((who,x):)) mp . 
         filter ((/=who) . fst) $ private state
-  last newPrivate `seq` writeMS $ state { private = newPrivate }
+  length newPrivate `seq` writeMS $ state { private = newPrivate }
 
 -- | Reads private state.
 readPS :: MonadIO m => String -> ModuleT (GlobalPrivate g p) m (Maybe p)
