@@ -3,6 +3,7 @@
 --
 module Main where
 
+import Shared
 import IRC
 import Config
 import Modules
@@ -10,11 +11,27 @@ import qualified Map as M
 
 import Control.Monad.State (get, liftIO)
 
+------------------------------------------------------------------------
+
 main :: IO ()
-main = runIrc ircInit ircMain
-    where
-        ircInit = loadStaticModules
-        ircMain = ircSignOn (name config) (userinfo config) >> mainloop
+main = main' Nothing
+
+dynmain :: DynLoad  -> IO ()
+dynmain fn = main' (Just fn)
+
+main' :: Maybe DynLoad -> IO ()
+main' Nothing   = runIrc ircInit ircMain (error "no dynamic loading")
+main' (Just ld) = runIrc ircInit ircMain ld
+
+------------------------------------------------------------------------
+
+ircInit :: LB ()
+ircInit = loadStaticModules
+
+ircMain :: IRC ()
+ircMain = ircSignOn (name config) (userinfo config) >> mainloop
+
+------------------------------------------------------------------------
 
 mainloop :: IRC ()
 mainloop = do 
@@ -36,3 +53,4 @@ allCallbacks (f:fs) msg = do
         handleIrc (liftIO . putStrLn) (f msg)
         allCallbacks fs msg
 
+------------------------------------------------------------------------

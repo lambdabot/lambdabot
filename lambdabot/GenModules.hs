@@ -8,17 +8,14 @@
 --
 module Main where
 
-import Config
-import ParsePkgConf
-
 import Data.Char
 import Data.List
 
 import System.Environment
 
-outfile, outfile' :: String
+outfile :: String
 outfile  = "Modules.hs"
-outfile' = "Depends.conf"
+-- outfile' = "Depends.conf"
 
 main :: IO ()
 main = do argv <- getArgs
@@ -32,7 +29,17 @@ main = do argv <- getArgs
 
            -- generate a dependency tree.
            -- must run after we've built the lambdabot.
-           else do
+           else error "Dynamic dependencies obsoleted by hs-plugins"
+
+    where breakcsv p = (\(a,b) -> (a,tail b)) . (break (== p))
+          nodot []       = []
+          nodot ('.':cs) = '/':nodot cs
+          nodot (c:cs)   = c  :nodot cs
+
+
+{-
+-- obsoleted by hs-plugins
+        do
                 raw <- getContents      -- list of ghc --show-iface output
 
                 let syn'      = parse raw
@@ -59,11 +66,6 @@ main = do argv <- getArgs
                                           depList = deplist }
 
                 writeFile outfile' (show deps)
-
-    where breakcsv p = (\(a,b) -> (a,tail b)) . (break (== p))
-          nodot []       = []
-          nodot ('.':cs) = '/':nodot cs
-          nodot (c:cs)   = c  :nodot cs
 
 -- ---------------------------------------------------------------------
 --
@@ -99,6 +101,7 @@ parseModule s =
               dropVersion [] = []
               dropVersion ('-':c:_) | isDigit c = []
               dropVersion (c:cs) = c : dropVersion cs
+-}
 
 ------------------------------------------------------------------------
 

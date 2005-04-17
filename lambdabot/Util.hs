@@ -15,10 +15,7 @@ module Util (
         debugStrLn,
         lowerCaseString,
         listToStr,
-        Accessor (..),
         Serializer (..), stdSerializer, mapSerializer,
-        readFM, writeFM, deleteFM,
-        lookupSet, insertSet, deleteSet, lookupList,
         getRandItem, stdGetRandItem,
         readM,
         showClean,
@@ -28,11 +25,10 @@ module Util (
 
 import Config
 import Map                      (Map)
-import qualified Map as M       (lookup, insert, delete, toList, fromList)
-import qualified Set as S       (member, insert, delete, Set)
+import qualified Map as M       (toList, fromList)
 
 import Data.List                (intersperse, isPrefixOf)
-import Data.Maybe               (catMaybes,fromMaybe)
+import Data.Maybe               (catMaybes)
 import Data.Char                (isSpace, toLower)
 import Control.Monad.State      (when,MonadIO(..))
 
@@ -150,42 +146,6 @@ listToStr conj (item:items) =
       listToStr' [y] = concat [" ", conj, " ", y]
       listToStr' (y:ys) = concat [", ", y, listToStr' ys]
   in  item ++ listToStr' items
-
-------------------------------------------------------------------------
--- More stuff for getting at state in DynamicModule.
-
-data Accessor m s = Accessor { reader :: m s, writer :: s -> m () }
-
-readFM :: (Monad m,Ord k) => Accessor m (Map k e) -> k -> m (Maybe e)
-readFM a k = do fm <- reader a
-                return $ M.lookup k fm
-
-writeFM :: (Monad m,Ord k) => Accessor m (Map k e) -> k -> e -> m ()
-writeFM a k e = do fm <- reader a
-                   writer a $ M.insert k e fm
-
-deleteFM :: (Monad m,Ord k) => Accessor m (Map k e) -> k -> m ()
-deleteFM a k = do fm <- reader a
-                  writer a $ M.delete k fm
-
-------------------------------------------------------------------------
-
-lookupSet :: (Monad m,Ord e) => Accessor m (S.Set e) -> e -> m Bool
-lookupSet a e = do set <- reader a
-                   return $ e `S.member` set
-
-insertSet :: (Monad m,Ord e) => Accessor m (S.Set e) -> e -> m ()
-insertSet a e = do set <- reader a
-                   writer a $ S.insert e set
-
-deleteSet :: (Monad m,Ord e) => Accessor m (S.Set e) -> e -> m ()
-deleteSet a e = do set <- reader a
-                   writer a $ S.delete e set
-
--- readList :: (Monad )
-lookupList :: (Monad m, Eq a1) => Accessor m [(a1, [a])] -> a1 -> m [a]
-lookupList a e = do ls <- reader a
-                    return $ fromMaybe [] (lookup e ls)
 
 ------------------------------------------------------------------------
 

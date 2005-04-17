@@ -5,7 +5,7 @@ include config.mk
 #
 #  All directories to look for sources
 #
-ALL_DIRS=	.  DictModule EvalModule QuoteModule BabelBot PlModule
+ALL_DIRS=	.  DictModule EvalModule QuoteModule PlModule
 
 # Not used, not built, bit dodgy as we are relying on ALL_DIRS to ignore
 # the subdirs of EXCLUDED_MODS. The following additional srcs will not be built
@@ -33,17 +33,6 @@ ALL_SRCS=$(filter-out $(EXCLUDED_SRCS) $(EXTRA_SRCS), \
 ALL_OBJS=	$(addsuffix .$(way_)o,$(basename $(ALL_SRCS)))
 
 #
-# With this, 'make lambdabot' should only build the static code, and 'make
-# modules' only makes the plugins. However, we need to cache this somehow.
-#
-#BOT_SRCS=$(patsubst %, %.hs, \
-#		$(shell echo ":q" | \
-#		          ghci -v1 Main.hs $(PKG_OPTS) 2> /dev/null | \
-#			    sed -n '/Ok/{ s/.*://; s/,//g; s/.$$//; p; q;}' ))
-#
-#BOT_OBJS=	$(addsuffix .$(way_)o,$(basename $(BOT_SRCS)))
-
-#
 # way management
 #
 # If $(way) is set then we define $(way_) and $(_way) from it in the
@@ -66,7 +55,7 @@ endif
 #
 # Now, get down to business
 #
-all: lambdabot modules Depends.conf
+all: lambdabot modules
 
 #
 # TODO should be just PLUGIN_OBJS
@@ -103,15 +92,16 @@ GenModules: GenModules.hs
 
 #
 # Recalculating dependencies depends on a correct build
+# Obsoleted by hs-plugins
 #
-Depends.conf: GenModules $(ALL_OBJS) lambdabot
-	@echo -n "Calculating dynamic dependencies ... "
-	@for i in *Module.hi ; do \
-		echo -n `echo "$$i"` ;\
-		$(GHC) $(PKG_OPTS) --show-iface $$i | sed 's/\[boot\]//g;/orphans/{s/.*/#/;q;}' ;\
-	done | ./GenModules --depends
-	@touch Depends.conf
-	@echo "done."
+#Depends.conf: GenModules $(ALL_OBJS) lambdabot
+#	@echo -n "Calculating dynamic dependencies ... "
+##	@for i in *Module.hi ; do \
+#		echo -n `echo "$$i"` ;\
+#		$(GHC) $(PKG_OPTS) --show-iface $$i | sed 's/\[boot\]//g;/orphans/{s/.*/#/;q;}' ;\
+#	done | ./GenModules --depends
+#	@touch Depends.conf
+#	@echo "done."
 
 #
 # Link the bot.
@@ -123,9 +113,16 @@ lambdabot: $(ALL_OBJS)
 			ln -f -s $$i `echo $$i | sed 's/p_//'` ; \
 		done ; \
 	fi
-	$(GHC) $(HC_OPTS) $(PKG_OPTS) $(LD_OPTS) -v0 --make Main.hs -o $@
+	$(GHC) $(HC_OPTS) $(PKG_OPTS) $(LD_OPTS) -v0 Boot.$(way_)o Shared.$(way_)o Map.$(way_)o -o $@
+	strip $@
 
 # and for i in $(ALL_OBJS) ; do ln -s $i $i_p.o ...
+
+#
+# Boot is the bootstrap loader. It shouldn't be linked *statically* lambdabot
+#
+Boot.o: Boot.hs 
+	$(GHC) $(HC_OPTS) $(PKG_OPTS) -main-is Boot.main -c $< -o $@ -ohi $(basename $@).$(way_)hi
 
 #
 # Main rules, with support for 'way' management, from Yi.
@@ -195,6 +192,5 @@ distclean: clean
 	rm -f config.mk config.h config.log config.status configure
 	rm -rf autom4te.cache
 	rm -f GenModules Modules.hs Modules.o-boot Modules.*-boot
-	rm -f Depends.conf
 
 -include depend

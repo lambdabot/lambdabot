@@ -1,5 +1,7 @@
 --
 -- | IRC protocol binding
+-- TODO : refactor this. Especially the MODULE stuff which has nothing
+-- to do with the IRC protocol.
 --
 module IRC (
         MODULE(..), Module(..),
@@ -28,10 +30,10 @@ module IRC (
         ircSignOn,
         ircRead,
 
+        ircLoad, ircUnload,
+
         clean, checkPrivs, mkCN, handleIrc, runIrc,
   ) where
-
-import Prelude hiding   (mod, catch)
 
 import qualified Config (config, name, admins, host, port)
 import DeepSeq          (($!!), DeepSeq(..))
@@ -42,6 +44,9 @@ import Util             (split,clean,breakOnGlue, Serializer(..))
 
 import Map (Map)
 import qualified Map as M hiding (Map)
+import qualified Shared as S
+
+import Prelude hiding   (mod, catch)
 
 import Network          (withSocketsDo, connectTo, PortID(PortNumber))
 
@@ -71,6 +76,8 @@ import Control.Monad.Reader
 import Control.Monad.State
 import Control.Monad.Error (MonadError (..))
 import Control.Arrow       (first)
+
+import GHC.Prim             (unsafeCoerce#)
 
 ------------------------------------------------------------------------
 
@@ -102,9 +109,11 @@ data IRCRWState
         ircChannels        :: Map ChanName String,
         ircModules         :: Map String ModuleRef,
         ircCallbacks       :: Map String [(String,Callback)],
-        ircOutputFilters   :: [(String,OutputFilter)], -- ^ Output filters, invoked from right to left
+        ircOutputFilters   :: [(String,OutputFilter)], 
+            -- ^ Output filters, invoked from right to left
         ircCommands        :: Map String ModuleRef,
-        ircStayConnected   :: Bool
+        ircStayConnected   :: Bool,
+        ircDynLoad         :: S.DynLoad
   }
 
 newtype ChanName = ChanName String -- should be abstract, always lowercase
@@ -450,8 +459,8 @@ handleIrc handler m = catchError m $ \e -> case e of
 --
 -- | run the IRC monad
 --
-runIrc :: LB () -> IRC () -> IO ()
-runIrc initialise m = withSocketsDo $ do 
+runIrc :: LB a -> IRC () -> S.DynLoad -> IO ()
+runIrc initialise m ld = withSocketsDo $ do
         ex <- try $ evalLB
                  (initialise >> withIrcSignalCatch (runIrc' m))
                  (initState (Config.admins Config.config))
@@ -464,7 +473,8 @@ runIrc initialise m = withSocketsDo $ do
                 ircCallbacks       = M.empty,
                 ircOutputFilters   = [("",lineify)],
                 ircCommands        = M.empty,
-                ircStayConnected   = True
+                ircStayConnected   = True,
+                ircDynLoad         = ld
             }
 
 {-
@@ -657,6 +667,8 @@ ctcpDequote ('\134':cs)        = ctcpDequote cs
 ctcpDequote (c:cs)             = c : ctcpDequote cs
 -}
 
+------------------------------------------------------------------------
+
 -- | The Module type class.
 -- Minimal complete definition: @moduleHelp@, @moduleCmds@, @process@.
 class Module m s | m -> s where
@@ -724,30 +736,34 @@ readGlobalState mod name = case moduleSerialize mod of
     state <- Just `fmap` readFile' (toFilename name) `catch` \_ -> return Nothing
     return $ deSerialize ser =<< state
 
+------------------------------------------------------------------------
 --
--- | register a module in the irc state
+-- | Register a module in the irc state
 --
 ircInstallModule :: MODULE -> String -> LB ()
-ircInstallModule (MODULE modn) modname
-  = do  s <- get
-        savedState <- liftIO $ readGlobalState modn modname
-        state <- maybe (moduleDefState modn) return savedState
-        ref <- liftIO $ newIORef state
-        let modmap = ircModules s
-        let mod = ModuleRef modn ref
-        put (s { ircModules = M.insert modname mod modmap })
-        ircLoadModule modname
-
-ircLoadModule :: String -> LB ()
-ircLoadModule modname = withModule ircModules modname (return ()) (\m -> do
-    cmds <- moduleCmds m
+ircInstallModule (MODULE modn) modname = do  
     s <- get
-    let cmdmap = ircCommands s
-        mod = ModuleRef m ?ref
-    put (s { ircCommands = M.addList [ (cmd,mod) | cmd <- cmds ] cmdmap })
-    moduleInit m)
+    savedState <- liftIO $ readGlobalState modn modname
+    state      <- maybe (moduleDefState modn) return savedState
+    ref        <- liftIO $ newIORef state
+    let modmap = ircModules s
+    let mod = ModuleRef modn ref
+    put (s { ircModules = M.insert modname mod modmap })
+    ircLoadModule modname
 
--- | Unload a module.
+  where
+    ircLoadModule :: String -> LB ()
+    ircLoadModule modnm = withModule ircModules modnm (return ()) (\m -> do
+        cmds <- moduleCmds m
+        s    <- get
+        let cmdmap = ircCommands s
+            mod = ModuleRef m ?ref
+        put (s { ircCommands = M.addList [ (cmd,mod) | cmd <- cmds ] cmdmap })
+        moduleInit m)
+
+--
+-- | Unregister a module's entry in the irc state
+--
 ircUnloadModule :: String -> LB ()
 ircUnloadModule modname = withModule ircModules modname (error "module not loaded") (\m -> do
     when (moduleSticky m) $ error "module is sticky"
@@ -764,6 +780,27 @@ ircUnloadModule modname = withModule ircModules modname (error "module not loade
             { ircCallbacks = filter ((/=modname) . fst) `fmap` cbs }
             { ircOutputFilters = filter ((/=modname) . fst) ofs }
   )
+
+--
+-- | Binding to dynamic loader functions (stored as a bundle in state)
+-- passed from Boot. DynamicModule goes through here to get at them.
+--
+ircLoad :: FilePath -> S.Symbol -> LB (S.Module, a)
+ircLoad mod sym = do
+    s <- get
+    let fn  = S.dynload (ircDynLoad s)
+        fn' = (unsafeCoerce# fn) :: FilePath -> S.Symbol -> IO (S.Module,a) -- :/
+    liftIO $ (fn' mod sym)
+
+--
+-- | Dynamically unload a module
+--
+ircUnload :: FilePath -> LB ()
+ircUnload mod = do
+    s <- get
+    liftIO $ (S.unload (ircDynLoad s)) (S.Module mod)
+
+------------------------------------------------------------------------
 
 ircSignalConnect :: MonadLB m => String -> Callback -> ModuleT s m ()
 ircSignalConnect str f 

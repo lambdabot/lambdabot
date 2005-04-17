@@ -45,6 +45,9 @@ endif
 GHC_VERSION=	@GHC_VERSION@
 GLASGOW_HASKELL=@GLASGOW_HASKELL@
 
+# You need hs-plugins >= 0.9.8 
+PKG_OPTS=	                -package plugins
+
 #
 # Possibly this will be a problem in the future
 #
