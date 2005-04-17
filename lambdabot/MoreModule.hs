@@ -26,8 +26,9 @@ instance Module MoreModule MoreState where
 moreFilter :: String -> [String] -> ModuleT MoreState IRC [String]
 moreFilter target msglines = do
   let maxLines = Config.moresize Config.config
-      morelines = drop maxLines msglines
-      thislines = take maxLines msglines
+      (morelines, thislines) = case drop (maxLines+2) msglines of
+          [] -> ([],msglines)
+          _  -> (drop maxLines msglines, take maxLines msglines)
   writePS 15 target $ if null morelines then Nothing else Just morelines
   return $ thislines ++ if null morelines then [] 
     else ['[':shows (length morelines) " @more lines]"]
