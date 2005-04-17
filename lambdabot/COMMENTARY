@@ -5,73 +5,30 @@ Authors: Don Stewart
 
 ------------------------------------------------------------------------
 
-Current design (there's many more interconnectsions between these modules)
+Current module tree.
 
-(GenModules) -+- Config
-              +- ParsePkgConf
-              +- GenModules.hs
+(lambdabot : static) 
+    +- Boot -+- hs-plugins
+            -+- Shared
+            -+- Map
 
-(lambdabot) --+- Main.hs
-                  +- RuntimeLoader --- ParsePkgConf
-                  +- Modules
-                      +- SystemModule
-                      +- DynamicModule
-                      +- BaseModule
-                      +- IRC
-                          +- ErrorUtils
-                          +- DeepSeq
-                          +- ExceptionError -- MonadException
-                          +- Util          -+- Config
-                                            +- Map
-                                            +- Set
-
-(plugins)
-
-BabelModule.hs   DynamicModule.hs HelpModule.hs    QuoteModule.hs   SystemModule.hs
-BaseModule.hs    EvalModule.hs    KarmaModule.hs   SearchModule.hs  TopicModule.hs
-DiceModule.hs    FactModule.hs    MoreModule.hs    SeenModule.hs    TypeModule.hs
-DictModule.hs    HaddockModule.hs PlModule.hs      SpellModule.hs   VersionModule.hs
-DummyModule.hs   HelloModule.hs   PlugsModule.hs   StateModule.hs   VixenModule.hs
-     
-Plugins depend on at least:
-        DeepSeq
-        ErrorUtils
-        MonadException
-        ExceptionError
-        Set
-        PosixCompat
-        MiniHTTP
-        Config
-        Map
-        Util
-        IRC
-
-Which mean if any of these are also dependencies of Main, they are linked
-twice, once statically and once dynamically  :/
-
-The solution is to use a boot loader, and either write an hs-plugins-ish
-wrapper with what we already have, or just use hs-plugins:
-
-(lambdabot) 
-    +- Boot -> hs-plugins
-
-(plugins)
-    HSlambdabot.o
+(plugins : dynamca)
         +-- Main
+            IRC
+            Shared
             Config
             DeepSeq
             ErrorUtils
             ExceptionError
             MonadException
-            IRC
             Map
-            Set
             Util
             Modules -+ SystemModule
                        BaseModule
                        DynamicModule ...<dynload>... [*Module.o plugins]
+                                                        +Set
+                                                        +MiniHTTP ...
 
-The static binary would only contain hs-plugins, and the runtime footprint
-would be around the size of the current static binary (instead of double that).
+The static binary only contains hs-plugins.
 
 ------------------------------------------------------------------------
