@@ -65,7 +65,6 @@ import Posix
 import System.IO.Error
 #endif
 
-import Data.List                (minimumBy)
 import Data.Char                (toLower, isAlphaNum, isSpace)
 import Data.Dynamic             (Typeable, toDyn, fromDynamic)
 import Data.IORef               (newIORef, IORef, readIORef, writeIORef)
@@ -837,57 +836,51 @@ modifyMS f = liftIO $ do
   s <- readIORef ?ref
   writeIORef ?ref $! f s -- It's a shame there's no modifyIORef'
 
--- TODO: Document
+-- | This datatype allows modules to conviently maintain both global 
+--   (i.e. for all clients they're interacting with) and private state.
+--   It is implemented on top of readMS/writeMS.
+-- 
+-- This sipmle implementation is linear in the number of private states used.
 data GlobalPrivate g p = GP {
   global :: !g,
-  private :: !(Map String (Integer, p)),
-  countGP :: !Integer
-  -- define usedCounts :: Map Integer String if you need better performance
+  private :: ![(String,p)]
 }
 
+-- | Creates a @GlobalPrivate@ given the value of the global state. No private
+--   state for clients will be created.
 mkGlobalPrivate :: g -> GlobalPrivate g p
 mkGlobalPrivate g = GP {
   global = g,
-  private = M.empty,
-  countGP = 0
+  private = []
 }
 
-writePS :: MonadIO m => Int -> String -> Maybe p -> ModuleT (GlobalPrivate g p) m ()
+-- | Writes private state.
+writePS :: MonadIO m 
+  => Int     -- ^ Maximal number of private states to keep
+  -> String  -- ^ The target
+  -> Maybe p -- ^ @Just x@ writes x in the user's private state, @Nothing@ removes it.
+  -> ModuleT (GlobalPrivate g p) m ()
 writePS maxSize who mp = do
   state <- readMS
-  let newCount = countGP state + 1
-      newPrivate = case mp of
-        Just p  -> M.insert who (newCount, p) $ private state
-        Nothing -> M.delete who $ private state
-      newState = state {
-        countGP = newCount,
-        private = newPrivate
-      }
-  if M.size newPrivate > maxSize 
-    then do
-      let minCount = fst $ minimumBy (\(_,(x,_)) (_,(y,_)) -> compare x y) $ 
-            M.assocs newPrivate
-      writeMS $ newState { private = M.delete minCount newPrivate }
-    else writeMS newState
+  let newPrivate = take maxSize . maybe id (\x -> ((who,x):)) mp . 
+        filter ((/=who) . fst) $ private state
+  last newPrivate `seq` writeMS $ state { private = newPrivate }
 
+-- | Reads private state.
 readPS :: MonadIO m => String -> ModuleT (GlobalPrivate g p) m (Maybe p)
 readPS who = do
   state <- readMS
-  let newCount = countGP state + 1
-      newPrivate = M.update (Just . first (const newCount)) who $ private state 
-      newState = state { 
-        countGP = newCount, 
-        private = newPrivate
-      }
-  writeMS newState
-  return $ snd `fmap` M.lookup who newPrivate
-  
+  let answer = lookup who (private state)
+  writePS maxBound who answer
+  return answer
 
+-- | Writes global state.
 writeGS :: MonadIO m => g -> ModuleT (GlobalPrivate g p) m ()
 writeGS g = do
   state <- readMS
   writeMS $ state { global = g }
 
+-- | Reads global state.
 readGS :: MonadIO m => ModuleT (GlobalPrivate g p) m g
 readGS = global `liftM` readMS
 
