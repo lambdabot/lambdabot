@@ -185,8 +185,7 @@ stdSerializer = Serializer show readM
 -- | 'mapSerializer' serializes a 'Map' type if both the key and the value
 --   are instances of Read and Show. The serialization is done by converting
 --   the map to and from lists.
-mapSerializer :: (Ord k, Show k, Show v, Read k, Read v)
-	      => Serializer (Map k v)
+mapSerializer :: (Ord k, Show k, Show v, Read k, Read v) => Serializer (Map k v)
 mapSerializer = Serializer {
   serialize = unlines . map show . M.toList,
   deSerialize = Just . M.fromList . catMaybes . map readM . lines

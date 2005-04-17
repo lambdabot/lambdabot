@@ -671,7 +671,7 @@ ctcpDequote (c:cs)             = c : ctcpDequote cs
 -- | The Module type class.
 -- Minimal complete definition: @moduleHelp@, @moduleCmds@, @process@.
 class Module m s | m -> s where
-    -- | If the module wants its state to be saves, this function should
+    -- | If the module wants its state to be saved, this function should
     --   return a Serializer.
     --
     --   The default implementation returns Nothing.
