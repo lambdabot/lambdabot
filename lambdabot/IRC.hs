@@ -40,7 +40,7 @@ import DeepSeq          (($!!), DeepSeq(..))
 import ErrorUtils
 import ExceptionError   (ExceptionError(..), ExceptionErrorT(..))
 import MonadException   (MonadException(throwM))
-import Util             (split,clean,breakOnGlue, Serializer(..))
+import Util             (split,clean,breakOnGlue, Serializer(..), lowerCaseString)
 
 import Map (Map)
 import qualified Map as M hiding (Map)
@@ -66,6 +66,7 @@ import System.IO.Error
 #endif
 
 import Data.Char                (toLower, isAlphaNum, isSpace)
+import Data.List                (isSuffixOf)
 import Data.Dynamic             (Typeable, toDyn, fromDynamic)
 import Data.IORef               (newIORef, IORef, readIORef, writeIORef)
 
@@ -363,12 +364,24 @@ ircGetChannels = do
 lineify :: OutputFilter
 lineify _ msg = return $ mlines $ unlines msg
 
+checkRecip :: OutputFilter
+checkRecip who msg
+  | who == Config.name Config.config = return []
+  | "bot" `isSuffixOf` lowerCaseString who = return []
+  | otherwise = return msg
+
+-- For now, this just checks for duplicate empty lines.
+cleanOutput :: OutputFilter
+cleanOutput _ msg = return $ concat $ zipWith cl msg (drop 1 msg) where
+  cl [] [] = []
+  cl x  _  = [x]
+
 -- | Send a message to a channel\/user. If the message is too long, the rest
 --   of it is saved in the (global) more-state.
 ircPrivmsg :: String -- ^ The channel\/user.
    -> String         -- ^ The message.
    -> IRC ()
-ircPrivmsg who msg = when (Config.name Config.config /= who) $ do 
+ircPrivmsg who msg = do 
   filters <- gets ircOutputFilters
   sendlines <- foldr (\f -> (=<<) (f who)) (return $ lines msg) $ map snd filters
   -- Hardcoded defaults: maximal ten lines, maximal 80 chars/line
@@ -470,7 +483,9 @@ runIrc initialise m ld = withSocketsDo $ do
                 ircChannels        = M.empty,
                 ircModules         = M.empty,
                 ircCallbacks       = M.empty,
-                ircOutputFilters   = [("",lineify)],
+                ircOutputFilters   = [("",cleanOutput),
+                                      ("",lineify),
+                                      ("",checkRecip)],
                 ircCommands        = M.empty,
                 ircStayConnected   = True,
                 ircDynLoad         = ld
