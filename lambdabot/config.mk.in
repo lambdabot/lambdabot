@@ -52,7 +52,7 @@ PKG_OPTS=	                -package plugins
 # Possibly this will be a problem in the future
 #
 ifeq "$(GLASGOW_HASKELL)" "602"
-PKG_OPTS=	                -package posix
+PKG_OPTS+=	                -package posix
 RECURSIVE_MODULE_SUFFIX=	hi-boot
 MODULE_HI_BOOT=             "module Modules where { plugins::[[GHC.Base.Char]] }"
 else
