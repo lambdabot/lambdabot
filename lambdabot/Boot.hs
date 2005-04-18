@@ -61,7 +61,7 @@ dLoad :: String -> String -> IO (S.Module,a)
 dLoad p s = do
     mm <- load_ p ["."] s
     case mm of
-        LoadFailure e   -> error (show e)  -- throw this back to DynamicModule
+        LoadFailure e   -> error ("dLoad: "++show e)  -- throw this back to DynamicModule
         LoadSuccess m v -> do
             atomicModifyIORef modules $ \fm -> (M.insert (path m) m fm, ())
             return (S.Module (path m),v)
@@ -69,11 +69,13 @@ dLoad p s = do
 -- | Unload a module, given the path to that module
 dUnload :: S.Module -> IO ()
 dUnload (S.Module p) = do
-    m <- atomicModifyIORef modules $ \fm -> 
-            case M.lookup p fm of
-                Nothing -> error "module not loaded"
-                Just m  -> (M.delete p fm, m)  -- delete here.
-    unload m
+    mm <- atomicModifyIORef modules $ \fm -> 
+        case M.lookup p fm of
+            Nothing -> (fm,Nothing)    -- fail silently
+            Just m  -> (M.delete p fm, Just m)
+    case mm of
+        Nothing -> return ()
+        Just m  -> unload m
 
 --
 -- | Dynamic loader package we pass over.

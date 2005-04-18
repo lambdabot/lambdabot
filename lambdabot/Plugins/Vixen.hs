@@ -1,116 +1,44 @@
 --
--- BSD licence, author Mark Wotton (mwotton@gmail.com)
---
 -- | Talk to hot chixxors.
 --
-module Plugins.Vixen (mkVixen) where
-
-import Util (stdGetRandItem)
-
-import Data.Maybe (isJust)
-import Control.Exception (try, evaluate)
-
-import qualified Text.ParserCombinators.Parsec.Token as P
-import Text.ParserCombinators.Parsec.Language
-import Text.ParserCombinators.Parsec
-import Text.Regex
-
-import GHC.IOBase (unsafePerformIO)
-
-mkVixen :: String -> String -> IO String
-mkVixen phraseBook question = do 
-  vixen (mkResponses $ readConfig phraseBook) question
-
-----------------------------------------------------------------------
-
--- format
--- top:  (regex, wtree)
--- wtr:  (wtr wtr ... )
---    |   str
-readConfig :: String -> RespChoice
-readConfig l = do
-  case parse parseChoices "vixenlove" l of
-    Left a  -> error $ "Parse error at"++ show a
-    Right b -> (b ++ [(mkRegex ".*", Leaf "If you see this, gentle sir, know that you are being trolled by a poorly configured VixenLove program")])
-  
--- ----------------------------------------------------------------------------
--- Parser
-
-lexer :: P.TokenParser st
-lexer = P.makeTokenParser haskellStyle
-
-parens :: CharParser st a -> CharParser st a
-parens = P.parens lexer
-
-stringLiteral :: CharParser st String
-stringLiteral = P.stringLiteral lexer
-
-lexeme :: CharParser st a -> CharParser st a
-lexeme = P.lexeme lexer
-
-lstring :: GenParser Char st String
-lstring = lexeme stringLiteral <?> "lexeme"
-
-whiteSpace :: CharParser st ()
-whiteSpace = P.whiteSpace lexer
-
-parseChoices :: GenParser Char st [(Regex, WTree String)]
-parseChoices = do
-  whiteSpace <?> "whitespace"
-  l <- many parseMatch <?> "many parses"
-  return [(a,b) | (Just a,b) <- l] 
-
-parseMatch :: GenParser Char st (Maybe Regex, WTree String)
-parseMatch = parens (do {
-               r <- regexP <?> "r";
-               wtr <- many wtreeP <?> "wtr" ; return (r,Node wtr) 
-	     }) <?> "parseMatch"
-
--- case insensitive match
-mkRegexMaybe :: String -> Maybe Regex
-mkRegexMaybe l = let r = mkRegexWithOpts l True False in 
-		 case unsafePerformIO $ Control.Exception.try (evaluate r) of
-		    Left  _  -> Nothing
-                    Right s -> Just s
-		 
-		   
-regexP :: GenParser Char st (Maybe Regex)
-regexP = do { l <- lstring <?> "lstring"; return $ mkRegexMaybe l } <?> "regexP"
-
-wtreeP :: CharParser st (WTree String)
-wtreeP = lexeme (
-      (parens (do {wtrs <- many wtreeP; return $ Node wtrs}))
-  <|> (do l <- lstring; return $ Leaf l)
-  <?> "wtree"
-  )	  
-
--- idea is that everything on a given level is 
--- equally likely. Probably enough, could add a
--- weighting if necessary.
+-- (c) Mark Wotton
 --
--- must be one element at least - we guarantee that
--- we can return something from a WTree, so a null l
--- leaf is inappropriate
+module Plugins.Vixen where
 
-data WTree a = Leaf a | Node [WTree a]
-  deriving Show
+import IRC
+import Plugins.Vixen.Vixen      (mkVixen)
 
-type RespChoice = [(Regex, WTree String)]
+import Control.Monad.State      (MonadIO, liftIO)
 
--- use IO only for random, could remove it.
-vixen :: (String -> WTree String) -> String -> IO String
-vixen responder them = randomWTreeElt (responder them)
+------------------------------------------------------------------------
 
-randomWTreeElt :: WTree a -> IO a
-randomWTreeElt (Leaf a)  = return a
-randomWTreeElt (Node ls) = do
-  elt <- stdGetRandItem ls
-  randomWTreeElt elt
+newtype VixenModule = VixenModule ()
 
-match :: Regex -> String -> Bool
-match r s = isJust $ matchRegex r s
+theModule :: MODULE
+theModule = MODULE $ VixenModule ()
 
-mkResponses :: RespChoice -> String -> WTree String
-mkResponses choices them = (\((_,wtree):_) -> wtree) $
-                           filter (\(reg,_) -> match reg them) choices
+file :: String
+file = "State/vixenrc"
+
+instance Module VixenModule (String -> IO String) where
+    moduleSticky _ = False
+
+    moduleHelp _ s = return $ case s of
+             "vixenlove" -> "talk to me, big boy"
+             _           -> "sergeant curry's lonely hearts club"
+
+    moduleDefState _ = do
+                         f <- liftIO (readFile file)
+    			 return $ mkVixen f
+
+    moduleCmds     _ = return ["vixen"]
+    process _ _ src cmd rest = case cmd of
+               "vixen" -> vixenCmd src rest
+               _       -> error "vixen error: i'm just a girl!"
+
+vixenCmd :: String -> String -> ModuleT (String -> IO String) IRC ()
+vixenCmd src rest = do 
+	responder <-  readMS
+        result <- liftIO $  responder rest
+        ircPrivmsg src result
 

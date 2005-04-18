@@ -6,14 +6,13 @@ include config.mk
 #  All directories to look for sources
 #
 ALL_DIRS=	.  Plugins \
-            Plugins/DictModule Plugins/EvalModule \
-            Plugins/QuoteModule Plugins/PlModule
+            Plugins/Dict Plugins/Lambda Plugins/Quote Plugins/Pl Plugins/Vixen
 
 # Not used, not built, bit dodgy as we are relying on ALL_DIRS to ignore
 # the subdirs of EXCLUDED_MODS. The following additional srcs will not be built
 EXCLUDED_MODS=	Haddock Hello Cmafihe
-EXCLUDED_SRCS=	$(addprefix Plugins/, $(addsuffix Module.hs,$(EXCLUDED_MODS)))
-EXCLUDED_SRCS+= Plugins/EvalModule/tests.hs Plugins/PlModule/Test.hs GenModules.hs
+EXCLUDED_SRCS=	$(addprefix Plugins/, $(addsuffix .hs,$(EXCLUDED_MODS)))
+EXCLUDED_SRCS+= Plugins/Lambda/tests.hs Plugins/Pl/Test.hs GenModules.hs
 
 #
 # Generated at build time
@@ -89,21 +88,7 @@ Modules.hs: config.mk GenModules
 	@echo "done."
 
 GenModules: GenModules.hs
-	@$(GHC) $(HC_OPTS) --make GenModules.hs -o GenModules
-
-
-#
-# Recalculating dependencies depends on a correct build
-# Obsoleted by hs-plugins
-#
-#Depends.conf: GenModules $(ALL_OBJS) lambdabot
-#	@echo -n "Calculating dynamic dependencies ... "
-##	@for i in *Module.hi ; do \
-#		echo -n `echo "$$i"` ;\
-#		$(GHC) $(PKG_OPTS) --show-iface $$i | sed 's/\[boot\]//g;/orphans/{s/.*/#/;q;}' ;\
-#	done | ./GenModules --depends
-#	@touch Depends.conf
-#	@echo "done."
+	@$(GHC) $(HC_OPTS) GenModules.hs -o GenModules
 
 #
 # Link the bot.
@@ -159,7 +144,7 @@ ifneq "$(HADDOCK)" ""
 docs: .doc-stamp
 
 # break cyclic imports, and ones with tricky syntax extensions
-NO_DOCS=Modules.hs PlModule/Transform.hs
+NO_DOCS=Modules.hs Plugins/Pl/Transform.hs
 
 HS_PPS= $(addsuffix .raw-hs, \
             $(filter-out $(basename $(NO_DOCS)), \

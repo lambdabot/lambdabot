@@ -105,6 +105,11 @@ parseModule s =
 
 ------------------------------------------------------------------------
 
+--
+-- there's an assumption that plugins are only capitalised in their
+-- first letter.
+--
+
 process :: [String] -> [String]
 process m = concat [begin, 
                     map doimport m, 
@@ -112,10 +117,10 @@ process m = concat [begin,
                     map doload m]
  where
     begin        = ["module Modules where", "import IRC", ""]
-    doimport nm  = "import qualified Plugins." ++ (clean . upperise) nm ++ "Module"
+    doimport nm  = "import qualified Plugins." ++ (clean . upperise) nm
     middle       = ["","loadStaticModules :: LB ()","loadStaticModules"," = do"]
     doload nm   = " ircInstallModule Plugins." ++ (clean . upperise) nm  ++ 
-                     "Module.theModule " ++ show (clean . lowerise $ nm)
+                     ".theModule " ++ show (clean . lowerise $ nm)
 
 process2 :: [String] -> String
 process2 ms = "\nplugins :: [String]\n" ++ concat ("plugins = [" : 
