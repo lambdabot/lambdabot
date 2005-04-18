@@ -5,13 +5,15 @@ include config.mk
 #
 #  All directories to look for sources
 #
-ALL_DIRS=	.  DictModule EvalModule QuoteModule PlModule
+ALL_DIRS=	.  Plugins \
+            Plugins/DictModule Plugins/EvalModule \
+            Plugins/QuoteModule Plugins/PlModule
 
 # Not used, not built, bit dodgy as we are relying on ALL_DIRS to ignore
 # the subdirs of EXCLUDED_MODS. The following additional srcs will not be built
 EXCLUDED_MODS=	Haddock Hello Cmafihe
-EXCLUDED_SRCS=	$(addsuffix Module.hs,$(EXCLUDED_MODS))
-EXCLUDED_SRCS+= EvalModule/tests.hs PlModule/Test.hs GenModules.hs
+EXCLUDED_SRCS=	$(addprefix Plugins/, $(addsuffix Module.hs,$(EXCLUDED_MODS)))
+EXCLUDED_SRCS+= Plugins/EvalModule/tests.hs Plugins/PlModule/Test.hs GenModules.hs
 
 #
 # Generated at build time
@@ -183,7 +185,8 @@ endif
 # clean rules
 #
 clean:
-	rm -f *.o *.p_o  *.hi *.p_hi */*.o */*.p_o */*.hi */*.p_hi
+	rm -f *.o  */*.o  */*/*.o  *.p_o  */*.p_o  */*/*.p_o 
+	rm -f *.hi */*.hi */*/*.hi *.p_hi */*.p_hi */*/*.p_hi
 	rm -f *~ */*~
 	rm -f lambdabot lambdabot.prof depend depend.bak
 	rm -rf $(CLEANS)
