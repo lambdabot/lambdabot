@@ -12,7 +12,7 @@ Current module tree.
             -+- Shared
             -+- Map
 
-(plugins : dynamca)
+(plugins : dynamic)
         +-- Main
             IRC
             Shared
@@ -32,3 +32,5 @@ Current module tree.
 The static binary only contains hs-plugins.
 
 ------------------------------------------------------------------------
+
+Plugins live in Plugins/ and inhabit the Plugins.* namespace.

@@ -854,7 +854,7 @@ modifyMS f = liftIO $ do
 
 -- | This datatype allows modules to conviently maintain both global 
 --   (i.e. for all clients they're interacting with) and private state.
---   It is implemented on top of readMS/writeMS.
+--   It is implemented on top of readMS\/writeMS.
 -- 
 -- This sipmle implementation is linear in the number of private states used.
 data GlobalPrivate g p = GP {
