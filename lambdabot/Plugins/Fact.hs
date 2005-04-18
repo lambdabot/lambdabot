@@ -6,7 +6,7 @@
 -- License:     lGPL
 --
 -- Quick ugly hack to get factoids in lambdabot.  This is a rewrite of
--- Shaes originial code to use internal module states. jlouis
+-- Shae's originial code to use internal module states. jlouis
 --
 module Plugins.Fact (theModule) where
 
@@ -66,7 +66,7 @@ processCommand factFM fact cmd dat =
 updateFact :: Bool -> M.Map String String -> String -> String -> Fact IRC String
 updateFact guard factFM fact dat =
     if guard && M.member fact factFM
-        then return "Fact is already existing, not updating"
+        then return "Fact already exists, not updating"
         else do writeMS $ M.insert fact dat factFM
                 return "Fact recorded."
 
@@ -74,7 +74,7 @@ alterFact :: (String -> String)
           -> M.Map String String -> String -> Fact IRC String
 alterFact f factFM fact =
     case M.lookup fact factFM of
-        Nothing -> return "Fact must exist alter it"
+        Nothing -> return "A fact must exist to alter it"
         Just x  -> do writeMS $ M.insert fact (f x) factFM
                       return "Fact altered."
 
