@@ -17,10 +17,10 @@ import Text.Regex
 
 import GHC.IOBase (unsafePerformIO)
 
-
 mkVixen :: String -> String -> IO String
 mkVixen phraseBook question = do 
   vixen (mkResponses $ readConfig phraseBook) question
+
 ----------------------------------------------------------------------
 
 -- format

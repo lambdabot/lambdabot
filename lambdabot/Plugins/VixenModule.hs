@@ -18,7 +18,7 @@ theModule :: MODULE
 theModule = MODULE $ VixenModule ()
 
 file :: String
-file = "data/vixenrc"
+file = "State/vixenrc"
 
 instance Module VixenModule (String -> IO String) where
     moduleSticky _ = False
