@@ -6,7 +6,7 @@
 -- License:     lGPL
 --
 -- Quick ugly hack to get factoids in lambdabot.  This is a rewrite of
--- Shae's originial code to use internal module states. jlouis
+-- Shae's original code to use internal module states. jlouis
 --
 module Plugins.Fact (theModule) where
 
