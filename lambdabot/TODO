@@ -17,11 +17,9 @@ Thomas' Todo:
 Todo:
 * FactModule - make "foo?" equal to "lambdabot: @fact foo"
 * fsbot-style factoid parsing, 
-* ircPrivmsg should actually be an input collector of some type, that way output filters could be written
 * real hostmask matching
 * move privileged commands out of @listcommands
 * refactor utility functions out of the modules ex. gets(\s -> lookupFM ...)
-* change @more and 'no self privmsg' to output plugins/filters
 * @fact-to ircnick key for sending factoids via privmsg
 * reformat/refill output to allow for fewer longer lines.
 * multiple servers

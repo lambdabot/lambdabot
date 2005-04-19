@@ -43,28 +43,15 @@ signature_regex
 
 --     through IRC.
 
-{-
-result_regex :: Regex
-result_regex
-    = mkRegexWithOpts
-      "^\\*?[A-Z][_a-zA-Z0-9]*(\\*?[A-Z][_a-zA-Z0-9]*)*> (.*)" True True
--}
-
 --
 --     To get any signature line from the hugs output, split it into lines,
 --     match each against the regex, and take the last substring match from
---     each successfull match.
+--     each successful match.
 --
 extract_signatures :: String -> [String]
 extract_signatures output
-        = map expandTab $ map last.mapMaybe (matchRegex signature_regex) $
-                 (reverse $ tail $ reverse $ drop 7 $ lines output)
-
-{-
-extract_result :: String -> [String]
-extract_result output
-        = head (map last.mapMaybe (matchRegex result_regex) $ (lines output)) : []
--}
+        = map expandTab . map last . mapMaybe (matchRegex signature_regex) .
+                 reverse . tail . reverse . drop 7 . lines $ output
 
 --
 --     With this the command handler can be easily defined using popen:
@@ -74,20 +61,8 @@ query_ghci src cmd expr =
        do
        (output, _, _) <- liftIO $ popen "ghci-6.4" ["-fglasgow-exts"]
 			                  (Just (command cmd expr))
-       mapM_ (ircPrivmsg src) $
-                let ls = extract_signatures output
-                in if null ls then ["bzzt"] else ls
-
-{-
---
---     With this the command handler can be easily defined using popen:
---
-run_ghci :: String -> String -> IRC ()
-run_ghci src expr =
-       do
-       (output, _, _) <- liftIO $ popen "ghci" [] (Just expr)
-       mapM_ (ircPrivmsg src) (extract_result output)
--}
+       let ls = extract_signatures output
+       ircPrivmsg src . unlines $ if null ls then ["bzzt"] else ls
 
 --
 --     And thus the plugin:
