@@ -58,49 +58,52 @@ instance Module SeenModule SeenState where
 
     process m msg target cmd rest =
       do seenFM <- readMS
-	 now <- liftIO getClockTime
+         now <- liftIO getClockTime
          let myname = lowerCaseString (name config)
-             nick = firstWord rest
+             nick' = firstWord rest
+             you   = nick' == ircNick msg
+             nick  = if you then "you" else nick'
              lcnick = lowerCaseString nick
-	     ircMessage = ircPrivmsg target . concat
-	     clockDifference = timeDiffPretty . diffClockTimes now
+             ircMessage = ircPrivmsg target . concat
+             clockDifference = timeDiffPretty . diffClockTimes now
              nickPresent mct cs =
                do ircPrivmsg target $
-                     concat [nick, " is in ", listToStr "and" cs, ".",
-			     case mct of
-				Nothing -> concat
-				            [" I don't know when ",
-					     nick,
-					     " last spoke."]
-			        Just ct -> concat
-			                    [" Last spoke ",
-					     let when' = clockDifference ct
-					     in if null when'
-					          then "just now."
-					          else when' ++ "ago."]]
+                     concat [if you then "You are" else nick ++ " is in ",
+                             listToStr "and" cs, ".",
+                             case mct of
+                                Nothing -> concat
+                                            [" I don't know when ",
+                                             nick, " last spoke."]
+                                Just ct -> concat
+                                            [" Last spoke ",
+                                             let when' = clockDifference ct
+                                             in if null when'
+                                                  then "just now."
+                                                  else when' ++ "ago."]]
              nickNotPresent ct chan =
-	       do ircMessage ["I saw ", nick, " leaving ", chan, " ",
-			      clockDifference ct, "ago."]
+               do ircMessage ["I saw ", nick, " leaving ", chan, " ",
+                              clockDifference ct, "ago."]
              nickWasPresent ct chan =
-	       do ircMessage ["Last time I saw ", nick, "was when I left ",
-			      chan , " ", clockDifference ct, "ago."]
+               do ircMessage ["Last time I saw ", nick, "was when I left ",
+                              chan , " ", clockDifference ct, "ago."]
              nickIsNew newnick =
                do let findFunc str =
                         case M.lookup (lowerCaseString str) seenFM of
-	                  Just (NewNick str') -> findFunc str'
-	                  Just _              -> str
+                          Just (NewNick str') -> findFunc str'
+                          Just _              -> str
                           Nothing             -> error "SeenModule.nickIsNew: Nothing"
-		      us = findFunc newnick
-                  ircMessage [nick, " has changed nick to ", us, "."]
+                      us = findFunc newnick
+                  ircMessage [if you then "You have" else nick++"has", 
+                              " changed nick to ", us, "."]
                   process m msg target cmd us
          if lcnick == myname
-            then ircPrivmsg target "Yes, I'm here"
+            then ircPrivmsg target "Yes, I'm here."
             else case M.lookup lcnick seenFM of
                   Just (Present mct cs) -> nickPresent mct cs
                   Just (NotPresent ct chan) -> nickNotPresent ct chan
                   Just (WasPresent ct chan) -> nickWasPresent ct chan
                   Just (NewNick newnick) -> nickIsNew newnick
-                  _ -> ircPrivmsg target $ "I haven't seen " ++ nick
+                  _ -> ircPrivmsg target $ "I haven't seen " ++ nick ++ "."
 
 -- | Callback for when somebody joins. If it is not the bot that joins, record
 --   that we have a new user in our state tree and that we have never seen the
@@ -127,12 +130,12 @@ partCB msg = withSeenFM msg $ \fm ct myname nick ->
               Just (Present mct xs) ->
                 case xs \\ (ircChans msg) of
                   [] -> Left $ M.insert nick
-			                (NotPresent ct (listToStr "and" xs))
-					fm
+                                        (NotPresent ct (listToStr "and" xs))
+                                        fm
                   ys -> Left $ M.insert nick
                                         (Present mct ys)
-					fm
-	      _ -> Right "SeenModule> someone who isn't known parted"
+                                        fm
+              _ -> Right "SeenModule> someone who isn't known parted"
 
 quitCB :: IRCMessage -> Seen IRC () -- when somebody quits
 quitCB msg = withSeenFM msg $ \fm ct _myname nick ->
@@ -176,11 +179,11 @@ unUserMode nick = dropWhile (`elem` "@+") nick
 
 withSeenFM :: IRCMessage
               -> (SeenState -> ClockTime -> String -> Nick
-	          -> Either SeenState String)
-	      -> Seen IRC ()
+                  -> Either SeenState String)
+              -> Seen IRC ()
 withSeenFM msg f = do let nick = (lowerCaseString . unUserMode)
                                          (ircNick msg)
-		      state <- readMS
+                      state <- readMS
                       ct <- liftIO getClockTime
                       let myname = (lowerCaseString . name) config
                       case f state ct myname nick of
