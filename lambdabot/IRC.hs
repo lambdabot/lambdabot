@@ -18,7 +18,7 @@ module IRC (
         -- ** Functions to access the module's state
         readMS, writeMS, modifyMS,
 
-        -- ** Utitlity functions for module's that need state for each target.
+        -- ** Utility functions for modules that need state for each target.
         GlobalPrivate(global), mkGlobalPrivate, writePS, readPS, writeGS, readGS,
 
         ircPrivmsg,
@@ -552,9 +552,10 @@ runIrc' m = do
                                        throwError (SignalCaught s))
 
         exitModules = do
-          mods <- gets $ M.toList . ircModules
-          (`mapM_` mods) $ \(name, ModuleRef mod ref) -> 
+          mods <- gets $ M.elems . ircModules
+          (`mapM_` mods) $ \(ModuleRef mod ref name) -> 
             let ?ref = ref; ?name = name in writeGlobalState mod name
+
                                     
 
 readerLoop :: ThreadId -> Chan IRCMessage -> Chan IRCMessage -> Handle -> IO ()
@@ -726,7 +727,7 @@ class Module m s | m -> s where
 -- | An existential type holding a module.
 data MODULE = forall m s. (Module m s) => MODULE m
 
-data ModuleRef = forall m s. (Module m s) => ModuleRef m (IORef s)
+data ModuleRef = forall m s. (Module m s) => ModuleRef m (IORef s) String
 
 toFilename :: String -> String
 toFilename = ("State/"++)
@@ -756,25 +757,23 @@ readGlobalState mod name = case moduleSerialize mod of
 -- | Register a module in the irc state
 --
 ircInstallModule :: MODULE -> String -> LB ()
-ircInstallModule (MODULE modn) modname = do  
-    s <- get
-    savedState <- liftIO $ readGlobalState modn modname
-    state      <- maybe (moduleDefState modn) return savedState
+ircInstallModule (MODULE mod) modname = do  
+    savedState <- liftIO $ readGlobalState mod modname
+    state      <- maybe (moduleDefState mod) return savedState
     ref        <- liftIO $ newIORef state
-    let modmap = ircModules s
-    let mod = ModuleRef modn ref
-    put (s { ircModules = M.insert modname mod modmap })
-    ircLoadModule modname
 
-  where
-    ircLoadModule :: String -> LB ()
-    ircLoadModule modnm = withModule ircModules modnm (return ()) (\m -> do
-        cmds <- moduleCmds m
-        s    <- get
-        let cmdmap = ircCommands s
-            mod = ModuleRef m ?ref
-        put (s { ircCommands = M.addList [ (cmd,mod) | cmd <- cmds ] cmdmap })
-        moduleInit m)
+    let modref = ModuleRef mod ref modname
+    let ?ref = ref; ?name = modname
+    moduleInit mod
+    cmds <- moduleCmds mod
+
+    s <- get
+    let modmap = ircModules s
+    let cmdmap = ircCommands s
+    put $ s {
+      ircModules = M.insert modname modref modmap,
+      ircCommands = M.addList [ (cmd,modref) | cmd <- cmds ] cmdmap                
+    }
 
 --
 -- | Unregister a module's entry in the irc state
@@ -856,7 +855,7 @@ modifyMS f = liftIO $ do
 --   (i.e. for all clients they're interacting with) and private state.
 --   It is implemented on top of readMS\/writeMS.
 -- 
--- This sipmle implementation is linear in the number of private states used.
+-- This simple implementation is linear in the number of private states used.
 data GlobalPrivate g p = GP {
   global :: !g,
   private :: ![(String,p)]
@@ -907,9 +906,9 @@ readGS = global `liftM` readMS
 -- action for the case that the lookup fails, action if the lookup
 -- succeeds.
 --
-withModule :: MonadLB m 
-  => (IRCRWState -> Map String ModuleRef)
-  -> String
+withModule :: (Ord k, MonadLB m)
+  => (IRCRWState -> Map k ModuleRef)
+  -> k
   -> m a 
   -> (forall mod s. Module mod s => mod -> ModuleT s m a)
   -> m a
@@ -917,7 +916,7 @@ withModule :: MonadLB m
 withModule dict modname def f = do
     maybemod <- gets (M.lookup modname . dict)
     case maybemod of
-      Just (ModuleRef m ref) -> let ?ref = ref; ?name = modname in f m
+      Just (ModuleRef m ref name) -> let ?ref = ref; ?name = name in f m
       _                      -> def
 
 
