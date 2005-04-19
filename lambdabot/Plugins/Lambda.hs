@@ -11,7 +11,7 @@ import qualified Map as M
 
 import Data.Dynamic                     (Dynamic)
 import Data.List                        (groupBy,sort,isPrefixOf)
-import Data.Maybe                       (catMaybes)
+import Data.Maybe                       (mapMaybe)
 
 -- TODO: clear continuation IORef after -every- @eval?
 
@@ -63,7 +63,8 @@ instance Module EvalModule EvalState where
             "eval" -> do 
                  let r_or_s = evaluate rest env fuel
                  case r_or_s of
-                    Right s -> ircPrivmsg target s
+                    Right s -> do writeRes Nothing
+                                  ircPrivmsg target s
                     Left nr -> do writeRes $ Just nr
                                   ircPrivmsg target outOfFuelMsg
 
@@ -131,18 +132,15 @@ loadDefinitions s = do
   fuel':rest <- return $ lines s
   fuel <- readM fuel'
   -- rest is a list of paris of ids and rhs defins
-  let rests = catMaybes $ map readM rest
+  let rests = mapMaybe readM rest
   -- parse the lot. :/
-  let the_d_FM = M.fromList $! rests
-      (the_e_FM :: Environment) = 
-        M.mapWithKey (\_ (Right v) -> v) $
-           M.filterWithKey (const $ either (const False) (flip seq True)) $
-               M.mapWithKey (const $ define) the_d_FM
+  let dMap = M.fromList $! rests
+      eMap = M.mapMaybe ((const Nothing `either` \x -> Just $! x) . define) $ dMap
 
-      keys = M.keys the_e_FM
+      keys = M.keys eMap
   
-  fuel `seq` the_e_FM `seq` the_d_FM `seq` return
+  fuel `seq` eMap `seq` dMap `seq` return
                 (fuel,
-                 the_e_FM,
-                 M.filterWithKey (\k _ -> k `elem` keys) the_d_FM) 
+                 eMap,
+                 M.filterWithKey (\k _ -> k `elem` keys) dMap) 
 

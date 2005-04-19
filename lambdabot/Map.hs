@@ -33,9 +33,12 @@ module Map (
         filterWithKey,
         foldWithKey,
 #endif
+        mapMaybe,
   ) where
 
-import Prelude hiding (lookup)
+import Prelude hiding (lookup, filter)
+import Data.Maybe (fromJust, isJust)
+
 
 #if __GLASGOW_HASKELL__ >= 604
 import Data.Map
@@ -126,3 +129,7 @@ foldWithKey :: (k -> a -> b -> b) -> b -> Map k a -> b
 foldWithKey = FM.foldFM
 
 #endif
+
+mapMaybe :: Ord k => (a -> Maybe b) -> Map k a -> Map k b
+mapMaybe f = fmap fromJust . filter isJust . fmap f
+
