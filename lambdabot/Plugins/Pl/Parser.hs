@@ -189,13 +189,14 @@ endsIn p end = do
 input :: Parser TopLevel
 input = do
   spaces
-  lhs <- try (fmap Just $ liftM2 (,) atomic (pattern `endsIn` symbol "=")) 
-         <|> return Nothing
-  e <- myParser False
+  tl <- try (do 
+      f    <- atomic
+      args <- pattern `endsIn` symbol "="
+      e    <- myParser False
+      return $ TLD True $ Define f (foldr Lambda e args)
+    ) <|> TLE `fmap` myParser False
   eof
-  return $ case lhs of
-    Nothing       -> TLE e
-    Just (f,args) -> TLD True $ Define f (foldr Lambda e args)
+  return tl
 
 parsePF :: String -> Either String TopLevel
 parsePF inp = case runParser input () "" inp of

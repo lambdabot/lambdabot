@@ -117,6 +117,7 @@ unitTest inp out = TestCase $ do
 
 unitTests :: Test
 unitTests = TestList [
+  unitTest "f =<< return x" ["f x"],
   unitTest "(=<<) id" ["join"],
   unitTest "zipWith (,)" ["zip"],
   unitTest "map fst . zip [1..]" ["zipWith const [1..]"],
@@ -139,7 +140,7 @@ unitTests = TestList [
 --  unitTest "let (x,y) = (1,2) in y" ["2"],
   unitTest "map (+1) [1,2,3]" ["[2, 3, 4]"],
   unitTest "snd . (,) (\\x -> x*x)" ["id"],
-  unitTest "x + (y - (z + x))" ["y - z"],
+  unitTest "x + (y - (z + x))" ["y - z"], -- We can't reasonably expect that.
   unitTest "return x >>= f" ["f x"],
   unitTest "m >>= return" ["m"],
   unitTest "m >>= \\x -> f x >>= g" ["m >>= f >>= g", "g =<< f =<< m"],
