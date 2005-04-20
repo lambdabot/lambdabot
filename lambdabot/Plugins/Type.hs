@@ -25,7 +25,7 @@ import PosixCompat          (popen)
 
 import Maybe (mapMaybe)
 import Control.Monad.Trans (liftIO)
-import Text.Regex          (Regex, mkRegexWithOpts, matchRegex)
+import Text.Regex          (Regex, mkRegexWithOpts, matchRegex, subRegex)
 
 --     In accordance with the KISS principle, the plan is to delegate all
 --     the hard work! To get the type of foo, pipe
@@ -39,6 +39,14 @@ signature_regex :: Regex
 signature_regex
     = mkRegexWithOpts
       "^(\\*?[A-Z][_a-zA-Z0-9]*(\\*?[A-Z][_a-zA-Z0-9]*)*>)? *(.*[	-=:].*)"
+      True True
+
+--     regex to strip off comments
+
+comments_regex :: Regex
+comments_regex
+    = mkRegexWithOpts
+      "(\\{-[^-]*-+([^\\}-][^-]*-+)*\\}|--.*$)"
       True True
 
 --     through IRC.
@@ -60,7 +68,7 @@ query_ghci :: String -> String -> String -> IRC ()
 query_ghci src cmd expr =
        do
        (output, _, _) <- liftIO $ popen "ghci-6.4" ["-fglasgow-exts"]
-			                  (Just (command cmd expr))
+			                  (Just (command cmd (subRegex comments_regex expr "")))
        let ls = extract_signatures output
        ircPrivmsg src . unlines $ if null ls then ["bzzt"] else ls
 
