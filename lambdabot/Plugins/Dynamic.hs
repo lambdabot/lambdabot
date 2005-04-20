@@ -30,39 +30,47 @@ instance Module DynamicModule () where
         liftIO $ putStrLn " done."
                                 
     process _ msg src "dynamic-load" rest =
-        checkPrivs msg src $ load rest >> ircPrivmsg src "module loaded"
+        checkPrivs msg src $ loadIRC rest >> ircPrivmsg src "module loaded"
 
     process _ msg src "dynamic-unload" rest =
         checkPrivs msg src $ unload rest >> ircPrivmsg src "module unloaded"
 
     process _ msg src "dynamic-reload" rest = do
         checkPrivs msg src $ do
-            unload rest ; load rest ; ircPrivmsg src "module reloaded"
+            unload rest ; loadIRC rest ; ircPrivmsg src "module reloaded"
 
     process _ _ _ _ _ = error "DynamicModule: Invalid command"
+
+
+loadIRC :: String -> IRC ()
+loadIRC nm = do
+  success <- liftLB $ load nm
+  when success $ withModule ircModules nm (return ()) moduleDynInit
 
 --
 -- | Load value "theModule" from each plugin, given simple name of a
 -- plugin, i.e. "google"
 --
-load :: (MonadLB m) => String -> m ()
+load :: String -> LB Bool
 load nm = do
         let file = getModuleFile nm
         catchError
-            (do (_,md) <- liftLB $ ircLoad file "theModule"
-                liftLB $ ircInstallModule md nm) -- need to put mod in state
+            (do (_,md) <- ircLoad file "theModule"
+                ircInstallModule md nm
+                return True) -- need to put mod in state
             (\_ -> do
-                liftLB $ ircUnload file
-                liftIO $ putStrLn $ "\nCouldn't load "++nm++", ignoring")
+                ircUnload file
+                liftIO $ putStrLn $ "\nCouldn't load "++nm++", ignoring"
+                return False)
 
 --
 -- | Unload a module, e.g. "vixen"
 --
 unload :: (MonadLB m) => [Char] -> m ()
-unload nm = do
+unload nm = liftLB $ do
         unless (nm `elem` plugins) $ error "unknown or static module"
-        liftLB $ ircUnloadModule nm
-        liftLB $ ircUnload (getModuleFile nm)
+        ircUnloadModule nm
+        ircUnload (getModuleFile nm)
 
 --
 -- | Convert simple plugin name to a valid plugin. Could sanity check.
