@@ -16,9 +16,7 @@ infixr 0 `deepSeq`, $!!
 ($!!) :: (DeepSeq a) => (a -> b) -> a -> b
 f $!! x = x `deepSeq` f x
 
-#ifndef __HADDOCK__
-instance  DeepSeq ()  where
-#endif
+instance  DeepSeq ()
 
 instance  (DeepSeq a) => DeepSeq [a]  where
   deepSeq [] y = y
@@ -65,10 +63,8 @@ instance  (DeepSeq a, DeepSeq b, DeepSeq c, DeepSeq d,
 				    $ deepSeq f
 				    $ deepSeq g y
 
-#ifndef __HADDOCK__
-instance  DeepSeq Bool  where
-instance  DeepSeq Char  where
-#endif
+instance  DeepSeq Bool
+instance  DeepSeq Char
 
 instance  (DeepSeq a) => DeepSeq (Maybe a)  where
   deepSeq Nothing y = y
@@ -78,11 +74,9 @@ instance  (DeepSeq a, DeepSeq b) => DeepSeq (Either a b)  where
   deepSeq (Left a) y = deepSeq a y
   deepSeq (Right b) y = deepSeq b y
 
-#ifndef __HADDOCK__
-instance  DeepSeq Ordering  where
+instance  DeepSeq Ordering
 
-instance  DeepSeq Integer  where
-instance  DeepSeq Int  where
-instance  DeepSeq Float  where
-instance  DeepSeq Double  where
-#endif
+instance  DeepSeq Integer
+instance  DeepSeq Int
+instance  DeepSeq Float
+instance  DeepSeq Double

@@ -225,6 +225,7 @@ boundedStep e = red (step e) where
 step :: (?first :: Bool) => Expr -> Set Expr
 step e = msumO $ (\r -> rewrite r e) `map` rules
  
+#ifndef __HADDOCK__
 rewrite :: (?first :: Bool, OrdMonadPlus m) => RewriteRule -> Expr -> m Expr
 rewrite rl e :: m a = case rl of
     Up r1 r2     -> let e'  :: m a = cut $ rewrite r1 e
@@ -262,4 +263,4 @@ rew r@(Up     {}) e = rewrite r e
 rew r@(Opt    {}) e = rewrite r e
 rew r@(If     {}) e = rewrite r e
 rew r@(Hard   {}) e = rewrite r e
-
+#endif

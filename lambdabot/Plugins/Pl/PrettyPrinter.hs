@@ -1,6 +1,7 @@
 module Plugins.Pl.PrettyPrinter (Expr) where 
 -- Dummy export to make ghc -Wall happy
 
+import Util (readM)
 import Plugins.Pl.Common
 
 instance Show Decl where

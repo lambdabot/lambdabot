@@ -143,8 +143,8 @@ ifneq "$(HADDOCK)" ""
 
 docs: .doc-stamp
 
-# break cyclic imports, and ones with tricky syntax extensions
-NO_DOCS=Modules.hs Plugins/Pl/Transform.hs
+# break cyclic imports
+NO_DOCS=Modules.hs
 
 HS_PPS= $(addsuffix .raw-hs, \
             $(filter-out $(basename $(NO_DOCS)), \

@@ -5,14 +5,12 @@ module Plugins.Pl.Common (
         operators, opchars, reservedOps, lookupOp, lookupFix, minPrec, maxPrec,
         comp, flip', id', const', scomb, cons, nil, fix', if',
         makeList, getList,
-        trace',
-        readM, Assoc(..),
+        Assoc(..),
         module Data.Maybe,
         module Control.Arrow,
         module Data.List,
         module Control.Monad,
-        module GHC.Base,
-        module Debug.Trace -- what the heck!
+        module GHC.Base
     ) where
 
 import Data.Maybe (isJust, fromJust)
@@ -25,7 +23,6 @@ import Control.Arrow (first, second, (***), (&&&), (|||), (+++))
 import Text.ParserCombinators.Parsec.Expr (Assoc(..))
 
 import GHC.Base (assert)
-import Debug.Trace (trace)
 
 
 -- The rewrite rules can be found at the end of the file Rules.hs
@@ -139,14 +136,3 @@ lookupFix :: String -> (Assoc, Int)
 lookupFix str = case lookupOp $ str of
   Nothing -> (AssocLeft, 9 + shift)
   Just x  -> x
-
--- This should be in the libs
-readM :: (Monad m, Read a) => String -> m a
-readM s       =  case [x | (x,t) <- reads s, ("","") <- lex t] of
-                      [x] -> return x
-                      []  -> fail "Prelude.read: no parse"
-                      _   -> fail "Prelude.read: ambiguous parse"
-
--- For Debugging
-trace' :: Show a => a -> a
-trace' x = trace (show x) x
