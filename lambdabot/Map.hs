@@ -34,6 +34,7 @@ module Map (
         foldWithKey,
 #endif
         mapMaybe,
+        insertUpd,
   ) where
 
 import Prelude hiding (lookup, filter)
@@ -68,6 +69,10 @@ insert :: Ord k => k -> a -> Map k a -> Map k a
 insert = \k e m -> FM.addToFM m k e
 
 -- | This function is pure evil. Avoid it if possible.
+--   Otherwise, always remember: The first argument of @f@ is the NEW value 
+--   (i.e we already know it), the second argument is the OLD value!
+--
+--   Grrrrrrrr.
 insertWith :: Ord k => (a -> a -> a) -> k -> a -> Map k a -> Map k a
 insertWith f k e m = FM.addToFM_C (flip f) m k e
 
@@ -130,6 +135,11 @@ foldWithKey = FM.foldFM
 
 #endif
 
+-- | Data.Maybe.mapMaybe for Maps
 mapMaybe :: Ord k => (a -> Maybe b) -> Map k a -> Map k b
 mapMaybe f = fmap fromJust . filter isJust . fmap f
 
+-- | This makes way more sense than @insertWith@ because we don't need to
+--   remember the order of arguments of @f@.
+insertUpd :: Ord k => (a -> a) -> k -> a -> Map k a -> Map k a
+insertUpd f = insertWith (\_ -> f)
