@@ -7,13 +7,13 @@ import Plugins.Pl.Rules
 import Plugins.Pl.PrettyPrinter
 
 import qualified Map as M
-import qualified Set as S
 
 import Data.Graph (stronglyConnComp, flattenSCC, flattenSCCs)
+import qualified Data.Set as S
 import Control.Monad.State
 
-
-type Set = S.Set
+nub' :: Ord a => [a] -> [a]
+nub' = S.toList . S.fromList
 
 occursP :: String -> Pattern -> Bool
 occursP v (PVar v') = v == v'
@@ -113,59 +113,12 @@ transform' (Lambda (PVar v) e) = transform' $ getRidOfV e where
       fr1 = v `isFreeIn` e1
       fr2 = v `isFreeIn` e2
 
-class OrdMonadPlus m where
-  cut     ::          m a -> m a
-  isMZero ::          m a -> Bool
-  nubM    :: Ord a => m a -> m a
-  returnO ::          a -> m a
-  extO    :: Ord b => (a -> m b) -> (m a -> m b)
-  fmapO   :: Ord b => (a -> b) -> (m a -> m b)
-  mplusO  :: Ord a => m a -> m a -> m a
-  mzeroO  ::          m a
-  msumO   :: Ord a => [m a] -> m a
-#if __GLASGOW_HASKELL__ > 602
-  mapMono :: (a -> b) -> m a -> m b
-#else 
-  mapMono :: Ord b => (a -> b) -> m a -> m b
-#endif
+cut :: [a] -> [a]
+cut = take 1
 
-instance OrdMonadPlus S.Set where
-  {-# INLINE cut #-}
-  cut x = case S.elems x of
-    []    -> S.empty
-    (y:_) -> S.singleton y
-  isMZero = S.null
-  nubM = id
-  returnO = S.singleton
-  {-# INLINE extO #-}
-  extO f x = S.unions (f `map` S.elems x)
-  fmapO f x = S.fromList (f `map` S.elems x)
-  mzeroO = S.empty
-  mplusO = S.union
-  msumO = S.unions
-#if __GLASGOW_HASKELL__ > 602
-  mapMono = S.mapMonotonic
-#else 
-  {-# INLINE mapMono #-}
-  mapMono f x = S.fromList (f `map` S.elems x)
-#endif
-
-{-
-instance OrdMonadPlus [] where
-  cut = take 1
-  isMZero = null
-  nubM = nub
-  returnO = return
-  extO = (=<<)
-  fmapO = fmap
-  mzeroO = mzero
-  mplusO = mplus
-  msumO  = msum
--}
-
-toOrdMonadPlus :: OrdMonadPlus m => Maybe a -> m a
-toOrdMonadPlus Nothing = mzeroO
-toOrdMonadPlus (Just x)= returnO x
+toMonadPlus :: MonadPlus m => Maybe a -> m a
+toMonadPlus Nothing = mzero
+toMonadPlus (Just x)= return x
 
 -- Missing in the libs
 comparing :: (Ord b) => (a -> b) -> (a -> a -> Ordering)
@@ -205,62 +158,60 @@ optimize e = result where
   simpleStep :: (Size, Expr) -> Maybe (Size, Expr)
   simpleStep t = do 
     let chn = let ?first = True in boundedStep (snd t)
-        chnn = let ?first = False in S.unions . map boundedStep $ S.elems chn
-        new = minimumBy (comparing fst) . map (sizeExpr' &&& id) . S.elems $ 
-                (snd t `S.insert` chn) `S.union` chnn
+        chnn = let ?first = False in boundedStep =<< chn
+        new = minimumBy (comparing fst) . map (sizeExpr' &&& id) $ 
+                snd t: chn ++ chnn
     guard $ fst new < fst t
     return new
 
-boundedStep :: (?first :: Bool) => Expr -> Set Expr
+boundedStep :: (?first :: Bool) => Expr -> [Expr]
 boundedStep e = red (step e) where
   mx = 32
   mx' = mx - 1
 
   red xs | len <= mx = xs
 --         | trace (show len) False = bt
-         | otherwise = S.fromList 
-             [S.elems xs !! ((j*(len-1))`div`mx') | j <- [0..mx']]
-    where len = S.size xs
+         | otherwise = [xs !! ((j*(len-1))`div`mx') | j <- [0..mx']]
+    where len = length xs
 
-step :: (?first :: Bool) => Expr -> Set Expr
-step e = msumO $ (\r -> rewrite r e) `map` rules
+step :: (?first :: Bool) => Expr -> [Expr]
+step e = nub' $ (\r -> rewrite r e) =<< rules
  
-#ifndef __HADDOCK__
-rewrite :: (?first :: Bool, OrdMonadPlus m) => RewriteRule -> Expr -> m Expr
-rewrite rl e :: m a = case rl of
-    Up r1 r2     -> let e'  :: m a = cut $ rewrite r1 e
-                        e'' :: m a = rewrite r2 `extO` e'
-                    in if isMZero e'' then e' else e''
-    OrElse r1 r2 -> let e'  :: m a = rewrite r1 e
-                    in if isMZero e' then rewrite r2 e else e' 
-    Then r1 r2   -> rewrite r2 `extO` nubM (rewrite r1 e)
-    Opt  r       -> returnO e `mplusO` rewrite r e
-    If   p  r    -> if isMZero (rewrite p e :: m a) then mzeroO else rewrite r e
-    Hard r       -> if ?first then rewrite r e else mzeroO
+rewrite :: (?first :: Bool) => RewriteRule -> Expr -> [Expr]
+rewrite rl e = case rl of
+    Up r1 r2     -> let e'  = cut $ rewrite r1 e
+                        e'' = rewrite r2 =<< e'
+                    in if null e'' then e' else e''
+    OrElse r1 r2 -> let e'  = rewrite r1 e
+                    in if null e' then rewrite r2 e else e' 
+    Then r1 r2   -> rewrite r2 =<< nub' (rewrite r1 e)
+    Opt  r       -> e: rewrite r e
+    If   p  r    -> if null (rewrite p e) then mzero else rewrite r e
+    Hard r       -> if ?first then rewrite r e else mzero
     _            -> rewDeep rl e
     
   where -- rew = ...; rewDeep = ...
 
-rewDeep :: (?first :: Bool, OrdMonadPlus m) => RewriteRule -> Expr -> m Expr
-rewDeep rule e = rew rule e `mplusO` case e of
-    Var _ _    -> mzeroO
+rewDeep :: (?first :: Bool) => RewriteRule -> Expr -> [Expr]
+rewDeep rule e = rew rule e `mplus` case e of
+    Var _ _    -> mzero
     Lambda _ _ -> error "lambda: optimizer only works for closed expressions"
     Let _ _    -> error "let: optimizer only works for closed expressions"
-    App e1 e2  -> ((`App` e2) `mapMono` rewDeep rule e1) `mplusO` 
-                  ((e1 `App`) `mapMono` rewDeep rule e2)
+    App e1 e2  -> ((`App` e2) `map` rewDeep rule e1) `mplus`
+                  ((e1 `App`) `map` rewDeep rule e2)
 
-rew :: (?first :: Bool, OrdMonadPlus m) => RewriteRule -> Expr -> m Expr
-rew (RR r1 r2) e = toOrdMonadPlus $ fire r1 r2 e 
-rew (CRR r) e = toOrdMonadPlus $ r e
-rew (Or rs) e = msumO $ map (\x -> rew x e) rs
-rew (Down r1 r2) e :: m a 
-  = if isMZero e'' then e' else e'' where
-    e'  :: m a = cut $ rew r1 e
-    e'' :: m a = rewDeep (r2) `extO` e'
+rew :: (?first :: Bool) => RewriteRule -> Expr -> [Expr]
+rew (RR r1 r2) e = toMonadPlus $ fire r1 r2 e 
+rew (CRR r) e = toMonadPlus $ r e
+rew (Or rs) e = (\x -> rew x e) =<< rs
+rew (Down r1 r2) e
+  = if null e'' then e' else e'' where
+    e'  = cut $ rew r1 e
+    e'' = rewDeep r2 =<< e'
 rew r@(Then   {}) e = rewrite r e
 rew r@(OrElse {}) e = rewrite r e
 rew r@(Up     {}) e = rewrite r e
 rew r@(Opt    {}) e = rewrite r e
 rew r@(If     {}) e = rewrite r e
 rew r@(Hard   {}) e = rewrite r e
-#endif
+
