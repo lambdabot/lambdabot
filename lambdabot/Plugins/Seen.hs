@@ -4,15 +4,41 @@
 module Plugins.Seen (theModule) where
 
 import IRC
-import Util
+import Util (mapSerializer, lowerCaseString, firstWord, listToStr, debugStrLn)
 import Config
 import qualified Map as M
 
 import Data.List ((\\),nub)
 
 import Control.Monad.Trans (liftIO, MonadIO)
+import Control.Arrow (first)
 
-import System.Time
+import System.Time (TimeDiff(..), noTimeDiff)
+import qualified System.Time as T 
+  (ClockTime(..), getClockTime, diffClockTimes, addToClockTime)
+
+------------------------------------------------------------------------
+
+------- Time compatibility layer (maybe move to its own module?) -------
+
+-- Wrapping ClockTime (which doesn't provide a Read instance!) seems 
+-- easier than talking care of the serialization of UserStatus ourselves.
+newtype ClockTime = ClockTime (T.ClockTime)
+
+instance Show ClockTime where
+  showsPrec p (ClockTime (T.TOD x y)) = showsPrec p (x,y)
+
+instance Read ClockTime where
+  readsPrec p = map (first $ ClockTime . uncurry T.TOD) . readsPrec p
+
+getClockTime :: IO ClockTime
+getClockTime = ClockTime `fmap` T.getClockTime
+
+diffClockTimes :: ClockTime -> ClockTime -> TimeDiff
+diffClockTimes (ClockTime ct1) (ClockTime ct2) = T.diffClockTimes ct1 ct2
+
+addToClockTime :: TimeDiff -> ClockTime -> ClockTime
+addToClockTime td (ClockTime ct) = ClockTime $ T.addToClockTime td ct
 
 ------------------------------------------------------------------------
 
@@ -26,20 +52,25 @@ type Channel = String
 -- | The type of nicknames
 type Nick = String
 
+-- | We last heard the user speak at ClockTime; since then we have missed
+--   TimeDiff of him because we were absent.
+type SpokeLast = Maybe (ClockTime, TimeDiff)
+
 -- | 'UserStatus' keeps track of the status of a given Nick name.
 data UserStatus
-        = Present (Maybe ClockTime) [Channel] -- ^ Records when the nick last
-                                              --   spoke and that the nick is
-                                              --   currently in [Channel]
+        = Present SpokeLast [Channel]  -- ^ Records when the nick last
+                                       --   spoke and that the nick is
+                                       --   currently in [Channel]
         | NotPresent ClockTime Channel -- ^ The nick is not present and was
                                        --   last seen at ClockTime in Channel
-        | WasPresent ClockTime Channel -- ^ The bot parted a channel where the
-                                       --   user was. The Clocktime records the
-                                       --   the time and Channel the channel
-                                       --   this happened in.
+        | WasPresent ClockTime SpokeLast Channel -- ^ The bot parted a channel 
+                                                 -- where the user was. The 
+                                                 -- Clocktime records the time 
+                                                 -- and Channel the channel
+                                                 -- this happened in.
         | NewNick Nick                 -- ^ The user changed nick to something
                                        --   new.
-    deriving Show
+    deriving (Show, Read)
 
 type SeenState = M.Map Nick UserStatus
 type Seen m a = ModuleT SeenState m a
@@ -48,6 +79,7 @@ instance Module SeenModule SeenState where
     moduleHelp _ _      = return "Report if a user has been seen by the bot"
     moduleCmds _        = return ["seen"]
     moduleDefState _    = return M.empty
+    moduleSerialize _   = Just mapSerializer
     moduleInit _
       = do ircSignalConnect "JOIN"    joinCB
            ircSignalConnect "PART"    partCB
@@ -66,26 +98,33 @@ instance Module SeenModule SeenState where
              lcnick = lowerCaseString nick
              ircMessage = ircPrivmsg target . concat
              clockDifference = timeDiffPretty . diffClockTimes now
+             -- I guess the only way out of this spagetty hell are 
+             -- printf-style responses.
              nickPresent mct cs =
-               do ircPrivmsg target $
-                     concat [if you then "You are" else nick ++ " is in ",
-                             listToStr "and" cs, ".",
-                             case mct of
-                                Nothing -> concat
-                                            [" I don't know when ",
-                                             nick, " last spoke."]
-                                Just ct -> concat
-                                            [" Last spoke ",
-                                             let when' = clockDifference ct
-                                             in if null when'
-                                                  then "just now."
-                                                  else when' ++ "ago."]]
+               ircPrivmsg target $ concat [
+                 if you then "You are" else nick ++ " is in ", 
+                 listToStr "and" cs, ".",
+                 case mct of
+                   Nothing -> 
+                     concat [" I don't know when ", nick, " last spoke."]
+                   Just (ct,missed)
+                     |  missed == noTimeDiff
+                     -> concat [" Last spoke ", lastSpoke, "."]
+                     |  otherwise
+                     -> concat [" I last heard ", nick, " speak ", when',
+                                " but I have missed ", timeDiffPretty missed, 
+                                " since then."]
+                     where 
+                       lastSpoke | "" <- when' = "just now"
+                                 | otherwise   = when' ++ "ago"
+                       when' = clockDifference ct
+               ]
              nickNotPresent ct chan =
-               do ircMessage ["I saw ", nick, " leaving ", chan, " ",
-                              clockDifference ct, "ago."]
+               ircMessage ["I saw ", nick, " leaving ", chan, " ",
+                           clockDifference ct, "ago."]
              nickWasPresent ct chan =
-               do ircMessage ["Last time I saw ", nick, "was when I left ",
-                              chan , " ", clockDifference ct, "ago."]
+               ircMessage ["Last time I saw ", nick, "was when I left ",
+                           chan , " ", clockDifference ct, " ago."]
              nickIsNew newnick =
                do let findFunc str =
                         case M.lookup (lowerCaseString str) seenFM of
@@ -101,7 +140,7 @@ instance Module SeenModule SeenState where
             else case M.lookup lcnick seenFM of
                   Just (Present mct cs) -> nickPresent mct cs
                   Just (NotPresent ct chan) -> nickNotPresent ct chan
-                  Just (WasPresent ct chan) -> nickWasPresent ct chan
+                  Just (WasPresent ct _ chan) -> nickWasPresent ct chan
                   Just (NewNick newnick) -> nickIsNew newnick
                   _ -> ircPrivmsg target $ "I haven't seen " ++ nick ++ "."
 
@@ -112,7 +151,7 @@ joinCB :: IRCMessage -> Seen IRC () -- when somebody joins
 joinCB msg = withSeenFM msg $ \fm _ct myname nick ->
   if nick /= myname
      then let newInfo = Present Nothing (ircChans msg)
-          in  Left $ M.insertWith updateJ nick newInfo fm
+          in  Left $ M.insertWith (updateJ Nothing) nick newInfo fm
      else Left fm
 
 partCB :: IRCMessage -> Seen IRC () -- when somebody parts
@@ -121,7 +160,7 @@ partCB msg = withSeenFM msg $ \fm ct myname nick ->
         case us of
           Present mct xs ->
             case xs \\ cs of
-              [] -> WasPresent ct (listToStr "and" cs)
+              [] -> WasPresent ct mct (listToStr "and" cs)
               ys -> Present mct ys
           _ -> us
   in if nick == myname
@@ -155,11 +194,11 @@ nickCB msg = withSeenFM msg $ \fm _ct _myname nick ->
 
 -- use IRC.ircChans?
 joinChanCB :: IRCMessage -> Seen IRC () -- when the bot join a channel
-joinChanCB msg = withSeenFM msg $ \fm _ct _myname _nick ->
+joinChanCB msg = withSeenFM msg $ \fm now _myname _nick ->
   let l = msgParams msg
       chan = l !! 2
       chanUsers = words (drop 1 (l !! 3)) -- remove ':'
-      insertNick fm' u = M.insertWith updateJ
+      insertNick fm' u = M.insertWith (updateJ $ Just now)
                                       (lowerCaseString $ unUserMode u)
                                       (Present Nothing [chan])
                                       fm'
@@ -169,7 +208,8 @@ joinChanCB msg = withSeenFM msg $ \fm _ct _myname _nick ->
 msgCB :: IRCMessage -> Seen IRC ()
 msgCB msg = withSeenFM msg $ \fm ct _myname nick ->
   case M.lookup nick fm of
-    Just (Present _ct xs) -> Left $ M.insert nick (Present (Just ct) xs) fm
+    Just (Present mct xs) -> Left $ 
+      M.insert nick (Present (Just (ct, maybe noTimeDiff snd mct)) xs) fm
     _ -> Right "SeenModule> someone who isn't here msg us"
 
 -- misc. functions
@@ -190,11 +230,24 @@ withSeenFM msg f = do let nick = (lowerCaseString . unUserMode)
                         Left newstate -> writeMS newstate
                         Right err -> debugStrLn err
 
-updateJ :: UserStatus -> UserStatus -> UserStatus
-updateJ = flip updateJ' where
-  updateJ' (Present _ct cs) (Present ct c) = Present ct $ nub (c ++ cs)
+-- | Update the user status. Invariant: The first argument (i.e. the second
+--   argument of updateJ' is always of the Form @Preset Nothing channels@.
+--
+-- TODO; Refactor
+updateJ :: Maybe ClockTime -> UserStatus -> UserStatus -> UserStatus
+updateJ iJoined = flip updateJ' where
+  --             OLD            NEW
+  updateJ' (Present ct cs) (Present _ct c) = Present ct $ nub (c ++ cs)
+  updateJ' (WasPresent lastSeen (Just (lastSpoke, missed)) channel) (Present _ cs)
+    | channel `elem` cs, Just now <- iJoined 
+    --                 newMissed
+    -- |---------------------------------------|
+    -- |-------------------|                   |
+    --        missed    lastSeen              now
+    = let newMissed = addToClockTime missed now `diffClockTimes` lastSeen
+      in  Present (Just (lastSpoke, newMissed)) cs
   updateJ' _x y@(Present _ct _cs) = y
-  updateJ' x _ = x
+  updateJ' _ _ = error "after suitable refactoring, this case doesn't need to be caught anymore"
 
 
 -- annoying
@@ -216,6 +269,4 @@ timeDiffPretty td =
                      | i == 0    = ""
                      | i == 1    = "1 " ++ str ++ " " 
                      | otherwise = show i ++ " " ++ str ++ "s "
-
-
 
