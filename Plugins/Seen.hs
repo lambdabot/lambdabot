@@ -20,33 +20,6 @@ import qualified System.Time as T
 
 ------------------------------------------------------------------------
 
-------- Time compatibility layer (maybe move to its own module?) -------
-
--- Wrapping ClockTime (which doesn't provide a Read instance!) seems 
--- easier than talking care of the serialization of UserStatus ourselves.
-newtype ClockTime = ClockTime (T.ClockTime)
-
-instance Show ClockTime where
-  showsPrec p (ClockTime (T.TOD x y)) = showsPrec p (x,y)
-
-instance Read ClockTime where
-  readsPrec p = map (first $ ClockTime . uncurry T.TOD) . readsPrec p
-
-getClockTime :: IO ClockTime
-getClockTime = ClockTime `fmap` T.getClockTime
-
-diffClockTimes :: ClockTime -> ClockTime -> TimeDiff
-diffClockTimes (ClockTime ct1) (ClockTime ct2) = 
--- This is an ugly hack (we don't care about picoseconds...) to avoid the 
---   "Time.toClockTime: picoseconds out of range"
--- error. I think time arithmetic is broken in GHC.
-  (T.diffClockTimes ct1 ct2) { tdPicosec = 0 }
-
-addToClockTime :: TimeDiff -> ClockTime -> ClockTime
-addToClockTime td (ClockTime ct) = ClockTime $ T.addToClockTime td ct
-
-------------------------------------------------------------------------
-
 newtype SeenModule = SeenModule ()
 
 theModule :: MODULE
@@ -61,12 +34,13 @@ type Nick = String
 --   TimeDiff of him because we were absent.
 type LastSpoke = Maybe (ClockTime, TimeDiff)
 
+--data WhoQuit = WeQuit | HeQuit deriving (Show,Read)
 -- | 'UserStatus' keeps track of the status of a given Nick name.
 data UserStatus
         = Present LastSpoke [Channel]  
           -- ^ Records when the nick last spoke and that the nick is currently 
           --   in [Channel].
-        | NotPresent ClockTime (Either TimeDiff ClockTime) Channel 
+        | NotPresent ClockTime StopWatch Channel --WhoQuit
           -- ^ The nick is not present and was last seen at ClockTime in Channel.
           --   The second argument records how much we've missed (due to the
           --   incompleteness of System.Time's api we save negative TimeDiffs).
@@ -138,7 +112,7 @@ instance Module SeenModule SeenState where
                  "I saw ", nick, " leaving ", chan, " ", 
                  clockDifference ct, " ago", 
                  case missed of
-                   Left missed' 
+                   Stopped missed' 
                      |  missedPretty <- timeDiffPretty missed', 
                         any (/=' ') missedPretty
                      -> concat [" but I have missed ", missedPretty, 
@@ -185,8 +159,8 @@ botPart ct chans fm =
               case xs \\ cs of
                 [] -> WasPresent ct mct (listToStr "and" cs)
                 ys -> Present mct ys
-            NotPresent ct' (Left td) c 
-              | c `elem` chans -> NotPresent ct' (Right $ td `addToClockTime` ct) c
+            NotPresent ct' missed c 
+              | c `elem` chans -> NotPresent ct' (startWatch ct missed) c
             _ -> us
     in fmap (botPart' chans) fm
 
@@ -198,7 +172,7 @@ partCB msg = withSeenFM msg $ \fm ct myname nick ->
               Just (Present mct xs) ->
                 case xs \\ ircChans msg of
                   [] -> Right $ M.insert nick
-                         (NotPresent ct (Left noTimeDiff) (head xs))
+                         (NotPresent ct zeroWatch (head xs))
                          fm
                   ys -> Right $ M.insert nick
                                          (Present mct ys)
@@ -209,7 +183,7 @@ quitCB :: IRCMessage -> Seen IRC () -- when somebody quits
 quitCB msg = withSeenFM msg $ \fm ct _myname nick ->
   case M.lookup nick fm of
     Just (Present _ct xs) -> Right $ M.insert nick 
-        (NotPresent ct (Left noTimeDiff) (head xs)) fm
+        (NotPresent ct zeroWatch (head xs)) fm
     _ -> Left "SeenModule> someone who isn't known has quit"
 
 nickCB :: IRCMessage -> Seen IRC () -- when somebody changes his/her name
@@ -283,13 +257,12 @@ updateJ _ cs _ = Present Nothing cs
 -- | Update a user who is not present. We just convert absolute missing time
 --   into relative time.
 updateNP :: ClockTime -> Channel -> UserStatus -> UserStatus
-updateNP now _ (NotPresent ct (Right missedTime) c)
-  = NotPresent ct (Left $ missedTime `diffClockTimes` now) c
+updateNP now _ (NotPresent ct missed c)
+  = NotPresent ct (stopWatch now missed) c
 -- The user is gone, thus it's meaningless when we last heard him speak.
 updateNP _ chan (WasPresent lastSeen (Just _) c)
   | c == chan = WasPresent lastSeen Nothing c
 updateNP _ _ status = status
-
 -- annoying
 timeDiffPretty :: TimeDiff -> String
 timeDiffPretty td =
@@ -311,4 +284,47 @@ timeDiffPretty td =
                      | i == 0    = ""
                      | i == 1    = "1 " ++ str
                      | otherwise = show i ++ " " ++ str ++ "s"
+
+------------------------------------------------------------------------
+
+------- Time compatibility layer (maybe move to its own module?) -------
+
+-- Wrapping ClockTime (which doesn't provide a Read instance!) seems 
+-- easier than talking care of the serialization of UserStatus ourselves.
+newtype ClockTime = ClockTime (T.ClockTime)
+
+instance Show ClockTime where
+  showsPrec p (ClockTime (T.TOD x y)) = showsPrec p (x,y)
+
+instance Read ClockTime where
+  readsPrec p = map (first $ ClockTime . uncurry T.TOD) . readsPrec p
+
+getClockTime :: IO ClockTime
+getClockTime = ClockTime `fmap` T.getClockTime
+
+diffClockTimes :: ClockTime -> ClockTime -> TimeDiff
+diffClockTimes (ClockTime ct1) (ClockTime ct2) = 
+-- This is an ugly hack (we don't care about picoseconds...) to avoid the 
+--   "Time.toClockTime: picoseconds out of range"
+-- error. I think time arithmetic is broken in GHC.
+  (T.diffClockTimes ct1 ct2) { tdPicosec = 0 }
+
+addToClockTime :: TimeDiff -> ClockTime -> ClockTime
+addToClockTime td (ClockTime ct) = ClockTime $ T.addToClockTime td ct
+
+------------------------------------------------------------------------
+
+-- Stop watches mini-library --
+data StopWatch = Stopped TimeDiff | Running ClockTime deriving (Show,Read)
+
+zeroWatch :: StopWatch
+zeroWatch = Stopped noTimeDiff
+
+startWatch :: ClockTime -> StopWatch -> StopWatch
+startWatch now (Stopped td) = Running $ td `addToClockTime` now
+startWatch _ alreadyStarted = alreadyStarted
+
+stopWatch :: ClockTime -> StopWatch -> StopWatch
+stopWatch now (Running t)  = Stopped $ t `diffClockTimes` now
+stopWatch _ alreadyStopped = alreadyStopped
 
