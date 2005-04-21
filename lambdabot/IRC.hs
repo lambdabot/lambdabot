@@ -23,7 +23,7 @@ module IRC (
 
         ircPrivmsg,
         ircJoin, ircPart, ircQuit, ircReconnect,
-        ircTopic, ircGetTopic,
+        ircTopic, ircGetTopic, ircGetChannels,
         ircSignalConnect, Callback, ircInstallOutputFilter, OutputFilter,
         ircInstallModule, ircUnloadModule,
         ircNick, ircChans, ircNames,
@@ -32,7 +32,7 @@ module IRC (
 
         ircLoad, ircUnload,
 
-        clean, checkPrivs, mkCN, ChanName(..), handleIrc, runIrc,
+        clean, checkPrivs, mkCN, handleIrc, runIrc,
   ) where
 
 import qualified Config (config, name, admins, host, port)
@@ -350,13 +350,10 @@ ircSignOn nick ircname = do
     ircWrite (mkIrcMessage "USER" [nick, "localhost", server, ircname])
     ircWrite (mkIrcMessage "NICK" [nick])
 
-{-
-ircGetChannels :: MonadIRC m => m [String]
+ircGetChannels :: MonadLB m => m [String]
 ircGetChannels = do 
     chans <- gets ircChannels
     return $ map getCN (M.keys chans)
--}
-
 
 lineify, checkRecip, cleanOutput :: OutputFilter
 lineify _ msg = return $ mlines $ unlines msg

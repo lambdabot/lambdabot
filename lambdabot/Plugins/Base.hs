@@ -10,7 +10,7 @@ import qualified Map as M   (insert, delete)
 
 import Data.List            (isPrefixOf,nub)
 import Text.Regex           (mkRegex, matchRegexAll)
-import Control.Monad.State  (MonadState(..))
+import Control.Monad.State  (MonadState(..), when)
 
 newtype BaseModule = BaseModule ()
 
@@ -88,9 +88,10 @@ doJOIN msg
 
 doPART :: Callback
 doPART msg
-  = do  let loc = head (msgParams msg)
+  = when (name config == ircNick msg) $ do  
+        let loc = head (msgParams msg)
         s <- get
-        put (s { ircChannels = M.delete (mkCN loc) (ircChannels s) }) -- this must be a bug
+        put (s { ircChannels = M.delete (mkCN loc) (ircChannels s) })
 
 doNICK :: Callback
 doNICK msg

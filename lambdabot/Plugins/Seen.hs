@@ -11,7 +11,6 @@ import qualified Map as M
 import Data.List ((\\),nub)
 
 import Control.Monad.Trans (liftIO, MonadIO)
-import Control.Monad.State (gets)
 import Control.Arrow (first)
 
 import System.Time (TimeDiff(..), noTimeDiff)
@@ -93,15 +92,15 @@ instance Module SeenModule SeenState where
            ircSignalConnect "353"     joinChanCB
            ircSignalConnect "PRIVMSG" msgCB
     moduleDynInit _     = do 
-      chans <- gets ircChannels
+      chans <- ircGetChannels
       -- This magically causes the 353 callback to be invoked :)
-      ircNames $ map getCN $ M.keys chans
+      ircNames chans
     
     moduleExit _ = do
-        chans <- gets ircChannels
+        chans <- ircGetChannels
         ct    <- liftIO getClockTime
         fm    <- readMS
-        writeMS $ botPart ct (map getCN $ M.keys chans) fm
+        writeMS $ botPart ct chans fm
 
     process m msg target cmd rest =
       do seenFM <- readMS
@@ -239,8 +238,8 @@ joinChanCB msg = withSeenFM msg $ \fm now _myname _nick ->
 msgCB :: IRCMessage -> Seen IRC ()
 msgCB msg = withSeenFM msg $ \fm ct _myname nick ->
   case M.lookup nick fm of
-    Just (Present mct xs) -> Right $ 
-      M.insert nick (Present (Just (ct, maybe noTimeDiff snd mct)) xs) fm
+    Just (Present _ xs) -> Right $ 
+      M.insert nick (Present (Just (ct, noTimeDiff)) xs) fm
     _ -> Left "SeenModule> someone who isn't here msg us"
 
 -- misc. functions
