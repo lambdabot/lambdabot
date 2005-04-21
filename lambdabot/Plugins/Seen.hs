@@ -63,18 +63,18 @@ type LastSpoke = Maybe (ClockTime, TimeDiff)
 
 -- | 'UserStatus' keeps track of the status of a given Nick name.
 data UserStatus
-        = Present LastSpoke [Channel]  -- ^ Records when the nick last
-                                       --   spoke and that the nick is
-                                       --   currently in [Channel]
-        | NotPresent ClockTime Channel -- ^ The nick is not present and was
-                                       --   last seen at ClockTime in Channel
-        | WasPresent ClockTime LastSpoke Channel -- ^ The bot parted a channel 
-                                                 -- where the user was. The 
-                                                 -- Clocktime records the time 
-                                                 -- and Channel the channel
-                                                 -- this happened in.
-        | NewNick Nick                 -- ^ The user changed nick to something
-                                       --   new.
+        = Present LastSpoke [Channel]  
+          -- ^ Records when the nick last spoke and that the nick is currently 
+          --   in [Channel].
+        | NotPresent ClockTime (Either TimeDiff ClockTime) Channel 
+          -- ^ The nick is not present and was last seen at ClockTime in Channel.
+          --   The second argument records how much we've missed (due to the
+          --   incompleteness of System.Time's api we save negative TimeDiffs).
+        | WasPresent ClockTime LastSpoke Channel 
+          -- ^ The bot parted a channel where the user was. The Clocktime
+          --   records the time and Channel the channel this happened in.
+        | NewNick Nick                 
+          -- ^ The user changed nick to something new.
     deriving (Show, Read)
 
 type SeenState = M.Map Nick UserStatus
@@ -135,9 +135,17 @@ instance Module SeenModule SeenState where
                        when' = clockDifference ct
                        missedPretty = timeDiffPretty missed
                ]
-             nickNotPresent ct chan =
-               ircMessage ["I saw ", nick, " leaving ", chan, " ",
-                           clockDifference ct, " ago."]
+             nickNotPresent ct missed chan = ircMessage [
+                 "I saw ", nick, " leaving ", chan, " ", 
+                 clockDifference ct, " ago", 
+                 case missed of
+                   Left missed' 
+                     |  missedPretty <- timeDiffPretty missed', 
+                        any (/=' ') missedPretty
+                     -> concat [" but I have missed ", missedPretty, 
+                                " since then."]
+                   _ -> "."
+               ]
              nickWasPresent ct chan =
                ircMessage ["Last time I saw ", nick, "was when I left ",
                            chan , " ", clockDifference ct, " ago."]
@@ -155,7 +163,7 @@ instance Module SeenModule SeenState where
             then ircPrivmsg target "Yes, I'm here."
             else case M.lookup lcnick seenFM of
                   Just (Present mct cs) -> nickPresent mct cs
-                  Just (NotPresent ct chan) -> nickNotPresent ct chan
+                  Just (NotPresent ct td chan) -> nickNotPresent ct td chan
                   Just (WasPresent ct _ chan) -> nickWasPresent ct chan
                   Just (NewNick newnick) -> nickIsNew newnick
                   _ -> ircPrivmsg target $ "I haven't seen " ++ nick ++ "."
@@ -178,6 +186,8 @@ botPart ct chans fm =
               case xs \\ cs of
                 [] -> WasPresent ct mct (listToStr "and" cs)
                 ys -> Present mct ys
+            NotPresent ct' (Left td) c 
+              | c `elem` chans -> NotPresent ct' (Right $ td `addToClockTime` ct) c
             _ -> us
     in fmap (botPart' chans) fm
 
@@ -189,8 +199,8 @@ partCB msg = withSeenFM msg $ \fm ct myname nick ->
               Just (Present mct xs) ->
                 case xs \\ (ircChans msg) of
                   [] -> Right $ M.insert nick
-                                         (NotPresent ct (listToStr "and" xs))
-                                         fm
+                         (NotPresent ct (Left noTimeDiff) (listToStr "and" xs))
+                         fm
                   ys -> Right $ M.insert nick
                                          (Present mct ys)
                                          fm
@@ -199,7 +209,8 @@ partCB msg = withSeenFM msg $ \fm ct myname nick ->
 quitCB :: IRCMessage -> Seen IRC () -- when somebody quits
 quitCB msg = withSeenFM msg $ \fm ct _myname nick ->
   case M.lookup nick fm of
-    Just (Present _ct xs) -> Right $ M.insert nick (NotPresent ct (head xs)) fm
+    Just (Present _ct xs) -> Right $ M.insert nick 
+        (NotPresent ct (Left noTimeDiff) (head xs)) fm
     _ -> Left "SeenModule> someone who isn't known has quit"
 
 nickCB :: IRCMessage -> Seen IRC () -- when somebody changes his/her name
@@ -222,7 +233,7 @@ joinChanCB msg = withSeenFM msg $ \fm now _myname _nick ->
                                       (lowerCaseString $ unUserMode u)
                                       (Present Nothing [chan])
                                       fm'
-      in Right $ foldl insertNick fm chanUsers
+      in Right $ fmap (updateNP now) $ foldl insertNick fm chanUsers
 
 -- when somebody speaks, update their clocktime
 msgCB :: IRCMessage -> Seen IRC ()
@@ -276,11 +287,18 @@ updateJ (Just now) cs (WasPresent lastSeen (Just (lastSpoke, missed)) channel)
 -- Otherwise, we create a new record of the user.
 updateJ _ cs _ = Present Nothing cs
 
+-- | Update a user who is not present. We just convert absolute missing time
+--   into relative time.
+updateNP :: ClockTime -> UserStatus -> UserStatus
+updateNP now (NotPresent ct (Right missedTime) c)
+  = NotPresent ct (Left $ missedTime `diffClockTimes` now) c
+updateNP _ status = status
 
 -- annoying
 timeDiffPretty :: TimeDiff -> String
 timeDiffPretty td =
-  let secs = tdSec td
+  let secs = abs $ tdSec td -- This is a hack, but there wasn't an sane output
+                            -- for negative TimeDiffs anyway.
       mins = secs `div` 60
       hours = mins `div` 60
       days = hours `div` 24
