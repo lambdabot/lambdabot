@@ -31,6 +31,7 @@ module Map (
 
         mapWithKey,
         filterWithKey,
+        filter,
         foldWithKey,
 #endif
         mapMaybe,
@@ -51,7 +52,7 @@ addList l m = union (fromList l) m
 --
 -- compatibility code for deprecated FiniteMap
 --
-import Prelude hiding (lookup)
+import Prelude hiding (lookup, filter)
 import qualified Data.FiniteMap as FM
 
 type Map = FM.FiniteMap
@@ -129,6 +130,9 @@ mapWithKey = FM.mapFM
 
 filterWithKey :: Ord k => (k -> a -> Bool) -> Map k a -> Map k a
 filterWithKey = FM.filterFM
+
+filter :: Ord k => (a -> Bool) -> Map k a -> Map k a
+filter = filterWithKey . const f
 
 foldWithKey :: (k -> a -> b -> b) -> b -> Map k a -> b
 foldWithKey = FM.foldFM
