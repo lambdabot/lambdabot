@@ -5,7 +5,6 @@ module Plugins.Seen (theModule) where
 
 import IRC
 import Util (mapSerializer, lowerCaseString, firstWord, listToStr, debugStrLn)
--- TODO: qualified
 import Config
 import qualified Map as M
 
@@ -95,6 +94,7 @@ instance Module SeenModule SeenState where
            ircSignalConnect "PRIVMSG" msgCB
     moduleDynInit _     = do 
       chans <- gets ircChannels
+      -- This magically causes the 353 callback to be invoked :)
       ircNames $ map getCN $ M.keys chans
     
     moduleExit _ = do
@@ -167,7 +167,7 @@ joinCB :: IRCMessage -> Seen IRC () -- when somebody joins
 joinCB msg = withSeenFM msg $ \fm _ct myname nick ->
   if nick /= myname
      then let newInfo = Present Nothing (ircChans msg)
-          in  Right $ M.insertWith (updateJ Nothing) nick newInfo fm
+          in  Right $ M.insertUpd (updateJ Nothing (ircChans msg)) nick newInfo fm
      else Right fm
 
 botPart :: ClockTime -> [Channel] -> SeenState -> SeenState
@@ -218,7 +218,7 @@ joinChanCB msg = withSeenFM msg $ \fm now _myname _nick ->
   let l = msgParams msg
       chan = l !! 2
       chanUsers = words (drop 1 (l !! 3)) -- remove ':'
-      insertNick fm' u = M.insertWith (updateJ $ Just now)
+      insertNick fm' u = M.insertUpd (updateJ (Just now) [chan])
                                       (lowerCaseString $ unUserMode u)
                                       (Present Nothing [chan])
                                       fm'
@@ -255,24 +255,26 @@ withSeenFM' nick' f = do
         Right newstate -> writeMS newstate
         Left err -> debugStrLn err
 
--- | Update the user status. Invariant: The first argument (i.e. the second
---   argument of updateJ' is always of the Form @Preset Nothing channels@.
---
--- TODO; Refactor
-updateJ :: Maybe ClockTime -> UserStatus -> UserStatus -> UserStatus
-updateJ iJoined = flip updateJ' where
-  --             OLD            NEW
-  updateJ' (Present ct cs) (Present _ct c) = Present ct $ nub (c ++ cs)
-  updateJ' (WasPresent lastSeen (Just (lastSpoke, missed)) channel) (Present _ cs)
-    | channel `elem` cs, Just now <- iJoined 
-    --                 newMissed
-    -- |---------------------------------------|
-    -- |-------------------|                   |
-    --        missed    lastSeen              now
-    = let newMissed = addToClockTime missed now `diffClockTimes` lastSeen
-      in  newMissed `seq` Present (Just (lastSpoke, newMissed)) cs
-  updateJ' _x y@(Present _ct _cs) = y
-  updateJ' _ _ = error "after suitable refactoring, this case doesn't need to be caught anymore"
+-- | Update the user status.
+updateJ :: Maybe ClockTime -- ^ If the bot joined the channel, the time that 
+                           --   happened, i.e. now.
+  -> [Channel]             -- ^ The channels the user joined.
+  -> UserStatus            -- ^ The old status
+  -> UserStatus            -- ^ The new status
+-- The user was present before, so he's present now.
+updateJ _ c (Present ct cs) = Present ct $ nub (c ++ cs)
+-- The user was present when we left that channel and now we've come back.
+-- We need to update the time we've missed.
+updateJ (Just now) cs (WasPresent lastSeen (Just (lastSpoke, missed)) channel)
+  | channel `elem` cs
+  --                 newMissed
+  -- |---------------------------------------|
+  -- |-------------------|                   |
+  --        missed    lastSeen              now
+  = let newMissed = addToClockTime missed now `diffClockTimes` lastSeen
+    in  newMissed `seq` Present (Just (lastSpoke, newMissed)) cs
+-- Otherwise, we create a new record of the user.
+updateJ _ cs _ = Present Nothing cs
 
 
 -- annoying
