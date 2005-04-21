@@ -206,10 +206,10 @@ doPRIVMSG' myname msg
     (who, _) = breakOnGlue "!" (msgPrefix msg)
 
     doPersonalMsg ('@':c) r = doMsg c r who
-    doPersonalMsg _ _       = ircPrivmsg who "Sorry, don't understand that."
+    doPersonalMsg _ _       = doIGNORE msg
 
     doPublicMsg ('@':c) r   = doMsg c r alltargets
-    doPublicMsg _ _         = ircPrivmsg alltargets ("Not a command (no @).")
+    doPublicMsg _ _         = doIGNORE msg
 
     doMsg cmd rest towhere = do
         let ircmsg = ircPrivmsg towhere
