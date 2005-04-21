@@ -110,34 +110,34 @@ instance Module SeenModule SeenState where
              nick' = firstWord rest
              you   = nick' == ircNick msg
              nick  = if you then "you" else nick'
-             lcnick = lowerCaseString nick
+             lcnick = lowerCaseString nick'
              ircMessage = ircPrivmsg target . concat
              clockDifference = timeDiffPretty . diffClockTimes now
              -- I guess the only way out of this spagetty hell are 
              -- printf-style responses.
              nickPresent mct cs =
                ircPrivmsg target $ concat [
-                 if you then "You are" else nick ++ " is in ", 
+                 if you then "You are" else nick ++ " is", " in ",
                  listToStr "and" cs, ".",
                  case mct of
                    Nothing -> 
                      concat [" I don't know when ", nick, " last spoke."]
                    Just (ct,missed)
-                     |  missedPretty == []
+                     | all (==' ') missedPretty
                      -> concat [" Last spoke ", lastSpoke, "."]
                      |  otherwise
-                     -> concat [" I last heard ", nick, " speak ", when',
-                                "ago but I have missed ", 
-                                missedPretty, "since then."]
+                     -> concat [" I last heard ", nick, " speak ", lastSpoke,
+                                " but I have missed ", 
+                                missedPretty, " since then."]
                      where 
-                       lastSpoke | "" <- when' = "just now"
-                                 | otherwise   = when' ++ "ago"
+                       lastSpoke | all (==' ') when' = "just now"
+                                 | otherwise         = when' ++ " ago"
                        when' = clockDifference ct
                        missedPretty = timeDiffPretty missed
                ]
              nickNotPresent ct chan =
                ircMessage ["I saw ", nick, " leaving ", chan, " ",
-                           clockDifference ct, "ago."]
+                           clockDifference ct, " ago."]
              nickWasPresent ct chan =
                ircMessage ["Last time I saw ", nick, "was when I left ",
                            chan , " ", clockDifference ct, " ago."]
@@ -148,7 +148,7 @@ instance Module SeenModule SeenState where
                           Just _              -> str
                           Nothing             -> error "SeenModule.nickIsNew: Nothing"
                       us = findFunc newnick
-                  ircMessage [if you then "You have" else nick++"has", 
+                  ircMessage [if you then "You have" else nick++" has", 
                               " changed nick to ", us, "."]
                   process m msg target cmd us
          if lcnick == myname
@@ -207,9 +207,9 @@ nickCB msg = withSeenFM msg $ \fm _ct _myname nick ->
   let newnick = drop 1 $ head (msgParams msg)
       lcnewnick = lowerCaseString newnick
   in case M.lookup nick fm of
-       Just (Present mct xs) ->
+       Just status ->
          let fm' = M.insert nick (NewNick newnick) fm
-         in Right $ M.insert lcnewnick (Present mct xs) fm'
+         in Right $ M.insert lcnewnick status fm'
        _ -> Left "SeenModule> someone who isn't here changed nick"
 
 -- use IRC.ircChans?
@@ -286,7 +286,8 @@ timeDiffPretty td =
       days = hours `div` 24
       months = days `div` 28
       years = months `div` 12
-  in concat [prettyP years "year",
+  in listToStr "and" $ filter (not . null) [
+             prettyP years "year",
              prettyP (months `mod` 12) "month",
              prettyP (days `mod` 28) "day",
              prettyP (hours `mod` 24) "hour",
@@ -294,6 +295,6 @@ timeDiffPretty td =
              prettyP (secs `mod` 60) "second"]
               where prettyP i str
                      | i == 0    = ""
-                     | i == 1    = "1 " ++ str ++ " " 
-                     | otherwise = show i ++ " " ++ str ++ "s "
+                     | i == 1    = "1 " ++ str
+                     | otherwise = show i ++ " " ++ str ++ "s"
 
