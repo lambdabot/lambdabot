@@ -8,10 +8,11 @@ import Util (mapSerializer, lowerCaseString, firstWord, listToStr, debugStrLn)
 import Config
 import qualified Map as M
 
-import Data.List ((\\),nub)
+import Data.List           ((\\), nub)
 
+import Control.Monad       (unless)
 import Control.Monad.Trans (liftIO, MonadIO)
-import Control.Arrow (first)
+import Control.Arrow       (first)
 
 import System.Time (TimeDiff(..), noTimeDiff)
 import qualified System.Time as T 
@@ -69,7 +70,7 @@ data UserStatus
           -- ^ The nick is not present and was last seen at ClockTime in Channel.
           --   The second argument records how much we've missed (due to the
           --   incompleteness of System.Time's api we save negative TimeDiffs).
-        | WasPresent ClockTime LastSpoke Channel 
+        | WasPresent ClockTime LastSpoke Channel
           -- ^ The bot parted a channel where the user was. The Clocktime
           --   records the time and Channel the channel this happened in.
         | NewNick Nick                 
@@ -91,16 +92,16 @@ instance Module SeenModule SeenState where
            ircSignalConnect "NICK"    nickCB
            ircSignalConnect "353"     joinChanCB
            ircSignalConnect "PRIVMSG" msgCB
-    moduleDynInit _     = do 
-      chans <- ircGetChannels
-      -- This magically causes the 353 callback to be invoked :)
-      ircNames chans
+
+    -- This magically causes the 353 callback to be invoked :)
+    moduleDynInit _     = ircNames =<< ircGetChannels
     
     moduleExit _ = do
         chans <- ircGetChannels
-        ct    <- liftIO getClockTime
-        fm    <- readMS
-        writeMS $ botPart ct chans fm
+        unless (null chans) $ do
+            ct    <- liftIO getClockTime
+            fm    <- readMS
+            writeMS $ botPart ct chans fm
 
     process m msg target cmd rest =
       do seenFM <- readMS
@@ -114,8 +115,7 @@ instance Module SeenModule SeenState where
              clockDifference = timeDiffPretty . diffClockTimes now
              -- I guess the only way out of this spagetty hell are 
              -- printf-style responses.
-             nickPresent mct cs =
-               ircPrivmsg target $ concat [
+             nickPresent mct cs = ircMessage [
                  if you then "You are" else nick ++ " is", " in ",
                  listToStr "and" cs, ".",
                  case mct of
@@ -159,13 +159,13 @@ instance Module SeenModule SeenState where
                               " changed nick to ", us, "."]
                   process m msg target cmd us
          if lcnick == myname
-            then ircPrivmsg target "Yes, I'm here."
+            then ircMessage ["Yes, I'm here."]
             else case M.lookup lcnick seenFM of
                   Just (Present mct cs) -> nickPresent mct cs
                   Just (NotPresent ct td chan) -> nickNotPresent ct td chan
                   Just (WasPresent ct _ chan) -> nickWasPresent ct chan
                   Just (NewNick newnick) -> nickIsNew newnick
-                  _ -> ircPrivmsg target $ "I haven't seen " ++ nick ++ "."
+                  _ -> ircMessage ["I haven't seen ", nick, "."]
 
 -- | Callback for when somebody joins. If it is not the bot that joins, record
 --   that we have a new user in our state tree and that we have never seen the
@@ -196,9 +196,9 @@ partCB msg = withSeenFM msg $ \fm ct myname nick ->
        then Right $ botPart ct (ircChans msg) fm
        else case M.lookup nick fm of
               Just (Present mct xs) ->
-                case xs \\ (ircChans msg) of
+                case xs \\ ircChans msg of
                   [] -> Right $ M.insert nick
-                         (NotPresent ct (Left noTimeDiff) (listToStr "and" xs))
+                         (NotPresent ct (Left noTimeDiff) (head xs))
                          fm
                   ys -> Right $ M.insert nick
                                          (Present mct ys)
@@ -232,7 +232,7 @@ joinChanCB msg = withSeenFM msg $ \fm now _myname _nick ->
                                       (lowerCaseString $ unUserMode u)
                                       (Present Nothing [chan])
                                       fm'
-      in Right $ fmap (updateNP now) $ foldl insertNick fm chanUsers
+      in Right $ fmap (updateNP now chan) $ foldl insertNick fm chanUsers
 
 -- when somebody speaks, update their clocktime
 msgCB :: IRCMessage -> Seen IRC ()
@@ -250,14 +250,8 @@ withSeenFM :: IRCMessage
               -> (SeenState -> ClockTime -> String -> Nick
                   -> Either String SeenState)
               -> Seen IRC ()
-withSeenFM msg = withSeenFM' (ircNick msg)
-
-withSeenFM' :: String
-              -> (SeenState -> ClockTime -> String -> Nick
-                  -> Either String SeenState)
-              -> Seen IRC ()
-withSeenFM' nick' f = do 
-    let nick = (lowerCaseString . unUserMode) nick'
+withSeenFM msg f = do 
+    let nick = lowerCaseString . unUserMode . ircNick $ msg
     state <- readMS
     ct <- liftIO getClockTime
     let myname = (lowerCaseString . name) config
@@ -277,10 +271,10 @@ updateJ _ c (Present ct cs) = Present ct $ nub (c ++ cs)
 -- We need to update the time we've missed.
 updateJ (Just now) cs (WasPresent lastSeen (Just (lastSpoke, missed)) channel)
   | channel `elem` cs
-  --                 newMissed
-  -- |---------------------------------------|
-  -- |-------------------|                   |
-  --        missed    lastSeen              now
+  ---                 newMissed
+  --- |---------------------------------------|
+  --- |-------------------|                   |
+  ---        missed    lastSeen              now
   = let newMissed = addToClockTime missed now `diffClockTimes` lastSeen
     in  newMissed `seq` Present (Just (lastSpoke, newMissed)) cs
 -- Otherwise, we create a new record of the user.
@@ -288,10 +282,13 @@ updateJ _ cs _ = Present Nothing cs
 
 -- | Update a user who is not present. We just convert absolute missing time
 --   into relative time.
-updateNP :: ClockTime -> UserStatus -> UserStatus
-updateNP now (NotPresent ct (Right missedTime) c)
+updateNP :: ClockTime -> Channel -> UserStatus -> UserStatus
+updateNP now _ (NotPresent ct (Right missedTime) c)
   = NotPresent ct (Left $ missedTime `diffClockTimes` now) c
-updateNP _ status = status
+-- The user is gone, thus it's meaningless when we last heard him speak.
+updateNP _ chan (WasPresent lastSeen (Just _) c)
+  | c == chan = WasPresent lastSeen Nothing c
+updateNP _ _ status = status
 
 -- annoying
 timeDiffPretty :: TimeDiff -> String

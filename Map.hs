@@ -132,7 +132,7 @@ filterWithKey :: Ord k => (k -> a -> Bool) -> Map k a -> Map k a
 filterWithKey = FM.filterFM
 
 filter :: Ord k => (a -> Bool) -> Map k a -> Map k a
-filter = filterWithKey . const
+filter = filterWithKey . const f
 
 foldWithKey :: (k -> a -> b -> b) -> b -> Map k a -> b
 foldWithKey = FM.foldFM
