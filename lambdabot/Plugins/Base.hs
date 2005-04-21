@@ -188,7 +188,7 @@ doPRIVMSG' myname msg
     = let (cmd, params) = breakOnGlue " " text
       in doPersonalMsg cmd (dropWhile (== ' ') params)
 
-  | (myname ++ ":") `isPrefixOf` text
+  | flip any ":," $ \c -> (myname ++ [c]) `isPrefixOf` text
     = let Just wholeCmd = maybeCommand myname text
 	  (cmd, params) = breakOnGlue " " wholeCmd
       in doPublicMsg cmd (dropWhile (==' ') params)
