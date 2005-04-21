@@ -52,5 +52,5 @@ alterTopic source chan f =
 				              "ignoring bogus characters: " ++ r
 					 ircTopic chan (show $ f $ xs)
 			_          -> ircPrivmsg source "topic does not parse"
-	  Nothing -> ircPrivmsg source "do not know that channel"
+	  Nothing -> ircPrivmsg source ("I do not know the channel " ++ chan)
   in lookupTopic chan p
