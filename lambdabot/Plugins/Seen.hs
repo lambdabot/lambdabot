@@ -5,12 +5,14 @@ module Plugins.Seen (theModule) where
 
 import IRC
 import Util (mapSerializer, lowerCaseString, firstWord, listToStr, debugStrLn)
+-- TODO: qualified
 import Config
 import qualified Map as M
 
 import Data.List ((\\),nub)
 
 import Control.Monad.Trans (liftIO, MonadIO)
+import Control.Monad.State (gets)
 import Control.Arrow (first)
 
 import System.Time (TimeDiff(..), noTimeDiff)
@@ -35,7 +37,11 @@ getClockTime :: IO ClockTime
 getClockTime = ClockTime `fmap` T.getClockTime
 
 diffClockTimes :: ClockTime -> ClockTime -> TimeDiff
-diffClockTimes (ClockTime ct1) (ClockTime ct2) = T.diffClockTimes ct1 ct2
+diffClockTimes (ClockTime ct1) (ClockTime ct2) = 
+-- This is an ugly hack (we don't care about picoseconds...) to avoid the 
+--   "Time.toClockTime: picoseconds out of range"
+-- error. I think time arithmetic is broken in GHC.
+  (T.diffClockTimes ct1 ct2) { tdPicosec = 0 }
 
 addToClockTime :: TimeDiff -> ClockTime -> ClockTime
 addToClockTime td (ClockTime ct) = ClockTime $ T.addToClockTime td ct
@@ -54,16 +60,16 @@ type Nick = String
 
 -- | We last heard the user speak at ClockTime; since then we have missed
 --   TimeDiff of him because we were absent.
-type SpokeLast = Maybe (ClockTime, TimeDiff)
+type LastSpoke = Maybe (ClockTime, TimeDiff)
 
 -- | 'UserStatus' keeps track of the status of a given Nick name.
 data UserStatus
-        = Present SpokeLast [Channel]  -- ^ Records when the nick last
+        = Present LastSpoke [Channel]  -- ^ Records when the nick last
                                        --   spoke and that the nick is
                                        --   currently in [Channel]
         | NotPresent ClockTime Channel -- ^ The nick is not present and was
                                        --   last seen at ClockTime in Channel
-        | WasPresent ClockTime SpokeLast Channel -- ^ The bot parted a channel 
+        | WasPresent ClockTime LastSpoke Channel -- ^ The bot parted a channel 
                                                  -- where the user was. The 
                                                  -- Clocktime records the time 
                                                  -- and Channel the channel
@@ -87,6 +93,15 @@ instance Module SeenModule SeenState where
            ircSignalConnect "NICK"    nickCB
            ircSignalConnect "353"     joinChanCB
            ircSignalConnect "PRIVMSG" msgCB
+    moduleDynInit _     = do 
+      chans <- gets ircChannels
+      ircNames $ map getCN $ M.keys chans
+    
+    moduleExit _ = do
+        chans <- gets ircChannels
+        ct    <- liftIO getClockTime
+        fm    <- readMS
+        writeMS $ botPart ct (map getCN $ M.keys chans) fm
 
     process m msg target cmd rest =
       do seenFM <- readMS
@@ -108,16 +123,17 @@ instance Module SeenModule SeenState where
                    Nothing -> 
                      concat [" I don't know when ", nick, " last spoke."]
                    Just (ct,missed)
-                     |  missed == noTimeDiff
+                     |  missedPretty == []
                      -> concat [" Last spoke ", lastSpoke, "."]
                      |  otherwise
                      -> concat [" I last heard ", nick, " speak ", when',
-                                " but I have missed ", timeDiffPretty missed, 
-                                " since then."]
+                                "ago but I have missed ", 
+                                missedPretty, "since then."]
                      where 
                        lastSpoke | "" <- when' = "just now"
                                  | otherwise   = when' ++ "ago"
                        when' = clockDifference ct
+                       missedPretty = timeDiffPretty missed
                ]
              nickNotPresent ct chan =
                ircMessage ["I saw ", nick, " leaving ", chan, " ",
@@ -151,36 +167,40 @@ joinCB :: IRCMessage -> Seen IRC () -- when somebody joins
 joinCB msg = withSeenFM msg $ \fm _ct myname nick ->
   if nick /= myname
      then let newInfo = Present Nothing (ircChans msg)
-          in  Left $ M.insertWith (updateJ Nothing) nick newInfo fm
-     else Left fm
+          in  Right $ M.insertWith (updateJ Nothing) nick newInfo fm
+     else Right fm
+
+botPart :: ClockTime -> [Channel] -> SeenState -> SeenState
+botPart ct chans fm = 
+    let botPart' cs us =
+          case us of
+            Present mct xs ->
+              case xs \\ cs of
+                [] -> WasPresent ct mct (listToStr "and" cs)
+                ys -> Present mct ys
+            _ -> us
+    in fmap (botPart' chans) fm
 
 partCB :: IRCMessage -> Seen IRC () -- when somebody parts
 partCB msg = withSeenFM msg $ \fm ct myname nick ->
-  let botPart cs us =
-        case us of
-          Present mct xs ->
-            case xs \\ cs of
-              [] -> WasPresent ct mct (listToStr "and" cs)
-              ys -> Present mct ys
-          _ -> us
-  in if nick == myname
-       then Left $ M.mapWithKey (const (botPart $ ircChans msg)) fm
+  if nick == myname
+       then Right $ botPart ct (ircChans msg) fm
        else case M.lookup nick fm of
               Just (Present mct xs) ->
                 case xs \\ (ircChans msg) of
-                  [] -> Left $ M.insert nick
-                                        (NotPresent ct (listToStr "and" xs))
-                                        fm
-                  ys -> Left $ M.insert nick
-                                        (Present mct ys)
-                                        fm
-              _ -> Right "SeenModule> someone who isn't known parted"
+                  [] -> Right $ M.insert nick
+                                         (NotPresent ct (listToStr "and" xs))
+                                         fm
+                  ys -> Right $ M.insert nick
+                                         (Present mct ys)
+                                         fm
+              _ -> Left "SeenModule> someone who isn't known parted"
 
 quitCB :: IRCMessage -> Seen IRC () -- when somebody quits
 quitCB msg = withSeenFM msg $ \fm ct _myname nick ->
   case M.lookup nick fm of
-    Just (Present _ct xs) -> Left $ M.insert nick (NotPresent ct (head xs)) fm
-    _ -> Right "SeenModule> someone who isn't known has quit"
+    Just (Present _ct xs) -> Right $ M.insert nick (NotPresent ct (head xs)) fm
+    _ -> Left "SeenModule> someone who isn't known has quit"
 
 nickCB :: IRCMessage -> Seen IRC () -- when somebody changes his/her name
 nickCB msg = withSeenFM msg $ \fm _ct _myname nick ->
@@ -189,8 +209,8 @@ nickCB msg = withSeenFM msg $ \fm _ct _myname nick ->
   in case M.lookup nick fm of
        Just (Present mct xs) ->
          let fm' = M.insert nick (NewNick newnick) fm
-         in Left $ M.insert lcnewnick (Present mct xs) fm'
-       _ -> Right "SeenModule> someone who isn't here changed nick"
+         in Right $ M.insert lcnewnick (Present mct xs) fm'
+       _ -> Left "SeenModule> someone who isn't here changed nick"
 
 -- use IRC.ircChans?
 joinChanCB :: IRCMessage -> Seen IRC () -- when the bot join a channel
@@ -202,33 +222,38 @@ joinChanCB msg = withSeenFM msg $ \fm now _myname _nick ->
                                       (lowerCaseString $ unUserMode u)
                                       (Present Nothing [chan])
                                       fm'
-      in Left $ foldl insertNick fm chanUsers
+      in Right $ foldl insertNick fm chanUsers
 
 -- when somebody speaks, update their clocktime
 msgCB :: IRCMessage -> Seen IRC ()
 msgCB msg = withSeenFM msg $ \fm ct _myname nick ->
   case M.lookup nick fm of
-    Just (Present mct xs) -> Left $ 
+    Just (Present mct xs) -> Right $ 
       M.insert nick (Present (Just (ct, maybe noTimeDiff snd mct)) xs) fm
-    _ -> Right "SeenModule> someone who isn't here msg us"
+    _ -> Left "SeenModule> someone who isn't here msg us"
 
 -- misc. functions
 unUserMode :: Nick -> Nick
 unUserMode nick = dropWhile (`elem` "@+") nick
 
-
 withSeenFM :: IRCMessage
               -> (SeenState -> ClockTime -> String -> Nick
-                  -> Either SeenState String)
+                  -> Either String SeenState)
               -> Seen IRC ()
-withSeenFM msg f = do let nick = (lowerCaseString . unUserMode)
-                                         (ircNick msg)
-                      state <- readMS
-                      ct <- liftIO getClockTime
-                      let myname = (lowerCaseString . name) config
-                      case f state ct myname nick of
-                        Left newstate -> writeMS newstate
-                        Right err -> debugStrLn err
+withSeenFM msg = withSeenFM' (ircNick msg)
+
+withSeenFM' :: String
+              -> (SeenState -> ClockTime -> String -> Nick
+                  -> Either String SeenState)
+              -> Seen IRC ()
+withSeenFM' nick' f = do 
+    let nick = (lowerCaseString . unUserMode) nick'
+    state <- readMS
+    ct <- liftIO getClockTime
+    let myname = (lowerCaseString . name) config
+    case f state ct myname nick of
+        Right newstate -> writeMS newstate
+        Left err -> debugStrLn err
 
 -- | Update the user status. Invariant: The first argument (i.e. the second
 --   argument of updateJ' is always of the Form @Preset Nothing channels@.
@@ -245,7 +270,7 @@ updateJ iJoined = flip updateJ' where
     -- |-------------------|                   |
     --        missed    lastSeen              now
     = let newMissed = addToClockTime missed now `diffClockTimes` lastSeen
-      in  Present (Just (lastSpoke, newMissed)) cs
+      in  newMissed `seq` Present (Just (lastSpoke, newMissed)) cs
   updateJ' _x y@(Present _ct _cs) = y
   updateJ' _ _ = error "after suitable refactoring, this case doesn't need to be caught anymore"
 

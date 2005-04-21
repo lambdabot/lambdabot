@@ -26,13 +26,13 @@ module IRC (
         ircTopic, ircGetTopic,
         ircSignalConnect, Callback, ircInstallOutputFilter, OutputFilter,
         ircInstallModule, ircUnloadModule,
-        ircNick, ircChans,
+        ircNick, ircChans, ircNames,
         ircSignOn,
         ircRead,
 
         ircLoad, ircUnload,
 
-        clean, checkPrivs, mkCN, handleIrc, runIrc,
+        clean, checkPrivs, mkCN, ChanName(..), handleIrc, runIrc,
   ) where
 
 import qualified Config (config, name, admins, host, port)
@@ -41,6 +41,7 @@ import ErrorUtils
 import ExceptionError   (ExceptionError(..), ExceptionErrorT(..))
 import MonadException   (MonadException(throwM))
 import Util             (split,clean,breakOnGlue, Serializer(..), lowerCaseString)
+import qualified Util   (join)
 
 import Map (Map)
 import qualified Map as M hiding (Map)
@@ -106,7 +107,8 @@ type OutputFilter = String -> [String] -> IRC [String]
 data IRCRWState
   = IRCRWState {
         ircPrivilegedUsers :: Map String Bool,
-        ircChannels        :: Map ChanName String,
+        ircChannels        :: Map ChanName String, 
+            -- ^ maps channel names to topics
         ircModules         :: Map String ModuleRef,
         ircCallbacks       :: Map String [(String,Callback)],
         ircOutputFilters   :: [(String,OutputFilter)], 
@@ -116,7 +118,7 @@ data IRCRWState
         ircDynLoad         :: S.DynLoad
   }
 
-newtype ChanName = ChanName String -- should be abstract, always lowercase
+newtype ChanName = ChanName { getCN :: String } -- should be abstract, always lowercase
   deriving (Eq, Ord)
 
 instance Show ChanName where
@@ -125,11 +127,6 @@ instance Show ChanName where
 -- only use the "smart constructor":
 mkCN :: String -> ChanName
 mkCN = ChanName . map toLower
-
-{-
-getCN :: ChanName -> String
-getCN (ChanName c) = c
--}
 
 -- does the deriving Typeable do the right thing?
 newtype SignalException = SignalException Signal
@@ -446,6 +443,9 @@ ircPart :: String -> IRC ()
 ircPart loc
   = ircWrite (mkIrcMessage "PART" [loc])
 
+ircNames :: [String] -> IRC ()
+ircNames chans = ircWrite (mkIrcMessage "NAMES" [Util.join "," chans])
+
 ircRead :: IRC IRCMessage
 ircRead = do 
     chanr <- asks ircReadChan
@@ -457,6 +457,7 @@ ircWrite line = do
     -- use DeepSeq's $!! to ensure that any Haskell errors in line
     -- are caught now, rather than later on in the other thread
     liftIO (writeChan chanw $!! line)
+
 
 --
 -- May wish to add more things to the things caught, or restructure things 
@@ -553,10 +554,12 @@ runIrc' m = do
 
         exitModules = do
           mods <- gets $ M.elems . ircModules
-          (`mapM_` mods) $ \(ModuleRef mod ref name) -> 
-            let ?ref = ref; ?name = name in writeGlobalState mod name
+          (`mapM_` mods) $ \(ModuleRef mod ref name) -> do
+            -- Call ircUnloadModule?
+            let ?ref = ref; ?name = name 
+            moduleExit mod
+            writeGlobalState mod name
 
-                                    
 
 readerLoop :: ThreadId -> Chan IRCMessage -> Chan IRCMessage -> Handle -> IO ()
 readerLoop threadmain chanr chanw h
