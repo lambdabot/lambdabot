@@ -6,10 +6,10 @@ import Plugins.Pl.Common
 import Plugins.Pl.Rules
 import Plugins.Pl.PrettyPrinter
 
+import qualified Set as S
 import qualified Map as M
 
 import Data.Graph (stronglyConnComp, flattenSCC, flattenSCCs)
-import qualified Data.Set as S
 import Control.Monad.State
 
 nub' :: Ord a => [a] -> [a]
