@@ -34,19 +34,19 @@ type Nick = String
 --   TimeDiff of him because we were absent.
 type LastSpoke = Maybe (ClockTime, TimeDiff)
 
---data WhoQuit = WeQuit | HeQuit deriving (Show,Read)
 -- | 'UserStatus' keeps track of the status of a given Nick name.
 data UserStatus
         = Present LastSpoke [Channel]  
           -- ^ Records when the nick last spoke and that the nick is currently 
           --   in [Channel].
-        | NotPresent ClockTime StopWatch Channel --WhoQuit
+        | NotPresent ClockTime StopWatch Channel
           -- ^ The nick is not present and was last seen at ClockTime in Channel.
-          --   The second argument records how much we've missed (due to the
-          --   incompleteness of System.Time's api we save negative TimeDiffs).
-        | WasPresent ClockTime LastSpoke Channel
+          --   The second argument records how much we've missed.
+        | WasPresent ClockTime StopWatch LastSpoke Channel
           -- ^ The bot parted a channel where the user was. The Clocktime
           --   records the time and Channel the channel this happened in.
+          --   We also save the reliablility of our information and the
+          --   time we last heard the user speak.
         | NewNick Nick                 
           -- ^ The user changed nick to something new.
     deriving (Show, Read)
@@ -137,7 +137,7 @@ instance Module SeenModule SeenState where
             else case M.lookup lcnick seenFM of
                   Just (Present mct cs) -> nickPresent mct cs
                   Just (NotPresent ct td chan) -> nickNotPresent ct td chan
-                  Just (WasPresent ct _ chan) -> nickWasPresent ct chan
+                  Just (WasPresent ct _ _todo chan) -> nickWasPresent ct chan
                   Just (NewNick newnick) -> nickIsNew newnick
                   _ -> ircMessage ["I haven't seen ", nick, "."]
 
@@ -157,7 +157,7 @@ botPart ct chans fm =
           case us of
             Present mct xs ->
               case xs \\ cs of
-                [] -> WasPresent ct mct (listToStr "and" cs)
+                [] -> WasPresent ct (startWatch ct zeroWatch) mct (head cs)
                 ys -> Present mct ys
             NotPresent ct' missed c 
               | c `elem` chans -> NotPresent ct' (startWatch ct missed) c
@@ -243,7 +243,7 @@ updateJ :: Maybe ClockTime -- ^ If the bot joined the channel, the time that
 updateJ _ c (Present ct cs) = Present ct $ nub (c ++ cs)
 -- The user was present when we left that channel and now we've come back.
 -- We need to update the time we've missed.
-updateJ (Just now) cs (WasPresent lastSeen (Just (lastSpoke, missed)) channel)
+updateJ (Just now) cs (WasPresent lastSeen _ (Just (lastSpoke, missed)) channel)
   | channel `elem` cs
   ---                 newMissed
   --- |---------------------------------------|
@@ -260,8 +260,8 @@ updateNP :: ClockTime -> Channel -> UserStatus -> UserStatus
 updateNP now _ (NotPresent ct missed c)
   = NotPresent ct (stopWatch now missed) c
 -- The user is gone, thus it's meaningless when we last heard him speak.
-updateNP _ chan (WasPresent lastSeen (Just _) c)
-  | c == chan = WasPresent lastSeen Nothing c
+updateNP now chan (WasPresent lastSeen missed (Just _) c)
+  | c == chan = WasPresent lastSeen (stopWatch now missed) Nothing c
 updateNP _ _ status = status
 -- annoying
 timeDiffPretty :: TimeDiff -> String
