@@ -56,16 +56,16 @@ stripComments (c:cs)      = c : stripComments cs
 -- Adapted from ghc/compiler/parser/Lexer.x
 go :: Int -> String -> String
 go 0 xs         = xs
-go n ('-':[])   = []   -- unterminated
+go _ ('-':[])   = []   -- unterminated
 go n ('-':x:xs) 
     | x == '}'  = go (n-1) xs
     | otherwise = go n (x:xs)
-go n ('{':[])   = []  -- unterminated
+go _ ('{':[])   = []  -- unterminated
 go n ('{':x:xs)
     | x == '-'  = go (n+1) xs
     | otherwise = go n (x:xs)
-go n [c]    = []   -- unterminated
-go n (c:xs) = go n xs
+go n (_:xs) = go n xs
+go _ _      = []   -- unterminated
 
 --     through IRC.
 
