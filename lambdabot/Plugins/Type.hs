@@ -25,7 +25,7 @@ import PosixCompat          (popen)
 
 import Maybe (mapMaybe)
 import Control.Monad.Trans (liftIO)
-import Text.Regex          (Regex, mkRegexWithOpts, matchRegex, subRegex)
+import Text.Regex          (Regex, mkRegexWithOpts, matchRegex)
 
 --     In accordance with the KISS principle, the plan is to delegate all
 --     the hard work! To get the type of foo, pipe
@@ -41,13 +41,31 @@ signature_regex
       "^(\\*?[A-Z][_a-zA-Z0-9]*(\\*?[A-Z][_a-zA-Z0-9]*)*>)? *(.*[	-=:].*)"
       True True
 
---     regex to strip off comments
+--
+-- Rather than use subRegex, which is new to 6.4, we can remove comments
+-- old skool style.
+-- Former regex for this:
+--    "(\\{-[^-]*-+([^\\}-][^-]*-+)*\\}|--.*$)"
+--
+stripComments :: String -> String
+stripComments []          = []
+stripComments ('-':'-':_) = []  -- 
+stripComments ('{':'-':cs)= stripComments (go 1 cs)
+stripComments (c:cs)      = c : stripComments cs
 
-comments_regex :: Regex
-comments_regex
-    = mkRegexWithOpts
-      "(\\{-[^-]*-+([^\\}-][^-]*-+)*\\}|--.*$)"
-      True True
+-- Adapted from ghc/compiler/parser/Lexer.x
+go :: Int -> String -> String
+go 0 xs         = xs
+go n ('-':[])   = []   -- unterminated
+go n ('-':x:xs) 
+    | x == '}'  = go (n-1) xs
+    | otherwise = go n (x:xs)
+go n ('{':[])   = []  -- unterminated
+go n ('{':x:xs)
+    | x == '-'  = go (n+1) xs
+    | otherwise = go n (x:xs)
+go n [c]    = []   -- unterminated
+go n (c:xs) = go n xs
 
 --     through IRC.
 
@@ -68,7 +86,7 @@ query_ghci :: String -> String -> String -> IRC ()
 query_ghci src cmd expr =
        do
        (output, _, _) <- liftIO $ popen "ghci-6.4" ["-fglasgow-exts"]
-			                  (Just (command cmd (subRegex comments_regex expr "")))
+			                  (Just (command cmd (stripComments expr)))
        let ls = extract_signatures output
        ircPrivmsg src . unlines $ if null ls then ["bzzt"] else ls
 
