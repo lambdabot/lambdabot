@@ -10,7 +10,7 @@ import qualified Map as M
 
 import Data.List           ((\\), nub)
 
-import Control.Monad       (unless)
+import Control.Monad       (unless, zipWithM_)
 import Control.Monad.Trans (liftIO, MonadIO)
 import Control.Arrow       (first)
 
@@ -59,13 +59,9 @@ instance Module SeenModule SeenState where
     moduleCmds _        = return ["seen"]
     moduleDefState _    = return M.empty
     moduleSerialize _   = Just mapSerializer
-    moduleInit _
-      = do ircSignalConnect "JOIN"    joinCB
-           ircSignalConnect "PART"    partCB
-           ircSignalConnect "QUIT"    quitCB
-           ircSignalConnect "NICK"    nickCB
-           ircSignalConnect "353"     joinChanCB
-           ircSignalConnect "PRIVMSG" msgCB
+    moduleInit _        = zipWithM_ ircSignalConnect 
+      ["JOIN", "PART", "QUIT", "NICK", "353",      "PRIVMSG"] $ map withSeenFM 
+      [joinCB, partCB, quitCB, nickCB, joinChanCB, msgCB]
 
     -- This magically causes the 353 callback to be invoked :)
     moduleDynInit _     = ircNames =<< ircGetChannels
@@ -82,6 +78,10 @@ instance Module SeenModule SeenState where
          now <- liftIO getClockTime
          ircPrivmsg target . unlines $ getAnswer msg rest seenFM now
 
+------------------------------------------------------------------------
+-- | The bot's name, lowercase
+myname :: String
+myname = lowerCaseString (name config)
 
 getAnswer :: IRCMessage -> String -> SeenState -> ClockTime -> [String]
 getAnswer msg rest seenFM now 
@@ -93,30 +93,13 @@ getAnswer msg rest seenFM now
       Just (NewNick newnick) -> nickIsNew newnick
       _ -> ["I haven't seen ", nick, "."]
   where
-    ircMessage = return . concat
-    myname = lowerCaseString (name config)
-    nick' = firstWord rest
-    you   = nick' == ircNick msg
-    nick  = if you then "you" else nick'
-    lcnick = lowerCaseString nick'
-    clockDifference past 
-      | all (==' ') diff = "just now"
-      | otherwise        = diff ++ " ago" 
-      where diff = timeDiffPretty . diffClockTimes now $ past
-    prettyMissed (Stopped missed) ifMissed _
-      | missedPretty <- timeDiffPretty missed, 
-        any (/=' ') missedPretty
-      = concat [ifMissed, "I have missed ", missedPretty, " since then."]
-    prettyMissed _ _ ifNotMissed = ifNotMissed ++ "."
     -- I guess the only way out of this spagetty hell are printf-style responses.
     nickPresent mct cs = ircMessage [
       if you then "You are" else nick ++ " is", " in ",
       listToStr "and" cs, ".",
       case mct of
-        Nothing -> 
-          concat [" I don't know when ", nick, " last spoke."]
-        Just (ct,missed)
-          -> prettyMissed (Stopped missed)
+        Nothing          -> concat [" I don't know when ", nick, " last spoke."]
+        Just (ct,missed) -> prettyMissed (Stopped missed)
                (concat [" I last heard ", nick, " speak ", 
                         lastSpoke, ", but "])
                (" Last spoke " ++ lastSpoke)
@@ -139,31 +122,44 @@ getAnswer msg rest seenFM now
             Nothing             -> error "SeenModule.nickIsNew: Nothing"
         us = findFunc newnick
 
+    ircMessage = return . concat
+    nick' = firstWord rest
+    you   = nick' == ircNick msg
+    nick  = if you then "you" else nick'
+    lcnick = lowerCaseString nick'
+    clockDifference past 
+      | all (==' ') diff = "just now"
+      | otherwise        = diff ++ " ago" 
+      where diff = timeDiffPretty . diffClockTimes now $ past
+    prettyMissed (Stopped missed) ifMissed _
+      | missedPretty <- timeDiffPretty missed, 
+        any (/=' ') missedPretty
+      = concat [ifMissed, "I have missed ", missedPretty, " since then."]
+    prettyMissed _ _ ifNotMissed = ifNotMissed ++ "."
+
+
 -- | Callback for when somebody joins. If it is not the bot that joins, record
 --   that we have a new user in our state tree and that we have never seen the
 --   user speaking.
-joinCB :: IRCMessage -> Seen IRC () -- when somebody joins
-joinCB msg = withSeenFM msg $ \fm _ct myname nick ->
+joinCB :: IRCMessage -> SeenState -> ClockTime -> Nick -> Either String SeenState
+joinCB msg fm _ct nick =
   if nick /= myname
      then let newInfo = Present Nothing (ircChans msg)
           in  Right $ M.insertUpd (updateJ Nothing (ircChans msg)) nick newInfo fm
      else Right fm
 
 botPart :: ClockTime -> [Channel] -> SeenState -> SeenState
-botPart ct chans fm = 
-    let botPart' cs us =
-          case us of
-            Present mct xs ->
-              case xs \\ cs of
-                [] -> WasPresent ct (startWatch ct zeroWatch) mct cs
-                ys -> Present mct ys
-            NotPresent ct' missed c 
-              | head c `elem` chans -> NotPresent ct' (startWatch ct missed) c
-            _ -> us
-    in fmap (botPart' chans) fm
+botPart ct chans fm = fmap (botPart' chans) fm where
+    botPart' cs (Present mct xs) = case xs \\ cs of
+        [] -> WasPresent ct (startWatch ct zeroWatch) mct cs
+        ys -> Present mct ys
+    botPart' _ (NotPresent ct' missed c)
+        | head c `elem` chans = NotPresent ct' (startWatch ct missed) c
+    botPart' _ us = us
 
-partCB :: IRCMessage -> Seen IRC () -- when somebody parts
-partCB msg = withSeenFM msg $ \fm ct myname nick ->
+-- | when somebody parts
+partCB :: IRCMessage -> SeenState -> ClockTime -> Nick -> Either String SeenState
+partCB msg fm ct nick =
   if nick == myname
        then Right $ botPart ct (ircChans msg) fm
        else case M.lookup nick fm of
@@ -177,15 +173,17 @@ partCB msg = withSeenFM msg $ \fm ct myname nick ->
                                          fm
               _ -> Left "SeenModule> someone who isn't known parted"
 
-quitCB :: IRCMessage -> Seen IRC () -- when somebody quits
-quitCB msg = withSeenFM msg $ \fm ct _myname nick ->
+-- | when somebody quits
+quitCB :: IRCMessage -> SeenState -> ClockTime -> Nick -> Either String SeenState 
+quitCB _msg fm ct nick =
   case M.lookup nick fm of
     Just (Present _ct xs) -> Right $ M.insert nick 
         (NotPresent ct zeroWatch xs) fm
     _ -> Left "SeenModule> someone who isn't known has quit"
 
-nickCB :: IRCMessage -> Seen IRC () -- when somebody changes his/her name
-nickCB msg = withSeenFM msg $ \fm _ct _myname nick ->
+-- | when somebody changes his/her name
+nickCB :: IRCMessage -> SeenState -> ClockTime -> Nick -> Either String SeenState
+nickCB msg fm _ct nick =
   let newnick = drop 1 $ head (msgParams msg)
       lcnewnick = lowerCaseString newnick
   in case M.lookup nick fm of
@@ -195,8 +193,9 @@ nickCB msg = withSeenFM msg $ \fm _ct _myname nick ->
        _ -> Left "SeenModule> someone who isn't here changed nick"
 
 -- use IRC.ircChans?
-joinChanCB :: IRCMessage -> Seen IRC () -- when the bot join a channel
-joinChanCB msg = withSeenFM msg $ \fm now _myname _nick ->
+-- | when the bot join a channel
+joinChanCB :: IRCMessage -> SeenState -> ClockTime -> Nick -> Either String SeenState
+joinChanCB msg fm now _nick =
   let l = msgParams msg
       chan = l !! 2
       chanUsers = words (drop 1 (l !! 3)) -- remove ':'
@@ -206,9 +205,9 @@ joinChanCB msg = withSeenFM msg $ \fm now _myname _nick ->
                                       fm'
       in Right $ fmap (updateNP now chan) $ foldl insertNick fm chanUsers
 
--- when somebody speaks, update their clocktime
-msgCB :: IRCMessage -> Seen IRC ()
-msgCB msg = withSeenFM msg $ \fm ct _myname nick ->
+-- | when somebody speaks, update their clocktime
+msgCB :: IRCMessage -> SeenState -> ClockTime -> Nick -> Either String SeenState
+msgCB _ fm ct nick =
   case M.lookup nick fm of
     Just (Present _ xs) -> Right $ 
       M.insert nick (Present (Just (ct, noTimeDiff)) xs) fm
@@ -218,16 +217,15 @@ msgCB msg = withSeenFM msg $ \fm ct _myname nick ->
 unUserMode :: Nick -> Nick
 unUserMode nick = dropWhile (`elem` "@+") nick
 
-withSeenFM :: IRCMessage
-              -> (SeenState -> ClockTime -> String -> Nick
+withSeenFM :: (IRCMessage -> SeenState -> ClockTime -> Nick
                   -> Either String SeenState)
+              -> IRCMessage
               -> Seen IRC ()
-withSeenFM msg f = do 
+withSeenFM f msg = do 
     let nick = lowerCaseString . unUserMode . ircNick $ msg
     state <- readMS
     ct <- liftIO getClockTime
-    let myname = (lowerCaseString . name) config
-    case f state ct myname nick of
+    case f msg state ct nick of
         Right newstate -> writeMS newstate
         Left err -> debugStrLn err
 
@@ -253,7 +251,7 @@ updateJ (Just now) cs (WasPresent lastSeen _ (Just (lastSpoke, missed)) channels
 updateJ _ cs _ = Present Nothing cs
 
 -- | Update a user who is not present. We just convert absolute missing time
---   into relative time.
+--   into relative time (i.e. start the "watch").
 updateNP :: ClockTime -> Channel -> UserStatus -> UserStatus
 updateNP now _ (NotPresent ct missed c)
   = NotPresent ct (stopWatch now missed) c
@@ -261,27 +259,28 @@ updateNP now _ (NotPresent ct missed c)
 updateNP now chan (WasPresent lastSeen missed (Just _) cs)
   | head cs == chan = WasPresent lastSeen (stopWatch now missed) Nothing cs
 updateNP _ _ status = status
+
 -- annoying
 timeDiffPretty :: TimeDiff -> String
-timeDiffPretty td =
-  let secs = abs $ tdSec td -- This is a hack, but there wasn't an sane output
-                            -- for negative TimeDiffs anyway.
-      mins = secs `div` 60
-      hours = mins `div` 60
-      days = hours `div` 24
-      months = days `div` 28
-      years = months `div` 12
-  in listToStr "and" $ filter (not . null) [
-             prettyP years "year",
-             prettyP (months `mod` 12) "month",
-             prettyP (days `mod` 28) "day",
-             prettyP (hours `mod` 24) "hour",
-             prettyP (mins `mod` 60) "minute",
-             prettyP (secs `mod` 60) "second"]
-              where prettyP i str
-                     | i == 0    = ""
-                     | i == 1    = "1 " ++ str
-                     | otherwise = show i ++ " " ++ str ++ "s"
+timeDiffPretty td = listToStr "and" $ filter (not . null) [
+    prettyP years "year",
+    prettyP (months `mod` 12) "month",
+    prettyP (days `mod` 28) "day",
+    prettyP (hours `mod` 24) "hour",
+    prettyP (mins `mod` 60) "minute",
+    prettyP (secs `mod` 60) "second"]
+  where 
+    prettyP i str | i == 0    = ""
+                  | i == 1    = "1 " ++ str
+                  | otherwise = show i ++ " " ++ str ++ "s"
+
+    secs = abs $ tdSec td -- This is a hack, but there wasn't an sane output
+                          -- for negative TimeDiffs anyway.
+    mins = secs `div` 60
+    hours = mins `div` 60
+    days = hours `div` 24
+    months = days `div` 28
+    years = months `div` 12
 
 ------------------------------------------------------------------------
 
