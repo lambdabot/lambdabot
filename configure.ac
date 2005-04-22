@@ -81,7 +81,7 @@ AC_SUBST(GHC_LIB_PATH)
 PLATFORM=`uname -ms`
 AC_SUBST(PLATFORM)
 
-REPO_PATH=`sed -n 1p ../_darcs/prefs/repos`
+REPO_PATH=`sed -n 1p _darcs/prefs/repos`
 AC_SUBST(REPO_PATH)
 
 PATCH_COUNT=`darcs changes --xml-output | sed -n '/^<patch/p' | wc -l | sed 's/ *//g'`
