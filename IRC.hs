@@ -78,8 +78,6 @@ import Control.Monad.State
 import Control.Monad.Error (MonadError (..))
 import Control.Arrow       (first)
 
-import GHC.Prim             (unsafeCoerce#)
-
 ------------------------------------------------------------------------
 
 #ifdef mingw32_HOST_OS
@@ -807,8 +805,7 @@ ircLoad :: FilePath -> S.Symbol -> LB (S.Module, a)
 ircLoad mod sym = do
     s <- get
     let fn  = S.dynload (ircDynLoad s)
-        fn' = (unsafeCoerce# fn) :: FilePath -> S.Symbol -> IO (S.Module,a) -- :/
-    liftIO $ (fn' mod sym)
+    liftIO $ (fn mod sym)
 
 --
 -- | Dynamically unload a module
