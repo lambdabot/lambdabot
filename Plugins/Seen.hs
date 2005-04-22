@@ -77,69 +77,67 @@ instance Module SeenModule SeenState where
             fm    <- readMS
             writeMS $ botPart ct chans fm
 
-    process m msg target cmd rest =
-      do seenFM <- readMS
+    process _ msg target _ rest = do 
+         seenFM <- readMS
          now <- liftIO getClockTime
-         let myname = lowerCaseString (name config)
-             nick' = firstWord rest
-             you   = nick' == ircNick msg
-             nick  = if you then "you" else nick'
-             lcnick = lowerCaseString nick'
-             ircMessage = ircPrivmsg target . concat
-             clockDifference = timeDiffPretty . diffClockTimes now
-             -- I guess the only way out of this spagetty hell are 
-             -- printf-style responses.
-             nickPresent mct cs = ircMessage [
-                 if you then "You are" else nick ++ " is", " in ",
-                 listToStr "and" cs, ".",
-                 case mct of
-                   Nothing -> 
-                     concat [" I don't know when ", nick, " last spoke."]
-                   Just (ct,missed)
-                     | all (==' ') missedPretty
-                     -> concat [" Last spoke ", lastSpoke, "."]
-                     |  otherwise
-                     -> concat [" I last heard ", nick, " speak ", lastSpoke,
-                                " but I have missed ", 
-                                missedPretty, " since then."]
-                     where 
-                       lastSpoke | all (==' ') when' = "just now"
-                                 | otherwise         = when' ++ " ago"
-                       when' = clockDifference ct
-                       missedPretty = timeDiffPretty missed
-               ]
-             nickNotPresent ct missed chans = ircMessage [
-                 "I saw ", nick, " leaving ", listToStr "and" chans, " ", 
-                 clockDifference ct, " ago", 
-                 case missed of
-                   Stopped missed' 
-                     |  missedPretty <- timeDiffPretty missed', 
-                        any (/=' ') missedPretty
-                     -> concat [" but I have missed ", missedPretty, 
-                                " since then."]
-                   _ -> "."
-               ]
-             nickWasPresent ct chans = ircMessage [
-                 "Last time I saw ", nick, "was when I left ",
-                 listToStr "and" chans , " ", clockDifference ct, " ago."]
-             nickIsNew newnick =
-               do let findFunc str =
-                        case M.lookup (lowerCaseString str) seenFM of
-                          Just (NewNick str') -> findFunc str'
-                          Just _              -> str
-                          Nothing             -> error "SeenModule.nickIsNew: Nothing"
-                      us = findFunc newnick
-                  ircMessage [if you then "You have" else nick++" has", 
-                              " changed nick to ", us, "."]
-                  process m msg target cmd us
-         if lcnick == myname
-            then ircMessage ["Yes, I'm here."]
-            else case M.lookup lcnick seenFM of
-                  Just (Present mct cs) -> nickPresent mct cs
-                  Just (NotPresent ct td chans) -> nickNotPresent ct td chans
-                  Just (WasPresent ct _ _todo chans) -> nickWasPresent ct chans
-                  Just (NewNick newnick) -> nickIsNew newnick
-                  _ -> ircMessage ["I haven't seen ", nick, "."]
+         ircPrivmsg target . unlines $ getAnswer msg rest seenFM now
+
+
+getAnswer :: IRCMessage -> String -> SeenState -> ClockTime -> [String]
+getAnswer msg rest seenFM now 
+  | lcnick == myname = ["Yes, I'm here."]
+  | otherwise        = case M.lookup lcnick seenFM of
+      Just (Present mct cs) -> nickPresent mct cs
+      Just (NotPresent ct td chans) -> nickNotPresent ct td chans
+      Just (WasPresent ct sw _ chans) -> nickWasPresent ct sw chans
+      Just (NewNick newnick) -> nickIsNew newnick
+      _ -> ["I haven't seen ", nick, "."]
+  where
+    ircMessage = return . concat
+    myname = lowerCaseString (name config)
+    nick' = firstWord rest
+    you   = nick' == ircNick msg
+    nick  = if you then "you" else nick'
+    lcnick = lowerCaseString nick'
+    clockDifference past 
+      | all (==' ') diff = "just now"
+      | otherwise        = diff ++ " ago" 
+      where diff = timeDiffPretty . diffClockTimes now $ past
+    prettyMissed (Stopped missed) ifMissed _
+      | missedPretty <- timeDiffPretty missed, 
+        any (/=' ') missedPretty
+      = concat [ifMissed, "I have missed ", missedPretty, " since then."]
+    prettyMissed _ _ ifNotMissed = ifNotMissed ++ "."
+    -- I guess the only way out of this spagetty hell are printf-style responses.
+    nickPresent mct cs = ircMessage [
+      if you then "You are" else nick ++ " is", " in ",
+      listToStr "and" cs, ".",
+      case mct of
+        Nothing -> 
+          concat [" I don't know when ", nick, " last spoke."]
+        Just (ct,missed)
+          -> prettyMissed (Stopped missed)
+               (concat [" I last heard ", nick, " speak ", 
+                        lastSpoke, ", but "])
+               (" Last spoke " ++ lastSpoke)
+          where lastSpoke = clockDifference ct
+     ]
+    nickNotPresent ct missed chans = ircMessage [
+       "I saw ", nick, " leaving ", listToStr "and" chans, " ", 
+       clockDifference ct, prettyMissed missed ", and " ""
+     ]
+    nickWasPresent ct sw chans = ircMessage [
+       "Last time I saw ", nick, "was when I left ",
+       listToStr "and" chans , " ", clockDifference ct,
+       prettyMissed sw ", and" ""]
+    nickIsNew newnick = ircMessage [if you then "You have" else nick++" has", 
+        " changed nick to ", us, "."] ++ getAnswer msg us seenFM now 
+      where
+        findFunc str = case M.lookup (lowerCaseString str) seenFM of
+            Just (NewNick str') -> findFunc str'
+            Just _              -> str
+            Nothing             -> error "SeenModule.nickIsNew: Nothing"
+        us = findFunc newnick
 
 -- | Callback for when somebody joins. If it is not the bot that joins, record
 --   that we have a new user in our state tree and that we have never seen the
