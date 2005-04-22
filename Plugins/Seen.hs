@@ -142,11 +142,12 @@ getAnswer msg rest seenFM now
 --   that we have a new user in our state tree and that we have never seen the
 --   user speaking.
 joinCB :: IRCMessage -> SeenState -> ClockTime -> Nick -> Either String SeenState
-joinCB msg fm _ct nick =
-  if nick /= myname
-     then let newInfo = Present Nothing (ircChans msg)
-          in  Right $ M.insertUpd (updateJ Nothing (ircChans msg)) nick newInfo fm
-     else Right fm
+joinCB msg fm _ct nick
+  | nick == myname = Right fm
+  | otherwise      = Right $ M.insertUpd (updateJ Nothing (ircChans msg)) 
+                                         nick newInfo fm
+  where newInfo = Present Nothing (ircChans msg)
+
 
 botPart :: ClockTime -> [Channel] -> SeenState -> SeenState
 botPart ct chans fm = fmap (botPart' chans) fm where
@@ -159,51 +160,48 @@ botPart ct chans fm = fmap (botPart' chans) fm where
 
 -- | when somebody parts
 partCB :: IRCMessage -> SeenState -> ClockTime -> Nick -> Either String SeenState
-partCB msg fm ct nick =
-  if nick == myname
-       then Right $ botPart ct (ircChans msg) fm
-       else case M.lookup nick fm of
-              Just (Present mct xs) ->
-                case xs \\ ircChans msg of
-                  [] -> Right $ M.insert nick
-                         (NotPresent ct zeroWatch xs)
-                         fm
-                  ys -> Right $ M.insert nick
-                                         (Present mct ys)
-                                         fm
-              _ -> Left "SeenModule> someone who isn't known parted"
+partCB msg fm ct nick
+  | nick == myname = Right $ botPart ct (ircChans msg) fm
+  | otherwise      = case M.lookup nick fm of
+      Just (Present mct xs) ->
+        case xs \\ ircChans msg of
+          [] -> Right $ M.insert nick
+                 (NotPresent ct zeroWatch xs)
+                 fm
+          ys -> Right $ M.insert nick
+                                 (Present mct ys)
+                                 fm
+      _ -> Left "someone who isn't known parted"
 
 -- | when somebody quits
 quitCB :: IRCMessage -> SeenState -> ClockTime -> Nick -> Either String SeenState 
-quitCB _msg fm ct nick =
-  case M.lookup nick fm of
-    Just (Present _ct xs) -> Right $ M.insert nick 
-        (NotPresent ct zeroWatch xs) fm
-    _ -> Left "SeenModule> someone who isn't known has quit"
+quitCB _ fm ct nick = case M.lookup nick fm of
+    Just (Present _ct xs) -> Right $ M.insert nick (NotPresent ct zeroWatch xs) fm
+    _ -> Left "someone who isn't known has quit"
 
 -- | when somebody changes his/her name
 nickCB :: IRCMessage -> SeenState -> ClockTime -> Nick -> Either String SeenState
-nickCB msg fm _ct nick =
-  let newnick = drop 1 $ head (msgParams msg)
-      lcnewnick = lowerCaseString newnick
-  in case M.lookup nick fm of
-       Just status ->
-         let fm' = M.insert nick (NewNick newnick) fm
-         in Right $ M.insert lcnewnick status fm'
-       _ -> Left "SeenModule> someone who isn't here changed nick"
+nickCB msg fm _ nick = case M.lookup nick fm of
+   Just status -> let fm' = M.insert nick (NewNick newnick) fm
+                  in  Right $ M.insert lcnewnick status fm'
+   _           -> Left "someone who isn't here changed nick"
+   where
+   newnick = drop 1 $ head (msgParams msg)
+   lcnewnick = lowerCaseString newnick
 
 -- use IRC.ircChans?
 -- | when the bot join a channel
 joinChanCB :: IRCMessage -> SeenState -> ClockTime -> Nick -> Either String SeenState
-joinChanCB msg fm now _nick =
-  let l = msgParams msg
-      chan = l !! 2
-      chanUsers = words (drop 1 (l !! 3)) -- remove ':'
-      insertNick fm' u = M.insertUpd (updateJ (Just now) [chan])
-                                      (lowerCaseString $ unUserMode u)
-                                      (Present Nothing [chan])
-                                      fm'
-      in Right $ fmap (updateNP now chan) $ foldl insertNick fm chanUsers
+joinChanCB msg fm now _nick 
+    = Right $ fmap (updateNP now chan) $ foldl insertNick fm chanUsers
+  where
+    l = msgParams msg
+    chan = l !! 2
+    chanUsers = words (drop 1 (l !! 3)) -- remove ':'
+    insertNick fm' u = M.insertUpd (updateJ (Just now) [chan])
+                                    (lowerCaseString $ unUserMode u)
+                                    (Present Nothing [chan])
+                                    fm'
 
 -- | when somebody speaks, update their clocktime
 msgCB :: IRCMessage -> SeenState -> ClockTime -> Nick -> Either String SeenState
@@ -211,12 +209,19 @@ msgCB _ fm ct nick =
   case M.lookup nick fm of
     Just (Present _ xs) -> Right $ 
       M.insert nick (Present (Just (ct, noTimeDiff)) xs) fm
-    _ -> Left "SeenModule> someone who isn't here msg us"
+    _ -> Left "someone who isn't here msg us"
 
 -- misc. functions
 unUserMode :: Nick -> Nick
 unUserMode nick = dropWhile (`elem` "@+") nick
 
+-- | Callbacks are only allowed to use a limited knowledge of the world. 
+-- 'withSeenFM' is (up to trivial isomorphism) a monad morphism from the 
+-- restricted
+--   'ReaderT (IRCMessage, ClockTime, Nick) (StateT SeenState (Error String))'
+-- to the
+--   'ReaderT (Seen IRC)'
+-- monad.
 withSeenFM :: (IRCMessage -> SeenState -> ClockTime -> Nick
                   -> Either String SeenState)
               -> IRCMessage
@@ -227,7 +232,7 @@ withSeenFM f msg = do
     ct <- liftIO getClockTime
     case f msg state ct nick of
         Right newstate -> writeMS newstate
-        Left err -> debugStrLn err
+        Left err -> debugStrLn $ "SeenModule> " ++ err
 
 -- | Update the user status.
 updateJ :: Maybe ClockTime -- ^ If the bot joined the channel, the time that 
@@ -260,7 +265,8 @@ updateNP now chan (WasPresent lastSeen missed (Just _) cs)
   | head cs == chan = WasPresent lastSeen (stopWatch now missed) Nothing cs
 updateNP _ _ status = status
 
--- annoying
+-- | Pretty-print a TimeDiff. Both positive and negative Timediffs are produce
+--   the same output.
 timeDiffPretty :: TimeDiff -> String
 timeDiffPretty td = listToStr "and" $ filter (not . null) [
     prettyP years "year",
@@ -310,8 +316,8 @@ addToClockTime :: TimeDiff -> ClockTime -> ClockTime
 addToClockTime td (ClockTime ct) = ClockTime $ T.addToClockTime td ct
 
 ------------------------------------------------------------------------
-
 -- Stop watches mini-library --
+
 data StopWatch = Stopped TimeDiff | Running ClockTime deriving (Show,Read)
 
 zeroWatch :: StopWatch
