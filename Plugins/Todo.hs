@@ -30,17 +30,19 @@ instance Module TodoModule TodoState where
     process      _ msg source cmd rest =
         do todoList <- readMS
            case cmd of
-               "todo"        -> getTodo source todoList
+               "todo"        -> getTodo source todoList rest
                "todo-add"    -> addTodo source sender rest
                "todo-delete" -> checkPrivs msg source (delTodo source rest)
                _ -> error "unimplemented command"
 	where sender = ircNick msg
 
 -- | Print todo list
-getTodo :: String -> [(String, String)] -> ModuleT TodoState IRC ()
-getTodo source todoList = 
+getTodo :: String -> TodoState -> String -> ModuleT TodoState IRC ()
+getTodo source todoList "" = 
     ircPrivmsg source (formatTodo todoList)
-
+getTodo _      _        _  =
+    error "@todo given arguments, try @todo-add or @listcommands todo"
+ 
 -- | Pretty print todo list
 formatTodo :: [(String, String)] -> String
 formatTodo [] = "Nothing to do!"
