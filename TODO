@@ -1,9 +1,6 @@
 Don's Todo:
 * have 'make prof' and 'make static' just work
 * reduce memory usage
-* spell correction on arguments to @help
-+ we then get a @reboot, that reloads all code, but maintains state
-(probably)
 
 * Profiling issues:
     * ln -s Map.o Map.p_o
