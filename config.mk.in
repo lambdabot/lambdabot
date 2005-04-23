@@ -32,7 +32,7 @@ STATIC=NO
 ifeq "$(STATIC)" "NO"
 PLUGINS=       Dict Dummy Lambda Karma Quote Seen State \
                Topic Type Plugs Babel Version More Pl \
-               Help Dice Search Vixen Fact Spell
+               Help Dice Search Vixen Fact Spell Todo
 STATICS=       Base System Dynamic
 else
 PLUGINS=
