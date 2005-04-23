@@ -146,13 +146,15 @@ joinCB msg fm _ct nick
 
 
 botPart :: ClockTime -> [Channel] -> SeenState -> SeenState
-botPart ct chans fm = fmap (botPart' chans) fm where
-    botPart' cs (Present mct xs) = case xs \\ cs of
+botPart ct cs fm = fmap botPart' fm where
+    botPart' (Present mct xs) = case xs \\ cs of
         [] -> WasPresent ct (startWatch ct zeroWatch) mct cs
         ys -> Present mct ys
-    botPart' _ (NotPresent ct' missed c)
-        | head c `elem` chans = NotPresent ct' (startWatch ct missed) c
-    botPart' _ us = us
+    botPart' (NotPresent ct' missed c)
+        | head c `elem` cs = NotPresent ct' (startWatch ct missed) c
+    botPart' (WasPresent ct' missed mct c)
+        | head c `elem` cs = WasPresent ct' (startWatch ct missed) mct c
+    botPart' us = us
 
 -- | when somebody parts
 partCB :: IRCMessage -> SeenState -> ClockTime -> Nick -> Either String SeenState
@@ -256,8 +258,8 @@ updateJ _ cs _ = Present Nothing cs
 updateNP :: ClockTime -> Channel -> UserStatus -> UserStatus
 updateNP now _ (NotPresent ct missed c)
   = NotPresent ct (stopWatch now missed) c
--- The user is gone, thus it's meaningless when we last heard him speak.
-updateNP now chan (WasPresent lastSeen missed (Just _) cs)
+-- The user might be gone, thus it's meaningless when we last heard him speak.
+updateNP now chan (WasPresent lastSeen missed _ cs)
   | head cs == chan = WasPresent lastSeen (stopWatch now missed) Nothing cs
 updateNP _ _ status = status
 
