@@ -31,7 +31,7 @@ syscmds :: M.Map String String
 syscmds = M.fromList
        [("listchans",   "show channels bot has joined")
        ,("listmodules", "show available plugins")
-       ,("listcommands","listcommands [module]\n"++
+       ,("listcommands","listcommands [module|command]\n"++
                         "show all commands or command for [module]")
        ,("join",        "join <channel>")
        ,("leave",       "leave <channel>")
@@ -87,11 +87,20 @@ listAll state target =
         ircPrivmsg target $ "Commands: "++pprKeys (ircCommands state)
 
 listModule :: String -> String -> IRC ()
-listModule target modname = withModule ircCommands modname (ircPrivmsg target $ 
-        "No module \""++modname++"\" loaded") (\m -> do
-                cmds <- liftLB $ moduleCmds m
-                ircPrivmsg target $ concat
-                        [modname, " provides: ", showClean cmds])
+listModule target query = withModule ircModules query fromCommand printProvides
+    where
+    fromCommand = withModule ircCommands query 
+        (ircPrivmsg target $ "No module \""++query++"\" loaded") 
+        printProvides
+    
+    -- calling moduleCmds seems bad here, since it might have side effects.
+    -- Two solutions come to mind:
+    -- (i)  make moduleCmds a pure function (its implementation in all
+    --      modules is pure anyway.
+    -- (ii) extract the information directly from the ircCommands map.
+    printProvides m = do
+        cmds <- liftLB $ moduleCmds m
+        ircPrivmsg target $ concat [?name, " provides: ", showClean cmds]
 
 pprKeys :: (Show k) => M.Map k a -> String
 pprKeys m = showClean (M.keys m)
