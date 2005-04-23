@@ -52,7 +52,8 @@ import Prelude hiding   (mod, catch)
 import Network          (withSocketsDo, connectTo, PortID(PortNumber))
 
 import System.IO        (Handle, hGetLine, hPutStr, hClose,
-                         hSetBuffering, BufferMode(NoBuffering))
+                         hSetBuffering, BufferMode(NoBuffering),
+                         openFile, hGetContents, IOMode(..))
 
 #if __GLASGOW_HASKELL__ >= 600
 import System.IO.Error  (isEOFError, ioeGetHandle)
@@ -746,8 +747,10 @@ writeGlobalState mod name = case moduleSerialize mod of
 -- Read the whole file so it'll be closed
 readFile' :: String -> IO String
 readFile' file = do
-  cont <- readFile file
-  return $!! cont
+  h <- openFile file ReadMode
+  cont <- hGetContents h
+  cont `deepSeq` hClose h
+  return cont
 
 readGlobalState :: Module m s => m -> String -> IO (Maybe s)
 readGlobalState mod name = case moduleSerialize mod of
