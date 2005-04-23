@@ -5,6 +5,7 @@ module Plugins.Seen (theModule) where
 
 import IRC
 import Util (mapSerializer, lowerCaseString, firstWord, listToStr, debugStrLn)
+import AltTime
 import Config
 import qualified Map as M
 
@@ -12,11 +13,6 @@ import Data.List           ((\\), nub)
 
 import Control.Monad       (unless, zipWithM_)
 import Control.Monad.Trans (liftIO, MonadIO)
-import Control.Arrow       (first)
-
-import System.Time (TimeDiff(..), noTimeDiff)
-import qualified System.Time as T 
-  (ClockTime(..), getClockTime, diffClockTimes, addToClockTime)
 
 ------------------------------------------------------------------------
 
@@ -264,56 +260,6 @@ updateNP now _ (NotPresent ct missed c)
 updateNP now chan (WasPresent lastSeen missed (Just _) cs)
   | head cs == chan = WasPresent lastSeen (stopWatch now missed) Nothing cs
 updateNP _ _ status = status
-
--- | Pretty-print a TimeDiff. Both positive and negative Timediffs are produce
---   the same output.
-timeDiffPretty :: TimeDiff -> String
-timeDiffPretty td = listToStr "and" $ filter (not . null) [
-    prettyP years "year",
-    prettyP (months `mod` 12) "month",
-    prettyP (days `mod` 28) "day",
-    prettyP (hours `mod` 24) "hour",
-    prettyP (mins `mod` 60) "minute",
-    prettyP (secs `mod` 60) "second"]
-  where 
-    prettyP i str | i == 0    = ""
-                  | i == 1    = "1 " ++ str
-                  | otherwise = show i ++ " " ++ str ++ "s"
-
-    secs = abs $ tdSec td -- This is a hack, but there wasn't an sane output
-                          -- for negative TimeDiffs anyway.
-    mins = secs `div` 60
-    hours = mins `div` 60
-    days = hours `div` 24
-    months = days `div` 28
-    years = months `div` 12
-
-------------------------------------------------------------------------
-
-------- Time compatibility layer (maybe move to its own module?) -------
-
--- Wrapping ClockTime (which doesn't provide a Read instance!) seems 
--- easier than talking care of the serialization of UserStatus ourselves.
-newtype ClockTime = ClockTime (T.ClockTime)
-
-instance Show ClockTime where
-  showsPrec p (ClockTime (T.TOD x y)) = showsPrec p (x,y)
-
-instance Read ClockTime where
-  readsPrec p = map (first $ ClockTime . uncurry T.TOD) . readsPrec p
-
-getClockTime :: IO ClockTime
-getClockTime = ClockTime `fmap` T.getClockTime
-
-diffClockTimes :: ClockTime -> ClockTime -> TimeDiff
-diffClockTimes (ClockTime ct1) (ClockTime ct2) = 
--- This is an ugly hack (we don't care about picoseconds...) to avoid the 
---   "Time.toClockTime: picoseconds out of range"
--- error. I think time arithmetic is broken in GHC.
-  (T.diffClockTimes ct1 ct2) { tdPicosec = 0 }
-
-addToClockTime :: TimeDiff -> ClockTime -> ClockTime
-addToClockTime td (ClockTime ct) = ClockTime $ T.addToClockTime td ct
 
 ------------------------------------------------------------------------
 -- Stop watches mini-library --

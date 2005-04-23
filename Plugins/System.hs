@@ -5,10 +5,12 @@ module Plugins.System (theModule) where
 
 import IRC
 import Util                     (breakOnGlue,showClean)
+import AltTime
 import qualified Map as M       (Map,keys,fromList,lookup)
 
 import Data.Maybe               (fromMaybe)
 import Control.Monad.State      (MonadState(get))
+import Control.Monad.Trans      (liftIO)
 
 ------------------------------------------------------------------------
 
@@ -17,9 +19,10 @@ newtype SystemModule = SystemModule ()
 theModule :: MODULE
 theModule = MODULE $ SystemModule ()
 
-instance Module SystemModule () where
+instance Module SystemModule ClockTime where
     moduleCmds   _ = return (M.keys syscmds)
     moduleHelp _ s = return $ fromMaybe defaultHelp (M.lookup s syscmds)
+    moduleDefState _ = liftIO getClockTime
     process      _ = doSystem
 
 ------------------------------------------------------------------------
@@ -36,12 +39,13 @@ syscmds = M.fromList
        ,("msg",         "msg someone")
        ,("quit",        "quit [msg]")
        ,("reconnect",   "reconnect to channel")
-       ,("echo",        "echo irc protocol string")]
+       ,("echo",        "echo irc protocol string")
+       ,("uptime",      "show uptime")]
 
 defaultHelp :: String
 defaultHelp = "system : irc management"
 
-doSystem :: IRCMessage -> String -> [Char] -> [Char] -> IRC ()
+doSystem :: IRCMessage -> String -> [Char] -> [Char] -> ModuleT ClockTime IRC ()
 doSystem msg target cmd rest = do
    s <- get
    case cmd of
@@ -66,6 +70,12 @@ doSystem msg target cmd rest = do
 
       "echo" -> ircPrivmsg target $ concat 
               ["echo; msg:", show msg, " rest:", show rest]
+
+      "uptime" -> do
+              loaded <- readMS
+              now    <- liftIO getClockTime
+              let diff = timeDiffPretty $ now `diffClockTimes` loaded
+              ircPrivmsg target $ "uptime: " ++ diff
 
       _unknowncmd -> ircPrivmsg target $ 
               concat ["unknown system command: ", show msg, show rest]
