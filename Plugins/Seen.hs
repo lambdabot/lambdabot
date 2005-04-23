@@ -60,7 +60,7 @@ instance Module SeenModule SeenState where
     moduleDefState _    = return M.empty
     moduleSerialize _   = Just mapSerializer
     moduleInit _        = zipWithM_ ircSignalConnect 
-      ["JOIN", "PART", "QUIT", "NICK", "353",      "PRIVMSG"] $ map withSeenFM 
+      ["JOIN", "PART", "QUIT", "NICK", "353",      "PRIVMSG"] $ map withSeenFM
       [joinCB, partCB, quitCB, nickCB, joinChanCB, msgCB]
 
     -- This magically causes the 353 callback to be invoked :)
@@ -91,7 +91,7 @@ getAnswer msg rest seenFM now
       Just (NotPresent ct td chans) -> nickNotPresent ct td chans
       Just (WasPresent ct sw _ chans) -> nickWasPresent ct sw chans
       Just (NewNick newnick) -> nickIsNew newnick
-      _ -> ["I haven't seen ", nick, "."]
+      _ -> ircMessage ["I haven't seen ", nick, "."]
   where
     -- I guess the only way out of this spagetty hell are printf-style responses.
     nickPresent mct cs = ircMessage [
@@ -110,9 +110,9 @@ getAnswer msg rest seenFM now
        clockDifference ct, prettyMissed missed ", and " ""
      ]
     nickWasPresent ct sw chans = ircMessage [
-       "Last time I saw ", nick, "was when I left ",
+       "Last time I saw ", nick, " was when I left ",
        listToStr "and" chans , " ", clockDifference ct,
-       prettyMissed sw ", and" ""]
+       prettyMissed sw ", and " ""]
     nickIsNew newnick = ircMessage [if you then "You have" else nick++" has", 
         " changed nick to ", us, "."] ++ getAnswer msg us seenFM now 
       where
@@ -179,7 +179,7 @@ quitCB _ fm ct nick = case M.lookup nick fm of
     Just (Present _ct xs) -> Right $ M.insert nick (NotPresent ct zeroWatch xs) fm
     _ -> Left "someone who isn't known has quit"
 
--- | when somebody changes his/her name
+-- | when somebody changes his\/her name
 nickCB :: IRCMessage -> SeenState -> ClockTime -> Nick -> Either String SeenState
 nickCB msg fm _ nick = case M.lookup nick fm of
    Just status -> let fm' = M.insert nick (NewNick newnick) fm
@@ -220,7 +220,7 @@ unUserMode nick = dropWhile (`elem` "@+") nick
 -- restricted
 --   'ReaderT (IRCMessage, ClockTime, Nick) (StateT SeenState (Error String))'
 -- to the
---   'ReaderT (Seen IRC)'
+--   'ReaderT IRCMessage (Seen IRC)'
 -- monad.
 withSeenFM :: (IRCMessage -> SeenState -> ClockTime -> Nick
                   -> Either String SeenState)
