@@ -4,6 +4,8 @@
 module Plugins.Dummy (theModule) where
 
 import IRC
+import Plugins.Dummy.DocAssocs (docAssocs)
+import qualified Data.Map as M
 
 newtype DummyModule = DummyModule ()
 
@@ -34,8 +36,10 @@ dummylst = [("dummy",       \_ -> "dummy"),
                                                 "- Gothenburg, Sweden"]),
 	    ("wiki",        \x -> "http://www.haskell.org/hawiki/" ++ x),
 	    ("paste",       \_ -> "http://www.haskell.org/hawiki/HaskellIrcPastePage"),
-            ("docs",        \x -> "http://haskell.org/ghc/docs/latest/html/"++
-                                  "libraries/base/" ++ x ++ ".html"),
+            ("docs",        \x -> case M.lookup x docAssocs of
+               Nothing -> x ++ " not available"
+               Just m  -> "http://haskell.org/ghc/docs/latest/html/"++
+                          "libraries/" ++ m ++ "/" ++ x ++ ".html"),
 	    ("learn",       \_ -> "http://www.haskell.org/learning.html"),
 	    ("moo",         \_ -> unlines ["         (__)",
 					   "         (oo)",
