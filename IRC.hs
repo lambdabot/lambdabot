@@ -60,6 +60,7 @@ import System.IO.Error  (isEOFError, ioeGetHandle)
 
 # ifndef mingw32_HOST_OS
 import System.Posix.Signals
+import System.IO.Unsafe         (unsafePerformIO)
 # endif
 
 #else
@@ -189,7 +190,17 @@ ircSignalHandler threadid s
 #ifdef mingw32_HOST_OS
   = ()
 #else  
-  = Catch $ throwTo threadid $ DynException $ toDyn $ SignalException s
+  = Catch $ do
+      putMVar catchLock ()
+      throwTo threadid $ DynException $ toDyn $ SignalException s
+                                
+-- This is clearly a hack, but I have no idea how to accomplish the same
+-- thing correctly. The main problem is that signals are often thrown multiple
+-- times, and the threads start killing each other if we allow the
+-- SignalException to be thrown more than once.
+{-# NOINLINE catchLock #-}      
+catchLock :: MVar ()            
+catchLock = unsafePerformIO $ newEmptyMVar
 #endif  
 
 withIrcSignalCatch :: (MonadError e m,MonadIO m) => m () -> m ()
