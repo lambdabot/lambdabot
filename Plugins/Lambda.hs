@@ -39,7 +39,7 @@ type EvalState = GlobalPrivate EvalGlobal Dynamic
 instance Module EvalModule EvalState where
     moduleDefState _ = return $ mkGlobalPrivate (initFuel, initEnv, initDefns)
     moduleSerialize _ = Just $ Serializer {
-      serialize = (\(fuel,_,defns) -> 
+      serialize = Just . (\(fuel,_,defns) -> 
         unlines $ show fuel: map show (M.toList defns)) . global,
       deSerialize = fmap mkGlobalPrivate . loadDefinitions
     }

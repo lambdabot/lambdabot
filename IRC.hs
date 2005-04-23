@@ -739,7 +739,9 @@ writeGlobalState mod name = case moduleSerialize mod of
   Nothing  -> return ()
   Just ser -> do
     state <- readMS
-    liftIO $ writeFile (toFilename name) (serialize ser state)
+    case serialize ser state of
+      Nothing  -> return ()
+      Just out -> liftIO $ writeFile (toFilename name) out
 
 -- Read the whole file so it'll be closed
 readFile' :: String -> IO String

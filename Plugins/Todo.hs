@@ -6,7 +6,7 @@
 module Plugins.Todo (theModule) where
 
 import IRC
-import Util         (stdSerializer,readM)
+import Util         (listSerializer,readM)
 import Data.Char    (isDigit)
 
 newtype TodoModule = TodoModule ()
@@ -24,7 +24,7 @@ instance Module TodoModule TodoState where
         _ -> "Keep a todo list. Provides @todo, @todo-add, @todo-delete"
 
     moduleDefState  _ = return ([] :: [(String, String)])
-    moduleSerialize _ = Just stdSerializer
+    moduleSerialize _ = Just listSerializer
     
     moduleCmds _ = return ["todo", "todo-add", "todo-delete"] 
     process      _ msg source cmd rest =
