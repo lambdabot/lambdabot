@@ -15,12 +15,13 @@ instance Module DummyModule () where
         "dummy"       -> "print a string constant"
         "wiki"        -> "wiki urls"
         "paste"       -> "paste page url"
+        "docs"        -> "library documentation"
         "learn"       -> "another url"
         "eurohaskell" -> "urls are good"
         "moo"         -> "vegan-friendly command"
         _             -> "dummy module"
 
-  moduleCmds   _ = return ["dummy","wiki","paste","learn","eurohaskell","moo"]
+  moduleCmds   _ = return $ map fst dummylst
   process _ _ src cmd rest = case lookup cmd dummylst of
 			       Nothing -> error "Dummy: invalid command"
                                Just f -> ircPrivmsg src $ f rest
@@ -33,6 +34,8 @@ dummylst = [("dummy",       \_ -> "dummy"),
                                                 "- Gothenburg, Sweden"]),
 	    ("wiki",        \x -> "http://www.haskell.org/hawiki/" ++ x),
 	    ("paste",       \_ -> "http://www.haskell.org/hawiki/HaskellIrcPastePage"),
+            ("docs",        \x -> "http://haskell.org/ghc/docs/latest/html/"++
+                                  "libraries/base/" ++ x ++ ".html"),
 	    ("learn",       \_ -> "http://www.haskell.org/learning.html"),
 	    ("moo",         \_ -> unlines ["         (__)",
 					   "         (oo)",
