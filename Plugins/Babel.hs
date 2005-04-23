@@ -43,13 +43,15 @@ instance Module BabelModule Quotes where
         moduleHelp _ "remember" = return "@remember <nick> quote - record some memorable phrase"
         moduleHelp _ "quote"    = return "@quote [nick] - quote somebody randomly"
         moduleHelp _ "timein"   = return "@timein <city>, report the local time in <city>"
-        moduleHelp _ _          = return "@babel,@remember,@quote,@timein"
+        moduleHelp _ "ghc"      = return "GHC!"
+        moduleHelp _ _          = return "@babel,@remember,@quote,@timein,@ghc"
 
-        moduleCmds _            = return ["babel", "remember", "quote", "timein" ]
+        moduleCmds _            = return ["babel", "remember", "quote", "timein", "ghc" ]
 
-        process _ _ src "babel" s     = run_babel src s
+        process _ _ src "babel" s      = run_babel src s
         process _ _ _src "remember"  s = run_remember  s
-        process _ _ src "quote"     s = run_quote    src s
+        process _ _ src "quote"      s = run_quote    src s
+        process _ _ src "ghc"        _ = run_quote    src "ghc"
 --      process _ _ src "last"  s     = run_last  src s
 
         -- totally unrelated :}
