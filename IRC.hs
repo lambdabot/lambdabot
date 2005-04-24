@@ -426,9 +426,8 @@ ircWrite line = do
 --
 handleIrc :: (MonadError IRCError m) => (String -> m ()) -> m () -> m ()
 handleIrc handler m = catchError m $ \e -> case e of
-        IRCRaised (ErrorCall s)        -> handler s
-        IRCRaised (PatternMatchFail s) -> handler s
-        _                              -> throwError e
+        IRCRaised s -> handler $ show s
+        _           -> throwError e
 
 --
 -- | run the IRC monad

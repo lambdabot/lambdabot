@@ -228,10 +228,12 @@ doPRIVMSG' myname msg
             e = 3   -- edit distance cut off. Seems reasonable for small words
             docmd c =
                 withModule ircCommands c
-                    (ircPrivmsg towhere ("Unknown command, try @listcommands.")) 
+                    (ircPrivmsg towhere ("Unknown command, try @listcommands."))
                     (\m -> do
                       debugStrLn (show msg)
-                      handleIrc (ircPrivmsg towhere) (process m msg towhere c rest))
+                      handleIrc (ircPrivmsg towhere . 
+                          (("module \"" ++ ?name ++ "\" screwed up: ") ++) )
+                        (process m msg towhere c rest))
 
 ------------------------------------------------------------------------
 
