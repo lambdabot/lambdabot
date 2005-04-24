@@ -47,7 +47,9 @@ getTodo _      _        _  =
 formatTodo :: [(String, String)] -> String
 formatTodo [] = "Nothing to do!"
 formatTodo todoList =
-    unlines $ map (\(idea, nick) -> "  * "++idea++" (submitted by "++nick++")") todoList
+    unlines $ map (\(n::Int, (idea, nick)) ->
+                   "  "++show n++": "++idea
+                   ++" (submitted by "++nick++")") $ zip [0..] todoList 
 
 -- | Add new entry to list
 addTodo :: String -> String -> String -> ModuleT TodoState IRC ()
