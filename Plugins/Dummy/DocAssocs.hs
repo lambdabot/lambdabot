@@ -2,7 +2,7 @@ module Plugins.Dummy.DocAssocs (docAssocs) where
 
 import qualified Map as M
 
-docAssocs :: String `M.Map` String
+docAssocs :: M.Map String String
 docAssocs = M.fromList [
   ("Control.Arrow","base"),
   ("Control.Concurrent","base"),
