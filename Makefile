@@ -136,6 +136,9 @@ endif
 %.raw-hs : %.hs
 	@$(GHC) $(HC_OPTS) $(PKG_OPTS) -D__HADDOCK__ -E -optP-P $< -o $@
 
+%.raw-hs : %.lhs
+	@$(GHC) $(HC_OPTS) $(PKG_OPTS) -D__HADDOCK__ -E -optP-P $< -o $@
+
 #
 # Building the haddocks (only if we have haddock)
 #
