@@ -76,8 +76,11 @@ go _ _      = []   -- unterminated
 --
 extract_signatures :: String -> [String]
 extract_signatures output
-        = map expandTab . map last . mapMaybe (matchRegex signature_regex) .
-                 reverse . tail . reverse . drop 7 . lines $ output
+        = map expandTab . mapMaybe last' . mapMaybe (matchRegex signature_regex) .
+                 reverse . drop 1 . reverse . drop 7 . lines $ output
+        where
+        last' [] = Nothing
+        last' xs = Just $ last xs
 
 --
 --     With this the command handler can be easily defined using popen:

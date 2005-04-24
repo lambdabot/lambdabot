@@ -37,9 +37,7 @@ module IRC (
 
 import qualified Config (config, name, admins, host, port, textwidth)
 import DeepSeq          (($!!), DeepSeq(..))
-import ErrorUtils
-import ExceptionError   (ExceptionError(..), ExceptionErrorT(..))
-import MonadException   (MonadException(throwM))
+import ErrorUtils       (bracketError, tryErrorJust, finallyError, catchErrorJust, tryError)
 import Util             (split,clean,breakOnGlue, Serializer(..), lowerCaseString)
 import qualified Util   (join)
 
@@ -70,7 +68,7 @@ import System.IO.Error
 
 import Data.Char                (toLower, isAlphaNum, isSpace)
 import Data.List                (isSuffixOf)
-import Data.Dynamic             (Typeable, toDyn, fromDynamic)
+import Data.Dynamic             (Typeable, toDyn) --, fromDynamic)
 import Data.IORef               (newIORef, IORef, readIORef, writeIORef)
 
 import Control.Exception
@@ -208,6 +206,7 @@ withIrcSignalCatch m
   = do threadid <- liftIO $ myThreadId
        withHandlerList ircSignalsToCatch (ircSignalHandler threadid) Nothing m
 
+-- "Phantom Error". Maybe we should handle both errors separately?
 data IRCError = IRCRaised Exception 
               | SignalCaught Signal 
   deriving Show
@@ -217,30 +216,6 @@ ircErrorMsg :: IRCError -> String
 ircErrorMsg (IRCRaised e) = show e
 ircErrorMsg (SignalCaught s) = "caught signal "++show s
 -}
-
-instance ExceptionError IRCError where
-  fromException e 
-    = case e of
-        DynException d ->
-          case fromDynamic d of
-             Just (SignalException s) -> SignalCaught s
-             Nothing -> IRCRaised e
-        _ -> IRCRaised e
-
-
-type IRCErrorT m a = ExceptionErrorT IRCError m a
-
-handleIRCErrorT :: (MonadIO m,MonadException m) => IRCErrorT m () -> m ()
-handleIRCErrorT m 
-  = do res <- runExceptionErrorT m
-       case res of
-         Left (IRCRaised e) -> throwM e
-#ifndef mingw32_HOST_OS         
-         Left (SignalCaught s) -> liftIO $ raiseSignal s
-#endif         
--- overlapped for now, but won't be if IRCError gets extended
---       Left e -> throwM $ ErrorCall (ircErrorMsg e)
-         Right v -> return v
 
 
 data IRCMessage
@@ -275,32 +250,32 @@ irchost msg = (split "@" (msgPrefix msg)) !! 1
 
 -- | Lambdabot's basic monad. Doesn't assume that there is a connection to a
 --   server.
-newtype LB a = LB { runLB :: IRCErrorT (StateT IRCRWState IO) a }
-#if __GLASGOW_HASKELL__ >= 600
+newtype LB a = LB { runLB :: ReaderT (IORef IRCRWState) IO a }
 #ifndef __HADDOCK__
-   deriving (Functor,Monad,MonadState IRCRWState,MonadError IRCError,MonadIO)
+   deriving (Functor,Monad,MonadIO)
 #endif
-#else
-instance Monad LB where
-  return a = LB $ return a
-  LB m >>= f = LB $ do v <- m
-                       runLB (f v)
+
+-- All of IRCErrorT's (RIP) functionality can be shrinked down to that.
+instance MonadError IRCError LB where
+  throwError (IRCRaised e) = liftIO $ throwIO e
+  throwError (SignalCaught e) = liftIO $ evaluate (throwDyn e)
+  LB m `catchError` h = LB $ ReaderT $ \r -> runReaderT m r
+                  `catch` \e' -> runReaderT (runLB $ h (IRCRaised e')) r
+                  `catchDyn` \e -> runReaderT (runLB $ h (SignalCaught e)) r
 
 instance MonadState IRCRWState LB where
-  get = LB get
-  put s = LB $ put s
-
-instance MonadError IRCError LB where
-  throwError e = LB $ throwError e
-  catchError (LB m) f = LB $ catchError m (runLB . f)
-
-instance MonadIO LB where
-  liftIO m = LB $ liftIO m
-
-#endif
+  get = LB $ do
+    ref <- ask
+    lift $ readIORef ref
+  put x = LB $ do
+    ref <- ask
+    lift $ writeIORef ref x
+  
 
 evalLB :: LB () -> IRCRWState -> IO ()
-evalLB lb rws = evalStateT (handleIRCErrorT (runLB lb)) rws
+evalLB lb rws = do
+  ref <- newIORef rws
+  runLB lb `runReaderT` ref
 
 class (Monad m,MonadState IRCRWState m,MonadError IRCError m,MonadIO m) 
    => MonadLB m 
@@ -314,41 +289,17 @@ type ModuleT s m a = (?ref :: IORef s, ?name :: String) => m a
 -- | The IRC Monad. The reader transformer holds information about the
 --   connection to the IRC server.
 newtype IRC a 
-  = IRC { runIRC :: IRCErrorT (ReaderT IRCRState (StateT IRCRWState IO)) a }
-#if __GLASGOW_HASKELL__ >= 600
+  = IRC { runIRC :: ReaderT IRCRState LB a }
 #ifndef __HADDOCK__
     deriving (Monad,Functor,MonadReader IRCRState,MonadState IRCRWState,
               MonadError IRCError,MonadIO)
-#endif
-#else
-instance Monad IRC where
-  return a = IRC $ return a
-  IRC m >>= f = IRC $ do v <- m
-                         runIRC (f v)
-
-instance MonadReader IRCRState IRC where
-  ask = IRC ask
-  local f (IRC m) = IRC $ local f m
-
-instance MonadState IRCRWState IRC where
-  get = IRC get
-  put s = IRC $ put s
-  
-instance MonadError IRCError IRC where
-  throwError e = IRC $ throwError e
-  catchError (IRC m) f = IRC $ catchError m (runIRC . f)
-
-instance MonadIO IRC where
-  liftIO m = IRC $ liftIO m
-
 #endif
 
 instance MonadLB LB where
   liftLB m = m
 
 instance MonadLB IRC where
-  liftLB (LB (ExceptionErrorT m)) 
-   = IRC $ ExceptionErrorT $ lift m
+  liftLB m = IRC $ lift m
 
 mkIrcMessage :: String -> [String] -> IRCMessage
 mkIrcMessage cmd params
@@ -532,10 +483,7 @@ runIrc' m = do
                             ircWriteThread = threadw }
 
             finallyError 
-               (LB $ ExceptionErrorT $
-                     runReaderT (runExceptionErrorT $ runIRC $ catchSignals $
-                                       m >> ircQuit "terminated")
-                                chans)
+               (runReaderT (runIRC $ catchSignals $ m >> ircQuit "terminated") chans)
                (do exitModules
                    liftIO $ killThread threadr
                    liftIO $ killThread threadw
