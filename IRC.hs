@@ -68,7 +68,7 @@ import System.IO.Error
 
 import Data.Char                (toLower, isAlphaNum, isSpace)
 import Data.List                (isSuffixOf)
-import Data.Dynamic             (Typeable, toDyn) --, fromDynamic)
+import Data.Typeable            (Typeable)
 import Data.IORef               (newIORef, IORef, readIORef, writeIORef)
 
 import Control.Exception
@@ -126,7 +126,7 @@ instance Show ChanName where
 mkCN :: String -> ChanName
 mkCN = ChanName . map toLower
 
--- does the deriving Typeable do the right thing?
+-- Man, I hate dynamics
 newtype SignalException = SignalException Signal
   deriving Typeable
 
@@ -190,7 +190,7 @@ ircSignalHandler threadid s
 #else  
   = Catch $ do
       putMVar catchLock ()
-      throwTo threadid $ DynException $ toDyn $ SignalException s
+      throwDynTo threadid $ SignalException s
                                 
 -- This is clearly a hack, but I have no idea how to accomplish the same
 -- thing correctly. The main problem is that signals are often thrown multiple
@@ -258,10 +258,11 @@ newtype LB a = LB { runLB :: ReaderT (IORef IRCRWState) IO a }
 -- All of IRCErrorT's (RIP) functionality can be shrinked down to that.
 instance MonadError IRCError LB where
   throwError (IRCRaised e) = liftIO $ throwIO e
-  throwError (SignalCaught e) = liftIO $ evaluate (throwDyn e)
-  LB m `catchError` h = LB $ ReaderT $ \r -> runReaderT m r
-                  `catch` \e' -> runReaderT (runLB $ h (IRCRaised e')) r
-                  `catchDyn` \e -> runReaderT (runLB $ h (SignalCaught e)) r
+  throwError (SignalCaught e) = liftIO $ evaluate (throwDyn $ SignalException e)
+  LB m `catchError` h = LB $ ReaderT $ \r -> (runReaderT m r
+              `catchDyn` \(SignalException e) -> 
+                 runReaderT (runLB $ h (SignalCaught e)) r)
+              `catch` \e -> runReaderT (runLB $ h (IRCRaised e)) r
 
 instance MonadState IRCRWState LB where
   get = LB $ do
@@ -272,7 +273,7 @@ instance MonadState IRCRWState LB where
     lift $ writeIORef ref x
   
 
-evalLB :: LB () -> IRCRWState -> IO ()
+evalLB :: LB a -> IRCRWState -> IO a
 evalLB lb rws = do
   ref <- newIORef rws
   runLB lb `runReaderT` ref
@@ -482,7 +483,8 @@ runIrc' m = do
                             ircWriteThread = threadw }
 
             finallyError 
-               (runReaderT (runIRC $ catchSignals $ m >> ircQuit "terminated") chans)
+               (runReaderT (runIRC $ catchSignals $ m >> ircQuit "terminated") 
+                           chans)
                (do exitModules
                    liftIO $ killThread threadr
                    liftIO $ killThread threadw
@@ -504,9 +506,12 @@ runIrc' m = do
         isEOFon _ _ = Nothing
         isSignal (SignalCaught s) = Just s
         isSignal _ = Nothing
-        catchSignals n = catchErrorJust isSignal n
-                             (\s -> do tryError $ ircQuit (ircSignalMessage s)
-                                       throwError (SignalCaught s))
+        -- catches a signal, quit with message
+        catchSignals n = catchErrorJust isSignal n $
+             \s -> do tryError $ ircQuit (ircSignalMessage s)
+                      -- forkIO $ threadDelay 1000000 >> throw ...
+                      --throwError (SignalCaught s)
+                      return ()
 
         exitModules = do
           mods <- gets $ M.elems . ircModules
