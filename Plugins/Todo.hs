@@ -38,8 +38,7 @@ instance Module TodoModule TodoState where
 
 -- | Print todo list
 getTodo :: String -> TodoState -> String -> ModuleT TodoState IRC ()
-getTodo source todoList "" = 
-    ircPrivmsg source (formatTodo todoList)
+getTodo source todoList "" = ircPrivmsg source (formatTodo todoList)
 getTodo _      _        _  =
     error "@todo given arguments, try @todo-add or @listcommands todo"
  
@@ -47,9 +46,8 @@ getTodo _      _        _  =
 formatTodo :: [(String, String)] -> String
 formatTodo [] = "Nothing to do!"
 formatTodo todoList =
-    unlines $ map (\(n::Int, (idea, nick)) ->
-                   "  "++show n++": "++idea
-                   ++" (submitted by "++nick++")") $ zip [0..] todoList 
+    unlines $ map (\(n::Int, (idea, nick)) -> concat $ 
+                [ show n,". ",nick,": ",idea ]) $ zip [0..] todoList 
 
 -- | Add new entry to list
 addTodo :: String -> String -> String -> ModuleT TodoState IRC ()
@@ -65,12 +63,12 @@ delTodo source rest | rest /= [] && all isDigit rest = do
     case () of {_
         | ls == [] -> ircPrivmsg source "Todo list is empty"
         | n > length ls - 1 || n < 0
-        -> ircPrivmsg source "Index to @todo-del is out of range"
+        -> ircPrivmsg source $ (show n) ++ " is out of range"
 
         | otherwise -> do 
             modifyMS (map snd . filter ((/= n) . fst) . zip [0..])
-            let (a,b) = ls !! n
-            ircPrivmsg source $ "Removed item: " ++ a ++ ", " ++ b
+            let (a,_) = ls !! n
+            ircPrivmsg source $ "Removed: " ++ a
     }
 
 delTodo source _ = ircPrivmsg source "Syntax error. @todo <n>, where n :: Int"
