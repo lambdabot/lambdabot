@@ -1,4 +1,6 @@
+--
 -- | Time compatibility layer
+--
 module AltTime (
     ClockTime, getClockTime, diffClockTimes, addToClockTime, timeDiffPretty,
     module System.Time
@@ -12,8 +14,10 @@ import System.Time (TimeDiff(..), noTimeDiff)
 import qualified System.Time as T 
   (ClockTime(..), getClockTime, diffClockTimes, addToClockTime)
 
--- Wrapping ClockTime (which doesn't provide a Read instance!) seems 
--- easier than talking care of the serialization of UserStatus ourselves.
+-- | Wrapping ClockTime (which doesn't provide a Read instance!) seems
+-- easier than talking care of the serialization of UserStatus
+-- ourselves.
+--
 newtype ClockTime = ClockTime (T.ClockTime)
 
 instance Show ClockTime where
@@ -22,9 +26,11 @@ instance Show ClockTime where
 instance Read ClockTime where
   readsPrec p = map (first $ ClockTime . uncurry T.TOD) . readsPrec p
 
+-- | Retrieve the current clocktime
 getClockTime :: IO ClockTime
 getClockTime = ClockTime `fmap` T.getClockTime
 
+-- | Difference of two clock times
 diffClockTimes :: ClockTime -> ClockTime -> TimeDiff
 diffClockTimes (ClockTime ct1) (ClockTime ct2) = 
 -- This is an ugly hack (we don't care about picoseconds...) to avoid the 
@@ -32,6 +38,8 @@ diffClockTimes (ClockTime ct1) (ClockTime ct2) =
 -- error. I think time arithmetic is broken in GHC.
   (T.diffClockTimes ct1 ct2) { tdPicosec = 0 }
 
+-- | @'addToClockTime' d t@ adds a time difference @d@ and a -- clock
+-- time @t@ to yield a new clock time.
 addToClockTime :: TimeDiff -> ClockTime -> ClockTime
 addToClockTime td (ClockTime ct) = ClockTime $ T.addToClockTime td ct
 
