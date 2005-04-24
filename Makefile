@@ -6,7 +6,9 @@ include config.mk
 #  All directories to look for sources
 #
 ALL_DIRS=	.  Plugins \
-            Plugins/Dict Plugins/Lambda Plugins/Quote Plugins/Pl Plugins/Vixen
+            Plugins/Dict  Plugins/Lambda \
+			Plugins/Quote Plugins/Pl \
+			Plugins/Vixen Plugins/Dummy
 
 # Not used, not built, bit dodgy as we are relying on ALL_DIRS to ignore
 # the subdirs of EXCLUDED_MODS. The following additional srcs will not be built

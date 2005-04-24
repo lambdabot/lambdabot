@@ -5,7 +5,7 @@ module Plugins.Dummy (theModule) where
 
 import IRC
 import Plugins.Dummy.DocAssocs (docAssocs)
-import qualified Data.Map as M
+import qualified Map as M
 
 newtype DummyModule = DummyModule ()
 

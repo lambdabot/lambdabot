@@ -1,6 +1,6 @@
 module Plugins.Dummy.DocAssocs (docAssocs) where
 
-import qualified Data.Map as M
+import qualified Map as M
 
 docAssocs :: String `M.Map` String
 docAssocs = M.fromList [
