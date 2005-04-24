@@ -722,7 +722,7 @@ readGlobalState mod name = case moduleSerialize mod of
   Nothing  -> return Nothing
   Just ser -> do
     state <- Just `fmap` readFile' (toFilename name) `catch` \_ -> return Nothing
-    return $ deSerialize ser =<< state
+    return $! deSerialize ser =<< state
 
 ------------------------------------------------------------------------
 --
@@ -732,7 +732,7 @@ ircInstallModule :: MODULE -> String -> LB ()
 ircInstallModule (MODULE mod) modname = do  
     savedState <- liftIO $ readGlobalState mod modname
     state      <- maybe (moduleDefState mod) return savedState
-    ref        <- liftIO $ newIORef $! state
+    ref        <- liftIO $ newIORef state
 
     let modref = ModuleRef mod ref modname
     let ?ref = ref; ?name = modname
