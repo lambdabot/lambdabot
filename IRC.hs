@@ -35,7 +35,7 @@ module IRC (
         clean, checkPrivs, mkCN, handleIrc, runIrc,
   ) where
 
-import qualified Config (config, name, admins, host, port)
+import qualified Config (config, name, admins, host, port, textwidth)
 import DeepSeq          (($!!), DeepSeq(..))
 import ErrorUtils
 import ExceptionError   (ExceptionError(..), ExceptionErrorT(..))
@@ -391,22 +391,24 @@ ircPrivmsg who msg = do
   -- Hardcoded defaults: maximal ten lines, maximal 80 chars/line
   mapM_ (ircPrivmsg' who . take 80) $ take 10 sendlines
 
-------------------------------------------------------------------------
-
-{- yes it's ugly, but... -}
-
-mlines			:: String -> [String]
-mlines ""		=  []
-mlines s		=  let (l, s') = mbreak 0 (== '\n') s in l: mlines s'
+-- ---------------------------------------------------------------------
+-- | output filter (should consider a fmt(1)-like algorithm
+--
+mlines		:: String -> [String]
+mlines ""	=  []
+mlines s	=  let (l, s') = mbreak 0 (== '\n') s in l: mlines s'
   where
-  mbreak :: Int -> (Char -> Bool) -> [Char] -> ([Char], [Char])
-  mbreak _ _ xs@[] = (xs, xs)
-  mbreak n p xs@(x:xs')
-      | n == 80   = ([],dropWhile isSpace xs)
-      | n > 70 && not (isAlphaNum x) = ([x], dropWhile isSpace xs')
-      | p x	  = ([],xs')
-      | otherwise = first (x:) $ mbreak (n+1) p xs'
+    mbreak :: Int -> (Char -> Bool) -> [Char] -> ([Char], [Char])
+    mbreak _ _ xs@[] = (xs, xs)
+    mbreak n p xs@(x:xs')
+      | n == w                           = ([],dropWhile isSpace xs)
+      | n > (w-10) && not (isAlphaNum x) = ([x], dropWhile isSpace xs')
+      | p x	                             = ([],xs')
+      | otherwise                        = first (x:) $ mbreak (n+1) p xs'
 
+    w = Config.textwidth Config.config
+
+-- ---------------------------------------------------------------------
 
 ircPrivmsg' :: String -> String -> IRC ()
 ircPrivmsg' who "" = ircPrivmsg' who " "
