@@ -20,10 +20,10 @@ theModule :: MODULE
 theModule = MODULE $ SystemModule ()
 
 instance Module SystemModule ClockTime where
-    moduleCmds   _ = return (M.keys syscmds)
-    moduleHelp _ s = return $ fromMaybe defaultHelp (M.lookup s syscmds)
+    moduleCmds   _   = return (M.keys syscmds)
+    moduleHelp _ s   = return $ fromMaybe defaultHelp (M.lookup s syscmds)
     moduleDefState _ = liftIO getClockTime
-    process      _ = doSystem
+    process      _   = doSystem
 
 ------------------------------------------------------------------------
 
@@ -37,7 +37,7 @@ syscmds = M.fromList
        ,("leave",       "leave <channel>")
        ,("part",        "part <channel>")
        ,("msg",         "msg someone")
-       ,("quit",        "quit [msg]")
+       ,("quit",        "quit [msg], have the bot exit with msg")
        ,("reconnect",   "reconnect to channel")
        ,("echo",        "echo irc protocol string")
        ,("uptime",      "show uptime")]
@@ -84,7 +84,7 @@ doSystem msg target cmd rest = do
 
 listAll :: IRCRWState -> String -> IRC ()
 listAll state target = 
-        ircPrivmsg target $ "Commands: "++pprKeys (ircCommands state)
+        ircPrivmsg target $ pprKeys (ircCommands state)
 
 listModule :: String -> String -> IRC ()
 listModule target query = withModule ircModules query fromCommand printProvides
