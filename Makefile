@@ -12,7 +12,7 @@ ALL_DIRS=	.  Plugins \
 
 # Not used, not built, bit dodgy as we are relying on ALL_DIRS to ignore
 # the subdirs of EXCLUDED_MODS. The following additional srcs will not be built
-EXCLUDED_MODS=	Haddock Hello Cmafihe
+EXCLUDED_MODS=	Hello Cmafihe
 EXCLUDED_SRCS=	$(addprefix Plugins/, $(addsuffix .hs,$(EXCLUDED_MODS)))
 EXCLUDED_SRCS+= Plugins/Lambda/tests.hs Plugins/Pl/Test.hs GenModules.hs
 
@@ -63,7 +63,7 @@ all: lambdabot modules
 #
 # TODO should be just PLUGIN_OBJS
 #
-.PHONY: modules haddock
+.PHONY: modules
 modules: $(ALL_OBJS)
 
 #
