@@ -1,0 +1,6 @@
+("Release lambdabot 3.0","dons")
+("A way to get multiple results from a google search","SamB")
+("@index liftIO looks up liftIO in http://www.haskell.org/ghc/docs/latest/html/libraries/doc-index-L.html, and says \"Control.Monad.Trans, Control.Monad.Reader, Control.Monad.Writer, Control.Monad.State, Control.Monad.RWS, Control.Monad.Cont, Control.Monad.Error, Control.Monad.List\"","theorbtwo")
+("@get-shapr summons shapr instantly","SamB")
+("bare @part either gives error message or parts the channel the command was given on","SamB")
+("stop mangling long urls","SamB")
