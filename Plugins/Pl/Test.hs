@@ -122,6 +122,8 @@ unitTest inp out = TestCase $ do
 
 unitTests :: Test
 unitTests = TestList [
+  unitTest "\\x -> return x y" ["const y"],
+  unitTest "\\x -> f x x" ["join f"],
   unitTest "join (+) 1" ["2"],
   unitTest "fmap f g x" ["f (g x)"],
   unitTest "liftM2 (+) f g 0" ["f 0 + g 0", "g 0 + f 0"],
