@@ -20,7 +20,12 @@ import Control.Monad.Error
 
 import System.IO (hSetBuffering, stdout, BufferMode(NoBuffering))
 import System.Environment (getArgs)
+
+#ifdef READLINE
 import System.Console.Readline (readline, addHistory, initialize)
+#endif
+
+import Debug.Trace
 
 instance Arbitrary Expr where
   arbitrary = sized $ \size -> frequency $ zipWith (,) [1,size,size]
@@ -133,8 +138,8 @@ unitTests = TestList [
   unitTest "liftM2 (+) (return 1) (return 2)" ["return 3"],
   unitTest "(. ((return .) . (+))) . (>>=)" ["flip (fmap . (+))"],
   unitTest "\\a b -> a >>= \\x -> b >>= \\y -> return $ x + y" ["liftM2 (+)"],
-  unitTest "s (flip const . f)" ["id"],
-  unitTest "uncurry (flip (const . flip (,) (snd t))) . s (,) id" ["flip (,) (snd t)"],
+  unitTest "ap (flip const . f)" ["id"],
+  unitTest "uncurry (flip (const . flip (,) (snd t))) . ap (,) id" ["flip (,) (snd t)"],
   unitTest "foo = (1, fst foo)" ["foo = (1, 1)"],
   unitTest "foo = (snd foo, 1)" ["foo = (1, 1)"],
 --  unitTest "let (x,y) = (1,2) in y" ["2"],
@@ -152,7 +157,7 @@ unitTests = TestList [
   unitTest "\\x -> x" ["id"],
   unitTest "\\x y -> x" ["const"],
   unitTest "\\f x y -> f y x" ["flip"],
-  unitTest "t f g x = f x (g x)" ["t = s"],
+  unitTest "t f g x = f x (g x)" ["t = ap"],
   unitTest "(+2).(+3).(+4)" ["(9 +)"],
   unitTest "head $ fix (x:)" ["x"],
   unitTest "head $ tail $ let xs = x:ys; ys = y:ys in xs" ["y"],
@@ -174,7 +179,7 @@ unitTests = TestList [
   unitTest "foldr (+) 0 [x,y,z]" ["x + y + z"],
   unitTest "foldl (*) 0 [x,y,z]" ["0"],
   unitTest "length \"abcdefg\"" ["7"],
-  unitTest "s (f x . fst) snd" ["uncurry (f x)"],
+  unitTest "ap (f x . fst) snd" ["uncurry (f x)"],
   unitTest "sum [1,2,3,x]" ["6 + x", "x + 6"],
   unitTest "p x = product [1,2,3,x]" ["p = (6 *)"],
   unitTest "(concat .) . map" ["(=<<)"],
@@ -188,15 +193,30 @@ main = do
   args <- getArgs
   case args of
     ("tests":_) -> doTests
-    xs          -> mapM_ pf xs >> initialize >> pfloop
+    xs          -> do 
+        mapM_ pf xs
+#ifdef READLINE
+        initialize
+#endif
+        pfloop
+
 
 pfloop :: IO ()
 pfloop = do
+#ifdef READLINE 
   line' <- readline "pointless> "
+#else
+  line' <- Just `fmap` getLine
+#endif
   case line' of
     Just line 
       | all isSpace line -> pfloop
-      | otherwise        -> addHistory line >> pf line >> pfloop
+      | otherwise        -> do
+#ifdef READLINE
+          addHistory line
+#endif
+          pf line
+          pfloop
     Nothing   -> putStrLn "Bye."
 
 doTests :: IO ()

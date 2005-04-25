@@ -136,7 +136,7 @@ sizeExpr' e = fromIntegral (length $ show e) + adjust e where
   adjust :: Expr -> Size
   adjust (Var _ str) -- Just n <- readM str = log (n*n+1) / 4
                      | str == "uncurry"    = -4
-                     | str == "s"          = 5
+--                     | str == "s"          = 5
                      | str == "flip"       = 0.1
                      | str == ">>="        = 0.05
                      | str == "$"          = 0.01

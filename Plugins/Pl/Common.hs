@@ -80,7 +80,7 @@ comp   = Var Inf  "."
 flip'  = Var Pref "flip"
 id'    = Var Pref "id"
 const' = Var Pref "const"
-scomb  = Var Pref "s"
+scomb  = Var Pref "ap"
 cons   = Var Inf  ":"
 nil    = Var Pref "[]"
 fix'   = Var Pref "fix"
@@ -121,7 +121,7 @@ operators = (map . map . second . second $ (+shift))
   inf name assoc fx = (name, (assoc, fx))
 
 opchars :: [Char]
-opchars = "!@#$%^*./|=-+:?<>"
+opchars = "!@#$%^*./|=-+:?<>&"
 
 reservedOps :: [String]
 reservedOps = ["->", "..", "="]

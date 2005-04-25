@@ -168,7 +168,7 @@ idE        = Quote $ Var Pref "id"
 flipE      = Quote $ Var Pref "flip"
 constE     = Quote $ Var Pref "const"
 compE      = Quote $ Var Inf "."
-sE         = Quote $ Var Pref "s"
+sE         = Quote $ Var Pref "ap"
 fixE       = Quote $ Var Pref "fix"
 bindE      = Quote $ Var Inf  ">>="
 extE       = Quote $ Var Inf  "=<<"
@@ -447,6 +447,15 @@ rules = [
     -- 1 * x --> x
     rr  (\x -> multE `a` oneE `a` x)
         (\x -> x),
+    -- x - x --> 0
+    rr  (\x -> minusE `a` x `a` x)
+        (\_ -> zeroE),
+    -- x - y + y --> x
+    rr  (\y x -> plusE `a` (minusE `a` x `a` y) `a` y)
+        (\_ x -> x),
+    -- x + y - y --> x
+    rr  (\y x -> minusE `a` (plusE `a` x `a` y) `a` y)
+        (\_ x -> x),
     -- x + (y - z) --> x + y - z
     rr  (\x y z -> plusE `a` x `a` (minusE `a` y `a` z))
         (\x y z -> minusE `a` (plusE `a` x `a` y) `a` z),
@@ -455,16 +464,7 @@ rules = [
         (\x y z -> minusE `a` (minusE `a` x `a` y) `a` z),
     -- x - (y - z) --> x + y - z
     rr  (\x y z -> minusE `a` x `a` (minusE `a` y `a` z))
-        (\x y z -> minusE `a` (plusE `a` x `a` y) `a` z),
-    -- x - y + y --> x
-    rr  (\y x -> plusE `a` (minusE `a` x `a` y) `a` y)
-        (\_ x -> x),
-    -- x + y - y --> x
-    rr  (\y x -> minusE `a` (plusE `a` x `a` y) `a` y)
-        (\_ x -> x),
-    -- x - x --> 0
-    rr  (\x -> minusE `a` x `a` x)
-        (\_ -> zeroE)
+        (\x y z -> minusE `a` (plusE `a` x `a` y) `a` z)
   ],
   onceRewrites,
   -- join (fmap f x) --> f =<< x
@@ -488,6 +488,10 @@ rules = [
   -- f `fmap` return x --> return (f x)
   rr (\f x -> fmapE `a` f `a` (returnE `a` x))
      (\f x -> returnE `a` (f `a` x)),
+  
+  -- (.) -> fmap
+  Hard $ 
+  rr compE fmapE,
 
   -- return f `ap` x --> fmap f x
   rr (\f x -> apE `a` (returnE `a` f) `a` x)

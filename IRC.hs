@@ -255,7 +255,7 @@ newtype LB a = LB { runLB :: ReaderT (IORef IRCRWState) IO a }
    deriving (Functor,Monad,MonadIO)
 #endif
 
--- All of IRCErrorT's (RIP) functionality can be shrinked down to that.
+-- All of IRCErrorT's (RIP) functionality can be shrunk down to that.
 instance MonadError IRCError LB where
   throwError (IRCRaised e) = liftIO $ throwIO e
   throwError (SignalCaught e) = liftIO $ evaluate (throwDyn $ SignalException e)
