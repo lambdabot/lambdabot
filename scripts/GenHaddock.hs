@@ -1,3 +1,6 @@
+--
+-- | Generate the initial @index state
+--
 import System.Cmd
 import System.Directory
 import Data.List
