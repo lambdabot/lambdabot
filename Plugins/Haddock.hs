@@ -16,7 +16,7 @@ type HaddockState = M.Map String [String]
 
 instance Module HaddockModule HaddockState where
     moduleHelp    _ _ = return "@index - yay!"
-    moduleCmds      _ = return ["@index"]
+    moduleCmds      _ = return ["index"]
     moduleDefState  _ = return M.empty
     moduleSerialize _ = Just $ mapSerializer { serialize = const Nothing }
     process      _ _ target _ rest = do
