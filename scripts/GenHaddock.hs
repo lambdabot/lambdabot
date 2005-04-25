@@ -17,8 +17,8 @@ main = do
 getAssocs :: FilePath -> IO [(String,[String])]
 getAssocs file = do
   cont <- lines `fmap` readFile file
-  let a = "><TD CLASS=\"indexentry\""
-      sections = tail $ groupBy (const (/=a)) cont
+  let isKey str = "><TD CLASS=\"indexentry\"" `isPrefixOf` str
+      sections = tail $ groupBy (const $ not . isKey) cont
   return $ do 
     s <- sections
     let key = clean $ (reverse . drop 4 . reverse . drop 1) (s !! 1)
