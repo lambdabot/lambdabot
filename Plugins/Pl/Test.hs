@@ -122,6 +122,10 @@ unitTest inp out = TestCase $ do
 
 unitTests :: Test
 unitTests = TestList [
+  unitTest "join (+) 1" ["2"],
+  unitTest "fmap f g x" ["f (g x)"],
+  unitTest "liftM2 (+) f g 0" ["f 0 + g 0", "g 0 + f 0"],
+  unitTest "return 1 x" ["x"],
   unitTest "f =<< return x" ["f x"],
   unitTest "(=<<) id" ["join"],
   unitTest "zipWith (,)" ["zip"],
@@ -145,7 +149,7 @@ unitTests = TestList [
 --  unitTest "let (x,y) = (1,2) in y" ["2"],
   unitTest "map (+1) [1,2,3]" ["[2, 3, 4]"],
   unitTest "snd . (,) (\\x -> x*x)" ["id"],
-  unitTest "x + (y - (z + x))" ["y - z"], -- We can't reasonably expect that.
+--  unitTest "x + (y - (z + x))" ["y - z"], -- We can't reasonably expect that.
   unitTest "return x >>= f" ["f x"],
   unitTest "m >>= return" ["m"],
   unitTest "m >>= \\x -> f x >>= g" ["m >>= f >>= g", "g =<< f =<< m"],

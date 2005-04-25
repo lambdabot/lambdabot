@@ -145,6 +145,7 @@ sizeExpr' e = fromIntegral (length $ show e) + adjust e where
                      | str == "return"     = -2
                      | str == "zipWith"    = -4
                      | str == "const"      = 0 -- -2
+                     | str == "fmap"       = -1
   adjust (Lambda _ e') = adjust e'
   adjust (App e1 e2)  = adjust e1 + adjust e2
   adjust _ = 0

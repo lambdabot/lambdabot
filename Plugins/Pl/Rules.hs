@@ -472,6 +472,9 @@ rules = [
      (\f x -> extE `a` f `a` x),
   -- (=<<) id --> join
   rr (extE `a` idE) joinE,
+  -- join --> (=<<) id
+  Hard $
+  rr joinE (extE `a` idE),
   -- (return . f) =<< m --> fmap f m
   rr (\f m -> extE `a` (returnE `c` f) `a` m)
      (\f m -> fmapIE `a` f `a` m),
@@ -509,6 +512,19 @@ rules = [
   -- (x >>=) . flip (fmap . f) -> liftM2 f x
   rr (\f x -> bindE `a` x `c` flipE `a` (fmapE `c` f))
      (\f x -> liftM2E `a` f `a` x),
+
+  -- (f =<< m) x --> f (m x) x
+  rr0 (\f m x -> extE `a` f `a` m `a` x)
+      (\f m x -> f `a` (m `a` x) `a` x) `Then` Or rules,
+  -- (fmap f g x) --> f (g x)
+  rr0 (\f g x -> fmapE `a` f `a` g `a` x)
+      (\f g x -> f `a` (g `a` x)),
+  -- return x y --> y
+  rr0 (\x y -> returnE `a` x `a` y)
+      (\_ y -> y),
+  -- liftM2 f g h x --> g x `h` h x
+  rr0 (\f g h x -> liftM2E `a` f `a` g `a` h `a` x)
+      (\f g h x -> f `a` (g `a` x) `a` (h `a` x)),
 
   -- map f (zip xs ys) --> zipWith (curry f) xs ys
   Hard $
