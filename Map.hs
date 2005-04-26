@@ -28,6 +28,8 @@ module Map (
         member,
         keys,
         assocs,
+        find,
+        (!),
 
         mapWithKey,
         filterWithKey,
@@ -136,6 +138,17 @@ filter = filterWithKey . const
 
 foldWithKey :: (k -> a -> b -> b) -> b -> Map k a -> b
 foldWithKey = FM.foldFM
+
+infixl 9 !
+(!) :: Ord k => Map k a -> k -> a
+m ! k = find k m
+
+-- | /O(log n)/. Find the value at a key.
+-- Calls 'error' when the element can not be found.
+find :: Ord k => k -> Map k a -> a
+find k m = case lookup k m of
+    Nothing -> error "Map.find: element not in the map"
+    Just x  -> x
 
 #endif
 
