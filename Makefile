@@ -21,6 +21,10 @@ EXCLUDED_SRCS+= Plugins/Lambda/tests.hs Plugins/Pl/Test.hs GenModules.hs
 #
 EXTRA_SRCS=Modules.hs
 
+ifeq "$(static)" "yes"
+EXCLUDED_SRCS+=Boot.hs Plugins/Dynamic.hs
+endif
+
 #
 # Construct a list of buildable sources, based on $ALL_DIRS, and their objects
 #
@@ -70,7 +74,7 @@ modules: $(ALL_OBJS)
 #
 depend: $(ALL_SRCS)
 	@echo -n "Rebuilding dependencies ... "
-	@$(GHC) -cpp $(HC_OPTS) $(PKG_OPTS) $(HTOOLKIT) -M -optdep-f \
+	@$(GHC) -cpp $(HC_OPTS) $(PKG_OPTS) $(LD_OPTS) -M -optdep-f \
 		-optdepdepend $(ALL_SRCS) || rm depend
 	@echo "done."
 
@@ -101,7 +105,11 @@ lambdabot: $(ALL_OBJS)
 			ln -f -s $$i `echo $$i | sed 's/p_//'` ; \
 		done ; \
 	fi
+ifeq "$(static)" "yes"
+	$(GHC) $(HC_OPTS) $(PKG_OPTS) $(LD_OPTS) -v0 $(ALL_OBJS) -o $@
+else
 	$(GHC) $(HC_OPTS) $(PKG_OPTS) $(LD_OPTS) -v0 -main-is Boot.main Boot.$(way_)o Shared.$(way_)o Map.$(way_)o -o $@
+endif
 	strip $@
 
 # and for i in $(ALL_OBJS) ; do ln -s $i $i_p.o ...
@@ -110,7 +118,7 @@ lambdabot: $(ALL_OBJS)
 # Boot is the bootstrap loader. It shouldn't be linked *statically* lambdabot
 #
 Boot.o: Boot.hs 
-	$(GHC) $(HC_OPTS) $(PKG_OPTS) -main-is Boot.main -c $< -o $@ -ohi $(basename $@).$(way_)hi
+	$(GHC) $(HC_OPTS) $(PKG_OPTS) -package plugins -main-is Boot.main -c $< -o $@ -ohi $(basename $@).$(way_)hi
 
 #
 # Main rules, with support for 'way' management, from Yi.

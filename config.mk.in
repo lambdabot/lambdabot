@@ -21,30 +21,34 @@ HC_OPTS+=       -funbox-strict-fields -O2 -fvia-C
 # user-specified
 HC_OPTS+=	$(EXTRA_HC_OPTS)
 
+# if they want prof, they need static too
+ifeq "$(way)" "p"
+static=yes
+endif
+
 #
 # List of modules to statically link, or to load dynamically
 #
 # edit this to change which modules you'd like to use.
 #
-ifneq "$(way)" "static"
+ifneq "$(static)" "yes"
 PLUGINS=       Dict Dummy Lambda Karma Quote Seen State \
                Topic Type Plugs Babel Version More Pl \
                Help Dice Search Vixen Fact Spell Todo \
                Haddock
 STATICS=       Base System Dynamic
+LD_OPTS=       -package plugins
 else
 PLUGINS=
-STATICS=       Base System Dynamic Dict Dummy Lambda Karma \
+STATICS=       Base System Dict Dummy Lambda Karma \
                Quote Seen State Topic Type Plugs Babel \
                Version More Pl Help Dice Search Vixen Fact \
                Spell Haddock
+LD_OPTS=       -package network -package posix -package parsec
 endif
 
 GHC_VERSION=	@GHC_VERSION@
 GLASGOW_HASKELL=@GLASGOW_HASKELL@
-
-# You need hs-plugins >= 0.9.8 
-PKG_OPTS=	                -package plugins
 
 #
 # Possibly this will be a problem in the future
