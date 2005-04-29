@@ -6,9 +6,9 @@ include config.mk
 #  All directories to look for sources
 #
 ALL_DIRS=	.  Plugins \
-            Plugins/Dict  Plugins/Lambda \
-			Plugins/Quote Plugins/Pl \
-			Plugins/Vixen Plugins/Dummy
+                Plugins/Dict  Plugins/Lambda \
+                Plugins/Quote Plugins/Pl \
+                Plugins/Vixen Plugins/Dummy
 
 # Not used, not built, bit dodgy as we are relying on ALL_DIRS to ignore
 # the subdirs of EXCLUDED_MODS. The following additional srcs will not be built
@@ -30,12 +30,6 @@ ALL_SRCS=$(filter-out $(EXCLUDED_SRCS) $(EXTRA_SRCS), \
 		   $(patsubst %,%/*.lhs,  $(ALL_DIRS)) ))) $(EXTRA_SRCS)
 
 #
-# Just a list of the bot dependencies. Use ghci to trace the dependency
-# tree from Main.hs.
-#
-ALL_OBJS=	$(addsuffix .$(way_)o,$(basename $(ALL_SRCS)))
-
-#
 # way management
 #
 # If $(way) is set then we define $(way_) and $(_way) from it in the
@@ -47,13 +41,18 @@ endif
 
 # building the profiled way
 ifeq "$(way)" "p"
-PROF_OPTS	= -prof -auto-all -DSTATIC=1
+PROF_OPTS	= -prof -auto-all
 LD_OPTS		+= $(PROF_OPTS)
 HC_OPTS		+= $(PROF_OPTS)
 HC_OPTS 	+= -hisuf $(way_)hi -hcsuf $(way_)hc -osuf $(way_)o
-
 # and statically link all the modules.
 endif
+
+#
+# Just a list of the bot dependencies. Use ghci to trace the dependency
+# tree from Main.hs.
+#
+ALL_OBJS=	$(addsuffix .$(way_)o,$(basename $(ALL_SRCS)))
 
 #
 # Now, get down to business
@@ -102,7 +101,7 @@ lambdabot: $(ALL_OBJS)
 			ln -f -s $$i `echo $$i | sed 's/p_//'` ; \
 		done ; \
 	fi
-	$(GHC) $(HC_OPTS) $(PKG_OPTS) $(LD_OPTS) -v0 Boot.$(way_)o Shared.$(way_)o Map.$(way_)o -o $@
+	$(GHC) $(HC_OPTS) $(PKG_OPTS) $(LD_OPTS) -v0 -main-is Boot.main Boot.$(way_)o Shared.$(way_)o Map.$(way_)o -o $@
 	strip $@
 
 # and for i in $(ALL_OBJS) ; do ln -s $i $i_p.o ...

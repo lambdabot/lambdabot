@@ -21,15 +21,12 @@ HC_OPTS+=       -funbox-strict-fields -O2 -fvia-C
 # user-specified
 HC_OPTS+=	$(EXTRA_HC_OPTS)
 
-# build statically?
-STATIC=NO
-
 #
 # List of modules to statically link, or to load dynamically
 #
 # edit this to change which modules you'd like to use.
 #
-ifeq "$(STATIC)" "NO"
+ifneq "$(way)" "static"
 PLUGINS=       Dict Dummy Lambda Karma Quote Seen State \
                Topic Type Plugs Babel Version More Pl \
                Help Dice Search Vixen Fact Spell Todo \
