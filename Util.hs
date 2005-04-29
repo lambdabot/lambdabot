@@ -206,6 +206,7 @@ readM s = case [x | (x,t) <- reads s, ("","") <- lex t] of
         [x] -> return x
         []  -> fail "Util.readM: no parse"
         _   -> fail "Util.readM: ambiguous parse"
+-- this allocates a 20-30 M on startup...
 
 ------------------------------------------------------------------------
 
