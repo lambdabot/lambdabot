@@ -1,6 +1,9 @@
 Don's Todo:
 * have 'make prof' and 'make static' just work
 * reduce memory usage
+* Think about some of the issues discussed in Simon Marlow's paper:
+        "Writing High-Performance Server Applications in Haskell - 
+                Case study: A Haskell Web Server", 2000.
 
 * Profiling issues:
     * ln -s Map.o Map.p_o
