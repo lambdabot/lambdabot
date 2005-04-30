@@ -64,7 +64,7 @@ AC_SUBST(GHC_VERSION)
 if test -n "$WithGhc" ; then
  AC_MSG_CHECKING([for value of __GLASGOW_HASKELL__])
  echo "main = print __GLASGOW_HASKELL__" > t.hs
- GLASGOW_HASKELL=`echo 'main' | "$WithGhc" --interactive -v0 -cpp t.hs`
+ GLASGOW_HASKELL=`echo 'main' | "$WithGhc" -ignore-dot-ghci --interactive -v0 -cpp t.hs`
  rm t.hs
  AC_MSG_RESULT([$GLASGOW_HASKELL])
 fi
