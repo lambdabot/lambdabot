@@ -5,6 +5,7 @@ module Plugins.Dummy (theModule) where
 
 import IRC
 import Plugins.Dummy.DocAssocs (docAssocs)
+import Plugins.Dummy.Moo (cows)
 import qualified Map as M
 
 newtype DummyModule = DummyModule ()
@@ -12,7 +13,9 @@ newtype DummyModule = DummyModule ()
 theModule :: MODULE
 theModule = MODULE $ DummyModule ()
 
-instance Module DummyModule () where
+instance Module DummyModule [String] where
+  moduleDefState _ = return $ cycle cows
+
   moduleHelp _ s = return $ case s of
         "dummy"       -> "print a string constant"
         "wiki"        -> "wiki urls"
@@ -23,7 +26,13 @@ instance Module DummyModule () where
         "moo"         -> "vegan-friendly command"
         _             -> "dummy module"
 
-  moduleCmds   _ = return $ map fst dummylst
+  moduleCmds   _ = return $ "moo" : map fst dummylst
+
+  process _ _ src "moo" _ = do
+        cow:farm <- readMS
+        writeMS farm
+        ircPrivmsg src cow
+
   process _ _ src cmd rest = case lookup cmd dummylst of
 			       Nothing -> error "Dummy: invalid command"
                                Just f -> ircPrivmsg src $ f rest
@@ -40,11 +49,4 @@ dummylst = [("dummy",       \_ -> "dummy"),
                Nothing -> x ++ " not available"
                Just m  -> "http://haskell.org/ghc/docs/latest/html/"++
                           "libraries/" ++ m ++ "/" ++ x ++ ".html"),
-	    ("learn",       \_ -> "http://www.haskell.org/learning.html"),
-	    ("moo",         \_ -> unlines ["         (__)",
-					   "         (oo)",
-					   "   /------\\/",
-					   "  / |    ||",
-					   " *  /\\---/\\",
-					   "    ~~   ~~",
-					   "....\"Have you mooed today?\"..." ])]
+	    ("learn",       \_ -> "http://www.haskell.org/learning.html")]
