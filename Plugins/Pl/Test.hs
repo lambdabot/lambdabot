@@ -122,6 +122,9 @@ unitTest inp out = TestCase $ do
 
 unitTests :: Test
 unitTests = TestList [
+  unitTest "\\a b -> a >>= \\x -> b >>= \\y -> return (x,y)" ["liftM2 (,)"],
+  unitTest "\\b a -> a >>= \\x -> b >>= \\y -> return (x,y)" ["flip liftM2 (,)"],
+  unitTest "curry snd" ["const id"],
   unitTest "\\x -> return x y" ["const y"],
   unitTest "\\x -> f x x" ["join f"],
   unitTest "join (+) 1" ["2"],

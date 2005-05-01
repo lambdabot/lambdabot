@@ -163,7 +163,8 @@ idE, flipE, bindE, extE, returnE, consE, appendE, nilE, foldrE, foldlE, fstE,
   sndE, dollarE, constE, uncurryE, curryE, compE, headE, tailE, sE, commaE, 
   fixE, foldl1E, notE, equalsE, nequalsE, plusE, multE, zeroE, oneE, lengthE, 
   sumE, productE, concatE, concatMapE, joinE, mapE, fmapE, fmapIE, subtractE, 
-  minusE, liftME, apE, liftM2E, seqME, zipE, zipWithE :: MExpr
+  minusE, liftME, apE, liftM2E, seqME, zipE, zipWithE, 
+  crossE, firstE, secondE :: MExpr
 idE        = Quote $ Var Pref "id"
 flipE      = Quote $ Var Pref "flip"
 constE     = Quote $ Var Pref "const"
@@ -211,7 +212,9 @@ apE        = Quote $ Var Inf  "ap"
 seqME      = Quote $ Var Inf  ">>"
 zipE       = Quote $ Var Pref "zip"
 zipWithE   = Quote $ Var Pref "zipWith"
-
+crossE     = Quote $ Var Inf  "***"
+firstE     = Quote $ Var Pref "first"
+secondE    = Quote $ Var Pref "second"
 
 
 
@@ -320,6 +323,8 @@ simplifies = Or [
       (\f g -> sE `a` f `a` g),
   -- curry fst --> const
   rr (curryE `a` fstE) (constE),
+  -- curry snd --> const id
+  rr (curryE `a` sndE) (constE `a` idE),
   -- s f g x --> f x (g x)
   rr0 (\f g x -> sE `a` f `a` g `a` x)
       (\f g x -> f `a` x `a` (g `a` x)),
@@ -406,8 +411,8 @@ rules = [
       (\f -> uncurryE `a` f),
   -- The next two are `simplifies', strictly speaking, but invoked rarely.
   -- uncurry f (x,y) --> f x y
-  rr  (\f x y -> f `a` (commaE `a` x `a` y))
-      (\f x y -> f `a` x `a` y),
+--  rr  (\f x y -> uncurryE `a` f `a` (commaE `a` x `a` y))
+--      (\f x y -> f `a` x `a` y),
   -- curry (uncurry f) --> f
   rr (\f -> curryE `a` (uncurryE `a` f))
      (\f -> f),
@@ -466,7 +471,7 @@ rules = [
     rr  (\x y z -> minusE `a` x `a` (minusE `a` y `a` z))
         (\x y z -> minusE `a` (plusE `a` x `a` y) `a` z)
   ],
-  onceRewrites,
+  Hard onceRewrites,
   -- join (fmap f x) --> f =<< x
   rr (\f x -> joinE `a` (fmapE `a` f `a` x))
      (\f x -> extE `a` f `a` x),
@@ -544,6 +549,19 @@ rules = [
   Hard $
   rr (\p q -> seqME `a` p `a` q)
      (\p q -> extE `a` (constE `a` q) `a` p),
+
+  -- experimental support for Control.Arrow stuff 
+  -- (costs quite a bit of performace)
+  -- uncurry ((. g) . (,) . f) --> f *** g
+  rr (\f g -> uncurryE `a` ((flipE `a` compE `a` g) `c` commaE `c` f))
+     (\f g -> crossE `a` f `a` g),
+  -- uncurry ((,) . f) --> first f
+  rr (\f -> uncurryE `a` (commaE `c` f))
+     (\f -> firstE `a` f),
+  -- uncurry ((. g) . (,)) --> second g
+  rr (\g -> uncurryE `a` ((flipE `a` compE `a` g) `c` commaE))
+     (\g -> secondE `a` g),
+  
   -- list destructors
   Hard $ 
   If (Or [rr consE consE, rr nilE nilE]) $ Or [
