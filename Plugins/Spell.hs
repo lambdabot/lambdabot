@@ -26,5 +26,5 @@ instance Module SpellModule () where
     process _ _ src "spell" [] = ircPrivmsg src "No word to spell."
     process _ _ src "spell" s = do
         ss <- liftIO (spell s)
-        ircPrivmsg src (showClean $ take 10 ss)
+        ircPrivmsg src (showClean $ take 5 ss)
     process _ _ _ _ _         = error "SpellModule: invalid command"
