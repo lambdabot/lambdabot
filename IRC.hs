@@ -21,7 +21,7 @@ module IRC (
         -- ** Utility functions for modules that need state for each target.
         GlobalPrivate(global), mkGlobalPrivate, writePS, readPS, writeGS, readGS,
 
-        ircPrivmsg,
+        ircPrivmsg, ircPrivmsg',
         ircJoin, ircPart, ircQuit, ircReconnect,
         ircTopic, ircGetTopic, ircGetChannels,
         ircSignalConnect, Callback, ircInstallOutputFilter, OutputFilter,
@@ -67,7 +67,7 @@ import System.IO.Error
 #endif
 
 import Data.Char                (toLower, isAlphaNum, isSpace)
-import Data.List                (isSuffixOf)
+import Data.List                (isSuffixOf, inits, tails)
 import Data.Typeable            (Typeable)
 import Data.IORef               (newIORef, IORef, readIORef, writeIORef)
 
@@ -76,7 +76,6 @@ import Control.Concurrent
 import Control.Monad.Reader
 import Control.Monad.State
 import Control.Monad.Error (MonadError (..))
-import Control.Arrow       (first)
 
 ------------------------------------------------------------------------
 
@@ -317,20 +316,29 @@ ircGetChannels = do
     chans <- gets ircChannels
     return $ map getCN (M.keys chans)
 
-lineify, checkRecip, cleanOutput :: OutputFilter
+lineify, checkRecip, cleanOutput, reduceIndent :: OutputFilter
+-- | wrap long lines.
 lineify _ msg = return $ mlines $ unlines msg
 
+-- | Don't send any output to alleged bots.
 checkRecip who msg
   | who == Config.name Config.config = return []
   | "bot" `isSuffixOf` lowerCaseString who = return []
   | otherwise = return msg
 
--- For now, this just checks for duplicate empty lines.
-cleanOutput _ msg = return $ drop 1 $ concat $ zipWith cl ("":msg') (cycle msg') where 
-  cl "" "" = []
-  cl x  _  = [x]
-
+-- | For now, this just checks for duplicate empty lines.
+cleanOutput _ msg = return $ remDups True msg' where
+  remDups True  ("":xs) =    remDups True xs
+  remDups False ("":xs) = "":remDups True xs
+  remDups _     (x: xs) = x: remDups False xs
+  remDups _     []      = []
   msg' = map (reverse . dropWhile isSpace . reverse) msg
+
+-- | Divide the lines' indent by three.
+reduceIndent _ msg = return $ map redLine msg where
+  redLine (' ':' ':' ':xs) = ' ': redLine xs
+  redLine (' ':' ':xs)     = ' ': redLine xs
+  redLine xs               = xs
 
 -- | Send a message to a channel\/user. If the message is too long, the rest
 --   of it is saved in the (global) more-state.
@@ -346,19 +354,19 @@ ircPrivmsg who msg = do
 -- ---------------------------------------------------------------------
 -- | output filter (should consider a fmt(1)-like algorithm
 --
-mlines		:: String -> [String]
-mlines ""	=  []
-mlines s	=  let (l, s') = mbreak 0 (== '\n') s in l: mlines s'
-  where
-    mbreak :: Int -> (Char -> Bool) -> [Char] -> ([Char], [Char])
-    mbreak _ _ xs@[] = (xs, xs)
-    mbreak n p xs@(x:xs')
-      | n == w                           = ([],dropWhile isSpace xs)
-      | n > (w-10) && not (isAlphaNum x) = ([x], dropWhile isSpace xs')
-      | p x	                             = ([],xs')
-      | otherwise                        = first (x:) $ mbreak (n+1) p xs'
-
+mlines          :: String -> [String]
+mlines s        = mbreak =<< lines s where
+  mbreak :: String -> [String]
+  mbreak xs
+    | null bs = [as]
+    | otherwise = (as++cs):filter (not . null) (mbreak (dropWhile isSpace ds))
+    where 
+    (as,bs) = splitAt (w-n) xs
+    breaks  = filter (liftM2 (||) null (isAlphaNum . last) . snd) $ 
+      take n $ zip (inits bs) (tails bs)
+    (cs,ds) = last $ breaks ++ [(take n bs, drop n bs)]
     w = Config.textwidth Config.config
+    n = 10
 
 -- ---------------------------------------------------------------------
 
@@ -445,9 +453,12 @@ runIrc initialise m ld = withSocketsDo $ do
                 ircChannels        = M.empty,
                 ircModules         = M.empty,
                 ircCallbacks       = M.empty,
-                ircOutputFilters   = [("",cleanOutput),
-                                      ("",lineify),
-                                      ("",checkRecip)],
+                ircOutputFilters   = [
+                    ("",cleanOutput),
+                    ("",lineify),
+                    ("",cleanOutput),
+                    ("",reduceIndent),
+                    ("",checkRecip) ],
                 ircCommands        = M.empty,
                 ircStayConnected   = True,
                 ircDynLoad         = ld
@@ -485,13 +496,15 @@ runIrc' m = do
             finallyError 
                (runReaderT (runIRC $ catchSignals $ m >> ircQuit "terminated") 
                            chans)
-               (do exitModules
-                   liftIO $ killThread threadr
-                   liftIO $ killThread threadw
-                   liftIO $ hClose s)
+               (liftIO $ do 
+                   killThread threadr
+                   killThread threadw
+                   hClose s)
 
         reconn <- gets ircStayConnected
-        when reconn $ runIrc' m
+        case reconn of
+          True  -> runIrc' m
+          False -> exitModules
 
   where
 #if __GLASGOW_HASKELL__ >= 600

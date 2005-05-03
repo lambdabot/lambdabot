@@ -21,7 +21,9 @@ instance Module MoreModule MoreState where
     moduleInit   _ = ircInstallOutputFilter moreFilter
     process      _ _ target _ _ = do
         morestate <- readPS target
-        ircPrivmsg target $ maybe "more: empty buffer" unlines morestate
+        case morestate of
+          Nothing -> ircPrivmsg' target "more: empty buffer"
+          Just ls -> mapM_ (ircPrivmsg' target) =<< moreFilter target ls
 
 moreFilter :: String -> [String] -> ModuleT MoreState IRC [String]
 moreFilter target msglines = do

@@ -561,7 +561,7 @@ rules = [
   -- uncurry ((. g) . (,)) --> second g
   rr (\g -> uncurryE `a` ((flipE `a` compE `a` g) `c` commaE))
      (\g -> secondE `a` g),
-  
+
   -- list destructors
   Hard $ 
   If (Or [rr consE consE, rr nilE nilE]) $ Or [
