@@ -167,11 +167,10 @@ run_remember :: String -> ModuleT Quotes IRC ()
 run_remember str = do
         let (name,q') = break (== ' ') str
             q = if null q' then q' else tail q'
-        fm <- readMS
-
-        let ss  = fromMaybe [] (M.lookup name fm)
-            fm' = M.insert name (q:ss) fm
-        writeMS fm'
+        withMS $ \fm writer -> do
+          let ss  = fromMaybe [] (M.lookup name fm)
+              fm' = M.insert name (q:ss) fm
+          writer fm'
 
 --
 --  the @quote command, takes a user name to choose a random quote from

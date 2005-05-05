@@ -66,8 +66,8 @@ instance Module SeenModule SeenState where
         chans <- ircGetChannels
         unless (null chans) $ do
             ct    <- liftIO getClockTime
-            fm    <- readMS
-            writeMS $ botPart ct chans fm
+            withMS $ \fm writer ->
+              writer $ botPart ct chans fm
 
     process _ msg target _ rest = do 
          seenFM <- readMS
@@ -226,11 +226,11 @@ withSeenFM :: (IRCMessage -> SeenState -> ClockTime -> Nick
               -> Seen IRC ()
 withSeenFM f msg = do 
     let nick = lowerCaseString . unUserMode . ircNick $ msg
-    state <- readMS
-    ct <- liftIO getClockTime
-    case f msg state ct nick of
-        Right newstate -> writeMS newstate
-        Left err -> debugStrLn $ "SeenModule> " ++ err
+    withMS $ \state writer -> do
+      ct <- liftIO getClockTime
+      case f msg state ct nick of
+          Right newstate -> writer newstate
+          Left err -> debugStrLn $ "SeenModule> " ++ err
 
 -- | Update the user status.
 updateJ :: Maybe ClockTime -- ^ If the bot joined the channel, the time that 

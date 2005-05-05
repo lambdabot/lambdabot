@@ -17,6 +17,5 @@ instance Module StateModule String where
     moduleDefState  _ = return "nothing yet"
     moduleSerialize _ = Just stdSerializer
     process      _ _ target _ rest = do
-       modstate <- readMS
-       writeMS rest
+       modstate <- withMS $ \ms writer -> writer rest >> return ms
        ircPrivmsg target modstate

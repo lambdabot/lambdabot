@@ -20,7 +20,8 @@ module Util (
         readM,
         showClean,
         expandTab,
-        closest, closests
+        closest, closests,
+        withMWriter
     ) where
 
 import Config
@@ -31,6 +32,10 @@ import Data.List                (intersperse, isPrefixOf)
 import Data.Maybe               (mapMaybe)
 import Data.Char                (isSpace, toLower)
 import Control.Monad.State      (when,MonadIO(..))
+
+import Data.IORef               (newIORef, readIORef, writeIORef)
+import Control.Concurrent       (MVar, takeMVar, tryPutMVar)
+import Control.Exception        (bracket)
 
 import System.Random hiding (split)
 
@@ -273,7 +278,7 @@ lvn' :: String -> [Int] -> Char -> [Int] -> Int -> [Int]
 lvn' [] _ _ ndl _ = ndl
 lvn' (t:ts) (dlh:dlt) c ndl ld | length dlt > 0 = lvn' ts dlt c (ndl ++ [m]) m
     where
-        m = foldr1 min [ld + 1, head dlt + 1, dlh + (dif t c)]
+        m = foldl1 min [ld + 1, head dlt + 1, dlh + (dif t c)]
 lvn' _ _ _ _  _  = error "levenshtein, ran out of numbers"
 
 dif :: Char -> Char -> Int
@@ -302,3 +307,13 @@ levenshtein (s:ss) (t:ts)   =
           eq         = fromEnum (s /= t)
           min3 a b c = min c (min a b)
 -}
+
+------------------------------------------------------------------------
+
+-- | Thread-safe modification of an MVar.
+withMWriter :: MVar a -> (a -> (a -> IO ()) -> IO b) -> IO b
+withMWriter mvar f = bracket 
+  (do x <- takeMVar mvar; ref <- newIORef x; return (x,ref))
+  (\(_,ref) -> tryPutMVar mvar =<< readIORef ref)
+  (\(x,ref) -> f x $ writeIORef ref)
+

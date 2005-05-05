@@ -22,6 +22,7 @@ theModule :: MODULE
 theModule = MODULE $ FactModule()
 
 type FactState = M.Map String String
+type FactWriter = FactState -> LB ()
 type Fact m a = ModuleT FactState m a
 
 instance Module FactModule FactState where
@@ -40,42 +41,41 @@ instance Module FactModule FactState where
   moduleCmds   _ = return ["fact","fact-set","fact-delete",
                            "fact-cons","fact-snoc","fact-update"]
 
-  process _ _ target cmd rest = do 
-        factFM <- readMS
-        result <- case words rest of
+  process _ _ target cmd rest = do
+        result <- withMS $ \factFM writer -> case words rest of
             []         -> return "I can not handle empty facts."
-            (fact:dat) -> processCommand factFM 
+            (fact:dat) -> processCommand factFM writer
                                 (lowerCaseString fact) cmd (unwords dat)
         ircPrivmsg target result
 
 ------------------------------------------------------------------------
 
-processCommand :: M.Map String String 
+processCommand :: FactState -> FactWriter
                -> String -> String -> String -> Fact IRC String
-processCommand factFM fact cmd dat =
+processCommand factFM writer fact cmd dat =
     case cmd of
         "fact"        -> return $ getFact factFM fact
-        "fact-set"    -> updateFact True factFM fact dat
-        "fact-update" -> updateFact False factFM fact dat
-        "fact-cons"   -> alterFact ((dat ++ " ")++) factFM fact
-        "fact-snoc"   -> alterFact (++(" " ++ dat)) factFM fact
-        "fact-delete" -> do writeMS $ M.delete fact factFM
+        "fact-set"    -> updateFact True factFM writer fact dat
+        "fact-update" -> updateFact False factFM writer fact dat
+        "fact-cons"   -> alterFact ((dat ++ " ")++) factFM writer fact
+        "fact-snoc"   -> alterFact (++(" " ++ dat)) factFM writer fact
+        "fact-delete" -> do writer $ M.delete fact factFM
                             return "Fact deleted."
         _ -> return "Unknown command."
 
-updateFact :: Bool -> M.Map String String -> String -> String -> Fact IRC String
-updateFact guard factFM fact dat =
+updateFact :: Bool -> FactState -> FactWriter -> String -> String -> Fact IRC String
+updateFact guard factFM writer fact dat =
     if guard && M.member fact factFM
         then return "Fact already exists, not updating"
-        else do writeMS $ M.insert fact dat factFM
+        else do writer $ M.insert fact dat factFM
                 return "Fact recorded."
 
 alterFact :: (String -> String) 
-          -> M.Map String String -> String -> Fact IRC String
-alterFact f factFM fact =
+          -> FactState -> FactWriter -> String -> Fact IRC String
+alterFact f factFM writer fact =
     case M.lookup fact factFM of
         Nothing -> return "A fact must exist to alter it"
-        Just x  -> do writeMS $ M.insert fact (f x) factFM
+        Just x  -> do writer $ M.insert fact (f x) factFM
                       return "Fact altered."
 
 getFact :: M.Map String String -> String -> String

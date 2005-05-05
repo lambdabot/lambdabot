@@ -16,7 +16,7 @@ module IRC (
         withModule, getDictKeys,
 
         -- ** Functions to access the module's state
-        readMS, writeMS, modifyMS,
+        readMS, withMS, modifyMS,
 
         -- ** Utility functions for modules that need state for each target.
         GlobalPrivate(global), mkGlobalPrivate, writePS, readPS, writeGS, readGS,
@@ -38,7 +38,7 @@ module IRC (
 import qualified Config (config, name, admins, host, port, textwidth)
 import DeepSeq          (($!!), DeepSeq(..))
 import ErrorUtils       (bracketError, tryErrorJust, finallyError, catchErrorJust, tryError)
-import Util             (split,clean,breakOnGlue, Serializer(..), lowerCaseString)
+import Util             (split,clean,breakOnGlue, Serializer(..), lowerCaseString, withMWriter)
 import qualified Util   (join)
 
 import Map (Map)
@@ -247,14 +247,6 @@ irchost     :: IRCMessage -> String
 irchost msg = (split "@" (msgPrefix msg)) !! 1
 -}
 
--- | Lambdabot's basic monad. Doesn't assume that there is a connection to a
---   server.
-{-
-newtype LB a = LB { runLB :: ReaderT (IORef IRCRWState) IO a }
-#ifndef __HADDOCK__
-   deriving (Functor,Monad,MonadIO)
-#endif
--}
 type IRC = LB
 
 -- | The IRC Monad. The reader transformer holds information about the
@@ -307,7 +299,7 @@ evalLB (LB lb) rws = do
 
 -- | This \"transformer\" encodes the additional information a module might 
 --   need to access its name or its state.
-type ModuleT s m a = (?ref :: IORef s, ?name :: String) => m a
+type ModuleT s m a = (?ref :: MVar s, ?name :: String) => m a
 
 mkIrcMessage :: String -> [String] -> IRCMessage
 mkIrcMessage cmd params
@@ -715,7 +707,7 @@ class Module m s | m -> s where
 -- | An existential type holding a module.
 data MODULE = forall m s. (Module m s) => MODULE m
 
-data ModuleRef = forall m s. (Module m s) => ModuleRef m (IORef s) String
+data ModuleRef = forall m s. (Module m s) => ModuleRef m (MVar s) String
 
 toFilename :: String -> String
 toFilename = ("State/"++)
@@ -752,7 +744,7 @@ ircInstallModule :: MODULE -> String -> LB ()
 ircInstallModule (MODULE mod) modname = do  
     savedState <- liftIO $ readGlobalState mod modname
     state      <- maybe (moduleDefState mod) return savedState
-    ref        <- liftIO $ newIORef state
+    ref        <- liftIO $ newMVar state
 
     let modref = ModuleRef mod ref modname
     let ?ref = ref; ?name = modname
@@ -829,18 +821,18 @@ checkPrivs msg target f = do
        Nothing -> ircPrivmsg target "not enough privileges"
 
 -- | Update the module's private state.
-writeMS :: MonadIO m => s -> ModuleT s m ()
-writeMS s = liftIO $ writeIORef ?ref $! s
+--withMWriter :: MVar a -> (a -> (a -> IO ()) -> IO b) -> IO b
+withMS :: (s -> (s -> LB ()) -> LB a) -> ModuleT s LB a
+withMS f = LB $ ReaderT $ \r -> withMWriter ?ref $ 
+  \x writer -> runLB (f x (liftIO . writer)) `runReaderT` r
 
 -- | Read the module's private state.
 readMS :: MonadIO m => ModuleT s m s
-readMS = liftIO $ readIORef ?ref
+readMS = liftIO $ readMVar ?ref
 
 -- | Modify the module's private state.
-modifyMS :: MonadIO m => (s -> s) -> ModuleT s m ()
-modifyMS f = liftIO $ do
-  s <- readIORef ?ref
-  writeIORef ?ref $! f s -- It's a shame there's no modifyIORef'
+modifyMS :: (s -> s) -> ModuleT s LB ()
+modifyMS f = liftIO $ modifyMVar_ ?ref (return . f)
 
 -- | This datatype allows modules to conviently maintain both global 
 --   (i.e. for all clients they're interacting with) and private state.
@@ -870,7 +862,7 @@ writePS maxSize who mp = do
   state <- readMS
   let newPrivate = take maxSize . maybe id (\x -> ((who,x):)) mp . 
         filter ((/=who) . fst) $ private state
-  length newPrivate `seq` writeMS $ state { private = newPrivate }
+  length newPrivate `seq` undefined $ state { private = newPrivate }
 
 -- | Reads private state.
 readPS :: MonadIO m => String -> ModuleT (GlobalPrivate g p) m (Maybe p)
@@ -884,7 +876,7 @@ readPS who = do
 writeGS :: MonadIO m => g -> ModuleT (GlobalPrivate g p) m ()
 writeGS g = do
   state <- readMS
-  writeMS $ state { global = g }
+  undefined $ state { global = g }
 
 -- | Reads global state.
 readGS :: MonadIO m => ModuleT (GlobalPrivate g p) m g
