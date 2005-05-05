@@ -1,3 +1,7 @@
+--
+-- | Default cows
+--
+
 module Plugins.Dummy.Moo (cows) where
 
 cows :: [String]
