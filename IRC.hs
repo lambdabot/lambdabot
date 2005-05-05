@@ -19,7 +19,8 @@ module IRC (
         readMS, withMS, modifyMS,
 
         -- ** Utility functions for modules that need state for each target.
-        GlobalPrivate(global), mkGlobalPrivate, writePS, readPS, writeGS, readGS,
+        GlobalPrivate(global), mkGlobalPrivate, withPS, readPS, withGS, readGS,
+        writePS, writeGS,
 
         ircPrivmsg, ircPrivmsg',
         ircJoin, ircPart, ircQuit, ircReconnect,
@@ -852,35 +853,43 @@ mkGlobalPrivate g = GP {
   private = []
 }
 
--- | Writes private state.
-writePS :: MonadIO m 
-  => Int     -- ^ Maximal number of private states to keep
+-- Needs a better interface. The with-functions are hardly useful.
+-- | Writes private state. For now, it locks everything.
+withPS :: 
+     Int     -- ^ Maximal number of private states to keep
   -> String  -- ^ The target
-  -> Maybe p -- ^ @Just x@ writes x in the user's private state, @Nothing@ removes it.
-  -> ModuleT (GlobalPrivate g p) m ()
-writePS maxSize who mp = do
-  state <- readMS
-  let newPrivate = take maxSize . maybe id (\x -> ((who,x):)) mp . 
+  -> (Maybe p -> (Maybe p -> LB ()) -> LB a)
+    -- ^ @Just x@ writes x in the user's private state, @Nothing@ removes it.
+  -> ModuleT (GlobalPrivate g p) LB a
+withPS maxSize who f = withMS $ \state writer -> do
+  let oldPrivate = lookup who $ private state
+      newPrivate mp = take maxSize . maybe id (\x -> ((who,x):)) mp . 
         filter ((/=who) . fst) $ private state
-  length newPrivate `seq` undefined $ state { private = newPrivate }
+  writer $ state { private = newPrivate oldPrivate }
+  f oldPrivate $ \mp -> 
+    length (newPrivate mp) `seq` -- I hope CSE will take care of that.
+    writer $ state { private = newPrivate mp }
 
 -- | Reads private state.
-readPS :: MonadIO m => String -> ModuleT (GlobalPrivate g p) m (Maybe p)
-readPS who = do
-  state <- readMS
-  let answer = lookup who (private state)
-  writePS maxBound who answer
-  return answer
+readPS :: String -> ModuleT (GlobalPrivate g p) LB (Maybe p)
+readPS who = withPS maxBound who $ \state _ -> return state
 
--- | Writes global state.
-writeGS :: MonadIO m => g -> ModuleT (GlobalPrivate g p) m ()
-writeGS g = do
-  state <- readMS
-  undefined $ state { global = g }
+-- | Writes global state. Locks everything
+withGS :: (g -> (g -> LB ()) -> LB ()) -> ModuleT (GlobalPrivate g p) LB ()
+withGS f = withMS $ \state writer ->
+  f (global state) $ \g -> writer $ state { global = g }
 
 -- | Reads global state.
 readGS :: MonadIO m => ModuleT (GlobalPrivate g p) m g
 readGS = global `liftM` readMS
+
+
+-- The old interface, as we don't wanna be too fancy right now.
+writePS :: Int -> String -> Maybe p -> ModuleT (GlobalPrivate g p) LB ()
+writePS maxSize who x = withPS maxSize who (\_ writer -> writer x)
+
+writeGS :: g -> ModuleT (GlobalPrivate g p) LB ()
+writeGS g = withGS (\_ writer -> writer g)
 
 
 -- | Interpret an expression in the context of a module.
