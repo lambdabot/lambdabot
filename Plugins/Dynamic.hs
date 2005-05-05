@@ -30,22 +30,17 @@ instance Module DynamicModule () where
         liftIO $ putStrLn " done."
                                 
     process _ msg src "dynamic-load" rest =
-        checkPrivs msg src $ loadIRC rest >> ircPrivmsg src "module loaded"
+        checkPrivs msg src $ load rest >> ircPrivmsg src "module loaded"
 
     process _ msg src "dynamic-unload" rest =
         checkPrivs msg src $ unload rest >> ircPrivmsg src "module unloaded"
 
     process _ msg src "dynamic-reload" rest = do
         checkPrivs msg src $ do
-            unload rest ; loadIRC rest ; ircPrivmsg src "module reloaded"
+            unload rest ; load rest ; ircPrivmsg src "module reloaded"
 
     process _ _ _ _ _ = error "DynamicModule: Invalid command"
 
-
-loadIRC :: String -> IRC ()
-loadIRC nm = do
-  success <- load nm
-  when success $ withModule ircModules nm (return ()) moduleDynInit
 
 --
 -- | Load value "theModule" from each plugin, given simple name of a

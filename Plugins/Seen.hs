@@ -13,6 +13,7 @@ import Data.List           ((\\), nub)
 
 import Control.Monad       (unless, zipWithM_)
 import Control.Monad.Trans (liftIO, MonadIO)
+import ErrorUtils          (tryError)
 
 ------------------------------------------------------------------------
 
@@ -55,12 +56,13 @@ instance Module SeenModule SeenState where
     moduleCmds _        = return ["seen"]
     moduleDefState _    = return M.empty
     moduleSerialize _   = Just mapSerializer
-    moduleInit _        = zipWithM_ ircSignalConnect 
-      ["JOIN", "PART", "QUIT", "NICK", "353",      "PRIVMSG"] $ map withSeenFM
-      [joinCB, partCB, quitCB, nickCB, joinChanCB, msgCB]
-
-    -- This magically causes the 353 callback to be invoked :)
-    moduleDynInit _     = ircNames =<< ircGetChannels
+    moduleInit _        = do 
+      zipWithM_ ircSignalConnect 
+        ["JOIN", "PART", "QUIT", "NICK", "353",      "PRIVMSG"] $ map withSeenFM
+        [joinCB, partCB, quitCB, nickCB, joinChanCB, msgCB]
+      -- This magically causes the 353 callback to be invoked :)
+      tryError $ ircNames =<< ircGetChannels
+      return ()
     
     moduleExit _ = do
         chans <- ircGetChannels

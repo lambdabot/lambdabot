@@ -13,8 +13,6 @@ import Data.Dynamic                     (Dynamic)
 import Data.List                        (groupBy,sort,isPrefixOf)
 import Data.Maybe                       (mapMaybe)
 
--- TODO: clear continuation IORef after -every- @eval?
-
 newtype EvalModule = EvalModule ()
 
 theModule :: MODULE

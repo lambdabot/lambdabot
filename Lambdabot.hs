@@ -701,9 +701,6 @@ class Module m s | m -> s where
     moduleCmds      :: m -> ModuleT s LB [String]
     -- | Initialize the module. The default implementation does nothing.
     moduleInit      :: m -> ModuleT s LB ()
-    -- | Initialize the module. Only called when dynloading, i.e. when we
-    --   we have a connection to an IRC server.
-    moduleDynInit   :: m -> ModuleT s IRC ()
     -- | Finalize the module. The default implementation does nothing.
     moduleExit      :: m -> ModuleT s LB ()
     -- | Process a command a user sent.
@@ -716,7 +713,6 @@ class Module m s | m -> s where
 
     moduleExit _      = return ()
     moduleInit _      = return ()
-    moduleDynInit _   = return ()
     moduleSticky _    = False
     moduleSerialize _ = Nothing
     moduleDefState  _ = return $ error "state not initalized"
