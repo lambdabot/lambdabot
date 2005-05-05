@@ -61,7 +61,7 @@ query engine q = readPage (proxy config) uri request ""
 extractLoc :: [String] -> String
 extractLoc [] = error "No response, something weird is up."
 extractLoc (_:headers) =
-        fromMaybe (error "No result found.")
+        fromMaybe "No result found."
                   (lookup "Location" $ concatMap f headers)
 
         where f s = case findIndex (==':') s of
