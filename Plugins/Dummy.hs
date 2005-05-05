@@ -21,6 +21,7 @@ instance Module DummyModule [String] where
         "wiki"        -> "wiki urls"
         "paste"       -> "paste page url"
         "docs"        -> "library documentation"
+        "libsrc"      -> "library source"
         "learn"       -> "another url"
         "eurohaskell" -> "urls are good"
         "moo"         -> "vegan-friendly command"
@@ -49,4 +50,15 @@ dummylst = [("dummy",       \_ -> "dummy"),
                Nothing -> x ++ " not available"
                Just m  -> "http://haskell.org/ghc/docs/latest/html/"++
                           "libraries/" ++ m ++ "/" ++ x ++ ".html"),
+            ("libsrc",      \x -> case M.lookup x docAssocs of
+               Nothing -> x ++ " not available"
+               Just m  -> "http://..." ++
+                          m ++ "/" ++ map (choice (=='.') (const '/') id) x ++ ".hs"),
 	    ("learn",       \_ -> "http://www.haskell.org/learning.html")]
+
+{-# INLINE choice #-}
+choice :: (r -> Bool) -> (r -> a) -> (r -> a) -> (r -> a)
+choice p f g x = if p x then f x else g x
+-- Generalizations:
+-- choice :: ArrowChoice (~>) => r ~> Bool -> r ~> a -> r ~> a -> r ~> a
+-- choice :: Monad m => m Bool -> m a -> m a -> m a
