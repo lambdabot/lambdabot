@@ -838,11 +838,11 @@ checkPrivs msg target f = do
        Just _  -> f
        Nothing -> ircPrivmsg target "not enough privileges"
 
+-- withMWriter :: MVar a -> (a -> (a -> IO ()) -> IO b) -> IO b
 -- | Update the module's private state.
---withMWriter :: MVar a -> (a -> (a -> IO ()) -> IO b) -> IO b
 withMS :: (s -> (s -> LB ()) -> LB a) -> ModuleT s LB a
-withMS f = LB $ ReaderT $ \r -> withMWriter ?ref $ 
-  \x writer -> runLB (f x (liftIO . writer)) `runReaderT` r
+withMS f = lbIO $ \conv -> withMWriter ?ref $ \x writer ->
+  conv $ f x (liftIO . writer)
 
 -- | Read the module's private state.
 readMS :: MonadIO m => ModuleT s m s
@@ -880,8 +880,7 @@ withPS :: String  -- ^ The target
   -> ModuleT (GlobalPrivate g p) LB a
 withPS who f = do
   mvar <- accessPS return id who
-  LB $ ReaderT $ \r -> withMWriter mvar $ \x writer ->
-    runLB (f x (liftIO . writer)) `runReaderT` r
+  lbIO $ \conv -> withMWriter mvar $ \x writer -> conv $ f x (liftIO . writer)
 
 -- | Reads private state.
 readPS :: String -> ModuleT (GlobalPrivate g p) LB (Maybe p)
