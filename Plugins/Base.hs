@@ -5,19 +5,22 @@ module Plugins.Base (theModule) where
 
 import Config               (config, Config(name, autojoin))
 import IRC
-import Util                 (debugStrLn,breakOnGlue,split,closests,showClean)
+import Util                 (debugStrLn,breakOnGlue,split,closests,showClean,timeout)
 import qualified Map as M   (insert, delete)
 
 import Data.List            (isPrefixOf,nub)
 import Text.Regex           (mkRegex, matchRegexAll)
 import Control.Monad.State  (MonadState(..), when)
+import Control.Concurrent
 
 newtype BaseModule = BaseModule ()
 
 theModule :: MODULE
 theModule = MODULE $ BaseModule ()
 
-instance Module BaseModule () where
+type BaseState = GlobalPrivate () ()
+
+instance Module BaseModule BaseState where
     moduleHelp  _ _   = return "base module"
     moduleCmds      _ = return []
     process _ _ _ _ _ = return ()
@@ -177,13 +180,13 @@ doRPL_ENDOFMOTD :: Callback
 doRPL_ENDOFMOTD _msg = return ()
 -}
 
-doPRIVMSG :: Callback
+doPRIVMSG :: ModState BaseState Callback
 doPRIVMSG msg = doPRIVMSG' (name config) msg
 
 --
 -- | What does the bot respond to?
 --
-doPRIVMSG' :: String -> IRCMessage -> IRC ()
+doPRIVMSG' :: String -> IRCMessage -> ModuleT BaseState IRC ()
 doPRIVMSG' myname msg
   | myname `elem` targets
     = let (cmd, params) = breakOnGlue " " text
@@ -226,14 +229,24 @@ doPRIVMSG' myname msg
                   _ -> docmd cmd         -- no prefix, edit distance too far
         where 
             e = 3   -- edit distance cut off. Seems reasonable for small words
-            docmd c =
-                withModule ircCommands c
-                    (ircPrivmsg towhere ("Unknown command, try @listcommands."))
-                    (\m -> do
-                      debugStrLn (show msg)
-                      handleIrc (ircPrivmsg towhere . 
-                          (("module \"" ++ ?name ++ "\" screwed up: ") ++) )
-                        (process m msg towhere c rest))
+            -- Concurrency: We ensure that only one module communicates with
+            -- each target at once.
+            -- Timeout: We kill the thread after 1 minute
+            docmd c = do
+              mapLB forkIO $ withPS towhere $ \_ _ -> do
+                let act = withModule ircCommands c
+                      (ircPrivmsg towhere ("Unknown command, try @listcommands."))
+                      (\m -> do
+                        debugStrLn (show msg)
+                        handleIrc (ircPrivmsg towhere . 
+                            (("module \"" ++ ?name ++ "\" screwed up: ") ++) )
+                          (process m msg towhere c rest))
+                result <- mapLB (timeout $ 60*1000*1000) act
+                case result of
+                  Nothing -> ircPrivmsg towhere $ "module \"" ++ ?name ++ " timed out"
+                  Just _  -> return ()
+              return ()
+
 
 ------------------------------------------------------------------------
 

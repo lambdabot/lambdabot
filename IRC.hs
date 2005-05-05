@@ -5,13 +5,13 @@
 --
 module IRC (
         MODULE(..), Module(..),
-        ModuleT,
+        ModuleT, ModState,
 
         IRCMessage(..), 
         IRCRState(..), IRCRWState(..), IRCError(..), 
         IRC,
 
-        LB(..), 
+        LB(..), mapLB,
 
         withModule, getDictKeys,
 
@@ -258,6 +258,9 @@ newtype LB a
   deriving (Monad,Functor,MonadIO)
 #endif
 
+mapLB :: (IO a -> IO b) -> LB a -> LB b
+mapLB f = LB . mapReaderT f . runLB
+
 -- All of IRCErrorT's (RIP) functionality can be shrunk down to that.
 instance MonadError IRCError LB where
   throwError (IRCRaised e) = liftIO $ throwIO e
@@ -301,6 +304,9 @@ evalLB (LB lb) rws = do
 -- | This \"transformer\" encodes the additional information a module might 
 --   need to access its name or its state.
 type ModuleT s m a = (?ref :: MVar s, ?name :: String) => m a
+
+-- Name !!!
+type ModState s a = (?ref :: MVar s, ?name :: String) => a
 
 mkIrcMessage :: String -> [String] -> IRCMessage
 mkIrcMessage cmd params
@@ -842,37 +848,50 @@ modifyMS f = liftIO $ modifyMVar_ ?ref (return . f)
 -- This simple implementation is linear in the number of private states used.
 data GlobalPrivate g p = GP {
   global :: !g,
-  private :: ![(String,p)]
+  private :: ![(String,MVar (Maybe p))],
+  maxSize :: Int
 }
 
 -- | Creates a @GlobalPrivate@ given the value of the global state. No private
 --   state for clients will be created.
-mkGlobalPrivate :: g -> GlobalPrivate g p
-mkGlobalPrivate g = GP {
+mkGlobalPrivate :: Int -> g -> GlobalPrivate g p
+mkGlobalPrivate ms g = GP {
   global = g,
-  private = []
+  private = [],
+  maxSize = ms
 }
 
 -- Needs a better interface. The with-functions are hardly useful.
 -- | Writes private state. For now, it locks everything.
-withPS :: 
-     Int     -- ^ Maximal number of private states to keep
-  -> String  -- ^ The target
+withPS :: String  -- ^ The target
   -> (Maybe p -> (Maybe p -> LB ()) -> LB a)
     -- ^ @Just x@ writes x in the user's private state, @Nothing@ removes it.
   -> ModuleT (GlobalPrivate g p) LB a
-withPS maxSize who f = withMS $ \state writer -> do
-  let oldPrivate = lookup who $ private state
-      newPrivate mp = take maxSize . maybe id (\x -> ((who,x):)) mp . 
-        filter ((/=who) . fst) $ private state
-  writer $ state { private = newPrivate oldPrivate }
-  f oldPrivate $ \mp -> 
-    length (newPrivate mp) `seq` -- I hope CSE will take care of that.
-    writer $ state { private = newPrivate mp }
+withPS who f = do
+  (_, mvar) <- readPS' who
+  LB $ ReaderT $ \r -> withMWriter mvar $ \x writer ->
+    runLB (f x (liftIO . writer)) `runReaderT` r
 
 -- | Reads private state.
 readPS :: String -> ModuleT (GlobalPrivate g p) LB (Maybe p)
-readPS who = withPS maxBound who $ \state _ -> return state
+readPS = fmap fst . readPS'
+
+-- | Reads private state, creates a new mvar if necessary
+readPS' :: String 
+  -> ModuleT (GlobalPrivate g p) LB (Maybe p, MVar (Maybe p))
+readPS' who = withMS $ \state writer -> 
+  case lookup who $ private state of
+    Just mvar -> do
+      let newPrivate = (who,mvar):
+            filter ((/=who) . fst) (private state)
+      length newPrivate `seq` writer (state { private = newPrivate })
+      ps <- liftIO (readMVar mvar)
+      return (ps, mvar)
+    Nothing -> do
+      mvar <- liftIO $ newMVar Nothing
+      let newPrivate = take (maxSize state) $ (who,mvar): private state
+      length newPrivate `seq` writer (state { private = newPrivate })
+      return (Nothing, mvar)
 
 -- | Writes global state. Locks everything
 withGS :: (g -> (g -> LB ()) -> LB ()) -> ModuleT (GlobalPrivate g p) LB ()
@@ -885,8 +904,8 @@ readGS = global `liftM` readMS
 
 
 -- The old interface, as we don't wanna be too fancy right now.
-writePS :: Int -> String -> Maybe p -> ModuleT (GlobalPrivate g p) LB ()
-writePS maxSize who x = withPS maxSize who (\_ writer -> writer x)
+writePS :: String -> Maybe p -> ModuleT (GlobalPrivate g p) LB ()
+writePS who x = withPS who (\_ writer -> writer x)
 
 writeGS :: g -> ModuleT (GlobalPrivate g p) LB ()
 writeGS g = withGS (\_ writer -> writer g)

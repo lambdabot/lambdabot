@@ -24,6 +24,9 @@ initFuel, maxFuel :: Int
 initFuel = 1000
 maxFuel  = 500000 -- ~ 200M mem usage for "sum $ enumFrom 1"
 
+maxPrivate :: Int
+maxPrivate = 10
+
 initEnv :: Environment
 initEnv = M.empty
 
@@ -37,11 +40,12 @@ type EvalGlobal = (Int, Environment, M.Map String String)
 type EvalState = GlobalPrivate EvalGlobal Dynamic 
 
 instance Module EvalModule EvalState where
-    moduleDefState _ = return $ mkGlobalPrivate (initFuel, initEnv, initDefns)
+    moduleDefState _ = return $ mkGlobalPrivate (maxPrivate) 
+      (initFuel, initEnv, initDefns)
     moduleSerialize _ = Just $ Serializer {
       serialize = Just . (\(fuel,_,defns) -> 
         unlines $ show fuel: map show (M.toList defns)) . global,
-      deSerialize = fmap mkGlobalPrivate . loadDefinitions
+      deSerialize = fmap (mkGlobalPrivate maxPrivate) . loadDefinitions
     }
     
     moduleHelp   _ "eval" = return "@eval expr - evaluate the lambda calculus expression, expr"
@@ -56,7 +60,7 @@ instance Module EvalModule EvalState where
                              "del-definition","set-fuel","resume"]
 
     process      _ msg target cmd rest = do
-       let writeRes = writePS 10 target
+       let writeRes = writePS target
        (fuel, env, defns) <- readGS
        res <- readPS target
        case cmd of

@@ -17,7 +17,7 @@ type MoreState = GlobalPrivate () [String]
 instance Module MoreModule MoreState where
     moduleHelp _ _ = return "@more - return more bot output"
     moduleCmds   _ = return ["more"]
-    moduleDefState _ = return $ mkGlobalPrivate ()
+    moduleDefState _ = return $ mkGlobalPrivate 20 ()
     moduleInit   _ = ircInstallOutputFilter moreFilter
     process      _ _ target _ _ = do
         morestate <- readPS target
@@ -31,6 +31,6 @@ moreFilter target msglines = do
       (morelines, thislines) = case drop (maxLines+2) msglines of
           [] -> ([],msglines)
           _  -> (drop maxLines msglines, take maxLines msglines)
-  writePS 15 target $ if null morelines then Nothing else Just morelines
+  writePS target $ if null morelines then Nothing else Just morelines
   return $ thislines ++ if null morelines then [] 
     else ['[':shows (length morelines) " @more lines]"]

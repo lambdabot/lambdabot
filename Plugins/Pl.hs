@@ -4,16 +4,16 @@
 module Plugins.Pl (theModule) where
 
 import IRC
+import Util                       (timeout)
 
 import Plugins.Pl.Common          (TopLevel, mapTopLevel, getExpr)
 import Plugins.Pl.Parser          (parsePF)
 import Plugins.Pl.PrettyPrinter   (Expr)
 import Plugins.Pl.Transform       (transform, optimize)
 
-import Control.Concurrent       (forkIO, killThread, threadDelay, newEmptyMVar, putMVar, takeMVar)
-import Control.Concurrent.Chan  (Chan, newChan, isEmptyChan, readChan, writeList2Chan)
+import Control.Concurrent.Chan    (Chan, newChan, isEmptyChan, readChan, writeList2Chan)
 
-import Control.Monad.Trans      (liftIO)
+import Control.Monad.Trans        (liftIO)
 
 -- firstTimeout is the timeout when the expression is simplified for the first
 -- time. After each unsuccessful attempt, this number is doubled until it hits
@@ -35,7 +35,7 @@ instance Module PlModule PlState where
     moduleHelp _ "pl-resume" = return "@pl-resume - resume a suspended pointless transformation."
     moduleHelp _ _ = return "@pointless <expr> - play with pointfree code"
 
-    moduleDefState _ = return $ mkGlobalPrivate ()
+    moduleDefState _ = return $ mkGlobalPrivate 15 ()
 
     moduleCmds _   = return ["pointless","pl-resume","pl"]
 
@@ -63,10 +63,10 @@ optimizeTopLevel target (to, d) = do
   (e', finished) <- liftIO $ optimizeIO to e
   ircPrivmsg target $ show $ decl e'
   if finished
-    then writePS 10 target Nothing
+    then writePS target Nothing
     else do
       ircPrivmsg target "optimization suspended, use @pl-resume to continue."
-      writePS 10 target $ Just (min (2*to) maxTimeout, decl e')
+      writePS target $ Just (min (2*to) maxTimeout, decl e')
 
 optimizeIO :: Int -> Expr -> IO (Expr, Bool)
 optimizeIO to e = do
@@ -81,19 +81,3 @@ getChanLast :: Chan a -> a -> IO a
 getChanLast c x = do
   b <- isEmptyChan c
   if b then return x else getChanLast c =<< readChan c
-
--- stolen from
--- http://www.haskell.org/pipermail/haskell-cafe/2005-January/008314.html
-parIO :: IO a -> IO a -> IO a
-parIO a1 a2 = do
-  m <- newEmptyMVar
-  c1 <- forkIO $ putMVar m =<< a1
-  c2 <- forkIO $ putMVar m =<< a2
-  r <- takeMVar m
-  killThread c1
-  killThread c2
-  return r
-
-timeout :: Int -> IO a -> IO (Maybe a)
-timeout n a = parIO (Just `fmap` a) (threadDelay n >> return Nothing)
-

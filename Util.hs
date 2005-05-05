@@ -21,7 +21,7 @@ module Util (
         showClean,
         expandTab,
         closest, closests,
-        withMWriter
+        withMWriter, parIO, timeout
     ) where
 
 import Config
@@ -34,7 +34,8 @@ import Data.Char                (isSpace, toLower)
 import Control.Monad.State      (when,MonadIO(..))
 
 import Data.IORef               (newIORef, readIORef, writeIORef)
-import Control.Concurrent       (MVar, takeMVar, tryPutMVar)
+import Control.Concurrent       (MVar, newEmptyMVar, takeMVar, tryPutMVar, putMVar, 
+                                 forkIO, killThread, threadDelay)
 import Control.Exception        (bracket)
 
 import System.Random hiding (split)
@@ -316,4 +317,20 @@ withMWriter mvar f = bracket
   (do x <- takeMVar mvar; ref <- newIORef x; return (x,ref))
   (\(_,ref) -> tryPutMVar mvar =<< readIORef ref)
   (\(x,ref) -> f x $ writeIORef ref)
+
+
+-- stolen from
+-- http://www.haskell.org/pipermail/haskell-cafe/2005-January/008314.html
+parIO :: IO a -> IO a -> IO a
+parIO a1 a2 = do
+  m <- newEmptyMVar
+  c1 <- forkIO $ putMVar m =<< a1
+  c2 <- forkIO $ putMVar m =<< a2
+  r <- takeMVar m
+  killThread c1
+  killThread c2
+  return r
+
+timeout :: Int -> IO a -> IO (Maybe a)
+timeout n a = parIO (Just `fmap` a) (threadDelay n >> return Nothing)
 
