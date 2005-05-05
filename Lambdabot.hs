@@ -1,5 +1,5 @@
 --
--- | IRC protocol binding
+-- | Lambdabot monad and IRC protocol binding
 -- TODO : refactor this. Especially the MODULE stuff which has nothing
 -- to do with the IRC protocol.
 --
@@ -101,7 +101,7 @@ data Connection = Connection {
   server    :: String,
   readChan  :: Chan RMessage,
   writeChan :: Chan (WMessage, IO ()),
-  thread    :: IORef (Maybe ThreadID),
+  thread    :: MVar (Maybe ThreadID),
   handle    :: Handle
 }
 -}
@@ -878,30 +878,30 @@ withPS :: String  -- ^ The target
     -- ^ @Just x@ writes x in the user's private state, @Nothing@ removes it.
   -> ModuleT (GlobalPrivate g p) LB a
 withPS who f = do
-  (_, mvar) <- readPS' who
+  mvar <- accessPS return id who
   LB $ ReaderT $ \r -> withMWriter mvar $ \x writer ->
     runLB (f x (liftIO . writer)) `runReaderT` r
 
 -- | Reads private state.
 readPS :: String -> ModuleT (GlobalPrivate g p) LB (Maybe p)
-readPS = fmap fst . readPS'
+readPS = accessPS (liftIO . readMVar) (\_ -> return Nothing)
 
--- | Reads private state, creates a new mvar if necessary
-readPS' :: String 
-  -> ModuleT (GlobalPrivate g p) LB (Maybe p, MVar (Maybe p))
-readPS' who = withMS $ \state writer -> 
+-- | Reads private state, executes one of the actions success and failure
+-- which take an MVar and an action producing a @Nothing@ MVar, respectively.
+accessPS :: (MVar (Maybe p) -> LB a) -> (LB (MVar (Maybe p)) -> LB a) -> String
+  -> ModuleT (GlobalPrivate g p) LB a
+accessPS success failure who = withMS $ \state writer -> 
   case lookup who $ private state of
     Just mvar -> do
       let newPrivate = (who,mvar):
             filter ((/=who) . fst) (private state)
       length newPrivate `seq` writer (state { private = newPrivate })
-      ps <- liftIO (readMVar mvar)
-      return (ps, mvar)
-    Nothing -> do
+      success mvar
+    Nothing -> failure $ do
       mvar <- liftIO $ newMVar Nothing
       let newPrivate = take (maxSize state) $ (who,mvar): private state
       length newPrivate `seq` writer (state { private = newPrivate })
-      return (Nothing, mvar)
+      return mvar
 
 -- | Writes global state. Locks everything
 withGS :: (g -> (g -> LB ()) -> LB ()) -> ModuleT (GlobalPrivate g p) LB ()

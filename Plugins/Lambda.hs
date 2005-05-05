@@ -77,10 +77,10 @@ instance Module EvalModule EvalState where
                     (name,defn) = break (' '==) rest 
                 in case rslt of
                         Left s  -> ircPrivmsg target s
-                        Right v -> do
-                          writeGS (fuel, 
-                                   M.insert name v env,
-                                   M.insert name defn defns)
+                        Right v -> withGS $ \(fuel', env', defns') writer -> do
+                          writer (fuel', 
+                                  M.insert name v env',
+                                  M.insert name defn defns')
                           ircPrivmsg target (name ++ " defined")
 
             "definitions" -> 
@@ -106,10 +106,10 @@ instance Module EvalModule EvalState where
 
             "del-definition" -> case words rest of
                 [] -> return ()
-                (d:_) -> checkPrivs msg target $ do
-                    writeGS (fuel,
-                             M.delete d env,
-                             M.delete d defns)
+                (d:_) -> checkPrivs msg target $ withGS $ \(fuel',env',defns') writer -> do
+                    writer (fuel',
+                            M.delete d env',
+                            M.delete d defns')
                     ircPrivmsg target $ d++" removed"
 
             "resume" -> case res of
