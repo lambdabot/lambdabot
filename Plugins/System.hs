@@ -99,7 +99,7 @@ listModule target query = withModule ircModules query fromCommand printProvides
     --      modules is pure anyway.
     -- (ii) extract the information directly from the ircCommands map.
     printProvides m = do
-        cmds <- liftLB $ moduleCmds m
+        cmds <- moduleCmds m
         ircPrivmsg target $ concat [?name, " provides: ", showClean cmds]
 
 pprKeys :: (Show k) => M.Map k a -> String

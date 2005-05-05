@@ -9,9 +9,9 @@ module IRC (
 
         IRCMessage(..), 
         IRCRState(..), IRCRWState(..), IRCError(..), 
-        IRC(..),
+        IRC,
 
-        LB(..), MonadLB(..),
+        LB(..), 
 
         withModule, getDictKeys,
 
@@ -249,9 +249,20 @@ irchost msg = (split "@" (msgPrefix msg)) !! 1
 
 -- | Lambdabot's basic monad. Doesn't assume that there is a connection to a
 --   server.
+{-
 newtype LB a = LB { runLB :: ReaderT (IORef IRCRWState) IO a }
 #ifndef __HADDOCK__
    deriving (Functor,Monad,MonadIO)
+#endif
+-}
+type IRC = LB
+
+-- | The IRC Monad. The reader transformer holds information about the
+--   connection to the IRC server.
+newtype LB a 
+  = LB { runLB :: ReaderT (IORef (Maybe IRCRState), IORef IRCRWState) IO a }
+#ifndef __HADDOCK__
+  deriving (Monad,Functor,MonadIO)
 #endif
 
 -- All of IRCErrorT's (RIP) functionality can be shrunk down to that.
@@ -263,43 +274,40 @@ instance MonadError IRCError LB where
                  runReaderT (runLB $ h (SignalCaught e)) r)
               `catch` \e -> runReaderT (runLB $ h (IRCRaised e)) r
 
+
+
+-- Actually, this isn't a reader anymore
+instance MonadReader IRCRState LB where
+  ask = LB $ fmap (maybe (error "No connection") id) $
+    liftIO . readIORef =<< asks fst
+  local = error "You are not supposed to call local"
+
+localLB :: Maybe IRCRState -> LB a -> LB a
+localLB new (LB m) = LB $ do
+  ref <- asks fst
+  old <- liftIO $ readIORef ref
+  liftIO $ writeIORef ref new
+  res <- m
+  liftIO $ writeIORef ref old
+  return res
+
 instance MonadState IRCRWState LB where
   get = LB $ do
-    ref <- ask
+    ref <- asks snd
     lift $ readIORef ref
   put x = LB $ do
-    ref <- ask
+    ref <- asks snd
     lift $ writeIORef ref x
   
-
 evalLB :: LB a -> IRCRWState -> IO a
-evalLB lb rws = do
+evalLB (LB lb) rws = do
   ref <- newIORef rws
-  runLB lb `runReaderT` ref
-
-class (Monad m,MonadState IRCRWState m,MonadError IRCError m,MonadIO m) 
-   => MonadLB m 
-   where
-  liftLB :: LB a -> m a
+  ref' <- newIORef Nothing
+  lb `runReaderT` (ref',ref)
 
 -- | This \"transformer\" encodes the additional information a module might 
 --   need to access its name or its state.
 type ModuleT s m a = (?ref :: IORef s, ?name :: String) => m a
-
--- | The IRC Monad. The reader transformer holds information about the
---   connection to the IRC server.
-newtype IRC a 
-  = IRC { runIRC :: ReaderT IRCRState LB a }
-#ifndef __HADDOCK__
-    deriving (Monad,Functor,MonadReader IRCRState,MonadState IRCRWState,
-              MonadError IRCError,MonadIO)
-#endif
-
-instance MonadLB LB where
-  liftLB m = m
-
-instance MonadLB IRC where
-  liftLB m = IRC $ lift m
 
 mkIrcMessage :: String -> [String] -> IRCMessage
 mkIrcMessage cmd params
@@ -311,7 +319,7 @@ ircSignOn nick ircname = do
     ircWrite (mkIrcMessage "USER" [nick, "localhost", server, ircname])
     ircWrite (mkIrcMessage "NICK" [nick])
 
-ircGetChannels :: MonadLB m => m [String]
+ircGetChannels :: LB [String]
 ircGetChannels = do 
     chans <- gets ircChannels
     return $ map getCN (M.keys chans)
@@ -348,8 +356,8 @@ ircPrivmsg :: String -- ^ The channel\/user.
 ircPrivmsg who msg = do 
   filters <- gets ircOutputFilters
   sendlines <- foldr (\f -> (=<<) (f who)) (return $ lines msg) $ map snd filters
-  -- Hardcoded defaults: maximal ten lines, maximal 80 chars/line
-  mapM_ (ircPrivmsg' who . take 80) $ take 10 sendlines
+  -- Hardcoded defaults: maximal ten lines, maximal 100 chars/line
+  mapM_ (ircPrivmsg' who . take 100) $ take 10 sendlines
 
 -- ---------------------------------------------------------------------
 -- | output filter (should consider a fmt(1)-like algorithm
@@ -494,8 +502,7 @@ runIrc' m = do
                             ircWriteThread = threadw }
 
             finallyError 
-               (runReaderT (runIRC $ catchSignals $ m >> ircQuit "terminated") 
-                           chans)
+               (localLB (Just chans) $ catchSignals $ m >> ircQuit "terminated") 
                (liftIO $ do 
                    killThread threadr
                    killThread threadw
@@ -800,7 +807,7 @@ ircUnload mod = do
 
 ------------------------------------------------------------------------
 
-ircSignalConnect :: MonadLB m => String -> Callback -> ModuleT s m ()
+ircSignalConnect :: String -> Callback -> ModuleT s LB ()
 ircSignalConnect str f 
     = do s <- get
          let cbs = ircCallbacks s
@@ -808,7 +815,7 @@ ircSignalConnect str f
               Nothing -> put (s { ircCallbacks = M.insert str [(?name,f)]    cbs}) 
               Just fs -> put (s { ircCallbacks = M.insert str ((?name,f):fs) cbs}) 
 
-ircInstallOutputFilter :: MonadLB m => OutputFilter -> ModuleT s m ()
+ircInstallOutputFilter :: OutputFilter -> ModuleT s LB ()
 ircInstallOutputFilter f = modify $ \s -> 
   s { ircOutputFilters = (?name, f): ircOutputFilters s }
 
@@ -890,18 +897,18 @@ readGS = global `liftM` readMS
 -- action for the case that the lookup fails, action if the lookup
 -- succeeds.
 --
-withModule :: (Ord k, MonadLB m)
+withModule :: (Ord k)
   => (IRCRWState -> Map k ModuleRef)
   -> k
-  -> m a 
-  -> (forall mod s. Module mod s => mod -> ModuleT s m a)
-  -> m a
+  -> LB a 
+  -> (forall mod s. Module mod s => mod -> ModuleT s LB a)
+  -> LB a
 
 withModule dict modname def f = do
     maybemod <- gets (M.lookup modname . dict)
     case maybemod of
       Just (ModuleRef m ref name) -> let ?ref = ref; ?name = name in f m
-      _                      -> def
+      _                           -> def
 
 
 getDictKeys :: (MonadState s m) => (s -> Map k a) -> m [k]

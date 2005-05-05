@@ -32,14 +32,14 @@ doHelp m msg target cmd rest =
             (process m msg target cmd "help")   -- else give up
             -- its a module
             (\md -> do
-                ss <- liftLB $ moduleCmds md
+                ss <- moduleCmds md
                 let s | null ss   = arg ++ " is a module."
                       | otherwise = arg ++ " provides: " ++ (showClean ss)
                 ircPrivmsg target s))
 
         -- so it's a valid command, try to find its help
         (\md -> do
-            s <- catchError (liftLB $ moduleHelp md arg) $ \e ->
+            s <- catchError (moduleHelp md arg) $ \e ->
                 case e of
                     IRCRaised (NoMethodError _) -> return "This command is unknown."
                     _                           -> throwError e

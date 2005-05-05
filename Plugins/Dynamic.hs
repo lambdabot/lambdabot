@@ -44,7 +44,7 @@ instance Module DynamicModule () where
 
 loadIRC :: String -> IRC ()
 loadIRC nm = do
-  success <- liftLB $ load nm
+  success <- load nm
   when success $ withModule ircModules nm (return ()) moduleDynInit
 
 --
@@ -66,8 +66,8 @@ load nm = do
 --
 -- | Unload a module, e.g. "vixen"
 --
-unload :: (MonadLB m) => [Char] -> m ()
-unload nm = liftLB $ do
+unload :: [Char] -> LB ()
+unload nm = do
         unless (nm `elem` plugins) $ error "unknown or static module"
         ircUnloadModule nm
         ircUnload (getModuleFile nm)
