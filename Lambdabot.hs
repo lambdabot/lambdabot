@@ -16,7 +16,7 @@ module Lambdabot (
         withModule, getDictKeys,
 
         -- ** Functions to access the module's state
-        readMS, withMS, modifyMS,
+        readMS, withMS, modifyMS, writeMS,
 
         -- ** Utility functions for modules that need state for each target.
         GlobalPrivate(global), mkGlobalPrivate, withPS, readPS, withGS, readGS,
@@ -269,9 +269,9 @@ newtype LB a
 #endif
 
 mapLB :: (IO a -> IO b) -> LB a -> LB b
-mapLB f = LB . mapReaderT f . runLB
+mapLB f = LB . mapReaderT f . runLB -- lbIO (\conv -> f (conv lb))
 
--- lbIO :: LB (forall a. LB a -> IO a)
+-- lbIO return :: LB (LB a -> IO a)
 -- CPS to work around predicativiy of haskell's type system.
 lbIO :: ((forall a. LB a -> IO a) -> IO b) -> LB b
 lbIO k = LB $ ReaderT $ \r -> k (\(LB m) -> m `runReaderT` r)
@@ -280,11 +280,9 @@ lbIO k = LB $ ReaderT $ \r -> k (\(LB m) -> m `runReaderT` r)
 instance MonadError IRCError LB where
   throwError (IRCRaised e) = liftIO $ throwIO e
   throwError (SignalCaught e) = liftIO $ evaluate (throwDyn $ SignalException e)
-  LB m `catchError` h = LB $ ReaderT $ \r -> (runReaderT m r
-              `catchDyn` \(SignalException e) -> 
-                 runReaderT (runLB $ h (SignalCaught e)) r)
-              `catch` \e -> runReaderT (runLB $ h (IRCRaised e)) r
-
+  m `catchError` h = lbIO $ \conv -> (conv m
+              `catchDyn` \(SignalException e) -> conv $ h $ SignalCaught e)
+              `catch` \e -> conv $ h $ IRCRaised e
 
 
 -- Actually, this isn't a reader anymore
@@ -852,9 +850,13 @@ readMS = liftIO $ readMVar ?ref
 modifyMS :: (s -> s) -> ModuleT s LB ()
 modifyMS f = liftIO $ modifyMVar_ ?ref (return . f)
 
+-- | Write the module's private state. Try to use withMS instead
+writeMS :: s -> ModuleT s LB ()
+writeMS s = modifyMS (const s)
+
 -- | This datatype allows modules to conviently maintain both global 
 --   (i.e. for all clients they're interacting with) and private state.
---   It is implemented on top of readMS\/writeMS.
+--   It is implemented on top of readMS\/withMS.
 -- 
 -- This simple implementation is linear in the number of private states used.
 data GlobalPrivate g p = GP {

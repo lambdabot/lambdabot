@@ -32,9 +32,9 @@ instance Module KarmaModule KarmaState where
 	  []       -> ircPrivmsg target "I can't find the karma of nobody."
           (nick:_) -> do
               case cmd of
-                 "karma"  -> getKarma target sender nick
-                 "karma+" -> incKarma target sender nick
-                 "karma-" -> decKarma target sender nick
+                 "karma"  -> getKarma         target sender nick
+                 "karma+" -> changeKarma 1    target sender nick
+                 "karma-" -> changeKarma (-1) target sender nick
                  _        -> error "KarmaModule: can't happen"
 	    where sender = ircNick msg
 
@@ -42,21 +42,12 @@ getKarma :: String -> String -> String -> Karma IRC ()
 getKarma target sender nick = do
     karmaFM <- readMS
     let karma = fromMaybe 0 (M.lookup nick karmaFM)
-    if sender == nick then
-       ircPrivmsg target $ "You have a karma of " ++ (show karma)
-      else
-       ircPrivmsg target $ nick ++ " has a karma of " ++ (show karma)
+    ircPrivmsg target $ (if sender == nick then "You have" else nick ++ " has")
+      ++ " a karma of " ++ show karma
 
-incKarma :: String -> String -> String -> Karma IRC ()
-incKarma target sender nick = withMS $ \state writer ->
-    if sender == nick then
-       ircPrivmsg target "You can't change your own karma, silly."
-    else do writer $ M.insertWith (+) nick 1 state
-            ircPrivmsg target $ nick ++ "'s karma has been incremented"
-
-decKarma :: String -> String -> String -> Karma IRC ()
-decKarma target sender nick = withMS $ \state writer ->
-    if sender == nick then
-       ircPrivmsg target "You can't change your own karma, silly."
-    else do writer $ M.insertWith (+) nick (-1) state
-            ircPrivmsg target $ nick ++ "'s karma has been decremented"
+changeKarma :: Integer -> String -> String -> String -> Karma IRC ()
+changeKarma km target sender nick
+  | sender == nick = ircPrivmsg target "You can't change your own karma, silly."
+  | otherwise      = do
+      modifyMS $ M.insertWith (+) nick km
+      ircPrivmsg target $ nick ++ "'s karma has been incremented"

@@ -68,8 +68,7 @@ instance Module SeenModule SeenState where
         chans <- ircGetChannels
         unless (null chans) $ do
             ct    <- liftIO getClockTime
-            withMS $ \fm writer ->
-              writer $ botPart ct chans fm
+            modifyMS $ botPart ct chans
 
     process _ msg target _ rest = do 
          seenFM <- readMS

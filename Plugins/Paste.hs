@@ -21,7 +21,7 @@ instance Module PasteModule ThreadId where
     moduleInit      _ = do
       tid <- lbIO (\conv -> 
         forkIO $ pasteListener $ conv . ircPrivmsg announceTarget)
-      withMS (\_ writer -> writer tid)
+      writeMS tid
     moduleExit      _ = liftIO . killThread =<< readMS
     process _ _ _ _ _ = return ()
 
