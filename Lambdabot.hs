@@ -11,7 +11,7 @@ module Lambdabot (
         IRCRState(..), IRCRWState(..), IRCError(..), 
         IRC,
 
-        LB(..), mapLB,
+        LB, mapLB, lbIO,
 
         withModule, getDictKeys,
 
@@ -270,6 +270,11 @@ newtype LB a
 
 mapLB :: (IO a -> IO b) -> LB a -> LB b
 mapLB f = LB . mapReaderT f . runLB
+
+-- lbIO :: LB (forall a. LB a -> IO a)
+-- CPS to work around predicativiy of haskell's type system.
+lbIO :: ((forall a. LB a -> IO a) -> IO b) -> LB b
+lbIO k = LB $ ReaderT $ \r -> k (\(LB m) -> m `runReaderT` r)
 
 -- All of IRCErrorT's (RIP) functionality can be shrunk down to that.
 instance MonadError IRCError LB where
