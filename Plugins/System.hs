@@ -3,7 +3,7 @@
 --
 module Plugins.System (theModule) where
 
-import IRC
+import Lambdabot
 import Util                     (breakOnGlue,showClean)
 import AltTime
 import qualified Map as M       (Map,keys,fromList,lookup)

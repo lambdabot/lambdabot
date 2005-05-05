@@ -10,7 +10,7 @@
 --
 module Plugins.Babel (theModule) where
 
-import IRC
+import Lambdabot
 import Util                 (stdGetRandItem, mapSerializer)
 import PosixCompat          (popen)
 import MiniHTTP

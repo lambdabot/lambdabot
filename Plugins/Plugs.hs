@@ -12,7 +12,7 @@
 module Plugins.Plugs (theModule) where
 
 import Util             (expandTab)
-import IRC      hiding  (clean)
+import Lambdabot      hiding  (clean)
 import PosixCompat
 
 import Control.Monad.Trans      ( liftIO )

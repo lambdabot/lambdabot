@@ -5,7 +5,7 @@
 --
 module Plugins.Vixen where
 
-import IRC
+import Lambdabot
 import Plugins.Vixen.Vixen      (mkVixen)
 
 import Control.Monad.State      (MonadIO, liftIO)

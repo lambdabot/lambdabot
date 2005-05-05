@@ -5,7 +5,7 @@
 module Plugins.Dynamic (theModule) where
 
 import {-# SOURCE #-} Modules   (plugins)
-import IRC
+import Lambdabot
 
 import Data.Char                (toUpper)
 import Control.Monad.Error

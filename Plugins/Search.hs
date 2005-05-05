@@ -6,7 +6,7 @@
 module Plugins.Search (theModule) where
 
 import Util
-import IRC
+import Lambdabot
 import Config                   (proxy, config)
 import MiniHTTP
 

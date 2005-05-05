@@ -3,7 +3,7 @@
 --
 module Plugins.Dummy (theModule) where
 
-import IRC
+import Lambdabot
 import Plugins.Dummy.DocAssocs (docAssocs)
 import Plugins.Dummy.Moo (cows)
 import qualified Map as M

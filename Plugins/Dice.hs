@@ -5,7 +5,7 @@
 --
 module Plugins.Dice (theModule) where
 
-import IRC
+import Lambdabot
 
 import Data.Char                        (isSpace)
 import Control.Monad                    (replicateM,foldM)

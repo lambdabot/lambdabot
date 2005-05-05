@@ -5,7 +5,7 @@ module Plugins.Lambda (theModule) where
 
 import Plugins.Lambda.LMEngine (evaluate, define, resume, Environment)
 
-import IRC
+import Lambdabot
 import Util                             (Serializer(..), readM)
 import qualified Map as M
 

@@ -11,7 +11,7 @@ module Plugins.Spell (theModule) where
 
 import Spell                    (spell)
 import Util                     (showClean)
-import IRC
+import Lambdabot
 import Control.Monad.Trans      ( liftIO )
 
 newtype SpellModule = SpellModule ()

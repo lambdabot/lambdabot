@@ -3,7 +3,7 @@
 --
 module Plugins.More (theModule) where
 
-import IRC
+import Lambdabot
 import qualified Config (moresize, config)
 
 newtype MoreModule = MoreModule ()

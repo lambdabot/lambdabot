@@ -5,7 +5,7 @@
 --
 module Plugins.Todo (theModule) where
 
-import IRC
+import Lambdabot
 import Util         (listSerializer,readM)
 import Data.Char    (isDigit)
 

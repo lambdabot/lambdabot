@@ -3,7 +3,7 @@
 --
 module Plugins.Karma (theModule) where
 
-import IRC
+import Lambdabot
 import Util (mapSerializer)
 import qualified Map as M
 

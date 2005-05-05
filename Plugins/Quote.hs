@@ -4,7 +4,7 @@
 module Plugins.Quote (theModule) where
 
 import Plugins.Quote.Fortune      (randFortune)
-import IRC
+import Lambdabot
 import Util                     (stdGetRandItem)
 
 import Control.Monad.Trans      (liftIO)

@@ -3,7 +3,7 @@
 --
 module Plugins.Topic (theModule) where
 
-import IRC
+import Lambdabot
 import qualified Map as M
 
 import Control.Monad.State (gets)

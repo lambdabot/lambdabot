@@ -3,7 +3,7 @@
 -- TODO : refactor this. Especially the MODULE stuff which has nothing
 -- to do with the IRC protocol.
 --
-module IRC (
+module Lambdabot (
         MODULE(..), Module(..),
         ModuleT, ModState,
 
@@ -96,7 +96,17 @@ data IRCRState
         ircWriteThread :: ThreadId
   }
 
-type Callback = IRCMessage -> IRC ()
+{-
+data Connection = Connection {
+  server    :: String,
+  readChan  :: Chan RMessage,
+  writeChan :: Chan (WMessage, IO ()),
+  thread    :: IORef (Maybe ThreadID),
+  handle    :: Handle
+}
+-}
+
+type Callback = IRCMessage -> LB ()
 -- | target, message
 type OutputFilter = String -> [String] -> IRC [String]
 -- type OutputFilter = String -> [String] -> ContT [String] IRC [String]

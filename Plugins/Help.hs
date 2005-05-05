@@ -3,7 +3,7 @@
 --
 module Plugins.Help (theModule) where
 
-import IRC
+import Lambdabot
 import Util                 (showClean)
 import Control.Exception    (Exception(..))
 import Control.Monad.Error  (catchError, throwError)

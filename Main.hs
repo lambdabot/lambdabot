@@ -4,7 +4,7 @@
 module Main where
 
 import Shared
-import IRC
+import Lambdabot
 import Config
 import Modules
 import qualified Map as M

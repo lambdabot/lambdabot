@@ -4,7 +4,7 @@
 module Plugins.Base (theModule) where
 
 import Config               (config, Config(name, autojoin))
-import IRC
+import Lambdabot
 import Util                 (debugStrLn,breakOnGlue,split,closests,showClean,timeout)
 import qualified Map as M   (insert, delete)
 

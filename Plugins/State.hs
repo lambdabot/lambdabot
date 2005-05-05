@@ -3,7 +3,7 @@
 --
 module Plugins.State (theModule) where
 
-import IRC
+import Lambdabot
 import Util (stdSerializer)
 
 newtype StateModule = StateModule ()

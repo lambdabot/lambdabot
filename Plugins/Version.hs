@@ -8,7 +8,7 @@
 --
 module Plugins.Version (theModule) where
 
-import IRC
+import Lambdabot
 
 #include "config.h"
 

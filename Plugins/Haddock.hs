@@ -3,7 +3,7 @@
 --
 module Plugins.Haddock (theModule) where
 
-import IRC
+import Lambdabot
 import Util (Serializer(..), join, readM)
 import qualified Map as M
 import Data.Maybe (mapMaybe)

@@ -3,7 +3,7 @@
 --
 module Plugins.Pl (theModule) where
 
-import IRC
+import Lambdabot
 import Util                       (timeout)
 
 import Plugins.Pl.Common          (TopLevel, mapTopLevel, getExpr)

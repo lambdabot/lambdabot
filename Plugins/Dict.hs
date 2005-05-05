@@ -5,7 +5,7 @@
 module Plugins.Dict (theModule) where
 
 import qualified Plugins.Dict.DictLookup as Dict
-import IRC
+import Lambdabot
 import Util
 
 import Data.Maybe               (fromJust)

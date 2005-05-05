@@ -3,7 +3,7 @@
 --
 module Plugins.Hello (theModule) where
 
-import IRC
+import Lambdabot
 
 newtype HelloModule = HelloModule ()
 

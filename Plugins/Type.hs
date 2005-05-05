@@ -19,7 +19,7 @@
 --
 module Plugins.Type (theModule) where
 
-import IRC
+import Lambdabot
 import Util                 (expandTab)
 import PosixCompat          (popen)
 

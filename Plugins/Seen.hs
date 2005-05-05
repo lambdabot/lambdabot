@@ -3,7 +3,7 @@
 --
 module Plugins.Seen (theModule) where
 
-import IRC
+import Lambdabot
 import Util (mapSerializer, lowerCaseString, firstWord, listToStr, debugStrLn)
 import AltTime
 import Config

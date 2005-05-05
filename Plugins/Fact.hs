@@ -10,7 +10,7 @@
 --
 module Plugins.Fact (theModule) where
 
-import IRC
+import Lambdabot
 import Util
 import qualified Map as M
 
