@@ -33,7 +33,7 @@ instance Module DummyModule [String] where
         cow' <- withMS $ \(cow:farm) writer -> do
           writer farm
           return cow
-        mapM_ (ircPrivmsg' src) (lines cow)
+        mapM_ (ircPrivmsg' src) (lines cow')
 
   process _ _ src cmd rest = case lookup cmd dummylst of
 			       Nothing -> error "Dummy: invalid command"

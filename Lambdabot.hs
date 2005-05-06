@@ -335,7 +335,7 @@ ircSignOn nick ircname = do
     mpasswd <- liftIO $ readFile "State/passwd"
     case readM mpasswd of
       Nothing     -> return ()
-      Just passwd -> ircWrite (mkIrcMessage "MSG" ["nickserv","identify",passwd])
+      Just passwd -> ircPrivmsg "nickserv" $ "identify " ++ passwd
 
 ircGetChannels :: LB [String]
 ircGetChannels = do 
