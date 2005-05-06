@@ -29,6 +29,7 @@ module Map (
         keys,
         assocs,
         find,
+        union,
         (!),
 
         mapWithKey,
@@ -149,6 +150,9 @@ find :: Ord k => k -> Map k a -> a
 find k m = case lookup k m of
     Nothing -> error "Map.find: element not in the map"
     Just x  -> x
+
+union :: Ord k => Map k a -> Map k a -> Map k a
+union = FM.plusFM
 
 #endif
 
