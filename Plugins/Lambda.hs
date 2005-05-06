@@ -54,10 +54,10 @@ instance Module EvalModule EvalState where
     moduleHelp   _ "set-fuel" = return "@set-fuel ticks - how many ticks before @eval runs out of fuel"
     moduleHelp   _ "resume" = return "@resume - continue an expression that has run out of fuel"
     moduleHelp   _ cmd = return $ "EvalModule: don't know command "++cmd
-    moduleCmds   _ = return ["eval","define","get-definition","definitions",
-                             "del-definition","set-fuel","resume"]
+    moduleCmds   _ = return ["eval","define","get-definition","definitions","resume"]
+    modulePrivs  _ = return ["set-fuel","del-definition"]
 
-    process      _ msg target cmd rest = do
+    process      _ _ target cmd rest = do
        let writeRes = writePS target
        (fuel, env, defns) <- readGS
        res <- readPS target
@@ -95,8 +95,8 @@ instance Module EvalModule EvalState where
                 in ircPrivmsg target out
 
             "set-fuel" -> case readM rest of
-                Nothing -> checkPrivs msg target (ircPrivmsg target "not a number")
-                Just x  -> checkPrivs msg target $ case x > 0 && x <= maxFuel of
+                Nothing -> ircPrivmsg target "not a number"
+                Just x  -> case x > 0 && x <= maxFuel of
                     True  -> do 
                         writeGS (x,env,defns)
                         ircPrivmsg target $ "fuel set to "++show x
@@ -104,7 +104,7 @@ instance Module EvalModule EvalState where
 
             "del-definition" -> case words rest of
                 [] -> return ()
-                (d:_) -> checkPrivs msg target $ withGS $ \(fuel',env',defns') writer -> do
+                (d:_) -> withGS $ \(fuel',env',defns') writer -> do
                     writer (fuel',
                             M.delete d env',
                             M.delete d defns')

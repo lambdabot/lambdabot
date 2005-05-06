@@ -22,22 +22,23 @@ instance Module DynamicModule () where
     moduleSticky _ = True
     moduleHelp _ _ = return 
         "@dynamic-[load,unload,reload] <module>, interface to dynamic linker"
-    moduleCmds   _ = return ["dynamic-load","dynamic-unload","dynamic-reload"]
+    moduleCmds   _ = return []
+    modulePrivs  _ = return ["dynamic-load","dynamic-unload","dynamic-reload"]
+
 
     moduleInit   _ = do 
         liftIO $ putStr "Loading plugins\t" >> hFlush stdout
         mapM_ (\p -> load p >> liftIO (putChar '.' >> hFlush stdout)) plugins
         liftIO $ putStrLn " done."
                                 
-    process _ msg src "dynamic-load" rest =
-        checkPrivs msg src $ load rest >> ircPrivmsg src "module loaded"
+    process _ _ src "dynamic-load" rest =
+        load rest >> ircPrivmsg src "module loaded"
 
-    process _ msg src "dynamic-unload" rest =
-        checkPrivs msg src $ unload rest >> ircPrivmsg src "module unloaded"
+    process _ _ src "dynamic-unload" rest =
+        unload rest >> ircPrivmsg src "module unloaded"
 
-    process _ msg src "dynamic-reload" rest = do
-        checkPrivs msg src $ do
-            unload rest ; load rest ; ircPrivmsg src "module reloaded"
+    process _ _ src "dynamic-reload" rest =
+        do unload rest ; load rest ; ircPrivmsg src "module reloaded"
 
     process _ _ _ _ _ = error "DynamicModule: Invalid command"
 

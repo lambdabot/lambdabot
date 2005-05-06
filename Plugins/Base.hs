@@ -10,7 +10,7 @@ import qualified Map as M   (insert, delete)
 
 import Data.List            (isPrefixOf,nub)
 import Text.Regex           (mkRegex, matchRegexAll)
-import Control.Monad.State  (MonadState(..), when)
+import Control.Monad.State  (MonadState(..), when, unless, gets)
 import Control.Concurrent
 
 newtype BaseModule = BaseModule ()
@@ -238,9 +238,16 @@ doPRIVMSG' myname msg
                       (ircPrivmsg towhere ("Unknown command, try @listcommands."))
                       (\m -> do
                         debugStrLn (show msg)
-                        handleIrc (ircPrivmsg towhere . 
-                            (("module \"" ++ ?name ++ "\" screwed up: ") ++) )
-                          (process m msg towhere c rest))
+                        privs <- gets ircPrivCommands
+                        ok <- case cmd `elem` privs of
+                          False -> return True
+                          True  -> checkPrivs msg
+                        when ok $
+                          handleIrc (ircPrivmsg towhere . 
+                              (("module \"" ++ ?name ++ "\" screwed up: ") ++) )
+                            (process m msg towhere c rest)
+                        unless ok $
+                          ircPrivmsg towhere "not enough privileges")
                 result <- mapLB (timeout $ 60*1000*1000) act
                 case result of
                   Nothing -> ircPrivmsg towhere $ "module \"" ++ ?name ++ " timed out"

@@ -39,7 +39,7 @@ module Lambdabot (
 import qualified Config (config, name, admins, host, port, textwidth)
 import DeepSeq          (($!!), DeepSeq(..))
 import ErrorUtils       (bracketError, tryErrorJust, finallyError, catchErrorJust, tryError)
-import Util             (split,clean,breakOnGlue, Serializer(..), lowerCaseString, withMWriter)
+import Util             (split,clean,breakOnGlue, Serializer(..), lowerCaseString, withMWriter, readM)
 import qualified Util   (join)
 
 import Map (Map)
@@ -71,6 +71,7 @@ import Data.Char                (toLower, isAlphaNum, isSpace)
 import Data.List                (isSuffixOf, inits, tails)
 import Data.Typeable            (Typeable)
 import Data.IORef               (newIORef, IORef, readIORef, writeIORef)
+import Data.Maybe               (isJust)
 
 import Control.Exception
 import Control.Concurrent
@@ -122,6 +123,7 @@ data IRCRWState
         ircOutputFilters   :: [(String,OutputFilter)], 
             -- ^ Output filters, invoked from right to left
         ircCommands        :: Map String ModuleRef,
+        ircPrivCommands    :: [String],
         ircStayConnected   :: Bool,
         ircDynLoad         :: S.DynLoad
   }
@@ -330,6 +332,10 @@ ircSignOn nick ircname = do
     server <- asks ircServer
     ircWrite (mkIrcMessage "USER" [nick, "localhost", server, ircname])
     ircWrite (mkIrcMessage "NICK" [nick])
+    mpasswd <- liftIO $ readFile "State/passwd"
+    case readM mpasswd of
+      Nothing     -> return ()
+      Just passwd -> ircWrite (mkIrcMessage "MSG" ["nickserv","identify",passwd])
 
 ircGetChannels :: LB [String]
 ircGetChannels = do 
@@ -480,6 +486,7 @@ runIrc initialise m ld = withSocketsDo $ do
                     ("",reduceIndent),
                     ("",checkRecip) ],
                 ircCommands        = M.empty,
+                ircPrivCommands    = [],
                 ircStayConnected   = True,
                 ircDynLoad         = ld
             }
@@ -702,6 +709,8 @@ class Module m s | m -> s where
     moduleSticky    :: m -> Bool
     -- | The commands the module listenes to.
     moduleCmds      :: m -> ModuleT s LB [String]
+    -- | The privileged commands the module listenes to.
+    modulePrivs     :: m -> ModuleT s LB [String]
     -- | Initialize the module. The default implementation does nothing.
     moduleInit      :: m -> ModuleT s LB ()
     -- | Finalize the module. The default implementation does nothing.
@@ -714,6 +723,7 @@ class Module m s | m -> s where
         -> String        -- ^ the arguments to the command
         -> ModuleT s IRC () 
 
+    modulePrivs _     = return []
     moduleExit _      = return ()
     moduleInit _      = return ()
     moduleSticky _    = False
@@ -766,13 +776,15 @@ ircInstallModule (MODULE mod) modname = do
     let ?ref = ref; ?name = modname
     moduleInit mod
     cmds <- moduleCmds mod
+    privs <- modulePrivs mod
 
     s <- get
     let modmap = ircModules s
     let cmdmap = ircCommands s
     put $ s {
       ircModules = M.insert modname modref modmap,
-      ircCommands = M.addList [ (cmd,modref) | cmd <- cmds ] cmdmap                
+      ircCommands = M.addList [ (cmd,modref) | cmd <- cmds++privs ] cmdmap,
+      ircPrivCommands = ircPrivCommands s ++ privs
     }
 
 --
@@ -783,13 +795,12 @@ ircUnloadModule modname = withModule ircModules modname (error "module not loade
     when (moduleSticky m) $ error "module is sticky"
     moduleExit m
     writeGlobalState m modname
-    cmds  <- moduleCmds m
     s <- get
     let modmap = ircModules s
         cmdmap = ircCommands s
         cbs    = ircCallbacks s
         ofs    = ircOutputFilters s
-    put $ s { ircCommands = foldl (flip M.delete) cmdmap cmds }
+    put $ s { ircCommands = M.filter (\(ModuleRef _ _ name) -> name /= modname) cmdmap }
             { ircModules = M.delete modname modmap }
             { ircCallbacks = filter ((/=modname) . fst) `fmap` cbs }
             { ircOutputFilters = filter ((/=modname) . fst) ofs }
@@ -829,12 +840,8 @@ ircInstallOutputFilter f = modify $ \s ->
 
 -- | Checks if the given user has admin permissions and excecute the action
 --   only in this case.
-checkPrivs :: IRCMessage -> String -> IRC () -> IRC ()
-checkPrivs msg target f = do
-    maybepriv <- gets (\s -> M.lookup (ircNick msg) (ircPrivilegedUsers s) )
-    case maybepriv of
-       Just _  -> f
-       Nothing -> ircPrivmsg target "not enough privileges"
+checkPrivs :: IRCMessage -> IRC Bool
+checkPrivs msg = gets (isJust . M.lookup (ircNick msg) . ircPrivilegedUsers)
 
 -- withMWriter :: MVar a -> (a -> (a -> IO ()) -> IO b) -> IO b
 -- | Update the module's private state.

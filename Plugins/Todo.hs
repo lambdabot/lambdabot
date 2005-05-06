@@ -26,13 +26,14 @@ instance Module TodoModule TodoState where
     moduleDefState  _ = return ([] :: [(String, String)])
     moduleSerialize _ = Just listSerializer
     
-    moduleCmds _ = return ["todo", "todo-add", "todo-delete"] 
+    moduleCmds  _ = return ["todo", "todo-add"] 
+    modulePrivs _ = return ["todo-delete"]
     process      _ msg source cmd rest =
         do todoList <- readMS
            case cmd of
                "todo"        -> getTodo source todoList rest
                "todo-add"    -> addTodo source sender rest
-               "todo-delete" -> checkPrivs msg source (delTodo source rest)
+               "todo-delete" -> delTodo source rest
                _ -> error "unimplemented command"
 	where sender = ircNick msg
 

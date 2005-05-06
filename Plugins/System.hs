@@ -6,10 +6,11 @@ module Plugins.System (theModule) where
 import Lambdabot
 import Util                     (breakOnGlue,showClean)
 import AltTime
-import qualified Map as M       (Map,keys,fromList,lookup)
+import qualified Map as M       (Map,keys,fromList,lookup,union)
 
 import Data.Maybe               (fromMaybe)
-import Control.Monad.State      (MonadState(get))
+import Data.List                ((\\))
+import Control.Monad.State      (MonadState(get), gets)
 import Control.Monad.Trans      (liftIO)
 
 ------------------------------------------------------------------------
@@ -21,7 +22,9 @@ theModule = MODULE $ SystemModule ()
 
 instance Module SystemModule ClockTime where
     moduleCmds   _   = return (M.keys syscmds)
-    moduleHelp _ s   = return $ fromMaybe defaultHelp (M.lookup s syscmds)
+    modulePrivs  _   = return (M.keys privcmds)
+    moduleHelp _ s   = return $ fromMaybe defaultHelp 
+      (M.lookup s $ syscmds `M.union` privcmds)
     moduleDefState _ = liftIO getClockTime
     process      _   = doSystem
 
@@ -33,14 +36,18 @@ syscmds = M.fromList
        ,("listmodules", "show available plugins")
        ,("listcommands","listcommands [module|command]\n"++
                         "show all commands or command for [module]")
-       ,("join",        "join <channel>")
+       ,("echo",        "echo irc protocol string")
+       ,("uptime",      "show uptime")]
+
+privcmds :: M.Map String String
+privcmds = M.fromList [
+        ("join",        "join <channel>")
        ,("leave",       "leave <channel>")
        ,("part",        "part <channel>")
        ,("msg",         "msg someone")
        ,("quit",        "quit [msg], have the bot exit with msg")
-       ,("reconnect",   "reconnect to channel")
-       ,("echo",        "echo irc protocol string")
-       ,("uptime",      "show uptime")]
+       ,("reconnect",   "reconnect to channel")]
+
 
 defaultHelp :: String
 defaultHelp = "system : irc management"
@@ -54,19 +61,17 @@ doSystem msg target cmd rest = do
       "listcommands" | null rest -> listAll s target
                      | otherwise -> listModule target rest
 
-      "join"  -> checkPrivs msg target (ircJoin rest)
-      "leave" -> checkPrivs msg target (ircPart rest)
-      "part"  -> checkPrivs msg target (ircPart rest)
+      "join"  -> ircJoin rest
+      "leave" -> ircPart rest
+      "part"  -> ircPart rest
 
-      "msg"   -> checkPrivs msg target $ ircPrivmsg tgt txt'
+      "msg"   -> ircPrivmsg tgt txt'
                       where (tgt, txt) = breakOnGlue " " rest
                             txt'       = dropWhile (== ' ') txt
 
-      "quit" -> checkPrivs msg target $
-              ircQuit $ if null rest then "requested" else rest
+      "quit" -> ircQuit $ if null rest then "requested" else rest
 
-      "reconnect" -> checkPrivs msg target $
-              ircReconnect $ if null rest then "request" else rest
+      "reconnect" -> ircReconnect $ if null rest then "request" else rest
 
       "echo" -> ircPrivmsg target $ concat 
               ["echo; msg:", show msg, " rest:", show rest]
@@ -83,8 +88,9 @@ doSystem msg target cmd rest = do
 ------------------------------------------------------------------------
 
 listAll :: IRCRWState -> String -> IRC ()
-listAll state target = 
-        ircPrivmsg target $ pprKeys (ircCommands state)
+listAll state target = do
+        privs <- gets ircPrivCommands
+        ircPrivmsg target $ showClean (M.keys (ircCommands state) \\ privs)
 
 listModule :: String -> String -> IRC ()
 listModule target query = withModule ircModules query fromCommand printProvides
@@ -100,7 +106,8 @@ listModule target query = withModule ircModules query fromCommand printProvides
     -- (ii) extract the information directly from the ircCommands map.
     printProvides m = do
         cmds <- moduleCmds m
-        ircPrivmsg target $ concat [?name, " provides: ", showClean cmds]
+        privs <- gets ircPrivCommands
+        ircPrivmsg target $ concat [?name, " provides: ", showClean $ cmds\\privs]
 
 pprKeys :: (Show k) => M.Map k a -> String
 pprKeys m = showClean (M.keys m)
