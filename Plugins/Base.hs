@@ -23,6 +23,7 @@ type BaseState = GlobalPrivate () ()
 instance Module BaseModule BaseState where
     moduleHelp  _ _   = return "base module"
     moduleCmds      _ = return []
+    moduleDefState  _ = return (mkGlobalPrivate 20 ())
     process _ _ _ _ _ = return ()
     moduleInit _
 	= do ircSignalConnect "PING" 	doPING
@@ -248,10 +249,7 @@ doPRIVMSG' myname msg
                             (process m msg towhere c rest)
                         unless ok $
                           ircPrivmsg towhere "not enough privileges")
-                result <- mapLB (timeout $ 60*1000*1000) act
-                case result of
-                  Nothing -> ircPrivmsg towhere $ "module \"" ++ ?name ++ " timed out"
-                  Just _  -> return ()
+                mapLB (timeout $ 60*1000*1000) act
               return ()
 
 
