@@ -30,13 +30,14 @@ instance Module DummyModule [String] where
   moduleCmds   _ = return $ "moo" : map fst dummylst
 
   process _ _ src "moo" _ = do
-        cow:farm <- readMS
-        writeMS farm
-        ircPrivmsg src cow
+        cow' <- withMS $ \(cow:farm) writer -> do
+          writer farm
+          return cow
+        mapM_ (ircPrivmsg' src) (lines cow)
 
   process _ _ src cmd rest = case lookup cmd dummylst of
 			       Nothing -> error "Dummy: invalid command"
-                               Just f -> ircPrivmsg src $ f rest
+                               Just f -> mapM_ (ircPrivmsg' src) $ lines $ f rest
 
 dummylst :: [(String, String -> String)]
 dummylst = [("dummy",       \_ -> "dummy"),
@@ -52,7 +53,7 @@ dummylst = [("dummy",       \_ -> "dummy"),
                           "libraries/" ++ m ++ "/" ++ x ++ ".html"),
             ("libsrc",      \x -> case M.lookup x docAssocs of
                Nothing -> x ++ " not available"
-               Just m  -> "http://..." ++
+               Just m  -> "http://darcs.complete.org/fptools/libraries/" ++
                           m ++ "/" ++ map (choice (=='.') (const '/') id) x ++ ".hs"),
 	    ("learn",       \_ -> "http://www.haskell.org/learning.html")]
 

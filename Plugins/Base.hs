@@ -250,6 +250,7 @@ doPRIVMSG' myname msg
                         unless ok $
                           ircPrivmsg towhere "not enough privileges")
                 mapLB (timeout $ 60*1000*1000) act
+                return ()
               return ()
 
 
