@@ -116,7 +116,7 @@ process m = concat [begin,
                     middle, 
                     map doload m]
  where
-    begin        = ["module Modules where", "import IRC", ""]
+    begin        = ["module Modules where", "import Lambdabot", ""]
     doimport nm  = "import qualified Plugins." ++ (clean . upperise) nm
     middle       = ["","loadStaticModules :: LB ()","loadStaticModules"," = do"]
     doload nm   = " ircInstallModule Plugins." ++ (clean . upperise) nm  ++ 
