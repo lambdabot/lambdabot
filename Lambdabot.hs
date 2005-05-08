@@ -388,9 +388,9 @@ mlines s        = mbreak =<< lines s where
     | otherwise = (as++cs):filter (not . null) (mbreak (dropWhile isSpace ds))
     where 
     (as,bs) = splitAt (w-n) xs
-    breaks  = filter (liftM2 (||) null (isAlphaNum . last) . snd) $ 
+    breaks  = filter (not . isAlphaNum . last . fst) $ drop 1 $
       take n $ zip (inits bs) (tails bs)
-    (cs,ds) = last $ breaks ++ [(take n bs, drop n bs)]
+    (cs,ds) = last $ (take n bs, drop n bs): breaks
     w = Config.textwidth Config.config
     n = 10
 
