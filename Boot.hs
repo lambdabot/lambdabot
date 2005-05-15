@@ -23,7 +23,7 @@ import Map (Map)
 import qualified Map    as M hiding (Map)
 import qualified Shared as S
 
-import Plugins.Load
+import System.Plugins.Load
 
 import Data.IORef
 import System.IO.Unsafe       ( unsafePerformIO )
