@@ -49,6 +49,7 @@ signature_regex
 --
 stripComments :: String -> String
 stripComments []          = []
+stripComments ('\n':_)    = [] -- drop any newwline and rest. *security*
 stripComments ('-':'-':_) = []  -- 
 stripComments ('{':'-':cs)= stripComments (go 1 cs)
 stripComments (c:cs)      = c : stripComments cs
@@ -88,7 +89,7 @@ extract_signatures output
 query_ghci :: String -> String -> String -> IRC ()
 query_ghci src cmd expr =
        do
-       (output, _, _) <- liftIO $ popen "ghci-6.4" ["-fglasgow-exts"]
+       (output, _, _) <- liftIO $ popen "ghci-6.4" ["-fglasgow-exts","-fno-th"]
 			                  (Just (command cmd (stripComments expr)))
        let ls = extract_signatures output
        ircPrivmsg src . unlines $ if null ls then ["bzzt"] else ls
