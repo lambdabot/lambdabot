@@ -84,7 +84,7 @@ AC_SUBST(PLATFORM)
 REPO_PATH=`sed -n 1p _darcs/prefs/repos`
 AC_SUBST(REPO_PATH)
 
-PATCH_COUNT=`darcs changes --xml-output | sed -n '/^<patch/p' | wc -l | sed 's/ *//g'`
+PATCH_COUNT=`darcs changes --xml-output | sed -n '/TAG/q;/^<\/patch/p' | wc -l | sed 's/ *//g'`
 AC_SUBST(PATCH_COUNT)
 
 AC_CHECK_PROG(HaddockCmd,haddock,haddock)

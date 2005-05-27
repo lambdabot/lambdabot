@@ -23,7 +23,7 @@ instance Module VersionModule () where
     moduleCmds   _ = return ["version"]
     process      _ _ target _ _ =
         ircPrivmsg target $ concat
-                ["lambdabot 2p", PATCH_COUNT, ", ",
+                ["lambdabot 3p", PATCH_COUNT, ", ",
                  "GHC ", GHC_VERSION, " (", PLATFORM, ")",
                  "\n", "darcs get ", REPO_PATH ]
 
