@@ -332,7 +332,8 @@ ircSignOn nick ircname = do
     server <- asks ircServer
     ircWrite (mkIrcMessage "USER" [nick, "localhost", server, ircname])
     ircWrite (mkIrcMessage "NICK" [nick])
-    mpasswd <- liftIO $ readFile "State/passwd"
+    mpasswd <- liftIO (handleJust ioErrors (const (return "")) $
+                       readFile "State/passwd")
     case readM mpasswd of
       Nothing     -> return ()
       Just passwd -> ircPrivmsg "nickserv" $ "identify " ++ passwd
