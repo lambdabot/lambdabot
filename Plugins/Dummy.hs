@@ -25,6 +25,7 @@ instance Module DummyModule [String] where
         "learn"       -> "another url"
         "eurohaskell" -> "urls are good"
         "moo"         -> "vegan-friendly command"
+        "botsnack"    -> "bot-feeder"
         _             -> "dummy module"
 
   moduleCmds   _ = return $ "moo" : map fst dummylst
@@ -55,7 +56,9 @@ dummylst = [("dummy",       \_ -> "dummy"),
                Nothing -> x ++ " not available"
                Just m  -> "http://darcs.complete.org/fptools/libraries/" ++
                           m ++ "/" ++ map (choice (=='.') (const '/') id) x ++ ".hs"),
-	    ("learn",       \_ -> "http://www.haskell.org/learning.html")]
+	    ("learn",       \_ -> "http://www.haskell.org/learning.html"),
+
+            ("botsnack",    \_ -> ":)")]
 
 {-# INLINE choice #-}
 choice :: (r -> Bool) -> (r -> a) -> (r -> a) -> (r -> a)
