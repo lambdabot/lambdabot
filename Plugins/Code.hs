@@ -49,7 +49,7 @@ instance Module CodeModule [FilePath] where
                     f    <- stdGetRandItem fs
                     h    <- openFile f ReadMode
                     s    <- hGetContents h
-                    l    <- getRandSrcOf (lines s) 15 -- number of times to try
+                    l    <- getRandSrcOf (lines s) 1000 -- number of times to try
                     hClose h
                     return (f, (dropSpace . expandTab $ l))
 
@@ -82,12 +82,21 @@ getRandSrcOf ss n = do
                 | Just _ <- ws      `matchRegex` s -> getRandSrcOf ss (n-1)
                 | Just _ <- imports `matchRegex` s -> getRandSrcOf ss (n-1)
                 | Just _ <- wheres  `matchRegex` s -> getRandSrcOf ss (n-1)
+                | Just _ <- mods    `matchRegex` s -> getRandSrcOf ss (n-1)
+                | Just _ <- nested  `matchRegex` s -> getRandSrcOf ss (n-1)
+                | Just _ <- cpp     `matchRegex` s -> getRandSrcOf ss (n-1)
+                | Just _ <- cpp'    `matchRegex` s -> getRandSrcOf ss (n-1)
+                | length s < 30                    -> getRandSrcOf ss (n-1)
                 | otherwise                        -> return s -- got it
         }
-        where comment = mkRegex "^ *--"
+        where comment = mkRegex ".*--"
+              nested  = mkRegex "{-"
+              cpp     = mkRegex "#if"
+              cpp'    = mkRegex "#include"
               ws      = mkRegex "^ *$"
               imports = mkRegex "^import"
               wheres  = mkRegex "^ *where"
+              mods    = mkRegex "module"
         
 basename:: String -> String
 basename= reverse . (takeWhile (/= '/')) . reverse
