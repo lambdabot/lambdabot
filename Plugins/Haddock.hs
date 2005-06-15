@@ -26,7 +26,7 @@ instance Module HaddockModule HaddockState where
       serialize = const Nothing }
     process      _ _ target _ rest = do
        assocs <- readMS
-       ircPrivmsg target $ maybe "bzzt" (Util.join ", ") (M.lookup rest assocs)
+       ircPrivmsg target $ maybe "bzzt" (Util.join ", ") (M.lookup (stripParens rest) assocs)
 
 -- | This sucks, but we've got to do something about memory consumption.
 --   I would have expected a greater effect though, after all there are
@@ -42,3 +42,8 @@ readHaddockMap str = fst $ foldl' step (M.empty,M.empty) assocs where
     step' m v = case M.lookup v m of
       Nothing -> M.insert v v m
       Just _  -> m
+
+-- | make @index ($) work.
+stripParens :: String -> String
+stripParens = reverse . dropWhile (==')') . reverse . dropWhile (=='(')
+
