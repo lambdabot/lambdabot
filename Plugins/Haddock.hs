@@ -4,6 +4,7 @@
 module Plugins.Haddock (theModule) where
 
 import Lambdabot
+import LBState
 import Util (Serializer(..), join, readM)
 import qualified Map as M
 import Data.Maybe (mapMaybe)

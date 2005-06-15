@@ -4,6 +4,7 @@
 module Plugins.More (theModule) where
 
 import Lambdabot
+import LBState
 import qualified Config (moresize, config)
 
 newtype MoreModule = MoreModule ()

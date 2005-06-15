@@ -4,6 +4,7 @@
 module Plugins.System (theModule) where
 
 import Lambdabot
+import LBState
 import Util                     (breakOnGlue,showClean)
 import AltTime
 import qualified Map as M       (Map,keys,fromList,lookup,union)

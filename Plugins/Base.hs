@@ -5,6 +5,7 @@ module Plugins.Base (theModule) where
 
 import Config               (config, Config(name, autojoin))
 import Lambdabot
+import LBState
 import Util                 (debugStrLn,breakOnGlue,split,closests,showClean,timeout)
 import qualified Map as M   (insert, delete)
 

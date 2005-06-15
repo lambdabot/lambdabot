@@ -6,6 +6,7 @@
 module Plugins.Vixen where
 
 import Lambdabot
+import LBState
 import Plugins.Vixen.Vixen      (mkVixen)
 
 import Control.Monad.State      (MonadIO, liftIO)

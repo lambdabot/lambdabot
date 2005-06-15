@@ -4,6 +4,7 @@
 module Plugins.Pl (theModule) where
 
 import Lambdabot
+import LBState
 import Util                       (timeout)
 
 import Plugins.Pl.Common          (TopLevel, mapTopLevel, getExpr)

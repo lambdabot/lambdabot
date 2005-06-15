@@ -4,6 +4,7 @@
 module Plugins.Karma (theModule) where
 
 import Lambdabot
+import LBState
 import Util (mapSerializer)
 import qualified Map as M
 

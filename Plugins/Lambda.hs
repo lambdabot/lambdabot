@@ -6,6 +6,7 @@ module Plugins.Lambda (theModule) where
 import Plugins.Lambda.LMEngine (evaluate, define, resume, Environment)
 
 import Lambdabot
+import LBState
 import Util                             (Serializer(..), readM)
 import qualified Map as M
 

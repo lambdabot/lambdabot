@@ -4,6 +4,7 @@
 module Plugins.Seen (theModule) where
 
 import Lambdabot
+import LBState
 import Util (mapSerializer, lowerCaseString, firstWord, listToStr, debugStrLn)
 import AltTime
 import Config

@@ -24,6 +24,7 @@
 module Plugins.Code where
 
 import Lambdabot
+import LBState
 import Util
 import PosixCompat
 

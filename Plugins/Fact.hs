@@ -11,6 +11,7 @@
 module Plugins.Fact (theModule) where
 
 import Lambdabot
+import LBState
 import Util
 import qualified Map as M
 

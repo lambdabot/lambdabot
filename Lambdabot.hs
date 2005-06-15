@@ -15,13 +15,6 @@ module Lambdabot (
 
         withModule, getDictKeys,
 
-        -- ** Functions to access the module's state
-        readMS, withMS, modifyMS, writeMS,
-
-        -- ** Utility functions for modules that need state for each target.
-        GlobalPrivate(global), mkGlobalPrivate, withPS, readPS, withGS, readGS,
-        writePS, writeGS,
-
         ircPrivmsg, ircPrivmsg',
         ircJoin, ircPart, ircQuit, ircReconnect,
         ircTopic, ircGetTopic, ircGetChannels,
@@ -39,7 +32,7 @@ module Lambdabot (
 import qualified Config (config, name, admins, host, port, textwidth)
 import DeepSeq          (($!!), DeepSeq(..))
 import ErrorUtils       (bracketError, tryErrorJust, finallyError, catchErrorJust, tryError)
-import Util             (split,clean,breakOnGlue, Serializer(..), lowerCaseString, withMWriter, readM)
+import Util             (split,clean,breakOnGlue, Serializer(..), lowerCaseString, readM)
 import qualified Util   (join)
 
 import Map (Map)
@@ -743,7 +736,7 @@ writeGlobalState :: Module m s => m -> String -> ModuleT s LB ()
 writeGlobalState mod name = case moduleSerialize mod of
   Nothing  -> return ()
   Just ser -> do
-    state <- readMS
+    state <- liftIO $ readMVar ?ref -- readMS
     case serialize ser state of
       Nothing  -> return ()
       Just out -> liftIO $ writeFile (toFilename name) out
@@ -843,93 +836,6 @@ ircInstallOutputFilter f = modify $ \s ->
 --   only in this case.
 checkPrivs :: IRCMessage -> IRC Bool
 checkPrivs msg = gets (isJust . M.lookup (ircNick msg) . ircPrivilegedUsers)
-
--- withMWriter :: MVar a -> (a -> (a -> IO ()) -> IO b) -> IO b
--- | Update the module's private state.
-withMS :: (s -> (s -> LB ()) -> LB a) -> ModuleT s LB a
-withMS f = lbIO $ \conv -> withMWriter ?ref $ \x writer ->
-  conv $ f x (liftIO . writer)
-
--- | Read the module's private state.
-readMS :: MonadIO m => ModuleT s m s
-readMS = liftIO $ readMVar ?ref
-
--- | Modify the module's private state.
-modifyMS :: (s -> s) -> ModuleT s LB ()
-modifyMS f = liftIO $ modifyMVar_ ?ref (return . f)
-
--- | Write the module's private state. Try to use withMS instead
-writeMS :: s -> ModuleT s LB ()
-writeMS s = modifyMS (const s)
-
--- | This datatype allows modules to conviently maintain both global 
---   (i.e. for all clients they're interacting with) and private state.
---   It is implemented on top of readMS\/withMS.
--- 
--- This simple implementation is linear in the number of private states used.
-data GlobalPrivate g p = GP {
-  global :: !g,
-  private :: ![(String,MVar (Maybe p))],
-  maxSize :: Int
-}
-
--- | Creates a @GlobalPrivate@ given the value of the global state. No private
---   state for clients will be created.
-mkGlobalPrivate :: Int -> g -> GlobalPrivate g p
-mkGlobalPrivate ms g = GP {
-  global = g,
-  private = [],
-  maxSize = ms
-}
-
--- Needs a better interface. The with-functions are hardly useful.
--- | Writes private state. For now, it locks everything.
-withPS :: String  -- ^ The target
-  -> (Maybe p -> (Maybe p -> LB ()) -> LB a)
-    -- ^ @Just x@ writes x in the user's private state, @Nothing@ removes it.
-  -> ModuleT (GlobalPrivate g p) LB a
-withPS who f = do
-  mvar <- accessPS return id who
-  lbIO $ \conv -> withMWriter mvar $ \x writer -> conv $ f x (liftIO . writer)
-
--- | Reads private state.
-readPS :: String -> ModuleT (GlobalPrivate g p) LB (Maybe p)
-readPS = accessPS (liftIO . readMVar) (\_ -> return Nothing)
-
--- | Reads private state, executes one of the actions success and failure
--- which take an MVar and an action producing a @Nothing@ MVar, respectively.
-accessPS :: (MVar (Maybe p) -> LB a) -> (LB (MVar (Maybe p)) -> LB a) -> String
-  -> ModuleT (GlobalPrivate g p) LB a
-accessPS success failure who = withMS $ \state writer -> 
-  case lookup who $ private state of
-    Just mvar -> do
-      let newPrivate = (who,mvar):
-            filter ((/=who) . fst) (private state)
-      length newPrivate `seq` writer (state { private = newPrivate })
-      success mvar
-    Nothing -> failure $ do
-      mvar <- liftIO $ newMVar Nothing
-      let newPrivate = take (maxSize state) $ (who,mvar): private state
-      length newPrivate `seq` writer (state { private = newPrivate })
-      return mvar
-
--- | Writes global state. Locks everything
-withGS :: (g -> (g -> LB ()) -> LB ()) -> ModuleT (GlobalPrivate g p) LB ()
-withGS f = withMS $ \state writer ->
-  f (global state) $ \g -> writer $ state { global = g }
-
--- | Reads global state.
-readGS :: MonadIO m => ModuleT (GlobalPrivate g p) m g
-readGS = global `liftM` readMS
-
-
--- The old interface, as we don't wanna be too fancy right now.
-writePS :: String -> Maybe p -> ModuleT (GlobalPrivate g p) LB ()
-writePS who x = withPS who (\_ writer -> writer x)
-
-writeGS :: g -> ModuleT (GlobalPrivate g p) LB ()
-writeGS g = withGS (\_ writer -> writer g)
-
 
 -- | Interpret an expression in the context of a module.
 -- Arguments are which map to use (@ircModules@ and @ircCommands@ are

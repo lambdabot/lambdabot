@@ -4,6 +4,7 @@
 module Plugins.Dummy (theModule) where
 
 import Lambdabot
+import LBState
 import Plugins.Dummy.DocAssocs (docAssocs)
 import Plugins.Dummy.Moo (cows)
 import qualified Map as M

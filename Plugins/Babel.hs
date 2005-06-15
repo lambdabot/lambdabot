@@ -11,6 +11,7 @@
 module Plugins.Babel (theModule) where
 
 import Lambdabot
+import LBState
 import Util                 (stdGetRandItem, mapSerializer)
 import PosixCompat          (popen)
 import MiniHTTP

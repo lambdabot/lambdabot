@@ -4,6 +4,7 @@
 module Plugins.State (theModule) where
 
 import Lambdabot
+import LBState
 import Util (stdSerializer)
 
 newtype StateModule = StateModule ()

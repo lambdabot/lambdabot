@@ -6,6 +6,7 @@
 module Plugins.Todo (theModule) where
 
 import Lambdabot
+import LBState
 import Util         (listSerializer,readM)
 import Data.Char    (isDigit)
 

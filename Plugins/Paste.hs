@@ -4,6 +4,7 @@
 module Plugins.Paste (theModule) where
 
 import Lambdabot
+import LBState
 import Control.Concurrent
 import Control.Monad.Trans (liftIO)
 
