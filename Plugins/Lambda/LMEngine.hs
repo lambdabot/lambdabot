@@ -50,6 +50,7 @@ newtype EvalMonad a = EM { runEM :: (StateT (IState EvalMonad)
                                     (ReaderT Environment
                                     (ErrorT String
                                     (Cont Result)))) a }
+                    deriving Typeable
 
 phi :: Term (EvalMonad Value) -> EvalMonad Value
 phi (ArithT x) = phiArith x
@@ -163,8 +164,9 @@ instance Pause EvalMonad Result where
 -- Environment and EvalMonad
 -- Comment out what isn't true, uncomment what is
 
-{-# NOINLINE evalMonadTypeCon #-}
+#if __GLASGOW_HASKELL__ <= 604
 
+{-# NOINLINE evalMonadTypeCon #-}
 evalMonadTypeCon :: TyCon
 evalMonadTypeCon = mkTyCon "EM"
 
@@ -173,6 +175,7 @@ instance (Typeable a) => Typeable (EvalMonad a) where
     typeOf _ = mkTyConApp evalMonadTypeCon [typeOf (undefined :: a)]
 #else
     typeOf _ = mkAppTy evalMonadTypeCon [typeOf (undefined :: a)]
+#endif
 #endif
 
 instance Monad EvalMonad where

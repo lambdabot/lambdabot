@@ -21,7 +21,10 @@ import Control.Monad (liftM2)
 import System.IO
 
 import Network
-import Network.URI
+import Network.URI hiding (authority)
+
+authority :: URI -> String
+authority = uriRegName . maybe (error "authority") id . uriAuthority
 
 type Proxy = Maybe (String, Integer)
 
