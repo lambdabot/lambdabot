@@ -32,16 +32,20 @@ instance Module KarmaModule KarmaState where
 	  []       -> ircPrivmsg target "I can't find the karma of nobody."
           (nick:_) -> do
               case cmd of
-                 "karma"  -> getKarma         target sender nick
+                 "karma"  -> tellKarma        target sender nick
                  "karma+" -> changeKarma 1    target sender nick
                  "karma-" -> changeKarma (-1) target sender nick
                  _        -> error "KarmaModule: can't happen"
 	    where sender = ircNick msg
 
-getKarma :: String -> String -> String -> Karma IRC ()
-getKarma target sender nick = do
+getKarma :: String -> Karma IRC Integer
+getKarma nick = do
     karmaFM <- readMS
-    let karma = fromMaybe 0 (M.lookup nick karmaFM)
+    return $ fromMaybe 0 (M.lookup nick karmaFM)
+
+tellKarma :: String -> String -> String -> Karma IRC ()
+tellKarma target sender nick = do
+    karma <- getKarma nick
     ircPrivmsg target $ (if sender == nick then "You have" else nick ++ " has")
       ++ " a karma of " ++ show karma
 
@@ -50,4 +54,7 @@ changeKarma km target sender nick
   | sender == nick = ircPrivmsg target "You can't change your own karma, silly."
   | otherwise      = do
       modifyMS $ M.insertWith (+) nick km
-      ircPrivmsg target $ nick ++ "'s karma has been incremented"
+      karma <- getKarma nick
+      ircPrivmsg target $ fmt nick km (show karma)
+          where fmt n v k | v < 0     = n ++ "'s karma lowered to " ++ k ++ "."
+                          | otherwise = n ++ "'s karma raised to " ++ k ++ "."
