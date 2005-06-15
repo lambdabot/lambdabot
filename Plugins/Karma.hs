@@ -53,8 +53,8 @@ tellKarma target sender nick = do
 changeKarma :: Integer -> String -> String -> String -> Karma IRC ()
 changeKarma km target sender nick
   | sender == nick = ircPrivmsg target "You can't change your own karma, silly."
-  | otherwise      = do
-      modifyMS $ M.insertWith (+) nick km
+  | otherwise      = withMS $ \fm write -> do
+      write $ M.insertWith (+) nick km fm
       karma <- getKarma nick
       ircPrivmsg target $ fmt nick km (show karma)
           where fmt n v k | v < 0     = n ++ "'s karma lowered to " ++ k ++ "."
