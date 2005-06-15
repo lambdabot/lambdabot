@@ -5,6 +5,7 @@ module Main where
 
 import Shared
 import Lambdabot
+import qualified IRC
 import Config
 import Modules
 import qualified Map as M
@@ -42,12 +43,13 @@ mainloop = do
              _        -> return ()
         mainloop
 
+-- TODO: Doesn't belong here
 --
 -- If an error reaches allCallbacks, then all we can sensibly do is
 -- write it on standard out. Hopefully BaseModule will have caught it already
 -- if it can see a better place to send it
 
-allCallbacks :: [IRCMessage -> IRC ()] -> IRCMessage -> IRC ()
+allCallbacks :: [IRC.Message -> IRC ()] -> IRC.Message -> IRC ()
 allCallbacks [] _ = return ()
 allCallbacks (f:fs) msg = do
         handleIrc (liftIO . putStrLn) (f msg)

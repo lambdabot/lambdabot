@@ -5,6 +5,7 @@ module Plugins.Karma (theModule) where
 
 import Lambdabot
 import LBState
+import qualified IRC
 import Util (mapSerializer)
 import qualified Map as M
 
@@ -37,7 +38,7 @@ instance Module KarmaModule KarmaState where
                  "karma+" -> changeKarma 1    target sender nick
                  "karma-" -> changeKarma (-1) target sender nick
                  _        -> error "KarmaModule: can't happen"
-	    where sender = ircNick msg
+	    where sender = IRC.nick msg
 
 getKarma :: String -> Karma IRC Integer
 getKarma nick = do

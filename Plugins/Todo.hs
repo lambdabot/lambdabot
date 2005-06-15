@@ -7,6 +7,7 @@ module Plugins.Todo (theModule) where
 
 import Lambdabot
 import LBState
+import qualified IRC
 import Util         (listSerializer,readM)
 import Data.Char    (isDigit)
 
@@ -36,7 +37,7 @@ instance Module TodoModule TodoState where
                "todo-add"    -> addTodo source sender rest
                "todo-delete" -> delTodo source rest
                _ -> error "unimplemented command"
-	where sender = ircNick msg
+	where sender = IRC.nick msg
 
 -- | Print todo list
 getTodo :: String -> TodoState -> String -> ModuleT TodoState IRC ()

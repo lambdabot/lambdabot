@@ -5,6 +5,7 @@ module Plugins.Seen (theModule) where
 
 import Lambdabot
 import LBState
+import qualified IRC
 import Util (mapSerializer, lowerCaseString, firstWord, listToStr, debugStrLn)
 import AltTime
 import Config
@@ -62,7 +63,7 @@ instance Module SeenModule SeenState where
         ["JOIN", "PART", "QUIT", "NICK", "353",      "PRIVMSG"] $ map withSeenFM
         [joinCB, partCB, quitCB, nickCB, joinChanCB, msgCB]
       -- This magically causes the 353 callback to be invoked :)
-      tryError $ ircNames =<< ircGetChannels
+      tryError $ send . IRC.names =<< ircGetChannels
       return ()
     
     moduleExit _ = do
@@ -81,7 +82,7 @@ instance Module SeenModule SeenState where
 myname :: String
 myname = lowerCaseString (name config)
 
-getAnswer :: IRCMessage -> String -> SeenState -> ClockTime -> [String]
+getAnswer :: IRC.Message -> String -> SeenState -> ClockTime -> [String]
 getAnswer msg rest seenFM now 
   | lcnick == myname = ["Yes, I'm here."]
   | otherwise        = case M.lookup lcnick seenFM of
@@ -122,7 +123,7 @@ getAnswer msg rest seenFM now
 
     ircMessage = return . concat
     nick' = firstWord rest
-    you   = nick' == ircNick msg
+    you   = nick' == IRC.nick msg
     nick  = if you then "you" else nick'
     lcnick = lowerCaseString nick'
     clockDifference past 
@@ -139,12 +140,12 @@ getAnswer msg rest seenFM now
 -- | Callback for when somebody joins. If it is not the bot that joins, record
 --   that we have a new user in our state tree and that we have never seen the
 --   user speaking.
-joinCB :: IRCMessage -> SeenState -> ClockTime -> Nick -> Either String SeenState
+joinCB :: IRC.Message -> SeenState -> ClockTime -> Nick -> Either String SeenState
 joinCB msg fm _ct nick
   | nick == myname = Right fm
-  | otherwise      = Right $ M.insertUpd (updateJ Nothing (ircChans msg)) 
+  | otherwise      = Right $ M.insertUpd (updateJ Nothing (IRC.channels msg)) 
                                          nick newInfo fm
-  where newInfo = Present Nothing (ircChans msg)
+  where newInfo = Present Nothing (IRC.channels msg)
 
 
 botPart :: ClockTime -> [Channel] -> SeenState -> SeenState
@@ -159,12 +160,12 @@ botPart ct cs fm = fmap botPart' fm where
     botPart' us = us
 
 -- | when somebody parts
-partCB :: IRCMessage -> SeenState -> ClockTime -> Nick -> Either String SeenState
+partCB :: IRC.Message -> SeenState -> ClockTime -> Nick -> Either String SeenState
 partCB msg fm ct nick
-  | nick == myname = Right $ botPart ct (ircChans msg) fm
+  | nick == myname = Right $ botPart ct (IRC.channels msg) fm
   | otherwise      = case M.lookup nick fm of
       Just (Present mct xs) ->
-        case xs \\ ircChans msg of
+        case xs \\ IRC.channels msg of
           [] -> Right $ M.insert nick
                  (NotPresent ct zeroWatch xs)
                  fm
@@ -174,13 +175,13 @@ partCB msg fm ct nick
       _ -> Left "someone who isn't known parted"
 
 -- | when somebody quits
-quitCB :: IRCMessage -> SeenState -> ClockTime -> Nick -> Either String SeenState 
+quitCB :: IRC.Message -> SeenState -> ClockTime -> Nick -> Either String SeenState 
 quitCB _ fm ct nick = case M.lookup nick fm of
     Just (Present _ct xs) -> Right $ M.insert nick (NotPresent ct zeroWatch xs) fm
     _ -> Left "someone who isn't known has quit"
 
 -- | when somebody changes his\/her name
-nickCB :: IRCMessage -> SeenState -> ClockTime -> Nick -> Either String SeenState
+nickCB :: IRC.Message -> SeenState -> ClockTime -> Nick -> Either String SeenState
 nickCB msg fm _ nick = case M.lookup nick fm of
    Just status -> let fm' = M.insert nick (NewNick newnick) fm
                   in  Right $ M.insert lcnewnick status fm'
@@ -189,9 +190,9 @@ nickCB msg fm _ nick = case M.lookup nick fm of
    newnick = drop 1 $ head (msgParams msg)
    lcnewnick = lowerCaseString newnick
 
--- use IRC.ircChans?
+-- use IRC.IRC.channels?
 -- | when the bot join a channel
-joinChanCB :: IRCMessage -> SeenState -> ClockTime -> Nick -> Either String SeenState
+joinChanCB :: IRC.Message -> SeenState -> ClockTime -> Nick -> Either String SeenState
 joinChanCB msg fm now _nick 
     = Right $ fmap (updateNP now chan) $ foldl insertNick fm chanUsers
   where
@@ -204,7 +205,7 @@ joinChanCB msg fm now _nick
                                     fm'
 
 -- | when somebody speaks, update their clocktime
-msgCB :: IRCMessage -> SeenState -> ClockTime -> Nick -> Either String SeenState
+msgCB :: IRC.Message -> SeenState -> ClockTime -> Nick -> Either String SeenState
 msgCB _ fm ct nick =
   case M.lookup nick fm of
     Just (Present _ xs) -> Right $ 
@@ -218,16 +219,16 @@ unUserMode nick = dropWhile (`elem` "@+") nick
 -- | Callbacks are only allowed to use a limited knowledge of the world. 
 -- 'withSeenFM' is (up to trivial isomorphism) a monad morphism from the 
 -- restricted
---   'ReaderT (IRCMessage, ClockTime, Nick) (StateT SeenState (Error String))'
+--   'ReaderT (IRC.Message, ClockTime, Nick) (StateT SeenState (Error String))'
 -- to the
---   'ReaderT IRCMessage (Seen IRC)'
+--   'ReaderT IRC.Message (Seen IRC)'
 -- monad.
-withSeenFM :: (IRCMessage -> SeenState -> ClockTime -> Nick
+withSeenFM :: (IRC.Message -> SeenState -> ClockTime -> Nick
                   -> Either String SeenState)
-              -> IRCMessage
+              -> IRC.Message
               -> Seen IRC ()
 withSeenFM f msg = do 
-    let nick = lowerCaseString . unUserMode . ircNick $ msg
+    let nick = lowerCaseString . unUserMode . IRC.nick $ msg
     withMS $ \state writer -> do
       ct <- liftIO getClockTime
       case f msg state ct nick of

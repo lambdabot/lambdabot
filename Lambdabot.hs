@@ -7,7 +7,7 @@ module Lambdabot (
         MODULE(..), Module(..),
         ModuleT, ModState,
 
-        IRCMessage(..), 
+        IRC.Message(..), 
         IRCRState(..), IRCRWState(..), IRCError(..), 
         IRC,
 
@@ -15,12 +15,12 @@ module Lambdabot (
 
         withModule, getDictKeys,
 
+        send,
         ircPrivmsg, ircPrivmsg',
-        ircJoin, ircPart, ircQuit, ircReconnect,
-        ircTopic, ircGetTopic, ircGetChannels,
+        ircQuit, ircReconnect,
+        ircGetChannels,
         ircSignalConnect, Callback, ircInstallOutputFilter, OutputFilter,
         ircInstallModule, ircUnloadModule,
-        ircNick, ircChans, ircNames,
         ircSignOn,
         ircRead,
 
@@ -32,8 +32,8 @@ module Lambdabot (
 import qualified Config (config, name, admins, host, port, textwidth)
 import DeepSeq          (($!!), DeepSeq(..))
 import ErrorUtils       (bracketError, tryErrorJust, finallyError, catchErrorJust, tryError)
-import Util             (split,clean,breakOnGlue, Serializer(..), lowerCaseString, readM)
-import qualified Util   (join)
+import Util             (clean, Serializer(..), lowerCaseString, readM)
+import qualified IRC
 
 import Map (Map)
 import qualified Map as M hiding (Map)
@@ -84,9 +84,9 @@ type SignalSet = ()
 data IRCRState
   = IRCRState {
         ircServer      :: String,
-        ircReadChan    :: Chan IRCMessage,
+        ircReadChan    :: Chan IRC.Message,
         ircReadThread  :: ThreadId,
-        ircWriteChan   :: Chan IRCMessage,
+        ircWriteChan   :: Chan IRC.Message,
         ircWriteThread :: ThreadId
   }
 
@@ -100,7 +100,7 @@ data Connection = Connection {
 }
 -}
 
-type Callback = IRCMessage -> LB ()
+type Callback = IRC.Message -> LB ()
 -- | target, message
 type OutputFilter = String -> [String] -> IRC [String]
 -- type OutputFilter = String -> [String] -> ContT [String] IRC [String]
@@ -216,42 +216,6 @@ data IRCError = IRCRaised Exception
               | SignalCaught Signal 
   deriving Show
 
-{-
-ircErrorMsg :: IRCError -> String
-ircErrorMsg (IRCRaised e) = show e
-ircErrorMsg (SignalCaught s) = "caught signal "++show s
--}
-
-
-data IRCMessage
-  = IRCMessage {
-        msgPrefix   :: String,
-        msgCommand  :: String,
-        msgParams   :: [String]
-  }
-  deriving (Show)
-
-instance DeepSeq IRCMessage where
-  deepSeq m
-    = deepSeq (msgPrefix m) . deepSeq (msgCommand m) . deepSeq (msgParams m)
-
-ircNick     :: IRCMessage -> String
-ircNick msg = fst $ breakOnGlue "!" (msgPrefix msg)
-
--- | 'ircChans' converts an IRCMessage to a list of channels.
-ircChans :: IRCMessage -> [String]
-ircChans msg
-  = let cstr = head $ msgParams msg
-    in map (\(x:xs) -> if x == ':' then xs else x:xs) (split "," cstr)
-           -- solves what seems to be an inconsistency in the parser
-
-{-
-ircuser     :: IRCMessage -> String
-ircuser msg = head $ split "@" $ (split "!" (msgPrefix msg)) !! 1
-
-irchost     :: IRCMessage -> String
-irchost msg = (split "@" (msgPrefix msg)) !! 1
--}
 
 type IRC = LB
 
@@ -316,15 +280,12 @@ type ModuleT s m a = (?ref :: MVar s, ?name :: String) => m a
 -- Name !!!
 type ModState s a = (?ref :: MVar s, ?name :: String) => a
 
-mkIrcMessage :: String -> [String] -> IRCMessage
-mkIrcMessage cmd params
-  = IRCMessage { msgPrefix = "", msgCommand = cmd, msgParams = params }
-
 ircSignOn :: String -> String -> IRC ()
 ircSignOn nick ircname = do 
     server <- asks ircServer
-    ircWrite (mkIrcMessage "USER" [nick, "localhost", server, ircname])
-    ircWrite (mkIrcMessage "NICK" [nick])
+    -- TODO: Move this to IRC?
+    send $ IRC.mkMessage "USER" [nick, "localhost", server, ircname]
+    send $ IRC.mkMessage "NICK" [nick]
     mpasswd <- liftIO (handleJust ioErrors (const (return "")) $
                        readFile "State/passwd")
     case readM mpasswd of
@@ -335,6 +296,36 @@ ircGetChannels :: LB [String]
 ircGetChannels = do 
     chans <- gets ircChannels
     return $ map getCN (M.keys chans)
+
+-- quit and reconnect wait 1s after sending a QUIT to give the connection
+-- a chance to close gracefully (and interrupt the wait with an exception)
+-- after that they return and the connection will probably be forcibly
+-- closed by the finallyError in runIrc'
+
+ircQuit :: String -> IRC ()
+ircQuit msg = do 
+    modify $ \state -> state { ircStayConnected = False }
+    send $ IRC.quit msg
+    liftIO $ threadDelay 1000
+
+ircReconnect :: String -> IRC ()
+ircReconnect msg = do 
+    send $ IRC.quit msg
+    liftIO $ threadDelay 1000
+
+ircRead :: IRC IRC.Message
+ircRead = do 
+    chanr <- asks ircReadChan
+    liftIO (readChan chanr)
+
+send :: IRC.Message -> IRC ()
+send line = do  
+    chanw <- asks ircWriteChan
+    -- use DeepSeq's $!! to ensure that any Haskell errors in line
+    -- are caught now, rather than later on in the other thread
+    liftIO (writeChan chanw $!! line)
+
+----------------------------------------------------------------------
 
 lineify, checkRecip, cleanOutput, reduceIndent :: OutputFilter
 -- | wrap long lines.
@@ -371,6 +362,11 @@ ircPrivmsg who msg = do
   -- Hardcoded defaults: maximal ten lines, maximal 100 chars/line
   mapM_ (ircPrivmsg' who . take 100) $ take 10 sendlines
 
+-- TODO: rename
+ircPrivmsg' :: String -> String -> IRC ()
+ircPrivmsg' who "" = ircPrivmsg' who " "
+ircPrivmsg' who msg = send $ IRC.privmsg who msg
+
 -- ---------------------------------------------------------------------
 -- | output filter (should consider a fmt(1)-like algorithm
 --
@@ -389,64 +385,6 @@ mlines s        = mbreak =<< lines s where
     n = 10
 
 -- ---------------------------------------------------------------------
-
-ircPrivmsg' :: String -> String -> IRC ()
-ircPrivmsg' who "" = ircPrivmsg' who " "
-ircPrivmsg' who msg
-  = ircWrite (mkIrcMessage "PRIVMSG" [who, ':' : clean_msg])
-    -- merry christmas det
-    where clean_msg = case concatMap clean msg of
-              str@('@':_) -> ' ':str
-              str         -> str
-
-
-ircTopic :: String -> String -> IRC ()
-ircTopic chan topic
-  = ircWrite (mkIrcMessage "TOPIC" [chan, ':' : topic])
-
-ircGetTopic :: String -> IRC ()
-ircGetTopic chan
-  = ircWrite (mkIrcMessage "TOPIC" [chan])
-
--- quit and reconnect wait 1s after sending a QUIT to give the connection
--- a chance to close gracefully (and interrupt the wait with an exception)
--- after that they return and the connection will probably be forcibly
--- closed by the finallyError in runIrc'
-
-ircQuit :: String -> IRC ()
-ircQuit msg = do 
-    state <- get
-    put (state { ircStayConnected = False })
-    ircWrite (mkIrcMessage "QUIT" [':' : msg])
-    liftIO $ threadDelay 1000
-
-ircReconnect :: String -> IRC ()
-ircReconnect msg = do ircWrite (mkIrcMessage "QUIT" [':' : msg])
-                      liftIO $ threadDelay 1000
-
-ircJoin :: String -> IRC ()
-ircJoin loc
-  = ircWrite (mkIrcMessage "JOIN" [loc])
-
-ircPart :: String -> IRC ()
-ircPart loc
-  = ircWrite (mkIrcMessage "PART" [loc])
-
-ircNames :: [String] -> IRC ()
-ircNames chans = ircWrite (mkIrcMessage "NAMES" [Util.join "," chans])
-
-ircRead :: IRC IRCMessage
-ircRead = do 
-    chanr <- asks ircReadChan
-    liftIO (readChan chanr)
-
-ircWrite :: IRCMessage -> IRC ()
-ircWrite line = do  
-    chanw <- asks ircWriteChan
-    -- use DeepSeq's $!! to ensure that any Haskell errors in line
-    -- are caught now, rather than later on in the other thread
-    liftIO (writeChan chanw $!! line)
-
 
 --
 -- May wish to add more things to the things caught, or restructure things 
@@ -555,7 +493,7 @@ runIrc' m = do
             writeGlobalState mod name
 
 
-readerLoop :: ThreadId -> Chan IRCMessage -> Chan IRCMessage -> Handle -> IO ()
+readerLoop :: ThreadId -> Chan IRC.Message -> Chan IRC.Message -> Handle -> IO ()
 readerLoop threadmain chanr chanw h
   = do  liftIO (putStrLn "Running reader loop...")
         exc <- try readerLoop'
@@ -569,12 +507,12 @@ readerLoop threadmain chanr chanw h
            let  line' = [ c | c <- line, c /= '\n', c /= '\r' ]
            case line' of
                 ('P':'I':'N':'G':' ':rest)
-                    -> writeChan chanw (mkIrcMessage "PONG" [rest])
-                _   -> writeChan chanr (decodeMessage line')
+                    -> writeChan chanw (IRC.mkMessage "PONG" [rest])
+                _   -> writeChan chanr (IRC.decodeMessage line')
            readerLoop'
 {-# INLINE readerLoop #-}
 
-writerLoop :: ThreadId -> Chan IRCMessage -> Handle -> IO ()
+writerLoop :: ThreadId -> Chan IRC.Message -> Handle -> IO ()
 writerLoop threadmain chanw h
   = do exc <- try writerLoop'
        case exc of
@@ -585,100 +523,9 @@ writerLoop threadmain chanw h
   where
     writerLoop'
       = do msg <- readChan chanw
-           hPutStr h (encodeMessage msg "\r")
+           hPutStr h (IRC.encodeMessage msg "\r")
            writerLoop'
 {-# INLINE writerLoop #-}
-
-encodeMessage :: IRCMessage -> String -> String
-encodeMessage msg
-  = encodePrefix (msgPrefix msg) . encodeCommand (msgCommand msg)
-          . encodeParams (msgParams msg)
-  where
-    encodePrefix [] = id
-    encodePrefix prefix = showChar ':' . showString prefix . showChar ' '
-
-    encodeCommand cmd = showString cmd
-
-    encodeParams [] = id
-    encodeParams (p:ps) = showChar ' ' . showString p . encodeParams ps
-
-
-decodeMessage :: String -> IRCMessage
-decodeMessage line
-  = let (prefix, rest1) = decodePrefix (,) line in
-    let (cmd, rest2)    = decodeCmd (,) rest1 in
-    let params          = decodeParams rest2 in
-    IRCMessage { msgPrefix = prefix, msgCommand = cmd, msgParams = params }
-  where
-    decodePrefix k (':':cs)
-      = decodePrefix' k cs
-      where
-        decodePrefix' j ""       = j "" ""
-        decodePrefix' j (' ':ds) = j "" ds
-        decodePrefix' j (c:ds)   = decodePrefix' (\xs ys -> j (c:xs) ys) ds
-
-    decodePrefix k cs
-      = k "" cs
-
-    decodeCmd k []
-      = k "" ""
-    decodeCmd k (' ':cs)
-      = k "" cs
-    decodeCmd k (c:cs)
-      = decodeCmd (\xs ys -> k (c:xs) ys) cs
-
-    decodeParams :: String -> [String]
-    decodeParams xs
-      = decodeParams' [] [] xs
-      where
-        decodeParams' param params []
-          | null param = reverse params
-          | otherwise  = reverse (reverse param : params)
-        decodeParams' param params (' ' : cs)
-          | null param = decodeParams' [] params cs
-          | otherwise  = decodeParams' [] (reverse param : params) cs
-        decodeParams' param params rest@(c@':' : cs)
-          | null param = reverse (rest : params)
-          | otherwise  = decodeParams' (c:param) params cs
-        decodeParams' param params (c:cs)
-          = decodeParams' (c:param) params cs
-
-{-
-getFirstWord :: String -> String
-getFirstWord line = takeWhile (/=' ') line
--}
-
-{-
-lowQuote :: String -> String
-lowQuote [] = []
-lowQuote ('\0':cs)   = '\020':'0'    : lowQuote cs
-lowQuote ('\n':cs)   = '\020':'n'    : lowQuote cs
-lowQuote ('\r':cs)   = '\020':'r'    : lowQuote cs
-lowQuote ('\020':cs) = '\020':'\020' : lowQuote cs
-lowQuote (c:cs)      = c : lowQuote cs
-
-lowDequote :: String -> String
-lowDequote [] = []
-lowDequote ('\020':'0'   :cs) = '\0'   : lowDequote cs
-lowDequote ('\020':'n'   :cs) = '\n'   : lowDequote cs
-lowDequote ('\020':'r'   :cs) = '\r'   : lowDequote cs
-lowDequote ('\020':'\020':cs) = '\020' : lowDequote cs
-lowDequote ('\020'       :cs) = lowDequote cs
-lowDequote (c:cs)             = c : lowDequote cs
-
-ctcpQuote :: String -> String
-ctcpQuote [] = []
-ctcpQuote ('\001':cs) = '\134':'a'    : ctcpQuote cs
-ctcpQuote ('\134':cs) = '\134':'\134' : ctcpQuote cs
-ctcpQuote (c:cs)      = c : ctcpQuote cs
-
-ctcpDequote :: String -> String
-ctcpDequote [] = []
-ctcpDequote ('\134':'a'   :cs) = '\001' : ctcpDequote cs
-ctcpDequote ('\134':'\134':cs) = '\134' : ctcpDequote cs
-ctcpDequote ('\134':cs)        = ctcpDequote cs
-ctcpDequote (c:cs)             = c : ctcpDequote cs
--}
 
 ------------------------------------------------------------------------
 
@@ -711,7 +558,7 @@ class Module m s | m -> s where
     moduleExit      :: m -> ModuleT s LB ()
     -- | Process a command a user sent.
     process         :: m -- ^ phantom
-        -> IRCMessage    -- ^ the message
+        -> IRC.Message    -- ^ the message
         -> String        -- ^ target
         -> String        -- ^ command
         -> String        -- ^ the arguments to the command
@@ -834,8 +681,8 @@ ircInstallOutputFilter f = modify $ \s ->
 
 -- | Checks if the given user has admin permissions and excecute the action
 --   only in this case.
-checkPrivs :: IRCMessage -> IRC Bool
-checkPrivs msg = gets (isJust . M.lookup (ircNick msg) . ircPrivilegedUsers)
+checkPrivs :: IRC.Message -> IRC Bool
+checkPrivs msg = gets (isJust . M.lookup (IRC.nick msg) . ircPrivilegedUsers)
 
 -- | Interpret an expression in the context of a module.
 -- Arguments are which map to use (@ircModules@ and @ircCommands@ are

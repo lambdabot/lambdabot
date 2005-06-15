@@ -16,20 +16,20 @@ theModule = MODULE $ HelpModule ()
 instance Module HelpModule () where
     moduleHelp _ _ = return "@help <command> - ask for help for <command>" -- default output
     moduleCmds   _ = return ["help"]
-    process        = doHelp
+    process _ _ target cmd rest = doHelp target cmd rest
 
-doHelp :: HelpModule -> IRCMessage -> String -> String -> [Char] -> ModuleT () IRC ()
+doHelp :: String -> String -> [Char] -> ModuleT () IRC ()
 
-doHelp m msg target cmd "" = doHelp m msg target cmd "help"
+doHelp target cmd "" = doHelp target cmd "help"
 
 --
 -- If a target is a command, find the associated help, otherwise if it's
 -- a module, return a list of commands that module implements.
 --
-doHelp m msg target cmd rest = 
+doHelp target cmd rest = 
     withModule ircCommands arg                  -- see if it is a command
         (withModule ircModules arg              -- else maybe it's a module name
-            (process m msg target cmd "help")   -- else give up
+            (doHelp target cmd "help")          -- else give up
             -- its a module
             (\md -> do
                 ss <- moduleCmds md

@@ -5,6 +5,7 @@ module Plugins.System (theModule) where
 
 import Lambdabot
 import LBState
+import qualified IRC
 import Util                     (breakOnGlue,showClean)
 import AltTime
 import qualified Map as M       (Map,keys,fromList,lookup,union)
@@ -53,7 +54,7 @@ privcmds = M.fromList [
 defaultHelp :: String
 defaultHelp = "system : irc management"
 
-doSystem :: IRCMessage -> String -> [Char] -> [Char] -> ModuleT ClockTime IRC ()
+doSystem :: IRC.Message -> String -> [Char] -> [Char] -> ModuleT ClockTime IRC ()
 doSystem msg target cmd rest = do
    s <- get
    case cmd of
@@ -62,9 +63,9 @@ doSystem msg target cmd rest = do
       "listcommands" | null rest -> listAll s target
                      | otherwise -> listModule target rest
 
-      "join"  -> ircJoin rest
-      "leave" -> ircPart rest
-      "part"  -> ircPart rest
+      "join"  -> send $ IRC.join rest
+      "leave" -> send $ IRC.part rest
+      "part"  -> send $ IRC.part rest
 
       "msg"   -> ircPrivmsg tgt txt'
                       where (tgt, txt) = breakOnGlue " " rest

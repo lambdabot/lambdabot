@@ -4,6 +4,7 @@
 module Plugins.Topic (theModule) where
 
 import Lambdabot
+import qualified IRC
 import qualified Map as M
 
 import Control.Monad.State (gets)
@@ -24,7 +25,7 @@ instance Module TopicModule () where
   process _ _ src "topic-snoc" text = topicSplit snoc src text
   process _ _ src "topic-tail" chan = alterTopic src chan tail
   process _ _ src "topic-init" chan = alterTopic src chan init
-  process _ _ _   "topic-null" chan = ircTopic chan "[]"
+  process _ _ _   "topic-null" chan = send $ IRC.setTopic chan "[]"
 
   process _ _ src "topic-tell" chan =
       lookupTopic chan (\maybetopic ->
@@ -51,10 +52,10 @@ alterTopic source chan f =
   let p maybetopic =
         case maybetopic of
           Just x -> case reads x of
-                [(xs, "")] -> ircTopic chan (show $ f $ xs)
+                [(xs, "")] -> send $ IRC.setTopic chan (show $ f $ xs)
                 [(xs, r)] | length r <= 2 
                   -> do ircPrivmsg source $ "ignoring bogus characters: " ++ r
-                        ircTopic chan (show $ f $ xs)
+                        send $ IRC.setTopic chan (show $ f $ xs)
 
                 _ -> ircPrivmsg source 
                          "topic does not parse. topic should be of the form [\"...\",...,\"...\"]"

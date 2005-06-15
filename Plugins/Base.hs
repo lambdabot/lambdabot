@@ -6,6 +6,7 @@ module Plugins.Base (theModule) where
 import Config               (config, Config(name, autojoin))
 import Lambdabot
 import LBState
+import qualified IRC
 import Util                 (debugStrLn,breakOnGlue,split,closests,showClean,timeout)
 import qualified Map as M   (insert, delete)
 
@@ -89,11 +90,11 @@ doJOIN msg
   = do let (_, _:loc) = breakOnGlue ":" (head (msgParams msg))
        s <- get
        put (s { ircChannels = M.insert  (mkCN loc) "[currently unknown]" (ircChannels s)}) -- the empty topic causes problems
-       ircGetTopic loc -- initialize topic
+       send $ IRC.getTopic loc -- initialize topic
 
 doPART :: Callback
 doPART msg
-  = when (name config == ircNick msg) $ do  
+  = when (name config == IRC.nick msg) $ do  
         let loc = head (msgParams msg)
         s <- get
         put (s { ircChannels = M.delete (mkCN loc) (ircChannels s) })
@@ -114,7 +115,7 @@ doTOPIC msg
          put (s { ircChannels = M.insert (mkCN loc) (tail $ head $ tail $ msgParams msg) (ircChannels s)})
 
 doRPL_WELCOME :: Callback
-doRPL_WELCOME _msg = mapM_ ircJoin (autojoin config)
+doRPL_WELCOME _msg = mapM_ (send . IRC.join) (autojoin config)
 
 doQUIT :: Callback
 doQUIT msg = doIGNORE msg
@@ -188,7 +189,7 @@ doPRIVMSG msg = doPRIVMSG' (name config) msg
 --
 -- | What does the bot respond to?
 --
-doPRIVMSG' :: String -> IRCMessage -> ModuleT BaseState IRC ()
+doPRIVMSG' :: String -> IRC.Message -> ModuleT BaseState IRC ()
 doPRIVMSG' myname msg
   | myname `elem` targets
     = let (cmd, params) = breakOnGlue " " text
