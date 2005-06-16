@@ -1,6 +1,7 @@
 module LBState (
         -- ** Functions to access the module's state
         readMS, withMS, modifyMS, writeMS,
+        accessorMS,
 
         -- ** Utility functions for modules that need state for each target.
         GlobalPrivate(global), mkGlobalPrivate, withPS, readPS, withGS, readGS,
@@ -22,6 +23,12 @@ withMS f = lbIO $ \conv -> withMWriter ?ref $ \x writer ->
 -- | Read the module's private state.
 readMS :: ModuleT s LB s
 readMS = liftIO $ readMVar ?ref
+
+-- | Produces a with-function. Needs a better name.
+accessorMS :: (s -> (t, t -> s)) -> 
+  (t -> (t -> LB ()) -> LB a) -> ModuleT s LB a
+accessorMS decompose f = withMS $ \s writer -> 
+  let (t,k) = decompose s in f t (writer . k)
 
 -- | Modify the module's private state.
 modifyMS :: (s -> s) -> ModuleT s LB ()
