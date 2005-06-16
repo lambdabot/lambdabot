@@ -107,9 +107,9 @@ type DWP a = ModuleT DarcsPatchWatchState LB a
 instance Module DarcsPatchWatch DarcsPatchWatchState where
     moduleHelp    _ s = return $ case s of
         "repos"        -> "@repos, list all registered darcs repositories"
-        "repo-add"    -> "@repos-add path, add a repository"
-        "repo-del" -> "@repos-del path, delete a repository" 
-        _ -> "Watch darcs repositories. Provides @repos, @repo-add, @repo-del"
+        "repo-add"    -> "@repo-add path, add a repository"
+        "repo-del" -> "@repo-del path, delete a repository" 
+        _ -> ("Watch darcs repositories. Provides @repos, @repo-add, @repo-del")
 
     moduleCmds  _ = return ["repos", "repo-add", "repo-del"] 
 
