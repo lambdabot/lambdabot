@@ -92,16 +92,14 @@ stateSerializer =
                            { dpw_threadId = Nothing
                            , dpw_repos = repos })
 
-getRepos :: DWP Repos
-getRepos = 
-    do s <- readMS
-       return (dpw_repos s)
+getRepos :: DPW Repos
+getRepos = dpw_repos `fmap` readMS
 
-setRepos :: (?name::String, ?ref::MVar DarcsPatchWatchState) => Repos -> LB ()
-setRepos repos = 
-    do modifyMS (\s -> s { dpw_repos = repos })
+withRepos :: (Repos -> (Repos -> LB ()) -> LB a) -> DPW a
+-- template haskell?
+withRepos = accessorMS $ \s -> (dpw_repos s, \t -> s { dpw_repos = t })
 
-type DWP a = ModuleT DarcsPatchWatchState LB a
+type DPW a = ModuleT DarcsPatchWatchState LB a
 
 --
 -- The plugin itself
@@ -140,21 +138,21 @@ instance Module DarcsPatchWatch DarcsPatchWatchState where
 -- Configuration commands
 --
 
-printRepos :: String -> String -> DWP ()
+printRepos :: String -> String -> DPW ()
 printRepos source "" = 
     do repos <- getRepos
        ircPrivmsg source (showRepos repos)
 printRepos _ _ =
     error "@todo given arguments, try @todo-add or @listcommands todo"
 
-addRepo :: String -> String -> DWP ()
+addRepo :: String -> String -> DPW ()
 addRepo source rest | null (dropSpace rest) = 
     ircPrivmsg source "argument required"
 addRepo source rest = 
     do x <- mkRepo rest
        case x of
          Left s -> send ("cannot add invalid repository: " ++ s)
-         Right r -> do repos <- getRepos
+         Right r -> withRepos $ \repos setRepos -> do
                        case () of
                         _| length repos >= maxNumberOfRepos ->
                              send ("maximum number of repositories reached!")
@@ -166,14 +164,14 @@ addRepo source rest =
                                 send ("repository " ++ showRepo r ++ " added")
     where send = ircPrivmsg source
 
-delRepo :: String -> String -> DWP ()
+delRepo :: String -> String -> DPW ()
 delRepo source rest | null (dropSpace rest) = 
     ircPrivmsg source "argument required"
 delRepo source rest = 
     do x <- mkRepo rest
        case x of
          Left s -> ircPrivmsg source ("cannot delete invalid repository: " ++ s)
-         Right r -> do repos <- getRepos
+         Right r -> withRepos $ \repos setRepos -> do
                        case findRepo r repos of
                          Nothing ->
                            send ("no repository registered with path " 
@@ -187,7 +185,7 @@ delRepo source rest =
           findRepo _ [] = Nothing
           findRepo x (y:ys) = if cmpRepos x y then (Just y) else findRepo x ys
 
-mkRepo :: String -> DWP (Either String Repo)
+mkRepo :: String -> DPW (Either String Repo)
 mkRepo pref' =
     do x <- liftIO $ do let path = mkInventoryPath pref'
                             pref = dropSpace pref'
@@ -206,10 +204,9 @@ mkRepo pref' =
 -- The heart of the plugin: watching darcs repositories
 --
 
-watchRepos :: DWP ()
-watchRepos = 
-    do repos <- getRepos
-       debug ("checking darcs repositories " ++ showRepos repos)
+watchRepos :: DPW ()
+watchRepos = withRepos $ \repos setRepos ->
+    do debug ("checking darcs repositories " ++ showRepos repos)
        repos' <- mapM checkRepo repos
        setRepos repos'
        liftIO $ threadDelay sleepTime
@@ -219,9 +216,19 @@ watchRepos =
 
 
 
-checkRepo :: Repo -> DWP Repo
-checkRepo r = 
-    do (output, errput) <- liftIO $ runDarcs (repo_location r)
+checkRepo :: Repo -> DPW Repo
+checkRepo repo = 
+    do mtime <- liftIO $ getModificationTime (repo_location repo)
+       case repo_lastAnnounced repo of
+         Nothing                           -> announceRepoChanges repo
+         Just ct | toClockTime ct <= mtime -> announceRepoChanges repo
+                 | otherwise               -> return repo
+
+announceRepoChanges :: Repo -> DWP Repo
+announceRepoChanges r = 
+    do let header = "Changes have been made to " ++ repo_location r
+       now <- liftIO getClockTime
+       (output, errput) <- liftIO $ runDarcs (repo_location r)
        nlines <- 
          if not (null errput)
             then do send ("\ndarcs failed: " ++ errput)
