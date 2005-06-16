@@ -168,13 +168,18 @@ delRepo source rest =
        case x of
          Left s -> ircPrivmsg source ("cannot delete invalid repository: " ++ s)
          Right r -> do repos <- getRepos
-                       if not (r `elem` repos)
-                          then send ("cannot delete non-existing repository " 
-                                     ++ showRepo r)
-                          else 
-                          do setRepos (delete r repos)
-                             send ("repository " ++ showRepo r ++ " deleted")
-    where send = ircPrivmsg source                     
+                       case findRepo r repos of
+                         Nothing ->
+                           send ("no repository registered with path " 
+                                 ++ repo_location r)
+                         Just realRepo ->
+                             do setRepos (delete realRepo repos)
+                                send ("repository " ++ showRepo realRepo ++ 
+                                      " deleted")
+    where send = ircPrivmsg source
+          cmpRepos r1 r2 = repo_location r1 == repo_location r2
+          findRepo _ [] = Nothing
+          findRepo x (y:ys) = if cmpRepos x y then (Just y) else findRepo x ys
 
 mkRepo :: String -> DWP (Either String Repo)
 mkRepo pref' =
