@@ -18,7 +18,7 @@ instance Module HelpModule () where
     moduleCmds   _ = return ["help"]
     process _ _ target cmd rest = doHelp target cmd rest
 
-doHelp :: String -> String -> [Char] -> ModuleT () IRC ()
+doHelp :: String -> String -> [Char] -> ModuleT () LB ()
 
 doHelp target cmd "" = doHelp target cmd "help"
 

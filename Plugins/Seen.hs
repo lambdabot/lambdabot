@@ -226,7 +226,7 @@ unUserMode nick = dropWhile (`elem` "@+") nick
 withSeenFM :: (IRC.Message -> SeenState -> ClockTime -> Nick
                   -> Either String SeenState)
               -> IRC.Message
-              -> Seen IRC ()
+              -> Seen LB ()
 withSeenFM f msg = do 
     let nick = lowerCaseString . unUserMode . IRC.nick $ msg
     withMS $ \state writer -> do

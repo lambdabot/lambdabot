@@ -52,7 +52,7 @@ instance Module FactModule FactState where
 ------------------------------------------------------------------------
 
 processCommand :: FactState -> FactWriter
-               -> String -> String -> String -> Fact IRC String
+               -> String -> String -> String -> Fact LB String
 processCommand factFM writer fact cmd dat =
     case cmd of
         "fact"        -> return $ getFact factFM fact
@@ -64,7 +64,7 @@ processCommand factFM writer fact cmd dat =
                             return "Fact deleted."
         _ -> return "Unknown command."
 
-updateFact :: Bool -> FactState -> FactWriter -> String -> String -> Fact IRC String
+updateFact :: Bool -> FactState -> FactWriter -> String -> String -> Fact LB String
 updateFact guard factFM writer fact dat =
     if guard && M.member fact factFM
         then return "Fact already exists, not updating"
@@ -72,7 +72,7 @@ updateFact guard factFM writer fact dat =
                 return "Fact recorded."
 
 alterFact :: (String -> String) 
-          -> FactState -> FactWriter -> String -> Fact IRC String
+          -> FactState -> FactWriter -> String -> Fact LB String
 alterFact f factFM writer fact =
     case M.lookup fact factFM of
         Nothing -> return "A fact must exist to alter it"

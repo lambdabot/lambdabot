@@ -40,7 +40,7 @@ instance Module TodoModule TodoState where
 	where sender = IRC.nick msg
 
 -- | Print todo list
-getTodo :: String -> TodoState -> String -> ModuleT TodoState IRC ()
+getTodo :: String -> TodoState -> String -> ModuleT TodoState LB ()
 getTodo source todoList "" = ircPrivmsg source (formatTodo todoList)
 getTodo _      _        _  =
     error "@todo given arguments, try @todo-add or @listcommands todo"
@@ -53,13 +53,13 @@ formatTodo todoList =
                 [ show n,". ",nick,": ",idea ]) $ zip [0..] todoList 
 
 -- | Add new entry to list
-addTodo :: String -> String -> String -> ModuleT TodoState IRC ()
+addTodo :: String -> String -> String -> ModuleT TodoState LB ()
 addTodo source sender rest = do 
     modifyMS (++[(rest, sender)])
     ircPrivmsg source "Entry added to the todo list"        
 
 -- | Delete an entry from the list
-delTodo :: String -> String -> ModuleT TodoState IRC ()
+delTodo :: String -> String -> ModuleT TodoState LB ()
 delTodo source rest | rest /= [] && all isDigit rest = do
     n  <- readM rest
     ls <- readMS

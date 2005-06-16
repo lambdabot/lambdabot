@@ -46,19 +46,19 @@ instance Module PlModule PlState where
     process _ _ target _ _ =
       ircPrivmsg target "pointless: sorry, I don't understand."
 
-res :: String -> Pl IRC ()
+res :: String -> Pl LB ()
 res target = do
   d <- readPS target
   case d of
     Nothing -> ircPrivmsg target "pointless: sorry, nothing to resume."
     Just d' -> optimizeTopLevel target d'
 
-pf :: String -> String -> Pl IRC ()
+pf :: String -> String -> Pl LB ()
 pf target inp = case parsePF inp of
   Right d -> optimizeTopLevel target (firstTimeout, mapTopLevel transform d)
   Left err -> ircPrivmsg target err
 
-optimizeTopLevel :: String -> (Int, TopLevel) -> Pl IRC ()
+optimizeTopLevel :: String -> (Int, TopLevel) -> Pl LB ()
 optimizeTopLevel target (to, d) = do
   let (e,decl) = getExpr d
   (e', finished) <- liftIO $ optimizeIO to e

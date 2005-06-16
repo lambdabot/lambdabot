@@ -54,7 +54,7 @@ privcmds = M.fromList [
 defaultHelp :: String
 defaultHelp = "system : irc management"
 
-doSystem :: IRC.Message -> String -> [Char] -> [Char] -> ModuleT ClockTime IRC ()
+doSystem :: IRC.Message -> String -> [Char] -> [Char] -> ModuleT ClockTime LB ()
 doSystem msg target cmd rest = do
    s <- get
    case cmd of
@@ -89,12 +89,12 @@ doSystem msg target cmd rest = do
 
 ------------------------------------------------------------------------
 
-listAll :: IRCRWState -> String -> IRC ()
+listAll :: IRCRWState -> String -> LB ()
 listAll state target = do
         privs <- gets ircPrivCommands
         ircPrivmsg target $ showClean (M.keys (ircCommands state) \\ privs)
 
-listModule :: String -> String -> IRC ()
+listModule :: String -> String -> LB ()
 listModule target query = withModule ircModules query fromCommand printProvides
     where
     fromCommand = withModule ircCommands query 

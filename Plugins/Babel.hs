@@ -73,7 +73,7 @@ instance Module BabelModule Quotes where
 --
 -- TODO add range/context. i.e. !f-3 or 5-4
 --
-run_babel :: String -> String -> IRC ()
+run_babel :: String -> String -> LB ()
 
 run_babel src s = do
         let cmd = split ' ' 3 s
@@ -103,7 +103,7 @@ run_babel' _ = return ["bzzt."]
 --
 -- grab the history and translate it
 --
-doHistory :: String -> String -> Int -> IRC [String]
+doHistory :: String -> String -> Int -> LB [String]
 doHistory f t i = do
         ss <- getHistory i
         if (null ss)
@@ -119,7 +119,7 @@ doHistory f t i = do
 -- have to reverse history, as we want to search from the most recent
 -- backwards.
 --
-doLookup :: String -> String -> String -> IRC [String]
+doLookup :: String -> String -> String -> LB [String]
 doLookup f t r = do
         ss <- getHistory 100 -- all the lines
         case find matches (reverse ss) of
@@ -143,7 +143,7 @@ indent (ns,ms) = zipWith (\a b -> a++"> "++b) ns ms
 -- ---------------------------------------------------------------------
 -- the @last command
 --
-run_last :: String -> String -> IRC ()
+run_last :: String -> String -> LB ()
 
 -- no args, return 5 lines
 run_last src [] = do hs <- getHistory 5
@@ -164,7 +164,7 @@ run_last src i = do
 -- the @remember command stores away a quotation by a user, for future
 -- use by @quote
 
-run_remember :: String -> ModuleT Quotes IRC ()
+run_remember :: String -> ModuleT Quotes LB ()
 run_remember str = do
         let (name,q') = break (== ' ') str
             q = if null q' then q' else tail q'
@@ -176,7 +176,7 @@ run_remember str = do
 --
 --  the @quote command, takes a user name to choose a random quote from
 --
-run_quote :: String -> String -> ModuleT Quotes IRC ()
+run_quote :: String -> String -> ModuleT Quotes LB ()
 run_quote target name = do
     fm <- readMS
     let qs' = M.lookup name fm

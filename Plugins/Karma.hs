@@ -40,18 +40,18 @@ instance Module KarmaModule KarmaState where
                  _        -> error "KarmaModule: can't happen"
 	    where sender = IRC.nick msg
 
-getKarma :: String -> Karma IRC Integer
+getKarma :: String -> Karma LB Integer
 getKarma nick = do
     karmaFM <- readMS
     return $ fromMaybe 0 (M.lookup nick karmaFM)
 
-tellKarma :: String -> String -> String -> Karma IRC ()
+tellKarma :: String -> String -> String -> Karma LB ()
 tellKarma target sender nick = do
     karma <- getKarma nick
     ircPrivmsg target $ (if sender == nick then "You have" else nick ++ " has")
       ++ " a karma of " ++ show karma
 
-changeKarma :: Integer -> String -> String -> String -> Karma IRC ()
+changeKarma :: Integer -> String -> String -> String -> Karma LB ()
 changeKarma km target sender nick
   | sender == nick = ircPrivmsg target "You can't change your own karma, silly."
   | otherwise      = withMS $ \fm write -> do

@@ -37,7 +37,7 @@ instance Module VixenModule (String -> IO String) where
                "vixen" -> vixenCmd src rest
                _       -> error "vixen error: i'm just a girl!"
 
-vixenCmd :: String -> String -> ModuleT (String -> IO String) IRC ()
+vixenCmd :: String -> String -> ModuleT (String -> IO String) LB ()
 vixenCmd src rest = do 
 	responder <-  readMS
         result <- liftIO $  responder rest

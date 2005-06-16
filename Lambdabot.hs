@@ -217,6 +217,7 @@ data IRCError = IRCRaised Exception
   deriving Show
 
 
+{-# DEPRECATED IRC "Use LB instead" #-}
 type IRC = LB
 
 -- | The IRC Monad. The reader transformer holds information about the

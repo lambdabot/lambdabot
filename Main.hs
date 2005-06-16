@@ -29,12 +29,12 @@ main' (Just ld) = runIrc ircInit ircMain ld
 ircInit :: LB ()
 ircInit = loadStaticModules
 
-ircMain :: IRC ()
+ircMain :: LB ()
 ircMain = ircSignOn (name config) (userinfo config) >> mainloop
 
 ------------------------------------------------------------------------
 
-mainloop :: IRC ()
+mainloop :: LB ()
 mainloop = do 
         msg <- ircRead
         s   <- get
@@ -49,7 +49,7 @@ mainloop = do
 -- write it on standard out. Hopefully BaseModule will have caught it already
 -- if it can see a better place to send it
 
-allCallbacks :: [IRC.Message -> IRC ()] -> IRC.Message -> IRC ()
+allCallbacks :: [IRC.Message -> LB ()] -> IRC.Message -> LB ()
 allCallbacks [] _ = return ()
 allCallbacks (f:fs) msg = do
         handleIrc (liftIO . putStrLn) (f msg)

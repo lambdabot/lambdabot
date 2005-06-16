@@ -37,17 +37,17 @@ instance Module TopicModule () where
     = ircPrivmsg src ("Bug! someone forgot the handler for \""++cmd++"\"")
 
 
-topicSplit :: (String -> [String] -> [String]) -> String -> String -> IRC ()
+topicSplit :: (String -> [String] -> [String]) -> String -> String -> LB ()
 topicSplit f source cmdtext = alterTopic source chan (f topic_item)
   where 
       (chan, topic_item) = splitFirstWord cmdtext
 
-lookupTopic :: String -> (Maybe String -> IRC () ) -> IRC ()
+lookupTopic :: String -> (Maybe String -> LB ()) -> LB ()
 lookupTopic chan f =
   do maybetopic <- gets (\s -> M.lookup (mkCN chan) (ircChannels s))
      f maybetopic
 
-alterTopic :: String -> String -> ([String] -> [String]) -> IRC ()
+alterTopic :: String -> String -> ([String] -> [String]) -> LB ()
 alterTopic source chan f =
   let p maybetopic =
         case maybetopic of

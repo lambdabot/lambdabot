@@ -189,7 +189,7 @@ doPRIVMSG msg = doPRIVMSG' (name config) msg
 --
 -- | What does the bot respond to?
 --
-doPRIVMSG' :: String -> IRC.Message -> ModuleT BaseState IRC ()
+doPRIVMSG' :: String -> IRC.Message -> ModuleT BaseState LB ()
 doPRIVMSG' myname msg
   | myname `elem` targets
     = let (cmd, params) = breakOnGlue " " text

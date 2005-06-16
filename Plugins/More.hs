@@ -26,7 +26,7 @@ instance Module MoreModule MoreState where
           Nothing -> ircPrivmsg' target "more: empty buffer"
           Just ls -> mapM_ (ircPrivmsg' target) =<< moreFilter target ls
 
-moreFilter :: String -> [String] -> ModuleT MoreState IRC [String]
+moreFilter :: String -> [String] -> ModuleT MoreState LB [String]
 moreFilter target msglines = do
   let maxLines = Config.moresize Config.config
       (morelines, thislines) = case drop (maxLines+2) msglines of

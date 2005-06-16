@@ -86,7 +86,7 @@ extract_signatures output
 --
 --     With this the command handler can be easily defined using popen:
 --
-query_ghci :: String -> String -> String -> IRC ()
+query_ghci :: String -> String -> String -> LB ()
 query_ghci src cmd expr =
        do
        (output, _, _) <- liftIO $ popen "ghci-6.4" ["-fglasgow-exts","-fno-th"]
