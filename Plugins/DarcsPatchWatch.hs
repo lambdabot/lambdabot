@@ -31,6 +31,9 @@ theModule = MODULE $ DarcsPatchWatch ()
 -- Configuration variables
 --
 
+debugFlag :: Bool
+debugFlag = False
+
 announceTarget :: String
 announceTarget = "#00maja"
 
@@ -225,7 +228,7 @@ announceRepoChanges r =
                        lastN = repo_nlinesAtLastAnnouncement r
                        new = take (length olines - lastN) olines
                    in do if null new
-                            then debug ("silently ignoring that darcs hasn't " ++
+                            then info ("silently ignoring that darcs hasn't " ++
                                         "produced any new lines since last check")
                             else send (header ++ "\n" ++ unlines new)
                          return (length olines)
@@ -239,7 +242,7 @@ runDarcs loc =
     do (output, errput, _) <- popen darcsCmd ["changes", "--repo=" ++ loc]
                                 Nothing
        if not (null errput)
-          then debug errput
+          then info errput
           else return ()
        return (output, errput)
 
@@ -261,7 +264,12 @@ joinPath p q =
       _     -> p ++ "/" ++ q
 
 debug :: MonadIO m => String -> m ()
-debug s = liftIO $ putStrLn ("[DarcsPatchWatch] " ++ s)
+debug s = if debugFlag 
+             then liftIO (putStrLn ("[DarcsPatchWatch] " ++ s)) 
+             else return ()
+
+info :: MonadIO m => String -> m ()
+info s = liftIO $ putStrLn ("[DarcsPatchWatch] " ++ s)
 
 formatTime :: CalendarTime -> String
 formatTime = calendarTimeToString
