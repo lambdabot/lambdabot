@@ -214,30 +214,22 @@ watchRepos =
 
 
 checkRepo :: Repo -> DWP Repo
-checkRepo repo = 
-    do mtime <- liftIO $ getModificationTime (repo_location repo)
-       case repo_lastAnnounced repo of
-         Nothing                           -> announceRepoChanges repo
-         Just ct | toClockTime ct <= mtime -> announceRepoChanges repo
-                 | otherwise               -> return repo
-
-announceRepoChanges :: Repo -> DWP Repo
-announceRepoChanges r = 
-    do let header = "Changes have been made to " ++ repo_location r
-       now <- liftIO getClockTime
-       (output, errput) <- liftIO $ runDarcs (repo_location r)
+checkRepo r = 
+    do (output, errput) <- liftIO $ runDarcs (repo_location r)
        nlines <- 
-           if not (null errput)
-              then do send (header ++ "\ndarcs failed: " ++ errput)
-                      return (repo_nlinesAtLastAnnouncement r)
-              else let olines = lines output
-                       lastN = repo_nlinesAtLastAnnouncement r
-                       new = take (length olines - lastN) olines
-                   in do if null new
-                            then info ("silently ignoring that darcs hasn't " ++
-                                        "produced any new lines since last check")
-                            else send (header ++ "\n" ++ unlines new)
-                         return (length olines)
+         if not (null errput)
+            then do send ("\ndarcs failed: " ++ errput)
+                    return (repo_nlinesAtLastAnnouncement r)
+            else 
+            let olines = lines output
+                lastN = repo_nlinesAtLastAnnouncement r
+                new = take (length olines - lastN) olines
+                in do if not (null new)
+                         then send ("New patches in " ++ repo_location r 
+                                    ++ "\n" ++ (dropSpace $ unlines new))
+                         else return ()
+                      return (length olines)
+       now <- liftIO getClockTime
        ct <- liftIO $ toCalendarTime now
        return $ r { repo_nlinesAtLastAnnouncement = nlines
                   , repo_lastAnnounced = Just ct }
