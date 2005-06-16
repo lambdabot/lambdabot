@@ -185,7 +185,7 @@ delRepo source rest =
           findRepo _ [] = Nothing
           findRepo x (y:ys) = if cmpRepos x y then (Just y) else findRepo x ys
 
-mkRepo :: String -> DPW (Either String Repo)
+mkRepo :: String -> LB (Either String Repo)
 mkRepo pref' =
     do x <- liftIO $ do let path = mkInventoryPath pref'
                             pref = dropSpace pref'
@@ -216,7 +216,7 @@ watchRepos = withRepos $ \repos setRepos ->
 
 
 
-checkRepo :: Repo -> DPW Repo
+checkRepo :: Repo -> LB Repo
 checkRepo repo = 
     do mtime <- liftIO $ getModificationTime (repo_location repo)
        case repo_lastAnnounced repo of

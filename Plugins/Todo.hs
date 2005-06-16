@@ -9,7 +9,6 @@ import Lambdabot
 import LBState
 import qualified IRC
 import Util         (listSerializer,readM)
-import Data.Char    (isDigit)
 
 newtype TodoModule = TodoModule ()
 
@@ -60,18 +59,15 @@ addTodo source sender rest = do
 
 -- | Delete an entry from the list
 delTodo :: String -> String -> ModuleT TodoState LB ()
-delTodo source rest | rest /= [] && all isDigit rest = do
-    n  <- readM rest
-    ls <- readMS
-    case () of {_
-        | ls == [] -> ircPrivmsg source "Todo list is empty"
+delTodo source rest | Just n <- readM rest = withMS $ \ls write -> 
+    case () of   
+      _ | null ls -> ircPrivmsg source "Todo list is empty"
         | n > length ls - 1 || n < 0
-        -> ircPrivmsg source $ (show n) ++ " is out of range"
+        -> ircPrivmsg source $ show n ++ " is out of range"
 
         | otherwise -> do 
-            modifyMS (map snd . filter ((/= n) . fst) . zip [0..])
+            write (map snd . filter ((/= n) . fst) . zip [0..] $ ls)
             let (a,_) = ls !! n
             ircPrivmsg source $ "Removed: " ++ a
-    }
 
 delTodo source _ = ircPrivmsg source "Syntax error. @todo <n>, where n :: Int"
