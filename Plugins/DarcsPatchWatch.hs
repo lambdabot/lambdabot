@@ -40,8 +40,9 @@ announceTarget = "#00maja"
 inventoryFile :: String
 inventoryFile = "_darcs/inventory"
 
-sleepSeconds :: Int
-sleepSeconds = 10
+-- in seconds
+checkInterval :: Int
+checkInterval = 30
 
 darcsCmd :: String
 darcsCmd = "darcs"
@@ -203,7 +204,7 @@ watchRepos =
        liftIO $ threadDelay sleepTime
        watchRepos
     where sleepTime :: Int  -- in milliseconds
-          sleepTime = sleepSeconds * 1000 * 1000  -- don't change, change sleepSeconds
+          sleepTime = checkInterval * 1000 * 1000
 
 
 
