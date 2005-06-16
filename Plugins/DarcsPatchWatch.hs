@@ -31,6 +31,9 @@ theModule = MODULE $ DarcsPatchWatch ()
 -- Configuration variables
 --
 
+maxNumberOfRepos :: Int
+maxNumberOfRepos = 20
+
 debugFlag :: Bool
 debugFlag = False
 
@@ -152,12 +155,15 @@ addRepo source rest =
        case x of
          Left s -> send ("cannot add invalid repository: " ++ s)
          Right r -> do repos <- getRepos
-                       if r `elem` repos
-                          then send ("cannot add already existing repository " 
-                                     ++ showRepo r)
-                          else
-                          do setRepos (r:repos)
-                             send ("repository " ++ showRepo r ++ " added")
+                       case () of
+                        _| length repos >= maxNumberOfRepos ->
+                             send ("maximum number of repositories reached!")
+                         | r `elem` repos ->
+                             send ("cannot add already existing repository " 
+                                   ++ showRepo r)
+                         | otherwise ->
+                             do setRepos (r:repos)
+                                send ("repository " ++ showRepo r ++ " added")
     where send = ircPrivmsg source
 
 delRepo :: String -> String -> DWP ()
