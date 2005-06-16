@@ -16,7 +16,8 @@ import Control.Monad.Trans ( liftIO, MonadIO )
 import System.Directory
 import System.Time
 
-import Lambdabot
+import Lambdabot hiding (send)
+import LBState
 import Util
 import PosixCompat ( popen )
 
@@ -84,8 +85,7 @@ stateSerializer =
                            { dpw_threadId = Nothing
                            , dpw_repos = repos })
 
-getRepos :: (MonadIO m, ?name::String, ?ref::MVar DarcsPatchWatchState) => 
-            m Repos
+getRepos :: DWP Repos
 getRepos = 
     do s <- readMS
        return (dpw_repos s)
@@ -94,6 +94,7 @@ setRepos :: (?name::String, ?ref::MVar DarcsPatchWatchState) => Repos -> LB ()
 setRepos repos = 
     do modifyMS (\s -> s { dpw_repos = repos })
 
+type DWP a = ModuleT DarcsPatchWatchState LB a
 
 --
 -- The plugin itself
@@ -112,7 +113,7 @@ instance Module DarcsPatchWatch DarcsPatchWatchState where
     moduleSerialize _ = Just stateSerializer
 
     moduleInit      _ = do
-      tid <- lbIO (\conv -> let ?ref = ?ref in forkIO $ watchRepos conv)
+      tid <- lbIO (\conv -> forkIO $ conv watchRepos)
       modifyMS (\s -> s { dpw_threadId = Just tid })
     moduleExit      _ = 
         do s <- readMS
@@ -132,14 +133,14 @@ instance Module DarcsPatchWatch DarcsPatchWatchState where
 -- Configuration commands
 --
 
-printRepos :: String -> String -> ModuleT DarcsPatchWatchState IRC ()
+printRepos :: String -> String -> DWP ()
 printRepos source "" = 
     do repos <- getRepos
        ircPrivmsg source (showRepos repos)
 printRepos _ _ =
     error "@todo given arguments, try @todo-add or @listcommands todo"
 
-addRepo :: String -> String -> ModuleT DarcsPatchWatchState IRC ()
+addRepo :: String -> String -> DWP ()
 addRepo source rest | null (dropSpace rest) = 
     ircPrivmsg source "argument required"
 addRepo source rest = 
@@ -155,7 +156,7 @@ addRepo source rest =
                              send ("repository " ++ showRepo r ++ " added")
     where send = ircPrivmsg source
 
-delRepo :: String -> String -> ModuleT DarcsPatchWatchState IRC ()
+delRepo :: String -> String -> DWP ()
 delRepo source rest | null (dropSpace rest) = 
     ircPrivmsg source "argument required"
 delRepo source rest = 
@@ -171,7 +172,7 @@ delRepo source rest =
                              send ("repository " ++ showRepo r ++ " deleted")
     where send = ircPrivmsg source                     
 
-mkRepo :: String -> ModuleT DarcsPatchWatchState IRC (Either String Repo)
+mkRepo :: String -> DWP (Either String Repo)
 mkRepo pref' =
     do x <- liftIO $ do let path = mkInventoryPath pref'
                             pref = dropSpace pref'
@@ -190,35 +191,32 @@ mkRepo pref' =
 -- The heart of the plugin: watching darcs repositories
 --
 
-watchRepos ::  (?name::String, ?ref::MVar DarcsPatchWatchState) => 
-               (forall a. LB a -> IO a) -> IO ()
-watchRepos conv =
+watchRepos :: DWP ()
+watchRepos = 
     do repos <- getRepos
        debug ("checking darcs repositories " ++ showRepos repos)
-       repos' <- mapM (checkRepo conv) repos
-       conv $ setRepos repos'
-       threadDelay sleepTime
-       watchRepos conv
+       repos' <- mapM checkRepo repos
+       setRepos repos'
+       liftIO $ threadDelay sleepTime
+       watchRepos
     where sleepTime :: Int  -- in milliseconds
           sleepTime = sleepSeconds * 1000 * 1000  -- don't change, change sleepSeconds
 
 
 
-checkRepo :: (?name::String, ?ref::MVar DarcsPatchWatchState) => 
-             (forall a. LB a -> IO a) -> Repo -> IO Repo
-checkRepo conv repo = 
-    do mtime <- getModificationTime (repo_location repo)
+checkRepo :: Repo -> DWP Repo
+checkRepo repo = 
+    do mtime <- liftIO $ getModificationTime (repo_location repo)
        case repo_lastAnnounced repo of
-         Nothing                           -> announceRepoChanges conv repo
-         Just ct | toClockTime ct <= mtime -> announceRepoChanges conv repo
+         Nothing                           -> announceRepoChanges repo
+         Just ct | toClockTime ct <= mtime -> announceRepoChanges repo
                  | otherwise               -> return repo
 
-announceRepoChanges :: (?name::String, ?ref::MVar DarcsPatchWatchState) => 
-                       (forall a. LB a -> IO a) -> Repo -> IO Repo
-announceRepoChanges conv r = 
+announceRepoChanges :: Repo -> DWP Repo
+announceRepoChanges r = 
     do let header = "Changes have been made to " ++ repo_location r
-       now <- getClockTime
-       (output, errput) <- runDarcs (repo_location r)
+       now <- liftIO getClockTime
+       (output, errput) <- liftIO $ runDarcs (repo_location r)
        nlines <- 
            if not (null errput)
               then do send (header ++ "\ndarcs failed: " ++ errput)
@@ -231,10 +229,10 @@ announceRepoChanges conv r =
                                         "produced any new lines since last check")
                             else send (header ++ "\n" ++ unlines new)
                          return (length olines)
-       ct <- toCalendarTime now
+       ct <- liftIO $ toCalendarTime now
        return $ r { repo_nlinesAtLastAnnouncement = nlines
                   , repo_lastAnnounced = Just ct }
-    where send s = conv $ ircPrivmsg announceTarget s
+    where send s = ircPrivmsg announceTarget s
 
 runDarcs :: FilePath -> IO (String, String)
 runDarcs loc =
@@ -262,8 +260,8 @@ joinPath p q =
       []    -> q
       _     -> p ++ "/" ++ q
 
-debug :: String -> IO ()
-debug s = putStrLn ("[DarcsPatchWatch] " ++ s)
+debug :: MonadIO m => String -> m ()
+debug s = liftIO $ putStrLn ("[DarcsPatchWatch] " ++ s)
 
 formatTime :: CalendarTime -> String
 formatTime = calendarTimeToString
