@@ -40,11 +40,11 @@ instance Module SearchModule () where
 
 ------------------------------------------------------------------------
 
-searchCmd :: String -> String -> String -> ModuleT s IRC ()
+searchCmd :: String -> String -> String -> LB ()
 searchCmd _ src [] = ircPrivmsg src "Empty search."
 searchCmd engine src rest = do
         result <- liftIO $ query engine rest
-        ircPrivmsg src (extractLoc result)
+        ircPrivmsg' src (extractLoc result)
 
 queryUrl :: String -> String -> String
 queryUrl engine q = prefix ++ urlEncode q ++ suffix
