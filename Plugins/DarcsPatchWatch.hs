@@ -244,13 +244,11 @@ mkMsg r (who,msg,0) = "[" ++ basename r ++ ":" ++ who ++ "] " ++ msg
 mkMsg r (who,msg,n) = (mkMsg r (who,msg,0)) ++ " (and "++show n++" more)"
 
 runDarcs :: FilePath -> IO (String, String)
-runDarcs loc =
-    do (output, errput, _) <- popen darcsCmd ["changes", "--repo=" ++ loc]
-                                Nothing
-       if not (null errput)
-          then info errput
-          else return ()
-       return (output, errput)
+runDarcs loc = do
+        (output, errput, _) <- handle (const $ return ([],[],undefined)) $ 
+                popen darcsCmd ["changes", "--repo=" ++ loc] Nothing
+        when (not (null errput)) $ info errput
+        return (output, errput)
 
 -- Extract the committer, and commit msg from the darcs msg
 parseDarcsMsg :: String -> (String,String,Integer)
