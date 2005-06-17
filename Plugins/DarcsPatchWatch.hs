@@ -217,18 +217,8 @@ watchRepos = withRepos $ \repos setRepos ->
 
 
 checkRepo :: Repo -> LB Repo
-checkRepo repo = 
-    do mtime <- liftIO $ getModificationTime (repo_location repo)
-       case repo_lastAnnounced repo of
-         Nothing                           -> announceRepoChanges repo
-         Just ct | toClockTime ct <= mtime -> announceRepoChanges repo
-                 | otherwise               -> return repo
-
-announceRepoChanges :: Repo -> DWP Repo
-announceRepoChanges r = 
-    do let header = "Changes have been made to " ++ repo_location r
-       now <- liftIO getClockTime
-       (output, errput) <- liftIO $ runDarcs (repo_location r)
+checkRepo r = 
+    do (output, errput) <- liftIO $ runDarcs (repo_location r)
        nlines <- 
          if not (null errput)
             then do send ("\ndarcs failed: " ++ errput)
