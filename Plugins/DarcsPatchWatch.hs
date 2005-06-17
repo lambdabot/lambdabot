@@ -239,8 +239,9 @@ checkRepo r = do
     where 
         send s = ircPrivmsg announceTarget s
 
-mkMsg :: String -> (String,String) -> String
-mkMsg r (who,msg) = "[" ++ basename r ++ ":" ++ who ++ "] " ++ msg
+mkMsg :: String -> (String,String,Integer) -> String
+mkMsg r (who,msg,0) = "[" ++ basename r ++ ":" ++ who ++ "] " ++ msg
+mkMsg r (who,msg,n) = (mkMsg r (who,msg,0)) ++ " (and "++show n++" more)"
 
 runDarcs :: FilePath -> IO (String, String)
 runDarcs loc =
@@ -252,12 +253,19 @@ runDarcs loc =
        return (output, errput)
 
 -- Extract the committer, and commit msg from the darcs msg
-parseDarcsMsg :: String -> (String,String)
+parseDarcsMsg :: String -> (String,String,Integer)
 parseDarcsMsg s = 
-    let (_,rest)  = breakOnGlue "  " s -- two spaces
-        (who,msg) = breakOnGlue "\n" rest
-        who'      = if '@' `elem` who then fst (breakOnGlue "@" who) else who
-    in (dropSpace who', drop 2 {- "* " -} $ dropSpace msg)
+    let (_,rest)   = breakOnGlue "  " s -- two spaces
+        (who,msg') = breakOnGlue "\n" rest
+        (msg,n)    = countRest (drop 1 msg')
+        who'       = if '@' `elem` who then fst (breakOnGlue "@" who) else who
+    in (dropSpace who', drop 2 (dropSpace msg),n)
+    where
+        countRest  s = let (m,r) = breakOnGlue "\n" s in (m, countRest' r)
+
+        countRest' []               = 0
+        countRest' (' ':'*':' ':cs) = 1 + countRest' cs
+        countRest' (_:cs)           = countRest' cs
 
 --
 -- Helpers
