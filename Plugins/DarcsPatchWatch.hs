@@ -261,7 +261,7 @@ parseDarcsMsg s =
         who'       = if '@' `elem` who then fst (breakOnGlue "@" who) else who
     in (dropSpace who', drop 2 (dropSpace msg),n)
     where
-        countRest  s = let (m,r) = breakOnGlue "\n" s in (m, countRest' r)
+        countRest  t = let (m,r) = breakOnGlue "\n" t in (m, countRest' r)
 
         countRest' []               = 0
         countRest' (' ':'*':' ':cs) = 1 + countRest' cs
