@@ -99,5 +99,3 @@ getRandSrcOf ss n = do
               wheres  = mkRegex "^ *where"
               mods    = mkRegex "module"
         
-basename:: String -> String
-basename= reverse . (takeWhile (/= '/')) . reverse

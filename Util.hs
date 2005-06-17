@@ -21,7 +21,10 @@ module Util (
         showClean,
         expandTab,
         closest, closests,
-        withMWriter, parIO, timeout
+        withMWriter, parIO, timeout,
+
+        (</>), (<.>), (<+>), (<>),
+        basename, dirname, dropSuffix, joinPath 
     ) where
 
 import Config
@@ -334,3 +337,44 @@ parIO a1 a2 = do
 timeout :: Int -> IO a -> IO (Maybe a)
 timeout n a = parIO (Just `fmap` a) (threadDelay n >> return Nothing)
 
+------------------------------------------------------------------------
+
+-- some filename manipulation stuff
+
+--
+-- | </>, <.> : join two path components
+--
+infixr 6 </>
+infixr 6 <.>
+
+(</>), (<.>), (<+>), (<>) :: FilePath -> FilePath -> FilePath
+[] </> b = b
+a  </> b = a ++ "/" ++ b
+
+[] <.> b = b
+a  <.> b = a ++ "." ++ b
+
+[] <+> b = b
+a  <+> b = a ++ " " ++ b
+
+[] <> b = b
+a  <> b = a ++ b
+
+basename :: FilePath -> FilePath
+basename p = reverse $ takeWhile (/= '/') $ reverse p
+
+dirname :: FilePath -> FilePath
+dirname p  = 
+    case reverse $ dropWhile (/= '/') $ reverse p of
+        [] -> "."
+        p' -> p'
+
+dropSuffix :: FilePath -> FilePath
+dropSuffix f = reverse . tail . dropWhile (/= '.') $ reverse f
+
+joinPath :: FilePath -> FilePath -> FilePath
+joinPath p q =
+    case reverse p of
+      '/':_ -> p ++ q
+      []    -> q
+      _     -> p ++ "/" ++ q

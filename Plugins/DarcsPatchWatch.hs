@@ -13,6 +13,7 @@ import List ( intersperse, delete )
 import Control.Concurrent
 import Control.Exception
 import Control.Monad.Trans ( liftIO, MonadIO )
+import Control.Monad       ( when )
 import System.Directory
 import System.Time
 
@@ -38,7 +39,7 @@ debugFlag :: Bool
 debugFlag = False
 
 announceTarget :: String
-announceTarget = "#00maja"
+announceTarget = "#z123lambdabot"
 
 inventoryFile :: String
 inventoryFile = "_darcs/inventory"
@@ -215,29 +216,31 @@ watchRepos =
     where sleepTime :: Int  -- in milliseconds
           sleepTime = checkInterval * 1000 * 1000
 
-
-
+-- actually work out if we need to send a message
+--
 checkRepo :: Repo -> LB Repo
-checkRepo r = 
-    do (output, errput) <- liftIO $ runDarcs (repo_location r)
+checkRepo r = do
+       (output, errput) <- liftIO $ runDarcs (repo_location r)
        nlines <- 
          if not (null errput)
             then do send ("\ndarcs failed: " ++ errput)
                     return (repo_nlinesAtLastAnnouncement r)
-            else 
-            let olines = lines output
-                lastN = repo_nlinesAtLastAnnouncement r
-                new = take (length olines - lastN) olines
-                in do if not (null new)
-                         then send ("New patches in " ++ repo_location r 
-                                    ++ "\n" ++ (dropSpace $ unlines new))
-                         else return ()
-                      return (length olines)
+            else do let olines = lines output
+                        lastN = repo_nlinesAtLastAnnouncement r
+                        new = take (length olines - lastN) olines
+                    when (not (null new)) $
+                        send $ mkMsg (repo_location r) (parseDarcsMsg (unlines new))
+                    return (length olines)
+
        now <- liftIO getClockTime
        ct <- liftIO $ toCalendarTime now
        return $ r { repo_nlinesAtLastAnnouncement = nlines
                   , repo_lastAnnounced = Just ct }
-    where send s = ircPrivmsg announceTarget s
+    where 
+        send s = ircPrivmsg announceTarget s
+
+mkMsg :: String -> (String,String) -> String
+mkMsg r (who,msg) = "[" ++ basename r ++ ":" ++ who ++ "] " ++ msg
 
 runDarcs :: FilePath -> IO (String, String)
 runDarcs loc =
@@ -248,6 +251,13 @@ runDarcs loc =
           else return ()
        return (output, errput)
 
+-- Extract the committer, and commit msg from the darcs msg
+parseDarcsMsg :: String -> (String,String)
+parseDarcsMsg s = 
+    let (_,rest)  = breakOnGlue "  " s -- two spaces
+        (who,msg) = breakOnGlue "\n" rest
+        who'      = if '@' `elem` who then fst (breakOnGlue "@" who) else who
+    in (dropSpace who', drop 2 {- "* " -} $ dropSpace msg)
 
 --
 -- Helpers
@@ -257,13 +267,6 @@ mkInventoryPath :: String -> FilePath
 mkInventoryPath prefix = 
     let pref = dropSpace prefix
         in joinPath pref inventoryFile
-
-joinPath :: FilePath -> FilePath -> FilePath
-joinPath p q =
-    case reverse p of
-      '/':_ -> p ++ q
-      []    -> q
-      _     -> p ++ "/" ++ q
 
 debug :: MonadIO m => String -> m ()
 debug s = if debugFlag 
@@ -275,3 +278,4 @@ info s = liftIO $ putStrLn ("[DarcsPatchWatch] " ++ s)
 
 formatTime :: CalendarTime -> String
 formatTime = calendarTimeToString
+
