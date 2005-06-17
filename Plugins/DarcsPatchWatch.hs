@@ -186,9 +186,9 @@ delRepo source rest =
           findRepo x (y:ys) = if cmpRepos x y then (Just y) else findRepo x ys
 
 mkRepo :: String -> LB (Either String Repo)
-mkRepo pref' =
-    do x <- liftIO $ do let path = mkInventoryPath pref'
-                            pref = dropSpace pref'
+mkRepo pref_ =
+    do x <- liftIO $ do let path = mkInventoryPath pref_
+                            pref = dropSpace pref_
                         perms <- getPermissions path
                         return (Right (pref, perms))
                      `catch` (\e -> return $ Left (show e))
@@ -205,10 +205,11 @@ mkRepo pref' =
 --
 
 watchRepos :: DPW ()
-watchRepos = withRepos $ \repos setRepos ->
-    do debug ("checking darcs repositories " ++ showRepos repos)
-       repos' <- mapM checkRepo repos
-       setRepos repos'
+watchRepos = 
+    do withRepos $ \repos setRepos ->
+           do debug ("checking darcs repositories " ++ showRepos repos)
+              repos_ <- mapM checkRepo repos
+              setRepos repos_
        liftIO $ threadDelay sleepTime
        watchRepos
     where sleepTime :: Int  -- in milliseconds
