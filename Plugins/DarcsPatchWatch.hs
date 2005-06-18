@@ -223,7 +223,7 @@ checkRepo r = do
        (output, errput) <- liftIO $ runDarcs (repo_location r)
        nlines <- 
          if not (null errput)
-            then do send ("\ndarcs failed: " ++ errput)
+            then do info ("\ndarcs failed: " ++ errput)
                     return (repo_nlinesAtLastAnnouncement r)
             else do let olines = lines output
                         lastN = repo_nlinesAtLastAnnouncement r
@@ -245,8 +245,7 @@ mkMsg r (who,msg,n) = (mkMsg r (who,msg,0)) ++ " (and "++show n++" more)"
 
 runDarcs :: FilePath -> IO (String, String)
 runDarcs loc = do
-        (output, errput, _) <- handle (const $ return ([],[],undefined)) $ 
-                popen darcsCmd ["changes", "--repo=" ++ loc] Nothing
+        (output, errput, _) <- popen darcsCmd ["changes", "--repo=" ++ loc] Nothing
         when (not (null errput)) $ info errput
         return (output, errput)
 
