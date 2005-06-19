@@ -562,6 +562,11 @@ rules = [
   rr (\g -> uncurryE `a` ((flipE `a` compE `a` g) `c` commaE))
      (\g -> secondE `a` g),
 
+  -- TODO is this the right place?
+  -- [x] --> return x
+  Hard $
+  rr (\x -> consE `a` x `a` nilE)
+     (\x -> returnE `a` x),
   -- list destructors
   Hard $ 
   If (Or [rr consE consE, rr nilE nilE]) $ Or [

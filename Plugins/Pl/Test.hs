@@ -1,5 +1,6 @@
 module Main where
 
+#define READLINE
 #if __GLASGOW_HASKELL__ > 602
 import Test.HUnit
 import Test.QuickCheck hiding (test)
@@ -101,8 +102,11 @@ pf inp = case parsePF inp of
     let d' = mapTopLevel transform d
     print $ d'
     putStrLn "Optimized expression:"
-    print $ mapTopLevel (last . optimize) d'
+    mapM_ print $ mapTopLevel' optimize d'
   Left err -> putStrLn $ err
+
+mapTopLevel' :: Functor f => (Expr -> f Expr) -> TopLevel -> f TopLevel
+mapTopLevel' f tl = case getExpr tl of (e, c) -> fmap c $ f e
 
 pf' :: String -> IO ()
 pf' = putStrLn . (id ||| show) . parsePF
@@ -122,6 +126,11 @@ unitTest inp out = TestCase $ do
 
 unitTests :: Test
 unitTests = TestList [
+  unitTest "f (fix f)" ["fix f"],
+  unitTest "concat ([concat (map h (k a))])" ["h =<< k a"],
+  unitTest "uncurry (const f)" ["f . snd"],
+  unitTest "uncurry const" ["fst"],
+  unitTest "uncurry (const . f)" ["f . fst"],
   unitTest "\\a b -> a >>= \\x -> b >>= \\y -> return (x,y)" ["liftM2 (,)"],
   unitTest "\\b a -> a >>= \\x -> b >>= \\y -> return (x,y)" ["flip liftM2 (,)"],
   unitTest "curry snd" ["const id"],
