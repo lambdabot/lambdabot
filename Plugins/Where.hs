@@ -57,7 +57,7 @@ getWhere :: M.Map String String -> String -> String
 getWhere fm fact =
     case M.lookup fact fm of
         Nothing -> "I know nothing about " ++ fact ++ "."
-        Just x  -> fact ++ ": " ++ x ++ "."
+        Just x  -> x
 
 updateWhere :: Bool -> WhereState -> WhereWriter -> String -> String -> Where LB String
 updateWhere _guard factFM writer fact dat = do 
