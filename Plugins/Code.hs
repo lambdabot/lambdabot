@@ -90,7 +90,7 @@ getRandSrcOf ss n = do
                 | length s < 30                    -> getRandSrcOf ss (n-1)
                 | otherwise                        -> return s -- got it
         }
-        where comment = mkRegex ".*--"
+        where comment = mkRegex "--"
               nested  = mkRegex "{-"
               cpp     = mkRegex "#if"
               cpp'    = mkRegex "#include"
