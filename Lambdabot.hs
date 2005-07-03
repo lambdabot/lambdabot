@@ -60,6 +60,11 @@ import Posix
 import System.IO.Error
 #endif
 
+-- discarding picoseconds is inacceptable here, therfore we can't use AltTime
+-- and instead pray that we won't be bitten in the ass by one of System.Time's
+-- bugs.
+import System.Time
+
 import Data.Char                (toLower, isAlphaNum, isSpace)
 import Data.List                (isSuffixOf, inits, tails)
 import Data.Typeable            (Typeable)
@@ -513,19 +518,29 @@ readerLoop threadmain chanr chanw h
            readerLoop'
 {-# INLINE readerLoop #-}
 
+-- flood control: RFC 2813, section 5.8
 writerLoop :: ThreadId -> Chan IRC.Message -> Handle -> IO ()
 writerLoop threadmain chanw h
-  = do exc <- try writerLoop'
+  = do exc <- try $ writerLoop' $ TOD 0 0
        case exc of
            Left (AsyncException ThreadKilled) 
              -> try (hPutStr h "QUIT :died unexpectedly\r") >> return ()
            Left e  -> throwTo threadmain e
            Right _ -> return ()
   where
-    writerLoop'
+    -- i don't care for readability as long as this thing just works
+    writerLoop' foo
       = do msg <- readChan chanw
+           now <- getClockTime
+           let bar = max foo $ noTimeDiff {tdSec = -10} `addToClockTime` now
+           -- baz is the next time we may say something
+           let baz = noTimeDiff {tdSec = 2} `addToClockTime` bar
+           let diff = baz `diffClockTimes` now
+           when (diff > noTimeDiff) $ 
+             threadDelay $ fromInteger (tdPicosec diff `div` 1000000) + 
+                           1000000 * tdSec diff
            hPutStr h (IRC.encodeMessage msg "\r")
-           writerLoop'
+           writerLoop' baz
 {-# INLINE writerLoop #-}
 
 ------------------------------------------------------------------------
