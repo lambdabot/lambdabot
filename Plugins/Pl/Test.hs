@@ -126,6 +126,13 @@ unitTest inp out = TestCase $ do
 
 unitTests :: Test
 unitTests = TestList [
+  unitTest "flip (-)" ["subtract"],
+  unitTest "\\xs -> [f x | x <- xs, p x]" ["map f . filter p"],
+  unitTest "all id" ["and"],
+  unitTest "any id" ["or"],
+  unitTest "and . map f" ["all f"],
+  unitTest "or . map f" ["any f"],
+  unitTest "return ()" ["return ()"],
   unitTest "f (fix f)" ["fix f"],
   unitTest "concat ([concat (map h (k a))])" ["h =<< k a"],
   unitTest "uncurry (const f)" ["f . snd"],
