@@ -16,6 +16,16 @@ import Control.Monad.Trans (liftIO)
 
 -- withMWriter :: MVar a -> (a -> (a -> IO ()) -> IO b) -> IO b
 -- | Update the module's private state.
+-- This is the preferred way of changing the state. The state will be locked
+-- until the body returns. The function is exception-safe, i.e. even if
+-- an error occurs or the thread is killed (e.g. because it deadlocked and
+-- therefore exceeded its time limit), the state from the last write operation
+-- will be restored. If the writer escapes, calling it will have no observable
+-- effect.
+-- @withMS@ is not composable, in the sense that a readMS from within the body
+-- will cause a dead-lock. However, all other possibilies to access the state
+-- that came to my mind had even more serious deficiencies such as being prone
+-- to race conditions or semantic obscurities.
 withMS :: (s -> (s -> LB ()) -> LB a) -> ModuleT s LB a
 withMS f = lbIO $ \conv -> withMWriter ?ref $ \x writer ->
   conv $ f x (liftIO . writer)
@@ -34,7 +44,7 @@ accessorMS decompose f = withMS $ \s writer ->
 modifyMS :: (s -> s) -> ModuleT s LB ()
 modifyMS f = liftIO $ modifyMVar_ ?ref (return . f)
 
--- | Write the module's private state. Try to use withMS instead
+-- | Write the module's private state. Try to use withMS instead.
 writeMS :: s -> ModuleT s LB ()
 writeMS s = modifyMS (const s)
 
