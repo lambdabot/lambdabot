@@ -20,7 +20,7 @@
 module Plugins.Type (theModule) where
 
 import Lambdabot
-import Util                 (expandTab)
+import Util                 (expandTab, split)
 import PosixCompat          (popen)
 
 import Maybe (mapMaybe)
@@ -75,13 +75,17 @@ go _ _      = []   -- unterminated
 --     match each against the regex, and take the last substring match from
 --     each successful match.
 --
-extract_signatures :: String -> [String]
+extract_signatures :: String -> String
 extract_signatures output
-        = map expandTab . mapMaybe last' . mapMaybe (matchRegex signature_regex) .
-                 reverse . drop 1 . reverse . drop 7 . lines $ output
+        = removeExp . unlines . map expandTab . mapMaybe last' . 
+          mapMaybe (matchRegex signature_regex) .
+          reverse . drop 1 . reverse . drop 7 . lines $ output
         where
         last' [] = Nothing
         last' xs = Just $ last xs
+
+        removeExp :: String -> String
+        removeExp = last . ([]:) . split ":: "
 
 --
 --     With this the command handler can be easily defined using popen:
@@ -92,7 +96,7 @@ query_ghci src cmd expr =
        (output, _, _) <- liftIO $ popen "ghci-6.4" ["-fglasgow-exts","-fno-th"]
 			                  (Just (command cmd (stripComments expr)))
        let ls = extract_signatures output
-       ircPrivmsg src . unlines $ if null ls then ["bzzt"] else ls
+       ircPrivmsg src $ if null ls then "bzzt" else ls
 
 --
 --     And thus the plugin:
