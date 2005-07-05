@@ -20,7 +20,7 @@
 module Plugins.Type (theModule) where
 
 import Lambdabot
-import Util                 (expandTab, split)
+import Util                 (expandTab, breakOnGlue)
 import PosixCompat          (popen)
 
 import Maybe (mapMaybe)
@@ -84,8 +84,11 @@ extract_signatures output
         last' [] = Nothing
         last' xs = Just $ last xs
 
+        -- one problem is kind annotations:
         removeExp :: String -> String
-        removeExp = last . ([]:) . split ":: "
+     -- removeExp = last . ([]:) . split ":: "
+        removeExp = drop (length glue) . snd . breakOnGlue glue
+                where glue = " :: "
 
 --
 --     With this the command handler can be easily defined using popen:
