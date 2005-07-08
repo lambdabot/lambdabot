@@ -43,7 +43,7 @@ readHaddockMap str = fst $ foldl' step (M.empty,M.empty) assocs where
       Nothing -> M.insert v v m
       Just _  -> m
 
--- | make @index ($) work.
+-- | make \@index ($) work.
 stripParens :: String -> String
 stripParens = reverse . dropWhile (==')') . reverse . dropWhile (=='(')
 
