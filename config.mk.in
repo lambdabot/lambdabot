@@ -35,7 +35,7 @@ ifneq "$(static)" "yes"
 PLUGINS=       Dict Dummy Lambda Karma Quote Seen State \
                Topic Type Plugs Babel Version More Pl \
                Help Dice Search Vixen Fact Spell Todo \
-               Haddock Code Hoogle DarcsPatchWatch Where
+               Haddock Code Hoogle DarcsPatchWatch Where Elite
 STATICS=       Base System Dynamic
 LD_OPTS=       -package plugins
 else
@@ -43,7 +43,7 @@ PLUGINS=
 STATICS=       Base System Dict Dummy Lambda Karma \
                Quote Seen State Topic Type Plugs Babel \
                Version More Pl Help Dice Search Vixen Fact \
-               Spell Haddock Code Hoogle DarcsPatchWatch Where
+               Spell Haddock Code Hoogle DarcsPatchWatch Where Elite
 LD_OPTS=       -package network -package posix -package parsec
 endif
 
