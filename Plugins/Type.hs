@@ -20,7 +20,7 @@
 module Plugins.Type (theModule) where
 
 import Lambdabot
-import Util                 (expandTab, breakOnGlue)
+import Util                 (expandTab)
 import PosixCompat          (popen)
 
 import Maybe (mapMaybe)
@@ -84,11 +84,22 @@ extract_signatures output
         last' [] = Nothing
         last' xs = Just $ last xs
 
-        -- one problem is kind annotations:
         removeExp :: String -> String
-     -- removeExp = last . ([]:) . split ":: "
-        removeExp = drop (length glue) . snd . breakOnGlue glue
-                where glue = " :: "
+        removeExp (' ':':':':':' ':xs) = xs
+        removeExp xs = case lex xs of
+          [("(",ys)] -> removeExp $ stripParens 1 ys
+          [("","")]  -> []
+          [(_,ys)]   -> removeExp ys
+          _          -> error "invalid ghci output: unexpected lex behavior"
+
+        stripParens :: Int -> String -> String
+        stripParens 0 xs = xs
+        stripParens n xs = case lex xs of
+          [("(",ys)] -> stripParens (n+1) ys
+          [(")",ys)] -> stripParens (n-1) ys
+          [("","")]  -> error "invalid ghci output: open parenthesis"
+          [(_,ys)]   -> stripParens n     ys
+          _          -> error "invalid ghci output: unexpected lex behavior"
 
 --
 --     With this the command handler can be easily defined using popen:
