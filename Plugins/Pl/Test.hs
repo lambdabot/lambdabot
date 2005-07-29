@@ -126,6 +126,7 @@ unitTest inp out = TestCase $ do
 
 unitTests :: Test
 unitTests = TestList [
+  unitTest "\\f -> f x" ["($ x)"],
   unitTest "flip (-)" ["subtract"],
   unitTest "\\xs -> [f x | x <- xs, p x]" ["map f . filter p"],
   unitTest "all id" ["and"],

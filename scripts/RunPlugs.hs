@@ -7,7 +7,7 @@
 -- | Runplugs: use hs-plugins to run a Haskell expression under
 -- controlled conditions.
 --
-import Eval.Haskell             (unsafeEval)
+import System.Eval.Haskell             (unsafeEval)
 
 import Data.Maybe               (isJust, fromJust)
 import Control.Monad            (when) 
