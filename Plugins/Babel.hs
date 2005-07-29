@@ -41,8 +41,9 @@ instance Module BabelModule Quotes where
         moduleDefState  _       = return M.empty
 
         moduleHelp _ "babel"    = concat `fmap` run_babel' ["help"]
-        moduleHelp _ "remember" = return "@remember <nick> quote - record some memorable phrase"
-        moduleHelp _ "quote"    = return "@quote [nick] - quote somebody randomly"
+        moduleHelp _ "remember" = return help
+        moduleHelp _ "quote-add" = return help
+        moduleHelp _ "quote"    = return help
         moduleHelp _ "timein"   = return "@timein <city>, report the local time in <city>"
         moduleHelp _ "ghc"      = return "GHC!"
         moduleHelp _ _          = return "@babel,@remember,@quote,@timein,@ghc"
@@ -50,7 +51,8 @@ instance Module BabelModule Quotes where
         moduleCmds _            = return ["babel", "remember", "quote", "timein", "ghc" ]
 
         process _ _ src "babel" s      = run_babel src s
-        process _ _ _src "remember"  s = run_remember  s
+        process a b src "remember"  s  = process a b src "quote-add" s -- synonym
+        process _ _ _src "quote-add" s = run_remember  s
         process _ _ src "quote"      s = run_quote    src s
         process _ _ src "ghc"        _ = run_quote    src "ghc"
 --      process _ _ src "last"  s     = run_last  src s
@@ -63,6 +65,10 @@ instance Module BabelModule Quotes where
                     ircPrivmsg src $ "  " ++ o
 
         process _ _ _   _ _ = error "BabelBot: Invalid cmd"
+
+help :: String
+help = "@quote <nick>/@quote-add <nick> <quote>\n" ++
+   "Quote somebody, or a random person, or save a memorable quote"
 
 --
 -- The @babel command.
