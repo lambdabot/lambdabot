@@ -409,6 +409,13 @@ rules = Or [
   -- flip (.) f . flip id --> flip f 
   rr  (\f -> (flipE `a` compE `a` f) `c` (flipE `a` idE))
       (\f -> flipE `a` f),
+  -- flip (.) f . flip flip --> flip (flip . f)
+  rr  (\f -> (flipE `a` compE `a` f) `c` (flipE `a` flipE))
+      (\f -> flipE `a` (flipE `c` f)),
+  -- flip (flip (flip . f) g) --> flip (flip . flip f) g
+  rr1 (\f g -> flipE `a` (flipE `a` (flipE `c` f) `a` g))
+      (\f g -> flipE `a` (flipE `c` flipE `a` f) `a` g),
+  
   -- flip (.) id --> id
   rr (flipE `a` compE `a` idE)
      idE,
@@ -525,6 +532,9 @@ rules = Or [
   -- (x >>=) . (return .) . f  --> flip (fmap . f) x
   rr (\f x -> bindE `a` x `c` (compE `a` returnE) `c` f)
      (\f x -> flipE `a` (fmapIE `c` f) `a` x),
+  -- (>>=) (return f) --> flip id f
+  rr (\f -> bindE `a` (returnE `a` f))
+     (\f -> flipE `a` idE `a` f),
   -- liftM2 f x --> ap (f `fmap` x)
   Hard $
   rr (\f x -> liftM2E `a` f `a` x)
@@ -543,6 +553,13 @@ rules = Or [
   -- (.) -> fmap
   Hard $ 
   rr compE fmapE,
+
+  -- map f (zip xs ys) --> zipWith (curry f) xs ys
+  Hard $
+  rr (\f xs ys -> mapE `a` f `a` (zipE `a` xs `a` ys))
+     (\f xs ys -> zipWithE `a` (curryE `a` f) `a` xs `a` ys),
+  -- zipWith (,) --> zip (,)
+  rr (zipWithE `a` commaE) zipE,
 
   -- all f --> and . map f
   Hard $
@@ -591,13 +608,6 @@ rules = Or [
   -- ap f id --> join f
   rr  (\f -> apE `a` f `a` idE)
       (\f -> joinE `a` f),
-
-  -- map f (zip xs ys) --> zipWith (curry f) xs ys
-  Hard $
-  rr (\f xs ys -> mapE `a` f `a` (zipE `a` xs `a` ys))
-     (\f xs ys -> zipWithE `a` (curryE `a` f) `a` xs `a` ys),
-  -- zipWith (,) --> zip (,)
-  rr (zipWithE `a` commaE) zipE,
 
   -- (=<<) const q --> flip (>>) q
   Hard $ -- ??

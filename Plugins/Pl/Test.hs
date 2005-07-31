@@ -126,6 +126,7 @@ unitTest inp out = TestCase $ do
 
 unitTests :: Test
 unitTests = TestList [
+  unitTest "\\x y z -> return x >>= \\x' -> return y >>= \\y' -> return z >>= \\z' -> f x' y' z'" ["f"],
   unitTest "let (x,y) = (1,2) in y" ["2"],
   unitTest "fix . const" ["id"],
   unitTest "all f . map g" ["all (f . g)"],
@@ -213,7 +214,7 @@ unitTests = TestList [
   unitTest "p x = product [1,2,3,x]" ["p = (6 *)"],
   unitTest "(concat .) . map" ["(=<<)"],
   unitTest "let f ((a,b),(c,d)) = a + b + c + d in f ((1,2),(3,4))" ["10"],
-  unitTest "let x = const 3 y; y = const 4 x in x + y" ["7"], -- yay!
+  unitTest "let x = const 3 y; y = const 4 x in x + y" ["7"] -- yay!
   ]
 
 main :: IO ()
