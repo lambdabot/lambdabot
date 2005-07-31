@@ -6,14 +6,15 @@ import Plugins.Pl.Common
 import Plugins.Pl.Rules
 import Plugins.Pl.PrettyPrinter
 
-import qualified Set as S
+--import qualified Set as S
+import Data.List
 import qualified Map as M
 
 import Data.Graph (stronglyConnComp, flattenSCC, flattenSCCs)
 import Control.Monad.State
 
-nub' :: Ord a => [a] -> [a]
-nub' = S.toList . S.fromList
+nub' :: Eq a => [a] -> [a]
+nub' = nub -- S.toList . S.fromList
 
 occursP :: String -> Pattern -> Bool
 occursP v (PVar v') = v == v'
