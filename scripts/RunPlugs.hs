@@ -21,17 +21,19 @@ import System.Posix.Resource    (setResourceLimit,
 
 rlimit = ResourceLimit 3
 
-context = prehier ++ datas ++ controls
+context = prehier ++ datas ++ qualifieds ++ controls
 
 prehier = ["Char", "List", "Maybe", "Numeric", "Random" ]
 
+qualifieds = ["qualified Data.Map as M", "qualified Data.Set as S"]
+
 datas   = map ("Data." ++) [
                 "Bits", "Bool", "Char", "Dynamic", "Either", 
-                "FiniteMap", "Graph", "Int", "Ix", "List", 
-                "Maybe", "Ratio", "Set", "Tree", "Tuple", "Typeable", "Word" 
+                "Graph", "Int", "Ix", "List", 
+                "Maybe", "Ratio", "Tree", "Tuple", "Typeable", "Word" 
               ]
 
-controls = map ("Control." ++) ["Monad", "Arrow"]
+controls = map ("Control." ++) ["Monad", "Monad.Reader", "Monad.Fix", "Arrow"]
 
 main = do
         setResourceLimit ResourceCPUTime (ResourceLimits rlimit rlimit)
