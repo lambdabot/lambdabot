@@ -50,10 +50,13 @@ toSExpr (App e1 e2) = case e1 of
     -> SInfix v (toSExpr e0) (toSExpr e2)
   Var Inf v | v /= "-"
     -> LeftSection v (toSExpr e2)
+
+  Var _ "flip" | Var Inf v <- e2, v == "-" -> toSExpr $ Var Pref "subtract"
     
-  App (Var _ "flip") (Var Inf v)
-    | v == "-"  -> toSExpr $ Var Pref "subtract" `App` e2
-    | otherwise -> RightSection v (toSExpr e2)
+  App (Var _ "flip") (Var pr v)
+--    | v == "-"  -> toSExpr $ Var Pref "subtract" `App` e2
+    | v == "id" -> RightSection "$" (toSExpr e2)
+    | Inf <- pr -> RightSection v (toSExpr e2)
   _ -> SApp (toSExpr e1) (toSExpr e2)
 
 getHead :: Expr -> Maybe (String, [Expr])

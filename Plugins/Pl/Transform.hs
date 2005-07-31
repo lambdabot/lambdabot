@@ -141,7 +141,8 @@ sizeExpr' e = fromIntegral (length $ show e) + adjust e where
                      | str == ">>="        = 0.05
                      | str == "$"          = 0.01
                      | str == "subtract"   = 0.01
-                     | str == "ap"         = 3
+                     | str == "ap"         = 2
+                     | str == "liftM2"     = 1.01
                      | str == "return"     = -2
                      | str == "zipWith"    = -4
                      | str == "const"      = 0 -- -2
@@ -171,7 +172,6 @@ boundedStep e = red (step e) where
   mx' = mx - 1
 
   red xs | len <= mx = xs
---         | trace (show len) False = bt
          | otherwise = [xs !! ((j*(len-1))`div`mx') | j <- [0..mx']]
     where len = length xs
 

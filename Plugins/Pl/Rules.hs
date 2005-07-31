@@ -164,7 +164,7 @@ idE, flipE, bindE, extE, returnE, consE, appendE, nilE, foldrE, foldlE, fstE,
   fixE, foldl1E, notE, equalsE, nequalsE, plusE, multE, zeroE, oneE, lengthE, 
   sumE, productE, concatE, concatMapE, joinE, mapE, fmapE, fmapIE, subtractE, 
   minusE, liftME, apE, liftM2E, seqME, zipE, zipWithE, 
-  crossE, firstE, secondE :: MExpr
+  crossE, firstE, secondE, andE, orE, allE, anyE :: MExpr
 idE        = Quote $ Var Pref "id"
 flipE      = Quote $ Var Pref "flip"
 constE     = Quote $ Var Pref "const"
@@ -215,6 +215,10 @@ zipWithE   = Quote $ Var Pref "zipWith"
 crossE     = Quote $ Var Inf  "***"
 firstE     = Quote $ Var Pref "first"
 secondE    = Quote $ Var Pref "second"
+andE       = Quote $ Var Pref "and"
+orE        = Quote $ Var Pref "or"
+allE       = Quote $ Var Pref "all"
+anyE       = Quote $ Var Pref "any"
 
 
 
@@ -330,7 +334,15 @@ simplifies = Or [
       (\f g x -> f `a` x `a` (g `a` x)),
   -- flip f x y --> f y x
   rr0 (\f x y -> flipE `a` f `a` x `a` y)
-      (\f x y -> f `a` y `a` x)
+      (\f x y -> f `a` y `a` x),
+
+  -- TODO: Think about map/fmap
+  -- fmap id --> id
+  rr (fmapE `a` idE)
+     (idE),
+  -- map id --> id
+  rr (mapE `a` idE)
+     (idE)
   ]
 
 onceRewrites :: RewriteRule
@@ -429,6 +441,10 @@ rules = [
   Hard $
   rr0 (\f -> fixE `a` f)
       (\f -> f `a` (fixE `a` f)),
+  -- f (fix f) --> fix x
+  Hard $
+  rr0 (\f -> f `a` (fixE `a` f))
+      (\f -> fixE `a` f),
   -- fix f --> f (f (fix x))
   Hard $ 
   rr0 (\f -> fixE `a` f)
@@ -480,6 +496,9 @@ rules = [
   -- join --> (=<<) id
   Hard $
   rr joinE (extE `a` idE),
+  -- join (return x) --> x
+  rr (\x -> joinE `a` (returnE `a` x))
+     (\x -> x),
   -- (return . f) =<< m --> fmap f m
   rr (\f m -> extE `a` (returnE `c` f) `a` m)
      (\f m -> fmapIE `a` f `a` m),
@@ -496,10 +515,29 @@ rules = [
   -- f `fmap` return x --> return (f x)
   rr (\f x -> fmapE `a` f `a` (returnE `a` x))
      (\f x -> returnE `a` (f `a` x)),
+  -- (=<<) . flip (fmap . f) --> flip liftM2 f
+  Hard $
+  rr (\f -> extE `c` flipE `a` (fmapE `c` f))
+     (\f -> flipE `a` liftM2E `a` f),
   
   -- (.) -> fmap
   Hard $ 
   rr compE fmapE,
+
+  -- all f --> and . map f
+  Hard $
+  rr (\f -> allE `a` f)
+     (\f -> andE `c` mapE `a` f),
+  -- and . map f --> all f
+  rr (\f -> andE `c` mapE `a` f)
+     (\f -> allE `a` f),
+  -- any f --> or . map f
+  Hard $
+  rr (\f -> anyE `a` f)
+     (\f -> orE `c` mapE `a` f),
+  -- or . map f --> any f
+  rr (\f -> orE `c` mapE `a` f)
+     (\f -> anyE `a` f),
 
   -- return f `ap` x --> fmap f x
   rr (\f x -> apE `a` (returnE `a` f) `a` x)
@@ -561,6 +599,16 @@ rules = [
   -- uncurry ((. g) . (,)) --> second g
   rr (\g -> uncurryE `a` ((flipE `a` compE `a` g) `c` commaE))
      (\g -> secondE `a` g),
+  -- I think we need all three of them:
+  -- uncurry (const f) --> f .snd
+  rr (\f -> uncurryE `a` (constE `a` f))
+     (\f -> f `c` sndE),
+  -- uncurry const --> fst
+  rr (uncurryE `a` constE)
+     (fstE),
+  -- uncurry (const . f) --> f . fst
+  rr (\f -> uncurryE `a` (constE `c` f))
+     (\f -> f `c` fstE),
 
   -- TODO is this the right place?
   -- [x] --> return x

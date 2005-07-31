@@ -368,7 +368,7 @@ ircPrivmsg who msg = do
   -- Hardcoded defaults: maximal ten lines, maximal 100 chars/line
   mapM_ (ircPrivmsg' who . take 100) $ take 10 sendlines
 
--- TODO: rename
+-- TODO: rename, don't export
 ircPrivmsg' :: String -> String -> IRC ()
 ircPrivmsg' who "" = ircPrivmsg' who " "
 ircPrivmsg' who msg = send $ IRC.privmsg who msg
