@@ -6,15 +6,20 @@ import Plugins.Pl.Common
 import Plugins.Pl.Rules
 import Plugins.Pl.PrettyPrinter
 
---import qualified Set as S
-import Data.List
+import Data.List (nub)
 import qualified Map as M
 
 import Data.Graph (stronglyConnComp, flattenSCC, flattenSCCs)
 import Control.Monad.State
 
-nub' :: Eq a => [a] -> [a]
-nub' = nub -- S.toList . S.fromList
+{-
+nub :: Ord a => [a] -> [a]
+nub = nub' S.empty where
+  nub' _ [] = []
+  nub' set (x:xs)
+    | x `S.member` set = nub' set xs
+    | otherwise = x: nub' (x `S.insert` set) xs
+-}
 
 occursP :: String -> Pattern -> Bool
 occursP v (PVar v') = v == v'
@@ -165,7 +170,7 @@ optimize e = result where
       (new':_) -> return new'
 
 step :: (?first :: Bool) => Expr -> [Expr]
-step e = nub' $ rewrite rules e
+step e = nub $ rewrite rules e
  
 rewrite :: (?first :: Bool) => RewriteRule -> Expr -> [Expr]
 rewrite rl e = case rl of
@@ -174,7 +179,7 @@ rewrite rl e = case rl of
                     in if null e'' then e' else e''
     OrElse r1 r2 -> let e'  = rewrite r1 e
                     in if null e' then rewrite r2 e else e' 
-    Then r1 r2   -> rewrite r2 =<< nub' (rewrite r1 e)
+    Then r1 r2   -> rewrite r2 =<< nub (rewrite r1 e)
     Opt  r       -> e: rewrite r e
     If   p  r    -> if null (rewrite p e) then mzero else rewrite r e
     Hard r       -> if ?first then rewrite r e else mzero

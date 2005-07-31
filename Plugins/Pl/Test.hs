@@ -126,6 +126,7 @@ unitTest inp out = TestCase $ do
 
 unitTests :: Test
 unitTests = TestList [
+  unitTest "fix . const" ["id"],
   unitTest "all f . map g" ["all (f . g)"],
   unitTest "any f . map g" ["any (f . g)"],
   unitTest "liftM2 ($)" ["ap"],

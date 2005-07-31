@@ -378,7 +378,6 @@ onceRewrites = Hard $ Or [
 -- will be derived automatically.
 rules :: RewriteRule
 rules = Or [
-  Hard $ simplifies,
   -- f (g x) --> (f . g) x
   Hard $
   rr  (\f g x -> f `a` (g `a` x)) 
@@ -461,6 +460,9 @@ rules = Or [
   Hard $ 
   rr0 (\f -> fixE `a` f)
       (\f -> f `a` (f `a` (fixE `a` f))),
+  -- fix (const f) --> f
+  rr (\f -> fixE `a` (constE `a` f)) 
+     (\f -> f),
   -- flip const x --> id
   rr  (\x -> flipE `a` constE `a` x)
       (\_ -> idE),
@@ -686,6 +688,8 @@ rules = Or [
          (\_ z -> z),
       -- special rule:
       -- foldl f z [x] --> f z x
+      rr (\f z x -> foldlE `a` f `a` z `a` (returnE `a` x))
+         (\f z x -> f `a` z `a` x),
       rr (\f z x -> foldlE `a` f `a` z `a` (consE `a` x `a` nilE))
          (\f z x -> f `a` z `a` x)
     ] `OrElse` (
@@ -705,7 +709,9 @@ rules = Or [
   up $ CRR (assocL assocOps),
   up $ CRR (assocR assocOps),
   Up (CRR (commutative commutativeOps)) $ down $ Or [CRR $ assocL assocLOps,
-                                                     CRR $ assocR assocROps]
+                                                     CRR $ assocR assocROps],
+
+  Hard $ simplifies
   ] `Then` Opt (up simplifies)
 assocLOps, assocROps, assocOps :: [String]
 assocLOps = ["+", "*", "&&", "||", "max", "min"]
