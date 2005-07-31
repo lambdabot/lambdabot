@@ -280,9 +280,6 @@ simplifies = Or [
   -- (f . g) x --> f (g x)
   rr0 (\f g x -> (f `c` g) `a` x)
       (\f g x -> f `a` (g `a` x)),
-  -- flip (=<<) --> (>>=)
-  rr0 (flipE `a` extE)
-      bindE,
   -- id x --> x
   rr0 (\x -> idE `a` x)
       (\x -> x),
@@ -335,6 +332,9 @@ simplifies = Or [
   -- flip f x y --> f y x
   rr0 (\f x y -> flipE `a` f `a` x `a` y)
       (\f x y -> f `a` y `a` x),
+  -- flip (=<<) --> (>>=)
+  rr0 (flipE `a` extE)
+      bindE,
 
   -- TODO: Think about map/fmap
   -- fmap id --> id
@@ -342,7 +342,17 @@ simplifies = Or [
      (idE),
   -- map id --> id
   rr (mapE `a` idE)
-     (idE)
+     (idE),
+  -- (f . g) . h --> f . (g . h)
+  rr0 (\f g h -> (f `c` g) `c` h)
+      (\f g h -> f `c` (g `c` h)),
+  -- fmap f . fmap g -> fmap (f . g)
+  rr0 (\f g -> fmapE `a` f `c` fmapE `a` g)
+      (\f g -> fmapE `a` (f `c` g)),
+  -- map f . map g -> map (f . g)
+  rr0 (\f g -> mapE `a` f `c` mapE `a` g)
+      (\f g -> mapE `a` (f `c` g))
+  
   ]
 
 onceRewrites :: RewriteRule
@@ -366,10 +376,9 @@ onceRewrites = Hard $ Or [
 -- Now we can state rewrite rules in a nice high level way
 -- Rewrite rules should be as pointful as possible since the pointless variants
 -- will be derived automatically.
-rules :: [RewriteRule]
-rules = [
---  simplifies,
-  up simplifies,
+rules :: RewriteRule
+rules = Or [
+  Hard $ simplifies,
   -- f (g x) --> (f . g) x
   Hard $
   rr  (\f g x -> f `a` (g `a` x)) 
@@ -412,15 +421,18 @@ rules = [
   -- s (const . f) g --> f
   rr1 (\f g -> sE `a` (constE `c` f) `a` g)
       (\f _ -> f),
-  -- s (flip (const . f)) g --> f . g
-  rr1 (\f g -> sE `a` (flipE `a` (constE `c` f)) `a` g)
-      (\f g -> f `c` g),
   -- s (const f) --> (.) f
   rr  (\f -> sE `a` (constE `a` f))
       (\f -> compE `a` f),
   -- s (f . fst) snd --> uncurry f
   rr  (\f -> sE `a` (f `c` fstE) `a` sndE)
       (\f -> uncurryE `a` f),
+  -- fst (join (,) x) --> x
+  rr (\x -> fstE `a` (joinE `a` commaE `a` x))
+     (\x -> x),
+  -- snd (join (,) x) --> x
+  rr (\x -> sndE `a` (joinE `a` commaE `a` x))
+     (\x -> x),
   -- The next two are `simplifies', strictly speaking, but invoked rarely.
   -- uncurry f (x,y) --> f x y
 --  rr  (\f x y -> uncurryE `a` f `a` (commaE `a` x `a` y))
@@ -448,10 +460,14 @@ rules = [
   -- fix f --> f (f (fix x))
   Hard $ 
   rr0 (\f -> fixE `a` f)
-      (\f -> f `a` (f `a` (fixE `a` f))) `Then` simplifies,
+      (\f -> f `a` (f `a` (fixE `a` f))),
   -- flip const x --> id
   rr  (\x -> flipE `a` constE `a` x)
       (\_ -> idE),
+  -- const . f --> flip (const f)
+  Hard $ 
+  rr  (\f -> constE `c` f)
+      (\f -> flipE `a` (constE `a` f)),
   -- not (x == y) -> x /= y
   rr2 (\x y -> notE `a` (equalsE `a` x `a` y))
       (\x y -> nequalsE `a` x `a` y),
@@ -487,6 +503,7 @@ rules = [
     rr  (\x y z -> minusE `a` x `a` (minusE `a` y `a` z))
         (\x y z -> minusE `a` (plusE `a` x `a` y) `a` z)
   ],
+
   Hard onceRewrites,
   -- join (fmap f x) --> f =<< x
   rr (\f x -> joinE `a` (fmapE `a` f `a` x))
@@ -558,7 +575,7 @@ rules = [
 
   -- (f =<< m) x --> f (m x) x
   rr0 (\f m x -> extE `a` f `a` m `a` x)
-      (\f m x -> f `a` (m `a` x) `a` x) `Then` Or rules,
+      (\f m x -> f `a` (m `a` x) `a` x),
   -- (fmap f g x) --> f (g x)
   rr0 (\f g x -> fmapE `a` f `a` g `a` x)
       (\f g x -> f `a` (g `a` x)),
@@ -600,7 +617,7 @@ rules = [
   rr (\g -> uncurryE `a` ((flipE `a` compE `a` g) `c` commaE))
      (\g -> secondE `a` g),
   -- I think we need all three of them:
-  -- uncurry (const f) --> f .snd
+  -- uncurry (const f) --> f . snd
   rr (\f -> uncurryE `a` (constE `a` f))
      (\f -> f `c` sndE),
   -- uncurry const --> fst
@@ -689,7 +706,7 @@ rules = [
   up $ CRR (assocR assocOps),
   Up (CRR (commutative commutativeOps)) $ down $ Or [CRR $ assocL assocLOps,
                                                      CRR $ assocR assocROps]
-  ] 
+  ] `Then` Opt (up simplifies)
 assocLOps, assocROps, assocOps :: [String]
 assocLOps = ["+", "*", "&&", "||", "max", "min"]
 assocROps = [".", "++"]

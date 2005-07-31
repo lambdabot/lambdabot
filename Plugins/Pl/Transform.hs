@@ -120,10 +120,6 @@ toMonadPlus :: MonadPlus m => Maybe a -> m a
 toMonadPlus Nothing = mzero
 toMonadPlus (Just x)= return x
 
--- Missing in the libs
-comparing :: (Ord b) => (a -> b) -> (a -> a -> Ordering)
-comparing p x y = compare (p x) (p y)
-
 type Size = Double
 -- This seems to be a better size for our purposes,
 -- despite being "a little" slower because of the wasteful uglyprinting
@@ -159,24 +155,16 @@ optimize e = result where
 
   simpleStep :: (Size, Expr) -> Maybe (Size, Expr)
   simpleStep t = do 
-    let chn = let ?first = True in boundedStep (snd t)
-        chnn = let ?first = False in boundedStep =<< chn
-        new = minimumBy (comparing fst) . map (sizeExpr' &&& id) $ 
+    let chn = let ?first = True in step (snd t)
+        chnn = let ?first = False in step =<< chn
+        new = filter (\(x,_) -> x < fst t) . map (sizeExpr' &&& id) $ 
                 snd t: chn ++ chnn
-    guard $ fst new < fst t
-    return new
-
-boundedStep :: (?first :: Bool) => Expr -> [Expr]
-boundedStep e = red (step e) where
-  mx = 32
-  mx' = mx - 1
-
-  red xs | len <= mx = xs
-         | otherwise = [xs !! ((j*(len-1))`div`mx') | j <- [0..mx']]
-    where len = length xs
+    case new of
+      [] -> Nothing
+      (new':_) -> return new'
 
 step :: (?first :: Bool) => Expr -> [Expr]
-step e = nub' $ (\r -> rewrite r e) =<< rules
+step e = nub' $ rewrite rules e
  
 rewrite :: (?first :: Bool) => RewriteRule -> Expr -> [Expr]
 rewrite rl e = case rl of
@@ -189,7 +177,10 @@ rewrite rl e = case rl of
     Opt  r       -> e: rewrite r e
     If   p  r    -> if null (rewrite p e) then mzero else rewrite r e
     Hard r       -> if ?first then rewrite r e else mzero
-    _            -> rewDeep rl e
+    Or rs        -> (\x -> rewrite x e) =<< rs
+    RR {}        -> rewDeep rl e
+    CRR {}       -> rewDeep rl e
+    Down {}      -> rewDeep rl e
     
   where -- rew = ...; rewDeep = ...
 
@@ -215,4 +206,3 @@ rew r@(Up     {}) e = rewrite r e
 rew r@(Opt    {}) e = rewrite r e
 rew r@(If     {}) e = rewrite r e
 rew r@(Hard   {}) e = rewrite r e
-
