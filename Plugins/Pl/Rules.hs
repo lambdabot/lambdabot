@@ -274,6 +274,7 @@ commutative ops (Var f op `App` e1 `App` e2)
 commutative ops (Var _ "flip" `App` e@(Var _ op)) | op `elem` ops = Just e
 commutative _ _ = Nothing
 
+-- TODO: Move rules into a file.
 {-# INLINE simplifies #-}
 simplifies :: RewriteRule
 simplifies = Or [

@@ -126,6 +126,7 @@ unitTest inp out = TestCase $ do
 
 unitTests :: Test
 unitTests = TestList [
+  unitTest "let (x,y) = (1,2) in y" ["2"],
   unitTest "fix . const" ["id"],
   unitTest "all f . map g" ["all (f . g)"],
   unitTest "any f . map g" ["any (f . g)"],
@@ -172,10 +173,8 @@ unitTests = TestList [
   unitTest "uncurry (flip (const . flip (,) (snd t))) . ap (,) id" ["flip (,) (snd t)"],
   unitTest "foo = (1, fst foo)" ["foo = (1, 1)"],
   unitTest "foo = (snd foo, 1)" ["foo = (1, 1)"],
---  unitTest "let (x,y) = (1,2) in y" ["2"],
   unitTest "map (+1) [1,2,3]" ["[2, 3, 4]"],
   unitTest "snd . (,) (\\x -> x*x)" ["id"],
---  unitTest "x + (y - (z + x))" ["y - z"], -- We can't reasonably expect that.
   unitTest "return x >>= f" ["f x"],
   unitTest "m >>= return" ["m"],
   unitTest "m >>= \\x -> f x >>= g" ["m >>= f >>= g", "g =<< f =<< m"],
@@ -214,7 +213,7 @@ unitTests = TestList [
   unitTest "p x = product [1,2,3,x]" ["p = (6 *)"],
   unitTest "(concat .) . map" ["(=<<)"],
   unitTest "let f ((a,b),(c,d)) = a + b + c + d in f ((1,2),(3,4))" ["10"],
-  unitTest "let x = const 3 y; y = const 4 x in x + y" ["7"] -- yay!
+  unitTest "let x = const 3 y; y = const 4 x in x + y" ["7"], -- yay!
   ]
 
 main :: IO ()
