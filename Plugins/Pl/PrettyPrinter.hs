@@ -54,7 +54,7 @@ toSExpr (App e1 e2) = case e1 of
   Var _ "flip" | Var Inf v <- e2, v == "-" -> toSExpr $ Var Pref "subtract"
     
   App (Var _ "flip") (Var pr v)
---    | v == "-"  -> toSExpr $ Var Pref "subtract" `App` e2
+    | v == "-"  -> toSExpr $ Var Pref "subtract" `App` e2
     | v == "id" -> RightSection "$" (toSExpr e2)
     | Inf <- pr -> RightSection v (toSExpr e2)
   _ -> SApp (toSExpr e1) (toSExpr e2)
