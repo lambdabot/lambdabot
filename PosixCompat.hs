@@ -20,6 +20,10 @@ type ProcessID = ProcessHandle
 --
 -- Ignoring exit status for now.
 --
+-- You have to ignore SIGPIPE, otherwise popening a non-existing executable
+-- will result in an attempt to write to a closed pipe and crash the wholw
+-- program.
+--
 -- XXX there are still issues. Large amounts of output can cause what
 -- seems to be a dead lock on the pipe write from runplugs, for example.
 -- Posix.popen doesn't have this problem, so maybe we can reproduce its
