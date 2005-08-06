@@ -214,6 +214,7 @@ catchLock = unsafePerformIO $ newEmptyMVar
 withIrcSignalCatch :: (MonadError e m,MonadIO m) => m () -> m ()
 withIrcSignalCatch m 
   = do liftIO $ installHandler sigPIPE Ignore Nothing
+       liftIO $ installHandler sigALRM Ignore Nothing
        threadid <- liftIO $ myThreadId
        withHandlerList ircSignalsToCatch (ircSignalHandler threadid) Nothing m
 
