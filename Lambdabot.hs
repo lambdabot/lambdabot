@@ -213,7 +213,8 @@ catchLock = unsafePerformIO $ newEmptyMVar
 
 withIrcSignalCatch :: (MonadError e m,MonadIO m) => m () -> m ()
 withIrcSignalCatch m 
-  = do threadid <- liftIO $ myThreadId
+  = do liftIO $ installHandler sigPIPE Ignore Nothing
+       threadid <- liftIO $ myThreadId
        withHandlerList ircSignalsToCatch (ircSignalHandler threadid) Nothing m
 
 -- "Phantom Error". Maybe we should handle both errors separately?
