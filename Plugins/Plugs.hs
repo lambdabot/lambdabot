@@ -51,6 +51,7 @@ clean :: String -> String
 clean s | Just _         <- no_io      `matchRegex`    s = "No IO allowed\n"
         | Just _         <- terminated `matchRegex`    s = "Terminated\n"
         | Just _         <- stack_o_f  `matchRegex`    s = "Stack overflow\n"
+        | Just _         <- loop       `matchRegex`    s = "Loop\n"
         | Just (_,_,b,_) <- filename' `matchRegexAll`  s = clean b
         | Just (_,m,_,_) <- nomatch    `matchRegexAll` s = m
         | Just (_,m,_,_) <- ambiguous  `matchRegexAll` s = m
@@ -66,6 +67,7 @@ clean s | Just _         <- no_io      `matchRegex`    s = "No IO allowed\n"
         filepath   = mkRegex "\n*/[^\\.]*.hs:[^:]*:\n* *"
         filename   = mkRegex "\n*<[^>]*>:[^:]*:\n* *"
         filename'  = mkRegex "/tmp/.*\\.hs[^\n]*\n"
+        loop       = mkRegex "runplugs: <<loop>>"
         terminated = mkRegex "waitForProc"
         notinscope = mkRegex "Variable not in scope:[^\n]*"
         stack_o_f  = mkRegex "Stack space overflow"
