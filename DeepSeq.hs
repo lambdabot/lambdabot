@@ -1,12 +1,14 @@
 --
 -- | The 'DeepSeq' module provides 2 strict deep sequencing operators,
--- 'deepSeq' and '$!!'. 
+-- 'deepSeq' and '$!!'.
 --
 -- Cut and paste from
 -- <http://www.haskell.org/pipermail/haskell/2001-August/007712.html>
 --
 module DeepSeq where
 
+-- | The 'DeepSeq' class defines the types a which can be run strictly
+--   deep sequenced.
 class DeepSeq a where
   deepSeq :: a -> b -> b
   deepSeq = seq			-- default, for simple cases
@@ -15,6 +17,9 @@ infixr 0 `deepSeq`, $!!
 
 ($!!) :: (DeepSeq a) => (a -> b) -> a -> b
 f $!! x = x `deepSeq` f x
+
+-----------------------------------------------------------------------
+-- Instance declarations follow
 
 instance  DeepSeq ()
 
