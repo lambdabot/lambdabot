@@ -226,11 +226,11 @@ readM s = case [x | (x,t) <- reads s, ("","") <- lex t] of
 dropSpace :: [Char] -> [Char]
 dropSpace = let f = reverse . dropWhile isSpace in f . f
 
---clean x | x `elem` specials = ['\\',x]
+-- | 'clean' takes a Char x and returns [x] unless the Char is '\CR' in
+--   case [] is returned.
 clean :: Char -> [Char]
 clean x | x == '\CR' = []
         | otherwise         = [x]
-        -- where specials = "\\"
 
 ------------------------------------------------------------------------
 
