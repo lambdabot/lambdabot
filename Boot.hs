@@ -13,7 +13,7 @@
 --
 -- This is the only module that depends on -package plugins.
 --
--- Compile with: 
+-- Compile with:
 --      ghc-6.4 -fglasgow-exts -package plugins -main-is Boot.main Boot.hs
 --
 
@@ -39,7 +39,7 @@ mainSym  = "dynmain"        -- main entry point
 --
 -- todo, link statically and dynamically, a module with a Module type we
 -- can convert hs-plugins type to.
--- 
+--
 main :: IO ()
 main = do
     status  <- load lambdabotMain ["."] [] mainSym
@@ -52,7 +52,7 @@ main = do
     dynmain hsplugins
 
 ------------------------------------------------------------------------
--- Plugin.Loader wrappers passed over to the 
+-- Plugin.Loader wrappers passed over to the
 
 type MainType = S.DynLoad -> IO ()
 
@@ -69,7 +69,7 @@ dLoad p s = do
 -- | Unload a module, given the path to that module
 dUnload :: S.Module -> IO ()
 dUnload (S.Module p) = do
-    mm <- atomicModifyIORef modules $ \fm -> 
+    mm <- atomicModifyIORef modules $ \fm ->
         case M.lookup p fm of
             Nothing -> (fm,Nothing)    -- fail silently
             Just m  -> (M.delete p fm, Just m)
