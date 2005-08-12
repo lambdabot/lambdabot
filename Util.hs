@@ -24,7 +24,7 @@ module Util (
         withMWriter, parIO, timeout,
 
         (</>), (<.>), (<+>), (<>),
-        basename, dirname, dropSuffix, joinPath 
+        basename, dirname, dropSuffix, joinPath
     ) where
 
 import Config
@@ -37,7 +37,7 @@ import Data.Char                (isSpace, toLower)
 import Control.Monad.State      (when,MonadIO(..))
 
 import Data.IORef               (newIORef, readIORef, writeIORef)
-import Control.Concurrent       (MVar, newEmptyMVar, takeMVar, tryPutMVar, putMVar, 
+import Control.Concurrent       (MVar, newEmptyMVar, takeMVar, tryPutMVar, putMVar,
                                  forkIO, killThread, threadDelay)
 import Control.Exception        (bracket)
 
@@ -81,14 +81,14 @@ breakOnGlue :: (Eq a) => [a] -- ^ Glue that holds pieces together
 breakOnGlue _ [] = ([],[])
 breakOnGlue glue rest@(x:xs)
     | glue `isPrefixOf` rest = ([], rest)
-    | otherwise = (x:piece, rest') 
+    | otherwise = (x:piece, rest')
         where (piece, rest') = breakOnGlue glue xs
 {-# INLINE breakOnGlue #-}
 
 -- | Reverse cons. Add an element to the back of a list. Example:
 --
 -- > snoc 3 [2, 1] ===> [2, 1, 3]
-snoc :: a -- ^ Element to be added 
+snoc :: a -- ^ Element to be added
      -> [a] -- ^ List to add to
      -> [a] -- ^ Result: List ++ [Element]
 snoc x xs = xs ++ [x]
@@ -253,17 +253,17 @@ expandTab (x:xs)    = x : expandTab xs
 -- (this may not be desirable, e.g. "mroe" -> "moo", not "more"
 --
 closest :: String -> [String] -> (Int,String)
-closest pat ss = minimum ls 
+closest pat ss = minimum ls
     where
         ls = map (\s -> (levenshtein pat s,s)) ss
 
 closests :: String -> [String] -> (Int,[String])
-closests pat ss = 
+closests pat ss =
     let (m,_) = minimum ls
     in (m, map snd (filter ((m ==) . fst) ls))
     where
         ls = map (\s -> (levenshtein pat s,s)) ss
-        
+
 --
 -- | Levenshtein edit-distance algorithm
 -- Transated from an Erlang version by Fredrik Svensson and Adam Lindberg
@@ -303,7 +303,7 @@ levenshtein :: (Eq a) => [a] -> [a] -> Int
 levenshtein [] [] = 0
 levenshtein s  [] = length s
 levenshtein [] s  = length s
-levenshtein (s:ss) (t:ts)   = 
+levenshtein (s:ss) (t:ts)   =
     min3 (eq + (levenshtein  ss ts))
          (1  + (levenshtein (ss++[s]) ts))
          (1  + (levenshtein  ss (ts++[t])))
@@ -316,7 +316,7 @@ levenshtein (s:ss) (t:ts)   =
 
 -- | Thread-safe modification of an MVar.
 withMWriter :: MVar a -> (a -> (a -> IO ()) -> IO b) -> IO b
-withMWriter mvar f = bracket 
+withMWriter mvar f = bracket
   (do x <- takeMVar mvar; ref <- newIORef x; return (x,ref))
   (\(_,ref) -> tryPutMVar mvar =<< readIORef ref)
   (\(x,ref) -> f x $ writeIORef ref)
@@ -364,7 +364,7 @@ basename :: FilePath -> FilePath
 basename p = reverse $ takeWhile (/= '/') $ reverse p
 
 dirname :: FilePath -> FilePath
-dirname p  = 
+dirname p  =
     case reverse $ dropWhile (/= '/') $ reverse p of
         [] -> "."
         p' -> p'
