@@ -15,6 +15,7 @@ module Util (
         debugStrLn,
         lowerCaseString, upperCaseString,
 	upperize, lowerize,
+	quote,
         listToStr,
         Serializer (..), stdSerializer, mapSerializer, listSerializer,
         getRandItem, stdGetRandItem,
@@ -153,13 +154,18 @@ upperCaseString = map toUpper
 --   if the string is empty, the empty string is returned.
 lowerize :: String -> String
 lowerize [] = []
-lowerize c:cs = toLower c:cs
+lowerize (c:cs) = toLower c:cs
 
 -- | 'upperize' forces the first char of a string to be uppercase.
 --   if the string is empty, the empty string is returned.
 upperize :: String -> String
 upperize [] = []
-upperize c:cs = toUpper c:cs
+upperize (c:cs) = toUpper c:cs
+
+-- | 'quote' puts a string into quotes but does not escape quotes in
+--   the string itself.
+quote  :: String -> String
+quote x = "\"" ++ x ++ "\""
 
 -- | Form a list of terms using a single conjunction. Example:
 --
