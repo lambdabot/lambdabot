@@ -46,9 +46,9 @@ main = do argv <- getArgs
 --
 
 process :: [String] -> [String]
-process m = concat [begin, 
-                    map doimport m, 
-                    middle, 
+process m = concat [begin,
+                    map doimport m,
+                    middle,
                     map doload m]
  where
     begin        = ["module Modules where", "import Lambdabot", ""]
