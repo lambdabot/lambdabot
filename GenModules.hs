@@ -51,28 +51,17 @@ process m = concat [begin,
                     middle,
                     map doload m]
  where
+    canon = (Util.dropSpace.)
+    canonU = canon Util.upperize
+    canonL = canon Util.lowerize
     begin        = ["module Modules where", "import Lambdabot", ""]
-    doimport nm  = "import qualified Plugins." ++ (Util.dropSpace . upperise) nm
+    doimport nm  = "import qualified Plugins." ++ canonU nm
     middle       = ["","loadStaticModules :: LB ()","loadStaticModules"," = do"]
-    doload nm   = " ircInstallModule Plugins." ++ (Util.dropSpace . upperise) nm  ++ 
-                     ".theModule " ++ show (Util.dropSpace . lowerise $ nm)
+    doload nm   = " ircInstallModule Plugins." ++ canonU nm  ++
+                     ".theModule " ++ show (canonL $ nm)
 
 process2 :: [String] -> String
-process2 ms = "\nplugins :: [String]\n" ++ concat ("plugins = [" : 
-                        intersperse ", " 
-                           (map (quote.lowerise) ms)) ++ "]\n"
-
-------------------------------------------------------------------------
-
-quote  :: String -> String
-quote x = "\"" ++ x ++ "\""
-
-upperise :: [Char] -> [Char]
-upperise [] = []
-upperise (c:cs) = toUpper c:cs
-
-lowerise :: [Char] -> [Char]
-lowerise [] = []
-lowerise (c:cs) = toLower c:cs
-
+process2 ms = "\nplugins :: [String]\n" ++ concat ("plugins = [" :
+                        intersperse ", "
+                           (map (Util.quote . Util.lowerize) ms)) ++ "]\n"
 
