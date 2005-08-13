@@ -13,7 +13,8 @@ module Util (
         firstWord,
         debugStr,
         debugStrLn,
-        lowerCaseString,
+        lowerCaseString, upperCaseString,
+	upperize, lowerize,
         listToStr,
         Serializer (..), stdSerializer, mapSerializer, listSerializer,
         getRandItem, stdGetRandItem,
@@ -33,7 +34,7 @@ import qualified Map as M       (toList, fromList)
 
 import Data.List                (intersperse, isPrefixOf)
 import Data.Maybe               (mapMaybe)
-import Data.Char                (isSpace, toLower)
+import Data.Char                (isSpace, toLower, toUpper)
 import Control.Monad.State      (when,MonadIO(..))
 
 import Data.IORef               (newIORef, readIORef, writeIORef)
@@ -142,6 +143,23 @@ debugStrLn x = debugStr ( x ++ "\n" )
 lowerCaseString :: String -> String
 lowerCaseString = map toLower
 
+-- | 'upperCaseString' transforms the string given to upper case.
+--
+-- > Example: upperCaseString "MiXeDcaSe" ===> "MIXEDCASE"
+upperCaseString :: String -> String
+upperCaseString = map toUpper
+
+-- | 'lowerize' forces the first char of a string to be lowercase.
+--   if the string is empty, the empty string is returned.
+lowerize :: String -> String
+lowerize [] = []
+lowerize c:cs = toLower c:cs
+
+-- | 'upperize' forces the first char of a string to be uppercase.
+--   if the string is empty, the empty string is returned.
+upperize :: String -> String
+upperize [] = []
+upperize c:cs = toUpper c:cs
 
 -- | Form a list of terms using a single conjunction. Example:
 --
