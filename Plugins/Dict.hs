@@ -73,7 +73,7 @@ dictNames = sort (map fst dictTable)
 
 quickHelp :: String
 quickHelp = unlines [ "Supported dictionary-lookup commands:"
-                    , "  " ++ join " " (map ('@':) dictNames)
+                    , "  " ++ concatWith " " (map ('@':) dictNames)
                     , "Use \"@dict-help [cmd...]\" for more."
                     ]
 
@@ -111,8 +111,8 @@ parseTerms = pW . words
     where
     pW []  = []
     pW (w@(f:_):ws)
-        | f `elem` "'\"" = join " " qws : pW ws'
-        | last w == '\\' = let (w':rest) = pW ws in join " " [w, w'] : rest
+        | f `elem` "'\"" = concatWith " " qws : pW ws'
+        | last w == '\\' = let (w':rest) = pW ws in concatWith " " [w, w'] : rest
         | otherwise      = w : pW ws
         where
         (qws, ws') = case break isCloseQuotedWord (w:ws) of

@@ -5,7 +5,7 @@ module Plugins.Haddock (theModule) where
 
 import Lambdabot
 import LBState
-import Util (Serializer(..), join, readM)
+import Util (Serializer(..), concatWith, readM)
 import qualified Map as M
 import Data.Maybe (mapMaybe)
 import Data.List  (foldl')
@@ -21,12 +21,13 @@ instance Module HaddockModule HaddockState where
     moduleHelp    _ _ = return "@index - yay!"
     moduleCmds      _ = return ["index"]
     moduleDefState  _ = return M.empty
-    moduleSerialize _ = Just $ Serializer { 
+    moduleSerialize _ = Just $ Serializer {
       deSerialize = Just . readHaddockMap,
       serialize = const Nothing }
     process      _ _ target _ rest = do
        assocs <- readMS
-       ircPrivmsg target $ maybe "bzzt" (Util.join ", ") (M.lookup (stripParens rest) assocs)
+       ircPrivmsg target $ maybe "bzzt" (Util.concatWith ", ")
+		                        (M.lookup (stripParens rest) assocs)
 
 -- | This sucks, but we've got to do something about memory consumption.
 --   I would have expected a greater effect though, after all there are

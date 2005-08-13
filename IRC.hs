@@ -2,7 +2,7 @@ module IRC where
 
 import DeepSeq
 import Util (split, breakOnGlue, clean)
-import qualified Util (join) -- TODO: rename the damn thing.
+import qualified Util (concatWith) -- TODO: rename the damn thing.
 
 data Message
   = Message {
@@ -61,7 +61,7 @@ part :: String -> Message
 part loc = mkMessage "PART" [loc]
 
 names :: [String] -> Message
-names chans = mkMessage "NAMES" [Util.join "," chans]
+names chans = mkMessage "NAMES" [Util.concatWith "," chans]
 
 {-
 ircRead :: IRC Message

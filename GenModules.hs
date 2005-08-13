@@ -155,6 +155,6 @@ breakOnGlue :: (Eq a) => [a] -> [a] -> ([a],[a])
 breakOnGlue _ []                = ([],[])
 breakOnGlue glue rest@(x:xs)
     | glue `isPrefixOf` rest    = ([], rest)
-    | otherwise                 = (x:piece, rest') 
+    | otherwise                 = (x:piece, rest')
         where (piece, rest') = breakOnGlue glue xs
 

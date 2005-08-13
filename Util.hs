@@ -2,7 +2,7 @@
 -- | String and other utilities
 --
 module Util (
-        join,
+        concatWith,
         split,
         breakOnGlue,
         clean,
@@ -45,15 +45,13 @@ import System.Random hiding (split)
 
 ------------------------------------------------------------------------
 
--- TODO: rename join, clashes with Monad.join
-
--- | Join lists with the given glue elements. Example:
+-- | 'concatWith' joins lists with the given glue elements. Example:
 --
--- > join ", " ["one","two","three"] ===> "one, two, three"
-join :: [a]   -- ^ Glue to join with
-     -> [[a]] -- ^ Elements to glue together
-     -> [a]   -- ^ Result: glued-together list
-join glue xs = (concat . intersperse glue) xs
+-- > concatWith ", " ["one","two","three"] ===> "one, two, three"
+concatWith:: [a]   -- ^ Glue to join with
+	  -> [[a]] -- ^ Elements to glue together
+	  -> [a]   -- ^ Result: glued-together list
+concatWith glue xs = (concat . intersperse glue) xs
 
 
 -- | Split a list into pieces that were held together by glue.  Example:
@@ -236,7 +234,7 @@ clean x | x == '\CR' = []
 
 -- | show a list without heavyweight formatting
 showClean :: (Show a) => [a] -> String
-showClean s = join " " (map (init . tail . show) s)
+showClean s = concatWith " " (map (init . tail . show) s)
 
 -- | untab an string
 expandTab :: String -> String
