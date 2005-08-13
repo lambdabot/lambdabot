@@ -24,19 +24,16 @@ main = do argv <- getArgs
           if argv /= ["--depends"]
            -- write static/dynamic imports file
            then do
-                let (plugins,statics) = breakcsv "," argv
-                    src               = unlines (process statics)
-                                           ++ process2 plugins
+                let (plugins,statics) = breakCSV "," argv
+                    src               = unlines (processStatics statics)
+                                           ++ processDynamics plugins
                 writeFile outfile src
 
            -- generate a dependency tree.
            -- must run after we've built the lambdabot.
            else error "Dynamic dependencies obsoleted by hs-plugins"
 
-    where breakcsv p = (\(a,b) -> (a,tail b)) . (break (== p))
-          nodot []       = []
-          nodot ('.':cs) = '/':nodot cs
-          nodot (c:cs)   = c  :nodot cs
+    where breakCSV p = (\(a,b) -> (a,tail b)) . (break (== p))
 
 ------------------------------------------------------------------------
 
@@ -44,9 +41,8 @@ main = do argv <- getArgs
 -- there's an assumption that plugins are only capitalised in their
 -- first letter.
 --
-
-process :: [String] -> [String]
-process m = concat [begin,
+processStatics :: [String] -> [String]
+processStatics m = concat [begin,
                     map doimport m,
                     middle,
                     map doload m]
@@ -60,8 +56,8 @@ process m = concat [begin,
     doload nm   = " ircInstallModule Plugins." ++ canonU nm  ++
                      ".theModule " ++ show (canonL $ nm)
 
-process2 :: [String] -> String
-process2 ms = "\nplugins :: [String]\n" ++ concat ("plugins = [" :
+processDynamics :: [String] -> String
+processDynamics ms = "\nplugins :: [String]\n" ++ concat ("plugins = [" :
                         intersperse ", "
                            (map (Util.quote . Util.lowerize) ms)) ++ "]\n"
 
