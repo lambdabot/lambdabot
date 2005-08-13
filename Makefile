@@ -94,7 +94,7 @@ Modules.hs: config.mk GenModules
 
 GenModules: GenModules.hs
 	@$(GHC) $(HC_OPTS) -package mtl \
-	  Util.hs Map.hs Config.hs GenModules.hs -o GenModules
+	  Config.hs Map.hs Util.hs GenModules.hs -o GenModules
 
 #
 # Link the bot.
