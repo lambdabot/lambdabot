@@ -43,13 +43,14 @@ main = do argv <- getArgs
 --
 processStatics :: [String] -> [String]
 processStatics m = concat [begin,
-                    map doimport m,
-                    middle,
-                    map doload m]
+			   map doimport m,
+			   middle,
+			   map doload m]
  where
     canon = (Util.dropSpace.)
     canonU = canon Util.upperize
     canonL = canon Util.lowerize
+
     begin        = ["module Modules where", "import Lambdabot", ""]
     doimport nm  = "import qualified Plugins." ++ canonU nm
     middle       = ["","loadStaticModules :: LB ()","loadStaticModules"," = do"]
