@@ -1,7 +1,6 @@
 --
--- | Lambdabot monad and IRC protocol binding
--- TODO : refactor this. Especially the MODULE stuff which has nothing
--- to do with the IRC protocol.
+-- | Lambdabot monad and parts of the IRC protocol binding
+-- TODO : Move IRC protocol stuff into IRC.hs.
 --
 module Lambdabot (
         MODULE(..), Module(..),
@@ -9,7 +8,6 @@ module Lambdabot (
 
         IRC.Message(..), 
         IRCRState(..), IRCRWState(..), IRCError(..), 
-        IRC,
 
         LB, mapLB, lbIO,
 
@@ -107,7 +105,7 @@ data Connection = Connection {
 
 type Callback = IRC.Message -> LB ()
 -- | target, message
-type OutputFilter = String -> [String] -> IRC [String]
+type OutputFilter = String -> [String] -> LB [String]
 -- type OutputFilter = String -> [String] -> ContT [String] IRC [String]
 
 -- | Global read\/write state.
@@ -143,14 +141,13 @@ newtype SignalException = SignalException Signal
 withHandler :: (MonadIO m,MonadError e m)
             => Signal 
             -> Handler 
-            -> Maybe SignalSet 
             -> m () 
             -> m ()
 #ifdef mingw32_HOST_OS
-withHandler s h ss m = return ()
+withHandler s h m = return ()
 #else
-withHandler s h ss m 
-  = bracketError (liftIO $ installHandler s h ss)
+withHandler s h m 
+  = bracketError (liftIO $ installHandler s h Nothing)
                  (\oldh -> liftIO $ installHandler s oldh Nothing)
                  (\_ -> m)
 #endif
@@ -158,10 +155,9 @@ withHandler s h ss m
 withHandlerList :: (MonadError e m,MonadIO m)
                 => [Signal]
                 -> (Signal -> Handler) 
-                -> Maybe SignalSet 
                 -> m () 
                 -> m ()
-withHandlerList sl h ss m = foldr (\s -> withHandler s (h s) ss) m sl
+withHandlerList sl h m = foldr (\s -> withHandler s (h s)) m sl
 
 -- be careful adding signals, some signals can't be caught and installHandler
 -- just raises an exception if you try
@@ -216,16 +212,12 @@ withIrcSignalCatch m
   = do liftIO $ installHandler sigPIPE Ignore Nothing
        liftIO $ installHandler sigALRM Ignore Nothing
        threadid <- liftIO $ myThreadId
-       withHandlerList ircSignalsToCatch (ircSignalHandler threadid) Nothing m
+       withHandlerList ircSignalsToCatch (ircSignalHandler threadid) m
 
 -- "Phantom Error". Maybe we should handle both errors separately?
 data IRCError = IRCRaised Exception 
               | SignalCaught Signal 
   deriving Show
-
-
-{-# DEPRECATED IRC "Use LB instead" #-}
-type IRC = LB
 
 -- | The IRC Monad. The reader transformer holds information about the
 --   connection to the IRC server.
@@ -288,7 +280,7 @@ type ModuleT s m a = (?ref :: MVar s, ?name :: String) => m a
 -- Name !!!
 type ModState s a = (?ref :: MVar s, ?name :: String) => a
 
-ircSignOn :: String -> String -> IRC ()
+ircSignOn :: String -> String -> LB ()
 ircSignOn nick ircname = do 
     server <- asks ircServer
     -- TODO: Move this to IRC?
@@ -310,23 +302,23 @@ ircGetChannels = do
 -- after that they return and the connection will probably be forcibly
 -- closed by the finallyError in runIrc'
 
-ircQuit :: String -> IRC ()
+ircQuit :: String -> LB ()
 ircQuit msg = do 
     modify $ \state -> state { ircStayConnected = False }
     send $ IRC.quit msg
     liftIO $ threadDelay 1000
 
-ircReconnect :: String -> IRC ()
+ircReconnect :: String -> LB ()
 ircReconnect msg = do 
     send $ IRC.quit msg
     liftIO $ threadDelay 1000
 
-ircRead :: IRC IRC.Message
+ircRead :: LB IRC.Message
 ircRead = do 
     chanr <- asks ircReadChan
     liftIO (readChan chanr)
 
-send :: IRC.Message -> IRC ()
+send :: IRC.Message -> LB ()
 send line = do  
     chanw <- asks ircWriteChan
     -- use DeepSeq's $!! to ensure that any Haskell errors in line
@@ -363,7 +355,7 @@ reduceIndent _ msg = return $ map redLine msg where
 --   of it is saved in the (global) more-state.
 ircPrivmsg :: String -- ^ The channel\/user.
    -> String         -- ^ The message.
-   -> IRC ()
+   -> LB ()
 ircPrivmsg who msg = do 
   filters <- gets ircOutputFilters
   sendlines <- foldr (\f -> (=<<) (f who)) (return $ lines msg) $ map snd filters
@@ -371,7 +363,7 @@ ircPrivmsg who msg = do
   mapM_ (ircPrivmsg' who . take 100) $ take 10 sendlines
 
 -- TODO: rename, don't export
-ircPrivmsg' :: String -> String -> IRC ()
+ircPrivmsg' :: String -> String -> LB ()
 ircPrivmsg' who "" = ircPrivmsg' who " "
 ircPrivmsg' who msg = send $ IRC.privmsg who msg
 
@@ -407,7 +399,7 @@ handleIrc handler m = catchError m $ \e -> case e of
 --
 -- | run the IRC monad
 --
-runIrc :: LB a -> IRC () -> S.DynLoad -> IO ()
+runIrc :: LB a -> LB () -> S.DynLoad -> IO ()
 runIrc initialise m ld = withSocketsDo $ do
         ex <- try $ evalLB
                  (initialise >> withIrcSignalCatch (runIrc' m))
@@ -439,7 +431,7 @@ traceException :: (MonadIO m,MonadException m) => m a -> m a
 traceException = handleM (\e -> liftIO (print e) >> throwM e)
 -}
 
-runIrc' :: IRC () -> LB ()
+runIrc' :: LB () -> LB ()
 runIrc' m = do  
         let portnum  = PortNumber $ fromIntegral (Config.port Config.config)
 
@@ -580,7 +572,7 @@ class Module m s | m -> s where
         -> String        -- ^ target
         -> String        -- ^ command
         -> String        -- ^ the arguments to the command
-        -> ModuleT s IRC () 
+        -> ModuleT s LB () 
 
     modulePrivs _     = return []
     moduleExit _      = return ()
@@ -699,7 +691,7 @@ ircInstallOutputFilter f = modify $ \s ->
 
 -- | Checks if the given user has admin permissions and excecute the action
 --   only in this case.
-checkPrivs :: IRC.Message -> IRC Bool
+checkPrivs :: IRC.Message -> LB Bool
 checkPrivs msg = gets (isJust . M.lookup (IRC.nick msg) . ircPrivilegedUsers)
 
 -- | Interpret an expression in the context of a module.
