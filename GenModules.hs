@@ -36,73 +36,6 @@ main = do argv <- getArgs
           nodot ('.':cs) = '/':nodot cs
           nodot (c:cs)   = c  :nodot cs
 
-
-{-
--- obsoleted by hs-plugins
-        do
-                raw <- getContents      -- list of ghc --show-iface output
-
-                let syn'      = parse raw
-                    (_,ds,ps) = unzip3 syn'
-
-                let pkgs' = (foldr1 (++) ps) \\ ["Cabal"]
-
-                -- now find any unspecified dependencies in the package.conf
-                deppkgs <- findDepends pkgs'
-
-                -- and just the packages we need are left, in the right order
-                let pkgs   = (nub . foldr1 (++) $ deppkgs ++ [pkgs']) \\ ["rts"]
-    
-                -- a common subset of modules
-                let coremods  = foldr1 intersect $ ds
-
-                -- assoc list of modules to their imports
-                let deplist   = map (\(a,b,_) -> 
-                                        (a++".o"
-                                        ,map (\s -> (nodot s)++".o") (b \\  coremods))) syn'
-
-                let deps      = Depends { reqObjs = coremods,
-                                          reqPkgs = pkgs,
-                                          depList = deplist }
-
-                writeFile outfile' (show deps)
-
--- ---------------------------------------------------------------------
---
--- parse output of ghc --show-iface
-
-parse :: String -> [(String, [String], [String])]
-parse s = map parseModule (split "#\n" s)
-
-parseModule :: String -> (String, [String], [String])
-parseModule s =
-        let (modname, bs) = breakOnGlue one s
-            (_, cs)       = breakOnGlue "module dependencies: " bs
-            ds            = drop (length two) cs
-            (deps,es)     = breakOnGlue "package dependencies: " ds
-            pkgs          = drop (length three) es
-
-        in (modname ,cleanls deps, map dropVersion (cleanls pkgs))
-
-        where one     = ".hi"
-              two     = "module dependencies: "
-              three   = "package dependencies: "
-              cleanls = split " " . clean . squish
-
-              -- strip \n, \t, and squish repeated ' '
-              squish [] = []
-              squish (c:cs) 
-                | c == '\t'     = squish cs
-                | c == '\n'     = squish cs
-                | c == ' '      = c : squish (dropWhile (== ' ') cs)
-                | otherwise     = c : squish cs
-
-              -- drop cabal vers string fromm, e.g, "base-1.0"
-              dropVersion [] = []
-              dropVersion ('-':c:_) | isDigit c = []
-              dropVersion (c:cs) = c : dropVersion cs
--}
-
 ------------------------------------------------------------------------
 
 --
@@ -142,19 +75,4 @@ lowerise (c:cs) = toLower c:cs
 
 clean :: [Char] -> [Char]
 clean = let f = reverse . dropWhile isSpace in f . f
-
-split :: (Eq a) => [a] -> [a] -> [[a]]
-split glue xs = split' xs
-  where
-    split' []  = []
-    split' xs' = let (as, bs) = breakOnGlue glue xs'
-                 in as : split' (dropGlue bs)
-    dropGlue = drop (length glue)
-
-breakOnGlue :: (Eq a) => [a] -> [a] -> ([a],[a])
-breakOnGlue _ []                = ([],[])
-breakOnGlue glue rest@(x:xs)
-    | glue `isPrefixOf` rest    = ([], rest)
-    | otherwise                 = (x:piece, rest')
-        where (piece, rest') = breakOnGlue glue xs
 
