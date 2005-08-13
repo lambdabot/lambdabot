@@ -16,7 +16,8 @@ theModule :: MODULE
 theModule = MODULE $ TopicModule ()
 
 instance Module TopicModule () where
-  moduleHelp _ _ = return "Various commands for adjusting the channel topic\nUsage: @topic-XXX #chan <string>"
+  moduleHelp _ _ = return $ concat ["Various commands for adjusting the channel topic\n",
+				    "Usage: @topic-XXX #chan <string>"]
   moduleCmds   _ = return ["topic-tell",
                            "topic-cons", "topic-snoc",
                            "topic-tail", "topic-init", "topic-null"]
@@ -39,7 +40,7 @@ instance Module TopicModule () where
 
 topicSplit :: (String -> [String] -> [String]) -> String -> String -> LB ()
 topicSplit f source cmdtext = alterTopic source chan (f topic_item)
-  where 
+  where
       (chan, topic_item) = splitFirstWord cmdtext
 
 lookupTopic :: String -> (Maybe String -> LB ()) -> LB ()
@@ -53,11 +54,11 @@ alterTopic source chan f =
         case maybetopic of
           Just x -> case reads x of
                 [(xs, "")] -> send $ IRC.setTopic chan (show $ f $ xs)
-                [(xs, r)] | length r <= 2 
+                [(xs, r)] | length r <= 2
                   -> do ircPrivmsg source $ "ignoring bogus characters: " ++ r
                         send $ IRC.setTopic chan (show $ f $ xs)
 
-                _ -> ircPrivmsg source 
+                _ -> ircPrivmsg source
                          "topic does not parse. topic should be of the form [\"...\",...,\"...\"]"
 
           Nothing -> ircPrivmsg source ("I do not know the channel " ++ chan)
