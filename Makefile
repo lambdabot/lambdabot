@@ -93,7 +93,8 @@ Modules.hs: config.mk GenModules
 	@echo "done."
 
 GenModules: GenModules.hs
-	@$(GHC) $(HC_OPTS) GenModules.hs -o GenModules
+	@$(GHC) $(HC_OPTS) -package mtl \
+	  Util.hs Map.hs Config.hs GenModules.hs -o GenModules
 
 #
 # Link the bot.

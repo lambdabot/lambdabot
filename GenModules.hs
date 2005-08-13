@@ -8,6 +8,8 @@
 --
 module Main where
 
+import qualified Util
+
 import Data.Char
 import Data.List
 
@@ -50,10 +52,10 @@ process m = concat [begin,
                     map doload m]
  where
     begin        = ["module Modules where", "import Lambdabot", ""]
-    doimport nm  = "import qualified Plugins." ++ (clean . upperise) nm
+    doimport nm  = "import qualified Plugins." ++ (Util.dropSpace . upperise) nm
     middle       = ["","loadStaticModules :: LB ()","loadStaticModules"," = do"]
-    doload nm   = " ircInstallModule Plugins." ++ (clean . upperise) nm  ++ 
-                     ".theModule " ++ show (clean . lowerise $ nm)
+    doload nm   = " ircInstallModule Plugins." ++ (Util.dropSpace . upperise) nm  ++ 
+                     ".theModule " ++ show (Util.dropSpace . lowerise $ nm)
 
 process2 :: [String] -> String
 process2 ms = "\nplugins :: [String]\n" ++ concat ("plugins = [" : 
@@ -73,6 +75,4 @@ lowerise :: [Char] -> [Char]
 lowerise [] = []
 lowerise (c:cs) = toLower c:cs
 
-clean :: [Char] -> [Char]
-clean = let f = reverse . dropWhile isSpace in f . f
 
