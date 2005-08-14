@@ -55,52 +55,65 @@ darcsCmd = "darcs"
 -- The repository data type
 --
 
+-- Repositories is a list of Repo's
 type Repos = [Repo]
 
+-- A repository has a location, a time where it was last (known to be)
+-- announced and a number of lines for the last announcement.
 data Repo = Repo { repo_location     :: FilePath
                  , repo_lastAnnounced :: Maybe CalendarTime
                  , repo_nlinesAtLastAnnouncement :: Int }
             deriving (Eq,Ord,Show,Read)
 
-showRepo :: Repo -> String
-showRepo repo = 
+-- | 'showRepo' takes a repository, repo, to a String for pretty printing.
+showRepo :: Repo -- ^ Repository to pretty-print
+	 -> String -- ^ Resulting string.
+showRepo repo =
     "{Repository " ++ show (repo_location repo) ++ ", last announcement: " ++
     (case repo_lastAnnounced repo of
        Nothing -> "unknown"
        Just ct -> formatTime ct) ++ "}"
 
+-- | 'showRepos' is the logical lifting of showRepo to to list types.
 showRepos :: Repos -> String
 showRepos [] = "{no repositories defined}"
 showRepos l = '{' : ((concat . intersperse ", " . map showRepo) l ++ "}")
-
 
 --
 -- The state of the plugin
 --
 
+-- A darcs repository watcher state.
 data DarcsPatchWatchState = DarcsPatchWatchState
                           { dpw_threadId  :: Maybe ThreadId
                           , dpw_repos     :: Repos }
 
+-- DPW is our monadic state transformer.
+type DPW a = ModuleT DarcsPatchWatchState LB a
+
+-- Serialize and unserialize DarcsPatchWatch state.
 stateSerializer :: Serializer DarcsPatchWatchState
-stateSerializer = 
+stateSerializer =
     Serializer { serialize = Just . ser
                , deSerialize = deSer }
     where ser (DarcsPatchWatchState _ repos) = show repos
-          deSer s = 
+          deSer s =
               do repos <- readM s
-                 return $ (DarcsPatchWatchState 
+                 return $ (DarcsPatchWatchState
                            { dpw_threadId = Nothing
                            , dpw_repos = repos })
 
 getRepos :: DPW Repos
 getRepos = dpw_repos `fmap` readMS
 
-withRepos :: (Repos -> (Repos -> LB ()) -> LB a) -> DPW a
+-- | 'withRepos' operates on the current state of the repos with a
+--   given function.
+withRepos :: (Repos -> (Repos -> LB ()) -> LB a) -- ^ Function to apply
+	  -> DPW a
 -- template haskell?
 withRepos = accessorMS $ \s -> (dpw_repos s, \t -> s { dpw_repos = t })
 
-type DPW a = ModuleT DarcsPatchWatchState LB a
+
 
 --
 -- The plugin itself
@@ -110,10 +123,10 @@ instance Module DarcsPatchWatch DarcsPatchWatchState where
     moduleHelp    _ s = return $ case s of
         "repos"        -> "@repos, list all registered darcs repositories"
         "repo-add"    -> "@repo-add path, add a repository"
-        "repo-del" -> "@repo-del path, delete a repository" 
+        "repo-del" -> "@repo-del path, delete a repository"
         _ -> ("Watch darcs repositories. Provides @repos, @repo-add, @repo-del")
 
-    moduleCmds  _ = return ["repos", "repo-add", "repo-del"] 
+    moduleCmds  _ = return ["repos", "repo-add", "repo-del"]
 
     moduleDefState  _ = return (DarcsPatchWatchState Nothing [])
     moduleSerialize _ = Just stateSerializer
@@ -121,7 +134,7 @@ instance Module DarcsPatchWatch DarcsPatchWatchState where
     moduleInit      _ = do
       tid <- lbIO (\conv -> forkIO $ conv watchRepos)
       modifyMS (\s -> s { dpw_threadId = Just tid })
-    moduleExit      _ = 
+    moduleExit      _ =
         do s <- readMS
            case dpw_threadId s of
              Nothing -> return ()
@@ -140,16 +153,16 @@ instance Module DarcsPatchWatch DarcsPatchWatchState where
 --
 
 printRepos :: String -> String -> DPW ()
-printRepos source "" = 
+printRepos source "" =
     do repos <- getRepos
        ircPrivmsg source (showRepos repos)
 printRepos _ _ =
     error "@todo given arguments, try @todo-add or @listcommands todo"
 
 addRepo :: String -> String -> DPW ()
-addRepo source rest | null (dropSpace rest) = 
+addRepo source rest | null (dropSpace rest) =
     ircPrivmsg source "argument required"
-addRepo source rest = 
+addRepo source rest =
     do x <- mkRepo rest
        case x of
          Left s -> send ("cannot add invalid repository: " ++ s)
@@ -158,7 +171,7 @@ addRepo source rest =
                         _| length repos >= maxNumberOfRepos ->
                              send ("maximum number of repositories reached!")
                          | r `elem` repos ->
-                             send ("cannot add already existing repository " 
+                             send ("cannot add already existing repository "
                                    ++ showRepo r)
                          | otherwise ->
                              do setRepos (r:repos)
@@ -166,20 +179,20 @@ addRepo source rest =
     where send = ircPrivmsg source
 
 delRepo :: String -> String -> DPW ()
-delRepo source rest | null (dropSpace rest) = 
+delRepo source rest | null (dropSpace rest) =
     ircPrivmsg source "argument required"
-delRepo source rest = 
+delRepo source rest =
     do x <- mkRepo rest
        case x of
          Left s -> ircPrivmsg source ("cannot delete invalid repository: " ++ s)
          Right r -> withRepos $ \repos setRepos -> do
                        case findRepo r repos of
                          Nothing ->
-                           send ("no repository registered with path " 
+                           send ("no repository registered with path "
                                  ++ repo_location r)
                          Just realRepo ->
                              do setRepos (delete realRepo repos)
-                                send ("repository " ++ showRepo realRepo ++ 
+                                send ("repository " ++ showRepo realRepo ++
                                       " deleted")
     where send = ircPrivmsg source
           cmpRepos r1 r2 = repo_location r1 == repo_location r2
@@ -195,9 +208,9 @@ mkRepo pref_ =
                      `catch` (\e -> return $ Left (show e))
        case x of
          Left e -> return $ Left e
-         Right (pref, perms) 
+         Right (pref, perms)
              | readable perms -> return $ Right $ Repo pref Nothing 0
-             | otherwise -> 
+             | otherwise ->
                  return $ Left ("repository's inventory file not readable")
 
 
@@ -206,7 +219,7 @@ mkRepo pref_ =
 --
 
 watchRepos :: DPW ()
-watchRepos = 
+watchRepos =
     do withRepos $ \repos setRepos ->
            do debug ("checking darcs repositories " ++ showRepos repos)
               repos_ <- mapM checkRepo repos
@@ -221,7 +234,7 @@ watchRepos =
 checkRepo :: Repo -> LB Repo
 checkRepo r = do
        (output, errput) <- liftIO $ runDarcs (repo_location r)
-       nlines <- 
+       nlines <-
          if not (null errput)
             then do info ("\ndarcs failed: " ++ errput)
                     return (repo_nlinesAtLastAnnouncement r)
@@ -236,7 +249,7 @@ checkRepo r = do
        ct <- liftIO $ toCalendarTime now
        return $ r { repo_nlinesAtLastAnnouncement = nlines
                   , repo_lastAnnounced = Just ct }
-    where 
+    where
         send s = ircPrivmsg announceTarget s
 
 mkMsg :: String -> (String,String,Integer) -> String
@@ -251,7 +264,7 @@ runDarcs loc = do
 
 -- Extract the committer, and commit msg from the darcs msg
 parseDarcsMsg :: String -> (String,String,Integer)
-parseDarcsMsg s = 
+parseDarcsMsg s =
     let (_,rest)   = breakOnGlue "  " s -- two spaces
         (who,msg') = breakOnGlue "\n" rest
         (msg,n)    = countRest (drop 1 msg')
@@ -269,13 +282,13 @@ parseDarcsMsg s =
 --
 
 mkInventoryPath :: String -> FilePath
-mkInventoryPath prefix = 
+mkInventoryPath prefix =
     let pref = dropSpace prefix
         in joinPath pref inventoryFile
 
 debug :: MonadIO m => String -> m ()
-debug s = if debugFlag 
-             then liftIO (putStrLn ("[DarcsPatchWatch] " ++ s)) 
+debug s = if debugFlag
+             then liftIO (putStrLn ("[DarcsPatchWatch] " ++ s))
              else return ()
 
 info :: MonadIO m => String -> m ()
