@@ -60,7 +60,11 @@ doSystem msg target cmd rest = do
    case cmd of
       "listchans"   -> ircPrivmsg target $ pprKeys (ircChannels s)
       "listmodules" -> ircPrivmsg target $ pprKeys (ircModules s)
-      "listcommands" | null rest -> listAll s target
+      "listcommands" | null rest -> case target of
+          ('#':_) -> ircPrivmsg target $ 
+              "use listcommands [module|command], please. Modules are:\n" ++
+              pprKeys (ircModules s)
+          _       -> listAll target
                      | otherwise -> listModule target rest
 
       "join"  -> send $ IRC.join rest
@@ -89,10 +93,10 @@ doSystem msg target cmd rest = do
 
 ------------------------------------------------------------------------
 
-listAll :: IRCRWState -> String -> LB ()
-listAll state target = do
-        privs <- gets ircPrivCommands
-        ircPrivmsg target $ showClean (M.keys (ircCommands state) \\ privs)
+listAll :: String -> LB ()
+listAll target = do
+    s <- get
+    mapM_ (listModule target) $ M.keys (ircModules s)
 
 listModule :: String -> String -> LB ()
 listModule target query = withModule ircModules query fromCommand printProvides
