@@ -58,7 +58,7 @@ lookupTopic chan f =
      f maybetopic
 
 -- | 'alterTopic' takes a sender, a channel and an altering function.
---   then it alters the topic in the channel by the altering function,
+--   Then it alters the topic in the channel by the altering function,
 --   returning eventual problems back to the sender.
 alterTopic :: String                 -- ^ Sender
 	   -> String                 -- ^ Channel
@@ -72,10 +72,7 @@ alterTopic source chan f =
                 [(xs, r)] | length r <= 2
                   -> do ircPrivmsg source $ "ignoring bogus characters: " ++ r
                         send $ IRC.setTopic chan (show $ f $ xs)
-
                 _ -> ircPrivmsg source
-                         "topic does not parse. topic should be of the form [\"...\",...,\"...\"]"
-
+                         "Topic does not parse. Should be of the form [\"...\",...,\"...\"]"
           Nothing -> ircPrivmsg source ("I do not know the channel " ++ chan)
-
-        in lookupTopic chan p
+   in lookupTopic chan p
