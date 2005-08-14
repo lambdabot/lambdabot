@@ -1,5 +1,9 @@
 --
--- | Mess with the channel topic
+-- | The Topic plugin is an interface for messing with the channel topic.
+--   It can alter the topic in various ways and keep track of the changes.
+--   The advantage of having the bot maintain the topic is that we get an
+--   authoritative source for the current topic, when the IRC server decides
+--   to delete it due to Network Splits.
 --
 module Plugins.Topic (theModule) where
 
@@ -22,8 +26,13 @@ instance Module TopicModule () where
                            "topic-cons", "topic-snoc",
                            "topic-tail", "topic-init", "topic-null"]
 
-  process _ _ src "topic-cons" text = topicSplit (:) src text
-  process _ _ src "topic-snoc" text = topicSplit snoc src text
+  process _ _ src "topic-cons" text =
+      alterTopic src chan (topic_item :)
+	  where (chan, topic_item) = splitFirstWord text
+  process _ _ src "topic-snoc" text =
+      alterTopic src chan (snoc topic_item)
+          where (chan, topic_item) = splitFirstWord text
+
   process _ _ src "topic-tail" chan = alterTopic src chan tail
   process _ _ src "topic-init" chan = alterTopic src chan init
   process _ _ _   "topic-null" chan = send $ IRC.setTopic chan "[]"
@@ -37,18 +46,24 @@ instance Module TopicModule () where
   process _ _ src cmd _
     = ircPrivmsg src ("Bug! someone forgot the handler for \""++cmd++"\"")
 
-
-topicSplit :: (String -> [String] -> [String]) -> String -> String -> LB ()
-topicSplit f source cmdtext = alterTopic source chan (f topic_item)
-  where
-      (chan, topic_item) = splitFirstWord cmdtext
-
-lookupTopic :: String -> (Maybe String -> LB ()) -> LB ()
+-- | 'lookupTopic' Takes a channel and a modifier function f. It then
+--   proceeds to look up the channel topic for the channel given, returning
+--   Just t or Nothing to the modifier function which can then decide what
+--   to do with the topic
+lookupTopic :: String -- ^ Channel
+	    -> (Maybe String -> LB ()) -- ^ Modifier function
+	    -> LB ()
 lookupTopic chan f =
   do maybetopic <- gets (\s -> M.lookup (mkCN chan) (ircChannels s))
      f maybetopic
 
-alterTopic :: String -> String -> ([String] -> [String]) -> LB ()
+-- | 'alterTopic' takes a sender, a channel and an altering function.
+--   then it alters the topic in the channel by the altering function,
+--   returning eventual problems back to the sender.
+alterTopic :: String                 -- ^ Sender
+	   -> String                 -- ^ Channel
+	   -> ([String] -> [String]) -- ^ Modifying function
+	   -> LB ()
 alterTopic source chan f =
   let p maybetopic =
         case maybetopic of
