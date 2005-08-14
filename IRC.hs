@@ -1,9 +1,15 @@
+--
+-- | The IRC module processes the IRC protocol and provides a nice API for sending
+--   and recieving IRC messages with an IRC server.
+--
 module IRC where
 
 import DeepSeq
 import Util (split, breakOnGlue, clean)
-import qualified Util (concatWith) -- TODO: rename the damn thing.
+import qualified Util (concatWith)
 
+-- | An IRC message is a prefix, a command and a list of parameters.
+--   They can be DeepSeq'ed.
 data Message
   = Message {
         msgPrefix   :: String,
@@ -16,68 +22,69 @@ instance DeepSeq Message where
   deepSeq m
     = deepSeq (msgPrefix m) . deepSeq (msgCommand m) . deepSeq (msgParams m)
 
-mkMessage :: String -> [String] -> Message
+-- | 'mkMessage' creates a new message from a cmd and a list of parameters.
+mkMessage :: String -- ^ Command
+	  -> [String] -- ^ Parameters
+	  -> Message -- ^ Returns: The created message
 mkMessage cmd params
   = Message { msgPrefix = "", msgCommand = cmd, msgParams = params }
 
+-- | 'nick' extracts the nickname involved in a given message.
 nick     :: Message -> String
 nick msg = fst $ breakOnGlue "!" (msgPrefix msg)
 
--- | 'channels' converts an Message to a list of channels.
+-- | 'channels' extracts the channels a Message operate on.
 channels :: Message -> [String]
 channels msg
   = let cstr = head $ msgParams msg
     in map (\(x:xs) -> if x == ':' then xs else x:xs) (split "," cstr)
            -- solves what seems to be an inconsistency in the parser
 
-{-
-ircuser     :: Message -> String
-ircuser msg = head $ split "@" $ (split "!" (msgPrefix msg)) !! 1
-
-irchost     :: Message -> String
-irchost msg = (split "@" (msgPrefix msg)) !! 1
--}
-
-privmsg :: String -> String -> Message
+-- | 'privmsg' creates a private message to the person designated.
+privmsg :: String -- ^ Who should recieve the message (nick)
+	-> String -- ^ What is the message?
+	-> Message -- ^ Constructed message
 privmsg who msg = mkMessage "PRIVMSG" [who, ':' : clean_msg]
     where clean_msg = case concatMap clean msg of
               str@('@':_) -> ' ':str
               str         -> str
 
-
-setTopic :: String -> String -> Message
+-- | 'setTopic' takes a channel and a topic. It then returns the message
+--   which sets the channels topic.
+setTopic :: String -- ^ Channel
+	 -> String -- ^ Topic
+	 -> Message
 setTopic chan topic = mkMessage "TOPIC" [chan, ':' : topic]
 
+-- | 'getTopic' Returns the topic for a channel, given as a String
 getTopic :: String -> Message
 getTopic chan = mkMessage "TOPIC" [chan]
 
+-- | 'quit' creates a server QUIT message. The input string given is the
+--   quitmessage, given to other parties when leaving the network.
 quit :: String -> Message
 quit msg = mkMessage "QUIT" [':' : msg]
 
+-- | 'join' creates a join message. String given is the location (channel)
+--   to join.
 join :: String -> Message
 join loc = mkMessage "JOIN" [loc]
 
+-- | 'part' parts the channel given.
 part :: String -> Message
 part loc = mkMessage "PART" [loc]
 
+-- | 'names' builds a NAMES message from a list of channels.
 names :: [String] -> Message
 names chans = mkMessage "NAMES" [Util.concatWith "," chans]
 
-{-
-ircRead :: IRC Message
-ircRead = do 
-    chanr <- asks ircReadChan
-    liftIO (readChan chanr)
-
-ircWrite :: Message -> IRC ()
-ircWrite line = do  
-    chanw <- asks ircWriteChan
-    -- use DeepSeq's $!! to ensure that any Haskell errors in line
-    -- are caught now, rather than later on in the other thread
-    liftIO (writeChan chanw $!! line)
--}
 ----------------------------------------------------------------------
+-- Encoding and decoding of messages
 
+-- | 'encodeMessage' takes a message and converts it to a function.
+--   giving this function a string will attach the string to the message
+--   and output a string containing IRC protocol commands ready for writing
+--   on the outgoing stream socket.
 encodeMessage :: Message -> String -> String
 encodeMessage msg
   = encodePrefix (msgPrefix msg) . encodeCommand (msgCommand msg)
@@ -91,7 +98,8 @@ encodeMessage msg
     encodeParams [] = id
     encodeParams (p:ps) = showChar ' ' . showString p . encodeParams ps
 
-
+-- | 'decodeMessage' Takes an input line from the IRC protocol stream
+--   and decodes it into a message.
 decodeMessage :: String -> Message
 decodeMessage line
   = let (prefix, rest1) = decodePrefix (,) line in
@@ -131,41 +139,3 @@ decodeMessage line
           | otherwise  = decodeParams' (c:param) params cs
         decodeParams' param params (c:cs)
           = decodeParams' (c:param) params cs
-
-{-
-getFirstWord :: String -> String
-getFirstWord line = takeWhile (/=' ') line
--}
-
-{-
-lowQuote :: String -> String
-lowQuote [] = []
-lowQuote ('\0':cs)   = '\020':'0'    : lowQuote cs
-lowQuote ('\n':cs)   = '\020':'n'    : lowQuote cs
-lowQuote ('\r':cs)   = '\020':'r'    : lowQuote cs
-lowQuote ('\020':cs) = '\020':'\020' : lowQuote cs
-lowQuote (c:cs)      = c : lowQuote cs
-
-lowDequote :: String -> String
-lowDequote [] = []
-lowDequote ('\020':'0'   :cs) = '\0'   : lowDequote cs
-lowDequote ('\020':'n'   :cs) = '\n'   : lowDequote cs
-lowDequote ('\020':'r'   :cs) = '\r'   : lowDequote cs
-lowDequote ('\020':'\020':cs) = '\020' : lowDequote cs
-lowDequote ('\020'       :cs) = lowDequote cs
-lowDequote (c:cs)             = c : lowDequote cs
-
-ctcpQuote :: String -> String
-ctcpQuote [] = []
-ctcpQuote ('\001':cs) = '\134':'a'    : ctcpQuote cs
-ctcpQuote ('\134':cs) = '\134':'\134' : ctcpQuote cs
-ctcpQuote (c:cs)      = c : ctcpQuote cs
-
-ctcpDequote :: String -> String
-ctcpDequote [] = []
-ctcpDequote ('\134':'a'   :cs) = '\001' : ctcpDequote cs
-ctcpDequote ('\134':'\134':cs) = '\134' : ctcpDequote cs
-ctcpDequote ('\134':cs)        = ctcpDequote cs
-ctcpDequote (c:cs)             = c : ctcpDequote cs
--}
-
