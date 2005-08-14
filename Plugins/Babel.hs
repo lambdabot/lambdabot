@@ -6,7 +6,7 @@
 --
 
 --
--- | A translator module for lambdabot. 
+-- | A translator module for lambdabot.
 --
 module Plugins.Babel (theModule) where
 
@@ -227,7 +227,7 @@ shortLangs = ["de","el","en","es","fr","it","ja","ko","nl","pt","ru","zh","zt"]
 type URIVars = [(String, String)]
 
 constantVars :: URIVars
-constantVars = 
+constantVars =
     [("doit", "done"),
      ("intl", "1"),
      ("tt", "urltext")]
@@ -237,18 +237,18 @@ justEither a Nothing = Left a
 justEither _ (Just v) = Right v
 
 langVars :: String -> String -> URIVars -> Either String URIVars
-langVars inLang outLang vars = 
+langVars inLang outLang vars =
     do
     lookupLang inLang >>= \ins ->
-	lookupLang outLang >>= \outs -> 
+	lookupLang outLang >>= \outs ->
 	    Right (("lp", ins ++ "_" ++ outs) : vars)
     where
     lookupLang lang | length lang == 2 && lang `elem` shortLangs = Right lang
-    lookupLang lang = justEither ("Language " ++ lang ++ " not supported") 
-                                 (lookup (map toLower lang) supportedLangs) 
+    lookupLang lang = justEither ("Language " ++ lang ++ " not supported")
+                                 (lookup (map toLower lang) supportedLangs)
 
 mkBody :: String -> String -> String -> Either String String
-mkBody inLang outLang string 
+mkBody inLang outLang string
     = mapconcat mkString "&" vars
     where
     vars = langVars inLang outLang (("urltext", string) : constantVars)
@@ -269,10 +269,10 @@ getBabel lins =  cleanLine (concat (intersperse " " region))
     reLine =  mkRegex ".*padding:10px[^>]*>(.*)</div>.*"
     reStart = mkRegex ".*padding:10px[^>]*>"
     reEnd = mkRegex "</div>"
-    
+
 babelFish :: String -> String -> String -> IO String
 babelFish inLang outLang string = do
-    body <- either (\s -> error ("Error: " ++ s)) 
+    body <- either (\s -> error ("Error: " ++ s))
                    (\body -> return body) (mkBody inLang outLang string)
     lins <- readPage (proxy config) uri (mkPost uri body) body
     return (getBabel lins)
