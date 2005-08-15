@@ -38,7 +38,7 @@ instance Module HoogleModule HoogleState where
     process _ _ _ _ _ = error "HoogleModule: invalid command"
 
 binary :: String
-binary = "/home/thomas/hoogle/hoogle"
+binary = "/home/dons/bin/hoogle"
 
 hoogle :: String -> IO [String]
 hoogle src = do (out,err,_) <- popen binary [src] (Just "")
