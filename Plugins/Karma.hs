@@ -31,14 +31,14 @@ instance Module KarmaModule KarmaState where
     moduleCmds _ = return ["karma", "karma+", "karma-"]
     process      _ msg target cmd rest =
         case words rest of
-	  []       -> ircPrivmsg target "I can't find the karma of nobody."
+	  []       -> tellKarma target sender sender
           (nick:_) -> do
               case cmd of
                  "karma"  -> tellKarma        target sender nick
                  "karma+" -> changeKarma 1    target sender nick
                  "karma-" -> changeKarma (-1) target sender nick
                  _        -> error "KarmaModule: can't happen"
-	    where sender = IRC.nick msg
+	where sender = IRC.nick msg
 
 getKarma :: String -> KarmaState -> Integer
 getKarma nick karmaFM = fromMaybe 0 (M.lookup nick karmaFM)
