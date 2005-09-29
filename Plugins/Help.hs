@@ -34,7 +34,7 @@ doHelp target cmd rest =
             (\md -> do
                 ss <- moduleCmds md
                 let s | null ss   = arg ++ " is a module."
-                      | otherwise = arg ++ " provides: " ++ (showClean ss)
+                      | otherwise = arg ++ " provides: " ++ showClean ss
                 ircPrivmsg target s))
 
         -- so it's a valid command, try to find its help

@@ -126,6 +126,8 @@ unitTest inp out = TestCase $ do
 
 unitTests :: Test
 unitTests = TestList [
+  unitTest "foldr (++) []" ["join"],
+  unitTest "flip flip [] . ((:) .)" ["(return .)"],
   unitTest "\\x -> x - 2" ["subtract 2"],
   unitTest "\\(x,_) (y,_) -> x == y" ["(. fst) . (==) . fst"],
   unitTest "\\x y z -> return x >>= \\x' -> return y >>= \\y' -> return z >>= \\z' -> f x' y' z'" ["f"],
