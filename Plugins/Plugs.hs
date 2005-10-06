@@ -36,8 +36,8 @@ binary = "runplugs"
 plugs :: String -> IO String
 plugs src = do
     (out,err,_) <- popen binary [] (Just src)
-    let o = expandTab . clean $ out
-        e = expandTab . clean $ err
+    let o = unlines . take 3 . lines . expandTab . clean $ out
+        e = unlines . take 3 . lines . expandTab . clean $ err
     return $ case () of {_
         | null o && null e -> "Terminated\n"
         | null o           -> e
@@ -52,32 +52,34 @@ clean s | Just _         <- no_io      `matchRegex`    s = "No IO allowed\n"
         | Just _         <- terminated `matchRegex`    s = "Terminated\n"
         | Just _         <- stack_o_f  `matchRegex`    s = "Stack overflow\n"
         | Just _         <- loop       `matchRegex`    s = "Loop\n"
-        | Just _         <- irc        `matchRegex`    s = s
-        | Just (_,_,b,_) <- filename' `matchRegexAll`  s = clean b
-        | Just (_,m,_,_) <- nomatch    `matchRegexAll` s = m
+        | Just _         <- undef      `matchRegex`    s = "Undefined\n"
         | Just (_,m,_,_) <- ambiguous  `matchRegexAll` s = m
+        | Just (_,_,b,_) <- irc        `matchRegexAll` s = clean b
+        | Just (_,m,_,_) <- nomatch    `matchRegexAll` s = m
         | Just (_,m,_,_) <- notinscope `matchRegexAll` s = m
         | Just (_,m,_,_) <- hsplugins `matchRegexAll`  s = m
         | Just (a,_,_,_) <- columnnum `matchRegexAll`  s = a
-        | Just (a,_,b,_) <- runplugs  `matchRegexAll`  s = a ++ clean b
+        | Just (a,_,_,_) <- extraargs `matchRegexAll`  s = a
+        | Just (_,_,b,_) <- filename' `matchRegexAll`  s = clean b
         | Just (a,_,b,_) <- filename  `matchRegexAll`  s = a ++ clean b
         | Just (a,_,b,_) <- filepath `matchRegexAll`   s = a ++ clean b
-        | Just (a,_,_,_) <- extraargs `matchRegexAll`  s = a
+        | Just (a,_,b,_) <- runplugs  `matchRegexAll`  s = a ++ clean b
         | otherwise      = s
     where
         -- s/<[^>]*>:[^:]: //
-        irc        = mkRegex "\n*<irc>:"
-        filepath   = mkRegex "\n*/[^\\.]*.hs:[^:]*:\n* *"
-        filename   = mkRegex "\n*<[^>]*>:[^:]*:\n* *"
-        filename'  = mkRegex "/tmp/.*\\.hs[^\n]*\n"
-        loop       = mkRegex "runplugs: <<loop>>"
-        runplugs   = mkRegex "runplugs: "
-        terminated = mkRegex "waitForProc"
-        notinscope = mkRegex "Variable not in scope:[^\n]*"
-        stack_o_f  = mkRegex "Stack space overflow"
-        hsplugins  = mkRegex "Compiled, but didn't create object"
         no_io      = mkRegex "No instance for \\(Show \\(IO"
-        ambiguous  = mkRegex "Ambiguous type variable `a\' in the(se)* top-level constraints?"
+        terminated = mkRegex "waitForProc"
+        stack_o_f  = mkRegex "Stack space overflow"
+        loop       = mkRegex "runplugs: <<loop>>"
+        irc        = mkRegex "\n*<irc>:[^:]*:[^:]*:\n*"
+        filename   = mkRegex "\n*<[^>]*>:[^:]*:\\?[^:]*:\\?\n* *"
+        filename'  = mkRegex "/tmp/.*\\.hs[^\n]*\n"
+        filepath   = mkRegex "\n*/[^\\.]*.hs:[^:]*:\n* *"
+        undef      = mkRegex "Prelude.undefined"
+        ambiguous  = mkRegex "Ambiguous type variable `a\' in the constraints"
+        runplugs   = mkRegex "runplugs: "
+        notinscope = mkRegex "Variable not in scope:[^\n]*"
+        hsplugins  = mkRegex "Compiled, but didn't create object"
         extraargs  = mkRegex "[ \t\n]*In the [^ ]* argument"
         columnnum  = mkRegex " at <[^\\.]*\\.[^\\.]*>:[^ ]*"
         nomatch    = mkRegex "Couldn't match[^\n]*\n"
