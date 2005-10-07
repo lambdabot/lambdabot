@@ -47,15 +47,15 @@ instance Module EvalModule EvalState where
       deSerialize = fmap (mkGlobalPrivate maxPrivate) . loadDefinitions
     }
     
-    moduleHelp   _ "eval" = return "@eval expr - evaluate the lambda calculus expression, expr"
+    moduleHelp   _ "lambda" = return "@lambda expr - evaluate the lambda calculus expression, expr"
     moduleHelp   _ "define" = return "@define name expr - define name to be expr"
     moduleHelp   _ "get-definition" = return "@get-definition name - get the expression defining name"                               
     moduleHelp   _ "definitions" = return "@definitions [prefix] - get the definitions starting with prefix"
     moduleHelp   _ "del-definition" = return "@del-definition name - delete name"
-    moduleHelp   _ "set-fuel" = return "@set-fuel ticks - how many ticks before @eval runs out of fuel"
+    moduleHelp   _ "set-fuel" = return "@set-fuel ticks - how many ticks before @lambda runs out of fuel"
     moduleHelp   _ "resume" = return "@resume - continue an expression that has run out of fuel"
     moduleHelp   _ cmd = return $ "EvalModule: don't know command "++cmd
-    moduleCmds   _ = return ["eval","define","get-definition","definitions","resume"]
+    moduleCmds   _ = return ["lambda","define","get-definition","definitions","resume"]
     modulePrivs  _ = return ["set-fuel","del-definition"]
 
     process      _ _ target cmd rest = do
@@ -63,7 +63,7 @@ instance Module EvalModule EvalState where
        (fuel, env, defns) <- readGS
        res <- readPS target
        case cmd of
-            "eval" -> do 
+            "lambda" -> do 
                  let r_or_s = evaluate rest env fuel
                  case r_or_s of
                     Right s -> do writeRes Nothing
