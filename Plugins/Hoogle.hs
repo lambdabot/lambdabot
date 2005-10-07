@@ -1,8 +1,13 @@
+--
+-- Talk to Neil Mitchell's `Hoogle' program
+--
+
 module Plugins.Hoogle (theModule) where
 
 import Lambdabot
 import PosixCompat
 import LBState
+import Util
 
 import Control.Monad	   ( when )
 import Control.Monad.Trans ( liftIO )
@@ -40,10 +45,24 @@ instance Module HoogleModule HoogleState where
 binary :: String
 binary = "/home/dons/bin/hoogle"
 
+cutoff :: Int
+cutoff = -10
+
 hoogle :: String -> IO [String]
-hoogle src = do (out,err,_) <- popen binary [src] (Just "")
+hoogle src = do (out,err,_) <- popen binary ["-v",src] (Just "")
                 return $ result out err
     where result [] [] = ["Terminated\n"]
           result [] ys = [ys]
-          result xs _  = lines xs
+          result xs _  = 
+		let xs' = map toPair $ lines xs
+		    res = map snd $ filter ((>=cutoff) . fst) xs'
+		in if null res
+                   then ["No matches, try a more general search"]
+		   else res
+
+	  toPair s = let (rank,res) = break (==':') s
+		         res' = dropWhile (==':') res
+	             in case readM rank :: Maybe Int of
+				Just n -> (n,res')
+		                Nothing -> (0,res')
 
