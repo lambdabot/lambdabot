@@ -81,6 +81,8 @@ getRandSrcOf ss n = do
         case () of {_
                 | Just _ <- comment `matchRegex` s -> getRandSrcOf ss (n-1)
                 | Just _ <- ws      `matchRegex` s -> getRandSrcOf ss (n-1)
+                | Just _ <- nl      `matchRegex` s -> getRandSrcOf ss (n-1)
+                | Just _ <- pragma  `matchRegex` s -> getRandSrcOf ss (n-1)
                 | Just _ <- imports `matchRegex` s -> getRandSrcOf ss (n-1)
                 | Just _ <- wheres  `matchRegex` s -> getRandSrcOf ss (n-1)
                 | Just _ <- mods    `matchRegex` s -> getRandSrcOf ss (n-1)
@@ -91,10 +93,12 @@ getRandSrcOf ss n = do
                 | otherwise                        -> return s -- got it
         }
         where comment = mkRegex "--"
-              nested  = mkRegex "{-"
+              nested  = mkRegex "{"
+              pragma  = mkRegex "OPTION"
               cpp     = mkRegex "#if"
               cpp'    = mkRegex "#include"
-              ws      = mkRegex "^ *$"
+              ws      = mkRegex "^ "	-- line *must* start with an identifer
+              nl      = mkRegex "\n"
               imports = mkRegex "^import"
               wheres  = mkRegex "^ *where"
               mods    = mkRegex "module"
