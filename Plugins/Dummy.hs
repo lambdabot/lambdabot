@@ -49,10 +49,12 @@ dummylst = [("dummy",       \_ -> "dummy"),
                                                 "- Gothenburg, Sweden"]),
 	    ("wiki",        \x -> "http://www.haskell.org/hawiki/" ++ x),
 	    ("paste",       \_ -> "http://www.haskell.org/hawiki/HaskellIrcPastePage"),
-            ("docs",        \x -> case M.lookup x docAssocs of
-               Nothing -> x ++ " not available"
-               Just m  -> "http://haskell.org/ghc/docs/latest/html/"++
-                          "libraries/" ++ m ++ "/" ++ x ++ ".html"),
+            ("docs",        \x -> case x of
+               [] -> "http://haskell.org/ghc/docs/latest/html/libraries/index.html"
+               _  -> case M.lookup x docAssocs of
+                     Nothing -> x ++ " not available"
+                     Just m  -> "http://haskell.org/ghc/docs/latest/html/"++
+                                "libraries/" ++ m ++ "/" ++ x ++ ".html"),
             ("libsrc",      \x -> case M.lookup x docAssocs of
                Nothing -> x ++ " not available"
                Just m  -> "http://darcs.complete.org/fptools/libraries/" ++
