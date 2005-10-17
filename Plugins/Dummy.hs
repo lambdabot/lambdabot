@@ -26,6 +26,7 @@ instance Module DummyModule [String] where
         "learn"       -> "another url"
         "eurohaskell" -> "urls are good"
         "moo"         -> "vegan-friendly command"
+        "map"         -> "#haskell user map"
         "botsnack"    -> "bot-feeder"
         _             -> "dummy module"
 
@@ -60,6 +61,7 @@ dummylst = [("dummy",       \_ -> "dummy"),
                Just m  -> "http://darcs.complete.org/fptools/libraries/" ++
                           m ++ "/" ++ map (choice (=='.') (const '/') id) x ++ ".hs"),
 	    ("learn",       \_ -> "http://www.haskell.org/learning.html"),
+	    ("map",       \_ -> "http://www.haskell.org/hawiki/HaskellUserLocations"),
 
             ("botsnack",    \_ -> ":)")]
 
