@@ -36,7 +36,7 @@ PLUGINS=       Dict Dummy Lambda Karma Quote Seen State \
                Topic Type Plugs Babel Version More Pl \
                Help Dice Search Vixen Fact Spell Todo \
                Haddock Code Hoogle DarcsPatchWatch Where \
-               Elite TimeFor
+               Elite Localtime
 STATICS=       Base System Dynamic
 LD_OPTS=       -package plugins
 else
@@ -45,7 +45,7 @@ STATICS=       Base System Dict Dummy Lambda Karma \
                Quote Seen State Topic Type Plugs Babel \
                Version More Pl Help Dice Search Vixen Fact \
                Spell Haddock Code Hoogle DarcsPatchWatch Where \
-               Elite TimeFor
+               Elite Localtime
 LD_OPTS=       -package network -package posix -package parsec
 endif
 
