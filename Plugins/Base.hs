@@ -81,9 +81,37 @@ doPING msg
     = debugStrLn $ "ERROR> <" ++ msgPrefix msg ++
       "> [" ++ msgCommand msg ++ "] " ++ show (msgParams msg)
 
-doNOTICE :: Callback
-doNOTICE msg
-    = debugStrLn $ "NOTICE: " ++ show (msgParams msg)
+-- If this is a "TIME" then we need to pass it over to the localtime plugin
+-- otherwise, dump it to stdout
+doNOTICE :: ModState BaseState Callback
+doNOTICE msg = 
+  if isCTCPTimeReply 
+     then do    
+        -- bind implicit params to Localtime module. boo on implict params :/
+  --    withModule ircModules 
+  --               "Localtime"
+  --               (error "Plugin/Base: no Localtime plugin? So I can't handle CTCP time messges")
+  --               (\_ -> doPRIVMSG timeReplyPrivMsg)
+
+          -- need to say which module to run the privmsg in
+
+          doPRIVMSG timeReplyPrivMsg
+
+     else debugStrLn $ "NOTICE: " ++ show (msgParams msg)
+    where
+      (from, _)       = breakOnGlue "!" (msgPrefix msg)
+      isCTCPTimeReply = ":\SOHTIME" `isPrefixOf` (last (msgParams msg)) 
+
+      -- construct a privmsg from the CTCP TIME notice, to feed up to
+      -- the @localtime-reply plugin, which then passes the output to
+      -- the appropriate client.
+      timeReplyPrivMsg    = 
+            Message { msgPrefix  = msgPrefix (msg)
+                    , msgCommand = "PRIVMSG"
+                    , msgParams  = [head (msgParams msg)
+                                   ,":@localtime-reply " ++ from ++ ":" ++
+                                      (init $ drop 7 (last (msgParams msg))) ]
+                    }
 
 doJOIN :: Callback
 doJOIN msg
@@ -184,7 +212,9 @@ doRPL_ENDOFMOTD _msg = return ()
 -}
 
 doPRIVMSG :: ModState BaseState Callback
-doPRIVMSG msg = doPRIVMSG' (name config) msg
+doPRIVMSG msg = do
+    debugStrLn (show msg) 
+    doPRIVMSG' (name config) msg
 
 --
 -- | What does the bot respond to?
