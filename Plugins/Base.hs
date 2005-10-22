@@ -270,7 +270,7 @@ doPRIVMSG' myname msg
                 let act = withModule ircCommands c
                       (ircPrivmsg towhere ("Unknown command, try @listcommands."))
                       (\m -> do
-                        debugStrLn (show msg)
+                        -- debugStrLn (show msg)
                         privs <- gets ircPrivCommands
                         ok <- case cmd `elem` privs of
                           False -> return True

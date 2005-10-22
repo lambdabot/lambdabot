@@ -54,6 +54,7 @@ clean s | Just _         <- no_io      `matchRegex`    s = "No IO allowed\n"
         | Just _         <- stack_o_f  `matchRegex`    s = "Stack overflow\n"
         | Just _         <- loop       `matchRegex`    s = "Loop\n"
         | Just _         <- undef      `matchRegex`    s = "Undefined\n"
+        | Just _         <- type_sig   `matchRegex`    s = "Add a type signature\n"
         | Just (_,m,_,_) <- ambiguous  `matchRegexAll` s = m
         | Just (_,_,b,_) <- irc        `matchRegexAll` s = clean b
         | Just (_,m,_,_) <- nomatch    `matchRegexAll` s = m
@@ -68,6 +69,7 @@ clean s | Just _         <- no_io      `matchRegex`    s = "No IO allowed\n"
         | otherwise      = s
     where
         -- s/<[^>]*>:[^:]: //
+        type_sig   = mkRegex "add a type signature that fixes these type"
         no_io      = mkRegex "No instance for \\(Show \\(IO"
         terminated = mkRegex "waitForProc"
         stack_o_f  = mkRegex "Stack space overflow"
