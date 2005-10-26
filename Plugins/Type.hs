@@ -25,7 +25,7 @@ import PosixCompat          (popen)
 
 import Maybe (mapMaybe)
 import Control.Monad.Trans (liftIO)
-import Text.Regex          (Regex, mkRegexWithOpts, matchRegex)
+import Text.Regex
 
 --     In accordance with the KISS principle, the plan is to delegate all
 --     the hard work! To get the type of foo, pipe
@@ -107,10 +107,21 @@ extract_signatures output
 query_ghci :: String -> String -> String -> LB ()
 query_ghci src cmd expr =
        do
-       (output, _, _) <- liftIO $ popen "ghci-6.4" ["-fglasgow-exts","-fno-th"]
+       (output, errors, _) <- liftIO $ popen "ghci-6.4" ["-fglasgow-exts","-fno-th"]
 			                  (Just (command cmd (stripComments expr)))
        let ls = extract_signatures output
-       ircPrivmsg src $ if null ls then "bzzt" else ls
+       ircPrivmsg src $ if null ls 
+       			then unlines . take 1 . lines . expandTab . cleanRE $ errors -- "bzzt" 
+			else ls
+
+  where 
+     cleanRE :: String -> String
+     cleanRE s
+        | Just (_,_,b,_) <- ghci_msg `matchRegexAll`  s = b
+	| otherwise      = s
+
+     ghci_msg = mkRegex "<interactive>:[^:]*:[^:]*: "
+
 
 --
 --     And thus the plugin:
