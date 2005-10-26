@@ -111,7 +111,7 @@ query_ghci src cmd expr =
 			                  (Just (command cmd (stripComments expr)))
        let ls = extract_signatures output
        ircPrivmsg src $ if null ls 
-       			then unlines . take 1 . lines . expandTab . cleanRE $ errors -- "bzzt" 
+       			then unlines . take 3 . lines . expandTab . cleanRE $ errors -- "bzzt" 
 			else ls
 
   where 
@@ -120,7 +120,7 @@ query_ghci src cmd expr =
         | Just (_,_,b,_) <- ghci_msg `matchRegexAll`  s = b
 	| otherwise      = s
 
-     ghci_msg = mkRegex "<interactive>:[^:]*:[^:]*: "
+     ghci_msg = mkRegex "<interactive>:[^:]*:[^:]*: ?"
 
 
 --
