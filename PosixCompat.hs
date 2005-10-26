@@ -4,6 +4,7 @@
 module PosixCompat (popen) where
 
 #if __GLASGOW_HASKELL__ >= 604
+import System.Exit
 import System.IO
 import System.Process
 import Control.Concurrent       (forkIO)
@@ -52,7 +53,9 @@ popen file args minput =
     forkIO (Control.Exception.evaluate (length errput) >> return ())
 
     -- And now we wait. We must wait after we read, unsurprisingly.
-    waitForProcess pid -- blocks without -threaded, you're warned.
+    -- blocks without -threaded, you're warned.
+    -- and maybe the process has already completed..
+    Control.Exception.catch (waitForProcess pid) (\_ -> return ExitSuccess)
 
     return (output,errput,pid)
 
