@@ -7,7 +7,7 @@ module Plugins.Hoogle (theModule) where
 import Lambdabot
 import PosixCompat
 import LBState
-import Util
+import Serial 
 
 import Control.Monad	   ( when )
 import Control.Monad.Trans ( liftIO )
