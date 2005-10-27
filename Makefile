@@ -61,7 +61,7 @@ ALL_OBJS=	$(addsuffix .$(way_)o,$(basename $(ALL_SRCS)))
 #
 # Now, get down to business
 #
-all: lambdabot modules
+all: lambdabot modules runplugs
 
 #
 # TODO should be just PLUGIN_OBJS
@@ -193,5 +193,10 @@ distclean: clean
 	rm -f config.mk config.h config.log config.status configure
 	rm -rf autom4te.cache
 	rm -f GenModules Modules.hs Modules.o-boot Modules.*-boot
+
+runplugs: scripts/RunPlugs.hs
+	$(GHC) -O -package posix -package plugins -o $@ $<
+
+CLEANS+= runplugs
 
 -include depend
