@@ -32,7 +32,7 @@ instance Module PlugsModule () where
         process _ _ _ _ _ = error "PlugsModule: invalid command"
 
 binary :: String
-binary = "runplugs"
+binary = "./runplugs"
 
 plugs :: String -> IO String
 plugs src = do
