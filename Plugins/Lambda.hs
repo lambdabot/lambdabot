@@ -7,12 +7,14 @@ import Plugins.Lambda.LMEngine (evaluate, define, resume, Environment)
 
 import Lambdabot
 import LBState
-import Util                             (Serializer(..), readM)
+import Serial                           (Serial(..), readM)
 import qualified Map as M
 
 import Data.Dynamic                     (Dynamic)
 import Data.List                        (groupBy,sort,isPrefixOf)
 import Data.Maybe                       (mapMaybe)
+
+import qualified Data.FastPackedString as P
 
 newtype EvalModule = EvalModule ()
 
@@ -41,11 +43,11 @@ type EvalState = GlobalPrivate EvalGlobal Dynamic
 instance Module EvalModule EvalState where
     moduleDefState _ = return $ mkGlobalPrivate (maxPrivate) 
       (initFuel, initEnv, initDefns)
-    moduleSerialize _ = Just $ Serializer {
-      serialize = Just . (\(fuel,_,defns) -> 
-        unlines $ show fuel: map show (M.toList defns)) . global,
-      deSerialize = fmap (mkGlobalPrivate maxPrivate) . loadDefinitions
-    }
+    moduleSerialize _ = Just $ Serial {
+              serialize = Just . (\(fuel,_,defns) -> 
+                P.pack . unlines $ show fuel: map show (M.toList defns)) . global,
+              deserialize = fmap (mkGlobalPrivate maxPrivate) .  loadDefinitions . P.unpack
+           }
     
     moduleHelp   _ "lambda" = return "@lambda expr - evaluate the lambda calculus expression, expr"
     moduleHelp   _ "define" = return "@define name expr - define name to be expr"

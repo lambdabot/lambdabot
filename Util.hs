@@ -17,9 +17,7 @@ module Util (
 	upperize, lowerize,
 	quote,
         listToStr,
-        Serializer (..), stdSerializer, mapSerializer, listSerializer,
         getRandItem, stdGetRandItem,
-        readM,
         showClean,
         expandTab,
         closest, closests,
@@ -30,11 +28,8 @@ module Util (
     ) where
 
 import Config
-import Map                      (Map)
-import qualified Map as M       (toList, fromList)
 
 import Data.List                (intersperse, isPrefixOf)
-import Data.Maybe               (mapMaybe)
 import Data.Char                (isSpace, toLower, toUpper)
 import Control.Monad.State      (when,MonadIO(..))
 
@@ -201,44 +196,6 @@ getRandItem mylist rng = (mylist !! index,newRng)
 stdGetRandItem :: [a] -> IO a
 stdGetRandItem lst = getStdRandom $ getRandItem lst
 
--- | A Serializer provides a way for a type s to be written to and read from
---   a string.
-data Serializer s = Serializer {
-  serialize   :: s -> Maybe String,
-  deSerialize :: String -> Maybe s
-}
-
--- | The 'stdSerializer' serializes types t, which are instances of Read and
---   Show, using these 2 type classes for serialisation and deserialization.
-stdSerializer :: (Show s, Read s) => Serializer s
-stdSerializer = Serializer (Just . show) readM
-
--- | 'mapSerializer' serializes a 'Map' type if both the key and the value
---   are instances of Read and Show. The serialization is done by converting
---   the map to and from lists. Results are saved line-wise, for better
---   editing and revison control.
-mapSerializer :: (Ord k, Show k, Show v, Read k, Read v) => Serializer (Map k v)
-mapSerializer = Serializer {
-  serialize   = Just . unlines . map show . M.toList,
-  deSerialize = Just . M.fromList . mapMaybe readM . lines
-}
-
--- | 'listSerializer' serializes a list of 'a's. As the 'mapSerializer',
---   its output is line-wise.
-listSerializer :: (Read a, Show a) => Serializer [a]
-listSerializer = Serializer {
-  serialize   = Just . unlines . map show,
-  deSerialize = Just . mapMaybe readM . lines
-}
-
--- | 'readM' behaves like read, but catches failure in a monad.
-readM :: (Monad m, Read a) => String -> m a
-readM s = case [x | (x,t) <- reads s, ("","") <- lex t] of
-        [x] -> return x
-        []  -> fail "Util.readM: no parse"
-        _   -> fail "Util.readM: ambiguous parse"
--- this allocates a 20-30 M on startup...
-
 ------------------------------------------------------------------------
 
 -- | 'dropSpace' takes as input a String and strips spaces from the
@@ -288,7 +245,7 @@ closests pat ss =
 
 --
 -- | Levenshtein edit-distance algorithm
--- Transated from an Erlang version by Fredrik Svensson and Adam Lindberg
+-- Translated from an Erlang version by Fredrik Svensson and Adam Lindberg
 --
 levenshtein :: String -> String -> Int
 levenshtein [] [] = 0

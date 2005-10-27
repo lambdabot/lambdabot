@@ -6,7 +6,7 @@ module Plugins.Karma (theModule) where
 import Lambdabot
 import LBState
 import qualified IRC
-import Util (mapSerializer)
+import Serial (mapSerial)
 import qualified Map as M
 
 import Data.Maybe           (fromMaybe)
@@ -26,7 +26,7 @@ instance Module KarmaModule KarmaState where
     moduleHelp m _        = moduleHelp m "karma"
 
     moduleDefState  _ = return $ M.empty
-    moduleSerialize _ = Just mapSerializer
+    moduleSerialize _ = Just mapSerial
 
     moduleCmds _ = return ["karma", "karma+", "karma-"]
     process      _ msg target cmd rest =

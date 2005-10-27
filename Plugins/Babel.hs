@@ -12,7 +12,8 @@ module Plugins.Babel (theModule) where
 
 import Lambdabot
 import LBState
-import Util                 (stdGetRandItem, mapSerializer)
+import Serial               (mapSerial)
+import Util                 (stdGetRandItem)
 import PosixCompat          (popen)
 import MiniHTTP
 import Config               (proxy,config)
@@ -35,9 +36,10 @@ theModule :: MODULE
 theModule = MODULE $ BabelModule ()
 
 type Quotes = M.Map String [String]
+-- type Quotes = M.Map P.FastString [P.FastString]
 
 instance Module BabelModule Quotes where
-        moduleSerialize _       = Just mapSerializer
+        moduleSerialize _       = Just mapSerial
         moduleDefState  _       = return M.empty
 
         moduleHelp _ "babel"    = concat `fmap` run_babel' ["help"]

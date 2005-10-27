@@ -8,6 +8,7 @@
 --
 module Plugins.DarcsPatchWatch (theModule) where
 
+import qualified Data.FastPackedString as P
 import Prelude hiding ( catch )
 import List ( intersperse, delete )
 import Control.Concurrent
@@ -17,6 +18,7 @@ import Control.Monad       ( when )
 import System.Directory
 import System.Time
 
+import Serial
 import Lambdabot hiding (send)
 import LBState
 import Util
@@ -92,13 +94,11 @@ data DarcsPatchWatchState = DarcsPatchWatchState
 type DPW a = ModuleT DarcsPatchWatchState LB a
 
 -- Serialize and unserialize DarcsPatchWatch state.
-stateSerializer :: Serializer DarcsPatchWatchState
-stateSerializer =
-    Serializer { serialize = Just . ser
-               , deSerialize = deSer }
-    where ser (DarcsPatchWatchState _ repos) = show repos
+stateSerial :: Serial DarcsPatchWatchState
+stateSerial = Serial ser deSer
+    where ser (DarcsPatchWatchState _ repos) = Just . P.pack $ show repos
           deSer s =
-              do repos <- readM s
+              do repos <- readM (P.unpack s)
                  return $ (DarcsPatchWatchState
                            { dpw_threadId = Nothing
                            , dpw_repos = repos })
@@ -129,7 +129,7 @@ instance Module DarcsPatchWatch DarcsPatchWatchState where
     moduleCmds  _ = return ["repos", "repo-add", "repo-del"]
 
     moduleDefState  _ = return (DarcsPatchWatchState Nothing [])
-    moduleSerialize _ = Just stateSerializer
+    moduleSerialize _ = Just stateSerial
 
     moduleInit      _ = do
       tid <- lbIO (\conv -> forkIO $ conv watchRepos)

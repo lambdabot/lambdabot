@@ -6,7 +6,8 @@ module Plugins.Seen (theModule) where
 import Lambdabot
 import LBState
 import qualified IRC
-import Util (mapSerializer, lowerCaseString, firstWord, listToStr, debugStrLn)
+import Util (lowerCaseString, firstWord, listToStr, debugStrLn)
+import Serial
 import AltTime
 import Config
 import qualified Map as M
@@ -23,6 +24,8 @@ newtype SeenModule = SeenModule ()
 
 theModule :: MODULE
 theModule = MODULE $ SeenModule ()
+
+-- Try using packed strings?
 
 -- | The type of channels
 type Channel = String
@@ -57,7 +60,7 @@ instance Module SeenModule SeenState where
     moduleHelp _ _      = return "Report if a user has been seen by the bot"
     moduleCmds _        = return ["seen"]
     moduleDefState _    = return M.empty
-    moduleSerialize _   = Just mapSerializer
+    moduleSerialize _   = Just mapSerial
     moduleInit _        = do 
       zipWithM_ ircSignalConnect 
         ["JOIN", "PART", "QUIT", "NICK", "353",      "PRIVMSG"] $ map withSeenFM

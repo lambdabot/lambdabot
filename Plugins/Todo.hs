@@ -8,7 +8,7 @@ module Plugins.Todo (theModule) where
 import Lambdabot
 import LBState
 import qualified IRC
-import Util         (listSerializer,readM)
+import Serial       (listSerial,readM)
 
 newtype TodoModule = TodoModule ()
 
@@ -25,7 +25,7 @@ instance Module TodoModule TodoState where
         _ -> "Keep a todo list. Provides @todo, @todo-add, @todo-delete"
 
     moduleDefState  _ = return ([] :: [(String, String)])
-    moduleSerialize _ = Just listSerializer
+    moduleSerialize _ = Just listSerial
     
     moduleCmds  _ = return ["todo", "todo-add"] 
     modulePrivs _ = return ["todo-delete"]

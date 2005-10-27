@@ -13,6 +13,7 @@ module Plugins.Fact (theModule) where
 import Lambdabot
 import LBState
 import Util
+import Serial
 import qualified Map as M
 
 ------------------------------------------------------------------------
@@ -38,7 +39,7 @@ instance Module FactModule FactState where
     _             -> "Store and retrieve facts from a database"
 
   moduleDefState _  = return $ M.empty
-  moduleSerialize _ = Just mapSerializer
+  moduleSerialize _ = Just mapSerial
   moduleCmds   _ = return ["fact","fact-set","fact-delete",
                            "fact-cons","fact-snoc","fact-update"]
 

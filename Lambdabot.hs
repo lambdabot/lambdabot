@@ -28,10 +28,13 @@ module Lambdabot (
   ) where
 
 import qualified Config (config, name, admins, host, port, textwidth)
-import DeepSeq          (($!!), DeepSeq(..))
+import DeepSeq          (($!!))
 import ErrorUtils       (bracketError, tryErrorJust, finallyError, catchErrorJust, tryError)
-import Util             (clean, Serializer(..), lowerCaseString, readM)
+import Util             (clean, lowerCaseString)
+import Serial
 import qualified IRC
+
+import qualified Data.FastPackedString as P
 
 import Map (Map)
 import qualified Map as M hiding (Map)
@@ -42,8 +45,8 @@ import Prelude hiding   (mod, catch)
 import Network          (withSocketsDo, connectTo, PortID(PortNumber))
 
 import System.IO        (Handle, hGetLine, hPutStr, hClose,
-                         hSetBuffering, BufferMode(NoBuffering),
-                         openFile, hGetContents, IOMode(..))
+                         hSetBuffering, BufferMode(NoBuffering))
+                         
 
 #if __GLASGOW_HASKELL__ >= 600
 import System.IO.Error  (isEOFError, ioeGetHandle)
@@ -537,10 +540,10 @@ writerLoop threadmain chanw h
 -- Minimal complete definition: @moduleHelp@, @moduleCmds@, @process@.
 class Module m s | m -> s where
     -- | If the module wants its state to be saved, this function should
-    --   return a Serializer.
+    --   return a Serial.
     --
     --   The default implementation returns Nothing.
-    moduleSerialize :: m -> Maybe (Serializer s)
+    moduleSerialize :: m -> Maybe (Serial s)
     -- | If the module maintains state, this method specifies the default state
     --   (for example in case the state can't be read from a state).
     --
@@ -583,29 +586,30 @@ data ModuleRef = forall m s. (Module m s) => ModuleRef m (MVar s) String
 toFilename :: String -> String
 toFilename = ("State/"++)
 
+------------------------------------------------------------------------
+
+-- | Peristence: write the global state out
+--
 writeGlobalState :: Module m s => m -> String -> ModuleT s LB ()
 writeGlobalState mod name = case moduleSerialize mod of
   Nothing  -> return ()
   Just ser -> do
     state <- liftIO $ readMVar ?ref -- readMS
     case serialize ser state of
-      Nothing  -> return ()
-      Just out -> liftIO $ writeFile (toFilename name) out
+        Nothing  -> return ()   -- do not write any state
+        Just out -> liftIO $ P.writeFile (toFilename name) out
 
--- Read the whole file so it'll be closed
-readFile' :: String -> IO String
-readFile' file = do
-  h <- openFile file ReadMode
-  cont <- hGetContents h
-  cont `deepSeq` hClose h
-  return cont
+readFile' :: String -> IO P.FastString
+readFile' f = do
+  cont <- P.mmapFile f
+  cont `seq` return cont
 
 readGlobalState :: Module m s => m -> String -> IO (Maybe s)
 readGlobalState mod name = case moduleSerialize mod of
   Nothing  -> return Nothing
   Just ser -> do
     state <- Just `fmap` readFile' (toFilename name) `catch` \_ -> return Nothing
-    return $! maybe Nothing (Just $!) $ deSerialize ser =<< state
+    return $! maybe Nothing (Just $!) $ deserialize ser =<< state
 
 ------------------------------------------------------------------------
 --

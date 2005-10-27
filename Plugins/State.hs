@@ -5,7 +5,7 @@ module Plugins.State (theModule) where
 
 import Lambdabot
 import LBState
-import Util (stdSerializer)
+import Serial
 
 newtype StateModule = StateModule ()
 
@@ -16,7 +16,7 @@ instance Module StateModule String where
     moduleHelp    _ _ = return "@state - we all know it's evil"
     moduleCmds      _ = return ["state"]
     moduleDefState  _ = return "nothing yet"
-    moduleSerialize _ = Just stdSerializer
+    moduleSerialize _ = Just stdSerial
     process      _ _ target _ rest = do
        modstate <- withMS $ \ms writer -> writer rest >> return ms
        ircPrivmsg target modstate

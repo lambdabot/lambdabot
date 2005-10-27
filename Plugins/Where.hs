@@ -13,6 +13,7 @@ module Plugins.Where (theModule) where
 import Lambdabot
 import LBState
 import Util
+import Serial
 import qualified Map as M
 
 ------------------------------------------------------------------------
@@ -34,7 +35,7 @@ instance Module WhereModule WhereState where
     _          -> "Remember urls of open source projects"
 
   moduleDefState _  = return $ M.empty
-  moduleSerialize _ = Just mapSerializer
+  moduleSerialize _ = Just mapSerial
   moduleCmds   _ = return ["where", "where+" ]
 
   process _ _ target cmd rest = do
