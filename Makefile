@@ -1,5 +1,8 @@
 # Lambdabot makefile
 
+MAKEFLAGS += --no-builtin-rules
+.SUFFIXES:
+
 include config.mk
 
 #
@@ -71,10 +74,11 @@ modules: $(ALL_OBJS)
 
 #
 # Dependency generation
+# Need to remove -prof -auto-all from the ghc flags:
 #
 depend: $(ALL_SRCS)
 	@echo -n "Rebuilding dependencies ... "
-	@$(GHC) -cpp $(HC_OPTS) $(PKG_OPTS) $(LD_OPTS) -M -optdep-f \
+	$(GHC) -cpp $(HC_OPTS) $(PKG_OPTS) $(LD_OPTS) -M -optdep-f \
 		-optdepdepend $(ALL_SRCS) || rm depend
 	@echo "done."
 
