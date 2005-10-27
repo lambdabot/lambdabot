@@ -1,21 +1,25 @@
 INSTALL:
 
 First install hs-plugins and fps.
+    darcs get http://www.cse.unsw.edu.au/~dons/code/fps
+    darcs get http://www.cse.unsw.edu.au/~dons/code/hs-plugins
 
-The following is a guide to install lambdabot on your computer. Begin by
-unpacking the lambdabot archive into a directory and modify the file
-Config.hs to suit your needs. Then run:
+Begin by unpacking the lambdabot archive into a directory and modify the
+file Config.hs to suit your needs. Then run:
 
 	autoconf
 	./configure
 	make	(gmake on some systems)
 
+For compiling with profiling on, or to compile a static binary
+(obviating the need for hs-plugins!), try
+
+    make way=p
+or
+    make way=static
+
+
 KNOWN BUGS:
-
-The following bugs are currently known to the lambdabot developer team. We
-are working on them:
-
-* @topic often return nothing. We currently have no idea why.
 
 Bug reports, patches, new modules etc, contact:
 
@@ -25,5 +29,5 @@ Bug reports, patches, new modules etc, contact:
 REPOSITORY:
 
 Our darcs repository is located at:
-http://www.cse.unsw.edu.au/~dons/lambdabot
-http://www.ScannedInAvian.org/repos/lambdabot
+    http://www.cse.unsw.edu.au/~dons/lambdabot
+    http://www.ScannedInAvian.org/repos/lambdabot
