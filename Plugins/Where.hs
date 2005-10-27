@@ -14,6 +14,7 @@ import Lambdabot
 import LBState
 import Util
 import Serial
+import qualified Data.FastPackedString as P
 import qualified Map as M
 
 ------------------------------------------------------------------------
@@ -23,7 +24,7 @@ newtype WhereModule = WhereModule ()
 theModule :: MODULE
 theModule = MODULE $ WhereModule()
 
-type WhereState         = M.Map String String
+type WhereState         = M.Map P.FastString P.FastString
 type WhereWriter        = WhereState -> LB ()
 type Where m a          = ModuleT WhereState m a
 
@@ -35,7 +36,7 @@ instance Module WhereModule WhereState where
     _          -> "Remember urls of open source projects"
 
   moduleDefState _  = return $ M.empty
-  moduleSerialize _ = Just mapSerial
+  moduleSerialize _ = Just mapPackedSerial
   moduleCmds   _ = return ["where", "where+" ]
 
   process _ _ target cmd rest = do
@@ -49,18 +50,20 @@ instance Module WhereModule WhereState where
 
 processCommand :: WhereState -> WhereWriter
                -> String -> String -> String -> Where LB String
+
 processCommand factFM writer fact cmd dat = case cmd of
         "where"     -> return $ getWhere factFM fact
         "where+"    -> updateWhere True factFM writer fact dat
         _           -> return "Unknown command."
 
-getWhere :: M.Map String String -> String -> String
+getWhere :: WhereState -> String -> String
 getWhere fm fact =
-    case M.lookup fact fm of
+    case M.lookup (P.pack fact) fm of
         Nothing -> "I know nothing about " ++ fact ++ "."
-        Just x  -> x
+        Just x  -> P.unpack x
 
 updateWhere :: Bool -> WhereState -> WhereWriter -> String -> String -> Where LB String
 updateWhere _guard factFM writer fact dat = do 
-        writer $ M.insert fact dat factFM
+        writer $ M.insert (P.pack fact) (P.pack dat) factFM
         return $ fact ++ " ~> " ++ dat 
+
