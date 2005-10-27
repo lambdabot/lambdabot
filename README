@@ -1,5 +1,7 @@
 INSTALL:
 
+First install hs-plugins and fps.
+
 The following is a guide to install lambdabot on your computer. Begin by
 unpacking the lambdabot archive into a directory and modify the file
 Config.hs to suit your needs. Then run:
