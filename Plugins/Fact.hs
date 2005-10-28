@@ -15,6 +15,7 @@ import LBState
 import Util
 import Serial
 import qualified Map as M
+import qualified Data.FastPackedString as P
 
 ------------------------------------------------------------------------
 
@@ -23,9 +24,9 @@ newtype FactModule = FactModule ()
 theModule :: MODULE
 theModule = MODULE $ FactModule()
 
-type FactState = M.Map String String
+type FactState  = M.Map P.FastString P.FastString
 type FactWriter = FactState -> LB ()
-type Fact m a = ModuleT FactState m a
+type Fact m a   = ModuleT FactState m a
 
 instance Module FactModule FactState where
 
@@ -39,7 +40,7 @@ instance Module FactModule FactState where
     _             -> "Store and retrieve facts from a database"
 
   moduleDefState _  = return $ M.empty
-  moduleSerialize _ = Just mapSerial
+  moduleSerialize _ = Just mapPackedSerial
   moduleCmds   _ = return ["fact","fact-set","fact-delete",
                            "fact-cons","fact-snoc","fact-update"]
 
@@ -47,41 +48,39 @@ instance Module FactModule FactState where
         result <- withMS $ \factFM writer -> case words rest of
             []         -> return "I can not handle empty facts."
             (fact:dat) -> processCommand factFM writer
-                                (lowerCaseString fact) cmd (unwords dat)
+                                (P.pack $ lowerCaseString fact) 
+                                cmd 
+                                (P.pack $ unwords dat)
         ircPrivmsg target result
 
 ------------------------------------------------------------------------
 
 processCommand :: FactState -> FactWriter
-               -> String -> String -> String -> Fact LB String
-processCommand factFM writer fact cmd dat =
-    case cmd of
-        "fact"        -> return $ getFact factFM fact
+               -> P.FastString -> String -> P.FastString -> Fact LB String
+processCommand factFM writer fact cmd dat = case cmd of
+        "fact"        -> return $ getFact factFM fact 
         "fact-set"    -> updateFact True factFM writer fact dat
         "fact-update" -> updateFact False factFM writer fact dat
-        "fact-cons"   -> alterFact ((dat ++ " ")++) factFM writer fact
-        "fact-snoc"   -> alterFact (++(" " ++ dat)) factFM writer fact
-        "fact-delete" -> do writer $ M.delete fact factFM
-                            return "Fact deleted."
+        "fact-cons"   -> alterFact ((dat `P.append` (P.pack " ")) `P.append`) factFM writer fact
+        "fact-snoc"   -> alterFact (P.append ((P.pack " ") `P.append` dat))   factFM writer fact
+        "fact-delete" -> writer ( M.delete fact factFM ) >> return "Fact deleted."
         _ -> return "Unknown command."
 
-updateFact :: Bool -> FactState -> FactWriter -> String -> String -> Fact LB String
+updateFact :: Bool -> FactState -> FactWriter -> P.FastString -> P.FastString -> Fact LB String
 updateFact guard factFM writer fact dat =
     if guard && M.member fact factFM
         then return "Fact already exists, not updating"
-        else do writer $ M.insert fact dat factFM
-                return "Fact recorded."
+        else writer ( M.insert fact dat factFM ) >> return "Fact recorded."
 
-alterFact :: (String -> String) 
-          -> FactState -> FactWriter -> String -> Fact LB String
+alterFact :: (P.FastString -> P.FastString) 
+          -> FactState -> FactWriter -> P.FastString -> Fact LB String
 alterFact f factFM writer fact =
     case M.lookup fact factFM of
         Nothing -> return "A fact must exist to alter it"
         Just x  -> do writer $ M.insert fact (f x) factFM
                       return "Fact altered."
 
-getFact :: M.Map String String -> String -> String
-getFact fm fact =
-    case M.lookup fact fm of
-        Nothing -> "I know nothing about " ++ fact ++ "."
-        Just x  -> fact ++ ": " ++ x ++ "."
+getFact :: M.Map P.FastString P.FastString -> P.FastString -> String
+getFact fm fact = case M.lookup fact fm of
+        Nothing -> "I know nothing about " ++ P.unpack fact
+        Just x  -> P.unpack fact ++ ": " ++ P.unpack x
