@@ -1,22 +1,51 @@
 INSTALL:
 
-First install hs-plugins and fps.
-    darcs get http://www.cse.unsw.edu.au/~dons/code/fps
-    darcs get http://www.cse.unsw.edu.au/~dons/code/hs-plugins
+You'll need GHC >= 6.5 (for example ghc 20050806 seems to work well) for the @eval plugin to work.
 
-Begin by unpacking the lambdabot archive into a directory and modify the
-file Config.hs to suit your needs. Then run:
+Build the FastPackedString library:
 
-	autoconf
-	./configure
-	make	(gmake on some systems)
+        $ darcs get --partial http://www.cse.unsw.edu.au/~dons/code/fps
+        $ cd fps
+        $ ln -s fps.cabal.no-mmap fps.cabal
+        $ runhaskell Setup.hs configure --prefix=/home/dons
+        $ runhaskell Setup.hs build
+        $ runhaskell Setup.hs install
+
+Build hs-plugins:
+
+        $ cd ..
+        $ darcs get --partial http://www.cse.unsw.edu.au/~dons/code/hs-plugins
+        $ cd hs-plugins/
+        $ runhaskell Setup.hs configure --prefix=/home/dons
+        $ runhaskell Setup.hs build
+        $ runhaskell Setup.hs install
+
+Build Lambdabot:
+
+        $ cd ..
+        $ darcs get --partial http://www.cse.unsw.edu.au/~dons/code/lambdabot
+        $ cd lambdabot/
+        $ autoconf
+        $ ./configure
+        -- edit Config.hs to your requirements
+        $ make
+        $ ./lambdabot
+
+After this, you'll notice some of the plugins don't seem to work. They
+require extra local files. For example, @hoogle needs the 'hoogle'
+binary to be installed in the path, @yow needs a fortune file directory,
+@code needs fptools. This will be fixed eventually, but for now read the
+src of the broken plugin to find out what files it requires.
+
+Plugins are added or removed config.mk and removing them from the list
+of PLUGINS.
 
 For compiling with profiling on, or to compile a static binary
 (obviating the need for hs-plugins!), try
 
     make way=p
 or
-    make way=static
+    make static=yes
 
 
 KNOWN BUGS:
