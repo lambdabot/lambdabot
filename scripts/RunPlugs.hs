@@ -25,11 +25,13 @@ context = prehier ++ datas ++ qualifieds ++ controls
 
 prehier = ["Char", "List", "Maybe", "Numeric", "Random" ]
 
-qualifieds = ["qualified Data.Map as M", "qualified Data.Set as S"]
+qualifieds = ["qualified Data.Map as M"
+             ,"qualified Data.Set as S"
+             ,"qualified Data.IntSet as I"]
 
 datas   = map ("Data." ++) [
                 "Bits", "Bool", "Char", "Dynamic", "Either", 
-                "Graph", "Int", "Ix", "List", 
+                "Graph", "Int", "Ix", "List",
                 "Maybe", "Ratio", "Tree", "Tuple", "Typeable", "Word" 
               ]
 
