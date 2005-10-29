@@ -11,7 +11,7 @@ IFACEDIR=       $(LIBDIR)/imports
 
 GHC=            @WithGhc@
 
-HC_OPTS=        -Wall -Werror -cpp -fglasgow-exts -I.
+HC_OPTS=        -Wall -Werror -I. -cpp -fglasgow-exts
 HC_OPTS+=       -funbox-strict-fields -O
 #HC_OPTS+=       -Onot -fasm -H64m
 
@@ -26,6 +26,11 @@ ifeq "$(way)" "p"
 static=yes
 endif
 
+# build it really fast
+ifeq "$(way)" "fast"
+HC_OPTS+=       -Onot -fasm -H64m
+endif
+
 #
 # List of modules to statically link, or to load dynamically
 #
@@ -35,8 +40,9 @@ ifneq "$(static)" "yes"
 PLUGINS=       Dict Dummy Lambda Karma Quote Seen State \
                Topic Type Plugs Babel Version More Pl \
                Help Dice Search Vixen Fact Spell Todo \
-               Haddock Code Hoogle DarcsPatchWatch Where \
-               Elite Localtime
+               Haddock Code Hoogle Where Elite Localtime
+#              DarcsPatchWatch
+
 STATICS=       Base System Dynamic
 LD_OPTS=       -package plugins
 else
@@ -44,8 +50,9 @@ PLUGINS=
 STATICS=       Base System Dict Dummy Lambda Karma \
                Quote Seen State Topic Type Plugs Babel \
                Version More Pl Help Dice Search Vixen Fact \
-               Spell Haddock Code Hoogle DarcsPatchWatch Where \
+               Spell Haddock Code Hoogle Where \
                Elite Localtime
+#              DarcsPatchWatch
 LD_OPTS=       -package network -package posix -package parsec -package fps
 endif
 
@@ -60,7 +67,7 @@ PKG_OPTS+=	                -package posix
 RECURSIVE_MODULE_SUFFIX=	hi-boot
 MODULE_HI_BOOT=             "module Modules where { plugins::[[GHC.Base.Char]] }"
 else
-HC_OPTS+=	                -threaded
+LD_OPTS+=	                -threaded
 RECURSIVE_MODULE_SUFFIX=	hs-boot
 MODULE_HI_BOOT=             "module Modules where { plugins::[[Char]] }"
 endif
