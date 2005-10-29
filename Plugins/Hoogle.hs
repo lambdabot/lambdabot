@@ -86,8 +86,8 @@ qualifiedName x y =
    in length n `compare` length m
 
 toPair s = let (res, meta)  = break (=='@') s
-         rank = takeWhile (/=' ') . drop 2 $ meta
-     in case readM rank :: Maybe Int of
+               rank = takeWhile (/=' ') . drop 2 $ meta
+           in case readM rank :: Maybe Int of
                 Just n  -> (n,res)
                 Nothing -> (0,res)
 
