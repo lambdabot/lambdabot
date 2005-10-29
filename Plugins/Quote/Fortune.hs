@@ -3,6 +3,7 @@
 --
 module Plugins.Quote.Fortune where
 
+import Config
 import Util (stdGetRandItem)
 import qualified Util hiding (stdGetRandItem)
 
@@ -20,21 +21,13 @@ import System.Posix
 import Posix
 #endif
 
--- | The 'path' component is a string to the location where the fortune files
---   are located. On some systems, this is /usr/share/games/fortunes, on others
---   this is /usr/share/games/fortune. Alter this to suit your configuration
---
---   TODO: Move this to a generic Config file
-path :: FilePath
-path = "/usr/share/games/fortune/"
-
 -- | The 'filelist' function returns a List of fortune files from the
---   configured 'path' directory.
+--   configured 'fortunePath' directory.
 filelist :: IO [String]
-filelist = do filelist'<- C.catch (getDirectoryContents path)
+filelist = do filelist'<- C.catch (getDirectoryContents $ fortunePath config)
                                   (\_ -> return [])
               let files = filter (not . isSuffixOf ".dat") filelist'
-              join (return (filterM isFile (map (path ++) files)))
+              join (return (filterM isFile (map (fortunePath config ++) files)))
 
 -- | Select a random fortune file
 fileRandom :: IO FilePath
@@ -61,7 +54,7 @@ fortuneRandom filename
 randFortune :: (Maybe FilePath) -> IO String
 randFortune section =
   case section of Nothing -> fortuneRandom =<< fileRandom
-	          Just fname -> fortuneRandom =<< (return (path ++ fname))
+	          Just fname -> fortuneRandom =<< (return (fortunePath config ++ fname))
 
 -- | 'isFile' is a predicate wheter or not a given FilePath is a file.
 isFile :: FilePath -> IO Bool

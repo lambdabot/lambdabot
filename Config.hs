@@ -21,7 +21,12 @@ data Config = Config {
         proxy     :: Maybe ([Char], Integer), -- ^ A proxy given as
 	                                      --   a pair of host and port.
 
-        hooglePath :: FilePath      -- ^ path to hoogle directory
+        hooglePath :: FilePath,     -- ^ path to hoogle directory
+
+        -- | The 'path' component is a string to the location where the fortune files
+        --   are located. On some systems, this is /usr/share/games/fortunes, on others
+        --   this is /usr/share/games/fortune. Alter this to suit your configuration
+        fortunePath :: FilePath
 }
 
 --
@@ -46,6 +51,7 @@ config = Config {
                 "Cale",         "dons", "TheHunter",    "jlouis"
         ],
 
-        hooglePath      = "/home/dons/hoogle"
+        hooglePath      = "/home/dons/src/hoogle",
+        fortunePath     = "/usr/share/games/fortune/"
    }
 
