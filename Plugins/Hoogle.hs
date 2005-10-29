@@ -17,7 +17,7 @@ import Util
 import Data.List
 import qualified Config
 
-import Control.Monad	   ( when )
+import Control.Monad       ( when )
 import Control.Monad.Trans ( liftIO )
 
 newtype HoogleModule = HoogleModule ()
@@ -35,18 +35,18 @@ instance Module HoogleModule HoogleState where
     moduleCmds   _ = return ["hoogle", "hoogle+"]
 
     process _ _ src "hoogle" s = do 
-	o <- liftIO $ hoogle s
-	let (this,that) = splitAt 3 o
-	writeMS that
-	ircPrivmsg src (unlines this)
+        o <- liftIO $ hoogle s
+        let (this,that) = splitAt 3 o
+        writeMS that
+        ircPrivmsg src (unlines this)
 
     process  _ _ src "hoogle+" _ = do
-	this <- withMS $ \st write -> do
-			let (this,that) = splitAt 3 st
-			write that
-			return this
-	when (not . null $ this) $
-		ircPrivmsg src (unlines this)
+        this <- withMS $ \st write -> do
+                        let (this,that) = splitAt 3 st
+                        write that
+                        return this
+        when (not . null $ this) $
+                ircPrivmsg src (unlines this)
 
     process _ _ _ _ _ = error "HoogleModule: invalid command"
 
@@ -73,21 +73,20 @@ hoogle query = do
     where result [] [] = ["An error occured."]
           result [] ys = [ys]
           result xs _  = 
-		let xs' = map toPair $ lines xs
-		    res = map snd $ filter ((>=cutoff) . fst) xs'
-		in if null res
+                let xs' = map toPair $ lines xs
+                    res = map snd $ filter ((>=cutoff) . fst) xs'
+                in if null res
                    then ["No matches, try a more general search"]
-                   else res
---   else sortBy qualifiedName res
+                   else sortBy qualifiedName res
 
+          toPair s = let (res, meta)  = break (=='@') s
+                         rank = takeWhile (/=' ') . drop 2 $ meta
+                     in case readM rank :: Maybe Int of
+                        Just n  -> (n,res)
+                        Nothing -> (0,res)
+
+qualifiedName :: String -> String -> Ordering
 qualifiedName x y = 
    let (n,_) = break (== ':') x
        (m,_) = break (== ':') y
    in length n `compare` length m
-
-toPair s = let (res, meta)  = break (=='@') s
-               rank = takeWhile (/=' ') . drop 2 $ meta
-           in case readM rank :: Maybe Int of
-                Just n  -> (n,res)
-                Nothing -> (0,res)
-
