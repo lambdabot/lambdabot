@@ -47,7 +47,11 @@ For compiling with profiling on, or to compile a static binary
 or
     make static=yes
 
-Use:
+To build really quickly, for testing:
+
+    make way=fast
+
+For cleaning, use:
     make clean
 or
     make distclean
