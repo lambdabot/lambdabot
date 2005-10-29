@@ -41,7 +41,7 @@ instance Module WhereModule WhereState where
 
   process _ _ target cmd rest = do
         result <- withMS $ \factFM writer -> case words rest of
-            []         -> return "I can not handle empty facts."
+            []         -> return "@where <key>, return element associated with key"
             (fact:dat) -> processCommand factFM writer
                                 (lowerCaseString fact) cmd (unwords dat)
         ircPrivmsg target result
