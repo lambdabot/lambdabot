@@ -1,14 +1,28 @@
-("A way to get multiple results from a google search","SamB")
-("@get-shapr summons shapr instantly","SamB")
-("stop mangling long urls","SamB")
-("improve formatting of @dict","dons")
-("write Haskell Manifesto","dons")
-("don't let lambdabot's prettyprinter split the sequence @foo across lines","lispy")
-("priviledged users should get priviledged listcommands.","TheHunter")
-("@type 1 :: Int","TheHunter")
-("haddock gives a link from a type signature to the types.  It would be nice if it also let you find functions in the given module that use a type.","lispy")
-("Implement @whatis","dons")
-("implement @cool list, as a clone of the @todo(-add) commands","dcoutts")
-("there's some bug in the 'when i left' code of @seen","dons")
-("sarahbot style @tell","DonS")
-("@tell command - relays a message to someone when they next speak","beelsebob_")
+A way to get multiple results from a google search
+SamB
+@get-shapr summons shapr instantly
+SamB
+stop mangling long urls
+SamB
+improve formatting of @dict
+dons
+write Haskell Manifesto
+dons
+don't let lambdabot's prettyprinter split the sequence @foo across lines
+lispy
+priviledged users should get priviledged listcommands.
+TheHunter
+@type 1 :: Int
+TheHunter
+haddock gives a link from a type signature to the types.  It would be nice if it also let you find functions in the given module that use a type.
+lispy
+Implement @whatis
+dons
+implement @cool list, as a clone of the @todo(-add) commands
+dcoutts
+there's some bug in the 'when i left' code of @seen
+dons
+sarahbot style @tell
+dons
+@tell command - relays a message to someone when they next speak
+beelsebob_
