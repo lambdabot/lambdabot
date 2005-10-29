@@ -20,7 +20,8 @@
 -- | Serialisation
 --
 module Serial (
-        Serial(..), stdSerial, mapSerial, listSerial, mapPackedSerial,
+        Serial(..), 
+        stdSerial, mapSerial, listSerial, mapPackedSerial, assocListPackedSerial,
         readM, Packable(..), {- instances of Packable -}
     ) where
 
@@ -104,6 +105,20 @@ instance Packable (Map FastString FastString) where
 
         showPacked m  = P.unlines . concatMap (\(k,v) -> [k,v]) $ M.toList m
 
+instance Packable ([(FastString,FastString)]) where
+        readPacked ps = readKV (P.lines ps)
+                where
+                  readKV :: [FastString] -> [(FastString,FastString)]
+                  readKV []         = []
+                  readKV (k:v:rest) = (k,v) : readKV rest
+                  readKV _          = error "Serial.readPacked: parse failed"
+
+        showPacked = P.unlines . concatMap (\(k,v) -> [k,v])
+
 -- And for packed string maps
 mapPackedSerial :: Serial (Map FastString FastString)
 mapPackedSerial = Serial (Just . showPacked) (Just . readPacked)
+
+-- And for association list
+assocListPackedSerial   :: Serial ([(FastString,FastString)])
+assocListPackedSerial = Serial (Just . showPacked) (Just . readPacked)
