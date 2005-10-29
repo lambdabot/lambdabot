@@ -18,8 +18,10 @@ data Config = Config {
         textwidth :: Int,           -- ^ How many columns should we use
         autojoin  :: [String],      -- ^ List of channels to autojoin
         admins    :: [String],      -- ^ List of nicknames that are admins
-        proxy     :: Maybe ([Char], Integer) -- ^ An eventual proxy given as
-	                                         --   a pair of host and port.
+        proxy     :: Maybe ([Char], Integer), -- ^ A proxy given as
+	                                      --   a pair of host and port.
+
+        hooglePath :: FilePath      -- ^ path to hoogle directory
 }
 
 --
@@ -29,7 +31,7 @@ config :: Config
 config = Config {
         name            = "lambdabot",
         userinfo        = "Lambda Robots - 100% Loyal",
-        host            = "irc.eu.freenode.net",
+        host            = "irc.au.freenode.net",
 
         port            = 6667,
         verbose         = True,
@@ -38,11 +40,6 @@ config = Config {
         proxy           = Nothing,
         autojoin        = ["#haskell"],
 
-        admins          = [
-                "Pseudonym",    "shapr",        "pesco",        "Riastradh",
-                "Darius",       "tmoertel",     "delYsid",      "polli",
-                "Heffalump",    "Igloo",        "Marvin--",     "o3",
-                "phubuh",       "ddarius",      "bringert",     "dons",
-                "TheHunter",    "jlouis"
-        ]
+        hooglePath      = "/home/dons/src/hoogle"
    }
+
