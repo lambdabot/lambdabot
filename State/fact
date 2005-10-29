@@ -1,21 +1,44 @@
-("_samb_lambdabot","@fact lambdabot")
-("_samb_lambdabot.","@fact lambdabot")
-("_samb_lambdabot..","@fact lambdabot")
-("bar","foo")
-("breakfast","Meal that usually breaks fasts.")
-("bzip2","bzip2 is an open source data compression algorithm and program developed by Julian Seward. Seward made the first public release of bzip2, version 0.15, in July 1996. He's also known as a GHC hacker.")
-("dsl","Domain specific language")
-("foo","bar")
-("ghc","Haskell implementation")
-("glasgow-exts","http://www.haskell.org/ghc/docs/latest/html/users_guide/ghc-language-features.html")
-("haskell","Haskell is the language of choice for discriminating hackers.")
-("hsu","I know nothing about Haskell Secret Underground.")
-("lambdabot","Lambdabot is a bot of curious opinions, and is female.")
-("pizza","Eat pizza, but don't let it eat you.")
-("pseudonym","My initial creator.")
-("reader-monads","Reader monads have properties which go beyond those of just commutative monads. For example, m (a -> b) and a -> m b are isomorphic and so are m (a,b) and (m a, m b). When you are using implicit parameters, you are exploiting these properties all the time, and it's really cumbersome to do the same thing explicitely.")
-("recursion","recursion")
-("samb_lambdabot","@fact lambdabot")
-("samb_lambdabot.","@fact lambdabot")
-("tmr","The Monad.Reader http://www.haskell.org/tmrwiki/FrontPage")
-("welfare","The concept of wealth redistribution fails to understand that even if $1 trillion from the 225 richest people in the world were redistributed to the poorest of the earth, this would only give them $1 a day for a year. Our focus should be on underlying structural changes and the advancement of capitalism such that wealth can be created for the poor on a sustained basis.")
+_samb_lambdabot
+@fact lambdabot
+_samb_lambdabot.
+@fact lambdabot
+_samb_lambdabot..
+@fact lambdabot
+bar
+foo
+breakfast
+Meal that usually breaks fasts.
+bzip2
+bzip2 is an open source data compression algorithm and program developed by Julian Seward. Seward made the first public release of bzip2, version 0.15, in July 1996. He's also known as a GHC hacker.
+dsl
+Domain specific language
+flip
+f a b = f b a
+foo
+bar
+ghc
+Haskell implementation
+glasgow-exts
+http://www.haskell.org/ghc/docs/latest/html/users_guide/ghc-language-features.html
+haskell
+Haskell is the language of choice for discriminating hackers.
+hsu
+I know nothing about Haskell Secret Underground.
+lambdabot
+Lambdabot is a bot of curious opinions, and is female.
+pizza
+Eat pizza, but don't let it eat you.
+pseudonym
+My initial creator.
+reader-monads
+Reader monads have properties which go beyond those of just commutative monads. For example, m (a -> b) and a -> m b are isomorphic and so are m (a,b) and (m a, m b). When you are using implicit parameters, you are exploiting these properties all the time, and it's really cumbersome to do the same thing explicitely.
+recursion
+recursion
+samb_lambdabot
+@fact lambdabot
+samb_lambdabot.
+@fact lambdabot
+tmr
+The Monad.Reader http://www.haskell.org/tmrwiki/FrontPage
+welfare
+The concept of wealth redistribution fails to understand that even if $1 trillion from the 225 richest people in the world were redistributed to the poorest of the earth, this would only give them $1 a day for a year. Our focus should be on underlying structural changes and the advancement of capitalism such that wealth can be created for the poor on a sustained basis.
