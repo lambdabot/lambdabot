@@ -78,8 +78,7 @@ modules: $(ALL_OBJS)
 #
 depend: $(ALL_SRCS)
 	@echo -n "Rebuilding dependencies ... "
-	$(GHC) -cpp $(HC_OPTS) $(PKG_OPTS) $(LD_OPTS) -M -optdep-f \
-		-optdepdepend $(ALL_SRCS) || rm depend
+	$(GHC) -cpp $(HC_OPTS) $(PKG_OPTS) -M -optdep-f -optdepdepend $(ALL_SRCS) || rm depend
 	@echo "done."
 
 #
@@ -111,9 +110,9 @@ lambdabot: $(ALL_OBJS)
 		done ; \
 	fi
 ifeq "$(static)" "yes"
-	$(GHC) $(HC_OPTS) $(PKG_OPTS) $(LD_OPTS) -v0 $(ALL_OBJS) -o $@
+	$(GHC) $(PKG_OPTS) $(LD_OPTS) -v0 $(ALL_OBJS) -o $@
 else
-	$(GHC) $(HC_OPTS) $(PKG_OPTS) $(LD_OPTS) -v0 -main-is Boot.main Boot.$(way_)o Shared.$(way_)o Map.$(way_)o -o $@
+	$(GHC) $(PKG_OPTS) $(LD_OPTS) -v0 -main-is Boot.main Boot.$(way_)o Shared.$(way_)o Map.$(way_)o -o $@
 endif
 	strip $@
 
