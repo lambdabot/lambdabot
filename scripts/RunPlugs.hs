@@ -39,7 +39,7 @@ controls = map ("Control." ++) ["Monad", "Monad.Reader", "Monad.Fix", "Arrow"]
 
 main = do
         setResourceLimit ResourceCPUTime (ResourceLimits rlimit rlimit)
-        s <- getContents
+        s <- getLine
         when (not . null $ s) $ do
                 s <- unsafeEval ("let { xxxx = \n# 1 \"<irc>\"\n"++s++"} in take 2048 (show xxxx)") context
                 when (isJust s) (putStrLn (fromJust s))
