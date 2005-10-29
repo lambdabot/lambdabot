@@ -77,16 +77,17 @@ hoogle query = do
 		    res = map snd $ filter ((>=cutoff) . fst) xs'
 		in if null res
                    then ["No matches, try a more general search"]
-		   else sortBy qualifiedName res
+                   else res
+--   else sortBy qualifiedName res
 
-          qualifiedName x y = 
-                   let (n,_) = break (== ':') x
-                       (m,_) = break (== ':') y
-                   in m `compare` n
+qualifiedName x y = 
+   let (n,_) = break (== ':') x
+       (m,_) = break (== ':') y
+   in length n `compare` length m
 
-	  toPair s = let (res, meta)  = break (=='@') s
-		         rank = takeWhile (/=' ') . drop 2 $ meta
-	             in case readM rank :: Maybe Int of
-				Just n  -> (n,res)
-		                Nothing -> (0,res)
+toPair s = let (res, meta)  = break (=='@') s
+         rank = takeWhile (/=' ') . drop 2 $ meta
+     in case readM rank :: Maybe Int of
+                Just n  -> (n,res)
+                Nothing -> (0,res)
 
