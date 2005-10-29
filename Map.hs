@@ -36,6 +36,7 @@ module Map (
         filterWithKey,
         filter,
         foldWithKey,
+        -- null :: Map k a -> Bool
 #endif
         mapMaybe,
         insertUpd,
