@@ -47,6 +47,12 @@ For compiling with profiling on, or to compile a static binary
 or
     make static=yes
 
+Use:
+    make clean
+or
+    make distclean
+
+to clean the tree.
 
 KNOWN BUGS:
 
