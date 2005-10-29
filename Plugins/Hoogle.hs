@@ -1,4 +1,9 @@
 --
+-- Copyright (c) 2004-5 Don Stewart - http://www.cse.unsw.edu.au/~dons
+-- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
+--
+
+--
 -- Talk to Neil Mitchell's `Hoogle' program
 --
 
@@ -8,6 +13,9 @@ import Lambdabot
 import PosixCompat
 import LBState
 import Serial 
+import Util
+import Data.List
+import qualified Config
 
 import Control.Monad	   ( when )
 import Control.Monad.Trans ( liftIO )
@@ -42,27 +50,43 @@ instance Module HoogleModule HoogleState where
 
     process _ _ _ _ _ = error "HoogleModule: invalid command"
 
-binary :: String
-binary = "/home/dons/bin/hoogle"
+hoogleBinary :: FilePath
+hoogleBinary = Config.hooglePath Config.config </> "hoogle"
 
+hoogleText :: FilePath
+hoogleText = Config.hooglePath Config.config </> "src" </> "hoogle.txt"
+
+-- arbitrary cutoff point
 cutoff :: Int
 cutoff = -10
 
+-- | Actually run the hoogle binary
 hoogle :: String -> IO [String]
-hoogle src = do (out,err,_) <- popen binary ["-v",src] (Just "")
-                return $ result out err
-    where result [] [] = ["Terminated\n"]
+hoogle query = do 
+        let args = ["--count", "20"
+                   ,"-l", hoogleText
+                   ,"--verbose"
+                   ,query]         
+        (out,err,_) <- popen hoogleBinary args (Just "")
+        return $ result out err
+
+    where result [] [] = ["An error occured.\n"]
           result [] ys = [ys]
           result xs _  = 
 		let xs' = map toPair $ lines xs
 		    res = map snd $ filter ((>=cutoff) . fst) xs'
 		in if null res
                    then ["No matches, try a more general search"]
-		   else res
+		   else sortBy qualifiedName res
 
-	  toPair s = let (rank,res) = break (==':') s
-		         res' = dropWhile (==':') res
+          qualifiedName x y = 
+                   let (n,_) = break (== ':') x
+                       (m,_) = break (== ':') y
+                   in m `compare` n
+
+	  toPair s = let (res, meta)  = break (=='@') s
+		         rank = takeWhile (/=' ') . drop 2 $ meta
 	             in case readM rank :: Maybe Int of
-				Just n -> (n,res')
-		                Nothing -> (0,res')
+				Just n  -> (n,res)
+		                Nothing -> (0,res)
 
