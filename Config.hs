@@ -35,11 +35,16 @@ config = Config {
 
         port            = 6667,
         verbose         = True,
-        textwidth       = 70,
-        moresize        = 7,
-        proxy           = Nothing,
-        autojoin        = ["#haskell"],
+        textwidth       = 65,
+        moresize        = 6,
+        proxy           = Just ("www-proxy",3128),
+        autojoin        = ["#haskell","#haskell-blah"
+                 	  ,"#haskell-overflow","#gentoo-haskell"],
 
+        admins          = [
+                "Pseudonym",    "shapr", "Heffalump",    "Igloo",  
+                "Cale",         "dons", "TheHunter",    "jlouis"
+        ]
         hooglePath      = "/home/dons/src/hoogle"
    }
 
