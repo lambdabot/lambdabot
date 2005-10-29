@@ -1,9 +1,15 @@
 INSTALL:
 
-You'll need GHC >= 6.5 (for example ghc 20050806 seems to work well) for the @eval plugin to work.
+You'll need GHC >= 6.4.
 
-Build the FastPackedString library:
+Build a newer Cabal than v1.0 if you haven't already:
+        $ darcs get http://cvs.haskell.org/darcs/cabal
+        $ cd cabal
+        -- edit GNUmakefile
+        $ make
+        $ make install
 
+Build the FastPackedString library without the mmap extensions:
         $ darcs get --partial http://www.cse.unsw.edu.au/~dons/code/fps
         $ cd fps
         $ ln -s fps.cabal.no-mmap fps.cabal
@@ -12,7 +18,6 @@ Build the FastPackedString library:
         $ runhaskell Setup.hs install
 
 Build hs-plugins:
-
         $ cd ..
         $ darcs get --partial http://www.cse.unsw.edu.au/~dons/code/hs-plugins
         $ cd hs-plugins/
@@ -21,14 +26,13 @@ Build hs-plugins:
         $ runhaskell Setup.hs install
 
 Build Lambdabot:
-
         $ cd ..
         $ darcs get --partial http://www.cse.unsw.edu.au/~dons/code/lambdabot
         $ cd lambdabot/
         $ autoconf
         $ ./configure
         -- edit Config.hs to your requirements
-        $ make
+        $ make          # you could try -j2
         $ ./lambdabot
 
 After this, you'll notice some of the plugins don't seem to work. They
