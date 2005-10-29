@@ -20,12 +20,14 @@
 module Plugins.Type (theModule) where
 
 import Lambdabot
+import Config
 import Util                 (expandTab)
 import PosixCompat          (popen)
 
 import Maybe (mapMaybe)
 import Control.Monad.Trans (liftIO)
 import Text.Regex
+
 
 --     In accordance with the KISS principle, the plan is to delegate all
 --     the hard work! To get the type of foo, pipe
@@ -107,7 +109,7 @@ extract_signatures output
 query_ghci :: String -> String -> String -> LB ()
 query_ghci src cmd expr =
        do
-       (output, errors, _) <- liftIO $ popen "ghci-6.4" ["-fglasgow-exts","-fno-th"]
+       (output, errors, _) <- liftIO $ popen (ghci config) ["-fglasgow-exts","-fno-th"]
 			                  (Just (command cmd (stripComments expr)))
        let ls = extract_signatures output
        ircPrivmsg src $ if null ls 

@@ -26,7 +26,10 @@ data Config = Config {
         -- | The 'path' component is a string to the location where the fortune files
         --   are located. On some systems, this is /usr/share/games/fortunes, on others
         --   this is /usr/share/games/fortune. Alter this to suit your configuration
-        fortunePath :: FilePath
+        fortunePath :: FilePath,
+
+        -- which ghci to use (in @type)
+        ghci        :: FilePath
 }
 
 --
@@ -52,6 +55,7 @@ config = Config {
         ],
 
         hooglePath      = "/home/dons/src/hoogle",
-        fortunePath     = "/usr/share/games/fortune/"
+        fortunePath     = "/usr/share/games/fortune/",
+        ghci            = "ghci-6.5"
    }
 
