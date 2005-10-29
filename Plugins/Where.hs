@@ -37,7 +37,7 @@ instance Module WhereModule WhereState where
 
   moduleDefState _  = return $ M.empty
   moduleSerialize _ = Just mapPackedSerial
-  moduleCmds   _ = return ["where", "where+" ]
+  moduleCmds   _ = return ["where", "what", "where+" ]
 
   process _ _ target cmd rest = do
         result <- withMS $ \factFM writer -> case words rest of
@@ -53,6 +53,7 @@ processCommand :: WhereState -> WhereWriter
 
 processCommand factFM writer fact cmd dat = case cmd of
         "where"     -> return $ getWhere factFM fact
+        "what"      -> return $ getWhere factFM fact -- an alias
         "where+"    -> updateWhere True factFM writer fact dat
         _           -> return "Unknown command."
 
