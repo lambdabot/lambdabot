@@ -70,7 +70,7 @@ hoogle query = do
         (out,err,_) <- popen hoogleBinary args (Just "")
         return $ result out err
 
-    where result [] [] = ["An error occured.\n"]
+    where result [] [] = ["An error occured."]
           result [] ys = [ys]
           result xs _  = 
 		let xs' = map toPair $ lines xs
