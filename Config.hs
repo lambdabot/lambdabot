@@ -35,8 +35,8 @@ config = Config {
 
         port            = 6667,
         verbose         = True,
-        textwidth       = 65,
-        moresize        = 6,
+        textwidth       = 75,
+        moresize        = 5,
         proxy           = Just ("www-proxy",3128),
         autojoin        = ["#haskell","#haskell-blah"
                  	  ,"#haskell-overflow","#gentoo-haskell"],
