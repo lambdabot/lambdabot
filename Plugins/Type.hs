@@ -106,24 +106,26 @@ extract_signatures output
 --
 --     With this the command handler can be easily defined using popen:
 --
-query_ghci :: String -> String -> String -> LB ()
-query_ghci src cmd expr =
-       do
-       (output, errors, _) <- liftIO $ popen (ghci config) ["-fglasgow-exts","-fno-th"]
-			                  (Just (command cmd (stripComments expr)))
+query_ghci' :: String -> String -> IO String
+query_ghci' cmd expr = do
+       (output, errors, _) <- popen (ghci config) ["-fglasgow-exts","-fno-th"]
+			               (Just (command cmd (stripComments expr)))
        let ls = extract_signatures output
-       ircPrivmsg src $ if null ls 
-       			then unlines . take 3 . lines . expandTab . cleanRE $ errors -- "bzzt" 
-			else ls
-
+       return $ if null ls 
+       		then unlines . take 3 . lines . expandTab . cleanRE $ errors -- "bzzt" 
+		else ls
   where 
      cleanRE :: String -> String
      cleanRE s
         | Just (_,_,b,_) <- ghci_msg `matchRegexAll`  s = b
 	| otherwise      = s
-
      ghci_msg = mkRegex "<interactive>:[^:]*:[^:]*: ?"
 
+
+query_ghci :: String -> String -> String -> LB ()
+query_ghci src y z = do
+        ty <- liftIO $ query_ghci' y z
+        ircPrivmsg src ty
 
 --
 --     And thus the plugin:
