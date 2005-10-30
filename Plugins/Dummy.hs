@@ -5,6 +5,7 @@ module Plugins.Dummy (theModule) where
 
 import Lambdabot
 import LBState
+import Util
 import Plugins.Dummy.DocAssocs (docAssocs)
 import Plugins.Dummy.Moo (cows)
 import qualified Map as M
@@ -54,12 +55,12 @@ dummylst = [("dummy",       \_ -> "dummy"),
                [] -> "http://haskell.org/ghc/docs/latest/html/libraries/index.html"
                _  -> case M.lookup x docAssocs of
                      Nothing -> x ++ " not available"
-                     Just m  -> "http://haskell.org/ghc/docs/latest/html/"++
-                                "libraries/" ++ m ++ "/" ++ x ++ ".html"),
+                     Just m  -> "http://haskell.org/ghc/docs/latest/html/libraries/" <>
+                                m </> map (choice (=='.') (const '-') id) x <.> "html"),
             ("libsrc",      \x -> case M.lookup x docAssocs of
                Nothing -> x ++ " not available"
-               Just m  -> "http://darcs.complete.org/fptools/libraries/" ++
-                          m ++ "/" ++ map (choice (=='.') (const '/') id) x ++ ".hs"),
+               Just m  -> "http://darcs.complete.org/fptools/libraries/" <>
+                          m </> map (choice (=='.') (const '/') id) x <.> "hs"),
 	    ("learn",       \_ -> "http://www.haskell.org/learning.html"),
 	    ("map",       \_ -> "http://www.haskell.org/hawiki/HaskellUserLocations"),
 
