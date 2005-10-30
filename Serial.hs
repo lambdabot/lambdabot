@@ -21,7 +21,8 @@
 --
 module Serial (
         Serial(..), 
-        stdSerial, mapSerial, listSerial, mapPackedSerial, assocListPackedSerial,
+        stdSerial, mapSerial, listSerial, 
+        mapPackedSerial, assocListPackedSerial, mapListPackedSerial,
         readM, Packable(..), {- instances of Packable -}
     ) where
 
@@ -118,6 +119,10 @@ instance Packable ([(FastString,FastString)]) where
 -- And for packed string maps
 mapPackedSerial :: Serial (Map FastString FastString)
 mapPackedSerial = Serial (Just . showPacked) (Just . readPacked)
+
+-- And for list of packed string maps
+mapListPackedSerial :: Serial (Map FastString [FastString])
+mapListPackedSerial = Serial (Just . showPacked) (Just . readPacked)
 
 -- And for association list
 assocListPackedSerial   :: Serial ([(FastString,FastString)])

@@ -3,21 +3,20 @@
 -- Copyright (c) 2004 Simon Winwood - http://www.cse.unsw.edu.au/~sjw
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
 --
---
 
 --
--- | A translator module for lambdabot.
+-- | A translator module for lambdabot, also provides some quote code.
 --
 module Plugins.Babel (theModule) where
 
 import Lambdabot
 import LBState
-import Serial               (mapSerial)
+import Serial
 import Util                 (stdGetRandItem)
-import PosixCompat          (popen)
 import MiniHTTP
 import Config               (proxy,config)
 import qualified Map as M
+import qualified Data.FastPackedString as P
 
 import Data.Maybe           (fromMaybe,fromJust)
 import Data.Char            (toLower)
@@ -35,22 +34,23 @@ newtype BabelModule = BabelModule ()
 theModule :: MODULE
 theModule = MODULE $ BabelModule ()
 
-type Quotes = M.Map String [String]
--- type Quotes = M.Map P.FastString [P.FastString]
+type Quotes = M.Map P.FastString [P.FastString]
 
 instance Module BabelModule Quotes where
-        moduleSerialize _       = Just mapSerial
+        moduleSerialize _       = Just mapListPackedSerial
         moduleDefState  _       = return M.empty
 
         moduleHelp _ "babel"    = concat `fmap` run_babel' ["help"]
+
         moduleHelp _ "remember" = return help
-        moduleHelp _ "quote-add" = return help
+        moduleHelp _ "quote-add"= return help
         moduleHelp _ "quote"    = return help
-        moduleHelp _ "timein"   = return "@timein <city>, report the local time in <city>"
         moduleHelp _ "ghc"      = return "GHC!"
+
+--      moduleHelp _ "timein"   = return "@timein <city>, report the local time in <city>"
         moduleHelp _ _          = return "@babel,@remember,@quote,@timein,@ghc"
 
-        moduleCmds _            = return ["babel", "remember", "quote", "timein", "ghc" ]
+        moduleCmds _ = return ["babel", "remember", "quote",{-"timein",-} "ghc"]
 
         process _ _ src "babel" s      = run_babel src s
         process a b src "remember"  s  = process a b src "quote-add" s -- synonym
@@ -59,12 +59,14 @@ instance Module BabelModule Quotes where
         process _ _ src "ghc"        _ = run_quote    src "ghc"
 --      process _ _ src "last"  s     = run_last  src s
 
+        {-
         -- totally unrelated :}
         process _ _ src "timein" s =
           if s == "help"
             then ircPrivmsg src "  http://www.timeanddate.com"
             else do (o,_,_) <- liftIO $ popen "timein" [s] Nothing
                     ircPrivmsg src $ "  " ++ o
+        -}
 
         process _ _ _   _ _ = error "BabelBot: Invalid cmd"
 
@@ -169,6 +171,7 @@ run_last src i = do
 -}
 
 ------------------------------------------------------------------------
+
 -- the @remember command stores away a quotation by a user, for future
 -- use by @quote
 
@@ -177,8 +180,8 @@ run_remember str = do
         let (name,q') = break (== ' ') str
             q = if null q' then q' else tail q'
         withMS $ \fm writer -> do
-          let ss  = fromMaybe [] (M.lookup name fm)
-              fm' = M.insert name (q:ss) fm
+          let ss  = fromMaybe [] (M.lookup (P.pack name) fm)
+              fm' = M.insert (P.pack name) (P.pack q : ss) fm
           writer fm'
 
 --
@@ -187,20 +190,19 @@ run_remember str = do
 run_quote :: String -> String -> ModuleT Quotes LB ()
 run_quote target name = do
     fm <- readMS
-    let qs' = M.lookup name fm
-    (nm,qs) <- if name /= []
-                then return (name,qs') -- (String, Maybe [String])
+    let pnm = P.pack name
+        qs' = M.lookup pnm fm
 
-                else do (nm,rs') <- liftIO $ stdGetRandItem (M.toList fm) -- random person
-                        return (nm, Just rs')
-
+    (nm,qs) <- if not (P.null pnm)
+               then return (pnm,qs') -- (FastString, Maybe [FastString])
+               else do (nm',rs') <- liftIO $ stdGetRandItem (M.toList fm) -- random person
+                       return (nm', Just rs')
     case qs of
-        Nothing   -> ircPrivmsg target $ nm ++ " hasn't said anything memorable"
-
+        Nothing   -> ircPrivmsg target $ (P.unpack nm) ++ " hasn't said anything memorable"
         Just msgs -> do msg <- liftIO $ stdGetRandItem msgs
-                        if name /= []
-                            then ircPrivmsg target $ "  " ++ msg
-                            else ircPrivmsg target $ nm++" says: " ++ msg
+                        if not (P.null pnm)
+                            then ircPrivmsg target $ "  " ++ (P.unpack msg)
+                            else ircPrivmsg target $ (P.unpack nm)++" says: " ++ (P.unpack msg)
 
 ------------------------------------------------------------------------
 
