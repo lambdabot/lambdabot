@@ -209,7 +209,7 @@ dropSpace = let f = reverse . dropWhile isSpace in f . f
 --   case [] is returned.
 clean :: Char -> [Char]
 clean x | x == '\CR' = []
-        | otherwise         = [x]
+        | otherwise  = [x]
 
 ------------------------------------------------------------------------
 
