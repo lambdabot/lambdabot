@@ -84,7 +84,7 @@ class Packable t where
 
 -- | An instance for Map Packed [Packed]
 instance Packable (Map FastString [FastString]) where
-        readPacked ps = M.addList (readKV (P.lines ps)) M.empty
+        readPacked ps = M.fromList (readKV (P.lines ps))
                 where
                 readKV :: [FastString] -> [(FastString,[FastString])]
                 readKV []       =  []
@@ -97,7 +97,7 @@ instance Packable (Map FastString [FastString]) where
         
 
 instance Packable (Map FastString FastString) where
-        readPacked ps = M.addList (readKV (P.lines ps)) M.empty
+        readPacked ps = M.fromList (readKV (P.lines ps))
                 where
                   readKV :: [FastString] -> [(FastString,FastString)]
                   readKV []         = []
