@@ -51,6 +51,7 @@ import Data.Map
 
 addList :: (Ord k) => [(k,a)] -> Map k a -> Map k a
 addList l m = union (fromList l) m
+{-# INLINE addList #-}
 
 #else
 --
