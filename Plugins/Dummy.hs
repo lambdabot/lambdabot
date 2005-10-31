@@ -9,6 +9,7 @@ import Util
 import Plugins.Dummy.DocAssocs (docAssocs)
 import Plugins.Dummy.Moo (cows)
 import qualified Map as M
+import qualified Data.FastPackedString as P
 
 newtype DummyModule = DummyModule ()
 
@@ -53,14 +54,14 @@ dummylst = [("dummy",       \_ -> "dummy"),
 	    ("paste",       \_ -> "http://www.haskell.org/hawiki/HaskellIrcPastePage"),
             ("docs",        \x -> case x of
                [] -> "http://haskell.org/ghc/docs/latest/html/libraries/index.html"
-               _  -> case M.lookup x docAssocs of
+               _  -> case M.lookup (P.pack x) docAssocs of
                      Nothing -> x ++ " not available"
                      Just m  -> "http://haskell.org/ghc/docs/latest/html/libraries/" <>
-                                m </> map (choice (=='.') (const '-') id) x <.> "html"),
-            ("libsrc",      \x -> case M.lookup x docAssocs of
+                                (P.unpack m) </> map (choice (=='.') (const '-') id) x <.> "html"),
+            ("libsrc",      \x -> case M.lookup (P.pack x) docAssocs of
                Nothing -> x ++ " not available"
                Just m  -> "http://darcs.complete.org/fptools/libraries/" <>
-                          m </> map (choice (=='.') (const '/') id) x <.> "hs"),
+                          (P.unpack m) </> map (choice (=='.') (const '/') id) x <.> "hs"),
 	    ("learn",       \_ -> "http://www.haskell.org/learning.html"),
 	    ("map",       \_ -> "http://www.haskell.org/hawiki/HaskellUserLocations"),
 
