@@ -600,16 +600,17 @@ writeGlobalState mod name = case moduleSerialize mod of
         Just out -> liftIO $ P.writeFile (toFilename name) out
 
 readFile' :: String -> IO P.FastString
-readFile' f = do
-  cont <- P.mmapFile f
-  cont `seq` return cont
+readFile' = P.mmapFile
+{-# INLINE readFile' #-}
 
 readGlobalState :: Module m s => m -> String -> IO (Maybe s)
-readGlobalState mod name = case moduleSerialize mod of
-  Nothing  -> return Nothing
-  Just ser -> do
-    state <- Just `fmap` readFile' (toFilename name) `catch` \_ -> return Nothing
-    return $! maybe Nothing (Just $!) $ deserialize ser =<< state
+readGlobalState mod name = 
+  case moduleSerialize mod of
+          Nothing  -> return Nothing
+          Just ser -> do
+            state <- Just `fmap` readFile' (toFilename name) `catch` \_ -> return Nothing
+            return $! maybe Nothing (Just $!) $ deserialize ser =<< state
+{-# INLINE readGlobalState #-}
 
 ------------------------------------------------------------------------
 --
