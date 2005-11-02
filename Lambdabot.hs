@@ -608,8 +608,9 @@ readGlobalState mod name =
   case moduleSerialize mod of
           Nothing  -> return Nothing
           Just ser -> do
-            state <- Just `fmap` readFile' (toFilename name) `catch` \_ -> return Nothing
-            return $! maybe Nothing (Just $!) $ deserialize ser =<< state
+            state  <- Just `fmap` readFile' (toFilename name) `catch` \_ -> return Nothing
+            state' <- {-# SCC "readGlobalState.1" #-} evaluate $ deserialize ser =<< state
+            return $! maybe Nothing (Just $!) $ state'
 {-# INLINE readGlobalState #-}
 
 ------------------------------------------------------------------------
