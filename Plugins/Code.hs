@@ -27,6 +27,7 @@ import Lambdabot
 import LBState
 import Util
 import PosixCompat
+import Config
 
 import Control.Monad.Trans      ( liftIO )
 import System.IO
@@ -39,7 +40,8 @@ theModule = MODULE $ CodeModule ()
 
 instance Module CodeModule [FilePath] where
 
-  moduleDefState _ = liftIO $ getSourceFiles top
+  moduleDefState _ = liftIO $ getSourceFiles $ 
+  	fptoolsPath config </> "libraries" </> "base"
 
   moduleHelp _ _ = return "@code, print random line of code from $fptools"
   moduleCmds   _ = return [ "code" ]
@@ -57,9 +59,6 @@ instance Module CodeModule [FilePath] where
         ircPrivmsg' src $ (basename file) ++ ": " ++ line
 
   process _ _ _ _ _ = error "Code: invalid command"
-
-top :: String
-top = "/home/dons/head-gcc3/fptools/libraries/base/"
 
 --
 -- work out our list of potential source files

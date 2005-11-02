@@ -28,6 +28,9 @@ data Config = Config {
         --   this is /usr/share/games/fortune. Alter this to suit your configuration
         fortunePath :: FilePath,
 
+        -- | Path to the top of $fptools, used by @code
+	fptoolsPath :: FilePath,
+
         -- which ghci to use (in @type)
         ghci        :: FilePath
 }
@@ -54,8 +57,10 @@ config = Config {
                 "Cale",         "dons", "TheHunter",    "jlouis"
         ],
 
-        hooglePath      = "/home/dons/src/hoogle",
-        fortunePath     = "/usr/share/games/fortune/",
-        ghci            = "ghci-6.5"
+        hooglePath      = "/home/dons/hoogle",
+        fortunePath     = "/home/dons/fortune/",
+	fptoolsPath     = "/home/dons/fptools",
+
+        ghci            = "ghci"
    }
 
