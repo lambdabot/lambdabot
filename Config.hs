@@ -29,7 +29,7 @@ data Config = Config {
         fortunePath :: FilePath,
 
         -- | Path to the top of $fptools, used by @code
-	fptoolsPath :: FilePath,
+        fptoolsPath :: FilePath,
 
         -- which ghci to use (in @type)
         ghci        :: FilePath
@@ -40,7 +40,7 @@ data Config = Config {
 --
 config :: Config
 config = Config {
-        name            = "lambdabot",
+        name            = "testabot",
         userinfo        = "Lambda Robots - 100% Loyal",
         host            = "irc.au.freenode.net",
 
@@ -59,7 +59,7 @@ config = Config {
 
         hooglePath      = "/home/dons/hoogle",
         fortunePath     = "/home/dons/fortune/",
-	fptoolsPath     = "/home/dons/fptools",
+        fptoolsPath     = "/home/dons/fptools",
 
         ghci            = "ghci"
    }
