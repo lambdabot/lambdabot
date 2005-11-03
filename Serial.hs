@@ -127,3 +127,4 @@ mapListPackedSerial = Serial (Just . showPacked) (Just . readPacked)
 -- And for association list
 assocListPackedSerial   :: Serial ([(FastString,FastString)])
 assocListPackedSerial = Serial (Just . showPacked) (Just . readPacked)
+

@@ -11,6 +11,9 @@ import Serial
 import AltTime
 import Config
 import qualified Map as M
+import qualified Data.FastPackedString as P
+
+import Binary
 
 import Data.List           ((\\), nub)
 
@@ -28,9 +31,10 @@ theModule = MODULE $ SeenModule ()
 -- Try using packed strings?
 
 -- | The type of channels
-type Channel = String
+type Channel = P.FastString
+
 -- | The type of nicknames
-type Nick = String
+type Nick = P.FastString
 
 -- | We last heard the user speak at ClockTime; since then we have missed
 --   TimeDiff of him because we were absent.
@@ -53,14 +57,30 @@ data UserStatus
           -- ^ The user changed nick to something new.
     deriving (Show, Read)
 
+data StopWatch = Stopped TimeDiff 
+               | Running ClockTime 
+        deriving (Show,Read)
+
 type SeenState = M.Map Nick UserStatus
 type Seen m a = ModuleT SeenState m a
+
+------------------------------------------------------------------------
+
+-- ok, since this module generates quite a lot of state, what we'll do
+-- is use Binary to pack this value, since Read is sooo slow.
+
+instance Binary ClockTime where
+instance Binary TimeDiff where
+instance Binary UserStatus where
+
+------------------------------------------------------------------------
 
 instance Module SeenModule SeenState where
     moduleHelp _ _      = return "Report if a user has been seen by the bot"
     moduleCmds _        = return ["seen"]
     moduleDefState _    = return M.empty
-    moduleSerialize _   = Just mapSerial
+    moduleSerialize _   = Just (error "mapSerial")
+
     moduleInit _        = do 
       zipWithM_ ircSignalConnect 
         ["JOIN", "PART", "QUIT", "NICK", "353",      "PRIVMSG"] $ map withSeenFM
@@ -77,7 +97,7 @@ instance Module SeenModule SeenState where
 
     process _ msg target _ rest = do 
          seenFM <- readMS
-         now <- liftIO getClockTime
+         now    <- liftIO getClockTime
          ircPrivmsg target . unlines $ getAnswer msg rest seenFM now
 
 ------------------------------------------------------------------------
@@ -88,11 +108,11 @@ myname = lowerCaseString (name config)
 getAnswer :: IRC.Message -> String -> SeenState -> ClockTime -> [String]
 getAnswer msg rest seenFM now 
   | lcnick == myname = ["Yes, I'm here."]
-  | otherwise        = case M.lookup lcnick seenFM of
-      Just (Present mct cs) -> nickPresent mct cs
-      Just (NotPresent ct td chans) -> nickNotPresent ct td chans
-      Just (WasPresent ct sw _ chans) -> nickWasPresent ct sw chans
-      Just (NewNick newnick) -> nickIsNew newnick
+  | otherwise        = case M.lookup (P.pack lcnick) seenFM of
+      Just (Present mct cs)            -> nickPresent mct cs
+      Just (NotPresent ct td chans)    -> nickNotPresent ct td chans
+      Just (WasPresent ct sw _ chans)  -> nickWasPresent ct sw chans
+      Just (NewNick newnick)           -> nickIsNew newnick
       _ -> ircMessage ["I haven't seen ", nick, "."]
   where
     -- I guess the only way out of this spagetty hell are printf-style responses.
@@ -271,8 +291,6 @@ updateNP _ _ status = status
 
 ------------------------------------------------------------------------
 -- Stop watches mini-library --
-
-data StopWatch = Stopped TimeDiff | Running ClockTime deriving (Show,Read)
 
 zeroWatch :: StopWatch
 zeroWatch = Stopped noTimeDiff
