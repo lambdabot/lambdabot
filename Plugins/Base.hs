@@ -234,6 +234,11 @@ doPRIVMSG' myname msg
     = let (cmd, params) = breakOnGlue " " (dropWhile (==' ') text)
       in doPublicMsg cmd (dropWhile (==' ') params)
 
+  -- special syntax for @eval
+  | "> " `isPrefixOf` text
+    = let expr = drop 2 text
+      in doPublicMsg "@eval" (dropWhile (==' ') expr)
+
   | otherwise = doIGNORE msg
 
   where
@@ -243,9 +248,11 @@ doPRIVMSG' myname msg
     (who, _) = breakOnGlue "!" (msgPrefix msg)
 
     doPersonalMsg ('@':c) r = doMsg c r who
+    doPersonalMsg (">")   r = doMsg "eval" r who
     doPersonalMsg _ _       = doIGNORE msg
 
     doPublicMsg ('@':c) r   = doMsg c r alltargets
+    doPublicMsg (">")   r   = doMsg "eval" r alltargets
     doPublicMsg _ _         = doIGNORE msg
 
     doMsg cmd rest towhere = do
