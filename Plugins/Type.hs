@@ -117,9 +117,11 @@ query_ghci' cmd expr = do
   where 
      cleanRE :: String -> String
      cleanRE s
+        | Just _         <- notfound `matchRegex` s = "Couldn\'t find qualified module.\nMaybe you\'re using the wrong syntax: Data.List.(\\\\) instead of (Data.List.\\\\)?"
         | Just (_,_,b,_) <- ghci_msg `matchRegexAll`  s = b
 	| otherwise      = s
      ghci_msg = mkRegex "<interactive>:[^:]*:[^:]*: ?"
+     notfound = mkRegex "Failed to load interface"
 
 
 query_ghci :: String -> String -> String -> LB ()
