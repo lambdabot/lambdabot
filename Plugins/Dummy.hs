@@ -30,6 +30,7 @@ instance Module DummyModule [String] where
         "moo"         -> "vegan-friendly command"
         "map"         -> "#haskell user map"
         "botsnack"    -> "bot-feeder"
+        "get-shapr"   -> "summon shapr instantly"
         _             -> "dummy module"
 
   moduleCmds   _ = return $ "moo" : map fst dummylst
@@ -46,6 +47,7 @@ instance Module DummyModule [String] where
 
 dummylst :: [(String, String -> String)]
 dummylst = [("dummy",       \_ -> "dummy"),
+            ("get-shapr",   \_ -> "shapr!!"),
 	    ("eurohaskell", \_ -> unlines ["less talks, more code!",
 					   "http://www.haskell.org/hawiki/EuroHaskell",
 					   "EuroHaskell - Haskell Hackfest - Summer 2005 ",
