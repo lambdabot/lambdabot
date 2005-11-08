@@ -190,7 +190,12 @@ myname = lowerCaseString (name config)
 
 getAnswer :: IRC.Message -> String -> SeenState -> ClockTime -> [String]
 getAnswer msg rest seenFM now 
-  | lcnick == myname = ["Yes, I'm here."]
+  | lcnick == myname = 
+        case M.lookup (P.pack lcnick) seenFM of
+            Just (Present _ cs) -> 
+                ["Yes, I'm here. I'm in " ++ listToStr "and" (map P.unpack cs)]
+            _ -> error "I'm here, but not here. And very confused!"
+
   | otherwise        = case M.lookup (P.pack lcnick) seenFM of
       Just (Present mct cs)            -> nickPresent mct (map P.unpack cs)
       Just (NotPresent ct td chans)    -> nickNotPresent ct td (map P.unpack chans)
