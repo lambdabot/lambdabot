@@ -128,3 +128,4 @@ mapListPackedSerial = Serial (Just . showPacked) (Just . readPacked)
 assocListPackedSerial   :: Serial ([(FastString,FastString)])
 assocListPackedSerial = Serial (Just . showPacked) (Just . readPacked)
 
+------------------------------------------------------------------------
