@@ -8,6 +8,7 @@ module AltTime (
   ) where
 
 import Util (listToStr)
+import Binary
 
 import Control.Arrow (first)
 
@@ -66,4 +67,34 @@ timeDiffPretty td = listToStr "and" $ filter (not . null) [
     days = hours `div` 24
     months = days `div` 28
     years = months `div` 12
+
+------------------------------------------------------------------------
+
+instance Binary ClockTime where
+        put_ bh (ClockTime (T.TOD i j)) = do
+                put_ bh i
+                put_ bh j
+        get bh = do
+                i <- get bh
+                j <- get bh
+                return (ClockTime (T.TOD i j))
+
+instance Binary TimeDiff where
+        put_ bh (TimeDiff ye mo da ho mi se ps) = do
+                put_ bh ye
+                put_ bh mo
+                put_ bh da
+                put_ bh ho
+                put_ bh mi
+                put_ bh se
+                put_ bh ps
+        get bh = do
+                ye <- get bh 
+                mo <- get bh 
+                da <- get bh 
+                ho <- get bh 
+                mi <- get bh 
+                se <- get bh 
+                ps <- get bh 
+                return (TimeDiff ye mo da ho mi se ps)
 
