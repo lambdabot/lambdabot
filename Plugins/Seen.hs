@@ -1,4 +1,8 @@
 --
+-- Copyright (c) 2004 Thomas Jaeger
+-- Copyright (c) 2005 Don Stewart - http://www.cse.unsw.edu.au/~dons
+-- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
+--
 -- | Keep track of IRC users.
 --
 module Plugins.Seen (theModule) where
@@ -7,12 +11,13 @@ import Lambdabot
 import LBState
 import qualified IRC
 import Util (lowerCaseString, firstWord, listToStr, debugStrLn)
-import Serial
+import Serial  ({-instances-})
 import AltTime
 import Config
 import qualified Map as M
 import qualified Data.FastPackedString as P
 
+import System.IO
 import Binary
 
 import Data.List           ((\\), nub)
@@ -63,15 +68,76 @@ data StopWatch = Stopped TimeDiff
 
 type SeenState = M.Map Nick UserStatus
 type Seen m a = ModuleT SeenState m a
-
+ 
 ------------------------------------------------------------------------
 
 -- ok, since this module generates quite a lot of state, what we'll do
--- is use Binary to pack this value, since Read is sooo slow.
+-- is use Binary to pack this value, since Read is sooo slow and exe (as
+-- my gf says :)
 
-instance Binary ClockTime where
-instance Binary TimeDiff where
+instance Binary (M.Map Nick UserStatus) where
+    put_ bh m = put_ bh (M.toList m)
+    get bh    = do x <- get bh ; return (M.fromList x)
+
+instance Binary StopWatch where
+    put_ bh (Stopped td) = do
+        putByte bh 0
+        put_ bh td
+
+    put_ bh (Running ct) = do
+        putByte bh 1
+        put_ bh ct
+
+    get bh = do 
+        h <- getWord8 bh
+        case h of
+                0 -> do x <- get bh ; return (Stopped x)
+                1 -> do x <- get bh ; return (Running x)
+                _ -> error "Seen.StopWatch.get"
+
 instance Binary UserStatus where
+    put_ bh (Present spoke chans) = do
+        putByte bh 0
+        put_ bh spoke
+        put_ bh chans
+    put_ bh (NotPresent ct sw chans) = do
+        putByte bh 1
+        put_ bh ct
+        put_ bh sw
+        put_ bh chans
+    put_ bh (WasPresent ct sw spoke chans) = do
+        putByte bh 2
+        put_ bh ct
+        put_ bh sw
+        put_ bh spoke
+        put_ bh chans
+    put_ bh (NewNick n) = do
+        putByte bh 3
+        put_ bh n
+
+    get bh = do
+        h <- getWord8 bh
+        case h of
+            0 -> do
+                x <- get bh
+                y <- get bh
+                return (Present x y)
+            1 -> do
+                x <- get bh
+                y <- get bh
+                z <- get bh
+                return (NotPresent x y z)
+            2 -> do
+                x <- get bh
+                y <- get bh
+                z <- get bh
+                a <- get bh
+                return (WasPresent x y z a)
+            3 -> do 
+                x <- get bh
+                return (NewNick x)
+
+            _ -> error "Seen.UserStatus.get"
 
 ------------------------------------------------------------------------
 
@@ -79,7 +145,7 @@ instance Module SeenModule SeenState where
     moduleHelp _ _      = return "Report if a user has been seen by the bot"
     moduleCmds _        = return ["seen"]
     moduleDefState _    = return M.empty
-    moduleSerialize _   = Just (error "mapSerial")
+    moduleSerialize _   = Nothing   -- do our own writing/serialising
 
     moduleInit _        = do 
       zipWithM_ ircSignalConnect 
@@ -87,14 +153,31 @@ instance Module SeenModule SeenState where
         [joinCB, partCB, quitCB, nickCB, joinChanCB, msgCB]
       -- This magically causes the 353 callback to be invoked :)
       tryError $ send . IRC.names =<< ircGetChannels
+
+      -- and suck in our state:
+      s  <- liftIO $ do 
+              h  <- openFile "State/seen" ReadMode
+              bh <- openBinIO_ h
+              {-# SCC "Seen.get" #-} get bh
+      --      hClose h
+      writeMS s
       return ()
     
     moduleExit _ = do
-        chans <- ircGetChannels
-        unless (null chans) $ do
+      chans <- ircGetChannels
+      unless (null chans) $ do
             ct    <- liftIO getClockTime
-            modifyMS $ botPart ct chans
+            modifyMS $ botPart ct (map P.pack chans)
 
+        -- and write out our state:
+      s <- readMS
+      liftIO $ do 
+              h  <- openFile "State/seen" WriteMode
+              bh <- openBinIO_ h
+              {-# SCC "Seen.get" #-}put_ bh s
+              hClose h
+      return ()
+    
     process _ msg target _ rest = do 
          seenFM <- readMS
          now    <- liftIO getClockTime
@@ -109,10 +192,10 @@ getAnswer :: IRC.Message -> String -> SeenState -> ClockTime -> [String]
 getAnswer msg rest seenFM now 
   | lcnick == myname = ["Yes, I'm here."]
   | otherwise        = case M.lookup (P.pack lcnick) seenFM of
-      Just (Present mct cs)            -> nickPresent mct cs
-      Just (NotPresent ct td chans)    -> nickNotPresent ct td chans
-      Just (WasPresent ct sw _ chans)  -> nickWasPresent ct sw chans
-      Just (NewNick newnick)           -> nickIsNew newnick
+      Just (Present mct cs)            -> nickPresent mct (map P.unpack cs)
+      Just (NotPresent ct td chans)    -> nickNotPresent ct td (map P.unpack chans)
+      Just (WasPresent ct sw _ chans)  -> nickWasPresent ct sw (map P.unpack chans)
+      Just (NewNick newnick)           -> nickIsNew (P.unpack newnick)
       _ -> ircMessage ["I haven't seen ", nick, "."]
   where
     -- I guess the only way out of this spagetty hell are printf-style responses.
@@ -138,11 +221,13 @@ getAnswer msg rest seenFM now
     nickIsNew newnick = ircMessage [if you then "You have" else nick++" has", 
         " changed nick to ", us, "."] ++ getAnswer msg us seenFM now 
       where
-        findFunc str = case M.lookup (lowerCaseString str) seenFM of
-            Just (NewNick str') -> findFunc str'
-            Just _              -> str
-            Nothing             -> error "SeenModule.nickIsNew: Nothing"
-        us = findFunc newnick
+
+        findFunc pstr = case M.lookup pstr seenFM of
+            Just (NewNick pstr') -> findFunc pstr'
+            Just _               -> pstr
+            Nothing              -> error "SeenModule.nickIsNew: Nothing"
+
+        us = P.unpack $ findFunc (P.pack $ lowerCaseString newnick)
 
     ircMessage = return . concat
     nick' = firstWord rest
@@ -165,10 +250,10 @@ getAnswer msg rest seenFM now
 --   user speaking.
 joinCB :: IRC.Message -> SeenState -> ClockTime -> Nick -> Either String SeenState
 joinCB msg fm _ct nick
-  | nick == myname = Right fm
-  | otherwise      = Right $ M.insertUpd (updateJ Nothing (IRC.channels msg)) 
+  | nick == (P.pack myname) = Right fm
+  | otherwise               = Right $ M.insertUpd (updateJ Nothing (map P.pack $ IRC.channels msg)) 
                                          nick newInfo fm
-  where newInfo = Present Nothing (IRC.channels msg)
+  where newInfo = Present Nothing (map P.pack $ IRC.channels msg)
 
 
 botPart :: ClockTime -> [Channel] -> SeenState -> SeenState
@@ -185,10 +270,10 @@ botPart ct cs fm = fmap botPart' fm where
 -- | when somebody parts
 partCB :: IRC.Message -> SeenState -> ClockTime -> Nick -> Either String SeenState
 partCB msg fm ct nick
-  | nick == myname = Right $ botPart ct (IRC.channels msg) fm
+  | nick == (P.pack myname) = Right $ botPart ct (map P.pack $ IRC.channels msg) fm
   | otherwise      = case M.lookup nick fm of
       Just (Present mct xs) ->
-        case xs \\ IRC.channels msg of
+        case xs \\ (map P.pack $ IRC.channels msg) of
           [] -> Right $ M.insert nick
                  (NotPresent ct zeroWatch xs)
                  fm
@@ -206,12 +291,12 @@ quitCB _ fm ct nick = case M.lookup nick fm of
 -- | when somebody changes his\/her name
 nickCB :: IRC.Message -> SeenState -> ClockTime -> Nick -> Either String SeenState
 nickCB msg fm _ nick = case M.lookup nick fm of
-   Just status -> let fm' = M.insert nick (NewNick newnick) fm
+   Just status -> let fm' = M.insert nick (NewNick $ P.pack newnick) fm
                   in  Right $ M.insert lcnewnick status fm'
    _           -> Left "someone who isn't here changed nick"
    where
    newnick = drop 1 $ head (msgParams msg)
-   lcnewnick = lowerCaseString newnick
+   lcnewnick = P.pack $ lowerCaseString newnick
 
 -- use IRC.IRC.channels?
 -- | when the bot join a channel
@@ -220,10 +305,10 @@ joinChanCB msg fm now _nick
     = Right $ fmap (updateNP now chan) $ foldl insertNick fm chanUsers
   where
     l = msgParams msg
-    chan = l !! 2
-    chanUsers = words (drop 1 (l !! 3)) -- remove ':'
+    chan = P.pack $ l !! 2
+    chanUsers = map P.pack $ words (drop 1 (l !! 3)) -- remove ':'
     insertNick fm' u = M.insertUpd (updateJ (Just now) [chan])
-                                    (lowerCaseString $ unUserMode u)
+                                    (P.pack . lowerCaseString . P.unpack .  unUserMode $ u)
                                     (Present Nothing [chan])
                                     fm'
 
@@ -237,7 +322,7 @@ msgCB _ fm ct nick =
 
 -- misc. functions
 unUserMode :: Nick -> Nick
-unUserMode nick = dropWhile (`elem` "@+") nick
+unUserMode nick = P.dropWhile (`elem` "@+") nick
 
 -- | Callbacks are only allowed to use a limited knowledge of the world. 
 -- 'withSeenFM' is (up to trivial isomorphism) a monad morphism from the 
@@ -251,7 +336,7 @@ withSeenFM :: (IRC.Message -> SeenState -> ClockTime -> Nick
               -> IRC.Message
               -> Seen LB ()
 withSeenFM f msg = do 
-    let nick = lowerCaseString . unUserMode . IRC.nick $ msg
+    let nick = P.pack . lowerCaseString . P.unpack . unUserMode . P.pack . IRC.nick $ msg
     withMS $ \state writer -> do
       ct <- liftIO getClockTime
       case f msg state ct nick of
