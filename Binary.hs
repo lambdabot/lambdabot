@@ -35,6 +35,7 @@ module Binary
    -- for writing instances:
    putByte,
    getByte,
+   getWord8,
 
    -- bit stuff
    putBits,
