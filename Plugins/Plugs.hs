@@ -58,6 +58,7 @@ clean s | Just _         <- no_io      `matchRegex`    s = "No IO allowed\n"
         | Just _         <- undef      `matchRegex`    s = "Undefined\n"
         | Just _         <- type_sig   `matchRegex`    s = "Add a type signature\n"
         | Just (_,m,_,_) <- ambiguous  `matchRegexAll` s = m
+        | Just (_,_,b,_) <- inaninst   `matchRegexAll` s = clean b
         | Just (_,_,b,_) <- irc        `matchRegexAll` s = clean b
         | Just (_,m,_,_) <- nomatch    `matchRegexAll` s = m
         | Just (_,m,_,_) <- notinscope `matchRegexAll` s = m
@@ -88,6 +89,7 @@ clean s | Just _         <- no_io      `matchRegex`    s = "No IO allowed\n"
         extraargs  = mkRegex "[ \t\n]*In the [^ ]* argument"
         columnnum  = mkRegex " at <[^\\.]*\\.[^\\.]*>:[^ ]*"
         nomatch    = mkRegex "Couldn't match[^\n]*\n"
+        inaninst   = mkRegex "^[ \t]*In a.*$"
 
 ------------------------------------------------------------------------
 --
