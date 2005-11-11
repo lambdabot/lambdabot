@@ -197,8 +197,10 @@ distclean: clean
 	rm -rf autom4te.cache
 	rm -f GenModules Modules.hs Modules.o-boot Modules.*-boot
 
+ifneq "$(static)" "yes"
 runplugs: scripts/RunPlugs.hs
 	$(GHC) -O -package posix -package plugins -o $@ $<
+endif
 
 CLEANS+= runplugs
 
