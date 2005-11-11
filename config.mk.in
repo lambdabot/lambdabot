@@ -40,8 +40,8 @@ ifneq "$(static)" "yes"
 PLUGINS=       Dict Dummy Karma Quote Seen State \
                Topic Type Plugs Babel Version More Pl \
                Help Dice Search Vixen Fact Spell Todo \
-               Haddock Code Hoogle Where Elite Localtime
-#              Lambda DarcsPatchWatch
+               Haddock Code Hoogle Where Elite Localtime LogModule
+#              Lambda DarcsPatchWatch 
 
 STATICS=       Base System Dynamic
 LD_OPTS=       -package plugins
