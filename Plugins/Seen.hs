@@ -7,24 +7,26 @@
 --
 module Plugins.Seen (theModule) where
 
-import Lambdabot
-import LBState
-import qualified IRC
-import Util (lowerCaseString, firstWord, listToStr, debugStrLn)
-import Serial  ({-instances-})
 import AltTime
+import Binary
 import Config
+import ErrorUtils          (tryError)
+import LBState
+import Lambdabot
+import Serial  ({-instances-})
+import Util (lowerCaseString, firstWord, listToStr, debugStrLn)
+import qualified IRC
+
 import qualified Map as M
 import qualified Data.FastPackedString as P
 
-import System.IO
-import Binary
-
 import Data.List           ((\\), nub)
+
+import System.IO
+import System.Directory
 
 import Control.Monad       (unless, zipWithM_)
 import Control.Monad.Trans (liftIO, MonadIO)
-import ErrorUtils          (tryError)
 
 ------------------------------------------------------------------------
 
@@ -156,10 +158,15 @@ instance Module SeenModule SeenState where
 
       -- and suck in our state:
       s  <- liftIO $ do 
-              h  <- openFile "State/seen" ReadMode
-              bh <- openBinIO_ h
-              {-# SCC "Seen.get" #-} get bh
-      --      hClose h
+              b <- doesFileExist "State/seen"
+              if b 
+                then do
+                  h  <- openFile "State/seen" ReadMode
+                  bh <- openBinIO_ h
+                  st <- {-# SCC "Seen.get" #-} get bh
+                  hClose h
+                  return st
+                else return M.empty -- if not, construct a default state.
       writeMS s
       return ()
     
