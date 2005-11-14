@@ -13,25 +13,19 @@
 > import LBState
 > import qualified IRC
 
-> import Util (lowerCaseString, (</>), firstWord, debugStrLn)
+> import Util ((</>))
 
 > import Serial  ({-instances-})
 > import Config
 
 > import qualified Map as M
 
-import qualified Data.FastPackedString as P
-
-
 > import System.IO 
 > import System.Time  
 > import System.Directory (createDirectoryIfMissing) 
 
-import Data.List           ((\\), nub)
-
-> import Control.Monad       (unless, when, join)
+> import Control.Monad       (join)
 > import Control.Monad.Trans (liftIO, MonadIO, lift)
-> import Control.Monad.Reader (asks)
 > import Control.Monad.State (StateT, runStateT, gets, modify)
 
 > import Maybe (fromJust, fromMaybe)
@@ -80,6 +74,7 @@ import ErrorUtils          (tryError)
 > defaultNLines :: Int
 > defaultNLines = 10
 
+> commands :: [(String,String)]
 > commands = [("last", "@last [<user>] [<count>] The last <count> (default 10) posts"),
 >       ("log-email", "@log-email <email> [<start-date>] Email the log to the given address (default to todays)")]
 
@@ -99,19 +94,19 @@ Over all channels?  Maybe we want to intersect this with channels we are interes
 >              liftC f = withLogMS $ \msg ct -> withValidLogW (f msg ct) ct (head $ IRC.channels msg)
     
 >    process _ msg target "last" rest = showHistory msg target rest
->    process _ msg target _ rest = ircPrivmsg target "Implement me"
+>    process _ _   target _ _rest = ircPrivmsg target "Implement me"
 
 FIXME --- we only do this for one channel.  Maybe allow an extra argument?
 
 > showHistory :: IRC.Message -> String -> String -> ModuleT LogState LB () 
 > showHistory msg target args = do
 >			fm <- readMS
->			ircPrivmsg target . unlines . reverse $ map show $ take nLines (lines fm)
+>			ircPrivmsg target . unlines . reverse $ map show $ take nLines (lines' fm)
 >     where
->     nLines = case argsS of { x:y:xs -> read y; _ -> defaultNLines }
->     lines fm = case argsS of 
->		    x:xs -> filterNick x $ history fm
->		    _    -> history fm
+>     nLines = case argsS of { _:y:_ -> read y; _ -> defaultNLines }
+>     lines' fm = case argsS of 
+>		    x:_ -> filterNick x $ history fm
+>		    _   -> history fm
 >     history fm = fromMaybe [] $ M.lookup chan fm >>= \(_, _, his) -> return his
 >     argsS = words args
 >     chan = head $ IRC.channels msg
@@ -159,17 +154,18 @@ FIXME --- we only do this for one channel.  Maybe allow an extra argument?
 
 > initChannelMaybe :: String -> ClockTime -> Log ()
 > initChannelMaybe chan ct = ifChannel chan (return ()) $ do 	     
->		server  <- asks ircServer
 >		hdl <- openChannelFile chan ct
 >	        modify (M.insert chan (hdl, date, []))
 >      where
 >      date = dateStamp ct
 
+> {-
 > closeChannel :: Channel -> Log ()
 > closeChannel chan = do 
 >	      (hdl, _, _) <- join $ gets (M.lookup chan)
 >	      liftIO $ hClose hdl
 >	      modify (M.delete chan)
+> -}
 
 > reopenChannelMaybe :: Channel -> ClockTime -> Log ()
 > reopenChannelMaybe chan ct = whenChannel chan (\_ d _ -> d == date) (return ()) $ do 
@@ -191,8 +187,10 @@ FIXME --- we only do this for one channel.  Maybe allow an extra argument?
 >		   modify (M.insert chan (hdl, date, history'))
 >		   return rv
 
+> {-
 > withValidLogR :: (Handle -> History -> LB a) ->  ClockTime -> Channel -> Log a
 > withValidLogR f = withValidLog (\hdl his -> f hdl his >>= \x -> return (his, x))
+> -}
 
 > withValidLogW :: (Handle -> History -> LB History) ->  ClockTime -> Channel -> Log ()
 > withValidLogW f = withValidLog (\hdl his -> f hdl his >>= \x -> return (x, ()))
@@ -200,8 +198,10 @@ FIXME --- we only do this for one channel.  Maybe allow an extra argument?
 ------------------------------------------------------------------------
 -- | The bot's name, lowercase
 
+> {-
 > myname :: String
 > myname = lowerCaseString (name config)
+> -}
 
 > showWidth :: Int -> Int -> String
 > showWidth width n = zeroes ++ num
