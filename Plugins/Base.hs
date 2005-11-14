@@ -272,23 +272,26 @@ doPRIVMSG' myname msg
             -- Concurrency: We ensure that only one module communicates with
             -- each target at once.
             -- Timeout: We kill the thread after 1 minute
-            docmd c = do
+            --
+            -- Make sure to do the priv check on the post-spell-check cmd.
+            --
+            docmd cmd' = do
               mapLB forkIO $ withPS towhere $ \_ _ -> do
-                let act = withModule ircCommands c
+                let act = withModule ircCommands cmd'   -- Important. 
                       (ircPrivmsg towhere ("Unknown command, try @listcommands."))
                       (\m -> do
                         -- debugStrLn (show msg)
                         privs <- gets ircPrivCommands
-                        ok <- case cmd `elem` privs of
+                        ok <- case cmd' `elem` privs of
                           False -> return True
                           True  -> checkPrivs msg
                         when ok $
                           handleIrc (ircPrivmsg towhere . 
-                              (("module \"" ++ ?name ++ "\" screwed up: ") ++) )
-                            (process m msg towhere c rest)
+                              (("Module \"" ++ ?name ++ "\" produced error: ") ++) )
+                            (process m msg towhere cmd' rest)
                         unless ok $
-                          ircPrivmsg towhere "not enough privileges")
-                mapLB (timeout $ 60*1000*1000) act
+                          ircPrivmsg towhere "Not enough privileges")
+                mapLB (timeout $ 30*1000*1000) act
                 return ()
               return ()
 
