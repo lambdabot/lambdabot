@@ -33,9 +33,9 @@ data Config = Config {
 
         -- which ghci to use (in @type)
         ghci        :: FilePath,
-	
-	-- where to dump output.  should be outputDir ++ "/" ++ pluginName
-	outputDir :: String
+
+        -- where to dump output.  should be outputDir ++ "/" ++ pluginName
+        outputDir :: String
 }
 
 --
@@ -43,24 +43,28 @@ data Config = Config {
 --
 config :: Config
 config = Config {
-        name            = "sjw-bot",
-        userinfo        = "Simon's Lambda Robot - 99.99999% Loyal",
-        host            = "irc.slashnet.org",
+        name            = "lambdabot",
+        userinfo        = "Lambda_Robots:_100%_Loyal",
+        host            = "irc.au.freenode.net",
 
         port            = 6667,
         verbose         = True,
         textwidth       = 75,
         moresize        = 5,
-        proxy           = Nothing,
-        autojoin        = ["#maya"],
+        proxy           = Just ("www-proxy",3128),
+        autojoin        = ["#haskell","#haskell-blah"
+                          ,"#haskell-overflow","#gentoo-haskell"],
 
-        admins          = ["sjw", "sjw`", "dons"],
+        admins          = [
+                "Pseudonym",    "shapr", "Heffalump",    "Igloo",  
+                "Cale",         "dons", "TheHunter",    "jlouis"
+        ],
 
         hooglePath      = "/home/dons/hoogle",
         fortunePath     = "/home/dons/fortune/",
         fptoolsPath     = "/home/dons/fptools",
 
         ghci            = "ghci",
-	outputDir	= "/home/sjw/irc-logs/"
+        outputDir	    = "State/"
    }
 
