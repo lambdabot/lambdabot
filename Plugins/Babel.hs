@@ -53,9 +53,9 @@ instance Module BabelModule Quotes where
         moduleCmds _ = return ["babel", "remember", "quote",{-"timein",-} "ghc"]
 
         process _ _ src "babel" s      = run_babel src s
-        process a b src "remember"  s  = process a b src "quote-add" s -- synonym
-        process _ _ _src "quote-add" s = run_remember  s
-        process _ _ src "quote"      s = run_quote    src s
+        process a b src "remember"  s  = process a b src "quote-add" (dropSpace s) -- synonym
+        process _ _ _src "quote-add" s = run_remember  (dropSpace s)
+        process _ _ src "quote"      s = run_quote    src (dropSpace s)
         process _ _ src "ghc"        _ = run_quote    src "ghc"
 --      process _ _ src "last"  s     = run_last  src s
 
