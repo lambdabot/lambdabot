@@ -12,7 +12,7 @@ module Plugins.Babel (theModule) where
 import Lambdabot
 import LBState
 import Serial
-import Util
+import Util         hiding (split)
 import MiniHTTP
 import Config               (proxy,config)
 import qualified Map as M
