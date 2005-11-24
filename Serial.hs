@@ -116,6 +116,16 @@ instance Packable ([(FastString,FastString)]) where
 
         showPacked = P.unlines . concatMap (\(k,v) -> [k,v])
 
+instance Packable (M.Map P.FastString (Bool, [(String, Int)])) where
+    readPacked = M.fromList . readKV . P.lines
+        where
+          readKV :: [P.FastString] -> [(P.FastString,(Bool, [(String, Int)]))]
+          readKV []         = []
+          readKV (k:v:rest) = (k, (read . P.unpack) v) : readKV rest
+          readKV _          = error "Vote.readPacked: parse failed"
+
+    showPacked m = P.unlines . concatMap (\(k,v) -> [k,P.pack . show $ v]) $ M.toList m
+
 -- And for packed string maps
 mapPackedSerial :: Serial (Map FastString FastString)
 mapPackedSerial = Serial (Just . showPacked) (Just . readPacked)
