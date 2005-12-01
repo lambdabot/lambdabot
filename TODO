@@ -1,3 +1,6 @@
+Dons:
+  - a dynamic Config.hs module.
+
 Todo:
 * Better error reporting when connections fail at startup
 * FactModule - make "foo?" equal to "lambdabot: @fact foo"
