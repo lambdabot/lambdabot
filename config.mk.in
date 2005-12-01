@@ -12,8 +12,8 @@ IFACEDIR=       $(LIBDIR)/imports
 GHC=            @WithGhc@
 
 HC_OPTS=        -Wall -Werror -I. -cpp -fglasgow-exts
-HC_OPTS+=       -funbox-strict-fields -O
-#HC_OPTS+=       -Onot -fasm -H64m
+HC_OPTS+=       -funbox-strict-fields -O -fasm
+#HC_OPTS+=       -Onot -H64m
 
 #HC_OPTS+=      -debug 
 #HC_OPTS+=	-fignore-asserts 
