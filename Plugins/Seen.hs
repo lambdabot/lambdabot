@@ -205,6 +205,16 @@ getAnswer msg rest seenFM now
                 ["Yes, I'm here. I'm in " ++ listToStr "and" (map P.unpack cs)]
             _ -> error "I'm here, but not here. And very confused!"
 
+  | length lcnick > 0 && head lcnick == '#' =
+       let channel = lcnick
+           people  = map fst $ filter isActive $ M.toList seenFM
+           isActive (_nick,state) = case state of 
+               (Present (Just (_ct,_td)) cs) -> P.pack channel `elem` cs
+               _ -> False
+       in ["In "++channel++" I can see " 
+            ++ (if null people then "nobody" 
+               else listToStr "and" (map P.unpack people)) ++ "."]
+
   | otherwise        = case M.lookup (P.pack lcnick) seenFM of
       Just (Present mct cs)            -> nickPresent mct (map P.unpack cs)
       Just (NotPresent ct td chans)    -> nickNotPresent ct td (map P.unpack chans)
