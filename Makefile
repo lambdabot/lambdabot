@@ -64,7 +64,11 @@ ALL_OBJS=	$(addsuffix .$(way_)o,$(basename $(ALL_SRCS)))
 #
 # Now, get down to business
 #
+ifneq "$(static)" "yes"
 all: lambdabot modules runplugs
+else
+all: lambdabot modules
+endif
 
 #
 # TODO should be just PLUGIN_OBJS
