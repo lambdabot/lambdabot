@@ -197,6 +197,8 @@ myname = lowerCaseString (name config)
 
 getAnswer :: IRC.Message -> String -> SeenState -> ClockTime -> [String]
 getAnswer msg rest seenFM now 
+  | null lcnick = ["I see a lot of things.  Perhaps I can be of more help if you specify a name?"]
+
   | lcnick == myname = 
         case M.lookup (P.pack lcnick) seenFM of
             Just (Present _ cs) -> 
