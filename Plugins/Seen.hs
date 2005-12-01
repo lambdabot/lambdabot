@@ -25,6 +25,8 @@ import Data.List           ((\\), nub)
 import System.IO
 import System.Directory
 
+import System.Time (normalizeTimeDiff) -- or export from AltTime.hs?
+
 import Control.Monad       (unless, zipWithM_)
 import Control.Monad.Trans (liftIO, MonadIO)
 
@@ -197,7 +199,15 @@ myname = lowerCaseString (name config)
 
 getAnswer :: IRC.Message -> String -> SeenState -> ClockTime -> [String]
 getAnswer msg rest seenFM now 
-  | null lcnick = ["I see a lot of things.  Perhaps I can be of more help if you specify a name?"]
+  | null lcnick = 
+       let people  = map fst $ filter isActive $ M.toList seenFM
+           isActive (_nick,state) = case state of 
+               (Present (Just (ct,_td)) _cs) -> recent ct
+               _ -> False
+           recent t = normalizeTimeDiff (diffClockTimes now t) < two_minutes
+           two_minutes = TimeDiff 0 0 0 0 2 0 0
+       in ["Lately, I have seen " ++ (if null people then "nobody" 
+               else listToStr "and" (map P.unpack people)) ++ "."]
 
   | lcnick == myname = 
         case M.lookup (P.pack lcnick) seenFM of
@@ -207,11 +217,12 @@ getAnswer msg rest seenFM now
 
   | length lcnick > 0 && head lcnick == '#' =
        let channel = lcnick
-           people  = map fst $ filter isActive $ M.toList seenFM
-           isActive (_nick,state) = case state of 
-               (Present (Just (_ct,_td)) cs) -> P.pack channel `elem` cs
+           people  = map fst $ filter inChan $ M.toList seenFM
+           inChan (_nick,state) = case state of 
+               (Present (Just _) cs) 
+                  -> P.pack channel `elem` cs
                _ -> False
-       in ["In "++channel++" I can see " 
+       in ["In "++channel++" I can see "
             ++ (if null people then "nobody" 
                else listToStr "and" (map P.unpack people)) ++ "."]
 
