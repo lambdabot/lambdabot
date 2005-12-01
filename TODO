@@ -1,17 +1,5 @@
-Don's Todo:
-* have 'make prof' and 'make static' just work
-* reduce memory usage
-* Think about some of the issues discussed in Simon Marlow's paper:
-        "Writing High-Performance Server Applications in Haskell - 
-                Case study: A Haskell Web Server", 2000.
-
-* Profiling issues:
-    * ln -s Map.o Map.p_o
-    * dynloading won't work, as it requires prof versions of
-      HSfoo.o, which don't exist usually. So turn off dyn loading,
-      and link everything statically.
-
 Todo:
+* Better error reporting when connections fail at startup
 * FactModule - make "foo?" equal to "lambdabot: @fact foo"
 * fsbot-style factoid parsing, 
 * real hostmask matching
