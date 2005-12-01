@@ -1,3 +1,4 @@
+{-# OPTIONS -w #-}
 --
 --
 -- Module      :  Text.Regex.Posix
@@ -40,12 +41,10 @@ module Regex (
 # include <sys/types.h>
 # include <regex.h>
 
-import Foreign.C            (CSize, CInt, CChar, CString)
-import Foreign.C.String     (withCString)
-import Foreign.ForeignPtr   (withForeignPtr, ForeignPtr, 
-                             addForeignPtrFinalizer, mallocForeignPtrBytes)
-import Foreign              (Int,Int32,Ptr,FunPtr
-                            ,Storable(peekByteOff),allocaBytes,plusPtr)
+import Foreign.C
+import Foreign.C.String
+import Foreign.ForeignPtr
+import Foreign
 import System.IO.Unsafe     (unsafePerformIO)
 
 import qualified Data.FastPackedString as P
