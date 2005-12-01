@@ -44,7 +44,7 @@ import Foreign.C            (CSize, CInt, CChar, CString)
 import Foreign.C.String     (withCString)
 import Foreign.ForeignPtr   (withForeignPtr, ForeignPtr, 
                              addForeignPtrFinalizer, mallocForeignPtrBytes)
-import Foreign              (Int,Int32, Int64,Ptr,FunPtr
+import Foreign              (Int,Int32,Ptr,FunPtr
                             ,Storable(peekByteOff),allocaBytes,plusPtr)
 import System.IO.Unsafe     (unsafePerformIO)
 
