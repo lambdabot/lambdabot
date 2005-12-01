@@ -7,15 +7,10 @@ module Plugins.Vixen where
 
 import Lambdabot
 import LBState
+import Regex
 import Plugins.Vixen.VixenState
-
 import Util (stdGetRandItem)
-
-import Data.Maybe (isJust)
-
 import qualified Data.FastPackedString as P
-import Text.Regex
-
 import Control.Monad.State      (MonadIO, liftIO)
 
 ------------------------------------------------------------------------
@@ -59,9 +54,10 @@ randomWTreeElt (Leaf a)  = return a
 randomWTreeElt (Node ls) = stdGetRandItem ls >>= randomWTreeElt
 
 match :: Regex -> String -> Bool
-match r s = isJust $ matchRegex r s
+match r s = matchRegex r s
 
 mkResponses :: RespChoice -> String -> WTree
 mkResponses choices them = 
     (\((_,wtree):_) -> wtree) $ filter (\(reg,_) -> match reg them) choices
 
+------------------------------------------------------------------------

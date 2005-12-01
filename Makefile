@@ -9,9 +9,9 @@ include config.mk
 #  All directories to look for sources
 #
 ALL_DIRS=	.  Plugins \
-                Plugins/Dict  Plugins/Lambda \
-                Plugins/Quote Plugins/Pl \
-                Plugins/Vixen Plugins/Dummy
+               Plugins/Dict  Plugins/Lambda \
+               Plugins/Quote Plugins/Pl \
+               Plugins/Vixen Plugins/Dummy
 
 # Not used, not built, bit dodgy as we are relying on ALL_DIRS to ignore
 # the subdirs of EXCLUDED_MODS. The following additional srcs will not be built
@@ -22,7 +22,7 @@ EXCLUDED_SRCS+= Plugins/Lambda/tests.hs Plugins/Pl/Test.hs GenModules.hs
 #
 # Generated at build time
 #
-EXTRA_SRCS=Modules.hs
+EXTRA_SRCS=Modules.hs Regex.hs
 
 ifeq "$(static)" "yes"
 EXCLUDED_SRCS+=Boot.hs Plugins/Dynamic.hs
@@ -149,6 +149,10 @@ endif
 
 %.raw-hs : %.lhs
 	@$(GHC) $(HC_OPTS) $(PKG_OPTS) -D__HADDOCK__ -E -optP-P $< -o $@
+
+%_hsc.c %_hsc.h %.hs : %.hsc
+	hsc2hs $<
+	@touch $(patsubst %.hsc,%_hsc.c,$<)
 
 #
 # Building the haddocks (only if we have haddock)
