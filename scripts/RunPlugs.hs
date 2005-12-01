@@ -41,7 +41,7 @@ main = do
         setResourceLimit ResourceCPUTime (ResourceLimits rlimit rlimit)
         s <- getLine
         when (not . null $ s) $ do
-                s <- unsafeEval ("let { xxxx = \n# 1 \"<irc>\"\n"++s++"} in take 2048 (show xxxx)") context
+                s <- unsafeEval ("let { xxxx = \n# 1 \"<irc>\"\n"++s++"\n} in take 2048 (show xxxx)") context
                 when (isJust s) (putStrLn (fromJust s))
         exitWith ExitSuccess
 
