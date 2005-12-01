@@ -52,7 +52,7 @@ config = Config {
         textwidth       = 75,
         moresize        = 5,
         proxy           = Just ("www-proxy",3128),
-        autojoin        = ["#haskell","#haskell-blah"
+        autojoin        = ["#haskell","#haskell-blah","#flippi"
                           ,"#haskell-overflow","#gentoo-haskell"],
 
         admins          = [
