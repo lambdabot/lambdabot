@@ -2,12 +2,9 @@ INSTALL:
 
 You'll need GHC >= 6.4.
 
-Build a newer Cabal than v1.0 if you haven't already:
+Build a newer Cabal than v1.0 if you haven't already (instructions in
+the Cabal README file), which lives at:
         $ darcs get http://cvs.haskell.org/darcs/cabal
-        $ cd cabal
-        -- edit GNUmakefile
-        $ make
-        $ make install
 
 Build the FastPackedString library without the mmap extensions:
         $ darcs get --partial http://www.cse.unsw.edu.au/~dons/code/fps
