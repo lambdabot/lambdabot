@@ -40,13 +40,14 @@ datas   = map ("Data." ++) [
 controls = map ("Control." ++) ["Monad", "Monad.Reader", "Monad.Fix", "Arrow"]
 
 main = do
-        setResourceLimit ResourceCPUTime (ResourceLimits rlimit rlimit)
-        s <- getLine
-        when (not . null $ s) $ do
-                x <- sequence [ getStdRandom (randomR (97,122)) >>= return . chr 
-                              | _ <- [0..8] ] >>= return . show
-
-                s <- unsafeEval ("let { "++x++" = \n# 1 \"<irc>\"\n"++s++"\n} in take 2048 (show "++x++")") context
-                when (isJust s) (putStrLn (fromJust s))
-        exitWith ExitSuccess
+    setResourceLimit ResourceCPUTime (ResourceLimits rlimit rlimit)
+    s <- getLine
+    when (not . null $ s) $ do
+        x <- sequence (take 8 (repeat $ getStdRandom (randomR (97,122)) >>= return . chr))
+        s <- unsafeEval ("let { "++x++
+                         " = \n# 1 \"<irc>\"\n"++s++
+                         "\n} in take 2048 (show "++x++
+                         ")") context
+        when (isJust s) (putStrLn (fromJust s))
+    exitWith ExitSuccess
 
