@@ -45,15 +45,14 @@ config :: Config
 config = Config {
         name            = "lambdabot",
         userinfo        = "Lambda_Robots:_100%_Loyal",
-        host            = "irc.au.freenode.net",
+        host            = "irc.freenode.net",
 
         port            = 6667,
         verbose         = True,
         textwidth       = 75,
         moresize        = 5,
         proxy           = Just ("www-proxy",3128),
-        autojoin        = ["#haskell","#haskell-blah","#flippi"
-                          ,"#haskell-overflow","#gentoo-haskell"],
+        autojoin        = ["#haskell"],
 
         admins          = [
                 "Pseudonym",    "shapr", "Heffalump",    "Igloo",  
@@ -67,4 +66,3 @@ config = Config {
         ghci            = "ghci",
         outputDir	    = "State/"
    }
-
