@@ -1,3 +1,4 @@
+{-# OPTIONS -fvia-C -O2 -optc-O3 #-}
 --
 -- | Pointfree programming fun
 --

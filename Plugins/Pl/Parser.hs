@@ -1,3 +1,4 @@
+{-# OPTIONS -fvia-C -O2 -optc-O3 #-}
 module Plugins.Pl.Parser (parsePF) where
 
 import Plugins.Pl.Common
