@@ -1,5 +1,6 @@
 Dons:
   - a dynamic Config.hs module.
+  - a scripting interface, expose module ops to a scripting module
 
 Todo:
 * Better error reporting when connections fail at startup
