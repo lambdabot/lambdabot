@@ -18,9 +18,10 @@ Build hs-plugins:
         $ cd ..
         $ darcs get --partial http://www.cse.unsw.edu.au/~dons/code/hs-plugins
         $ cd hs-plugins/
-        $ runhaskell Setup.hs configure --prefix=/home/dons
-        $ runhaskell Setup.hs build
-        $ runhaskell Setup.hs install
+        $ chmod +x Setup.lhs configure
+        $ ./Setup.lhs configure --prefix=/usr/local
+        $ ./Setup.lhs build
+        $ ./Setup.lhs install
 
 Build Lambdabot:
         $ cd ..
