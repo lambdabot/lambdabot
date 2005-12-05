@@ -204,8 +204,8 @@ getAnswer msg rest seenFM now
            isActive (_nick,state) = case state of 
                (Present (Just (ct,_td)) _cs) -> recent ct
                _ -> False
-           recent t = normalizeTimeDiff (diffClockTimes now t) < two_minutes
-           two_minutes = TimeDiff 0 0 0 0 2 0 0
+           recent t = normalizeTimeDiff (diffClockTimes now t) < gap_minutes
+           gap_minutes = TimeDiff 0 0 0 0 15 0 0
        in ["Lately, I have seen " ++ (if null people then "nobody" 
                else listToStr "and" (map P.unpack people)) ++ "."]
 
