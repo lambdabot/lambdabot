@@ -21,6 +21,8 @@ import System.Posix.Resource    (setResourceLimit,
                                  ResourceLimits(ResourceLimits),
 			         ResourceLimit(ResourceLimit))
 
+import qualified Control.Exception (catch)
+
 rlimit = ResourceLimit 3
 
 context = prehier ++ datas ++ qualifieds ++ controls
@@ -48,6 +50,8 @@ main = do
                          " = \n# 1 \"<irc>\"\n"++s++
                          "\n} in take 2048 (show "++x++
                          ")") context
-        when (isJust s) (putStrLn (fromJust s))
+        when (isJust s) $ Control.Exception.catch 
+                    (putStrLn $ fromJust s)
+                    (\e -> putStrLn $ "Exception: " ++ show e )
     exitWith ExitSuccess
 
