@@ -45,7 +45,7 @@ main = do
     setResourceLimit ResourceCPUTime (ResourceLimits rlimit rlimit)
     s <- getLine
     when (not . null $ s) $ do
-        x <- sequence (take 8 (repeat $ getStdRandom (randomR (97,122)) >>= return . chr))
+        x <- sequence (take 3 (repeat $ getStdRandom (randomR (97,122)) >>= return . chr))
         s <- unsafeEval ("let { "++x++
                          " = \n# 1 \"<irc>\"\n"++s++
                          "\n} in take 2048 (show "++x++
