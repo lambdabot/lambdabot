@@ -213,7 +213,7 @@ doRPL_ENDOFMOTD _msg = return ()
 
 doPRIVMSG :: ModState BaseState Callback
 doPRIVMSG msg = do
-    debugStrLn (show msg) 
+    -- debugStrLn (show msg) 
     doPRIVMSG' (name config) msg
 
 --
