@@ -1,0 +1,61 @@
+%------------------------------------------------------------------------------
+% File     : schwicht_n2 : Dyckhoff's benchmark formulae (1997)
+% Domain   : Syntactic
+% Problem  : Formulae with normal natural deduction proofs only of exponential size
+% Version  : Especial.
+%            Problem formulation : Inuit. Invalid.   Size 2
+% English  : (~~p(N) & &&_{i=1..N} (p(i) => p(i) => p(i-1))) => p(0) 
+
+% Refs     : [Dyc97] Roy Dyckhoff. Some benchmark formulae for
+%                    intuitionistic propositional logic. At
+%                    http://www.dcs.st-and.ac.uk/~rd/logic/marks.html
+%          : [Sch97] H. Schwichtenberg, Termination of permutative
+%                    conversions in Gentzen's sequent calculus,
+%                    unpublished (1997). 
+% Source   : [Dyc97]
+% Names    : 
+
+% Status   : Non-Theorem
+% Rating   : 0.40 v 1.0
+% Syntax   : Number of formulae    :    4 (   2 unit)
+%            Number of atoms       :    8 (   0 equality)
+%            Maximal formula depth :    3 (   2 average)
+%            Number of connectives :    6 (   2 ~  ;   0  |;   0  &)
+%                                         (   0 <=>;   4 =>;   0 <=)
+%                                         (   0 <~>;   0 ~|;   0 ~&)
+%            Number of predicates  :    3 (   3 propositional; 0-0 arity)
+%            Number of functors    :    0 (   0 constant; --- arity)
+%            Number of variables   :    0 (   0 singleton;   0 !;   0 ?)
+%            Maximal term depth    :    0 (   0 average)
+
+% Comments : "...no normal natural deduction proof of size less than an
+%             expontial function of N.
+%            ..Our experience of these problems is that they can be decided
+%            very fast but can generate space problems, e.g. for some
+%            implementations of Prolog." [Dyc97]
+%          : tptp2X -f ljt schwicht_n.002.p 
+%------------------------------------------------------------------------------
+
+f((
+
+% axiom1, axiom.
+(( ~ ( ~ p2 ) ))
+
+ & 
+
+% axiom2, axiom.
+(( p1 -> ( p1 -> p0 ) ))
+
+ & 
+
+% axiom3, axiom.
+(( p2 -> ( p2 -> p1 ) ))
+
+  ->
+
+% conjecture_name, conjecture.
+(p0)
+
+)).
+
+%------------------------------------------------------------------------------

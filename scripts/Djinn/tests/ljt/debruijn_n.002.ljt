@@ -1,0 +1,65 @@
+%------------------------------------------------------------------------------
+% File     : debruijn_n2 : Dyckhoff's benchmark formulae (1997)
+% Domain   : Syntactic
+% Problem  : de Bruijn's example
+% Version  : Especial.
+%            Problem formulation : Inuit. Invalid.   Size 2
+% English  : LHS(2*N) -> (p0 | RHS(2*N) | ~p0)
+%            RHS(m) = &&_{i=1..m} p(i),
+%            LHS(m) = &&_{i=1..m} ((p(i)<=>p(i+1)) => c(N))
+%            where addition is computed modulo m, and with
+%            c(N) = &&_{i=1..N} p(i)
+
+% Refs     : [Dyc97] Roy Dyckhoff. Some benchmark formulae for
+%                    intuitionistic propositional logic. At
+%                    http://www.dcs.st-and.ac.uk/~rd/logic/marks.html
+%          :         "de Bruijn, N.: personal communication in about 1990."
+% Source   : [Dyc97]
+% Names    : 
+
+% Status   : Non-Theorem
+% Rating   : 0.60 v 1.0
+% Syntax   : Number of formulae    :    5 (   0 unit)
+%            Number of atoms       :   30 (   0 equality)
+%            Maximal formula depth :    6 (   5 average)
+%            Number of connectives :   26 (   1 ~  ;   2  |;  15  &)
+%                                         (   4 <=>;   4 =>;   0 <=)
+%                                         (   0 <~>;   0 ~|;   0 ~&)
+%            Number of predicates  :    5 (   5 propositional; 0-0 arity)
+%            Number of functors    :    0 (   0 constant; --- arity)
+%            Number of variables   :    0 (   0 singleton;   0 !;   0 ?)
+%            Maximal term depth    :    0 (   0 average)
+
+% Comments : "quite a tough exercise for students to prove by natural
+%             deduction" [Dyc97]
+%          : tptp2X -f ljt debruijn_n.002.p 
+%------------------------------------------------------------------------------
+
+f((
+
+% axiom1, axiom.
+(( ( p1 <-> p2 ) -> ( p1 & ( p2 & ( p3 & p4 ) ) ) ))
+
+ & 
+
+% axiom2, axiom.
+(( ( p2 <-> p3 ) -> ( p1 & ( p2 & ( p3 & p4 ) ) ) ))
+
+ & 
+
+% axiom3, axiom.
+(( ( p3 <-> p4 ) -> ( p1 & ( p2 & ( p3 & p4 ) ) ) ))
+
+ & 
+
+% axiom4, axiom.
+(( ( p4 <-> p1 ) -> ( p1 & ( p2 & ( p3 & p4 ) ) ) ))
+
+  ->
+
+% conjecture_name, conjecture.
+(( p0 v ( ( p1 & ( p2 & ( p3 & p4 ) ) ) v ( ~ p0 ) ) ))
+
+)).
+
+%------------------------------------------------------------------------------

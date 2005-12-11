@@ -1,0 +1,65 @@
+%------------------------------------------------------------------------------
+% File     : ph_n2 : Dyckhoff's benchmark formulae (1997)
+% Domain   : Syntactic
+% Problem  : Cook pigeon-hole problem
+% Version  : Especial.
+%            Problem formulation : Prop. Non-Clausal. Inuit. Invalid.   Size 2
+% English  : Suppose there are N holes and N+1 pigeons to put in the
+%            holes. Every pigeon is in a hole and no hole contains more
+%            than one pigeon. Prove that this is impossible. The size is
+%            the number of pigeons.
+%            LHS(N) => RHS(N) with 
+%            LHS(N) = &&_{p=1..N+1} (||_{h=1,..N-1} o(p,h) | ~~o(p,N) )
+%            RHS(N) = ||_{h=1..N, p1=1..{N+1}, p2={p1+1}..{N+1}} s(p1,p2,h)
+%            with s(p1,p2,h) = o(p1,h) & o(p2,h)
+
+% Refs     : [Dyc97] Roy Dyckhoff. Some benchmark formulae for
+%                    intuitionistic propositional logic. At
+%                    http://www.dcs.st-and.ac.uk/~rd/logic/marks.html
+%          : [CR79]  Cook & Reckhow (1979), The Relative Efficiency of
+%                    Propositional Proof Systems, Journal of Symbolic
+%                    Logic 44, pp.36-50.
+
+% Source   : [Dyc97]
+% Names    : 
+
+% Status   : Non-Theorem
+% Rating   : 0.40 v 1.0
+% Syntax   : Number of formulae    :    4 (   0 unit)
+%            Number of atoms       :   18 (   0 equality)
+%            Maximal formula depth :    7 (   4 average)
+%            Number of connectives :   20 (   6 ~  ;   8  |;   6  &)
+%                                         (   0 <=>;   0 =>;   0 <=)
+%                                         (   0 <~>;   0 ~|;   0 ~&)
+%            Number of predicates  :    6 (   6 propositional; 0-0 arity)
+%            Number of functors    :    0 (   0 constant; --- arity)
+%            Number of variables   :    0 (   0 singleton;   0 !;   0 ?)
+%            Maximal term depth    :    0 (   0 average)
+
+% Comments : 
+%          : tptp2X -f ljt ph_n.002.p 
+%------------------------------------------------------------------------------
+
+f((
+
+% axiom1, axiom.
+(( o11 v ( ~ ( ~ o12 ) ) ))
+
+ & 
+
+% axiom2, axiom.
+(( o21 v ( ~ ( ~ o22 ) ) ))
+
+ & 
+
+% axiom3, axiom.
+(( o31 v ( ~ ( ~ o32 ) ) ))
+
+  ->
+
+% conjecture_name, conjecture.
+(( ( o11 & o21 ) v ( ( o11 & o31 ) v ( ( o21 & o31 ) v ( ( o12 & o22 ) v ( ( o12 & o32 ) v ( o22 & o32 ) ) ) ) ) ))
+
+)).
+
+%------------------------------------------------------------------------------

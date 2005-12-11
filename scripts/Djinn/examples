@@ -1,0 +1,20 @@
+-- Some Prelude functions
+id ? a -> a;
+const ? a -> b -> a;
+fst ? (a, b) -> a;
+snd ? (a, b) -> b;
+swap ? (a, b) -> (b, a);
+compose ? (b->c) -> (a->b) -> (a->c)
+curry ? ((a,b) -> c) -> (a -> b -> c)
+uncurry ? (a -> b -> c) -> ((a,b) -> c)
+flip ? (a -> b -> c) -> b -> a -> c
+undefined ? a
+either ? (a -> b) -> (c -> b) -> Either a c -> b;
+
+-- CPS of deMorgans laws
+f1 ? ((((a, b) -> f) -> Either (a -> f) (b -> f)) -> f) -> f;
+f2 ? ((Either (a -> f) (b -> f) -> (a, b) -> f) -> f) -> f;
+
+type C a = (a -> r) -> r
+-- bind in the continuation monad
+bindC ? C a -> (a -> C b) -> C b

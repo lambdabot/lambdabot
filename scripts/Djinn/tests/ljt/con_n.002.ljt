@@ -1,0 +1,50 @@
+%------------------------------------------------------------------------------
+% File     : con_n2 : Dyckhoff's benchmark formulae (1997)
+% Domain   : Syntactic
+% Problem  : Formulae requiring many contractions
+% Version  : Especial.
+%            Problem formulation : Inuit. Invalid.   Size 2
+% English  : ((&&_{i=1..N} p(i) | ~~p(1)=>f | ||_{i=2..N} (p(i)=>f))=>f)=>f
+
+% Refs     : [Dyc97] Roy Dyckhoff. Some benchmark formulae for
+%                    intuitionistic propositional logic. At
+%                    http://www.dcs.st-and.ac.uk/~rd/logic/marks.html
+%          : [Fr88]  T. Franzen, Algorithmic Aspects of intuitionistic
+%                    propositional logic, SICS Research Report R87010B,
+%                    1988.
+%          : [Fr89]  T. Franzen, Algorithmic Aspects of intuitionistic
+%                    propositional logic II, SICS Research Report
+%                    R-89/89006, 1989.
+% Source   : [Dyc97]
+% Names    : 
+
+% Status   : Non-Theorem
+% Rating   : 0.60 v 1.0
+% Syntax   : Number of formulae    :    2 (   1 unit)
+%            Number of atoms       :    8 (   0 equality)
+%            Maximal formula depth :    7 (   4 average)
+%            Number of connectives :    8 (   2 ~  ;   2  |;   1  &)
+%                                         (   0 <=>;   3 =>;   0 <=)
+%                                         (   0 <~>;   0 ~|;   0 ~&)
+%            Number of predicates  :    3 (   3 propositional; 0-0 arity)
+%            Number of functors    :    0 (   0 constant; --- arity)
+%            Number of variables   :    0 (   0 singleton;   0 !;   0 ?)
+%            Maximal term depth    :    0 (   0 average)
+
+% Comments : "proof in LJ needs n contractions" [Dyc97]
+%          : tptp2X -f ljt con_n.002.p 
+%------------------------------------------------------------------------------
+
+f((
+
+% axiom1, axiom.
+(( ( ( p1 & p2 ) v ( ( ( ~ ( ~ p1 ) ) -> f ) v ( p2 -> f ) ) ) -> f ))
+
+  ->
+
+% conjecture_name, conjecture.
+(f)
+
+)).
+
+%------------------------------------------------------------------------------

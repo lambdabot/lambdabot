@@ -1,0 +1,50 @@
+%------------------------------------------------------------------------------
+% File     : con_n10 : Dyckhoff's benchmark formulae (1997)
+% Domain   : Syntactic
+% Problem  : Formulae requiring many contractions
+% Version  : Especial.
+%            Problem formulation : Inuit. Invalid.   Size 10
+% English  : ((&&_{i=1..N} p(i) | ~~p(1)=>f | ||_{i=2..N} (p(i)=>f))=>f)=>f
+
+% Refs     : [Dyc97] Roy Dyckhoff. Some benchmark formulae for
+%                    intuitionistic propositional logic. At
+%                    http://www.dcs.st-and.ac.uk/~rd/logic/marks.html
+%          : [Fr88]  T. Franzen, Algorithmic Aspects of intuitionistic
+%                    propositional logic, SICS Research Report R87010B,
+%                    1988.
+%          : [Fr89]  T. Franzen, Algorithmic Aspects of intuitionistic
+%                    propositional logic II, SICS Research Report
+%                    R-89/89006, 1989.
+% Source   : [Dyc97]
+% Names    : 
+
+% Status   : Non-Theorem
+% Rating   : 0.60 v 1.0
+% Syntax   : Number of formulae    :    2 (   1 unit)
+%            Number of atoms       :   32 (   0 equality)
+%            Maximal formula depth :   13 (   7 average)
+%            Number of connectives :   32 (   2 ~  ;  10  |;   9  &)
+%                                         (   0 <=>;  11 =>;   0 <=)
+%                                         (   0 <~>;   0 ~|;   0 ~&)
+%            Number of predicates  :   11 (  11 propositional; 0-0 arity)
+%            Number of functors    :    0 (   0 constant; --- arity)
+%            Number of variables   :    0 (   0 singleton;   0 !;   0 ?)
+%            Maximal term depth    :    0 (   0 average)
+
+% Comments : "proof in LJ needs n contractions" [Dyc97]
+%          : tptp2X -f ljt con_n.010.p 
+%------------------------------------------------------------------------------
+
+f((
+
+% axiom1, axiom.
+(( ( ( p1 & ( p2 & ( p3 & ( p4 & ( p5 & ( p6 & ( p7 & ( p8 & ( p9 & p10 ) ) ) ) ) ) ) ) ) v ( ( ( ~ ( ~ p1 ) ) -> f ) v ( ( p2 -> f ) v ( ( p3 -> f ) v ( ( p4 -> f ) v ( ( p5 -> f ) v ( ( p6 -> f ) v ( ( p7 -> f ) v ( ( p8 -> f ) v ( ( p9 -> f ) v ( p10 -> f ) ) ) ) ) ) ) ) ) ) ) -> f ))
+
+  ->
+
+% conjecture_name, conjecture.
+(f)
+
+)).
+
+%------------------------------------------------------------------------------

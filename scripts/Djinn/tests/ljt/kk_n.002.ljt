@@ -1,0 +1,65 @@
+%------------------------------------------------------------------------------
+% File     : kk_n2 : Dyckhoff's benchmark formulae (1997)
+% Domain   : Syntactic
+% Problem  : Formulae of Korn & Kreitz
+% Version  : Especial.
+%            Problem formulation : Inuit. Invalid.   Size 2
+% English  : (A & B(N) & C(N)) => f with
+%            A = (a(0) => f), B(N) = (~~b(N) => b(0) => a(N)),
+%            C(N) = (&&_{i=1..n} ((~~b(i-1) => a(i)) => a(i-1))),
+
+% Refs     : [Dyc97] Roy Dyckhoff. Some benchmark formulae for
+%                    intuitionistic propositional logic. At
+%                    http://www.dcs.st-and.ac.uk/~rd/logic/marks.html
+%          : [KK97]  D. Korn & C. Kreitz, A constructively adequate
+%                    refutation system for intuitionistic logic,
+%                    position paper at Tableaux'97, available at
+%                    http://www.cs.uni-potsdam.de/ti/kreitz/PDF/
+% Source   : [Dyc97]
+% Names    : 
+
+% Status   : Non-Theorem
+% Rating   : 0.40 v 1.0
+% Syntax   : Number of formulae    :    5 (   1 unit)
+%            Number of atoms       :   12 (   0 equality)
+%            Maximal formula depth :    5 (   3 average)
+%            Number of connectives :   13 (   6 ~  ;   0  |;   0  &)
+%                                         (   0 <=>;   7 =>;   0 <=)
+%                                         (   0 <~>;   0 ~|;   0 ~&)
+%            Number of predicates  :    7 (   7 propositional; 0-0 arity)
+%            Number of functors    :    0 (   0 constant; --- arity)
+%            Number of variables   :    0 (   0 singleton;   0 !;   0 ?)
+%            Maximal term depth    :    0 (   0 average)
+
+% Comments : 
+%          : tptp2X -f ljt kk_n.002.p 
+%------------------------------------------------------------------------------
+
+f((
+
+% axiom1, axiom.
+(( a0 -> f ))
+
+ & 
+
+% axiom2, axiom.
+(( ( ( ~ ( ~ b2 ) ) -> b0 ) -> a2 ))
+
+ & 
+
+% axiom3, axiom.
+(( ( ( ~ ( ~ b0 ) ) -> a1 ) -> a0 ))
+
+ & 
+
+% axiom4, axiom.
+(( ( ( ~ ( ~ b1 ) ) -> a2 ) -> a1 ))
+
+  ->
+
+% conjecture_name, conjecture.
+(f)
+
+)).
+
+%------------------------------------------------------------------------------

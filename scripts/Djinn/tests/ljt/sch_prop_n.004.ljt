@@ -1,0 +1,70 @@
+%------------------------------------------------------------------------------
+% File     : prop_n4 : JProver test formulae (2000)
+% Domain   : Syntactic
+% Problem  : 
+% Version  : Especial.
+%            Problem formulation : Intuit. Valid  Size 4
+% English  : 
+
+% Refs     : [SN00]  S. Schmitt & A. Nogin: test module "jprover_tests.ml",
+%                    test formulas for JProver in MetaPRL, at
+%                    http://cvs.metaprl.org:12000/cvsweb/metaprl/theories/
+%                         itt/jprover_tests.ml
+%            [ES99]  U. Egly & S. Schmitt. On intuitionistic proof
+%                    transformations, their complexity, and application to 
+%                    constructive program synthesis. Fundamenta 
+%                    Informaticae, Special Issue: Symbolic Computation and 
+%                    Artificial Intelligence, vol. 39, 1/2, p. 59-83, 1999
+% Source   : [SN00]
+% Names    : 
+
+% Status   : Theorem
+% Rating   : 0.00 v 1.0
+% Syntax   : Number of formulae    :    6 (   1 unit)
+%            Number of atoms       :   25 (   0 equality)
+%            Maximal formula depth :    6 (   3 average)
+%            Number of connectives :   19 (   0 ~  ;  12  |;   4  &)
+%                                         (   0 <=>;   3 =>;   0 <=)
+%                                         (   0 <~>;   0 ~|;   0 ~&)
+%            Number of predicates  :    9 (   9 propositional; 0-0 arity)
+%            Number of functors    :    0 (   0 constant; --- arity)
+%            Number of variables   :    0 (   0 singleton;   0 !;   0 ?)
+%            Maximal term depth    :    0 (   0 average)
+
+% Comments : 
+%          : tptp2X -f ljt sch_prop_n.004.p 
+%------------------------------------------------------------------------------
+
+f((
+
+% axiom1, axiom.
+(a4)
+
+ & 
+
+% axiom2, axiom.
+(( b2 -> ( ( b3 v a3 ) v b3 ) ))
+
+ & 
+
+% axiom3, axiom.
+(( b1 -> ( ( b2 v a2 ) v b2 ) ))
+
+ & 
+
+% axiom4, axiom.
+(( b -> ( ( b1 v a1 ) v b1 ) ))
+
+ & 
+
+% axiom5, axiom.
+(( ( b v a ) v b ))
+
+  ->
+
+% conjecture_name, conjecture.
+(( a v ( ( b & a1 ) v ( ( b1 & a2 ) v ( ( b2 & a3 ) v ( b3 & a4 ) ) ) ) ))
+
+)).
+
+%------------------------------------------------------------------------------

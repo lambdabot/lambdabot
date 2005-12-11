@@ -1,0 +1,44 @@
+%------------------------------------------------------------------------------
+% File     : notnot2 : JProver test formulae (2000)
+% Domain   : Syntactic
+% Problem  : 
+% Version  : Especial.
+% English  : 
+
+% Refs     : [SN00]  S. Schmitt & A. Nogin: test module "jprover_tests.ml",
+%                    test formulas for JProver in MetaPRL, at
+%                    http://cvs.metaprl.org:12000/cvsweb/metaprl/theories/
+%                         itt/jprover_tests.ml
+% Source   : [SN00]
+% Names    : 
+
+% Status   : Theorem
+% Rating   : 0.00 v 1.0
+% Syntax   : Number of formulae    :    2 (   0 unit)
+%            Number of atoms       :    4 (   0 equality)
+%            Maximal formula depth :    3 (   3 average)
+%            Number of connectives :    6 (   4 ~  ;   2  |;   0  &)
+%                                         (   0 <=>;   0 =>;   0 <=)
+%                                         (   0 <~>;   0 ~|;   0 ~&)
+%            Number of predicates  :    2 (   2 propositional; 0-0 arity)
+%            Number of functors    :    0 (   0 constant; --- arity)
+%            Number of variables   :    0 (   0 singleton;   0 !;   0 ?)
+%            Maximal term depth    :    0 (   0 average)
+
+% Comments : 
+%          : tptp2X -f ljt sch_notnot2.p 
+%------------------------------------------------------------------------------
+
+f((
+
+% axiom1, axiom.
+(( ( ~ a ) v ( ~ b ) ))
+
+  ->
+
+% conjecture_name, conjecture.
+(( ( ~ b ) v ( ~ a ) ))
+
+)).
+
+%------------------------------------------------------------------------------

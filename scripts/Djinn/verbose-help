@@ -1,0 +1,128 @@
+Djinn commands explained
+========================
+
+<sym> ? <type>
+  Try to find a function of the specified type.  Djinn knows about the
+function type, tuples, Either, and the () type.  (Djinn also knows
+about the empty type, Void, but this is less useful.)  Further
+functions and types can be added by using the next command.  If a
+function can be found it is printed in a style suitable for inclusion
+in a Haskell program.  If no function can be found this will be
+reported as well.  Examples:
+  Djinn> f ? a->a
+  f :: a -> a
+  f x1 = x1
+  Djinn> sel ? ((a,b),(c,d)) -> (b,c)
+  sel :: ((a, b), (c, d)) -> (b, c)
+  sel ((_, v5), (v6, _)) = (v5, v6)
+  Djinn> cast ? a->b
+  -- cast cannot be realized.
+  Djinn will always find a (total) function if one exists.  (The worst
+case complexity is bad, but unlikely for typical examples.)  If no
+function exists Djinn will always terminate and say so.
+  When multiple implementations of the type exists Djinn will only
+give one of them.  Example:
+  Djinn> f ? a->a->a
+  f :: a -> a -> a
+  f _ x2 = x2
+  
+
+<sym> :: <type>
+  Add a new function available for Djinn to construct the result.
+Example:
+  Djinn> foo :: Int -> Char
+  Djinn> bar :: Char -> Bool
+  Djinn> f ? Int -> Bool
+  f :: Int -> Bool
+  f x3 = bar (foo x3)
+This feature is not as powerful as it first might seem.  Djinn does
+*not* instantiate polymorphic function.  It will only use the function
+with exactly the given type.  Example:
+  Djinn> cast :: a -> b
+  Djinn> f ? c->d
+  -- f cannot be realized.
+
+type <sym> <vars> = <type>
+  Add a Haskell style type synonym.  Type synonyms are expanded before
+Djinn starts looking for a realization.
+  Warning: Type synonyms are treated as macros and are not checked in
+any way (e.g., for recursive definitions).
+  Example:
+  Djinn> type Id a = a->a
+  Djinn> f ? Id a
+  f :: Id a
+  f x1 = x1
+
+
+:delete <sym>
+  Remove a symbol that has been added with the add command.
+
+
+:environment
+  List all added symbols and their types.
+
+
+:help
+  Show a short help message.
+
+
+:load <file>
+  Read and execute a file with commands.  The file may include Haskell
+style -- comments.
+
+
+:quit
+  Quit Djinn.
+
+
+:verbose-help
+  Print this message.
+
+
+Further examples
+================
+  calvin% djinn
+  Welcome to Djinn version 2005-12-11.
+  Type :h to get help.
+
+  -- return, bind, and callCC in the continuation monad
+  Djinn> type C a = (a -> r) -> r
+  Djinn> returnC ? a -> C a
+  returnC :: a -> C a
+  returnC x1 x2 = x2 x1
+
+  Djinn> bindC ? C a -> (a -> C b) -> C b
+  bindC :: C a -> (a -> C b) -> C b
+  bindC x1 x2 x3 = x1 (\ c15 -> x2 c15 (\ c17 -> x3 c17))
+
+  Djinn> callCC ? ((a -> C b) -> C a) -> C a
+  callCC :: ((a -> C b) -> C a) -> C a
+  callCC x1 x2 = x1 (\ c15 _ -> x2 c15) (\ c11 -> x2 c11)
+
+
+  -- return and bind in the state monad
+  Djinn> type S s a = (s -> (a, s))
+  Djinn> returnS ? a -> S s a
+  returnS :: a -> S s a
+  returnS x1 x2 = (x1, x2)
+  Djinn> bindS ? S s a -> (a -> S s b) -> S s b
+  bindS :: S s a -> (a -> S s b) -> S s b
+  bindS x1 x2 x3 = case x1 x3 of
+                     (v4, v5) -> case x2 v4 x3 of
+                                   (v7, v8) -> (v7, v5)
+  -- NOTE: this is wrong; there are many ways to pass the state
+  -- and Djinn picked a non-standard way.
+
+
+Theory
+======
+  Djinn interprets a Haskell type as a logic formula using the
+Curry-Howard isomorphism and then a decision procedure for
+Intuitionistic Propositional Calculus.  This decision procedure is
+based on Gentzen's LJ sequent calculus, but in a modified form, LJT,
+that ensures termination.  This variation on LJ has a long history,
+but the particular formulation used in Djinn is due to Roy Dyckhoff.
+The decision procedure has been extended to generate a proof object
+(i.e., a lambda term).  It is this lambda term (in normal form) that
+constitutes the Haskell code.
+
