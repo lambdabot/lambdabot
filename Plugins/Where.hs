@@ -35,9 +35,9 @@ instance Module WhereModule WhereState where
     "where+"   -> "@where+ <key> <elem>, define an association"
     _          -> "Remember urls of open source projects"
 
-  moduleDefState _  = return $ M.empty
+  moduleDefState  _ = return $ M.empty
   moduleSerialize _ = Just mapPackedSerial
-  moduleCmds   _ = return ["where", "what", "where+" ]
+  moduleCmds      _ = return ["where", "what", "where+" ]
 
   process _ _ target cmd rest = do
         result <- withMS $ \factFM writer -> case words rest of
@@ -66,5 +66,5 @@ getWhere fm fact =
 updateWhere :: Bool -> WhereState -> WhereWriter -> String -> String -> Where LB String
 updateWhere _guard factFM writer fact dat = do 
         writer $ M.insert (P.pack fact) (P.pack dat) factFM
-        return $ fact ++ " ~> " ++ dat 
+        return "Done."
 
