@@ -28,7 +28,10 @@ verboseHelp = "\
 \  Djinn> f ? a->a->a\n\
 \  f :: a -> a -> a\n\
 \  f _ x2 = x2\n\
-\  \n\
+\\n\
+\Warning: The given type expression is not checked in any way (i.e., no\n\
+\kind checking).\n\
+\\n\
 \\n\
 \<sym> :: <type>\n\
 \  Add a new function available for Djinn to construct the result.\n\
@@ -76,6 +79,12 @@ verboseHelp = "\
 \\n\
 \:quit\n\
 \  Quit Djinn.\n\
+\\n\
+\\n\
+\:set\n\
+\  Set runtime options.\n\
+\     +m    show multiple solutions\n\
+\     -m    show one solution\n\
 \\n\
 \\n\
 \:verbose-help\n\
@@ -129,4 +138,15 @@ verboseHelp = "\
 \(i.e., a lambda term).  It is this lambda term (in normal form) that\n\
 \constitutes the Haskell code.\n\
 \\n\
+\  Since Djinn handles propositional calculus it also knows about the\n\
+\absurd proposition, corresponding to the empty set.  This set is\n\
+\called Void in Haskell, and Djinn assumes an elimination rule for the\n\
+\Void type:\n\
+\  void :: Void -> a\n\
+\Using Void is of little use for programming, but can be interesting\n\
+\for theorem proving.  Example, the double negation of the law of\n\
+\excluded middle:\n\
+\  Djinn> f ? Not (Not (Either x (Not x)))\n\
+\  f :: Not (Not (Either x (Not x)))\n\
+\  f x1 = x1 (Right (\\ c7 -> void (x1 (Left c7))))\n\
 \"

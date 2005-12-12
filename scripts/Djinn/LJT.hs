@@ -27,13 +27,10 @@ debug :: Bool
 debug = False
 
 provable :: Formula -> Bool
-provable a = prove [] a /= Nothing
+provable a = not $ null $ prove [] a 
 
-prove :: [(Symbol, Formula)] -> Formula -> Maybe Proof
-prove env a =
-    case runP $ redtop env a of
-	p : _ -> Just p
-	[] -> Nothing
+prove :: [(Symbol, Formula)] -> Formula -> [Proof]
+prove env a = runP $ redtop env a
 
 redtop :: [(Symbol, Formula)] -> Formula -> P Proof
 redtop ifs a = do
@@ -62,8 +59,8 @@ copy _r t = return t
 
 ---
 
-applayAtom :: Term -> Term -> Term
-applayAtom f a = Apply f a
+applyAtom :: Term -> Term -> Term
+applyAtom f a = Apply f a
 
 curryt :: Term -> Term
 curryt p = Lam x $ Lam y $ Apply p (applys (Ctuple 2) [Var x, Var y])
@@ -95,6 +92,10 @@ cImpDImpFalse p1 p2 cdf gp = do
 	d = Symbol "d"
 	c = Symbol "d"
     subst p1b p1 gp >>= subst p2b p2
+
+-- More simplifications:
+--  split where no variables used can be removed
+--  either with equal RHS can me merged.
 
 -- Compute the normal form
 nf :: Term -> P Term
@@ -323,7 +324,7 @@ redant as atomImps nestImps atoms gg =
 		Just a -> do
 		    x <- newSym "x"
 		    gp <- redant1 (A (Var x) b) l g
-		    subst (applayAtom p a) x gp
+		    subst (applyAtom p a) x gp
 		Nothing -> redant l (insert atomImps (AtomImp s [A p b])) nestImps atoms g
 
 	redsucc :: Formula -> P Proof

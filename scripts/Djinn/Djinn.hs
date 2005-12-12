@@ -16,7 +16,7 @@ main = do
     case args of
 	('-':_) : _ -> do usage; exitWith (ExitFailure 1)
 	[] -> repl hsGenRepl
-	_ -> loop emptyState args
+	_ -> loop startState args
 	      where loop _ [] = return ()
 		    loop s (a:as) = do
 		        (q, s') <- loadFile s a
@@ -37,27 +37,33 @@ hsGenRepl = REPL {
 
 data State = State {
     synonyms :: [(HSymbol, ([HSymbol], HType))],
-    axioms :: [(HSymbol, HType)]
+    axioms :: [(HSymbol, HType)],
+    multi :: Bool
     }
-emptyState :: State
-emptyState = State [] []
+startState :: State
+startState = State {
+    synonyms = [("Not", (["x"], htNot "x"))],
+    axioms = [],
+    multi = False
+    }
 
 version :: String
-version = "version 2005-12-11"
+version = "version 2005-12-12"
 
 inIt :: IO (String, State)
 inIt = do
     putStrLn $ "Welcome to Djinn " ++ version ++ "."
     putStrLn $ "Type :h to get help."
-    return ("Djinn> ", emptyState)
+    return ("Djinn> ", startState)
 
 eval :: State -> String -> IO (Bool, State)
 eval s line =
     case filter (null . snd) (readP_to_S pCmd line) of
-    [(cmd, "")] -> runCmd s cmd
-    _ -> do
+    [] -> do
 		putStrLn $ "Cannot parse command"
 		return (False, s)
+    (cmd, "") : _ -> runCmd s cmd
+    _ -> error "eval"
 
 exit :: State -> IO ()
 exit _s = do
@@ -65,8 +71,7 @@ exit _s = do
     return ()
 
 data Cmd = Help Bool | Quit | Add HSymbol HType | Query HSymbol HType | Del HSymbol | Load HSymbol | Noop | Env |
-	   Type (HSymbol, ([HSymbol], HType))
-    deriving (Show, Eq)
+	   Type (HSymbol, ([HSymbol], HType)) | Set (State -> State)
 
 pCmd :: ReadP Cmd
 pCmd = do
@@ -99,28 +104,30 @@ runCmd s (Help verbose) = do
 runCmd s Quit = 
     return (True, s)
 runCmd s (Load f) = loadFile s f
-runCmd (State ss as) (Add i t) = 
-    return (False, State ss ((i, t) : as))
-runCmd (State ss as) (Del i) = 
-    return (False, State ss [ (i', t) | (i', t) <- as, i /= i' ])
-runCmd s@(State ss as) Env = do
-    mapM_ (\ (i, (vs, t)) -> putStrLn $ "type " ++ unwords (i:vs) ++ " = " ++ show t) ss
-    mapM_ (\ (i, t) -> putStrLn $ i ++ " :: " ++ show t) as
+runCmd s (Add i t) = 
+    return (False, s { axioms = (i, t) : axioms s })
+runCmd s (Del i) = 
+    return (False, s { axioms = [ (i', t) | (i', t) <- axioms s, i /= i' ] })
+runCmd s Env = do
+    mapM_ (\ (i, (vs, t)) -> putStrLn $ "type " ++ unwords (i:vs) ++ " = " ++ show t) (synonyms s)
+    mapM_ (\ (i, t) -> putStrLn $ i ++ " :: " ++ show t) (axioms s)
     return (False, s)
-runCmd (State ss as) (Type s) =
-    return (False, State (s:ss) as)
-runCmd s@(State ss as) (Query i g) =
-    let form = hTypeToFormula ss g
-	env = [ (Symbol v, hTypeToFormula ss t) | (v, t) <- as ]
+runCmd s (Type syn) =
+    return (False, s { synonyms = syn : synonyms s })
+runCmd s (Set f) =
+    return (False, f s)
+runCmd s (Query i g) =
+    let form = hTypeToFormula (synonyms s) g
+	env = [ (Symbol v, hTypeToFormula (synonyms s) t) | (v, t) <- axioms s ]
 	mpr = prove env form
     in  case mpr of
-	Nothing -> do
+	[] -> do
 	    putStrLn $ "-- " ++ i ++ " cannot be realized."
 	    return (False, s)
-	Just e -> do
+	es@(e:_) -> do
+	    let es' = if multi s then es else [e]
 	    putStrLn $ i ++ " :: " ++ show g
---	    putStrLn $ i ++ " = " ++ hsShowTerm e
-	    putStrLn $ hPrClause (termToHClause i e)
+	    mapM_ (putStrLn . hPrClause . termToHClause i) es'
 	    return (False, s)
 
 loadFile :: State -> String -> IO (Bool, State)
@@ -153,6 +160,7 @@ commands = [
 	(":help",		"Print this message.",		return (Help False)),
 	(":load <file>",	"Load a file",			pLoad),
 	(":quit",		"Quit program.",		return Quit),
+	(":set",		"Set options",			pSet),
 	(":verbose-help",	"Print verbose help.",		return (Help True)),
 	("type <sym> <vars> = <type>", "Add a type synonym",	pType),
 	("<sym> :: <type>",	"Add to environment",		pAdd),
@@ -198,6 +206,17 @@ pType = do
     t <- pHType
     return $ Type (syn, (args, t))
 
+pSet :: ReadP Cmd
+pSet = (do
+    schar '+'
+    char 'm'
+    return $ Set $ \ s -> s { multi = True }
+  ) +++ (do
+    schar '-'
+    char 'm'
+    return $ Set $ \ s -> s { multi = False }
+  )
+
 schar :: Char -> ReadP ()
 schar c = do
     skipSpaces
@@ -210,6 +229,7 @@ helpText = "\
 \Given a type the program will deduce an expression of this type,\n\
 \if one exists.  If the Djinn says the type is not realizable it is\n\
 \because there is no (total) expression of the given type.\n\
+\Djinn only knows about tuples, (), Either, Void, and ->.\n\
 \\n\
 \Send any comments and feedback to lennart@augustsson.net\n\
 \\n\

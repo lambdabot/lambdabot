@@ -1,9 +1,11 @@
-module HTypes(HType, HSymbol, hTypeToFormula, pHSymbol, pHType,
+module HTypes(HType, HSymbol, hTypeToFormula, pHSymbol, pHType, htNot,
 	HClause, HPat, HExpr, hPrClause, termToHExpr, termToHClause) where
 import Text.PrettyPrint.HughesPJ(Doc, renderStyle, style, text, (<>), parens, ($$), vcat, punctuate, sep, nest, comma, (<+>))
-import Char(isAlphaNum, isLower)
+import Char(isAlphaNum, isLower, isAlpha)
 import Text.ParserCombinators.ReadP
 import LJTFormula
+
+--import Debug.Trace
 
 type HSymbol = String
 
@@ -15,6 +17,9 @@ data HType
 	| HTTuple [HType]
 	| HTArrow HType HType
 	deriving (Eq)
+
+htNot :: HSymbol -> HType
+htNot x = HTArrow (HTVar x) (HTCon "Void")
 
 instance Show HType where
     showsPrec p (HTApp f a) = showParen (p > 2) $ showsPrec 2 f . showString " " . showsPrec 3 a
@@ -58,8 +63,10 @@ pHTVar = do
 pHSymbol :: ReadP HSymbol
 pHSymbol = do
     skipSpaces
-    let isSym c = isAlphaNum c || c == '\'' || c == '.'
-    munch1 isSym
+    c <- satisfy isAlpha
+    let isSym d = isAlphaNum d || d == '\'' || d == '.'
+    cs <- munch1 isSym
+    return $ c:cs
 
 pHTTuple :: ReadP HType
 pHTTuple = do
@@ -179,9 +186,7 @@ termToHExpr term = remUnusedVars $ fst $ conv [] term
 	conv vs (Lam s te) = 
 		let hs = unSymbol s
 		    (te', ss) = conv (hs : vs) te
-		in  case lookup hs ss of
-		    Nothing -> (hELam [HPVar hs] te', ss)
-		    Just p -> (hELam [HPAt hs p] te', ss)
+		in  (hELam [convV hs ss] te', ss)
 	conv vs (Apply te1 te2) = convAp vs te1 [te2]
 	conv _vs Cleft = (HECon "Left", [])
 	conv _vs Cright = (HECon "Right", [])
@@ -194,11 +199,13 @@ termToHExpr term = remUnusedVars $ fst $ conv [] term
 		let (es, sss) = unzip $ map (conv vs) as
 		in  (HETuple es, concat sss)
 	convAp vs Ceither [Lam lv le, Lam rv re, e] =
-		let (le', ls) = conv vs le
-		    (re', rs) = conv vs re
+		let hlv = unSymbol lv
+		    hrv = unSymbol rv
+		    (le', ls) = conv (hlv:vs) le
+		    (re', rs) = conv (hrv:vs) re
 		    (e', ss) = conv vs e
-		in  (HECase e' [(HPApply (HPCon "Left" ) (HPVar (unSymbol lv)), le'),
-				(HPApply (HPCon "Right") (HPVar (unSymbol rv)), re')],
+		in  (HECase e' [(HPApply (HPCon "Left" ) (convV hlv ls), le'),
+				(HPApply (HPCon "Right") (convV hrv rs), re')],
 		     ls ++ rs ++ ss)
 	convAp vs (Csplit n) (b : a : as) =
 		let (HELam ps b', sb) = conv vs b
@@ -214,6 +221,11 @@ termToHExpr term = remUnusedVars $ fst $ conv [] term
 		let (es, sss) = unzip $ map (conv vs) (f:as)
 		in  (foldl1 HEApply es, concat sss)
 
+	convV hs ss =
+		case lookup hs ss of
+		Nothing -> HPVar hs
+		Just p -> HPAt hs p
+
 	hELam [] e = e
 	hELam ps (HELam ps' e) = HELam (ps ++ ps') e
 	hELam ps e = HELam ps e
@@ -228,7 +240,7 @@ remUnusedVars :: HExpr -> HExpr
 remUnusedVars expr = fst $ remE expr
   where remE (HELam ps e) =
 	    let (e', vs) = remE e
-	    in  (HELam (map (remEP vs) ps) e', vs)
+	    in  (HELam (map (remP vs) ps) e', vs)
 	remE (HEApply f a) =
 	    let (f', fs) = remE f
 		(a', as) = remE a
@@ -238,12 +250,12 @@ remUnusedVars expr = fst $ remE expr
 	    in  (HETuple es', concat sss)
 	remE (HECase e alts) =
 	    let (e', es) = remE e
-		(alts', sss) = unzip [ let (ee', ss) = remE ee in ((p, ee'), ss) | (p, ee) <- alts ]
+		(alts', sss) = unzip [ let (ee', ss) = remE ee in ((remP ss p, ee'), ss) | (p, ee) <- alts ]
 	    in  (HECase e' alts', es ++ concat sss)
 	remE e@(HECon _) = (e, [])
 	remE e@(HEVar v) = (e, [v])
-	remEP vs p@(HPVar v) = if v `elem` vs then p else HPVar "_"
-	remEP _vs p@(HPCon _) = p
-	remEP vs (HPTuple ps) = HPTuple (map (remEP vs) ps)
-	remEP vs (HPAt v p) = if v `elem` vs then HPAt v (remEP vs p) else remEP vs p
-	remEP vs (HPApply f a) = HPApply (remEP vs f) (remEP vs a)
+	remP vs p@(HPVar v) = if v `elem` vs then p else HPVar "_"
+	remP _vs p@(HPCon _) = p
+	remP vs (HPTuple ps) = HPTuple (map (remP vs) ps)
+	remP vs (HPAt v p) = if v `elem` vs then HPAt v (remP vs p) else remP vs p
+	remP vs (HPApply f a) = HPApply (remP vs f) (remP vs a)
