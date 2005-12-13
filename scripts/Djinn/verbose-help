@@ -1,3 +1,5 @@
+
+
 Djinn commands explained
 ========================
 
@@ -25,7 +27,10 @@ give one of them.  Example:
   Djinn> f ? a->a->a
   f :: a -> a -> a
   f _ x2 = x2
-  
+
+Warning: The given type expression is not checked in any way (i.e., no
+kind checking).
+
 
 <sym> :: <type>
   Add a new function available for Djinn to construct the result.
@@ -73,6 +78,16 @@ style -- comments.
 
 :quit
   Quit Djinn.
+
+
+:set
+  Set runtime options.
+     +multi    show multiple solutions
+               This will not show all solutions since there might be
+               infinitly many.
+     -multi    show one solution
+     +sorted   sort solutions according to a heuristic criterion
+     -sorted   do not sort solutions
 
 
 :verbose-help
@@ -125,4 +140,17 @@ but the particular formulation used in Djinn is due to Roy Dyckhoff.
 The decision procedure has been extended to generate a proof object
 (i.e., a lambda term).  It is this lambda term (in normal form) that
 constitutes the Haskell code.
+  See http://www.dcs.st-and.ac.uk/~rd/publications/jsl57.pdf for more
+on the exact method used by Djinn.
 
+  Since Djinn handles propositional calculus it also knows about the
+absurd proposition, corresponding to the empty set.  This set is
+called Void in Haskell, and Djinn assumes an elimination rule for the
+Void type:
+  void :: Void -> a
+Using Void is of little use for programming, but can be interesting
+for theorem proving.  Example, the double negation of the law of
+excluded middle:
+  Djinn> f ? Not (Not (Either x (Not x)))
+  f :: Not (Not (Either x (Not x)))
+  f x1 = x1 (Right (\ c7 -> void (x1 (Left c7))))

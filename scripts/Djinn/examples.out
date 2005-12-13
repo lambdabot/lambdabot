@@ -1,0 +1,98 @@
+id :: a -> a
+id x1 = x1
+const :: a -> b -> a
+const x1 _ = x1
+fst :: (a, b) -> a
+fst (v2, _) = v2
+snd :: (a, b) -> b
+snd (_, v3) = v3
+swap :: (a, b) -> (b, a)
+swap (v2, v3) = (v3, v2)
+compose :: (b -> c) -> (a -> b) -> a -> c
+compose x1 x2 x3 = x1 (x2 x3)
+curry :: ((a, b) -> c) -> a -> b -> c
+curry x1 x3 x4 = x1 (x3, x4)
+uncurry :: (a -> b -> c) -> (a, b) -> c
+uncurry x1 (v3, v4) = x1 v3 v4
+flip :: (a -> b -> c) -> b -> a -> c
+flip x1 x2 x3 = x1 x3 x2
+-- undefined cannot be realized.
+either :: (a -> b) -> (c -> b) -> Either a c -> b
+either x1 x2 x3 =
+         case x3 of
+         Left d4 -> x1 d4
+         Right d5 -> x2 d5
+returnC :: a -> C a
+returnC x1 x2 = x2 x1
+bindC :: C a -> (a -> C b) -> C b
+bindC x1 x2 x3 = x1 (\ c15 -> x2 c15 (\ c17 -> x3 c17))
+callCC :: ((a -> C b) -> C a) -> C a
+callCC x1 x2 = x1 (\ c15 _ -> x2 c15) (\ c11 -> x2 c11)
+returnS :: a -> S s a
+returnS x1 x2 = (x1, x2)
+bindS :: S s a -> (a -> S s b) -> S s b
+bindS x1 x2 x3 =
+        case x1 x3 of
+        (v4, v5) -> case x2 v4 v5 of
+                    (v6, v7) -> (v6, v7)
+rot :: (a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z) -> (z, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y)
+rot (v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15,
+     v16, v17, v18, v19, v20, v21, v22, v23, v24, v25, v26, v27) =
+      (v27, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15,
+       v16, v17, v18, v19, v20, v21, v22, v23, v24, v25, v26)
+f :: Either () (a, b) -> Either () (b, a)
+f x1 =
+    case x1 of
+    Left _ -> Left ()
+    Right (v6, v7) -> Right (v7, v6)
+f :: a -> a -> a
+f _ x2 = x2
+-- or
+f x1 _ = x1
+f :: Either () (a, b) -> Either () (b, a)
+f x1 =
+    case x1 of
+    Left _ -> Left ()
+    Right (v6, v7) -> Right (v7, v6)
+-- or
+f x1 =
+    case x1 of
+    Left _ -> Left ()
+    Right (_, _) -> Left ()
+-- or
+f x1 =
+    case x1 of
+    Left _ -> Left ()
+    Right (_, _) -> Left ()
+-- or
+f x1 =
+    case x1 of
+    Left _ -> Left ()
+    Right (_, _) -> Left ()
+f :: a -> (a -> a) -> a
+f x1 x2 = x2 x1
+-- or
+f x1 _ = x1
+-- or
+f x1 _ = x1
+f :: (a -> a) -> a -> a
+f x1 x2 = x1 x2
+-- or
+f _ x2 = x2
+f1 :: ((((a, b) -> f) -> Either (a -> f) (b -> f)) -> f) -> f
+f1 x1 =
+     x1 (\ c54 ->
+         Right (\ _ ->
+                x1 (\ _ ->
+                    Right (\ c110 ->
+                           x1 (\ _ ->
+                               Right (\ _ ->
+                                      x1 (\ _ ->
+                                          Left (\ c114 ->
+                                                x1 (\ _ -> Right (\ _ -> c54 (c114, c110)))))))))))
+f2 :: ((Either (a -> f) (b -> f) -> (a, b) -> f) -> f) -> f
+f2 x1 =
+     x1 (\ c14 ->
+         case c14 of
+         Left c15 -> \ (c17, _) -> c15 c17
+         Right c19 -> \ (_, c22) -> c19 c22)

@@ -1,3 +1,4 @@
+:set +s
 -- Some Prelude functions
 id ? a -> a;
 const ? a -> b -> a;
@@ -11,10 +12,30 @@ flip ? (a -> b -> c) -> b -> a -> c
 undefined ? a
 either ? (a -> b) -> (c -> b) -> Either a c -> b;
 
+-- continuation monad operations
+type C a = (a -> r) -> r
+returnC ? a -> C a
+bindC ? C a -> (a -> C b) -> C b
+callCC ? ((a -> C b) -> C a) -> C a
+
+-- state monad operations
+type S s a = (s -> (a, s))
+returnS ? a -> S s a
+bindS ? S s a -> (a -> S s b) -> S s b
+
+rot ? (a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z) -> (z,a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y)
+
+f ? Either () (a, b) -> Either () (b, a)
+
+:set +m
+f ? a->a->a
+f ? Either () (a, b) -> Either () (b, a)
+f ? a->(a->a)->a
+f ? (a->a)->a->a
+
+:set -m
+:set -s
 -- CPS of deMorgans laws
 f1 ? ((((a, b) -> f) -> Either (a -> f) (b -> f)) -> f) -> f;
 f2 ? ((Either (a -> f) (b -> f) -> (a, b) -> f) -> f) -> f;
 
-type C a = (a -> r) -> r
--- bind in the continuation monad
-bindC ? C a -> (a -> C b) -> C b

@@ -1,6 +1,8 @@
 module Help where
 verboseHelp :: String
 verboseHelp = "\
+\\n\
+\\n\
 \Djinn commands explained\n\
 \========================\n\
 \\n\
@@ -83,8 +85,12 @@ verboseHelp = "\
 \\n\
 \:set\n\
 \  Set runtime options.\n\
-\     +m    show multiple solutions\n\
-\     -m    show one solution\n\
+\     +multi    show multiple solutions\n\
+\               This will not show all solutions since there might be\n\
+\               infinitly many.\n\
+\     -multi    show one solution\n\
+\     +sorted   sort solutions according to a heuristic criterion\n\
+\     -sorted   do not sort solutions\n\
 \\n\
 \\n\
 \:verbose-help\n\
@@ -137,6 +143,8 @@ verboseHelp = "\
 \The decision procedure has been extended to generate a proof object\n\
 \(i.e., a lambda term).  It is this lambda term (in normal form) that\n\
 \constitutes the Haskell code.\n\
+\  See http://www.dcs.st-and.ac.uk/~rd/publications/jsl57.pdf for more\n\
+\on the exact method used by Djinn.\n\
 \\n\
 \  Since Djinn handles propositional calculus it also knows about the\n\
 \absurd proposition, corresponding to the empty set.  This set is\n\

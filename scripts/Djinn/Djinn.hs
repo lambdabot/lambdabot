@@ -1,5 +1,7 @@
 module Main(main) where
 import Char(isAlpha)
+import List(sortBy)
+import Ratio
 import Text.ParserCombinators.ReadP
 import Monad(when)
 import IO
@@ -13,10 +15,16 @@ import Help
 main :: IO ()
 main = do
     args <- getArgs
-    case args of
-	('-':_) : _ -> do usage; exitWith (ExitFailure 1)
-	[] -> repl hsGenRepl
-	_ -> loop startState args
+    let	decodeOptions (('-':cs) : as) st = decodeOption cs >>= \f -> decodeOptions as (f False st)
+	decodeOptions (('+':cs) : as) st = decodeOption cs >>= \f -> decodeOptions as (f True  st)
+	decodeOptions as st = return (as, st)
+	decodeOption cs = case [ set | (cmd, _, _, set) <- options, isPrefix cs cmd ] of
+			  [] -> do usage; exitWith (ExitFailure 1)
+			  set : _ -> return set
+    (args', state) <- decodeOptions args startState
+    case args' of
+	[] -> repl (hsGenRepl state)
+	_ -> loop state args'
 	      where loop _ [] = return ()
 		    loop s (a:as) = do
 		        (q, s') <- loadFile s a
@@ -26,11 +34,11 @@ main = do
 			    loop s' as
 
 usage :: IO ()
-usage = putStrLn "Usage: djinn [file ...]"
+usage = putStrLn "Usage: djinn [option ...] [file ...]"
 
-hsGenRepl :: REPL State
-hsGenRepl = REPL {
-    repl_init = inIt,
+hsGenRepl :: State -> REPL State
+hsGenRepl state = REPL {
+    repl_init = inIt state,
     repl_eval = eval,
     repl_exit = exit
     }
@@ -38,23 +46,25 @@ hsGenRepl = REPL {
 data State = State {
     synonyms :: [(HSymbol, ([HSymbol], HType))],
     axioms :: [(HSymbol, HType)],
-    multi :: Bool
+    multi :: Bool,
+    sorted :: Bool
     }
 startState :: State
 startState = State {
     synonyms = [("Not", (["x"], htNot "x"))],
     axioms = [],
-    multi = False
+    multi = False,
+    sorted = False
     }
 
 version :: String
 version = "version 2005-12-12"
 
-inIt :: IO (String, State)
-inIt = do
+inIt :: State -> IO (String, State)
+inIt state = do
     putStrLn $ "Welcome to Djinn " ++ version ++ "."
     putStrLn $ "Type :h to get help."
-    return ("Djinn> ", startState)
+    return ("Djinn> ", state)
 
 eval :: State -> String -> IO (Bool, State)
 eval s line =
@@ -76,7 +86,7 @@ data Cmd = Help Bool | Quit | Add HSymbol HType | Query HSymbol HType | Del HSym
 pCmd :: ReadP Cmd
 pCmd = do
     skipSpaces
-    let adds (':':s) p = do schar ':'; pPrefix s; c <- p; skipSpaces; return c
+    let adds (':':s) p = do schar ':'; pPrefix (takeWhile (/= ' ') s); c <- p; skipSpaces; return c
 	adds _ p = do c <- p; skipSpaces; return c
     cmd <- foldr1 (+++) [ adds s p | (s, _, p) <- commands ]
     skipSpaces
@@ -93,12 +103,12 @@ pPrefix s = do
 	pfail
 
 isPrefix :: String -> String -> Bool
-isPrefix p s = length p <= length s && take (length p) s == p
+isPrefix p s = not (null p) && length p <= length s && take (length p) s == p
 
 runCmd :: State -> Cmd -> IO (Bool, State)
 runCmd s Noop = return (False, s)
 runCmd s (Help verbose) = do
-    putStr $ helpText ++ unlines (map getHelp commands)
+    putStr $ helpText ++ unlines (map getHelp commands) ++ getSettings s
     when verbose $ putStr verboseHelp
     return (False, s)
 runCmd s Quit = 
@@ -119,15 +129,22 @@ runCmd s (Set f) =
 runCmd s (Query i g) =
     let form = hTypeToFormula (synonyms s) g
 	env = [ (Symbol v, hTypeToFormula (synonyms s) t) | (v, t) <- axioms s ]
-	mpr = prove env form
+	mpr = prove (multi s || sorted s) env form
     in  case mpr of
 	[] -> do
 	    putStrLn $ "-- " ++ i ++ " cannot be realized."
 	    return (False, s)
-	es@(e:_) -> do
-	    let es' = if multi s then es else [e]
+	ps -> do
+	    let f p =
+		   let c = termToHClause i p
+		       bvs = getBinderVars c
+		       r = if null bvs then 1 else length (filter (== "_") bvs) % length bvs
+		   in  (r, c)
+	        e:es = map snd $ sortBy (\ (x,_) (y,_) -> compare x y) $ map f ps
+	        pr = putStrLn . hPrClause
 	    putStrLn $ i ++ " :: " ++ show g
-	    mapM_ (putStrLn . hPrClause . termToHClause i) es'
+	    pr e
+	    when (multi s) $ mapM_ (\ x -> putStrLn "-- or" >> pr x) es
 	    return (False, s)
 
 loadFile :: State -> String -> IO (Bool, State)
@@ -160,13 +177,19 @@ commands = [
 	(":help",		"Print this message.",		return (Help False)),
 	(":load <file>",	"Load a file",			pLoad),
 	(":quit",		"Quit program.",		return Quit),
-	(":set",		"Set options",			pSet),
+	(":set <option>",	"Set options",			pSet),
 	(":verbose-help",	"Print verbose help.",		return (Help True)),
 	("type <sym> <vars> = <type>", "Add a type synonym",	pType),
 	("<sym> :: <type>",	"Add to environment",		pAdd),
 	("<sym> ? <type>",	"Query",			pQuery),
 	("",			"",				return Noop)
 	]
+
+options :: [(String, String, State->Bool, Bool->State->State)]
+options = [
+	  ("multi",		"print multiple solutions",	multi,	\ v s -> s { multi  = v }),
+	  ("sorted",		"sort solutions",		sorted,	\ v s -> s { sorted = v })
+	  ]
 
 getHelp :: (String, String, a) -> String
 getHelp (cmd, help, _) = cmd ++ replicate (30 - length cmd) ' ' ++ help
@@ -207,15 +230,10 @@ pType = do
     return $ Type (syn, (args, t))
 
 pSet :: ReadP Cmd
-pSet = (do
-    schar '+'
-    char 'm'
-    return $ Set $ \ s -> s { multi = True }
-  ) +++ (do
-    schar '-'
-    char 'm'
-    return $ Set $ \ s -> s { multi = False }
-  )
+pSet = do
+    val <- (do schar '+'; return True) +++ (do schar '-'; return False) 
+    f <- foldr (+++) pfail [ do pPrefix s; return (set val) | (s, _, _, set) <- options ]
+    return $ Set $ f
 
 schar :: Char -> ReadP ()
 schar c = do
@@ -235,3 +253,9 @@ helpText = "\
 \\n\
 \Commands (may be abbreviated):\n\
 \"
+
+getSettings :: State -> String
+getSettings s = unlines $ [
+    "",
+    "Current settings" ] ++ [ "    " ++ (if gett s then "+" else "-") ++ name ++ replicate (10 - length name) ' ' ++ descr |
+			      (name, descr, gett, _set) <- options ]

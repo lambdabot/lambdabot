@@ -10,7 +10,6 @@
 (False, "ljt/kk_n.002.ljt"),
 (True, "ljt/kk_p.002.ljt"),
 (False, "ljt/ph_n.002.ljt"),
-(False, "ljt/ph_n.006.ljt"),
 (True, "ljt/ph_p.002.ljt"),
 (True, "ljt/sch_ax.ljt"),
 (True, "ljt/sch_implies.ljt"),

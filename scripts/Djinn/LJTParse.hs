@@ -54,7 +54,7 @@ pArrow =
 pDisjuction :: ReadP Formula
 pDisjuction = do
    fs <- sepBy1 pConjunction (schar 'v')
-   return $ foldl1 (:|) fs
+   return $ foldl1 (|:) fs
 
 pConjunction :: ReadP Formula
 pConjunction = do

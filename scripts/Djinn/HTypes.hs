@@ -1,6 +1,7 @@
 module HTypes(HType, HSymbol, hTypeToFormula, pHSymbol, pHType, htNot,
-	HClause, HPat, HExpr, hPrClause, termToHExpr, termToHClause) where
-import Text.PrettyPrint.HughesPJ(Doc, renderStyle, style, text, (<>), parens, ($$), vcat, punctuate, sep, nest, comma, (<+>))
+	HClause, HPat, HExpr, hPrClause, termToHExpr, termToHClause, getBinderVars) where
+import Text.PrettyPrint.HughesPJ(Doc, renderStyle, style, text, (<>), parens, ($$), vcat, punctuate,
+	 sep, fsep, nest, comma, (<+>))
 import Char(isAlphaNum, isLower, isAlpha)
 import Text.ParserCombinators.ReadP
 import LJTFormula
@@ -65,7 +66,7 @@ pHSymbol = do
     skipSpaces
     c <- satisfy isAlpha
     let isSym d = isAlphaNum d || d == '\'' || d == '.'
-    cs <- munch1 isSym
+    cs <- munch isSym
     return $ c:cs
 
 pHTTuple :: ReadP HType
@@ -104,7 +105,7 @@ schar c = do
 -------------------------------
 
 hTypeToFormula :: [(HSymbol, ([HSymbol], HType))] -> HType -> Formula
-hTypeToFormula ss (HTApp (HTApp (HTCon "Either") l) r) = hTypeToFormula ss l :| hTypeToFormula ss r
+hTypeToFormula ss (HTApp (HTApp (HTCon "Either") l) r) = hTypeToFormula ss l |: hTypeToFormula ss r
 hTypeToFormula ss (HTTuple ts) = Conj (map (hTypeToFormula ss) ts)
 hTypeToFormula ss (HTArrow t1 t2) = hTypeToFormula ss t1 :-> hTypeToFormula ss t2
 hTypeToFormula _  (HTCon "()") = Truth
@@ -151,24 +152,26 @@ hPrClause :: HClause -> String
 hPrClause c = renderStyle style $ ppClause 0 c
 
 ppClause :: Int -> HClause -> Doc
-ppClause _p (HClause f ps e) = text f <+> sep (map (ppPat 10) ps) <+> text "=" <+> ppExpr 0 e
+ppClause _p (HClause f ps e) = text f <+> sep [sep (map (ppPat 10) ps) <+> text "=",
+					       nest 2 $ ppExpr 0 e]
 
 ppPat :: Int -> HPat -> Doc
 ppPat _ (HPVar s) = text s
 ppPat _ (HPCon s) = text s
-ppPat _ (HPTuple ps) = parens $ sep $ punctuate comma (map (ppPat 0) ps)
+ppPat _ (HPTuple ps) = parens $ fsep $ punctuate comma (map (ppPat 0) ps)
 ppPat _ (HPAt s p) = text s <> text "@" <> ppPat 10 p
 ppPat p (HPApply a b) = pparens (p > 1) $ ppPat 1 a <+> ppPat 2 b
 
 ppExpr :: Int -> HExpr -> Doc
-ppExpr p (HELam ps e) = pparens (p > 0) $ text "\\ " <> sep (map (ppPat 10) ps) <> text " -> " <> ppExpr 0 e
+ppExpr p (HELam ps e) = pparens (p > 0) $ sep [ text "\\" <+> sep (map (ppPat 10) ps) <+> text "->",
+						ppExpr 0 e]
 ppExpr p (HEApply f a) = pparens (p > 1) $ ppExpr 1 f <+> ppExpr 2 a
 ppExpr _ (HECon s) = text s
 ppExpr _ (HEVar s) = text s
-ppExpr _ (HETuple es) = parens $ sep $ punctuate comma (map (ppExpr 0) es)
+ppExpr _ (HETuple es) = parens $ fsep $ punctuate comma (map (ppExpr 0) es)
 ppExpr _ (HECase s alts) = (text "case" <+> ppExpr 0 s <+> text "of") $$
-			  nest 2 (vcat (map ppAlt alts))
-  where ppAlt (p, e) = ppPat 0 p <> text " -> " <> ppExpr 0 e
+			    vcat (map ppAlt alts)
+  where ppAlt (p, e) = ppPat 0 p <+> text "->" <+> ppExpr 0 e
 
 
 pparens :: Bool -> Doc -> Doc
@@ -188,8 +191,8 @@ termToHExpr term = remUnusedVars $ fst $ conv [] term
 		    (te', ss) = conv (hs : vs) te
 		in  (hELam [convV hs ss] te', ss)
 	conv vs (Apply te1 te2) = convAp vs te1 [te2]
-	conv _vs Cleft = (HECon "Left", [])
-	conv _vs Cright = (HECon "Right", [])
+	conv _vs (Cinj 0) = (HECon "Left", [])
+	conv _vs (Cinj 1) = (HECon "Right", [])
 	conv _vs Cunit = (HECon "()", [])
 	conv _vs Cabsurd = (HECon "void", [])
 	conv _vs e = error $ "termToHExpr " ++ show e
@@ -198,7 +201,7 @@ termToHExpr term = remUnusedVars $ fst $ conv [] term
 	convAp vs (Ctuple n) as | length as == n =
 		let (es, sss) = unzip $ map (conv vs) as
 		in  (HETuple es, concat sss)
-	convAp vs Ceither [Lam lv le, Lam rv re, e] =
+	convAp vs (Ccases 2) [e, Lam lv le, Lam rv re] =
 		let hlv = unSymbol lv
 		    hrv = unSymbol rv
 		    (le', ls) = conv (hlv:vs) le
@@ -259,3 +262,16 @@ remUnusedVars expr = fst $ remE expr
 	remP vs (HPTuple ps) = HPTuple (map (remP vs) ps)
 	remP vs (HPAt v p) = if v `elem` vs then HPAt v (remP vs p) else remP vs p
 	remP vs (HPApply f a) = HPApply (remP vs f) (remP vs a)
+
+getBinderVars :: HClause -> [HSymbol]
+getBinderVars (HClause _ pats expr) = concatMap gbPat pats ++ gbExp expr
+  where gbExp (HELam ps e) = concatMap gbPat ps ++ gbExp e
+	gbExp (HEApply f a) = gbExp f ++ gbExp a
+	gbExp (HETuple es) = concatMap gbExp es
+	gbExp (HECase se alts) = gbExp se ++ concatMap (\ (p, e) -> gbPat p ++ gbExp e) alts
+	gbExp _ = []
+	gbPat (HPVar s) = [s]
+	gbPat (HPCon _) = []
+	gbPat (HPTuple ps) = concatMap gbPat ps
+	gbPat (HPAt s p) = s : gbPat p
+	gbPat (HPApply f a) = gbPat f ++ gbPat a
