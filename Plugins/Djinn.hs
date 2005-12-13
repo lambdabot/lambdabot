@@ -70,7 +70,7 @@ instance Module DjinnModule DjinnEnv where
         -- Return the environment
         process _ _ src "djinn-env" _ = do 
             s <- readMS
-            ircPrivmsg src (showClean . intersperse "\n" $ s)
+            mapM_ (ircPrivmsg src . showClean) s
 
         -- Remove sym from environment. We let djinn do the hard work
         -- Currently (Tue Dec 13 11:09:11 EST 2005) we can't remove type
