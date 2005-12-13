@@ -44,9 +44,10 @@ instance Module DjinnModule DjinnEnv where
                            "http://darcs.augustsson.net/Darcs/Djinn"
             "djinn-add" -> "Define a new function type or type synonym"
             "djinn-del" -> "Remove a symbol from the environment"
+            "djinn-env" -> "Show the current djinn environment"
             _           -> error "invalid command to Djinn.moduleHelp"
 
-        moduleCmds      _ = return ["djinn","djinn-add","djinn-del"]
+        moduleCmds      _ = return ["djinn","djinn-add","djinn-del","djinn-env"]
         moduleDefState  _ = return []
         moduleSerialize _ = Just listSerial
 
@@ -59,12 +60,15 @@ instance Module DjinnModule DjinnEnv where
         -- Normal commands
         process _ _ src "djinn" s = do
                 env  <- readMS
-                o    <- djinn env $ ":set +sorted" <$> 
+                o    <- liftIO $ djinn env $ ":set +sorted" <$> 
                                     "f ?" <+> s
                 ircPrivmsg src o
 
         -- Augment environment
         process _ _ _ "djinn-add"  s = modifyMS $ \st -> (dropSpace s) : st
+
+        -- Return the environment
+        process _ _ src "djinn-env" _ = readMS >>= ircPrivmsg src . showClean
 
         -- Remove sym from environment. We let djinn do the hard work
         -- Currently (Tue Dec 13 11:09:11 EST 2005) we can't remove type
@@ -72,7 +76,7 @@ instance Module DjinnModule DjinnEnv where
         --
         process _ _ _ "djinn-del" s = do
             env  <- readMS
-            env' <- djinn env $ ":delete" <+> dropSpace s <$> ":environment"
+            env' <- liftIO $ djinn env $ ":delete" <+> dropSpace s <$> ":environment"
             modifyMS $ const . lines $ env'
 
         process _ _ _ _ _ = error "DjinnModule: invalid command"
@@ -85,10 +89,10 @@ binary = "./djinn"
 
 -- | Call the binary:
 
-djinn :: DjinnEnv -> String -> LB String
+djinn :: DjinnEnv -> String -> IO String
 djinn env' src = do
     let env = concat . intersperse "\n" $ env'
-    (out,err,_) <- liftIO $ popen binary [] (Just (env <$> src <$> ":q"))
+    (out,err,_) <- popen binary [] (Just (env <$> src <$> ":q"))
     let o = dropNL . clean . unlines . init . drop 2 . lines $ out
         e = clean $ err
     return $ case () of {_
