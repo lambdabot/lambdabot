@@ -104,7 +104,9 @@ djinn env' src = do
 --
 clean :: String -> String
 clean s | Just (a,_,b,_) <- prompt `matchRegexAll` s = a ++ clean b
+        | Just (a,_,b,_) <- failed `matchRegexAll` s = a ++ clean b
         | otherwise      = s
     where
         prompt = mkRegex "Djinn>[^\n]*\n"
+        failed = mkRegex "Cannot parse command[^\n]*\n"
 
