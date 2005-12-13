@@ -24,6 +24,7 @@ module Serial (
         stdSerial, mapSerial, listSerial, 
         mapPackedSerial, assocListPackedSerial, mapListPackedSerial,
         readM, Packable(..), {- instances of Packable -}
+        packedListSerial,
     ) where
 
 import Data.Maybe               (mapMaybe)
@@ -65,6 +66,12 @@ listSerial = Serial {
         serialize   = Just .P.pack . unlines . map show,
         deserialize = Just . mapMaybe (readM . P.unpack) . P.lines
    }
+
+packedListSerial :: Serial [P.FastString]
+packedListSerial = Serial {
+        serialize   = Just . P.unlines,
+        deserialize = Just . P.lines
+    }
 
 ------------------------------------------------------------------------
 

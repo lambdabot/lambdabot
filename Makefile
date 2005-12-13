@@ -211,7 +211,7 @@ runplugs: scripts/RunPlugs.hs
 endif
 
 djinn: scripts/Djinn/Djinn.hs
-	$(GHC) -O -iscripts/Djinn --make -o $@ $<
+	( cd scripts/Djinn && $(GHC) -O --make -o $@ Djinn.hs && mv djinn ../.. )
 
 CLEANS+= runplugs djinn 
 CLEANS+= Regex_hsc.c Regex.hs

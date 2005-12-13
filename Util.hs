@@ -23,7 +23,7 @@ module Util (
         closest, closests,
         withMWriter, parIO, timeout,
 
-        (</>), (<.>), (<+>), (<>),
+        (</>), (<.>), (<+>), (<>), (<$>),
         basename, dirname, dropSuffix, joinPath
     ) where
 
@@ -325,8 +325,11 @@ timeout n a = parIO (Just `fmap` a) (threadDelay n >> return Nothing)
 --
 infixr 6 </>
 infixr 6 <.>
+infixr 6 <+>
+infixr 6 <>
+infixr 6 <$>
 
-(</>), (<.>), (<+>), (<>) :: FilePath -> FilePath -> FilePath
+(</>), (<.>), (<+>), (<>), (<$>) :: FilePath -> FilePath -> FilePath
 [] </> b = b
 a  </> b = a ++ "/" ++ b
 
@@ -338,6 +341,9 @@ a  <+> b = a ++ " " ++ b
 
 [] <> b = b
 a  <> b = a ++ b
+
+[] <$> b = b
+a  <$> b = a ++ "\n" ++ b
 
 basename :: FilePath -> FilePath
 basename p = reverse $ takeWhile (/= '/') $ reverse p
