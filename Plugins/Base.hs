@@ -291,7 +291,7 @@ doPRIVMSG' myname msg
                             (process m msg towhere cmd' rest)
                         unless ok $
                           ircPrivmsg towhere "Not enough privileges")
-                mapLB (timeout $ 30*1000*1000) act
+                mapLB (timeout $ 15*1000*1000) act
                 return ()
               return ()
 
