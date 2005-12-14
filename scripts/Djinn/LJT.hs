@@ -60,18 +60,20 @@ copy r (Lam s t) = do
 copy r (Apply t1 t2) = liftM2 Apply (copy r t1) (copy r t2)
 copy _r t = return t
 
----
+------------------------------
+
+-- XXX The symbols used in the functions below must not clash
+-- XXX with any symbols from newSym.
 
 applyAtom :: Term -> Term -> Term
 applyAtom f a = Apply f a
 
-curryt :: Term -> Term
-curryt p = Lam x $ Lam y $ Apply p (applys (Ctuple 2) [Var x, Var y])
-  where x = Symbol "x"
-	y = Symbol "y"
+curryt :: Int -> Term -> Term
+curryt n p = foldr Lam (Apply p (applys (Ctuple n) (map Var xs))) xs
+  where xs = [ Symbol ("x_" ++ show i) | i <- [0 .. n-1] ]
 
-inj :: Int -> Term -> Term
-inj i p = Lam x $ Apply p (Apply (Cinj i) (Var x))
+inj :: ConsDesc -> Int -> Term -> Term
+inj cd i p = Lam x $ Apply p (Apply (Cinj cd i) (Var x))
   where x = Symbol "x"
 
 applyImp :: Term -> Term -> Term
@@ -84,13 +86,15 @@ applyImp p q = Apply p (Apply q (Lam y $ Apply p (Lam x (Var y))))
 -- replace p1 and p2 with the components of the pair
 cImpDImpFalse :: Symbol -> Symbol -> Term -> Term -> P Term
 cImpDImpFalse p1 p2 cdf gp = do
-    let p1b = Lam cf $ Apply cdf $ Lam x $ Apply Cabsurd $ Apply (Var cf) (Var x)
+    let p1b = Lam cf $ Apply cdf $ Lam x $ Apply (Ccases []) $ Apply (Var cf) (Var x)
 	p2b = Lam d $ Apply cdf $ Lam c $ Var d
 	cf = Symbol "cf"
 	x = Symbol "x"
 	d = Symbol "d"
 	c = Symbol "d"
     subst p1b p1 gp >>= subst p2b p2
+
+------------------------------
 
 -- More simplifications:
 --  split where no variables used can be removed
@@ -107,8 +111,8 @@ nf ee = spine ee []
 		getTup (Ctuple _) = (True, [])
 		getTup (Apply f a) = let (tf, as) = getTup f in (tf, a:as)
 		getTup _ = (False, [])
-	spine (Ccases n) (Apply (Cinj i) x : as) | length as >= n = spine (Apply (as!!i) x) (drop n as)
-        spine Cabsurd (Apply Cabsurd x : as) = spine Cabsurd (x : as)
+	spine (Ccases cds) (Apply (Cinj _ i) x : as) | length as >= n = spine (Apply (as!!i) x) (drop n as)
+		where n = length cds
 	spine f as = return $ applys f as
 
 
@@ -216,11 +220,11 @@ order nestImps g atomImps =
 	nestImps
     else
 	let 
-	    good_for (NestImp _ _ _ Falsity) = True
+	    good_for (NestImp _ _ _ (Disj [])) = True
 	    good_for (NestImp _ _ _ g') = g == g'
 	    nice_for (NestImp _ _ _ (PVar s)) =
 	        case extract atomImps s of
-	        (bs', _) -> let bs = [ b | A _ b <- bs'] in g `elem` bs || Falsity `elem` bs
+	        (bs', _) -> let bs = [ b | A _ b <- bs'] in g `elem` bs || false `elem` bs
 	    nice_for _ = False
 	    (good, ok) = partition good_for nestImps
 	    (nice, bad) = partition nice_for ok
@@ -232,13 +236,6 @@ newSym :: String -> P Symbol
 newSym pre = do
    i <- nextInt
    return $ Symbol $ pre ++ show i
-
-{-
-newVar :: String -> P Term
-newVar pre = do
-   s <- newSym pre
-   return $ Var s
--}
 
 ------------------------------
 ----- Generate all ways to select one element of a list
@@ -296,38 +293,31 @@ redant more as atomImps nestImps atoms goal =
 		let af = AtomF p s
 	            (bs, restAtomImps) = extract atomImps s
 	        in  redant more ([A (Apply f p) b | A f b <- bs] ++ l) restAtomImps nestImps (addAtom af atoms) g
-	redant1' (A _ Truth) l g = redant0 l g
-	redant1' (A p Falsity) _ _ = return $ Apply Cabsurd p
 	redant1' (A p (Conj bs)) l g = do
 	   vs <- mapM (const (newSym "v")) bs
 	   gp <- redant0 (zipWith (\ v a -> A (Var v) a) vs bs ++ l) g
 	   return $ applys (Csplit (length bs)) [foldr Lam gp vs, p]
 	redant1' (A p (Disj ds)) l g = do
 	   vs <- mapM (const (newSym "d")) ds
-	   ps <- mapM (\ (v, d) -> redant1 (A (Var v) d) l g) (zip vs ds)
-	   return $ applys (Ccases (length ds)) (p : zipWith Lam vs ps)
+	   ps <- mapM (\ (v, (_, d)) -> redant1 (A (Var v) d) l g) (zip vs ds)
+	   return $ applys (Ccases (map fst ds)) (p : zipWith Lam vs ps)
 	redant1' (A p (a :-> b)) l g = redantimp p a b l g
 
 	-- Reduce an implication antecedent
 	redantimp :: Term -> Formula -> Formula -> Antecedents -> Goal -> P Proof
 	-- p : PVar s -> b
 	redantimp p (PVar s) b l g = redantimpatom p s b l g
-	-- p : Truth -> b
-	redantimp p Truth b l g = redant1 (A (Apply p Cunit) b) l g
-	-- p : Falsity -> b, no help, ignore
-	redantimp _ Falsity _ l g = redant0 l g
 	-- p : (c & d) -> b
-	redantimp _ (Conj []) _ _ _ = error "redantimp"
-	redantimp p (Conj (c : cs)) b l g = do
+	redantimp p (Conj cs) b l g = do
 	    x <- newSym "x"
-	    let d = case cs of [a] -> a; _ -> Conj cs
-	    gp <- redantimp (Var x) c (d :-> b) l g
-	    subst (curryt p) x gp
+	    let imp = foldr (:->) b cs
+	    gp <- redant1 (A (Var x) imp) l g
+	    subst (curryt (length cs) p) x gp
 	-- p : (c | d) -> b
 	redantimp p (Disj ds) b l g = do
 	    vs <- mapM (const (newSym "d")) ds
-	    gp <- redant0 (zipWith (\ v d -> A (Var v) (d :-> b)) vs ds ++ l) g
-	    foldM (\ r (i, v) -> subst (inj i p) v r) gp (zip [0..] vs)
+	    gp <- redant0 (zipWith (\ v (_, d) -> A (Var v) (d :-> b)) vs ds ++ l) g
+	    foldM (\ r (i, v, (cd, _)) -> subst (inj cd i p) v r) gp (zip3 [0..] vs ds)
 	-- p : (c -> d) -> b
 	redantimp p (c :-> d) b l g = redantimpimp p c d b l g
 
@@ -335,10 +325,10 @@ redant more as atomImps nestImps atoms goal =
 	redantimpimp :: Term -> Formula -> Formula -> Formula -> Antecedents -> Goal -> P Proof
 	-- next clause exploits ~(C->D) <=> (~~C & ~D)
 	-- which isn't helpful when D = false
-	redantimpimp p c d Falsity l g | d /= Falsity = do
+	redantimpimp p c d (Disj []) l g | d /= false = do
 	    x <- newSym "x"
 	    y <- newSym "y"
-	    gp <- redantimpimp (Var x) c Falsity Falsity (A (Var y) (d :-> Falsity) : l) g
+	    gp <- redantimpimp (Var x) c false false (A (Var y) (d :-> false) : l) g
 	    cImpDImpFalse x y p gp
 	-- p : (c -> d) -> b
 	redantimpimp p c d b l g = redant more l atomImps (addNestImp (NestImp p c d b) nestImps) atoms g
@@ -360,8 +350,6 @@ redant more as atomImps nestImps atoms goal =
 	    redsucc' g
 
 	redsucc' :: Goal -> P Proof
-	redsucc' Truth = return Cunit
-	redsucc' Falsity = inconsis atomImps nestImps atoms
 	redsucc' a@(PVar s) =
 	    cutSearch more $ findAtoms s atoms
 	  `mplus`
@@ -377,7 +365,7 @@ redant more as atomImps nestImps atoms goal =
 	redsucc' (Disj ds) = do
 	    s1 <- newSym "_"
 	    let v = PVar s1
-	    redant0 [ A (Cinj i) $ d :-> v | (i, d) <- zip [0..] ds ] v
+	    redant0 [ A (Cinj cd i) $ d :-> v | (i, (cd, d)) <- zip [0..] ds ] v
 	redsucc' (a :-> b) = do
 	    s <- newSym "x"
 	    p <- redant1 (A (Var s) a) [] b
@@ -396,36 +384,6 @@ redant more as atomImps nestImps atoms goal =
 	    gp <- redant more [A (Var x) b] atomImps restImps atoms g
 	    subst (applyImp p (Lam z qz)) x gp
 
--- Classical ATP utility
--- from now on, goal is always = false...
-inconsis :: AtomImps -> NestImps -> AtomFs -> P Proof
-inconsis atomImps (NestImp p c d b : rest) atoms = inconsis1 p c d b atomImps rest atoms
-inconsis _ [] _ = none
-
-inconsis1 :: Term -> Formula -> Formula -> Formula -> AtomImps -> NestImps -> AtomFs -> P Proof
--- p : (c -> d) -> Falsity
--- Try (c->false), since ((c->false)->(c->d))
-inconsis1 p c _d Falsity atomImps nestImps atoms = do
-    x <- newSym "x"
-    fp <- redant False [A (Var x) c] atomImps nestImps atoms Falsity
-    let aImpD = Lam x $ Apply Cabsurd fp
-    return $ Apply p aImpD
-inconsis1 p c d b atomImps nestImps atoms = do
-    -- so can exploit ~((C->D)->B) eq ~~(C->D) & ~B
-    -- p : (c -> d) -> b
-    -- x : (c -> d) -> false
-    -- y : b
-    x <- newSym "x"
-    y <- newSym "y"
-    cd <- newSym "cd"
-    pf1 <- redant False [A (Var x) $ (c :-> d) :-> Falsity] atomImps nestImps atoms Falsity
-    pf2 <- redant False [A (Var y) b] atomImps nestImps atoms Falsity
-    -- bf : b -> false
-    -- cdf : (c->d) -> false
-    let bf = Lam y pf2
-	cdf = Lam cd $ Apply (Apply p (Var cd)) bf
-    subst cdf x pf1
-
 posin :: Symbol -> AtomImps -> NestImps -> Bool
 posin g atomImps nestImps = posin1 g atomImps || posin2 g [ (a :-> b) :-> c | NestImp _ a b c <- nestImps ]
 
@@ -436,12 +394,10 @@ posin2 :: Symbol -> [Formula] -> Bool
 posin2 g bs = any (posin3 g) bs
 
 posin3 :: Symbol -> Formula -> Bool
-posin3 g (Disj as) = all (posin3 g) as
+posin3 g (Disj as) = all (posin3 g) (map snd as)
 posin3 g (Conj as) = any (posin3 g) as
 posin3 g (_ :-> b) = posin3 g b
-posin3 _g Falsity = True
 posin3 s (PVar s') = s == s'
-posin3 _ _ = False
 
 cutSearch :: MoreSolutions -> P a -> P a
 cutSearch False p = atMostOne p

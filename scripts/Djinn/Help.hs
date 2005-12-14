@@ -8,12 +8,12 @@ verboseHelp = "\
 \\n\
 \<sym> ? <type>\n\
 \  Try to find a function of the specified type.  Djinn knows about the\n\
-\function type, tuples, Either, and the () type.  (Djinn also knows\n\
-\about the empty type, Void, but this is less useful.)  Further\n\
-\functions and types can be added by using the next command.  If a\n\
-\function can be found it is printed in a style suitable for inclusion\n\
-\in a Haskell program.  If no function can be found this will be\n\
-\reported as well.  Examples:\n\
+\function type, tuples, Either, Maybe, (), and can be given new type\n\
+\definitions.  (Djinn also knows about the empty type, Void, but this\n\
+\is less useful.)  Further functions, type synonyms, and data types can\n\
+\be added by using the commands below.  If a function can be found it\n\
+\is printed in a style suitable for inclusion in a Haskell program.  If\n\
+\no function can be found this will be reported as well.  Examples:\n\
 \  Djinn> f ? a->a\n\
 \  f :: a -> a\n\
 \  f x1 = x1\n\
@@ -53,13 +53,23 @@ verboseHelp = "\
 \type <sym> <vars> = <type>\n\
 \  Add a Haskell style type synonym.  Type synonyms are expanded before\n\
 \Djinn starts looking for a realization.\n\
-\  Warning: Type synonyms are treated as macros and are not checked in\n\
-\any way (e.g., for recursive definitions).\n\
 \  Example:\n\
 \  Djinn> type Id a = a->a\n\
 \  Djinn> f ? Id a\n\
 \  f :: Id a\n\
 \  f x1 = x1\n\
+\\n\
+\data <sym> <vars> = <type>\n\
+\  Add a Haskell style data type.\n\
+\  Example:\n\
+\  Djinn> data Foo a = C a a a\n\
+\  Djinn> f ? a -> Foo a\n\
+\  f :: a -> Foo a\n\
+\  f x1 = C x1 x1 x1\n\
+\\n\
+\\n\
+\:clear\n\
+\  Set the environment to the start environment.\n\
 \\n\
 \\n\
 \:delete <sym>\n\
@@ -91,7 +101,8 @@ verboseHelp = "\
 \     -multi    show one solution\n\
 \     +sorted   sort solutions according to a heuristic criterion\n\
 \     -sorted   do not sort solutions\n\
-\\n\
+\  The heuristic used to sort the solutions is that as many of the\n\
+\bound variables as possible should be used.\n\
 \\n\
 \:verbose-help\n\
 \  Print this message.\n\
@@ -104,18 +115,26 @@ verboseHelp = "\
 \  Type :h to get help.\n\
 \\n\
 \  -- return, bind, and callCC in the continuation monad\n\
-\  Djinn> type C a = (a -> r) -> r\n\
-\  Djinn> returnC ? a -> C a\n\
-\  returnC :: a -> C a\n\
-\  returnC x1 x2 = x2 x1\n\
+\  Djinn> data CD r a = CD ((a -> r) -> r)\n\
+\  Djinn> returnCD ? a -> CD r a\n\
+\  returnCD :: a -> CD r a\n\
+\  returnCD x1 = CD (\\ c15 -> c15 x1)\n\
 \\n\
-\  Djinn> bindC ? C a -> (a -> C b) -> C b\n\
-\  bindC :: C a -> (a -> C b) -> C b\n\
-\  bindC x1 x2 x3 = x1 (\\ c15 -> x2 c15 (\\ c17 -> x3 c17))\n\
+\  Djinn> bindCD ? CD r a -> (a -> CD r b) -> CD r b\n\
+\  bindCD :: CD r a -> (a -> CD r b) -> CD r b\n\
+\  bindCD x1 x4 =\n\
+\           case x1 of\n\
+\           CD v3 -> CD (\\ c49 ->\n\
+\                        v3 (\\ c50 ->\n\
+\                            case x4 c50 of\n\
+\                            CD c52 -> c52 c49))\n\
 \\n\
-\  Djinn> callCC ? ((a -> C b) -> C a) -> C a\n\
-\  callCC :: ((a -> C b) -> C a) -> C a\n\
-\  callCC x1 x2 = x1 (\\ c15 _ -> x2 c15) (\\ c11 -> x2 c11)\n\
+\  Djinn> callCCD ? ((a -> CD r b) -> CD r a) -> CD r a\n\
+\  callCCD :: ((a -> CD r b) -> CD r a) -> CD r a\n\
+\  callCCD x1 =\n\
+\            CD (\\ c68 ->\n\
+\                case x1 (\\ c69 -> CD (\\ _ -> c68 c69)) of\n\
+\                CD c72 -> c72 c68)\n\
 \\n\
 \\n\
 \  -- return and bind in the state monad\n\
@@ -125,11 +144,9 @@ verboseHelp = "\
 \  returnS x1 x2 = (x1, x2)\n\
 \  Djinn> bindS ? S s a -> (a -> S s b) -> S s b\n\
 \  bindS :: S s a -> (a -> S s b) -> S s b\n\
-\  bindS x1 x2 x3 = case x1 x3 of\n\
-\                     (v4, v5) -> case x2 v4 x3 of\n\
-\                                   (v7, v8) -> (v7, v5)\n\
-\  -- NOTE: this is wrong; there are many ways to pass the state\n\
-\  -- and Djinn picked a non-standard way.\n\
+\  bindS x1 x2 x3 =\n\
+\          case x1 x3 of\n\
+\          (v4, v5) -> x2 v4 v5\n\
 \\n\
 \\n\
 \Theory\n\
@@ -156,5 +173,5 @@ verboseHelp = "\
 \excluded middle:\n\
 \  Djinn> f ? Not (Not (Either x (Not x)))\n\
 \  f :: Not (Not (Either x (Not x)))\n\
-\  f x1 = x1 (Right (\\ c7 -> void (x1 (Left c7))))\n\
+\  f x1 = void (x1 (Right (\\ c23 -> void (x1 (Left c23)))))\n\
 \"

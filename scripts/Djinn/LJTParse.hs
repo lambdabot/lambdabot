@@ -75,8 +75,8 @@ pVar = do
     skipSpaces
     cs <- munch1 isAlphaNum
     case cs of
-	"false" -> return Falsity
-	"true" -> return Truth
+	"false" -> return false
+	"true" -> return true
 	_ -> return $ PVar $ Symbol cs
 
 pParen :: ReadP a -> ReadP a

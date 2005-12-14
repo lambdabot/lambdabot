@@ -1,0 +1,4 @@
+New in 2005-12-13
+  * Haskell data types are allowed
+  * Output is sorted so the most "relevant" function comes first
+  * Cyclic type definitions are detected and rejected

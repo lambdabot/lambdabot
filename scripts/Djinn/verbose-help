@@ -5,12 +5,12 @@ Djinn commands explained
 
 <sym> ? <type>
   Try to find a function of the specified type.  Djinn knows about the
-function type, tuples, Either, and the () type.  (Djinn also knows
-about the empty type, Void, but this is less useful.)  Further
-functions and types can be added by using the next command.  If a
-function can be found it is printed in a style suitable for inclusion
-in a Haskell program.  If no function can be found this will be
-reported as well.  Examples:
+function type, tuples, Either, Maybe, (), and can be given new type
+definitions.  (Djinn also knows about the empty type, Void, but this
+is less useful.)  Further functions, type synonyms, and data types can
+be added by using the commands below.  If a function can be found it
+is printed in a style suitable for inclusion in a Haskell program.  If
+no function can be found this will be reported as well.  Examples:
   Djinn> f ? a->a
   f :: a -> a
   f x1 = x1
@@ -50,13 +50,23 @@ with exactly the given type.  Example:
 type <sym> <vars> = <type>
   Add a Haskell style type synonym.  Type synonyms are expanded before
 Djinn starts looking for a realization.
-  Warning: Type synonyms are treated as macros and are not checked in
-any way (e.g., for recursive definitions).
   Example:
   Djinn> type Id a = a->a
   Djinn> f ? Id a
   f :: Id a
   f x1 = x1
+
+data <sym> <vars> = <type>
+  Add a Haskell style data type.
+  Example:
+  Djinn> data Foo a = C a a a
+  Djinn> f ? a -> Foo a
+  f :: a -> Foo a
+  f x1 = C x1 x1 x1
+
+
+:clear
+  Set the environment to the start environment.
 
 
 :delete <sym>
@@ -88,7 +98,8 @@ style -- comments.
      -multi    show one solution
      +sorted   sort solutions according to a heuristic criterion
      -sorted   do not sort solutions
-
+  The heuristic used to sort the solutions is that as many of the
+bound variables as possible should be used.
 
 :verbose-help
   Print this message.
@@ -101,18 +112,26 @@ Further examples
   Type :h to get help.
 
   -- return, bind, and callCC in the continuation monad
-  Djinn> type C a = (a -> r) -> r
-  Djinn> returnC ? a -> C a
-  returnC :: a -> C a
-  returnC x1 x2 = x2 x1
+  Djinn> data CD r a = CD ((a -> r) -> r)
+  Djinn> returnCD ? a -> CD r a
+  returnCD :: a -> CD r a
+  returnCD x1 = CD (\ c15 -> c15 x1)
 
-  Djinn> bindC ? C a -> (a -> C b) -> C b
-  bindC :: C a -> (a -> C b) -> C b
-  bindC x1 x2 x3 = x1 (\ c15 -> x2 c15 (\ c17 -> x3 c17))
+  Djinn> bindCD ? CD r a -> (a -> CD r b) -> CD r b
+  bindCD :: CD r a -> (a -> CD r b) -> CD r b
+  bindCD x1 x4 =
+           case x1 of
+           CD v3 -> CD (\ c49 ->
+                        v3 (\ c50 ->
+                            case x4 c50 of
+                            CD c52 -> c52 c49))
 
-  Djinn> callCC ? ((a -> C b) -> C a) -> C a
-  callCC :: ((a -> C b) -> C a) -> C a
-  callCC x1 x2 = x1 (\ c15 _ -> x2 c15) (\ c11 -> x2 c11)
+  Djinn> callCCD ? ((a -> CD r b) -> CD r a) -> CD r a
+  callCCD :: ((a -> CD r b) -> CD r a) -> CD r a
+  callCCD x1 =
+            CD (\ c68 ->
+                case x1 (\ c69 -> CD (\ _ -> c68 c69)) of
+                CD c72 -> c72 c68)
 
 
   -- return and bind in the state monad
@@ -122,11 +141,9 @@ Further examples
   returnS x1 x2 = (x1, x2)
   Djinn> bindS ? S s a -> (a -> S s b) -> S s b
   bindS :: S s a -> (a -> S s b) -> S s b
-  bindS x1 x2 x3 = case x1 x3 of
-                     (v4, v5) -> case x2 v4 x3 of
-                                   (v7, v8) -> (v7, v5)
-  -- NOTE: this is wrong; there are many ways to pass the state
-  -- and Djinn picked a non-standard way.
+  bindS x1 x2 x3 =
+          case x1 x3 of
+          (v4, v5) -> x2 v4 v5
 
 
 Theory
@@ -153,4 +170,4 @@ for theorem proving.  Example, the double negation of the law of
 excluded middle:
   Djinn> f ? Not (Not (Either x (Not x)))
   f :: Not (Not (Either x (Not x)))
-  f x1 = x1 (Right (\ c7 -> void (x1 (Left c7))))
+  f x1 = void (x1 (Right (\ c23 -> void (x1 (Left c23)))))

@@ -1,5 +1,5 @@
 module Main(main) where
-import Char(isAlpha)
+import Char(isAlpha, isSpace)
 import List(sortBy)
 import Ratio
 import Text.ParserCombinators.ReadP
@@ -10,6 +10,7 @@ import System
 import REPL
 import LJT
 import HTypes
+import HCheck(htCheck)
 import Help
 
 main :: IO ()
@@ -47,18 +48,30 @@ data State = State {
     synonyms :: [(HSymbol, ([HSymbol], HType))],
     axioms :: [(HSymbol, HType)],
     multi :: Bool,
-    sorted :: Bool
+    sorted :: Bool,
+    debug :: Bool,
+    cutOff :: Int
     }
 startState :: State
 startState = State {
-    synonyms = [("Not", (["x"], htNot "x"))],
+    synonyms = syns,
     axioms = [],
     multi = False,
-    sorted = False
+    sorted = True,
+    debug = False,
+    cutOff = 100
     }
+ where syns = reverse [
+	("()", ([], HTUnion [("()",[])])),
+	("Either", (["a","b"], HTUnion [("Left", [HTVar "a"]), ("Right", [HTVar "b"])])),
+	("Maybe", (["a"], HTUnion [("Nothing", []), ("Just", [HTVar "a"])])),
+	("Bool", ([], HTUnion [("False", []), ("True", [])])),
+	("Void", ([], HTUnion [])),
+	("Not", (["x"], htNot "x"))
+	]
 
 version :: String
-version = "version 2005-12-12"
+version = "version 2005-12-13"
 
 inIt :: State -> IO (String, State)
 inIt state = do
@@ -81,7 +94,7 @@ exit _s = do
     return ()
 
 data Cmd = Help Bool | Quit | Add HSymbol HType | Query HSymbol HType | Del HSymbol | Load HSymbol | Noop | Env |
-	   Type (HSymbol, ([HSymbol], HType)) | Set (State -> State)
+	   Type (HSymbol, ([HSymbol], HType)) | Set (State -> State) | Clear
 
 pCmd :: ReadP Cmd
 pCmd = do
@@ -116,21 +129,29 @@ runCmd s Quit =
 runCmd s (Load f) = loadFile s f
 runCmd s (Add i t) = 
     return (False, s { axioms = (i, t) : axioms s })
+runCmd _ Clear =
+    return (False, startState)
 runCmd s (Del i) = 
-    return (False, s { axioms = [ (i', t) | (i', t) <- axioms s, i /= i' ] })
+    return (False, s { axioms   = filter ((i /=) . fst) (axioms s)
+                     , synonyms = filter ((i /=) . fst) (synonyms s) })
 runCmd s Env = do
-    mapM_ (\ (i, (vs, t)) -> putStrLn $ "type " ++ unwords (i:vs) ++ " = " ++ show t) (synonyms s)
-    mapM_ (\ (i, t) -> putStrLn $ i ++ " :: " ++ show t) (axioms s)
+    let tname t = if isHTUnion t then "data" else "type"
+    mapM_ (\ (i, (vs, t)) -> putStrLn $ tname t ++ " " ++ unwords (i:vs) ++ " = " ++ show t) (reverse $ synonyms s)
+    mapM_ (\ (i, t) -> putStrLn $ i ++ " :: " ++ show t) (reverse $ axioms s)
     return (False, s)
-runCmd s (Type syn) =
-    return (False, s { synonyms = syn : synonyms s })
+runCmd s (Type syn) = do
+    let syns = syn : synonyms s
+    case htCheck syns of
+	Left msg -> do putStrLn $ "Error: " ++ msg; return (False, s)
+        Right _ -> return (False, s { synonyms = syns })
 runCmd s (Set f) =
     return (False, f s)
-runCmd s (Query i g) =
+runCmd s (Query i g) = do
     let form = hTypeToFormula (synonyms s) g
 	env = [ (Symbol v, hTypeToFormula (synonyms s) t) | (v, t) <- axioms s ]
 	mpr = prove (multi s || sorted s) env form
-    in  case mpr of
+    when (debug s) $ putStrLn ("*** " ++ show form)
+    case mpr of
 	[] -> do
 	    putStrLn $ "-- " ++ i ++ " cannot be realized."
 	    return (False, s)
@@ -140,8 +161,12 @@ runCmd s (Query i g) =
 		       bvs = getBinderVars c
 		       r = if null bvs then 1 else length (filter (== "_") bvs) % length bvs
 		   in  (r, c)
-	        e:es = map snd $ sortBy (\ (x,_) (y,_) -> compare x y) $ map f ps
+	        e:es = if sorted s then
+			    map snd $ sortBy (\ (x,_) (y,_) -> compare x y) $ map f $ take (cutOff s) ps
+			else
+			    map (termToHClause i) ps
 	        pr = putStrLn . hPrClause
+	    when (debug s) $ putStrLn ("+++ " ++ show (head ps))
 	    putStrLn $ i ++ " :: " ++ show g
 	    pr e
 	    when (multi s) $ mapM_ (\ x -> putStrLn "-- or" >> pr x) es
@@ -172,6 +197,7 @@ evalCmds state (l:ls) = do
 
 commands :: [(String, String, ReadP Cmd)]
 commands = [
+	(":clear",		"Clear the envirnment",		return Clear),
 	(":delete <sym>",	"Delete from environment.",	pDel),
 	(":environment",	"Show environment",		return Env),
 	(":help",		"Print this message.",		return (Help False)),
@@ -180,6 +206,7 @@ commands = [
 	(":set <option>",	"Set options",			pSet),
 	(":verbose-help",	"Print verbose help.",		return (Help True)),
 	("type <sym> <vars> = <type>", "Add a type synonym",	pType),
+	("data <sym> <vars> = <datatype>", "Add a data type",	pData),
 	("<sym> :: <type>",	"Add to environment",		pAdd),
 	("<sym> ? <type>",	"Query",			pQuery),
 	("",			"",				return Noop)
@@ -188,34 +215,35 @@ commands = [
 options :: [(String, String, State->Bool, Bool->State->State)]
 options = [
 	  ("multi",		"print multiple solutions",	multi,	\ v s -> s { multi  = v }),
-	  ("sorted",		"sort solutions",		sorted,	\ v s -> s { sorted = v })
+	  ("sorted",		"sort solutions",		sorted,	\ v s -> s { sorted = v }),
+	  ("debug",		"debug mode",			debug,	\ v s -> s { debug  = v })
 	  ]
 
 getHelp :: (String, String, a) -> String
-getHelp (cmd, help, _) = cmd ++ replicate (30 - length cmd) ' ' ++ help
+getHelp (cmd, help, _) = cmd ++ replicate (35 - length cmd) ' ' ++ help
 
 pDel :: ReadP Cmd
 pDel = do
-    s <- pHSymbol
+    s <- pHSymbol True +++ pHSymbol False
     return $ Del s
 
 pLoad :: ReadP Cmd
 pLoad = do
-    s <- pHSymbol
+    skipSpaces
+    s <- munch1 (not . isSpace)
     return $ Load s
 
 pAdd :: ReadP Cmd
 pAdd = do
-    i <- pHSymbol
-    schar ':'
-    char ':'
+    i <- pHSymbol True
+    sstring "::"
     t <- pHType
     optional $ schar ';'
     return $ Add i t
 
 pQuery :: ReadP Cmd
 pQuery = do
-    i <- pHSymbol
+    i <- pHSymbol False
     schar '?'
     t <- pHType
     optional $ schar ';'
@@ -223,10 +251,20 @@ pQuery = do
 
 pType :: ReadP Cmd
 pType = do
-    schar 't'; char 'y'; char 'p'; char 'e'
-    (syn:args) <- many1 pHSymbol
+    sstring "type"
+    syn <- pHSymbol True
+    args <- many (pHSymbol False)
     schar '='
     t <- pHType
+    return $ Type (syn, (args, t))
+
+pData :: ReadP Cmd
+pData = do
+    sstring "data"
+    syn <- pHSymbol True
+    args <- many (pHSymbol False)
+    schar '='
+    t <- pHDataType
     return $ Type (syn, (args, t))
 
 pSet :: ReadP Cmd
@@ -241,13 +279,23 @@ schar c = do
     char c
     return ()
 
+sstring :: String -> ReadP ()
+sstring s = do
+    skipSpaces
+    string s
+    return ()
+
 helpText :: String
 helpText = "\
 \Djinn is a program that generates Haskell code from a type.\n\
 \Given a type the program will deduce an expression of this type,\n\
 \if one exists.  If the Djinn says the type is not realizable it is\n\
 \because there is no (total) expression of the given type.\n\
-\Djinn only knows about tuples, (), Either, Void, and ->.\n\
+\Djinn only knows about tuples, ->, and some data types in the\n\
+\initial environment (do :e for a list).\n\
+\\n\
+\Caveat emptor: The expression will have the right type, but it\n\
+\not be what you were looking for.\n\
 \\n\
 \Send any comments and feedback to lennart@augustsson.net\n\
 \\n\
