@@ -7,6 +7,7 @@ module Util (
         breakOnGlue,
         clean,
         dropSpace,
+        dropNL,
         snoc,
         after,
         splitFirstWord,
@@ -14,8 +15,8 @@ module Util (
         debugStr,
         debugStrLn,
         lowerCaseString, upperCaseString,
-	upperize, lowerize,
-	quote,
+        upperize, lowerize,
+        quote,
         listToStr,
         getRandItem, stdGetRandItem,
         showClean,
@@ -216,6 +217,9 @@ clean x | x == '\CR' = []
 -- | show a list without heavyweight formatting
 showClean :: (Show a) => [a] -> String
 showClean s = concatWith " " (map (init . tail . show) s)
+
+dropNL :: [Char] -> [Char]
+dropNL = reverse . dropWhile (== '\n') . reverse
 
 -- | untab an string
 expandTab :: String -> String

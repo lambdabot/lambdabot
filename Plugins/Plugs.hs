@@ -11,7 +11,7 @@
 --
 module Plugins.Plugs (theModule) where
 
-import Util             (expandTab)
+import Util             (expandTab,dropNL)
 import Lambdabot      hiding  (clean)
 import PosixCompat
 
@@ -44,8 +44,6 @@ plugs src = do
         | null o           -> e
         | otherwise        -> o
     }
-    where
-        dropNL = reverse . dropWhile (== '\n') . reverse
 
 --
 -- Clean up runplugs' output

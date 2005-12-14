@@ -223,7 +223,7 @@ getAnswer msg rest seenFM now
                   -> P.pack channel `elem` cs
                _ -> False
        in ["In "++channel++" I can see "
-            ++ (if null people then "nobody" 
+            ++ (if null people then "nobody"    -- todo, how far back does this go?
                else listToStr "and" (map P.unpack people)) ++ "."]
 
   | otherwise        = case M.lookup (P.pack lcnick) seenFM of

@@ -44,11 +44,21 @@ instance Module DjinnModule DjinnEnv where
                            "http://darcs.augustsson.net/Darcs/Djinn"
             "djinn-add" -> "Define a new function type or type synonym"
             "djinn-del" -> "Remove a symbol from the environment"
+            "djinn-clr" -> "Reset the djinn environment"
             "djinn-env" -> "Show the current djinn environment"
+            "djinn-ver" -> "Show current djinn version"
             _           -> error "invalid command to Djinn.moduleHelp"
 
-        moduleCmds      _ = return ["djinn","djinn-add","djinn-del","djinn-env"]
-        moduleDefState  _ = return []
+        moduleCmds      _ = return ["djinn"
+                                   ,"djinn-add"
+                                   ,"djinn-del"
+                                   ,"djinn-env"
+                                   ,"djinn-clr" 
+                                   ,"djinn-ver"]
+
+        -- establish the default environment
+        moduleDefState  _ = getDjinnEnv
+
         moduleSerialize _ = Just listSerial
 
         -- rule out attempts to do IO, if these get into the env,
@@ -65,21 +75,28 @@ instance Module DjinnModule DjinnEnv where
                 ircPrivmsg src o
 
         -- Augment environment
-        process _ _ _ "djinn-add"  s = modifyMS $ \st -> (dropSpace s) : st
+        process _ _ _   "djinn-add"  s = modifyMS $ \st -> (dropSpace s) : st
 
-        -- Return the environment
-        process _ _ src "djinn-env" _ = do 
-            s <- readMS
-            mapM_ (ircPrivmsg src) s
+        -- Display the environment
+        process _ _ src "djinn-env"  _ = readMS >>= mapM_ (ircPrivmsg src)
 
-        -- Remove sym from environment. We let djinn do the hard work
-        -- Currently (Tue Dec 13 11:09:11 EST 2005) we can't remove type
-        -- synonyms from the environment
-        --
+        -- Reset the env
+        process _ _ _   "djinn-clr"  _ = do
+            env <- getDjinnEnv
+            modifyMS $ const env
+
+        -- Remove sym from environment. We let djinn do the hard work of
+        -- looking up the symbols.
         process _ _ _ "djinn-del" s = do
             env  <- readMS
             env' <- liftIO $ djinn env $ ":delete" <+> dropSpace s <$> ":environment"
             modifyMS $ const . lines $ env'
+
+        -- Version number
+        process _ _ src "djinn-ver"  _ = do
+            (out,_,_) <- liftIO $ popen binary [] (Just ":q")
+            let v = dropNL . clean . drop 18 . head . lines $ out
+            ircPrivmsg src v
 
         process _ _ _ _ _ = error "DjinnModule: invalid command"
 
@@ -88,6 +105,12 @@ instance Module DjinnModule DjinnEnv where
 -- | Should be built inplace by the build system
 binary :: String
 binary = "./djinn"
+
+-- | Extract the default environment
+getDjinnEnv :: LB DjinnEnv
+getDjinnEnv = do
+    env <- liftIO $ djinn [] ":environment"
+    return $ lines env
 
 -- | Call the binary:
 
@@ -102,8 +125,6 @@ djinn env' src = do
         | null o           -> e
         | otherwise        -> o
     }
-    where
-        dropNL = reverse . dropWhile (== '\n') . reverse
 
 --
 -- Clean up djinn output
