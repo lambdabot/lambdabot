@@ -271,7 +271,7 @@ termToHExpr term = etaReduce $ remUnusedVars $ fst $ conv [] term
 
 	hECase e [] = HEApply (HEVar "void") e
 	hECase _ [(HPCon "()", e)] = e
-	hECase e [(p, e')] | eqPatExpr p e' = e
+	hECase e pes | all (uncurry eqPatExpr) pes = e
 	hECase e [(p, HELam ps b)] = HELam ps $ hECase e [(p, b)]
 	hECase _ ((_,e):alts@(_:_)) | all (alphaEq e . snd) alts = e	-- if all arms are equal and there
 								   -- at least two alternatives there can be no bound vars

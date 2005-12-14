@@ -33,6 +33,7 @@ returnCD ? a -> CD r a
 bindCD ? CD r a -> (a -> CD r b) -> CD r b
 callCCD ? ((a -> CD r b) -> CD r a) -> CD r a
 
+bindM ? Maybe a -> (a -> Maybe b) -> Maybe b
 
 rot ? (a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z) -> (z,a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y)
 
@@ -50,3 +51,12 @@ f ? (a->a)->a->a
 f1 ? ((((a, b) -> f) -> Either (a -> f) (b -> f)) -> f) -> f;
 f2 ? ((Either (a -> f) (b -> f) -> (a, b) -> f) -> f) -> f;
 
+:set +s
+
+-- Lists with recursion through Fix (uninterpreted)
+data ListN a as = Nil | Cons a as
+type List a = Fix (ListN a)
+out :: List a -> ListN a (List a)
+in :: ListN a (List a) -> List a
+-- Strangely, it finds the null function
+null ? List a -> Bool

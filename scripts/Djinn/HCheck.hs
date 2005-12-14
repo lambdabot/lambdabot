@@ -116,7 +116,7 @@ getVarKind :: KEnv -> HSymbol -> M Kind
 getVarKind env v =
     case lookup v env of
     Just k -> return k
-    Nothing -> lift $ Left $ "type varible not bound " ++ v
+    Nothing -> lift $ Left $ "type variable not bound " ++ v
 
 getConKind :: KEnv -> HSymbol -> M Kind
 getConKind env v =

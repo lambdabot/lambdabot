@@ -235,7 +235,7 @@ pLoad = do
 
 pAdd :: ReadP Cmd
 pAdd = do
-    i <- pHSymbol True
+    i <- pHSymbol False
     sstring "::"
     t <- pHType
     optional $ schar ';'
