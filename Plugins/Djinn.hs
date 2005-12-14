@@ -10,16 +10,21 @@
 --
 module Plugins.Djinn (theModule) where
 
-import Serial
+-- import Serial
 import LBState
 import Lambdabot      hiding  (clean)
 import Util           hiding  (clean)
 import PosixCompat
 
-import Data.List                (intersperse)
+import System.IO
+
+import Data.List                (intersperse, nub)
+import Data.Either
 
 import Control.Monad.Trans      (liftIO)
 import Text.Regex
+
+------------------------------------------------------------------------
 
 newtype DjinnModule = DjinnModule ()
 
@@ -27,15 +32,10 @@ theModule :: MODULE
 theModule = MODULE $ DjinnModule ()
 
 -- | We can accumulate an interesting environment
-type DjinnEnv = [Decl]
+type DjinnEnv = ([Decl] {- prelude -}, [Decl])
 type Decl = String
 
---
--- | Serialise environment.
--- Forkprocess djinn?
--- Load env on startup.. Or just load once per run? Probably cleaner.
--- Write env on shutdown.
---
+------------------------------------------------------------------------
 
 instance Module DjinnModule DjinnEnv where
 
@@ -56,10 +56,11 @@ instance Module DjinnModule DjinnEnv where
                                    ,"djinn-clr" 
                                    ,"djinn-ver"]
 
-        -- establish the default environment
-        moduleDefState  _ = getDjinnEnv
+        moduleSerialize _ = Nothing -- Just listSerial
 
-        moduleSerialize _ = Just listSerial
+        moduleDefState  _ = do
+            st <- liftIO $ getDjinnEnv ([],[]) -- get the prelude
+            return (either (const []) snd{-!-} st, [])
 
         -- rule out attempts to do IO, if these get into the env,
         -- they'll be executed by djinn
@@ -69,28 +70,35 @@ instance Module DjinnModule DjinnEnv where
 
         -- Normal commands
         process _ _ src "djinn" s = do
-                env  <- readMS
-                o    <- liftIO $ djinn env $ ":set +sorted" <$> 
-                                    "f ?" <+> s
-                ircPrivmsg src o
+                (_,env) <- readMS
+                e       <- liftIO $ djinn env $ ":set +sorted" <$> "f ?" <+> s
+                mapM_ (ircPrivmsg src) $ either id (tail . lines) e
 
-        -- Augment environment
-        process _ _ _   "djinn-add"  s = modifyMS $ \st -> (dropSpace s) : st
+        -- Augment environment. Have it checked by djinn.
+        process _ _ src "djinn-add"  s = do
+            (p,st)  <- readMS 
+            est     <- liftIO $ getDjinnEnv $ (p, dropSpace s : st)
+            case est of
+                Left e     -> ircPrivmsg src (head e)
+                Right st'' -> modifyMS $ const st''
 
         -- Display the environment
-        process _ _ src "djinn-env"  _ = readMS >>= mapM_ (ircPrivmsg src)
+        process _ _ src "djinn-env"  _ = do
+            (prelude,st) <- readMS
+            mapM_ (ircPrivmsg src) (prelude ++ st)
 
         -- Reset the env
-        process _ _ _   "djinn-clr"  _ = do
-            env <- getDjinnEnv
-            modifyMS $ const env
+        process _ _ _ "djinn-clr"  _ = modifyMS $ \(p,_) -> (p,[])
 
         -- Remove sym from environment. We let djinn do the hard work of
         -- looking up the symbols.
-        process _ _ _ "djinn-del" s = do
-            env  <- readMS
-            env' <- liftIO $ djinn env $ ":delete" <+> dropSpace s <$> ":environment"
-            modifyMS $ const . lines $ env'
+        process _ _ src "djinn-del" s =  do
+            (_,env) <- readMS
+            eenv <- liftIO $ djinn env $ ":delete" <+> dropSpace s <$> ":environment"
+            case eenv of
+                Left e     -> ircPrivmsg src (head e)
+                Right env' -> modifyMS $ \(prel,_) ->
+                    (prel,filter (\p -> p `notElem` prel) . nub . lines $ env')
 
         -- Version number
         process _ _ src "djinn-ver"  _ = do
@@ -107,33 +115,36 @@ binary :: String
 binary = "./djinn"
 
 -- | Extract the default environment
-getDjinnEnv :: LB DjinnEnv
-getDjinnEnv = do
-    env <- liftIO $ djinn [] ":environment"
-    return $ lines env
+getDjinnEnv :: DjinnEnv -> IO (Either [String] DjinnEnv)
+getDjinnEnv (prel,env') = do
+    env <- djinn env' ":environment"
+    case env of
+        Left e  -> return $ Left e
+        Right o -> do let new = filter (\p -> p `notElem` prel) . nub .  lines $ o
+                      return $ Right (prel, new)
 
 -- | Call the binary:
 
-djinn :: DjinnEnv -> String -> IO String
+djinn :: [Decl] -> String -> IO (Either [String] String)
 djinn env' src = do
     let env = concat . intersperse "\n" $ env'
-    (out,err,_) <- popen binary [] (Just (env <$> src <$> ":q"))
+    (out,_,_) <- popen binary [] (Just (env <$> src <$> ":q"))
     let o = dropNL . clean . unlines . init . drop 2 . lines $ out
-        e = clean $ err
     return $ case () of {_
-        | null o && null e -> "Terminated\n"
-        | null o           -> e
-        | otherwise        -> o
+        | Just _ <- failed `matchRegexAll` o -> Left (lines o)
+        | Just _ <- unify  `matchRegexAll` o -> Left (lines o)
+        | otherwise                          -> Right o
     }
+    where
+        failed = mkRegex "Cannot parse command"
+        unify  = mkRegex "cannot be realized"
 
 --
 -- Clean up djinn output
 --
 clean :: String -> String
 clean s | Just (a,_,b,_) <- prompt `matchRegexAll` s = a ++ clean b
-        | Just (a,_,b,_) <- failed `matchRegexAll` s = a ++ clean b
         | otherwise      = s
     where
         prompt = mkRegex "Djinn>[^\n]*\n"
-        failed = mkRegex "Cannot parse command[^\n]*\n"
 
