@@ -40,7 +40,7 @@ instance Module PrettyModule (String -> IO String) where
 -- | calculates "desired" indentation and return pretty-printed declarations
 -- the indentation calculations are still pretty much rough guesswork.
 -- i'll have to figure out a way to do some _reliable_ pretty-printing!
-doPretty :: HsModule -> String
+doPretty :: HsModule -> [String]
 doPretty (HsModule _ _ _ _ decls) =
     let defaultLen = 4
         declLen (HsFunBind matches)   = maximum $ map matchLen matches
@@ -60,7 +60,7 @@ doPretty (HsModule _ _ _ _ decls) =
         }
     -- FIXME: prefixing with hashes is done, because i didn't find a way
     --   to disable the indentation filter of lambdabot only for this module...
-    in unlines . map ("#  "++) . lines . concat . intersperse "\n" 
+    in map (" "++) . lines . concat . intersperse "\n" 
        -- . map show $ decls
        . map (\d -> prettyPrintWithMode (makeMode d) d) $ decls
 
@@ -76,7 +76,7 @@ prettyCmd src rest =
         result = case parseModule (modPrefix ++ code) of
             (ParseOk a)           -> doPretty a
             (ParseFailed loc msg) -> let (SrcLoc _ _ col) = loc in
-                show msg ++ " at column " ++ show (col - prefLen)
-    in ircPrivmsg src result
+                (show msg ++ " at column " ++ show (col - prefLen)) : []
+    in mapM_ (ircPrivmsg' src) result
 
 ------------------------------------------------------------------------
