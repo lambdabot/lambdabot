@@ -1,4 +1,8 @@
-module HCheck(htCheck) where
+--
+-- Copyright (c) 2005 Lennart Augustsson
+-- See LICENSE for licensing details.
+--
+module HCheck(htCheckEnv, htCheckType) where
 import List(union)
 --import Control.Monad.Trans
 import Control.Monad.Error
@@ -11,33 +15,28 @@ import HTypes
 
 --import Debug.Trace
 
-type KState = (Int, IntMap (Maybe Kind))
+type KState = (Int, IntMap (Maybe HKind))
 initState :: KState
 initState = (0, empty)
 
 type M a = StateT KState (Either String) a
 
-type KEnv = [(HSymbol, Kind)]
+type KEnv = [(HSymbol, HKind)]
 
-data Kind
-    = KStar
-    | KArrow Kind Kind
-    | KVar Int
-
-newKVar :: M Kind
+newKVar :: M HKind
 newKVar = do
     (i, m) <- get
     put (i+1, insert i Nothing m)
     return $ KVar i
 
-getVar :: Int -> M (Maybe Kind)
+getVar :: Int -> M (Maybe HKind)
 getVar i = do
     (_, m) <- get
     case m!i of
 	Just (KVar i') -> getVar i'
 	mk -> return mk
 
-addMap :: Int -> Kind -> M ()
+addMap :: Int -> HKind -> M ()
 addMap i k = do
     (n, m) <- get
     put (n, insert i (Just k) m)
@@ -45,56 +44,67 @@ addMap i k = do
 clearState :: M ()
 clearState = put initState
 
-htCheck :: [(HSymbol, ([HSymbol], HType))] -> Either String ()
-htCheck its =
-    let graph = [ (n, i, getHTCons t) | n@(i, (_, t)) <- its ]
+htCheckType :: [(HSymbol, ([HSymbol], HType, HKind))] -> HType -> Either String ()
+htCheckType its t = flip evalStateT initState $ do
+    let vs = getHTVars t
+    ks <- mapM (const newKVar) vs
+    let env = zip vs ks ++ [(i, k) | (i, (_, _, k)) <- its ]
+    iHKindStar env t        
+
+htCheckEnv :: [(HSymbol, ([HSymbol], HType, a))] -> Either String [(HSymbol, ([HSymbol], HType, HKind))]
+htCheckEnv its =
+    let graph = [ (n, i, getHTCons t) | n@(i, (_, t, _)) <- its ]
 	order = stronglyConnComp graph
     in  case [ c | CyclicSCC c <- order ] of
-	c : _ -> Left $ "Recursive types are not allowed: " ++ unwords [ i | (i, (_, _)) <- c ]
-	[] -> flip evalStateT initState $ inferKinds [] $ map (\ (AcyclicSCC n) -> n) order
+	c : _ -> Left $ "Recursive types are not allowed: " ++ unwords [ i | (i, _) <- c ]
+	[] -> flip evalStateT initState $ addKinds
+	    where addKinds = do
+		        env <- inferHKinds [] $ map (\ (AcyclicSCC n) -> n) order
+		  	let getK i = maybe (error $ "htCheck " ++ i) id $ lookup i env
+			return [ (i, (vs, t, getK i)) | (i, (vs, t, _)) <- its ]
 
-inferKinds :: KEnv -> [(HSymbol, ([HSymbol], HType))] -> M ()
-inferKinds _env [] = return ()
-inferKinds env ((i, (vs, t)) : its) = do
-    k <- inferKind env vs t
-    inferKinds ((i, k) : env) its
+inferHKinds :: KEnv -> [(HSymbol, ([HSymbol], HType, a))] -> M KEnv
+inferHKinds env [] = return env
+inferHKinds env ((i, (vs, t, _)) : its) = do
+    k <- inferHKind env vs t
+    inferHKinds ((i, k) : env) its
 
-inferKind :: KEnv -> [HSymbol] -> HType -> M Kind
-inferKind env vs t = do
+inferHKind :: KEnv -> [HSymbol] -> HType -> M HKind
+inferHKind env vs t = do
     clearState
     ks <- mapM (const newKVar) vs
     let env' = zip vs ks ++ env
-    k <- iKind env' t
+    k <- iHKind env' t
     ground $ foldr KArrow k ks
 
-iKind :: KEnv -> HType -> M Kind
-iKind env (HTApp f a) = do
-    kf <- iKind env f
-    ka <- iKind env a
+iHKind :: KEnv -> HType -> M HKind
+iHKind env (HTApp f a) = do
+    kf <- iHKind env f
+    ka <- iHKind env a
     r <- newKVar
     unifyK (KArrow ka r) kf
     return r
-iKind env (HTVar v) = do
-    getVarKind env v
-iKind env (HTCon c) = do
-    getConKind env c
-iKind env (HTTuple ts) = do
-    mapM_ (iKindStar env) ts
+iHKind env (HTVar v) = do
+    getVarHKind env v
+iHKind env (HTCon c) = do
+    getConHKind env c
+iHKind env (HTTuple ts) = do
+    mapM_ (iHKindStar env) ts
     return KStar
-iKind env (HTArrow f a) = do
-    iKindStar env f
-    iKindStar env a
+iHKind env (HTArrow f a) = do
+    iHKindStar env f
+    iHKindStar env a
     return KStar
-iKind env (HTUnion cs) = do
-    mapM_ (\ (_, ts) -> mapM_ (iKindStar env) ts) cs
+iHKind env (HTUnion cs) = do
+    mapM_ (\ (_, ts) -> mapM_ (iHKindStar env) ts) cs
     return KStar
 
-iKindStar :: KEnv -> HType -> M ()
-iKindStar env t = do
-    k <- iKind env t
+iHKindStar :: KEnv -> HType -> M ()
+iHKindStar env t = do
+    k <- iHKind env t
     unifyK k KStar
 
-unifyK :: Kind -> Kind -> M ()
+unifyK :: HKind -> HKind -> M ()
 unifyK k1 k2 = do
     let follow k@(KVar i) = getVar i >>= return . maybe k id 
 	follow k = return k
@@ -112,19 +122,19 @@ unifyK k1 k2 = do
     unify k1' k2'
     
 
-getVarKind :: KEnv -> HSymbol -> M Kind
-getVarKind env v =
+getVarHKind :: KEnv -> HSymbol -> M HKind
+getVarHKind env v =
     case lookup v env of
     Just k -> return k
     Nothing -> lift $ Left $ "type variable not bound " ++ v
 
-getConKind :: KEnv -> HSymbol -> M Kind
-getConKind env v =
+getConHKind :: KEnv -> HSymbol -> M HKind
+getConHKind env v =
     case lookup v env of
     Just k -> return k
     Nothing -> newKVar		-- allow uninterpreted type constructors
 
-ground :: Kind -> M Kind
+ground :: HKind -> M HKind
 ground KStar = return KStar
 ground (KArrow k1 k2) = liftM2 KArrow (ground k1) (ground k2)
 ground (KVar i) = do

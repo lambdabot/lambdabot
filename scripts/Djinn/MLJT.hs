@@ -1,3 +1,7 @@
+--
+-- Copyright (c) 2005 Lennart Augustsson
+-- See LICENSE for licensing details.
+--
 import IO
 import System
 import LJT

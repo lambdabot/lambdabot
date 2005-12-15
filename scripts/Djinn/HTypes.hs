@@ -1,14 +1,26 @@
-module HTypes(HType(..), HSymbol, hTypeToFormula, pHSymbol, pHType, pHDataType, htNot, isHTUnion,
+--
+-- Copyright (c) 2005 Lennart Augustsson
+-- See LICENSE for licensing details.
+--
+module HTypes(HKind(..), HType(..), HSymbol, hTypeToFormula, pHSymbol, pHType, pHDataType, htNot, isHTUnion, getHTVars,
 	HClause, HPat, HExpr, hPrClause, termToHExpr, termToHClause, getBinderVars) where
 import Text.PrettyPrint.HughesPJ(Doc, renderStyle, style, text, (<>), parens, ($$), vcat, punctuate,
 	 sep, fsep, nest, comma, (<+>))
 import Char(isAlphaNum, isAlpha, isUpper)
+import List(union)
+import Monad(zipWithM)
 import Text.ParserCombinators.ReadP
 import LJTFormula
 
 --import Debug.Trace
 
 type HSymbol = String
+
+data HKind
+    = KStar
+    | KArrow HKind HKind
+    | KVar Int
+    deriving (Eq, Show)
 
 data HType
 	= HTApp HType HType
@@ -119,11 +131,17 @@ schar c = do
     char c
     return ()
 
-
+getHTVars :: HType -> [HSymbol]
+getHTVars (HTApp f a) = getHTVars f `union` getHTVars a
+getHTVars (HTVar v) = [v]
+getHTVars (HTCon _) = []
+getHTVars (HTTuple ts) = foldr union [] (map getHTVars ts)
+getHTVars (HTArrow f a) = getHTVars f `union` getHTVars a
+getHTVars _ = error "getHTVars"
 
 -------------------------------
 
-hTypeToFormula :: [(HSymbol, ([HSymbol], HType))] -> HType -> Formula
+hTypeToFormula :: [(HSymbol, ([HSymbol], HType, a))] -> HType -> Formula
 hTypeToFormula ss (HTTuple ts) = Conj (map (hTypeToFormula ss) ts)
 hTypeToFormula ss (HTArrow t1 t2) = hTypeToFormula ss t1 :-> hTypeToFormula ss t2
 hTypeToFormula ss (HTUnion ctss) = Disj [ (ConsDesc c (length ts), hTypeToFormula ss (HTTuple ts)) | (c, ts) <- ctss ]
@@ -132,11 +150,11 @@ hTypeToFormula ss t =
     Nothing -> PVar $ Symbol $ show t
     Just t' -> hTypeToFormula ss t'
 
-expandSyn :: [(HSymbol, ([HSymbol], HType))] -> HType -> [HType] -> Maybe HType
+expandSyn :: [(HSymbol, ([HSymbol], HType, a))] -> HType -> [HType] -> Maybe HType
 expandSyn ss (HTApp f a) as = expandSyn ss f (a:as)
 expandSyn ss (HTCon c) as =
     case lookup c ss of
-    Just (vs, t) | length vs == length as -> Just $ substHT (zip vs as) t
+    Just (vs, t, _) | length vs == length as -> Just $ substHT (zip vs as) t
     _ -> Nothing
 expandSyn _ _ _ = Nothing
 
@@ -262,28 +280,87 @@ termToHExpr term = etaReduce $ remUnusedVars $ fst $ conv [] term
 		Nothing -> HPVar hs
 		Just p -> HPAt hs p
 
-	hELam [] e = e
-	hELam ps (HELam ps' e) = HELam (ps ++ ps') e
-	hELam ps e = HELam ps e
-
 	hETuple [e] = e
 	hETuple es = HETuple es
 
-	hECase e [] = HEApply (HEVar "void") e
-	hECase _ [(HPCon "()", e)] = e
-	hECase e pes | all (uncurry eqPatExpr) pes = e
-	hECase e [(p, HELam ps b)] = HELam ps $ hECase e [(p, b)]
-	hECase _ ((_,e):alts@(_:_)) | all (alphaEq e . snd) alts = e	-- if all arms are equal and there
-								   -- at least two alternatives there can be no bound vars
-	hECase e alts = HECase e alts
+hELam :: [HPat] -> HExpr -> HExpr
+hELam [] e = e
+hELam ps (HELam ps' e) = HELam (ps ++ ps') e
+hELam ps e = HELam ps e
 
-	eqPatExpr (HPVar s) (HEVar s') = s == s'
-	eqPatExpr (HPCon s) (HECon s') = s == s'
-	eqPatExpr (HPTuple ps) (HETuple es) = and (zipWith eqPatExpr ps es)
-	eqPatExpr (HPApply pf pa) (HEApply ef ea) = eqPatExpr pf ef && eqPatExpr pa ea
-	eqPatExpr _ _ = False
+hECase :: HExpr -> [(HPat, HExpr)] -> HExpr
+hECase e [] = HEApply (HEVar "void") e
+hECase _ [(HPCon "()", e)] = e
+hECase e pes | all (uncurry eqPatExpr) pes = e
+hECase e [(p, HELam ps b)] = HELam ps $ hECase e [(p, b)]
+hECase se alts@((_, HELam ops _):_) | m > 0 = HELam (take m ops) $ hECase se alts'
+  where m = minimum (map (numBind . snd) alts)
+	numBind (HELam ps _) = length (takeWhile isPVar ps)
+	numBind _ = 0
+	isPVar (HPVar _) = True
+	isPVar _ = False
+	alts' = [ let (ps1, ps2) = splitAt m ps in (cps, hELam ps2 $ hESubst (zipWith (\ (HPVar v) n -> (v, n)) ps1 ns) e)
+		  | (cps, HELam ps e) <- alts ]
+	ns = [ n | HPVar n <- take m ops ]
+-- if all arms are equal and there are at least two alternatives there can be no bound vars
+-- from the patterns
+hECase _ ((_,e):alts@(_:_)) | all (alphaEq e . snd) alts = e
+hECase e alts = HECase e alts
 
-	alphaEq e1 e2 = e1 == e2	-- XXX needs improvement
+eqPatExpr :: HPat -> HExpr -> Bool
+eqPatExpr (HPVar s) (HEVar s') = s == s'
+eqPatExpr (HPCon s) (HECon s') = s == s'
+eqPatExpr (HPTuple ps) (HETuple es) = and (zipWith eqPatExpr ps es)
+eqPatExpr (HPApply pf pa) (HEApply ef ea) = eqPatExpr pf ef && eqPatExpr pa ea
+eqPatExpr _ _ = False
+
+alphaEq :: HExpr -> HExpr -> Bool
+alphaEq e1 e2 | e1 == e2 = True
+alphaEq (HELam ps1 e1) (HELam ps2 e2) =
+    Nothing /= do
+        s <- matchPat (HPTuple ps1) (HPTuple ps2)
+	if alphaEq (hESubst s e1) e2 then
+	    return ()
+	 else
+	    Nothing
+alphaEq (HEApply f1 a1) (HEApply f2 a2) = alphaEq f1 f2 && alphaEq a1 a2
+alphaEq (HECon s1) (HECon s2) = s1 == s2
+alphaEq (HEVar s1) (HEVar s2) = s1 == s2
+alphaEq (HETuple es1) (HETuple es2) | length es1 == length es2 = and (zipWith alphaEq es1 es2)
+alphaEq (HECase e1 alts1) (HECase e2 alts2) =
+    alphaEq e1 e2 && and (zipWith alphaEq [ HELam [p] e | (p, e) <- alts1 ] [ HELam [p] e | (p, e) <- alts2 ])
+alphaEq _ _ = False
+
+matchPat :: HPat -> HPat -> Maybe [(HSymbol, HSymbol)]
+matchPat (HPVar s1) (HPVar s2) = return [(s1, s2)]
+matchPat (HPCon s1) (HPCon s2) | s1 == s2 = return []
+matchPat (HPTuple ps1) (HPTuple ps2) | length ps1 == length ps2 = do
+    ss <- zipWithM matchPat ps1 ps2
+    return $ concat ss
+matchPat (HPAt s1 p1) (HPAt s2 p2) = do
+    s <- matchPat p1 p2
+    return $ (s1, s2) : s
+matchPat (HPApply f1 a1) (HPApply f2 a2) = do
+    s1 <- matchPat f1 f2
+    s2 <- matchPat a1 a2
+    return $ s1 ++ s2
+matchPat _ _ = Nothing
+
+hESubst :: [(HSymbol, HSymbol)] -> HExpr -> HExpr
+hESubst s (HELam ps e) = HELam (map (hPSubst s) ps) (hESubst s e)
+hESubst s (HEApply f a) = HEApply (hESubst s f) (hESubst s a)
+hESubst _ e@(HECon _) = e
+hESubst s (HEVar v) = HEVar $ maybe v id $ lookup v s
+hESubst s (HETuple es) = HETuple (map (hESubst s) es)
+hESubst s (HECase e alts) = HECase (hESubst s e) [(hPSubst s p, hESubst s b) | (p, b) <- alts]
+
+hPSubst :: [(HSymbol, HSymbol)] -> HPat -> HPat
+hPSubst s (HPVar v) = HPVar $ maybe v id $ lookup v s
+hPSubst _ p@(HPCon _) = p
+hPSubst s (HPTuple ps) = HPTuple (map (hPSubst s) ps)
+hPSubst s (HPAt v p) = HPAt (maybe v id $ lookup v s) (hPSubst s p)
+hPSubst s (HPApply f a) = HPApply (hPSubst s f) (hPSubst s a)
+
 
 termToHClause :: HSymbol -> Term -> HClause
 termToHClause i term =
@@ -306,14 +383,18 @@ remUnusedVars expr = fst $ remE expr
 	remE (HECase e alts) =
 	    let (e', es) = remE e
 		(alts', sss) = unzip [ let (ee', ss) = remE ee in ((remP ss p, ee'), ss) | (p, ee) <- alts ]
-	    in  (HECase e' alts', es ++ concat sss)
+	    in  case alts of
+		[(HPVar "_", b)] -> (b, concat sss)
+		_ -> (HECase e' alts', es ++ concat sss)
 	remE e@(HECon _) = (e, [])
 	remE e@(HEVar v) = (e, [v])
 	remP vs p@(HPVar v) = if v `elem` vs then p else HPVar "_"
 	remP _vs p@(HPCon _) = p
-	remP vs (HPTuple ps) = HPTuple (map (remP vs) ps)
+	remP vs (HPTuple ps) = hPTuple (map (remP vs) ps)
 	remP vs (HPAt v p) = if v `elem` vs then HPAt v (remP vs p) else remP vs p
 	remP vs (HPApply f a) = HPApply (remP vs f) (remP vs a)
+	hPTuple ps | all (== HPVar "_") ps = HPVar "_"
+	hPTuple ps = HPTuple ps
 
 getBinderVars :: HClause -> [HSymbol]
 getBinderVars (HClause _ pats expr) = concatMap gbPat pats ++ gbExp expr

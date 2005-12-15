@@ -5,6 +5,7 @@
 (True, "ljt/con_p.006.ljt"),
 (True, "ljt/con_p.010.ljt"),
 (False, "ljt/debruijn_n.002.ljt"),
+(True, "ljt/debruijn_p.002.ljt"),
 (False, "ljt/equiv_n.002.ljt"),
 (True, "ljt/equiv_p.002.ljt"),
 (False, "ljt/kk_n.002.ljt"),

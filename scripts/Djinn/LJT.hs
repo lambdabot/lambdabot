@@ -1,3 +1,7 @@
+--
+-- Copyright (c) 2005 Lennart Augustsson
+-- See LICENSE for licensing details.
+--
 -- Intuitionistic theorem prover
 -- Written by Roy Dyckhoff, Summer 1991    
 -- Modified to use the LWB syntax  Summer 1997
@@ -18,7 +22,6 @@ module LJT(module LJTFormula, provable,
 import List(partition)
 import Monad
 
-import Util
 import LJTFormula
 
 import Debug.Trace
@@ -48,15 +51,15 @@ type Proof = Term
 subst :: Term -> Symbol -> Term -> P Term
 subst b x term = sub term
   where sub t@(Var s') = if x == s' then copy [] b else return t
-	sub (Lam s t) = liftM1 (Lam s) (sub t)
+	sub (Lam s t) = liftM (Lam s) (sub t)
 	sub (Apply t1 t2) = liftM2 Apply (sub t1) (sub t2)
 	sub t = return t
 
 copy :: [(Symbol, Symbol)] -> Term -> P Term
-copy r (Var s) = return $ Var (lookupWithDefault r s s)
+copy r (Var s) = return $ Var $ maybe s id $ lookup s r
 copy r (Lam s t) = do
     s' <- newSym "c"
-    liftM1 (Lam s') $ copy ((s, s'):r) t
+    liftM (Lam s') $ copy ((s, s'):r) t
 copy r (Apply t1 t2) = liftM2 Apply (copy r t1) (copy r t2)
 copy _r t = return t
 
@@ -91,7 +94,7 @@ cImpDImpFalse p1 p2 cdf gp = do
 	cf = Symbol "cf"
 	x = Symbol "x"
 	d = Symbol "d"
-	c = Symbol "d"
+	c = Symbol "c"
     subst p1b p1 gp >>= subst p2b p2
 
 ------------------------------
@@ -104,13 +107,14 @@ cImpDImpFalse p1 p2 cdf gp = do
 nf :: Term -> P Term
 nf ee = spine ee []
   where spine (Apply f a) as = do a' <- nf a; spine f (a' : as)
-	spine (Lam s e) [] = liftM1 (Lam s) (nf e)
+	spine (Lam s e) [] = liftM (Lam s) (nf e)
 	spine (Lam s e) (a : as) = do e' <- subst a s e; spine e' as
 	spine (Csplit n) (b : tup : args) | istup && n <= length xs = spine (applys b xs) args
 	  where (istup, xs) = getTup tup
 		getTup (Ctuple _) = (True, [])
 		getTup (Apply f a) = let (tf, as) = getTup f in (tf, a:as)
 		getTup _ = (False, [])
+	spine (Ccases []) (e@(Apply (Ccases []) _) : as) = spine e as
 	spine (Ccases cds) (Apply (Cinj _ i) x : as) | length as >= n = spine (Apply (as!!i) x) (drop n as)
 		where n = length cds
 	spine f as = return $ applys f as
@@ -256,7 +260,7 @@ type Goal = Formula
 --
 -- This is the main loop of the proof search.
 --
--- The redant functions reduce antecedents amd the redsucc
+-- The redant functions reduce antecedents and the redsucc
 -- function reduces the goal (succedent).
 --
 -- The antecedents are kept in four groups: Antecedents, AtomImps, NestImps, AtomFs
@@ -271,28 +275,30 @@ type Goal = Formula
 -- There is also a proof object associated with each antecedent.
 --
 redant :: MoreSolutions -> Antecedents -> AtomImps -> NestImps -> AtomFs -> Goal -> P Proof
-redant more as atomImps nestImps atoms goal =
-    case as of
+redant more antes atomImps nestImps atoms goal =
+    case antes of
     [] -> redsucc goal
     a:l -> redant1 a l goal
   where redant0 l g = redant more l atomImps nestImps atoms g
 	redant1 :: Antecedent -> Antecedents -> Goal -> P Proof
-	redant1 a l g = 
+	redant1 a@(A p f) l g = 
 	    mtrace ("redant1 " ++ show ((a, l), atomImps, nestImps, atoms, g)) $
-	    redant1' a l g
+	    if f == g then
+	        -- The goal is the antecedent, we're done.
+	        -- XXX But we might want more?
+	        if more then
+		    return p `mplus` redant1' a l g
+		else
+		    return p
+	    else
+	        redant1' a l g
 
 	-- Reduce the first antecedent
 	redant1' :: Antecedent -> Antecedents -> Goal -> P Proof
-	redant1' (A p {-a@-}(PVar s)) l g =
-{-
-	    -- This is a speedup, but some solutions are lost.
-	    if a == g then
-		return p
-	    else
--}
-		let af = AtomF p s
-	            (bs, restAtomImps) = extract atomImps s
-	        in  redant more ([A (Apply f p) b | A f b <- bs] ++ l) restAtomImps nestImps (addAtom af atoms) g
+	redant1' (A p (PVar s)) l g =
+	   let af = AtomF p s
+	       (bs, restAtomImps) = extract atomImps s
+	   in  redant more ([A (Apply f p) b | A f b <- bs] ++ l) restAtomImps nestImps (addAtom af atoms) g
 	redant1' (A p (Conj bs)) l g = do
 	   vs <- mapM (const (newSym "v")) bs
 	   gp <- redant0 (zipWith (\ v a -> A (Var v) a) vs bs ++ l) g
@@ -300,7 +306,12 @@ redant more as atomImps nestImps atoms goal =
 	redant1' (A p (Disj ds)) l g = do
 	   vs <- mapM (const (newSym "d")) ds
 	   ps <- mapM (\ (v, (_, d)) -> redant1 (A (Var v) d) l g) (zip vs ds)
-	   return $ applys (Ccases (map fst ds)) (p : zipWith Lam vs ps)
+	   if null ds && g == Disj [] then
+	       -- We are about to construct `void p : Void', so we shortcut
+	       -- it with just `p'.
+	       return p
+	    else
+	       return $ applys (Ccases (map fst ds)) (p : zipWith Lam vs ps)
 	redant1' (A p (a :-> b)) l g = redantimp p a b l g
 
 	-- Reduce an implication antecedent
@@ -353,6 +364,7 @@ redant more as atomImps nestImps atoms goal =
 	redsucc' a@(PVar s) =
 	    cutSearch more $ findAtoms s atoms
 	  `mplus`
+	    -- The posin check is an optimization.  It gets a little slower without the test.
 	    if posin s atomImps nestImps then
 	        redsucc_choice a
 	    else

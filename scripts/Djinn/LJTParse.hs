@@ -1,3 +1,7 @@
+--
+-- Copyright (c) 2005 Lennart Augustsson
+-- See LICENSE for licensing details.
+--
 module LJTParse(parseFormula, parseLJT) where
 import Char(isAlphaNum)
 import Text.ParserCombinators.ReadP(ReadP, (+++), char, sepBy1, readP_to_S, skipSpaces, munch1, many)

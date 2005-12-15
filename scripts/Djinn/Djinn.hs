@@ -1,6 +1,10 @@
+--
+-- Copyright (c) 2005 Lennart Augustsson
+-- See LICENSE for licensing details.
+--
 module Main(main) where
 import Char(isAlpha, isSpace)
-import List(sortBy)
+import List(sortBy, nub)
 import Ratio
 import Text.ParserCombinators.ReadP
 import Monad(when)
@@ -10,7 +14,7 @@ import System
 import REPL
 import LJT
 import HTypes
-import HCheck(htCheck)
+import HCheck(htCheckEnv, htCheckType)
 import Help
 
 main :: IO ()
@@ -45,13 +49,15 @@ hsGenRepl state = REPL {
     }
 
 data State = State {
-    synonyms :: [(HSymbol, ([HSymbol], HType))],
+    synonyms :: [(HSymbol, ([HSymbol], HType, HKind))],
     axioms :: [(HSymbol, HType)],
     multi :: Bool,
     sorted :: Bool,
     debug :: Bool,
     cutOff :: Int
     }
+    deriving (Show)
+
 startState :: State
 startState = State {
     synonyms = syns,
@@ -61,17 +67,17 @@ startState = State {
     debug = False,
     cutOff = 100
     }
- where syns = reverse [
-	("()", ([], HTUnion [("()",[])])),
-	("Either", (["a","b"], HTUnion [("Left", [HTVar "a"]), ("Right", [HTVar "b"])])),
-	("Maybe", (["a"], HTUnion [("Nothing", []), ("Just", [HTVar "a"])])),
-	("Bool", ([], HTUnion [("False", []), ("True", [])])),
-	("Void", ([], HTUnion [])),
-	("Not", (["x"], htNot "x"))
+ where syns = either (const $ error "Bad initial environment") id $ htCheckEnv $ reverse [
+	("()",     ([],        HTUnion [("()",[])],                                      undefined)),
+	("Either", (["a","b"], HTUnion [("Left", [HTVar "a"]), ("Right", [HTVar "b"])],  undefined)),
+	("Maybe",  (["a"],     HTUnion [("Nothing", []), ("Just", [HTVar "a"])],         undefined)),
+	("Bool",   ([],        HTUnion [("False", []), ("True", [])],                    undefined)),
+	("Void",   ([],        HTUnion [],                                               undefined)),
+	("Not",    (["x"],     htNot "x",                                                undefined))
 	]
 
 version :: String
-version = "version 2005-12-13"
+version = "version 2005-12-15"
 
 inIt :: State -> IO (String, State)
 inIt state = do
@@ -94,7 +100,7 @@ exit _s = do
     return ()
 
 data Cmd = Help Bool | Quit | Add HSymbol HType | Query HSymbol HType | Del HSymbol | Load HSymbol | Noop | Env |
-	   Type (HSymbol, ([HSymbol], HType)) | Set (State -> State) | Clear
+	   Type (HSymbol, ([HSymbol], HType, HKind)) | Set (State -> State) | Clear
 
 pCmd :: ReadP Cmd
 pCmd = do
@@ -128,25 +134,32 @@ runCmd s Quit =
     return (True, s)
 runCmd s (Load f) = loadFile s f
 runCmd s (Add i t) = 
-    return (False, s { axioms = (i, t) : axioms s })
+    case htCheckType (synonyms s) t of
+    Left msg -> do putStrLn $ "Error: " ++ msg; return (False, s)
+    Right _ -> return (False, s { axioms = (i, t) : axioms s })
 runCmd _ Clear =
     return (False, startState)
 runCmd s (Del i) = 
     return (False, s { axioms   = filter ((i /=) . fst) (axioms s)
                      , synonyms = filter ((i /=) . fst) (synonyms s) })
 runCmd s Env = do
+--    print s
     let tname t = if isHTUnion t then "data" else "type"
-    mapM_ (\ (i, (vs, t)) -> putStrLn $ tname t ++ " " ++ unwords (i:vs) ++ " = " ++ show t) (reverse $ synonyms s)
+	showd (HTUnion []) = ""
+	showd t = " = " ++ show t
+    mapM_ (\ (i, (vs, t, _)) -> putStrLn $ tname t ++ " " ++ unwords (i:vs) ++ showd t) (reverse $ synonyms s)
     mapM_ (\ (i, t) -> putStrLn $ i ++ " :: " ++ show t) (reverse $ axioms s)
     return (False, s)
 runCmd s (Type syn) = do
-    let syns = syn : synonyms s
-    case htCheck syns of
+    case htCheckEnv (syn : synonyms s) of
 	Left msg -> do putStrLn $ "Error: " ++ msg; return (False, s)
-        Right _ -> return (False, s { synonyms = syns })
+        Right syns -> return (False, s { synonyms = syns })
 runCmd s (Set f) =
     return (False, f s)
-runCmd s (Query i g) = do
+runCmd s (Query i g) =
+   case htCheckType (synonyms s) g of
+   Left msg -> do putStrLn $ "Error: " ++ msg; return (False, s)
+   Right _ -> do
     let form = hTypeToFormula (synonyms s) g
 	env = [ (Symbol v, hTypeToFormula (synonyms s) t) | (v, t) <- axioms s ]
 	mpr = prove (multi s || sorted s) env form
@@ -159,9 +172,10 @@ runCmd s (Query i g) = do
 	    let f p =
 		   let c = termToHClause i p
 		       bvs = getBinderVars c
-		       r = if null bvs then 1 else length (filter (== "_") bvs) % length bvs
+		       r = if null bvs then (0, 0) else (length (filter (== "_") bvs) % length bvs, length bvs)
 		   in  (r, c)
-	        e:es = if sorted s then
+	        e:es = nub $ 
+		        if sorted s then
 			    map snd $ sortBy (\ (x,_) (y,_) -> compare x y) $ map f $ take (cutOff s) ps
 			else
 			    map (termToHClause i) ps
@@ -256,16 +270,14 @@ pType = do
     args <- many (pHSymbol False)
     schar '='
     t <- pHType
-    return $ Type (syn, (args, t))
+    return $ Type (syn, (args, t, undefined))
 
 pData :: ReadP Cmd
 pData = do
     sstring "data"
     syn <- pHSymbol True
     args <- many (pHSymbol False)
-    schar '='
-    t <- pHDataType
-    return $ Type (syn, (args, t))
+    (do schar '='; t <- pHDataType; return $ Type (syn, (args, t, undefined))) +++ (return $ Type (syn, (args, HTUnion [], undefined)))
 
 pSet :: ReadP Cmd
 pSet = do

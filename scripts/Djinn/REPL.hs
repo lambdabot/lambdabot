@@ -1,3 +1,7 @@
+--
+-- Copyright (c) 2005 Lennart Augustsson
+-- See LICENSE for licensing details.
+--
 module REPL(REPL(..), repl) where
 import qualified Control.Exception
 import System.Console.Readline(readline, addHistory)
