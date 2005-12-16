@@ -1,6 +1,9 @@
 Dons:
   - a dynamic Config.hs module.
   - a scripting interface, expose module ops to a scripting module
+  - look at pinging the server
+ - composable plugins, with @.
+    -- the Module:process method needs to return :: IO [String]
 
 Todo:
 * Better error reporting when connections fail at startup
