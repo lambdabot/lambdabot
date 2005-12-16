@@ -16,14 +16,14 @@ type MoreState = GlobalPrivate () [String]
 
 -- the @more state is handled centrally
 instance Module MoreModule MoreState where
-    moduleHelp _ _ = return "@more - return more bot output"
-    moduleCmds   _ = return ["more"]
+    moduleHelp _ _ = "@more - return more bot output"
+    moduleCmds   _ = ["more"]
     moduleDefState _ = return $ mkGlobalPrivate 20 ()
     moduleInit   _ = ircInstallOutputFilter moreFilter
     process      _ _ target _ _ = do
         morestate <- readPS target
         case morestate of
-          Nothing -> ircPrivmsg' target "more: empty buffer"
+          Nothing -> return () -- silently fail, it's ok.
           Just ls -> mapM_ (ircPrivmsg' target) =<< moreFilter target ls
 
 moreFilter :: String -> [String] -> ModuleT MoreState LB [String]

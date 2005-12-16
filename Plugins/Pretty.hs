@@ -31,8 +31,8 @@ theModule :: MODULE
 theModule = MODULE $ PrettyModule ()
 
 instance Module PrettyModule (String -> IO String) where
-    moduleHelp _ _   = return $ "echo haskell code in a pretty-printed manner"
-    moduleCmds     _ = return ["pretty"]
+    moduleHelp _ _   = "echo haskell code in a pretty-printed manner"
+    moduleCmds     _ = ["pretty"]
     process _ _ src cmd rest = case cmd of
         "pretty" -> prettyCmd src rest
         _        -> error "unknown command"

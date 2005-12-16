@@ -17,8 +17,7 @@ announceTarget :: String
 announceTarget = "#haskell"
 
 instance Module PasteModule ThreadId where
-    moduleHelp    _ _ = return ""
-    moduleCmds      _ = return []
+    moduleCmds      _ = []
     moduleInit      _ = do
       tid <- lbIO (\conv -> 
         forkIO $ pasteListener $ conv . ircPrivmsg announceTarget)

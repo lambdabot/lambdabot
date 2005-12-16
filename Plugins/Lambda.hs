@@ -43,22 +43,25 @@ type EvalState = GlobalPrivate EvalGlobal Dynamic
 instance Module EvalModule EvalState where
     moduleDefState _ = return $ mkGlobalPrivate (maxPrivate) 
       (initFuel, initEnv, initDefns)
+
     moduleSerialize _ = Just $ Serial {
               serialize = Just . (\(fuel,_,defns) -> 
                 P.pack . unlines $ show fuel: map show (M.toList defns)) . global,
               deserialize = fmap (mkGlobalPrivate maxPrivate) .  loadDefinitions . P.unpack
            }
-    
-    moduleHelp   _ "lambda" = return "@lambda expr - evaluate the lambda calculus expression, expr"
-    moduleHelp   _ "define" = return "@define name expr - define name to be expr"
-    moduleHelp   _ "get-definition" = return "@get-definition name - get the expression defining name"                               
-    moduleHelp   _ "definitions" = return "@definitions [prefix] - get the definitions starting with prefix"
-    moduleHelp   _ "del-definition" = return "@del-definition name - delete name"
-    moduleHelp   _ "set-fuel" = return "@set-fuel ticks - how many ticks before @lambda runs out of fuel"
-    moduleHelp   _ "resume" = return "@resume - continue an expression that has run out of fuel"
-    moduleHelp   _ cmd = return $ "EvalModule: don't know command "++cmd
-    moduleCmds   _ = return ["lambda","define","get-definition","definitions","resume"]
-    modulePrivs  _ = return ["set-fuel","del-definition"]
+
+    moduleHelp _ s = case s of
+        "lambda"         -> "@lambda expr - evaluate the lambda calculus expression, expr"
+        "define"         -> "@define name expr - define name to be expr"
+        "get-definition" -> "@get-definition name - get the expression defining name"
+        "definitions"    -> "@definitions [prefix] - get the definitions starting with prefix"
+        "del-definition" -> "@del-definition name - delete name"
+        "set-fuel"       -> "@set-fuel ticks - how many ticks before @lambda runs out of fuel"
+        "resume"         -> "@resume - continue an expression that has run out of fuel"
+        _                -> "EvalModule: don't know command " ++ show s
+
+    moduleCmds   _ = ["lambda","define","get-definition","definitions","resume"]
+    modulePrivs  _ = ["set-fuel","del-definition"]
 
     process      _ _ target cmd rest = do
        let writeRes = writePS target

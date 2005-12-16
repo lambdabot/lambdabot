@@ -31,8 +31,8 @@ instance Module HoogleModule HoogleState where
     moduleSticky   _ = False
     moduleDefState _ = return []
 
-    moduleHelp _ _ = return "@hoogle <expr>, Haskell API Search for either names, or types."
-    moduleCmds   _ = return ["hoogle", "hoogle+"]
+    moduleHelp _ _ = "@hoogle <expr>, Haskell API Search for either names, or types."
+    moduleCmds   _ = ["hoogle", "hoogle+"]
 
     process _ _ src "hoogle" s = do 
         o <- liftIO $ hoogle s

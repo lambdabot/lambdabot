@@ -40,17 +40,12 @@ instance Module BabelModule Quotes where
         moduleSerialize _       = Just mapListPackedSerial
         moduleDefState  _       = return M.empty
 
-        moduleHelp _ "babel"    = concat `fmap` run_babel' ["help"]
+        moduleCmds _ = ["babel", "remember", "quote", "ghc"]
 
-        moduleHelp _ "remember" = return help
-        moduleHelp _ "quote-add"= return help
-        moduleHelp _ "quote"    = return help
-        moduleHelp _ "ghc"      = return "GHC!"
-
+        moduleHelp _ "babel"    = concat ["usage: babel lang lang phrase"]
+        moduleHelp _ "ghc"      = "GHC!"
+        moduleHelp _ _          = help
 --      moduleHelp _ "timein"   = return "@timein <city>, report the local time in <city>"
-        moduleHelp _ _          = return "@babel,@remember,@quote,@timein,@ghc"
-
-        moduleCmds _ = return ["babel", "remember", "quote",{-"timein",-} "ghc"]
 
         process _ _ src "babel" s      = run_babel src s
         process a b src "remember"  s  = process a b src "quote-add" (dropSpace s) -- synonym

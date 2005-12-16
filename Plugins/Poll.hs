@@ -58,17 +58,17 @@ voteSerial = Serial (Just . showPacked) (Just . readPacked)
 ------------------------------------------------------------------------
 
 instance Module VoteModule VoteState where
-    moduleCmds     _ = return ["poll-list"
-                              ,"poll-show"
-                              ,"poll-add"
-                              ,"choice-add"
-                              ,"vote"
-                              ,"poll-result"
-                              ,"poll-close"
-                              ,"poll-remove"]
+    moduleCmds     _ = ["poll-list"
+                       ,"poll-show"
+                       ,"poll-add"
+                       ,"choice-add"
+                       ,"vote"
+                       ,"poll-result"
+                       ,"poll-close"
+                       ,"poll-remove"]
 --
    -- todo, should @vote foo automagically add foo as a possibility? 
-    moduleHelp   _ s = return $ case s of
+    moduleHelp   _ s = case s of
         "poll-list"     -> "@poll-list                 shows all current polls"
         "poll-show"     -> "@poll-show <poll>            shows all choices for some poll"
         "poll-add"      -> "@poll-add <name>             adds a new poll, with no candidates"

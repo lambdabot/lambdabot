@@ -13,8 +13,8 @@ theModule :: MODULE
 theModule = MODULE $ StateModule ()
 
 instance Module StateModule String where
-    moduleHelp    _ _ = return "@state - we all know it's evil"
-    moduleCmds      _ = return ["state"]
+    moduleHelp    _ _ = "@state - we all know it's evil"
+    moduleCmds      _ = ["state"]
     moduleDefState  _ = return "nothing yet"
     moduleSerialize _ = Just stdSerial
     process      _ _ target _ rest = do

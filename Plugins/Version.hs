@@ -18,9 +18,9 @@ theModule :: MODULE
 theModule = MODULE $ VersionModule ()
 
 instance Module VersionModule () where
-    moduleHelp _ _ = return $ "Report the build date, ghc version "
-                           ++ "and darcs repo of this bot"
-    moduleCmds   _ = return ["version", "source"]
+    moduleCmds   _ = ["version", "source"]
+    moduleHelp _ _ = "Report the build date, ghc version " ++ 
+                     "and darcs repo of this bot"
     process      _ _ target _ _ =
         ircPrivmsg target $ concat
                 ["lambdabot 3p", PATCH_COUNT, ", ",

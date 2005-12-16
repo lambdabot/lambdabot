@@ -544,34 +544,45 @@ class Module m s | m -> s where
     --
     --   The default implementation returns Nothing.
     moduleSerialize :: m -> Maybe (Serial s)
+
     -- | If the module maintains state, this method specifies the default state
     --   (for example in case the state can't be read from a state).
     --
     --   The default implementation returns an error and assumes the state is 
     --   never accessed.
     moduleDefState  :: m -> LB s
-    -- | This method should return a help string for every command it defines.
-    moduleHelp      :: m -> String -> ModuleT s LB String
+
     -- | Is the module sticky? Sticky modules (as well as static ones) can't be
     --   unloaded. By default, modules are not sticky.
     moduleSticky    :: m -> Bool
+
     -- | The commands the module listenes to.
-    moduleCmds      :: m -> ModuleT s LB [String]
+    moduleCmds      :: m -> [String]
+
+    -- | This method should return a help string for every command it defines.
+    moduleHelp      :: m -> String -> String
+
     -- | The privileged commands the module listenes to.
-    modulePrivs     :: m -> ModuleT s LB [String]
+    modulePrivs     :: m -> [String]
+
     -- | Initialize the module. The default implementation does nothing.
     moduleInit      :: m -> ModuleT s LB ()
+
     -- | Finalize the module. The default implementation does nothing.
     moduleExit      :: m -> ModuleT s LB ()
-    -- | Process a command a user sent.
-    process         :: m -- ^ phantom
-        -> IRC.Message    -- ^ the message
-        -> String        -- ^ target
-        -> String        -- ^ command
-        -> String        -- ^ the arguments to the command
-        -> ModuleT s LB () 
 
-    modulePrivs _     = return []
+    -- | Process a command a user sent.
+    process         :: m                    -- ^ phantom
+        -> IRC.Message                      -- ^ the message
+        -> String                           -- ^ target
+        -> String                           -- ^ command
+        -> String                           -- ^ the arguments to the command
+        -> ModuleT s LB ()                  -- ^ monad output
+-- TODO
+--      -> ModuleT s LB (Maybe [String])    -- ^ maybe output
+
+    moduleHelp m _    = concat (map ('@':) (moduleCmds m))
+    modulePrivs _     = []
     moduleExit _      = return ()
     moduleInit _      = return ()
     moduleSticky _    = False
@@ -624,14 +635,14 @@ ircInstallModule (MODULE mod) modname = do
     ref        <- liftIO $ newMVar state
 
     let modref = ModuleRef mod ref modname
-    let ?ref = ref; ?name = modname
+    let ?ref = ref; ?name = modname -- yikes
     moduleInit mod
-    cmds <- moduleCmds mod
-    privs <- modulePrivs mod
+    let cmds  = moduleCmds mod
+        privs = modulePrivs mod
 
     s <- get
     let modmap = ircModules s
-    let cmdmap = ircCommands s
+        cmdmap = ircCommands s
     put $ s {
       ircModules = M.insert modname modref modmap,
       ircCommands = M.addList [ (cmd,modref) | cmd <- cmds++privs ] cmdmap,

@@ -146,8 +146,8 @@ instance Binary UserStatus where
 ------------------------------------------------------------------------
 
 instance Module SeenModule SeenState where
-    moduleHelp _ _      = return "Report if a user has been seen by the bot"
-    moduleCmds _        = return ["seen"]
+    moduleHelp _ _      = "Report if a user has been seen by the bot"
+    moduleCmds _        = ["seen"]
     moduleDefState _    = return M.empty
     moduleSerialize _   = Nothing   -- do our own writing/serialising
 

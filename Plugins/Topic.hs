@@ -20,24 +20,24 @@ theModule :: MODULE
 theModule = MODULE $ TopicModule ()
 
 instance Module TopicModule () where
-  moduleHelp _ "topic-tell" = return $ "@topic-tell #chan -- " ++
-			       "Tell the requesting person of the topic of the channel"
-  moduleHelp _ "topic-cons" = return $ "@topic-cons #chan <mess> -- " ++
-			       "Add a new topic item to the front of the topic list"
-  moduleHelp _ "topic-snoc" = return $ "@topic-snoc #chan <mess> -- " ++
-			       "Add a new topic item to the back of the topic list"
-  moduleHelp _ "topic-tail" = return $ "@topic-tail #chan -- " ++
-			       "Remove the first topic item from the topic list"
-  moduleHelp _ "topic-null" = return $ "@topic-null #chan -- " ++
-			       "Clear out the topic entirely"
-  moduleHelp _ "topic-init" = return $ "@topic-init #chan -- " ++
-			       "Remove the last topic item from the topic list"
-  moduleHelp _ _ = return "Someone forgot to document his new Topic function! Shame on him/her!"
+  moduleHelp _ s = case s of
+      "topic-tell" -> "@topic-tell #chan -- " ++
+                       "Tell the requesting person of the topic of the channel"
+      "topic-cons" -> "@topic-cons #chan <mess> -- " ++
+                       "Add a new topic item to the front of the topic list"
+      "topic-snoc" -> "@topic-snoc #chan <mess> -- " ++
+                       "Add a new topic item to the back of the topic list"
+      "topic-tail" -> "@topic-tail #chan -- " ++
+                       "Remove the first topic item from the topic list"
+      "topic-null" -> "@topic-null #chan -- " ++
+                       "Clear out the topic entirely"
+      "topic-init" -> "@topic-init #chan -- " ++
+                       "Remove the last topic item from the topic list"
+      _ -> "Someone forgot to document his new Topic function! Shame on him/her!"
 
-
-  moduleCmds   _ = return ["topic-tell",
-                           "topic-cons", "topic-snoc",
-                           "topic-tail", "topic-init", "topic-null"]
+  moduleCmds   _ = ["topic-tell",
+                   "topic-cons", "topic-snoc",
+                   "topic-tail", "topic-init", "topic-null"]
 
   process _ _ src "topic-cons" text =
       alterTopic src chan (topic_item :)

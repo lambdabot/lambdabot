@@ -80,8 +80,8 @@ import ErrorUtils          (tryError)
 
 
 > instance Module LogModule LogState where
->    moduleHelp _ s      = return . fromJust $ lookup s commands
->    moduleCmds _        = return $ map fst commands
+>    moduleHelp _ s      = fromJust $ lookup s commands
+>    moduleCmds _        = map fst commands
 >    moduleDefState _    = return M.empty
 
 >    moduleExit          = cleanLogState

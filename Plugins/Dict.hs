@@ -20,8 +20,8 @@ theModule = MODULE $ DictModule ()
 -- | This is the module handler.  Here we process commands from users.
 
 instance Module DictModule () where
-    moduleHelp _ _ = return (getHelp [])
-    moduleCmds _   = return $ "dict" : "dict-help" : dictNames
+    moduleHelp _ _ = getHelp []
+    moduleCmds _   = "dict" : "dict-help" : dictNames
     process _ _ target "dict" _ = do
         ircPrivmsg target quickHelp
     process _ _ target "dict-help" rest = do

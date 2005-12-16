@@ -30,7 +30,9 @@ type Fact m a   = ModuleT FactState m a
 
 instance Module FactModule FactState where
 
-  moduleHelp _ s = return $ case s of
+  moduleCmds   _ = ["fact","fact-set","fact-delete"
+                   ,"fact-cons","fact-snoc","fact-update"]
+  moduleHelp _ s = case s of
     "fact"        -> "@fact <fact>, Retrieve a fact from the database"
     "fact-set"    -> "Define a new fact, guard if exists"
     "fact-update" -> "Define a new fact, overwriting"
@@ -41,8 +43,6 @@ instance Module FactModule FactState where
 
   moduleDefState _  = return $ M.empty
   moduleSerialize _ = Just mapPackedSerial
-  moduleCmds   _ = return ["fact","fact-set","fact-delete",
-                           "fact-cons","fact-snoc","fact-update"]
 
   process _ _ target cmd rest = do
         result <- withMS $ \factFM writer -> case words rest of

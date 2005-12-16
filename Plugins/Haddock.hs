@@ -19,8 +19,7 @@ theModule = MODULE $ HaddockModule ()
 type HaddockState = M.Map P.FastString [P.FastString]
 
 instance Module HaddockModule HaddockState where
-    moduleHelp    _ _ = return "@index - yay!"
-    moduleCmds      _ = return ["index"]
+    moduleCmds      _ = ["index"]
     moduleDefState  _ = return M.empty
     moduleSerialize _ = Just $ Serial {
               deserialize = Just . readPacked,

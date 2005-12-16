@@ -28,14 +28,12 @@ engines =  [("google",    ("http://www.google.com/search?hl=en&q=",
             ("wikipedia", ("http://en.wikipedia.org/wiki/Special:Search?search=", ""))]
 
 instance Module SearchModule () where
-    moduleSticky _ = False
+    moduleHelp _ s = case s of
+         "google"    -> "@google <expr>, search google and show url of first hit"
+         "wikipedia" -> "@wikipedia <expr>, search wikipedia and show url of first hit"
+         _           -> "module for doing searches"
 
-    moduleHelp _ s = return $ case s of
-             "google"    -> "@google <expr>, search google and show url of first hit"
-             "wikipedia" -> "@wikipedia <expr>, search wikipedia and show url of first hit"
-             _           -> "module for doing searches"
-
-    moduleCmds   _ = return (map fst engines)
+    moduleCmds   _ = map fst engines
     process _ _ src cmd rest = searchCmd cmd src (dropSpace rest)
 
 ------------------------------------------------------------------------

@@ -23,8 +23,8 @@ theModule = MODULE $ BaseModule ()
 type BaseState = GlobalPrivate () ()
 
 instance Module BaseModule BaseState where
-    moduleHelp  _ _   = return "base module"
-    moduleCmds      _ = return []
+    moduleHelp  _ _   = "lambdabot irc handler"
+    moduleCmds      _ = []
     moduleDefState  _ = return (mkGlobalPrivate 20 ())
     process _ _ _ _ _ = return ()
     moduleInit _
@@ -287,8 +287,14 @@ doPRIVMSG' myname msg
                           True  -> checkPrivs msg
                         when ok $
                           handleIrc (ircPrivmsg towhere . 
-                              (("Module \"" ++ ?name ++ "\" produced error: ") ++) )
+                              ((?name ++ "module failed: ") ++) )
                             (process m msg towhere cmd' rest)
+
+                    -- TODO
+                    --      (case process m msg towhere cmd' rest of
+                    --          Nothing -> return ()
+                    --          Just ss -> mapM_ (ircPrivMsg towhere) ss)
+
                         unless ok $
                           ircPrivmsg towhere "Not enough privileges")
                 mapLB (timeout $ 15*1000*1000) act

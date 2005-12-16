@@ -21,11 +21,11 @@ theModule = MODULE $ DiceModule ()
 instance Module DiceModule () where
   moduleSticky _ = False
 
-  moduleHelp _ s = return $ case s of
+  moduleHelp _ s = case s of
         "dice"       -> "@dice <expr>. Throw dice. <expr> of the form 3d6+2."
         _             -> "dice module"
 
-  moduleCmds   _ = return ["dice"]
+  moduleCmds   _ = ["dice"]
   process _ _ src "dice" rest = ircPrivmsg src =<< liftIO (dice rest)
   process _ _ _    _     _    = error "Dice: invalid command"
 

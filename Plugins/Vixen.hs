@@ -23,13 +23,13 @@ theModule = MODULE $ VixenModule ()
 instance Module VixenModule (String -> IO String) where
     moduleSticky _ = False
 
-    moduleHelp _ s = return $ case s of
+    moduleHelp _ s = case s of
              "vixenlove" -> "talk to me, big boy"
              _           -> "sergeant curry's lonely hearts club"
 
     moduleDefState _ = return $ mkVixen
 
-    moduleCmds     _ = return ["vixen"]
+    moduleCmds     _ = ["vixen"]
     process _ _ src cmd rest = case cmd of
                "vixen" -> vixenCmd src rest
                _       -> error "vixen error: i'm just a girl!"

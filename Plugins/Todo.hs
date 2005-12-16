@@ -20,7 +20,9 @@ theModule = MODULE $ TodoModule ()
 type TodoState = [(P.FastString, P.FastString)]
 
 instance Module TodoModule TodoState where
-    moduleHelp _ s = return $ case s of
+    moduleCmds  _ = ["todo", "todo-add"] 
+    modulePrivs _ = ["todo-delete"]
+    moduleHelp _ s = case s of
         "todo"        -> "@todo, list todo entries"
         "todo-add"    -> "@todo-add <idea>, add a todo entry"
         "todo-delete" -> "@todo-delete <m>, delete a todo entry (for admins)" 
@@ -29,8 +31,6 @@ instance Module TodoModule TodoState where
     moduleDefState  _ = return ([] :: TodoState)
     moduleSerialize _ = Just assocListPackedSerial
     
-    moduleCmds  _ = return ["todo", "todo-add"] 
-    modulePrivs _ = return ["todo-delete"]
     process      _ msg source cmd rest =
         do todoList <- readMS
            case cmd of

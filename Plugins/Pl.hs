@@ -40,12 +40,12 @@ theModule = MODULE $ PlModule ()
 type Pl m a = ModuleT PlState m a
 
 instance Module PlModule PlState where
-    moduleHelp _ "pl-resume" = return "@pl-resume - resume a suspended pointless transformation."
-    moduleHelp _ _ = return "@pointless <expr> - play with pointfree code"
+    moduleHelp _ "pl-resume" = "@pl-resume - resume a suspended pointless transformation."
+    moduleHelp _ _ = "@pointless <expr> - play with pointfree code"
 
     moduleDefState _ = return $ mkGlobalPrivate 15 ()
 
-    moduleCmds _   = return ["pointless","pl-resume","pl"]
+    moduleCmds _   = ["pointless","pl-resume","pl"]
 
     process _ _ target "pointless" rest = pf target rest
     process _ _ target "pl"        rest = pf target rest

@@ -43,8 +43,8 @@ instance Module CodeModule [FilePath] where
   moduleDefState _ = liftIO $ getSourceFiles $ 
   	fptoolsPath config </> "libraries" </> "base"
 
-  moduleHelp _ _ = return "@code, print random line of code from $fptools"
-  moduleCmds   _ = return [ "code" ]
+  moduleHelp _ _ = "@code, print random line of code from $fptools"
+  moduleCmds   _ = [ "code" ]
 
   process _ _ src "code" _ = do
         fs   <- readMS

@@ -1,5 +1,5 @@
 --
--- Copyright (c) 2004 Donald Bruce Stewart - http://www.cse.unsw.edu.au/~dons
+-- Copyright (c) 2004-5 Donald Bruce Stewart - http://www.cse.unsw.edu.au/~dons
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
 --
 
@@ -20,8 +20,8 @@ theModule :: MODULE
 theModule = MODULE $ SpellModule ()
 
 instance Module SpellModule () where
-    moduleHelp _ _    = return "@spell <word>, show spelling of word"
-    moduleCmds   _    = return ["spell"]
+    moduleHelp _ _    = "@spell <word>, show spelling of word"
+    moduleCmds   _    = ["spell"]
 
     process _ _ src "spell" [] = ircPrivmsg src "No word to spell."
     process _ _ src "spell" s = do

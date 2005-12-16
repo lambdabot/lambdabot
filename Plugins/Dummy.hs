@@ -19,7 +19,8 @@ theModule = MODULE $ DummyModule ()
 instance Module DummyModule [String] where
   moduleDefState _ = return $ cycle cows
 
-  moduleHelp _ s = return $ case s of
+  moduleCmds   _ = "moo" : map fst dummylst
+  moduleHelp _ s = case s of
         "dummy"       -> "print a string constant"
         "wiki"        -> "wiki urls"
         "paste"       -> "paste page url"
@@ -32,8 +33,6 @@ instance Module DummyModule [String] where
         "botsnack"    -> "bot-feeder"
         "get-shapr"   -> "summon shapr instantly"
         _             -> "dummy module"
-
-  moduleCmds   _ = return $ "moo" : map fst dummylst
 
   process _ _ src "moo" _ = do
         cow' <- withMS $ \(cow:farm) writer -> do

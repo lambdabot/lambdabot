@@ -20,11 +20,10 @@ theModule = MODULE $ DynamicModule ()
 instance Module DynamicModule () where
 
     moduleSticky _ = True
-    moduleHelp _ _ = return 
-        "@dynamic-[load,unload,reload] <module>, interface to dynamic linker"
-    moduleCmds   _ = return []
-    modulePrivs  _ = return ["dynamic-load","dynamic-unload","dynamic-reload"]
 
+    moduleHelp _ _ = "@dynamic-[load,unload,reload] <module>, interface to dynamic linker"
+    moduleCmds   _ = []
+    modulePrivs  _ = ["dynamic-load","dynamic-unload","dynamic-reload"]
 
     moduleInit   _ = do 
         liftIO $ putStr "Loading plugins\t" >> hFlush stdout

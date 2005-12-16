@@ -120,20 +120,20 @@ withRepos = accessorMS $ \s -> (dpw_repos s, \t -> s { dpw_repos = t })
 --
 
 instance Module DarcsPatchWatch DarcsPatchWatchState where
-    moduleHelp    _ s = return $ case s of
+    moduleHelp    _ s = case s of
         "repos"        -> "@repos, list all registered darcs repositories"
-        "repo-add"    -> "@repo-add path, add a repository"
-        "repo-del" -> "@repo-del path, delete a repository"
-        _ -> ("Watch darcs repositories. Provides @repos, @repo-add, @repo-del")
+        "repo-add"     -> "@repo-add path, add a repository"
+        "repo-del"     -> "@repo-del path, delete a repository"
+        _              -> "Watch darcs repositories. Provides @repos, @repo-add, @repo-del"
 
-    moduleCmds  _ = return ["repos", "repo-add", "repo-del"]
+    moduleCmds  _ = ["repos", "repo-add", "repo-del"]
 
-    moduleDefState  _ = return (DarcsPatchWatchState Nothing [])
     moduleSerialize _ = Just stateSerial
-
+    moduleDefState  _ = return (DarcsPatchWatchState Nothing [])
     moduleInit      _ = do
       tid <- lbIO (\conv -> forkIO $ conv watchRepos)
       modifyMS (\s -> s { dpw_threadId = Just tid })
+
     moduleExit      _ =
         do s <- readMS
            case dpw_threadId s of

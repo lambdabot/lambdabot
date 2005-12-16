@@ -39,7 +39,7 @@ type Decl = String
 
 instance Module DjinnModule DjinnEnv where
 
-        moduleHelp _ s = return $ case s of
+        moduleHelp _ s = case s of
             "djinn"     -> "Generates Haskell code from a type.\n" ++
                            "http://darcs.augustsson.net/Darcs/Djinn"
             "djinn-add" -> "Define a new function type or type synonym"
@@ -49,12 +49,12 @@ instance Module DjinnModule DjinnEnv where
             "djinn-ver" -> "Show current djinn version"
             _           -> error "invalid command to Djinn.moduleHelp"
 
-        moduleCmds      _ = return ["djinn"
-                                   ,"djinn-add"
-                                   ,"djinn-del"
-                                   ,"djinn-env"
-                                   ,"djinn-clr" 
-                                   ,"djinn-ver"]
+        moduleCmds      _ = ["djinn"
+                            ,"djinn-add"
+                            ,"djinn-del"
+                            ,"djinn-env"
+                            ,"djinn-clr" 
+                            ,"djinn-ver"]
 
         moduleSerialize _ = Nothing -- Just listSerial
 

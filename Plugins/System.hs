@@ -23,10 +23,9 @@ theModule :: MODULE
 theModule = MODULE $ SystemModule ()
 
 instance Module SystemModule ClockTime where
-    moduleCmds   _   = return (M.keys syscmds)
-    modulePrivs  _   = return (M.keys privcmds)
-    moduleHelp _ s   = return $ fromMaybe defaultHelp 
-      (M.lookup s $ syscmds `M.union` privcmds)
+    moduleCmds   _   = M.keys syscmds
+    modulePrivs  _   = M.keys privcmds
+    moduleHelp _ s   = fromMaybe defaultHelp (M.lookup s $ syscmds `M.union` privcmds)
     moduleDefState _ = liftIO getClockTime
     process      _   = doSystem
 
@@ -111,7 +110,7 @@ listModule target query = withModule ircModules query fromCommand printProvides
     --      modules is pure anyway.
     -- (ii) extract the information directly from the ircCommands map.
     printProvides m = do
-        cmds <- moduleCmds m
+        let cmds = moduleCmds m
         privs <- gets ircPrivCommands
         ircPrivmsg target $ concat [?name, " provides: ", showClean $ cmds\\privs]
 
