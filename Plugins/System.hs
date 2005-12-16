@@ -49,70 +49,64 @@ privcmds = M.fromList [
        ,("quit",        "quit [msg], have the bot exit with msg")
        ,("reconnect",   "reconnect to channel")]
 
+------------------------------------------------------------------------
 
 defaultHelp :: String
 defaultHelp = "system : irc management"
 
-doSystem :: IRC.Message -> String -> [Char] -> [Char] -> ModuleT ClockTime LB ()
-doSystem msg target cmd rest = do
-   s <- get
-   case cmd of
-      "listchans"   -> ircPrivmsg target $ pprKeys (ircChannels s)
-      "listmodules" -> ircPrivmsg target $ pprKeys (ircModules s)
-      "listcommands" | null rest -> case target of
-          ('#':_) -> ircPrivmsg target $ 
-              "use listcommands [module|command], please. Modules are:\n" ++
-              pprKeys (ircModules s)
-          _       -> listAll target
-                     | otherwise -> listModule target rest
+doSystem :: IRC.Message -> String -> [Char] -> [Char] -> ModuleT ClockTime LB (Maybe [String])
+doSystem msg target cmd rest = get >>= \s -> case cmd of
 
-      "join"  -> send $ IRC.join rest
-      "leave" -> send $ IRC.part rest
-      "part"  -> send $ IRC.part rest
+  "listchans"   -> return $ Just  [pprKeys (ircChannels s)]
+  "listmodules" -> return $ Just [pprKeys (ircModules s) ]
 
-      "msg"   -> ircPrivmsg tgt txt'
-                      where (tgt, txt) = breakOnGlue " " rest
-                            txt'       = dropWhile (== ' ') txt
+  "listcommands" 
+        | null rest -> case target of
+              ('#':_) -> return $ Just ["use listcommands [module|command]. " ++ 
+                                        "Modules are:\n" ++ pprKeys (ircModules s)]
+              _       -> listAll >>= return . Just
+        | otherwise -> listModule rest >>= return . Just . (:[])
 
-      "quit" -> ircQuit $ if null rest then "requested" else rest
+  ------------------------------------------------------------------------
 
-      "reconnect" -> ircReconnect $ if null rest then "request" else rest
+  "join"  -> send (IRC.join rest) >> return Nothing   -- system commands
+  "leave" -> send (IRC.part rest) >> return Nothing
+  "part"  -> send (IRC.part rest) >> return Nothing
 
-      "echo" -> ircPrivmsg target $ concat 
-              ["echo; msg:", show msg, " rest:", show rest]
+   -- writes to another location:
+  "msg"   -> ircPrivmsg tgt txt' >> return Nothing
+                  where (tgt, txt) = breakOnGlue " " rest
+                        txt'       = dropWhile (== ' ') txt
 
-      "uptime" -> do
-              loaded <- readMS
-              now    <- liftIO getClockTime
-              let diff = timeDiffPretty $ now `diffClockTimes` loaded
-              ircPrivmsg target $ "uptime: " ++ diff
+  "quit" -> do ircQuit $ if null rest then "requested" else rest
+               return Nothing
 
-      _unknowncmd -> ircPrivmsg target $ 
-              concat ["unknown system command: ", show msg, show rest]
+  "reconnect" -> do ircReconnect $ if null rest then "request" else rest
+                    return Nothing
+  "echo" -> return $ Just [concat ["echo; msg:", show msg, " rest:", show rest]]
+
+  "uptime" -> do
+          loaded <- readMS
+          now    <- liftIO getClockTime
+          let diff = timeDiffPretty $ now `diffClockTimes` loaded
+          return $ Just ["uptime: " ++ diff]
 
 ------------------------------------------------------------------------
 
-listAll :: String -> LB ()
-listAll target = do
-    s <- get
-    mapM_ (listModule target) $ M.keys (ircModules s)
+listAll :: LB [String]
+listAll = get >>= mapM listModule . M.keys . ircModules
 
-listModule :: String -> String -> LB ()
-listModule target query = withModule ircModules query fromCommand printProvides
-    where
-    fromCommand = withModule ircCommands query 
-        (ircPrivmsg target $ "No module \""++query++"\" loaded") 
+listModule :: String -> LB String
+listModule query = withModule ircModules query fromCommand printProvides
+  where
+    fromCommand = withModule ircCommands query
+        (return $ "No module \""++query++"\" loaded")
         printProvides
     
-    -- calling moduleCmds seems bad here, since it might have side effects.
-    -- Two solutions come to mind:
-    -- (i)  make moduleCmds a pure function (its implementation in all
-    --      modules is pure anyway.
-    -- (ii) extract the information directly from the ircCommands map.
     printProvides m = do
         let cmds = moduleCmds m
         privs <- gets ircPrivCommands
-        ircPrivmsg target $ concat [?name, " provides: ", showClean $ cmds\\privs]
+        return $ concat [?name, " provides: ", showClean $ cmds\\privs]
 
 pprKeys :: (Show k) => M.Map k a -> String
 pprKeys m = showClean (M.keys m)

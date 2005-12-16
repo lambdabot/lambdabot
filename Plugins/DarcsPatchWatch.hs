@@ -141,63 +141,50 @@ instance Module DarcsPatchWatch DarcsPatchWatchState where
              Just tid ->
                  liftIO $ killThread tid
 
-    process _ _ source cmd rest =
-           case cmd of
-             "repos"       -> printRepos source rest
-             "repo-add"    -> addRepo source rest
-             "repo-del"    -> delRepo source rest
-             _ -> error "unimplemented command"
+    process _ _ _ cmd rest = case cmd of
+         "repos"       -> printRepos rest
+         "repo-add"    -> addRepo rest
+         "repo-del"    -> delRepo source rest
 
 --
 -- Configuration commands
 --
+printRepos :: String -> String -> DPW [String]
+printRepos [] = getRepos >>= showRepos >>= return . (:[])
+printRepos _  = error "@todo given arguments, try @todo-add or @listcommands todo"
 
-printRepos :: String -> String -> DPW ()
-printRepos source "" =
-    do repos <- getRepos
-       ircPrivmsg source (showRepos repos)
-printRepos _ _ =
-    error "@todo given arguments, try @todo-add or @listcommands todo"
+addRepo :: String -> DPW [String]
+addRepo rest | null (dropSpace rest) = return ["argument required"]
+addRepo rest = do
+   x <- mkRepo rest
+   case x of
+     Right r -> withRepos $ \repos setRepos -> case () of { _
+            | length repos >= maxNumberOfRepos ->
+                return ["maximum number of repositories reached!"]
+            | r `elem` repos ->
+                return ["cannot add already existing repository " ++ showRepo r]
+            | otherwise -> 
+                do setRepos (r:repos)
+                   return ["repository " ++ showRepo r ++ " added"]
+     Left s  -> return ["cannot add invalid repository: " ++ s]
 
-addRepo :: String -> String -> DPW ()
-addRepo source rest | null (dropSpace rest) =
-    ircPrivmsg source "argument required"
-addRepo source rest =
-    do x <- mkRepo rest
-       case x of
-         Left s -> send ("cannot add invalid repository: " ++ s)
-         Right r -> withRepos $ \repos setRepos -> do
-                       case () of
-                        _| length repos >= maxNumberOfRepos ->
-                             send ("maximum number of repositories reached!")
-                         | r `elem` repos ->
-                             send ("cannot add already existing repository "
-                                   ++ showRepo r)
-                         | otherwise ->
-                             do setRepos (r:repos)
-                                send ("repository " ++ showRepo r ++ " added")
-    where send = ircPrivmsg source
+delRepo :: String -> DPW [String]
+delRepo rest | null (dropSpace rest) = return ["argument required"]
+delRepo rest = do
+   x <- mkRepo rest
+   case x of
+     Left s -> return ["cannot delete invalid repository: " ++ s]
+     Right r -> withRepos $ \repos setRepos -> case findRepo r repos of
+                 Nothing ->
+                   return ["no repository registered with path " ++ repo_location r]
+                 Just realRepo ->
+                     do setRepos (delete realRepo repos)
+                        return ["repository " ++ showRepo realRepo ++ " deleted"]
 
-delRepo :: String -> String -> DPW ()
-delRepo source rest | null (dropSpace rest) =
-    ircPrivmsg source "argument required"
-delRepo source rest =
-    do x <- mkRepo rest
-       case x of
-         Left s -> ircPrivmsg source ("cannot delete invalid repository: " ++ s)
-         Right r -> withRepos $ \repos setRepos -> do
-                       case findRepo r repos of
-                         Nothing ->
-                           send ("no repository registered with path "
-                                 ++ repo_location r)
-                         Just realRepo ->
-                             do setRepos (delete realRepo repos)
-                                send ("repository " ++ showRepo realRepo ++
-                                      " deleted")
-    where send = ircPrivmsg source
-          cmpRepos r1 r2 = repo_location r1 == repo_location r2
-          findRepo _ [] = Nothing
-          findRepo x (y:ys) = if cmpRepos x y then (Just y) else findRepo x ys
+    where
+      cmpRepos r1 r2    = repo_location r1 == repo_location r2
+      findRepo _ []     = Nothing
+      findRepo x (y:ys) = if cmpRepos x y then Just y else findRepo x ys
 
 mkRepo :: String -> LB (Either String Repo)
 mkRepo pref_ =

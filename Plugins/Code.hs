@@ -56,9 +56,8 @@ instance Module CodeModule [FilePath] where
                     hClose h
                     return (f, (dropSpace . expandTab $ l))
 
-        ircPrivmsg' src $ (basename file) ++ ": " ++ line
-
-  process _ _ _ _ _ = error "Code: invalid command"
+        -- dump raw output
+        return [src $ (basename file) ++ ": " ++ line]
 
 --
 -- work out our list of potential source files

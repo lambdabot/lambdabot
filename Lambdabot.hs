@@ -4,7 +4,7 @@
 --
 module Lambdabot (
         MODULE(..), Module(..),
-        ModuleT, ModState,
+        ModuleT, ModState, ModuleLB,
 
         IRC.Message(..), 
         IRCRState(..), IRCRWState(..), IRCError(..), 
@@ -14,7 +14,7 @@ module Lambdabot (
         withModule, getDictKeys,
 
         send,
-        ircPrivmsg, ircPrivmsg',
+        ircPrivmsg, ircPrivmsg', -- not generally used
         ircQuit, ircReconnect,
         ircGetChannels,
         ircSignalConnect, Callback, ircInstallOutputFilter, OutputFilter,
@@ -274,6 +274,9 @@ evalLB (LB lb) rws = do
 -- | This \"transformer\" encodes the additional information a module might 
 --   need to access its name or its state.
 type ModuleT s m a = (?ref :: MVar s, ?name :: String) => m a
+
+-- | A nicer synonym for some ModuleT stuffs
+type ModuleLB m = ModuleT m LB (Maybe [String])
 
 -- Name !!!
 type ModState s a = (?ref :: MVar s, ?name :: String) => a
@@ -571,23 +574,26 @@ class Module m s | m -> s where
     -- | Finalize the module. The default implementation does nothing.
     moduleExit      :: m -> ModuleT s LB ()
 
-    -- | Process a command a user sent.
+    -- | Process a command a user sent, the resulting string is draw in
+    -- some fashion.
     process         :: m                    -- ^ phantom
         -> IRC.Message                      -- ^ the message
         -> String                           -- ^ target
         -> String                           -- ^ command
         -> String                           -- ^ the arguments to the command
-        -> ModuleT s LB ()                  -- ^ monad output
--- TODO
---      -> ModuleT s LB (Maybe [String])    -- ^ maybe output
+        -> ModuleT s LB (Maybe [String])    -- ^ maybe output
 
-    moduleHelp m _    = concat (map ('@':) (moduleCmds m))
-    modulePrivs _     = []
-    moduleExit _      = return ()
-    moduleInit _      = return ()
-    moduleSticky _    = False
-    moduleSerialize _ = Nothing
-    moduleDefState  _ = return $ error "state not initalized"
+    --  -> ModuleT s LB ()                  -- ^ monad output
+
+    process  _ _ _ _ _ = return Nothing
+    moduleHelp m _     = concat (map ('@':) (moduleCmds m))
+    modulePrivs _      = []
+    moduleCmds      _  = []
+    moduleExit _       = return ()
+    moduleInit _       = return ()
+    moduleSticky _     = False
+    moduleSerialize _  = Nothing
+    moduleDefState  _  = return $ error "state not initalized"
 
 -- | An existential type holding a module.
 data MODULE = forall m s. (Module m s) => MODULE m

@@ -1,6 +1,6 @@
 --
 -- | Dynamic module, binding to the dynamic linker
--- Reimplemented to use hs-plugins.
+-- Reimplemented 2004-5 by dons to use hs-plugins.
 --
 module Plugins.Dynamic (theModule) where
 
@@ -20,27 +20,21 @@ theModule = MODULE $ DynamicModule ()
 instance Module DynamicModule () where
 
     moduleSticky _ = True
-
-    moduleHelp _ _ = "@dynamic-[load,unload,reload] <module>, interface to dynamic linker"
-    moduleCmds   _ = []
+    moduleHelp _ _ = "An interface to dynamic linker"
     modulePrivs  _ = ["dynamic-load","dynamic-unload","dynamic-reload"]
 
     moduleInit   _ = do 
         liftIO $ putStr "Loading plugins\t" >> hFlush stdout
         mapM_ (\p -> load p >> liftIO (putChar '.' >> hFlush stdout)) plugins
         liftIO $ putStrLn " done."
-                                
-    process _ _ src "dynamic-load" rest =
-        load rest >> ircPrivmsg src "module loaded"
 
-    process _ _ src "dynamic-unload" rest =
-        unload rest >> ircPrivmsg src "module unloaded"
-
-    process _ _ src "dynamic-reload" rest =
-        do unload rest ; load rest ; ircPrivmsg src "module reloaded"
-
-    process _ _ _ _ _ = error "DynamicModule: Invalid command"
-
+    process _ _ _ s rest = case s of
+        "dynamic-load"      -> 
+                do load rest; return $ Just ["module loaded"]
+        "dynamic-unload"    -> 
+                do unload rest; return $ Just ["module unloaded"]
+        "dynamic-reload"    -> 
+                do unload rest; load rest; return $ Just ["module reloaded"]
 
 --
 -- | Load value "theModule" from each plugin, given simple name of a
@@ -48,20 +42,20 @@ instance Module DynamicModule () where
 --
 load :: String -> LB Bool
 load nm = do
-        let file = getModuleFile nm
-        catchError
-            (do (_,md) <- ircLoad file "theModule"
-                ircInstallModule md nm
-                return True) -- need to put mod in state
-            (\_ -> do
-                ircUnload file
-                liftIO $ putStrLn $ "\nCouldn't load "++nm++", ignoring"
-                return False)
+    let file = getModuleFile nm
+    catchError
+        (do (_,md) <- ircLoad file "theModule"
+            ircInstallModule md nm
+            return True) -- need to put mod in state
+        (\_ -> do
+            ircUnload file
+            liftIO $ putStrLn $ "\nCouldn't load "++nm++", ignoring"
+            return False)
 
 --
 -- | Unload a module, e.g. "vixen"
 --
-unload :: [Char] -> LB ()
+unload :: String -> LB ()
 unload nm = do
         unless (nm `elem` plugins) $ error "unknown or static module"
         ircUnloadModule nm

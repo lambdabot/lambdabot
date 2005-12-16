@@ -24,43 +24,41 @@ type BaseState = GlobalPrivate () ()
 
 instance Module BaseModule BaseState where
     moduleHelp  _ _   = "lambdabot irc handler"
-    moduleCmds      _ = []
     moduleDefState  _ = return (mkGlobalPrivate 20 ())
-    process _ _ _ _ _ = return ()
-    moduleInit _
-	= do ircSignalConnect "PING" 	doPING
-	     ircSignalConnect "NOTICE" 	doNOTICE
-	     ircSignalConnect "PART" 	doPART
-	     ircSignalConnect "JOIN"    doJOIN
-	     ircSignalConnect "NICK" 	doNICK
-	     ircSignalConnect "MODE" 	doMODE
-	     ircSignalConnect "TOPIC" 	doTOPIC
-	     ircSignalConnect "QUIT" 	doQUIT
-	     ircSignalConnect "PRIVMSG" doPRIVMSG
-	     ircSignalConnect "001"	doRPL_WELCOME
+    moduleInit _ = do 
+             ircSignalConnect "PING"    doPING
+             ircSignalConnect "NOTICE"  doNOTICE
+             ircSignalConnect "PART"    doPART
+             ircSignalConnect "JOIN"    doJOIN
+             ircSignalConnect "NICK"    doNICK
+             ircSignalConnect "MODE"    doMODE
+             ircSignalConnect "TOPIC"   doTOPIC
+             ircSignalConnect "QUIT"    doQUIT
+             ircSignalConnect "PRIVMSG" doPRIVMSG
+             ircSignalConnect "001"     doRPL_WELCOME
 
-	  {- ircSignalConnect "002"	doRPL_YOURHOST
-	     ircSignalConnect "003"	doRPL_CREATED
-	     ircSignalConnect "004"	doRPL_MYINFO -}
+          {- ircSignalConnect "002"     doRPL_YOURHOST
+             ircSignalConnect "003"     doRPL_CREATED
+             ircSignalConnect "004"     doRPL_MYINFO -}
 
-	     ircSignalConnect "005" 	doRPL_BOUNCE
+             ircSignalConnect "005"     doRPL_BOUNCE
 
-	  {- ircSignalConnect "250"	doRPL_STATSCONN
-	     ircSignalConnect "251"     doRPL_LUSERCLIENT
-	     ircSignalConnect "252"     doRPL_LUSEROP
-	     ircSignalConnect "253"     doRPL_LUSERUNKNOWN
-	     ircSignalConnect "254"     doRPL_LUSERCHANNELS
-	     ircSignalConnect "255"     doRPL_LUSERME
-	     ircSignalConnect "265"	doRPL_LOCALUSERS
-	     ircSignalConnect "266"	doRPL_GLOBALUSERS -}
+          {- ircSignalConnect "250"     doRPL_STATSCONN
+             ircSignalConnect "251"     doRPL_LUSERCLIENT
+             ircSignalConnect "252"     doRPL_LUSEROP
+             ircSignalConnect "253"     doRPL_LUSERUNKNOWN
+             ircSignalConnect "254"     doRPL_LUSERCHANNELS
+             ircSignalConnect "255"     doRPL_LUSERME
+             ircSignalConnect "265"     doRPL_LOCALUSERS
+             ircSignalConnect "266"     doRPL_GLOBALUSERS -}
 
-	     ircSignalConnect "332"	doRPL_TOPIC
+             ircSignalConnect "332"     doRPL_TOPIC
 
-	  {- ircSignalConnect "353"	doRPL_NAMRELY
-	     ircSignalConnect "366"     doRPL_ENDOFNAMES
-	     ircSignalConnect "372"	doRPL_MOTD
-	     ircSignalConnect "375"	doRPL_MOTDSTART
-	     ircSignalConnect "376"     doRPL_ENDOFMOTD -}
+          {- ircSignalConnect "353"     doRPL_NAMRELY
+             ircSignalConnect "366"     doRPL_ENDOFNAMES
+             ircSignalConnect "372"     doRPL_MOTD
+             ircSignalConnect "375"     doRPL_MOTDSTART
+             ircSignalConnect "376"     doRPL_ENDOFMOTD -}
 
 {-
 doUNKNOWN :: Callback
@@ -227,7 +225,7 @@ doPRIVMSG' myname msg
 
   | flip any ":," $ \c -> (myname ++ [c]) `isPrefixOf` text
     = let Just wholeCmd = maybeCommand myname text
-	  (cmd, params) = breakOnGlue " " wholeCmd
+          (cmd, params) = breakOnGlue " " wholeCmd
       in doPublicMsg cmd (dropWhile (==' ') params)
 
   | ("@" `isPrefixOf` text)
@@ -288,12 +286,12 @@ doPRIVMSG' myname msg
                         when ok $
                           handleIrc (ircPrivmsg towhere . 
                               ((?name ++ "module failed: ") ++) )
-                            (process m msg towhere cmd' rest)
-
-                    -- TODO
-                    --      (case process m msg towhere cmd' rest of
-                    --          Nothing -> return ()
-                    --          Just ss -> mapM_ (ircPrivMsg towhere) ss)
+                    --      (process m msg towhere cmd' rest)
+                            (do mstrs <- process m msg towhere cmd' rest
+                                case mstrs of
+                                    Nothing -> return ()
+                                    Just ss -> mapM_ (ircPrivmsg towhere) ss)
+                                    -- todo, think about how to post-process...
 
                         unless ok $
                           ircPrivmsg towhere "Not enough privileges")

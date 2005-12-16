@@ -22,8 +22,8 @@ instance Module DiceModule () where
   moduleSticky _ = False
 
   moduleHelp _ s = case s of
-        "dice"       -> "@dice <expr>. Throw dice. <expr> of the form 3d6+2."
-        _             -> "dice module"
+        "dice" -> "@dice <expr>. Throw dice. <expr> of the form 3d6+2."
+        _      -> "dice module"
 
   moduleCmds   _ = ["dice"]
   process _ _ src "dice" rest = ircPrivmsg src =<< liftIO (dice rest)

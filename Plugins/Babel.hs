@@ -1,5 +1,5 @@
 --
--- Copyright (c) 2004-5 Donald Bruce Stewart - http://www.cse.unsw.edu.au/~dons
+-- Copyright (c) 2004-5 Don Stewart - http://www.cse.unsw.edu.au/~dons
 -- Copyright (c) 2004 Simon Winwood - http://www.cse.unsw.edu.au/~sjw
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
 --
@@ -47,11 +47,12 @@ instance Module BabelModule Quotes where
         moduleHelp _ _          = help
 --      moduleHelp _ "timein"   = return "@timein <city>, report the local time in <city>"
 
-        process _ _ src "babel" s      = run_babel src s
-        process a b src "remember"  s  = process a b src "quote-add" (dropSpace s) -- synonym
-        process _ _ _src "quote-add" s = run_remember  (dropSpace s)
-        process _ _ src "quote"      s = run_quote    src (dropSpace s)
-        process _ _ src "ghc"        _ = run_quote    src "ghc"
+        process a b src "remember" s = process a b src "quote-add" (dropSpace s) -- synonym
+        process _ _ _ "babel"      s = run_babel s
+        process _ _ _ "quote-add"  s = run_remember (dropSpace s)
+        process _ _ _ "quote"      s = run_quote    (dropSpace s)
+        process _ _ _ "ghc"        _ = run_quote    "ghc"
+
 --      process _ _ src "last"  s     = run_last  src s
 
         {-
@@ -78,31 +79,19 @@ help = "@quote <nick>/@quote-add <nick> <quote>\n" ++
 --
 -- TODO add range/context. i.e. !f-3 or 5-4
 --
-run_babel :: String -> String -> LB ()
-
-run_babel src s = do
+run_babel :: String -> LB (Maybe [String])
+run_babel s = do
         let cmd = split ' ' 3 s
         msg <- run_babel' cmd
-        let msg' = map (\t -> "  "++t) msg
-        ircPrivmsg src (unlines msg')
+        let msg' = map ("  " ++) msg
+        return $ Just [unlines msg']
 
 -- help msg
-run_babel' :: (MonadIO m) => [[Char]] -> m [[Char]]
-run_babel' ["help"] = return ["usage: babel lang lang phrase"]
+run_babel' :: (MonadIO m) => [String] -> m [String]
+run_babel' ["help"]      = return $ ["usage: babel lang lang phrase"]
 run_babel' ["languages"] = return $ [show shortLangs]
-
--- translate last line
--- run_babel' [f,t] = doHistory f t 1
-
--- num-indexed history
--- regex-indexed hitory
--- phrase-immediate translation
-run_babel' [f,t,i]
---      | isNum i    = doHistory f t (read i)
---      | isLookup i = doLookup f t (tail i)    -- chop '!' flag
-        | otherwise  = do p <- liftIO $ babelFish f t i ; return [p]
-
-run_babel' _ = return ["bzzt."]
+run_babel' [f,t,i]       = do p <- liftIO $ babelFish f t i ; return [p]
+run_babel' _             = return ["bzzt."]
 
 {-
 --
@@ -170,20 +159,21 @@ run_last src i = do
 -- the @remember command stores away a quotation by a user, for future
 -- use by @quote
 
-run_remember :: String -> ModuleT Quotes LB ()
+run_remember :: String -> ModuleLB Quotes
 run_remember str = do
-        let (name,q') = break (== ' ') str
-            q = if null q' then q' else tail q'
-        withMS $ \fm writer -> do
-          let ss  = fromMaybe [] (M.lookup (P.pack name) fm)
-              fm' = M.insert (P.pack name) (P.pack q : ss) fm
-          writer fm'
+    let (name,q') = break (== ' ') str
+        q = if null q' then q' else tail q'
+    withMS $ \fm writer -> do
+      let ss  = fromMaybe [] (M.lookup (P.pack name) fm)
+          fm' = M.insert (P.pack name) (P.pack q : ss) fm
+      writer fm'
+    return Nothing
 
 --
 --  the @quote command, takes a user name to choose a random quote from
 --
-run_quote :: String -> String -> ModuleT Quotes LB ()
-run_quote target name = do
+run_quote :: String -> ModuleLB Quotes
+run_quote name = do
     fm <- readMS
     let pnm = P.pack name
         qs' = M.lookup pnm fm
@@ -193,11 +183,11 @@ run_quote target name = do
                else do (nm',rs') <- liftIO $ stdGetRandItem (M.toList fm) -- random person
                        return (nm', Just rs')
     case qs of
-        Nothing   -> ircPrivmsg target $ (P.unpack nm) ++ " hasn't said anything memorable"
+        Nothing   -> return $ Just [P.unpack nm ++ " hasn't said anything memorable"]
         Just msgs -> do msg <- liftIO $ stdGetRandItem msgs
-                        if not (P.null pnm)
-                            then ircPrivmsg target $ "  " ++ (P.unpack msg)
-                            else ircPrivmsg target $ (P.unpack nm)++" says: " ++ (P.unpack msg)
+                        return $ Just $ if not (P.null pnm)
+                            then ["  " ++ (P.unpack msg)]
+                            else [(P.unpack nm)++" says: " ++ (P.unpack msg)]
 
 ------------------------------------------------------------------------
 
@@ -237,10 +227,9 @@ justEither _ (Just v) = Right v
 
 langVars :: String -> String -> URIVars -> Either String URIVars
 langVars inLang outLang vars =
-    do
     lookupLang inLang >>= \ins ->
-	lookupLang outLang >>= \outs ->
-	    Right (("lp", ins ++ "_" ++ outs) : vars)
+        lookupLang outLang >>= \outs ->
+            Right (("lp", ins ++ "_" ++ outs) : vars)
     where
     lookupLang lang | length lang == 2 && lang `elem` shortLangs = Right lang
     lookupLang lang = justEither ("Language " ++ lang ++ " not supported")
@@ -261,7 +250,7 @@ getBabel lins =  cleanLine (concat (intersperse " " region))
     where
     region = hd ++ [(head tl)]
     (hd, tl) = span (\x -> (matchRegex reEnd x) == Nothing)
-	       (dropWhile (\x -> (matchRegex reStart x) == Nothing) lins)
+                    (dropWhile (\x -> (matchRegex reStart x) == Nothing) lins)
 
     cleanLine x = maybe "can't parse this language" head $ matchRegex reLine x
 
