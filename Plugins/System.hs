@@ -54,42 +54,41 @@ privcmds = M.fromList [
 defaultHelp :: String
 defaultHelp = "system : irc management"
 
-doSystem :: IRC.Message -> String -> [Char] -> [Char] -> ModuleT ClockTime LB (Maybe [String])
+doSystem :: IRC.Message -> String -> [Char] -> [Char] -> ModuleLB ClockTime
 doSystem msg target cmd rest = get >>= \s -> case cmd of
 
-  "listchans"   -> return $ Just  [pprKeys (ircChannels s)]
-  "listmodules" -> return $ Just [pprKeys (ircModules s) ]
-
+  "listchans"   -> return [pprKeys (ircChannels s)]
+  "listmodules" -> return [pprKeys (ircModules s) ]
   "listcommands" 
         | null rest -> case target of
-              ('#':_) -> return $ Just ["use listcommands [module|command]. " ++ 
-                                        "Modules are:\n" ++ pprKeys (ircModules s)]
-              _       -> listAll >>= return . Just
-        | otherwise -> listModule rest >>= return . Just . (:[])
+              ('#':_) -> return ["use listcommands [module|command]. " ++ 
+                                 "Modules are:\n" ++ pprKeys (ircModules s)]
+              _       -> listAll
+        | otherwise -> listModule rest >>= return . (:[])
 
   ------------------------------------------------------------------------
 
-  "join"  -> send (IRC.join rest) >> return Nothing   -- system commands
-  "leave" -> send (IRC.part rest) >> return Nothing
-  "part"  -> send (IRC.part rest) >> return Nothing
+  "join"  -> send (IRC.join rest) >> return []        -- system commands
+  "leave" -> send (IRC.part rest) >> return []     
+  "part"  -> send (IRC.part rest) >> return []     
 
    -- writes to another location:
-  "msg"   -> ircPrivmsg tgt txt' >> return Nothing
+  "msg"   -> ircPrivmsg tgt txt' >> return []
                   where (tgt, txt) = breakOnGlue " " rest
                         txt'       = dropWhile (== ' ') txt
 
   "quit" -> do ircQuit $ if null rest then "requested" else rest
-               return Nothing
+               return []
 
   "reconnect" -> do ircReconnect $ if null rest then "request" else rest
-                    return Nothing
-  "echo" -> return $ Just [concat ["echo; msg:", show msg, " rest:", show rest]]
+                    return []
+  "echo" -> return [concat ["echo; msg:", show msg, " rest:", show rest]]
 
   "uptime" -> do
           loaded <- readMS
           now    <- liftIO getClockTime
           let diff = timeDiffPretty $ now `diffClockTimes` loaded
-          return $ Just ["uptime: " ++ diff]
+          return ["uptime: " ++ diff]
 
 ------------------------------------------------------------------------
 

@@ -34,25 +34,23 @@ instance Module DummyModule [String] where
         "get-shapr"   -> "summon shapr instantly"
         _             -> "dummy module"
 
-  process _ _ src "moo" _ = do
-        cow' <- withMS $ \(cow:farm) writer -> do
-          writer farm
-          return cow
-        mapM_ (ircPrivmsg' src) (lines cow')
+  process _ _ _ "moo" _ = do
+        cow' <- withMS $ \(cow:farm) writer -> writer farm >> return cow
+        return (lines cow')
 
-  process _ _ src cmd rest = case lookup cmd dummylst of
-			       Nothing -> error "Dummy: invalid command"
-                               Just f -> mapM_ (ircPrivmsg' src) $ lines $ f rest
+  process _ _ _ cmd rest = case lookup cmd dummylst of
+       Nothing -> error "Dummy: invalid command"
+       Just f  -> return $ lines $ f rest
 
 dummylst :: [(String, String -> String)]
 dummylst = [("dummy",       \_ -> "dummy"),
             ("get-shapr",   \_ -> "shapr!!"),
-	    ("eurohaskell", \_ -> unlines ["less talks, more code!",
-					   "http://www.haskell.org/hawiki/EuroHaskell",
-					   "EuroHaskell - Haskell Hackfest - Summer 2005 ",
+            ("eurohaskell", \_ -> unlines ["less talks, more code!",
+                                           "http://www.haskell.org/hawiki/EuroHaskell",
+                                           "EuroHaskell - Haskell Hackfest - Summer 2005 ",
                                                 "- Gothenburg, Sweden"]),
-	    ("wiki",        \x -> "http://www.haskell.org/hawiki/" ++ x),
-	    ("paste",       \_ -> "http://www.haskell.org/hawiki/HaskellIrcPastePage"),
+            ("wiki",        \x -> "http://www.haskell.org/hawiki/" ++ x),
+            ("paste",       \_ -> "http://www.haskell.org/hawiki/HaskellIrcPastePage"),
             ("docs",        \x -> case x of
                [] -> "http://haskell.org/ghc/docs/latest/html/libraries/index.html"
                _  -> case M.lookup (P.pack x) docAssocs of
@@ -63,8 +61,8 @@ dummylst = [("dummy",       \_ -> "dummy"),
                Nothing -> x ++ " not available"
                Just m  -> "http://darcs.complete.org/fptools/libraries/" <>
                           (P.unpack m) </> map (choice (=='.') (const '/') id) x <.> "hs"),
-	    ("learn",       \_ -> "http://www.haskell.org/learning.html"),
-	    ("map",       \_ -> "http://www.haskell.org/hawiki/HaskellUserLocations"),
+            ("learn",       \_ -> "http://www.haskell.org/learning.html"),
+            ("map",       \_ -> "http://www.haskell.org/hawiki/HaskellUserLocations"),
 
             ("botsnack",    \_ -> ":)")]
 

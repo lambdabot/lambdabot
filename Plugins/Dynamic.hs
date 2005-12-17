@@ -30,11 +30,11 @@ instance Module DynamicModule () where
 
     process _ _ _ s rest = case s of
         "dynamic-load"      -> 
-                do load rest; return $ Just ["module loaded"]
+                do load rest; return ["module loaded"]
         "dynamic-unload"    -> 
-                do unload rest; return $ Just ["module unloaded"]
+                do unload rest; return ["module unloaded"]
         "dynamic-reload"    -> 
-                do unload rest; load rest; return $ Just ["module reloaded"]
+                do unload rest; load rest; return ["module reloaded"]
 
 --
 -- | Load value "theModule" from each plugin, given simple name of a

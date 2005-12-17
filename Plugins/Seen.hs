@@ -149,7 +149,6 @@ instance Module SeenModule SeenState where
     moduleHelp _ _      = "Report if a user has been seen by the bot"
     moduleCmds _        = ["seen"]
     moduleDefState _    = return M.empty
-    moduleSerialize _   = Nothing   -- do our own writing/serialising
 
     moduleInit _        = do 
       zipWithM_ ircSignalConnect 
@@ -187,10 +186,10 @@ instance Module SeenModule SeenState where
               hClose h
       return ()
     
-    process _ msg target _ rest = do 
+    process _ msg _ _ rest = do 
          seenFM <- readMS
          now    <- liftIO getClockTime
-         ircPrivmsg target . unlines $ getAnswer msg rest seenFM now
+         return [unlines $ getAnswer msg rest seenFM now]
 
 ------------------------------------------------------------------------
 -- | The bot's name, lowercase

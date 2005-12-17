@@ -31,11 +31,26 @@ theModule :: MODULE
 theModule = MODULE $ PrettyModule ()
 
 instance Module PrettyModule (String -> IO String) where
-    moduleHelp _ _   = "echo haskell code in a pretty-printed manner"
-    moduleCmds     _ = ["pretty"]
-    process _ _ src cmd rest = case cmd of
-        "pretty" -> prettyCmd src rest
-        _        -> error "unknown command"
+    moduleCmds _      = ["pretty"]
+    moduleHelp _ _    = "Echo haskell code in a pretty-printed manner"
+    process _ _ _ _ r = prettyCmd r
+
+------------------------------------------------------------------------
+
+-- FIXME: the solution of prefixing code with a module prelude
+--   is pretty ugly, but for the moment it works well enough!
+--
+prettyCmd :: String -> ModuleLB (String -> IO String)
+prettyCmd rest = 
+    let code = dropWhile (`elem` " \t>") rest
+        modPrefix = "module Main where " 
+            ++ if "let" `isPrefixOf` code then "i = " else ""
+        prefLen = length modPrefix
+        result = case parseModule (modPrefix ++ code) of
+            (ParseOk a)           -> doPretty a
+            (ParseFailed loc msg) -> let (SrcLoc _ _ col) = loc in
+                (show msg ++ " at column " ++ show (col - prefLen)) : []
+    in return result -- will this work?
 
 -- | calculates "desired" indentation and return pretty-printed declarations
 -- the indentation calculations are still pretty much rough guesswork.
@@ -63,20 +78,3 @@ doPretty (HsModule _ _ _ _ decls) =
     in map (" "++) . lines . concat . intersperse "\n" 
        -- . map show $ decls
        . map (\d -> prettyPrintWithMode (makeMode d) d) $ decls
-
-
--- FIXME: the solution of prefixing code with a module prelude
---   is pretty ugly, but for the moment it works well enough!
-prettyCmd :: String -> String -> ModuleT (String -> IO String) LB ()
-prettyCmd src rest = 
-    let code = dropWhile (`elem` " \t>") rest
-        modPrefix = "module Main where " 
-            ++ if "let" `isPrefixOf` code then "i = " else ""
-        prefLen = length modPrefix
-        result = case parseModule (modPrefix ++ code) of
-            (ParseOk a)           -> doPretty a
-            (ParseFailed loc msg) -> let (SrcLoc _ _ col) = loc in
-                (show msg ++ " at column " ++ show (col - prefLen)) : []
-    in mapM_ (ircPrivmsg' src) result
-
-------------------------------------------------------------------------

@@ -28,6 +28,22 @@ import Maybe (mapMaybe)
 import Control.Monad.Trans (liftIO)
 import Text.Regex
 
+--
+--     And thus the plugin:
+--
+newtype TypeModule = TypeModule ()
+
+theModule :: MODULE
+theModule = MODULE $ TypeModule ()
+
+instance Module TypeModule () where
+     moduleCmds        _  = ["type", "kind"]
+     moduleHelp _ "kind"  = "@kind: return the kind of a type (GHC)"
+     moduleHelp _ _       = "@type: return the type of a value"
+     process _ _ _ s expr = 
+        flip query_ghci expr $ case s of "type" -> ":t" ; "kind" -> ":k"
+
+------------------------------------------------------------------------
 
 --     In accordance with the KISS principle, the plan is to delegate all
 --     the hard work! To get the type of foo, pipe
@@ -40,7 +56,7 @@ command cmd foo = cmd ++ " " ++ foo
 signature_regex :: Regex
 signature_regex
     = mkRegexWithOpts
-      "^(\\*?[A-Z][_a-zA-Z0-9]*(\\*?[A-Z][_a-zA-Z0-9]*)*>)? *(.*[	-=:].*)"
+      "^(\\*?[A-Z][_a-zA-Z0-9]*(\\*?[A-Z][_a-zA-Z0-9]*)*>)? *(.*[       -=:].*)"
       True True
 
 --
@@ -109,40 +125,19 @@ extract_signatures output
 query_ghci' :: String -> String -> IO String
 query_ghci' cmd expr = do
        (output, errors, _) <- popen (ghci config) ["-fglasgow-exts","-fno-th"]
-			               (Just (command cmd (stripComments expr)))
+                                       (Just (command cmd (stripComments expr)))
        let ls = extract_signatures output
        return $ if null ls 
-       		then unlines . take 3 . lines . expandTab . cleanRE $ errors -- "bzzt" 
-		else ls
+                then unlines . take 3 . lines . expandTab . cleanRE $ errors -- "bzzt" 
+                else ls
   where 
      cleanRE :: String -> String
      cleanRE s
         | Just _         <- notfound `matchRegex` s = "Couldn\'t find qualified module.\nMaybe you\'re using the wrong syntax: Data.List.(\\\\) instead of (Data.List.\\\\)?"
         | Just (_,_,b,_) <- ghci_msg `matchRegexAll`  s = b
-	| otherwise      = s
+        | otherwise      = s
      ghci_msg = mkRegex "<interactive>:[^:]*:[^:]*: ?"
      notfound = mkRegex "Failed to load interface"
 
-
-query_ghci :: String -> String -> String -> LB ()
-query_ghci src y z = do
-        ty <- liftIO $ query_ghci' y z
-        ircPrivmsg src ty
-
---
---     And thus the plugin:
---
-newtype TypeModule = TypeModule ()
-
-theModule :: MODULE
-theModule = MODULE $ TypeModule ()
-
-instance Module TypeModule () where
-     moduleHelp _ "kind" = "@kind: return the kind of a type (GHC)"
-     moduleHelp _ _      = "@type: return the type of a value"
-     moduleCmds        _ = ["type", "kind"]
-     process _ _ src "type" expr = query_ghci src ":t" expr
-     process _ _ src "kind" expr = query_ghci src ":k" expr
---   process _ _ src "info" expr = query_ghci src ":info" expr
-     process _ _ _ _ _ = error "TypeModule: invalid cmd"
-
+query_ghci :: String -> String -> LB [String]
+query_ghci y z = liftIO (query_ghci' y z) >>= return . (:[])

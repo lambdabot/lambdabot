@@ -30,7 +30,7 @@ type Where m a          = ModuleT WhereState m a
 
 instance Module WhereModule WhereState where
 
-  moduleCmds      _ = ["where", "what", "where+" ]
+  moduleCmds _ = ["where", "what", "where+" ]
   moduleHelp _ s = case s of
     "where"    -> "@where <key>, return element associated with key"
     "where+"   -> "@where+ <key> <elem>, define an association"
@@ -39,12 +39,12 @@ instance Module WhereModule WhereState where
   moduleDefState  _ = return $ M.empty
   moduleSerialize _ = Just mapPackedSerial
 
-  process _ _ target cmd rest = do
+  process _ _ _ cmd rest = do
         result <- withMS $ \factFM writer -> case words rest of
             []         -> return "@where <key>, return element associated with key"
             (fact:dat) -> processCommand factFM writer
                                 (lowerCaseString fact) cmd (unwords dat)
-        ircPrivmsg target result
+        return [result]
 
 ------------------------------------------------------------------------
 

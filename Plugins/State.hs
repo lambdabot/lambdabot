@@ -1,5 +1,6 @@
 --
 -- | Persistent state
+-- A demo plugin
 --
 module Plugins.State (theModule) where
 
@@ -13,10 +14,10 @@ theModule :: MODULE
 theModule = MODULE $ StateModule ()
 
 instance Module StateModule String where
-    moduleHelp    _ _ = "@state - we all know it's evil"
     moduleCmds      _ = ["state"]
-    moduleDefState  _ = return "nothing yet"
+    moduleHelp    _ _ = "@state - we all know it's evil"
+    moduleDefState  _ = return "This page left blank."
     moduleSerialize _ = Just stdSerial
-    process      _ _ target _ rest = do
+    process _ _ _ _ rest = do
        modstate <- withMS $ \ms writer -> writer rest >> return ms
-       ircPrivmsg target modstate
+       return [modstate]

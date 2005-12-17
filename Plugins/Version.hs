@@ -21,8 +21,7 @@ instance Module VersionModule () where
     moduleCmds   _ = ["version", "source"]
     moduleHelp _ _ = "Report the build date, ghc version " ++ 
                      "and darcs repo of this bot"
-    process      _ _ target _ _ =
-        ircPrivmsg target $ concat
+    process _ _ _ _ _ = return . (:[]) $ concat
                 ["lambdabot 3p", PATCH_COUNT, ", ",
                  "GHC ", GHC_VERSION, " (", PLATFORM, ")",
                  "\n", "darcs get ", REPO_PATH ]

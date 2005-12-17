@@ -23,10 +23,11 @@ instance Module MoreModule MoreState where
     process      _ _ target _ _ = do
         morestate <- readPS target
         case morestate of
-          Nothing -> return () -- silently fail, it's ok.
-          Just ls -> mapM_ (ircPrivmsg' target) =<< moreFilter target ls
+          Nothing -> return [] -- silently fail, it's ok.
+          Just ls -> do mapM_ (ircPrivmsg' target) =<< moreFilter target ls
+                        return []       -- special
 
-moreFilter :: String -> [String] -> ModuleT MoreState LB [String]
+moreFilter :: String -> [String] -> ModuleLB MoreState
 moreFilter target msglines = do
   let maxLines = Config.moresize Config.config
       (morelines, thislines) = case drop (maxLines+2) msglines of

@@ -24,9 +24,9 @@ theModule :: MODULE
 theModule = MODULE $ PlugsModule ()
 
 instance Module PlugsModule () where
-    moduleCmds   _      = ["eval"]
-    moduleHelp _ _      = "@eval <expr>\nYou have Haskell, 3 seconds and no IO. Go nuts!"
-    process _ _ src _ s = liftIO (plugs s) >>= ircPrivmsg src
+    moduleCmds   _    = ["eval"]
+    moduleHelp _ _    = "@eval <expr>\nYou have Haskell, 3 seconds and no IO. Go nuts!"
+    process _ _ _ _ s = liftIO (plugs s) >>= return . (:[])
 
 ------------------------------------------------------------------------
 

@@ -18,17 +18,15 @@ theModule = MODULE $ Elite
 data Elite = Elite
 
 instance Module Elite () where
-    moduleCmds _ = ["elite"]
-    moduleHelp _ cmd = case cmd of
-                        "elite" -> "Translating english to elitespeak"
-                        _       -> "Translations between english and elitespeak"
-    process _ _ target _ args
-        = do result <- case words args of
-                         [] -> return "Say again?"
-                         wds -> do let instr = map toLower (unwords wds)
-                                   transWords <- translate instr
-                                   return transWords
-             ircPrivmsg target result
+    moduleCmds _   = ["elite"]
+    moduleHelp _ _ = "Translating english to elitespeak"
+    process _ _ _ _ args = do 
+        result <- case words args of
+                     [] -> return "Say again?"
+                     wds -> do let instr = map toLower (unwords wds)
+                               transWords <- translate instr
+                               return transWords
+        return [result]
 
 translate :: MonadIO m => String -> m String
 translate []  = return []

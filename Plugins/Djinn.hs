@@ -64,49 +64,49 @@ instance Module DjinnModule DjinnEnv where
 
         -- rule out attempts to do IO, if these get into the env,
         -- they'll be executed by djinn
-        process _ _ src _ s | Just _ <- cmd  `matchRegex` s = end
-          where end  = ircPrivmsg src "Invalid command"
+        process _ _ _ _ s | Just _ <- cmd  `matchRegex` s = end
+          where end  = return ["Invalid command"]
                 cmd  = mkRegex "^ *:"
 
         -- Normal commands
-        process _ _ src "djinn" s = do
+        process _ _ _ "djinn" s = do
                 (_,env) <- readMS
                 e       <- liftIO $ djinn env $ ":set +sorted" <$> "f ?" <+> s
-                mapM_ (ircPrivmsg src) $ either id (tail . lines) e
+                return $ either id (tail . lines) e
 
         -- Augment environment. Have it checked by djinn.
-        process _ _ src "djinn-add"  s = do
+        process _ _ _ "djinn-add"  s = do
             (p,st)  <- readMS 
             est     <- liftIO $ getDjinnEnv $ (p, dropSpace s : st)
             case est of
-                Left e     -> ircPrivmsg src (head e)
-                Right st'' -> modifyMS $ const st''
+                Left e     -> return [head e]
+                Right st'' -> modifyMS (const st'') >> return []
 
         -- Display the environment
-        process _ _ src "djinn-env"  _ = do
+        process _ _ _ "djinn-env"  _ = do
             (prelude,st) <- readMS
-            mapM_ (ircPrivmsg src) (prelude ++ st)
+            return $ prelude ++ st
 
         -- Reset the env
-        process _ _ _ "djinn-clr"  _ = modifyMS $ \(p,_) -> (p,[])
+        process _ _ _ "djinn-clr"  _ = modifyMS (flip (,) [] . fst) >> return []
 
         -- Remove sym from environment. We let djinn do the hard work of
         -- looking up the symbols.
-        process _ _ src "djinn-del" s =  do
+        process _ _ _ "djinn-del" s =  do
             (_,env) <- readMS
             eenv <- liftIO $ djinn env $ ":delete" <+> dropSpace s <$> ":environment"
             case eenv of
-                Left e     -> ircPrivmsg src (head e)
-                Right env' -> modifyMS $ \(prel,_) ->
-                    (prel,filter (\p -> p `notElem` prel) . nub . lines $ env')
+                Left e     -> return [head e]
+                Right env' -> do 
+                    modifyMS $ \(prel,_) ->
+                        (prel,filter (\p -> p `notElem` prel) . nub . lines $ env')
+                    return []
 
         -- Version number
-        process _ _ src "djinn-ver"  _ = do
+        process _ _ _ "djinn-ver"  _ = do
             (out,_,_) <- liftIO $ popen binary [] (Just ":q")
             let v = dropNL . clean . drop 18 . head . lines $ out
-            ircPrivmsg src v
-
-        process _ _ _ _ _ = error "DjinnModule: invalid command"
+            return [v]
 
 ------------------------------------------------------------------------
 

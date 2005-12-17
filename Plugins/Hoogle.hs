@@ -17,7 +17,6 @@ import Util
 import Data.List
 import qualified Config
 
-import Control.Monad       ( when )
 import Control.Monad.Trans ( liftIO )
 
 newtype HoogleModule = HoogleModule ()
@@ -28,27 +27,24 @@ theModule = MODULE $ HoogleModule ()
 type HoogleState = [String]
 
 instance Module HoogleModule HoogleState where
-    moduleSticky   _ = False
     moduleDefState _ = return []
-
-    moduleHelp _ _ = "@hoogle <expr>, Haskell API Search for either names, or types."
     moduleCmds   _ = ["hoogle", "hoogle+"]
+    moduleHelp _ _ = "@hoogle <expr>, Haskell API Search for either names, or types."
 
-    process _ _ src "hoogle" s = do 
+    process _ _ _ "hoogle" s = do 
         o <- liftIO $ hoogle s
         let (this,that) = splitAt 3 o
         writeMS that
-        ircPrivmsg src (unlines this)
+        return [unlines this]
 
-    process  _ _ src "hoogle+" _ = do
+    process  _ _ _ "hoogle+" _ = do
         this <- withMS $ \st write -> do
                         let (this,that) = splitAt 3 st
                         write that
                         return this
-        when (not . null $ this) $
-                ircPrivmsg src (unlines this)
+        return [unlines this]
 
-    process _ _ _ _ _ = error "HoogleModule: invalid command"
+------------------------------------------------------------------------
 
 hoogleBinary :: FilePath
 hoogleBinary = Config.hooglePath Config.config </> "hoogle"

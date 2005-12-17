@@ -22,42 +22,43 @@ type Karma m a = ModuleT KarmaState m a
 instance Module KarmaModule KarmaState where
 
     moduleCmds _ = ["karma", "karma+", "karma-"]
-
     moduleHelp _ "karma"  = "return a person's karma value"
     moduleHelp _ "karma+" = "increment someone's karma"
     moduleHelp _ "karma-" = "decrement someone's karma"
-    moduleHelp m _        = moduleHelp m "karma"
 
     moduleDefState  _ = return $ M.empty
     moduleSerialize _ = Just mapSerial
 
-    process      _ msg target cmd rest =
+    process      _ msg _ cmd rest =
         case words rest of
-	  []       -> tellKarma target sender sender
+          []       -> tellKarma sender sender
           (nick:_) -> do
               case cmd of
-                 "karma"  -> tellKarma        target sender nick
-                 "karma+" -> changeKarma 1    target sender nick
-                 "karma-" -> changeKarma (-1) target sender nick
+                 "karma"  -> tellKarma        sender nick
+                 "karma+" -> changeKarma 1    sender nick
+                 "karma-" -> changeKarma (-1) sender nick
                  _        -> error "KarmaModule: can't happen"
-	where sender = IRC.nick msg
+        where sender = IRC.nick msg
+
+------------------------------------------------------------------------
 
 getKarma :: String -> KarmaState -> Integer
 getKarma nick karmaFM = fromMaybe 0 (M.lookup nick karmaFM)
 
-tellKarma :: String -> String -> String -> Karma LB ()
-tellKarma target sender nick = do
+tellKarma :: String -> String -> Karma LB [String]
+tellKarma sender nick = do
     karma <- getKarma nick `fmap` readMS
-    ircPrivmsg target $ (if sender == nick then "You have" else nick ++ " has")
-      ++ " a karma of " ++ show karma
+    return [concat [if sender == nick then "You have" else nick ++ " has"
+                   ," a karma of "
+                   ,show karma]]
 
-changeKarma :: Integer -> String -> String -> String -> Karma LB ()
-changeKarma km target sender nick
-  | sender == nick = ircPrivmsg target "You can't change your own karma, silly."
+changeKarma :: Integer -> String -> String -> Karma LB [String]
+changeKarma km sender nick
+  | sender == nick = return ["You can't change your own karma, silly."]
   | otherwise      = withMS $ \fm write -> do
       let fm' = M.insertWith (+) nick km fm
       let karma = getKarma nick fm'
       write fm'
-      ircPrivmsg target $ fmt nick km (show karma)
+      return [fmt nick km (show karma)]
           where fmt n v k | v < 0     = n ++ "'s karma lowered to " ++ k ++ "."
                           | otherwise = n ++ "'s karma raised to " ++ k ++ "."

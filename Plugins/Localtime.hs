@@ -1,5 +1,9 @@
 --
+-- Copyright (c) 2005 Don Stewart - http://www.cse.unsw.edu.au/~dons
+-- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
+--
 -- | Simple wrapper over privmsg to get time information via the CTCP
+--
 --
 module Plugins.Localtime (theModule) where
 
@@ -26,7 +30,8 @@ instance Module LocaltimeModule TimeMap where
         let (whoToPing,_) = break (== ' ') rawWho
         modifyMS $ \st -> M.insertWith (++) whoToPing [whoAsked] st
         -- this is a CTCP time call, which returns a NOTICE
-        ircPrivmsg' whoToPing "\^ATIME\^A" 
+        ircPrivmsg' whoToPing "\^ATIME\^A"      -- has to be raw
+        return []
 
   -- the Base module caught the NOTICE TIME, mapped it to a PRIVMGS, and here it is :)
   process _ _ _ "localtime-reply" text = do
@@ -40,5 +45,6 @@ instance Module LocaltimeModule TimeMap where
                           return xs
     let msg = "Local time for " ++ whoGotPinged ++ " is " ++ time
     flip mapM_ targets $ flip ircPrivmsg' msg
+    return []
 
   process _ _ _ _ _ = error "unknown function"

@@ -68,66 +68,58 @@ instance Module EvalModule EvalState where
        (fuel, env, defns) <- readGS
        res <- readPS target
        case cmd of
-            "lambda" -> do 
-                 let r_or_s = evaluate rest env fuel
-                 case r_or_s of
-                    Right s -> do writeRes Nothing
-                                  ircPrivmsg target s
-                    Left nr -> do writeRes $ Just nr
-                                  ircPrivmsg target outOfFuelMsg
+        "lambda" -> do 
+             let r_or_s = evaluate rest env fuel
+             case r_or_s of
+                Right s -> writeRes Nothing   >> return [s]
+                Left nr -> writeRes (Just nr) >> return [outOfFuelMsg]
 
-            "define" -> 
-                let rslt = define defn
-                    (name,defn) = break (' '==) rest 
-                in case rslt of
-                        Left s  -> ircPrivmsg target s
-                        Right v -> withGS $ \(fuel', env', defns') writer -> do
-                          writer (fuel', 
-                                  M.insert name v env',
-                                  M.insert name defn defns')
-                          ircPrivmsg target (name ++ " defined")
+        "define" -> 
+            let rslt = define defn
+                (name,defn) = break (' '==) rest 
+            in case rslt of
+                    Left s  -> return [s]
+                    Right v -> do
+                      withGS $ \(fuel', env', defns') writer -> do
+                          writer (fuel', M.insert name v env', 
+                                         M.insert name defn defns')
+                      return [name ++ " defined"]
 
-            "definitions" -> 
-                let names = M.keys defns 
-                in if null rest 
-                    then ircPrivmsg target (unlines $ map show $
-                                           groupBy (\(x:_) (y:_) -> x == y) $ names)
-                    else ircPrivmsg target $ show 
-                                [x | x <- sort names, rest `isPrefixOf` x]
+        "definitions" -> 
+            let names = M.keys defns 
+            in return . (:[]) $ if null rest 
+                then unlines $ map show $
+                                       groupBy (\(x:_) (y:_) -> x == y) $ names
+                else show [x | x <- sort names, rest `isPrefixOf` x]
 
-            "get-definition" -> 
-                let defn = M.lookup rest defns 
-                    out = maybe (rest++" not defined") ((rest++" =")++) defn
-                in ircPrivmsg target out
+        "get-definition" -> 
+            let defn = M.lookup rest defns 
+                out = maybe (rest++" not defined") ((rest++" =")++) defn
+            in return [out]
 
-            "set-fuel" -> case readM rest of
-                Nothing -> ircPrivmsg target "not a number"
-                Just x  -> case x > 0 && x <= maxFuel of
-                    True  -> do 
-                        writeGS (x,env,defns)
-                        ircPrivmsg target $ "fuel set to "++show x
-                    False -> ircPrivmsg target $ "can't set fuel above "++show maxFuel
+        "set-fuel" -> case readM rest of
+            Nothing -> return ["Not a number"]
+            Just x  -> if x > 0 && x <= maxFuel 
+                        then do writeGS (x,env,defns)
+                                return ["Fuel set to "++show x]
+                        else return ["Can't set fuel above "++show maxFuel]
 
-            "del-definition" -> case words rest of
-                [] -> return ()
-                (d:_) -> withGS $ \(fuel',env',defns') writer -> do
-                    writer (fuel',
-                            M.delete d env',
-                            M.delete d defns')
-                    ircPrivmsg target $ d++" removed"
+        "del-definition" -> case words rest of
+            (d:_) -> do
+                withGS $ \(fuel',env',defns') writer -> 
+                    writer (fuel', M.delete d env', M.delete d defns')
+                return [d++" removed"]
+            _ -> return []
 
-            "resume" -> case res of
-                Nothing -> return ()
-                Just r -> case resume r fuel of
-                        Left nr -> do
-                            writeRes $ Just nr
-                            ircPrivmsg target outOfFuelMsg
-                        Right s -> do
-                            writeRes Nothing
-                            ircPrivmsg target s
-
-            _       -> ircPrivmsg target ("unknown command: "++cmd)
-
+        "resume" -> case res of
+            Nothing -> return []
+            Just r -> case resume r fuel of
+                    Left nr -> do
+                        writeRes $ Just nr
+                        return [outOfFuelMsg]
+                    Right s -> do
+                        writeRes Nothing
+                        return [s]
 
 --
 -- this is so ugly (at least it's only init)

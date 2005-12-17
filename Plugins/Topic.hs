@@ -39,53 +39,45 @@ instance Module TopicModule () where
                    "topic-cons", "topic-snoc",
                    "topic-tail", "topic-init", "topic-null"]
 
-  process _ _ src "topic-cons" text =
-      alterTopic src chan (topic_item :)
-	  where (chan, topic_item) = splitFirstWord text
-  process _ _ src "topic-snoc" text =
-      alterTopic src chan (snoc topic_item)
-          where (chan, topic_item) = splitFirstWord text
+  process _ _ _ "topic-cons" text = alterTopic chan (topic_item :)
+        where (chan, topic_item) = splitFirstWord text
 
-  process _ _ src "topic-tail" chan = alterTopic src chan tail
-  process _ _ src "topic-init" chan = alterTopic src chan init
-  process _ _ _   "topic-null" chan = send $ IRC.setTopic chan "[]"
+  process _ _ _ "topic-snoc" text = alterTopic chan (snoc topic_item)
+        where (chan, topic_item) = splitFirstWord text
 
-  process _ _ src "topic-tell" chan =
-      lookupTopic chan (\maybetopic ->
+  process _ _ _ "topic-tail" chan = alterTopic chan tail
+  process _ _ _ "topic-init" chan = alterTopic chan init
+  process _ _ _ "topic-null" chan = send (IRC.setTopic chan "[]") >> return []
+  process _ _ _ "topic-tell" chan = lookupTopic chan $ \maybetopic ->
         case maybetopic of
-	  Just x  -> ircPrivmsg src x
-	  Nothing -> ircPrivmsg src "do not know that channel")
-
-  process _ _ src cmd _
-    = ircPrivmsg src ("Bug! someone forgot the handler for \""++cmd++"\"")
+            Just x  -> return [x]
+            Nothing -> return ["Do not know that channel"]
 
 -- | 'lookupTopic' Takes a channel and a modifier function f. It then
 --   proceeds to look up the channel topic for the channel given, returning
 --   Just t or Nothing to the modifier function which can then decide what
 --   to do with the topic
-lookupTopic :: String -- ^ Channel
-	    -> (Maybe String -> LB ()) -- ^ Modifier function
-	    -> LB ()
-lookupTopic chan f =
-  do maybetopic <- gets (\s -> M.lookup (mkCN chan) (ircChannels s))
-     f maybetopic
+lookupTopic :: String                        -- ^ Channel
+            -> (Maybe String -> LB [String]) -- ^ Modifier function
+            -> LB [String]
+lookupTopic chan f = gets (\s -> M.lookup (mkCN chan) (ircChannels s)) >>= f
 
 -- | 'alterTopic' takes a sender, a channel and an altering function.
 --   Then it alters the topic in the channel by the altering function,
 --   returning eventual problems back to the sender.
-alterTopic :: String                 -- ^ Sender
-	   -> String                 -- ^ Channel
-	   -> ([String] -> [String]) -- ^ Modifying function
-	   -> LB ()
-alterTopic source chan f =
+alterTopic :: String                 -- ^ Channel
+           -> ([String] -> [String]) -- ^ Modifying function
+           -> LB [String]
+alterTopic chan f =
   let p maybetopic =
         case maybetopic of
           Just x -> case reads x of
-                [(xs, "")] -> send $ IRC.setTopic chan (show $ f $ xs)
+                [(xs, "")] -> do send $ IRC.setTopic chan (show $ f $ xs)
+                                 return []
                 [(xs, r)] | length r <= 2
-                  -> do ircPrivmsg source $ "ignoring bogus characters: " ++ r
-                        send $ IRC.setTopic chan (show $ f $ xs)
-                _ -> ircPrivmsg source
-                         "Topic does not parse. Should be of the form [\"...\",...,\"...\"]"
-          Nothing -> ircPrivmsg source ("I do not know the channel " ++ chan)
+                  -> do send $ IRC.setTopic chan (show $ f $ xs)
+                        return ["ignoring bogus characters: " ++ r]
+
+                _ -> return ["Topic does not parse. Should be of the form [\"...\",...,\"...\"]"]
+          Nothing -> return ["I do not know the channel " ++ chan]
    in lookupTopic chan p

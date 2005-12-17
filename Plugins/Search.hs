@@ -34,15 +34,15 @@ instance Module SearchModule () where
          _           -> "module for doing searches"
 
     moduleCmds   _ = map fst engines
-    process _ _ src cmd rest = searchCmd cmd src (dropSpace rest)
+    process _ _ _ cmd rest = searchCmd cmd (dropSpace rest)
 
 ------------------------------------------------------------------------
 
-searchCmd :: String -> String -> String -> LB ()
-searchCmd _ src [] = ircPrivmsg src "Empty search."
-searchCmd engine src rest = do
+searchCmd :: String -> String -> LB [String]
+searchCmd _ []        = return ["Empty search."]
+searchCmd engine rest = do
         result <- liftIO $ query engine rest
-        ircPrivmsg' src (extractLoc result)
+        return [extractLoc result] -- ?
 
 queryUrl :: String -> String -> String
 queryUrl engine q = prefix ++ urlEncode q ++ suffix

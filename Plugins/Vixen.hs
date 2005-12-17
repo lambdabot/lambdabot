@@ -21,25 +21,18 @@ theModule :: MODULE
 theModule = MODULE $ VixenModule ()
 
 instance Module VixenModule (String -> IO String) where
-    moduleSticky _ = False
+    moduleCmds   _       = ["vixen"]
+    moduleHelp _ _       = "sergeant curry's lonely hearts club"
+    moduleDefState _     = return $ mkVixen
+    process _ _ _ _ rest = vixenCmd rest
 
-    moduleHelp _ s = case s of
-             "vixenlove" -> "talk to me, big boy"
-             _           -> "sergeant curry's lonely hearts club"
+vixenCmd :: String -> ModuleLB (String -> IO String)
+vixenCmd rest = do 
+    responder <- readMS
+    result    <- liftIO $  responder rest
+    return [result]
 
-    moduleDefState _ = return $ mkVixen
-
-    moduleCmds     _ = ["vixen"]
-    process _ _ src cmd rest = case cmd of
-               "vixen" -> vixenCmd src rest
-               _       -> error "vixen error: i'm just a girl!"
-
-vixenCmd :: String -> String -> ModuleT (String -> IO String) LB ()
-vixenCmd src rest = do 
-	responder <-  readMS
-        result <- liftIO $  responder rest
-        ircPrivmsg src result
-
+------------------------------------------------------------------------
 
 mkVixen :: String -> IO String
 mkVixen question = vixen (mkResponses state) question

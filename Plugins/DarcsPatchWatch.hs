@@ -144,13 +144,13 @@ instance Module DarcsPatchWatch DarcsPatchWatchState where
     process _ _ _ cmd rest = case cmd of
          "repos"       -> printRepos rest
          "repo-add"    -> addRepo rest
-         "repo-del"    -> delRepo source rest
+         "repo-del"    -> delRepo rest
 
 --
 -- Configuration commands
 --
-printRepos :: String -> String -> DPW [String]
-printRepos [] = getRepos >>= showRepos >>= return . (:[])
+printRepos :: String -> DPW [String]
+printRepos [] = getRepos >>= return . (:[]) . showRepos
 printRepos _  = error "@todo given arguments, try @todo-add or @listcommands todo"
 
 addRepo :: String -> DPW [String]
@@ -158,7 +158,7 @@ addRepo rest | null (dropSpace rest) = return ["argument required"]
 addRepo rest = do
    x <- mkRepo rest
    case x of
-     Right r -> withRepos $ \repos setRepos -> case () of { _
+     Right r -> withRepos $ \repos setRepos -> case () of {_
             | length repos >= maxNumberOfRepos ->
                 return ["maximum number of repositories reached!"]
             | r `elem` repos ->
@@ -166,6 +166,8 @@ addRepo rest = do
             | otherwise -> 
                 do setRepos (r:repos)
                    return ["repository " ++ showRepo r ++ " added"]
+            }
+
      Left s  -> return ["cannot add invalid repository: " ++ s]
 
 delRepo :: String -> DPW [String]

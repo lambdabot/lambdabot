@@ -22,17 +22,16 @@ theModule = MODULE $ DictModule ()
 instance Module DictModule () where
     moduleHelp _ _ = getHelp []
     moduleCmds _   = "dict" : "dict-help" : dictNames
-    process _ _ target "dict" _ = do
-        ircPrivmsg target quickHelp
-    process _ _ target "dict-help" rest = do
-        ircPrivmsg target (getHelp (words rest))
-    process _ _ target cmd rest = do
+
+    process _ _ _ "dict" _         = return [quickHelp]
+    process _ _ _ "dict-help" rest = return [getHelp (words rest)]
+    process _ _ _ cmd rest = do
         results <- mapM doLookup (parseTerms rest)
-        ircPrivmsg target (concat results)
-        where
+        return [concat results]
+      where
         doLookup w = liftIO $ do
             result <- lookupFn w
-            return $ either ("ERROR: " ++) id result
+            return $ either ("Error: " ++) id result
         lookupFn = uncurry Dict.simpleDictLookup . fst $
                    fromJust (lookup cmd dictTable)
 

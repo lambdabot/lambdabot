@@ -1,5 +1,5 @@
 --
--- | Persistent state
+-- | Skeletal paste support
 --
 module Plugins.Paste (theModule) where
 
@@ -14,16 +14,14 @@ theModule :: MODULE
 theModule = MODULE $ PasteModule ()
 
 announceTarget :: String
-announceTarget = "#haskell"
+announceTarget = "#haskell" -- hmm :/
 
 instance Module PasteModule ThreadId where
-    moduleCmds      _ = []
-    moduleInit      _ = do
+    moduleInit _ = do
       tid <- lbIO (\conv -> 
         forkIO $ pasteListener $ conv . ircPrivmsg announceTarget)
       writeMS tid
-    moduleExit      _ = liftIO . killThread =<< readMS
-    process _ _ _ _ _ = return ()
+    moduleExit _ = liftIO . killThread =<< readMS
 
 
 -- | Implements a server that listens for pastes from a paste script.

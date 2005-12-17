@@ -1,7 +1,7 @@
 --
 -- Copyright (c) 2005 Simon Winwood
--- Copyright (c) 2004 Thomas Jaeger
 -- Copyright (c) 2005 Don Stewart - http://www.cse.unsw.edu.au/~dons
+-- Copyright (c) 2004 Thomas Jaeger
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
 --
 -- | Logging an IRC channel..
@@ -89,24 +89,23 @@ import ErrorUtils          (tryError)
 Over all channels?  Maybe we want to intersect this with channels we are interested in.
 
 >    moduleInit _        = mapM_ (\(t, f) -> ircSignalConnect t $ liftC f) 
->		             [("PRIVMSG", msgCB), ("JOIN", joinCB), ("PART", quitCB), ("QUIT", quitCB), ("NICK", nickCB)]
->	       where 
+>                            [("PRIVMSG", msgCB), ("JOIN", joinCB), ("PART", quitCB), ("QUIT", quitCB), ("NICK", nickCB)]
+>              where 
 >              liftC f = withLogMS $ \msg ct -> withValidLogW (f msg ct) ct (head $ IRC.channels msg)
     
 >    process _ msg target "last" rest = showHistory msg target rest
->    process _ _   target _ _rest = ircPrivmsg target "Implement me"
 
 FIXME --- we only do this for one channel.  Maybe allow an extra argument?
 
-> showHistory :: IRC.Message -> String -> String -> ModuleT LogState LB () 
-> showHistory msg target args = do
->			fm <- readMS
->			ircPrivmsg target . unlines . reverse $ map show $ take nLines (lines' fm)
+> showHistory :: IRC.Message -> String -> String -> ModuleLB LogState
+> showHistory msg _ args = do
+>                       fm <- readMS
+>                       return [unlines . reverse $ map show $ take nLines (lines' fm)]
 >     where
 >     nLines = case argsS of { _:y:_ -> read y; _ -> defaultNLines }
 >     lines' fm = case argsS of 
->		    x:_ -> filterNick x $ history fm
->		    _   -> history fm
+>                   x:_ -> filterNick x $ history fm
+>                   _   -> history fm
 >     history fm = fromMaybe [] $ M.lookup chan fm >>= \(_, _, his) -> return his
 >     argsS = words args
 >     chan = head $ IRC.channels msg
@@ -118,8 +117,8 @@ FIXME --- we only do this for one channel.  Maybe allow an extra argument?
 > cleanLogState :: LogModule -> ModuleT LogState LB ()
 > cleanLogState  _ = 
 >     withMS $ \state writer -> do
->			liftIO $ M.fold (\(hdl, _, _) iom -> iom >> hClose hdl) (return ()) state
->			writer M.empty
+>                       liftIO $ M.fold (\(hdl, _, _) iom -> iom >> hClose hdl) (return ()) state
+>                       writer M.empty
 
 | Takes a state manipulation monad and executes it on the current
   state (and then updates it)
@@ -127,10 +126,10 @@ FIXME --- we only do this for one channel.  Maybe allow an extra argument?
 > withLogMS :: (IRC.Message -> ClockTime -> Log a) -> IRC.Message -> ModuleT LogState LB a
 > withLogMS f msg = 
 >     withMS $ \state writer -> do
->			ct <- liftIO getClockTime
->			(r, ls) <- runStateT (f msg ct) state
->			writer ls
->		        return r
+>                       ct <- liftIO getClockTime
+>                       (r, ls) <- runStateT (f msg ct) state
+>                       writer ls
+>                       return r
 
 > openChannelFile :: Channel -> ClockTime -> Log Handle
 > openChannelFile chan ct = 
@@ -142,37 +141,37 @@ FIXME --- we only do this for one channel.  Maybe allow an extra argument?
 
 > ifChannel :: Channel -> Log a -> Log a -> Log a
 > ifChannel chan opT opF = do 
->		   b <- gets (M.member chan :: LogState -> Bool) 
->		   if b then opT else opF
+>                  b <- gets (M.member chan :: LogState -> Bool) 
+>                  if b then opT else opF
 
 > whenChannel :: Channel -> (Handle -> DateStamp -> History -> Bool) -> Log a -> Log a -> Log a
 > whenChannel chan f opT opF = do
->		       (h, d, his) <- join $ gets (M.lookup chan)				    
->		       if (f h d his) then opT else opF
+>                      (h, d, his) <- join $ gets (M.lookup chan)                                   
+>                      if (f h d his) then opT else opF
 
 | This function initialises the channel state (if it not already inited)
 
 > initChannelMaybe :: String -> ClockTime -> Log ()
-> initChannelMaybe chan ct = ifChannel chan (return ()) $ do 	     
->		hdl <- openChannelFile chan ct
->	        modify (M.insert chan (hdl, date, []))
+> initChannelMaybe chan ct = ifChannel chan (return ()) $ do         
+>               hdl <- openChannelFile chan ct
+>               modify (M.insert chan (hdl, date, []))
 >      where
 >      date = dateStamp ct
 
 > {-
 > closeChannel :: Channel -> Log ()
 > closeChannel chan = do 
->	      (hdl, _, _) <- join $ gets (M.lookup chan)
->	      liftIO $ hClose hdl
->	      modify (M.delete chan)
+>             (hdl, _, _) <- join $ gets (M.lookup chan)
+>             liftIO $ hClose hdl
+>             modify (M.delete chan)
 > -}
 
 > reopenChannelMaybe :: Channel -> ClockTime -> Log ()
 > reopenChannelMaybe chan ct = whenChannel chan (\_ d _ -> d == date) (return ()) $ do 
->	      (hdl, _, _) <- join $ gets (M.lookup chan)
->	      liftIO $ hClose hdl
->	      hdl' <- openChannelFile chan ct
->	      modify (M.adjust (\ (_, _, his) -> (hdl', date, his)) chan)
+>             (hdl, _, _) <- join $ gets (M.lookup chan)
+>             liftIO $ hClose hdl
+>             hdl' <- openChannelFile chan ct
+>             modify (M.adjust (\ (_, _, his) -> (hdl', date, his)) chan)
 >      where
 >      date = dateStamp ct
 
@@ -180,12 +179,12 @@ FIXME --- we only do this for one channel.  Maybe allow an extra argument?
 
 > withValidLog :: (Handle -> History -> LB (History, a)) -> ClockTime -> Channel -> Log a
 > withValidLog f ct chan = do 
->		   initChannelMaybe chan ct
->		   reopenChannelMaybe chan ct
->		   (hdl, date, history) <- join $ gets (M.lookup chan)
->		   (history', rv) <- lift $ f hdl history
->		   modify (M.insert chan (hdl, date, history'))
->		   return rv
+>                  initChannelMaybe chan ct
+>                  reopenChannelMaybe chan ct
+>                  (hdl, date, history) <- join $ gets (M.lookup chan)
+>                  (history', rv) <- lift $ f hdl history
+>                  modify (M.insert chan (hdl, date, history'))
+>                  return rv
 
 > {-
 > withValidLogR :: (Handle -> History -> LB a) ->  ClockTime -> Channel -> Log a
@@ -214,7 +213,7 @@ FIXME --- we only do this for one channel.  Maybe allow an extra argument?
 
 > timeStamp :: ClockTime -> String
 > timeStamp ct = let cal = toUTCTime ct in 
->		   (showWidth 2 $ ctHour cal) ++ ":" ++ (showWidth 2 $ ctMin cal) ++ ":" ++ (showWidth 2 $ ctSec cal)
+>                  (showWidth 2 $ ctHour cal) ++ ":" ++ (showWidth 2 $ ctMin cal) ++ ":" ++ (showWidth 2 $ ctSec cal)
 
 > dateStamp :: ClockTime -> DateStamp
 > dateStamp ct = let cal = toUTCTime ct in (ctDay cal, ctMonth cal, ctYear cal)
@@ -226,8 +225,8 @@ FIXME --- we only do this for one channel.  Maybe allow an extra argument?
 
 > joinCB :: IRC.Message -> ClockTime -> Handle -> History -> LB History
 > joinCB msg ct hdl his = do
->		 logString hdl $ show new
->		 return $ new : his
+>                logString hdl $ show new
+>                return $ new : his
 >     where
 >     new  = Joined nick ct
 >     nick = IRC.nick msg
@@ -236,8 +235,8 @@ FIXME --- we only do this for one channel.  Maybe allow an extra argument?
 
 > quitCB :: IRC.Message -> ClockTime -> Handle -> History -> LB History
 > quitCB msg ct hdl his = do
->		 logString hdl $ show new
->		 return $ new : his
+>                logString hdl $ show new
+>                return $ new : his
 >     where
 >     new  = Parted nick ct
 >     nick = IRC.nick msg
@@ -246,8 +245,8 @@ FIXME --- we only do this for one channel.  Maybe allow an extra argument?
 
 > nickCB :: IRC.Message -> ClockTime -> Handle -> History -> LB History
 > nickCB msg ct hdl his = do
->		 logString hdl $ show new
->		 return $ new : his
+>                logString hdl $ show new
+>                return $ new : his
 >     where
 >     new  = Renick nick ct newnick
 >     nick = IRC.nick msg
@@ -257,8 +256,8 @@ FIXME --- we only do this for one channel.  Maybe allow an extra argument?
 
 > msgCB :: IRC.Message -> ClockTime -> Handle -> History -> LB History
 > msgCB msg ct hdl his = do
->		 logString hdl $ show new
->		 return $ new : his
+>                logString hdl $ show new
+>                return $ new : his
 >     where
 >     new  = Said nick ct said
 >     nick = IRC.nick msg

@@ -19,15 +19,9 @@ theModule :: MODULE
 theModule = MODULE $ DiceModule ()
 
 instance Module DiceModule () where
-  moduleSticky _ = False
-
-  moduleHelp _ s = case s of
-        "dice" -> "@dice <expr>. Throw dice. <expr> of the form 3d6+2."
-        _      -> "dice module"
-
   moduleCmds   _ = ["dice"]
-  process _ _ src "dice" rest = ircPrivmsg src =<< liftIO (dice rest)
-  process _ _ _    _     _    = error "Dice: invalid command"
+  moduleHelp _ _ = "@dice <expr>. Throw dice. <expr> of the form 3d6+2."
+  process _ _ _ _ xs = liftIO (dice xs) >>= return . (:[])
 
 dice :: String -> IO String
 dice str = case parse expr "dice" (filter (not.isSpace) str) of

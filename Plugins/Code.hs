@@ -46,7 +46,7 @@ instance Module CodeModule [FilePath] where
   moduleHelp _ _ = "@code, print random line of code from $fptools"
   moduleCmds   _ = [ "code" ]
 
-  process _ _ src "code" _ = do
+  process _ _ _ "code" _ = do
         fs   <- readMS
         (file,line) <- liftIO $ do 
                     f    <- stdGetRandItem fs
@@ -57,7 +57,7 @@ instance Module CodeModule [FilePath] where
                     return (f, (dropSpace . expandTab $ l))
 
         -- dump raw output
-        return [src $ (basename file) ++ ": " ++ line]
+        return [basename file ++ ": " ++ line]
 
 --
 -- work out our list of potential source files

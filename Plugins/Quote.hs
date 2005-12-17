@@ -16,19 +16,20 @@ theModule :: MODULE
 theModule = MODULE $ QuoteModule ()
 
 instance Module QuoteModule () where
+    moduleCmds           _ = ["fortune","yow","arr"]
     moduleHelp _ "fortune" = "Provide a random fortune"
     moduleHelp _ "yow"     = "Yow!"
     moduleHelp _ "arr"     = "Talk to a pirate"
-    moduleHelp _ _         = "The quote module provides random quotes"
-    moduleCmds           _ = ["fortune","yow","arr"]
 
-    process      _ _ target cmd _
+    process      _ _ _ cmd _
       = do quote <- liftIO $ case cmd of
                       "fortune" -> randFortune Nothing
                       "yow"     -> randFortune (Just "zippy")
                       "arr"     -> arrRandom
                       _ -> error "QuoteModule: bad string"
-           ircPrivmsg target quote
+           return [quote]
+
+------------------------------------------------------------------------
 
 -- | Return a random arr-quote
 arrRandom :: IO String

@@ -79,12 +79,12 @@ help = "@quote <nick>/@quote-add <nick> <quote>\n" ++
 --
 -- TODO add range/context. i.e. !f-3 or 5-4
 --
-run_babel :: String -> LB (Maybe [String])
+run_babel :: String -> LB [String]
 run_babel s = do
         let cmd = split ' ' 3 s
         msg <- run_babel' cmd
         let msg' = map ("  " ++) msg
-        return $ Just [unlines msg']
+        return [unlines msg']
 
 -- help msg
 run_babel' :: (MonadIO m) => [String] -> m [String]
@@ -167,7 +167,7 @@ run_remember str = do
       let ss  = fromMaybe [] (M.lookup (P.pack name) fm)
           fm' = M.insert (P.pack name) (P.pack q : ss) fm
       writer fm'
-    return Nothing
+    return []
 
 --
 --  the @quote command, takes a user name to choose a random quote from
@@ -183,9 +183,9 @@ run_quote name = do
                else do (nm',rs') <- liftIO $ stdGetRandItem (M.toList fm) -- random person
                        return (nm', Just rs')
     case qs of
-        Nothing   -> return $ Just [P.unpack nm ++ " hasn't said anything memorable"]
+        Nothing   -> return [P.unpack nm ++ " hasn't said anything memorable"]
         Just msgs -> do msg <- liftIO $ stdGetRandItem msgs
-                        return $ Just $ if not (P.null pnm)
+                        return $ if not (P.null pnm)
                             then ["  " ++ (P.unpack msg)]
                             else [(P.unpack nm)++" says: " ++ (P.unpack msg)]
 

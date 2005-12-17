@@ -21,13 +21,12 @@ type HaddockState = M.Map P.FastString [P.FastString]
 instance Module HaddockModule HaddockState where
     moduleCmds      _ = ["index"]
     moduleDefState  _ = return M.empty
-    moduleSerialize _ = Just $ Serial {
-              deserialize = Just . readPacked,
-              serialize   = const Nothing }
-    process      _ _ target _ rest = do
+    moduleSerialize _ = Just $ Serial { deserialize = Just . readPacked
+                                      , serialize   = const Nothing }
+    process _ _ _ _ rest = do
        assocs <- readMS
-       ircPrivmsg target $ maybe "bzzt" (Util.concatWith ", " . (map P.unpack))
-		                        (M.lookup (P.pack (stripParens rest)) assocs)
+       return . (:[]) $ maybe "bzzt" (Util.concatWith ", " . (map P.unpack))
+                                     (M.lookup (P.pack (stripParens rest)) assocs)
 
 -- | make \@index ($) work.
 stripParens :: String -> String

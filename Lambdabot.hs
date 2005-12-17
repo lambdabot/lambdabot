@@ -25,6 +25,8 @@ module Lambdabot (
         ircLoad, ircUnload,
 
         clean, checkPrivs, mkCN, handleIrc, runIrc,
+
+        liftIO,
   ) where
 
 import qualified Config (config, name, admins, host, port, textwidth)
@@ -72,6 +74,7 @@ import Control.Concurrent
 import Control.Monad.Reader
 import Control.Monad.State
 import Control.Monad.Error (MonadError (..))
+import Control.Monad.Trans      ( liftIO )
 
 ------------------------------------------------------------------------
 
@@ -276,7 +279,7 @@ evalLB (LB lb) rws = do
 type ModuleT s m a = (?ref :: MVar s, ?name :: String) => m a
 
 -- | A nicer synonym for some ModuleT stuffs
-type ModuleLB m = ModuleT m LB (Maybe [String])
+type ModuleLB m = ModuleT m LB [String]
 
 -- Name !!!
 type ModState s a = (?ref :: MVar s, ?name :: String) => a
@@ -581,11 +584,11 @@ class Module m s | m -> s where
         -> String                           -- ^ target
         -> String                           -- ^ command
         -> String                           -- ^ the arguments to the command
-        -> ModuleT s LB (Maybe [String])    -- ^ maybe output
+        -> ModuleT s LB [String]            -- ^ maybe output
 
     --  -> ModuleT s LB ()                  -- ^ monad output
 
-    process  _ _ _ _ _ = return Nothing
+    process  _ _ _ _ _ = return []
     moduleHelp m _     = concat (map ('@':) (moduleCmds m))
     modulePrivs _      = []
     moduleCmds      _  = []

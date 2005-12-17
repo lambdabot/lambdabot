@@ -82,17 +82,18 @@ instance Module VoteModule VoteState where
     moduleDefState _  = return M.empty
     moduleSerialize _ = Just voteSerial
     
-    process _ _ target "poll-list" _ = do 
+    process _ _ _ "poll-list" _ = do 
         result <- withMS $ \factFM writer -> processCommand factFM writer "poll-list" []
-        ircPrivmsg target result
+        return [result]
 
-    process _ _ target _ [] = do 
-        result <- return  "Missing argument. Check @help <vote-cmd> for info."
-        ircPrivmsg target result
+    process _ _ _ _ [] =
+        return ["Missing argument. Check @help <vote-cmd> for info."]
 
-    process _ _ target cmd dat = do
+    process _ _ _ cmd dat = do
         result <- withMS $ \factFM writer -> processCommand factFM writer cmd (words dat)
-        ircPrivmsg target result
+        return [result]
+
+------------------------------------------------------------------------
 
 processCommand :: VoteState -> VoteWriter -> String -> [String] -> Vote LB String
 processCommand fm writer cmd dat = case cmd of

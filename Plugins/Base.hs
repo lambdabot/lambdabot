@@ -289,8 +289,8 @@ doPRIVMSG' myname msg
                     --      (process m msg towhere cmd' rest)
                             (do mstrs <- process m msg towhere cmd' rest
                                 case mstrs of
-                                    Nothing -> return ()
-                                    Just ss -> mapM_ (ircPrivmsg towhere) ss)
+                                    [] -> return ()
+                                    _  -> mapM_ (ircPrivmsg towhere) mstrs )
                                     -- todo, think about how to post-process...
 
                         unless ok $
