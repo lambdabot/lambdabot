@@ -22,6 +22,7 @@ instance Module DummyModule [String] where
   moduleCmds   _ = "moo" : map fst dummylst
   moduleHelp _ s = case s of
         "dummy"       -> "print a string constant"
+        "id"          -> "the identiy plugin"
         "wiki"        -> "wiki urls"
         "paste"       -> "paste page url"
         "docs"        -> "@docs <lib>, lookup the url for this library's documentation"
@@ -44,6 +45,8 @@ instance Module DummyModule [String] where
 
 dummylst :: [(String, String -> String)]
 dummylst = [("dummy",       \_ -> "dummy"),
+            -- todo more h4sh style functoins...
+            ("id",          id),
             ("get-shapr",   \_ -> "shapr!!"),
             ("eurohaskell", \_ -> unlines ["less talks, more code!",
                                            "http://www.haskell.org/hawiki/EuroHaskell",

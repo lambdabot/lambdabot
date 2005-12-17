@@ -293,8 +293,7 @@ doPRIVMSG' myname msg
                                     _  -> mapM_ (ircPrivmsg towhere) mstrs )
                                     -- todo, think about how to post-process...
 
-                        unless ok $
-                          ircPrivmsg towhere "Not enough privileges")
+                        unless ok $ ircPrivmsg towhere "Not enough privileges")
                 mapLB (timeout $ 15*1000*1000) act
                 return ()
               return ()
