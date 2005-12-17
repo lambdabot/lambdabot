@@ -24,10 +24,9 @@ instance Module ComposeModule () where
     moduleCmds _   = ["."]
     moduleHelp _ _ = "@. cmd2 cmd1 arg == cmd2 . cmd1 $ arg"
     process    _ a b _ args =
-        let (f,as) = break (==' ') args -- no error checking...
-            (g,bs) = break (==' ') tail as
-            xs     = tail bs
-        in doCompose (a,b) f g xs
+        case split " " args of
+            (f:g:xs) -> doCompose (a,b) f g (concat $ intersperse " " xs)
+            _        -> return ["Not enough arguments to @."]
 
 doCompose :: (Message, String) -> String -> String -> String -> LB [String]
 doCompose ms f g xs = do
