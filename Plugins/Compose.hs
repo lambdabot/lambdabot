@@ -12,10 +12,7 @@ module Plugins.Compose (theModule) where
 import Util
 import Lambdabot
 import Data.List
-import Control.Monad
 import Control.Monad.State
-
-import System.IO
 
 newtype ComposeModule = ComposeModule ()
 
