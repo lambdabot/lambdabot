@@ -285,7 +285,7 @@ doPRIVMSG' myname msg
                           True  -> checkPrivs msg
                         when ok $
                           handleIrc (ircPrivmsg towhere . 
-                              ((?name ++ "module failed: ") ++) )
+                              ((?name ++ " module failed: ") ++) )
                     --      (process m msg towhere cmd' rest)
                             (do mstrs <- process m msg towhere cmd' rest
                                 case mstrs of
