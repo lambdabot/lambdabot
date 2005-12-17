@@ -152,12 +152,12 @@ null x7 =
        Nil -> False
        Cons _ _ -> True
 exm :: Not (Not (Either a (Not a)))
-exm x10 = void (x10 (Right (\ c59 -> x10 (Left c59))))
+exm x1 = void (x1 (Right (\ c23 -> x1 (Left c23))))
 foo :: Not (c -> d) -> (Not (Not c), Not d)
-foo x10 =
-      (\ x13 -> void (x10 (\ c24 -> void (x13 c24))),
-       \ x22 -> x10 (\ _ -> x22))
+foo x1 =
+      (\ x4 -> void (x1 (\ c15 -> void (x4 c15))),
+       \ x13 -> x1 (\ _ -> x13))
 peirce :: Not (Not (((a -> b) -> a) -> a))
-peirce x10 =
-         void (x10 (\ c34 ->
-                    void (x10 (\ _ -> c34 (\ c88 -> void (x10 (\ _ -> c88)))))))
+peirce x1 =
+         void (x1 (\ c25 ->
+                   void (x1 (\ _ -> c25 (\ c37 -> void (x1 (\ _ -> c37)))))))

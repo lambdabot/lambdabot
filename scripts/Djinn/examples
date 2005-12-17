@@ -78,6 +78,8 @@ out :: List a -> ListN a (List a)
 in :: ListN a (List a) -> List a
 -- Strangely, it finds the null function
 null ? List a -> Bool
+:d out
+:d in
 
 -- Some fun with negation
 exm ? Not (Not (Either a (Not a)))

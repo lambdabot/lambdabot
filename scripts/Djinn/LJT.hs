@@ -171,8 +171,8 @@ instance Show AtomF where
 
 type AtomFs = [AtomF]
 
-findAtoms :: Symbol -> AtomFs -> P Term
-findAtoms s atoms = many [ p | AtomF p s' <- atoms, s == s' ]
+findAtoms :: Symbol -> AtomFs -> [Term]
+findAtoms s atoms = [ p | AtomF p s' <- atoms, s == s' ]
 
 addAtom :: AtomF -> AtomFs -> AtomFs
 addAtom a as = if a `elem` as then as else a : as
@@ -276,6 +276,7 @@ type Goal = Formula
 --
 redant :: MoreSolutions -> Antecedents -> AtomImps -> NestImps -> AtomFs -> Goal -> P Proof
 redant more antes atomImps nestImps atoms goal =
+    mtrace ("redant " ++ show (antes, atomImps, nestImps, atoms, goal)) $
     case antes of
     [] -> redsucc goal
     a:l -> redant1 a l goal
@@ -346,14 +347,28 @@ redant more antes atomImps nestImps atoms goal =
 
 	-- Reduce an atomic implication
 	redantimpatom :: Term -> Symbol -> Formula -> Antecedents -> Goal -> P Proof
-	redantimpatom p s b l g = (do
-	    a <- cutSearch more $ findAtoms s atoms
-	    x <- newSym "x"
-	    gp <- redant1 (A (Var x) b) l g
-	    subst (applyAtom p a) x gp)
-	  `mplus`
-	    redant more l (insert atomImps (AtomImp s [A p b])) nestImps atoms g
-
+	redantimpatom p s b l g = 
+	  do
+            a <- cutSearch more $ many (findAtoms s atoms)
+            x <- newSym "x"
+            gp <- redant1 (A (Var x) b) l g
+            mtrace "redantimpatom: LLL" $
+             subst (applyAtom p a) x gp
+          `mplus`
+            (mtrace "redantimpatom: RRR" $
+             redant more l (insert atomImps (AtomImp s [A p b])) nestImps atoms g)
+{-
+	    let ps = findAtoms s atoms
+	    in  if not (null ps) then do
+		    a <- cutSearch more $ many ps
+		    x <- newSym "x"
+		    gp <- redant1 (A (Var x) b) l g
+		    mtrace "redantimpatom: LLL" $
+		     subst (applyAtom p a) x gp
+		else
+		    mtrace "redantimpatom: RRR" $
+		     redant more l (insert atomImps (AtomImp s [A p b])) nestImps atoms g
+-}
 	-- Reduce the goal, with all antecedents already being classified
 	redsucc :: Goal -> P Proof
 	redsucc g =
@@ -362,7 +377,7 @@ redant more antes atomImps nestImps atoms goal =
 
 	redsucc' :: Goal -> P Proof
 	redsucc' a@(PVar s) =
-	    cutSearch more $ findAtoms s atoms
+	    cutSearch more $ many (findAtoms s atoms)
 	  `mplus`
 	    -- The posin check is an optimization.  It gets a little slower without the test.
 	    if posin s atomImps nestImps then
