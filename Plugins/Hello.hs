@@ -11,6 +11,6 @@ theModule :: MODULE
 theModule = MODULE $ HelloModule ()
 
 instance Module HelloModule where
-    commands     _ = ["hello","goodbye"]
-    process _ _ target _ rest = ircPrivmsg target ("Hello world. " ++ rest)
+    commands _    = ["hello","goodbye"]
+    process_ _ xs = return ["Hello world. " ++ xs]
 

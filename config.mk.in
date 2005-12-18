@@ -13,8 +13,9 @@ GHC=            @WithGhc@
 
 # We turn of the incomplete patterns, as it complains on a lot of Module
 # instances that we know are perfectly ok, due to the dispatch mechanism
-HC_OPTS=        -Wall -Werror -fno-warn-incomplete-patterns -I. -cpp -fglasgow-exts
+HC_OPTS=        -Wall -Werror -I. -cpp -fglasgow-exts
 HC_OPTS+=       -funbox-strict-fields -O -fasm
+HC_OPTS+=       -fno-warn-incomplete-patterns -fno-warn-missing-methods
 #HC_OPTS+=       -Onot -H64m
 
 #HC_OPTS+=      -debug 

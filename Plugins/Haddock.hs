@@ -23,7 +23,7 @@ instance Module HaddockModule HaddockState where
     moduleDefState  _ = return M.empty
     moduleSerialize _ = Just $ Serial { deserialize = Just . readPacked
                                       , serialize   = const Nothing }
-    process _ _ _ _ rest = do
+    process_ _ _ rest = do
        assocs <- readMS
        return . (:[]) $ maybe "bzzt" (Util.concatWith ", " . (map P.unpack))
                                      (M.lookup (P.pack (stripParens rest)) assocs)

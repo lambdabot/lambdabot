@@ -13,6 +13,8 @@ import Util
 import Lambdabot
 import Data.List
 import Control.Monad.State
+import Control.Monad.Error
+import GHC.IOBase   (Exception(NoMethodError))
 
 newtype ComposeModule = ComposeModule ()
 
@@ -21,7 +23,7 @@ theModule = MODULE $ ComposeModule ()
 
 instance Module ComposeModule () where
     moduleCmds _   = [".", "compose"]
-    moduleHelp _ _ = "@. f g xs == g xs >>= f"
+    moduleHelp _ _ = "@compose/@. is the composition of two plugins, where: . f g xs == g xs >>= f"
     process    _ a b _ args =
         case split " " args of
             (f:g:xs) -> do
@@ -34,16 +36,21 @@ instance Module ComposeModule () where
 
 -- | Compose two plugin functions
 compose :: (String -> LB [String]) -> (String -> LB [String]) -> (String -> LB [String])
-compose f g xs = g xs >>= f . concat
+compose f g xs = g xs >>= f . unlines
 
 ------------------------------------------------------------------------
 -- | Lookup the `process' method we're after, and apply it to the dummy args
+-- Fall back to process_ if there's no process.
 --
 lookupP :: (Message, String) -> String -> LB (String -> LB [String])
 lookupP (a,b) cmd = withModule ircCommands cmd
-    (error $ "No such command: " ++ show cmd)
+    (error $ "Parse error: " ++ show cmd) 
     (\m -> do
         privs <- gets ircPrivCommands -- no priv commands can be composed
         when (cmd `elem` privs) $ error "Privledged commands cannot be composed"
-        return $ process m a b cmd)
+        return $ \str -> catchError 
+                    (process m a b cmd str)
+                    (\ex -> case (ex :: IRCError) of 
+                                (IRCRaised (NoMethodError _)) -> process_ m cmd str
+                                _ -> throwError ex))
 

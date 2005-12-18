@@ -19,9 +19,9 @@ theModule :: MODULE
 theModule = MODULE $ DiceModule ()
 
 instance Module DiceModule () where
-  moduleCmds   _ = ["dice"]
-  moduleHelp _ _ = "@dice <expr>. Throw dice. <expr> of the form 3d6+2."
-  process _ _ _ _ xs = liftIO (dice xs) >>= return . (:[])
+    moduleCmds   _  = ["dice"]
+    moduleHelp _ _  = "@dice <expr>. Throw dice. <expr> of the form 3d6+2."
+    process_ _ _ xs = liftIO (dice xs) >>= return . (:[])
 
 dice :: String -> IO String
 dice str = case parse expr "dice" (filter (not.isSpace) str) of

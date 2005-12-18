@@ -39,7 +39,7 @@ instance Module WhereModule WhereState where
   moduleDefState  _ = return $ M.empty
   moduleSerialize _ = Just mapPackedSerial
 
-  process _ _ _ cmd rest = do
+  process_ _ cmd rest = do
         result <- withMS $ \factFM writer -> case words rest of
             []         -> return "@where <key>, return element associated with key"
             (fact:dat) -> processCommand factFM writer

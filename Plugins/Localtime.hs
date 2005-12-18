@@ -46,5 +46,3 @@ instance Module LocaltimeModule TimeMap where
     let msg = "Local time for " ++ whoGotPinged ++ " is " ++ time
     flip mapM_ targets $ flip ircPrivmsg' msg
     return []
-
-  process _ _ _ _ _ = error "unknown function"

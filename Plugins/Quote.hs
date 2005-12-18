@@ -21,13 +21,13 @@ instance Module QuoteModule () where
     moduleHelp _ "yow"     = "Yow!"
     moduleHelp _ "arr"     = "Talk to a pirate"
 
-    process      _ _ _ cmd _
-      = do quote <- liftIO $ case cmd of
-                      "fortune" -> randFortune Nothing
-                      "yow"     -> randFortune (Just "zippy")
-                      "arr"     -> arrRandom
-                      _ -> error "QuoteModule: bad string"
-           return [quote]
+    process_ _ cmd _ = do
+       quote <- liftIO $ case cmd of
+                  "fortune" -> randFortune Nothing
+                  "yow"     -> randFortune (Just "zippy")
+                  "arr"     -> arrRandom
+                  _ -> error "QuoteModule: bad string"
+       return [quote]
 
 ------------------------------------------------------------------------
 

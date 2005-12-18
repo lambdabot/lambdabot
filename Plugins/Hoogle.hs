@@ -31,13 +31,13 @@ instance Module HoogleModule HoogleState where
     moduleCmds   _ = ["hoogle", "hoogle+"]
     moduleHelp _ _ = "@hoogle <expr>, Haskell API Search for either names, or types."
 
-    process _ _ _ "hoogle" s = do 
+    process_ _ "hoogle" s = do 
         o <- liftIO $ hoogle s
         let (this,that) = splitAt 3 o
         writeMS that
         return [unlines this]
 
-    process  _ _ _ "hoogle+" _ = do
+    process_ _ "hoogle+" _ = do
         this <- withMS $ \st write -> do
                         let (this,that) = splitAt 3 st
                         write that

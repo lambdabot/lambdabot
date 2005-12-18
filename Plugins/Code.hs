@@ -41,12 +41,12 @@ theModule = MODULE $ CodeModule ()
 instance Module CodeModule [FilePath] where
 
   moduleDefState _ = liftIO $ getSourceFiles $ 
-  	fptoolsPath config </> "libraries" </> "base"
+        fptoolsPath config </> "libraries" </> "base"
 
   moduleHelp _ _ = "@code, print random line of code from $fptools"
   moduleCmds   _ = [ "code" ]
 
-  process _ _ _ "code" _ = do
+  process_ _ "code" _ = do
         fs   <- readMS
         (file,line) <- liftIO $ do 
                     f    <- stdGetRandItem fs

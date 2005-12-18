@@ -543,7 +543,8 @@ writerLoop threadmain chanw h
 ------------------------------------------------------------------------
 
 -- | The Module type class.
--- Minimal complete definition: @moduleHelp@, @moduleCmds@, @process@.
+-- Minimal complete definition: @moduleHelp@, @moduleCmds@, and 
+-- either @process@ or @process_@
 class Module m s | m -> s where
     -- | If the module wants its state to be saved, this function should
     --   return a Serial.
@@ -579,16 +580,21 @@ class Module m s | m -> s where
 
     -- | Process a command a user sent, the resulting string is draw in
     -- some fashion.
-    process         :: m                    -- ^ phantom
-        -> IRC.Message                      -- ^ the message
-        -> String                           -- ^ target
+    process         :: m                    -- ^ phantom     (required)
+        -> IRC.Message                      -- ^ the message (uneeded by most?)
+        -> String                           -- ^ target      (not needed)
         -> String                           -- ^ command
         -> String                           -- ^ the arguments to the command
         -> ModuleT s LB [String]            -- ^ maybe output
 
-    --  -> ModuleT s LB ()                  -- ^ monad output
+    -- | Like process, but commonly used args are ignored
+    -- Lambdabot will attempt to run process first, and then fall back
+    -- to process_, whic has a default instance.
+    process_ :: m                           -- ^ phantom
+        ->  String -> String                   -- ^ command, args
+        -> ModuleT s LB [String]            -- ^ maybe output
 
-    process  _ _ _ _ _ = return []
+    process_ _ _ _     = return []
     moduleHelp m _     = concat (map ('@':) (moduleCmds m))
     modulePrivs _      = []
     moduleCmds      _  = []

@@ -45,14 +45,14 @@ instance Module BabelModule Quotes where
         moduleHelp _ "babel"    = concat ["usage: babel lang lang phrase"]
         moduleHelp _ "ghc"      = "GHC!"
         moduleHelp _ _          = help
+
+        process_ m "remember"  s = process_ m "quote-add" (dropSpace s) -- synonym
+        process_ _ "babel"     s = run_babel s
+        process_ _ "quote-add" s = run_remember (dropSpace s)
+        process_ _ "quote"     s = run_quote    (dropSpace s)
+        process_ _ "ghc"       _ = run_quote    "ghc"
+
 --      moduleHelp _ "timein"   = return "@timein <city>, report the local time in <city>"
-
-        process a b src "remember" s = process a b src "quote-add" (dropSpace s) -- synonym
-        process _ _ _ "babel"      s = run_babel s
-        process _ _ _ "quote-add"  s = run_remember (dropSpace s)
-        process _ _ _ "quote"      s = run_quote    (dropSpace s)
-        process _ _ _ "ghc"        _ = run_quote    "ghc"
-
 --      process _ _ src "last"  s     = run_last  src s
 
         {-
@@ -63,8 +63,6 @@ instance Module BabelModule Quotes where
             else do (o,_,_) <- liftIO $ popen "timein" [s] Nothing
                     ircPrivmsg src $ "  " ++ o
         -}
-
-        process _ _ _   _ _ = error "BabelBot: Invalid cmd"
 
 help :: String
 help = "@quote <nick>/@quote-add <nick> <quote>\n" ++

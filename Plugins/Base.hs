@@ -12,8 +12,12 @@ import qualified Map as M   (insert, delete)
 
 import Data.List            (isPrefixOf,nub)
 import Text.Regex           (mkRegex, matchRegexAll)
-import Control.Monad.State  (MonadState(..), when, unless, gets)
 import Control.Concurrent
+import Control.Monad.Error
+import Control.Monad.State  (MonadState(..), when, unless, gets)
+
+import GHC.IOBase           (Exception(NoMethodError))
+import System.IO
 
 newtype BaseModule = BaseModule ()
 
@@ -284,13 +288,20 @@ doPRIVMSG' myname msg
                           False -> return True
                           True  -> checkPrivs msg
                         when ok $
-                          handleIrc (ircPrivmsg towhere . 
-                              ((?name ++ " module failed: ") ++) )
-                    --      (process m msg towhere cmd' rest)
-                            (do mstrs <- process m msg towhere cmd' rest
+                          handleIrc 
+                            (ircPrivmsg towhere.((?name++" module failed: ")++))
+
+                            -- Attempt to run first process, then process_
+                            (do mstrs <- catchError -- :: m a -> (e -> m a) -> m a
+                                        (process m msg towhere cmd' rest)
+                                        (\ex -> case (ex :: IRCError) of 
+                                            (IRCRaised (NoMethodError _)) -> do
+                                                liftIO $ hPutStrLn stderr "NO METHOD ERROR"
+                                                process_ m cmd' rest
+                                            _ -> throwError ex)
                                 case mstrs of
                                     [] -> return ()
-                                    _  -> mapM_ (ircPrivmsg towhere) mstrs )
+                                    _  -> mapM_ (ircPrivmsg towhere) mstrs)
                                     -- todo, think about how to post-process...
 
                         unless ok $ ircPrivmsg towhere "Not enough privileges")

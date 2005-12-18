@@ -68,8 +68,7 @@ data Repo = Repo { repo_location     :: FilePath
             deriving (Eq,Ord,Show,Read)
 
 -- | 'showRepo' takes a repository, repo, to a String for pretty printing.
-showRepo :: Repo -- ^ Repository to pretty-print
-	 -> String -- ^ Resulting string.
+showRepo :: Repo -> String
 showRepo repo =
     "{Repository " ++ show (repo_location repo) ++ ", last announcement: " ++
     (case repo_lastAnnounced repo of
@@ -109,7 +108,7 @@ getRepos = dpw_repos `fmap` readMS
 -- | 'withRepos' operates on the current state of the repos with a
 --   given function.
 withRepos :: (Repos -> (Repos -> LB ()) -> LB a) -- ^ Function to apply
-	  -> DPW a
+          -> DPW a
 -- template haskell?
 withRepos = accessorMS $ \s -> (dpw_repos s, \t -> s { dpw_repos = t })
 
@@ -120,13 +119,14 @@ withRepos = accessorMS $ \s -> (dpw_repos s, \t -> s { dpw_repos = t })
 --
 
 instance Module DarcsPatchWatch DarcsPatchWatchState where
+
+    moduleCmds  _ = ["repos", "repo-add", "repo-del"]
+
     moduleHelp    _ s = case s of
         "repos"        -> "@repos, list all registered darcs repositories"
         "repo-add"     -> "@repo-add path, add a repository"
         "repo-del"     -> "@repo-del path, delete a repository"
         _              -> "Watch darcs repositories. Provides @repos, @repo-add, @repo-del"
-
-    moduleCmds  _ = ["repos", "repo-add", "repo-del"]
 
     moduleSerialize _ = Just stateSerial
     moduleDefState  _ = return (DarcsPatchWatchState Nothing [])
@@ -141,10 +141,10 @@ instance Module DarcsPatchWatch DarcsPatchWatchState where
              Just tid ->
                  liftIO $ killThread tid
 
-    process _ _ _ cmd rest = case cmd of
-         "repos"       -> printRepos rest
-         "repo-add"    -> addRepo rest
-         "repo-del"    -> delRepo rest
+    process_ _ cmd rest = case cmd of
+                         "repos"       -> printRepos rest
+                         "repo-add"    -> addRepo rest
+                         "repo-del"    -> delRepo rest
 
 --
 -- Configuration commands

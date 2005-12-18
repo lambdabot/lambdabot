@@ -35,11 +35,11 @@ instance Module DummyModule [String] where
         "get-shapr"   -> "summon shapr instantly"
         _             -> "dummy module"
 
-  process _ _ _ "moo" _ = do
+  process_ _ "moo" _ = do
         cow' <- withMS $ \(cow:farm) writer -> writer farm >> return cow
         return (lines cow')
 
-  process _ _ _ cmd rest = case lookup cmd dummylst of
+  process_ _ cmd rest = case lookup cmd dummylst of
        Nothing -> error "Dummy: invalid command"
        Just f  -> return $ lines $ f rest
 

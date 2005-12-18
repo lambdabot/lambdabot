@@ -64,18 +64,18 @@ instance Module DjinnModule DjinnEnv where
 
         -- rule out attempts to do IO, if these get into the env,
         -- they'll be executed by djinn
-        process _ _ _ _ s | Just _ <- cmd  `matchRegex` s = end
+        process_ _ _ s | Just _ <- cmd  `matchRegex` s = end
           where end  = return ["Invalid command"]
                 cmd  = mkRegex "^ *:"
 
         -- Normal commands
-        process _ _ _ "djinn" s = do
+        process_ _ "djinn" s = do
                 (_,env) <- readMS
                 e       <- liftIO $ djinn env $ ":set +sorted" <$> "f ?" <+> s
                 return $ either id (tail . lines) e
 
         -- Augment environment. Have it checked by djinn.
-        process _ _ _ "djinn-add"  s = do
+        process_ _ "djinn-add"  s = do
             (p,st)  <- readMS 
             est     <- liftIO $ getDjinnEnv $ (p, dropSpace s : st)
             case est of
@@ -83,16 +83,16 @@ instance Module DjinnModule DjinnEnv where
                 Right st'' -> modifyMS (const st'') >> return []
 
         -- Display the environment
-        process _ _ _ "djinn-env"  _ = do
+        process_ _ "djinn-env"  _ = do
             (prelude,st) <- readMS
             return $ prelude ++ st
 
         -- Reset the env
-        process _ _ _ "djinn-clr"  _ = modifyMS (flip (,) [] . fst) >> return []
+        process_ _ "djinn-clr"  _ = modifyMS (flip (,) [] . fst) >> return []
 
         -- Remove sym from environment. We let djinn do the hard work of
         -- looking up the symbols.
-        process _ _ _ "djinn-del" s =  do
+        process_ _ "djinn-del" s =  do
             (_,env) <- readMS
             eenv <- liftIO $ djinn env $ ":delete" <+> dropSpace s <$> ":environment"
             case eenv of
@@ -103,7 +103,7 @@ instance Module DjinnModule DjinnEnv where
                     return []
 
         -- Version number
-        process _ _ _ "djinn-ver"  _ = do
+        process_ _ "djinn-ver"  _ = do
             (out,_,_) <- liftIO $ popen binary [] (Just ":q")
             let v = dropNL . clean . drop 18 . head . lines $ out
             return [v]

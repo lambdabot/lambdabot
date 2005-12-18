@@ -21,10 +21,10 @@ theModule :: MODULE
 theModule = MODULE $ VixenModule ()
 
 instance Module VixenModule (String -> IO String) where
-    moduleCmds   _       = ["vixen"]
-    moduleHelp _ _       = "sergeant curry's lonely hearts club"
-    moduleDefState _     = return $ mkVixen
-    process _ _ _ _ rest = vixenCmd rest
+    moduleCmds   _   = ["vixen"]
+    moduleHelp _ _   = "sergeant curry's lonely hearts club"
+    moduleDefState _ = return $ mkVixen
+    process_ _ _ rest = vixenCmd rest
 
 vixenCmd :: String -> ModuleLB (String -> IO String)
 vixenCmd rest = do 

@@ -33,8 +33,8 @@ instance Module SearchModule () where
          "wikipedia" -> "@wikipedia <expr>, search wikipedia and show url of first hit"
          _           -> "module for doing searches"
 
-    moduleCmds   _ = map fst engines
-    process _ _ _ cmd rest = searchCmd cmd (dropSpace rest)
+    moduleCmds      _ = map fst engines
+    process_ _ cmd rest = searchCmd cmd (dropSpace rest)
 
 ------------------------------------------------------------------------
 

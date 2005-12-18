@@ -17,10 +17,7 @@ theModule :: MODULE
 theModule = MODULE $ SpellModule ()
 
 instance Module SpellModule () where
-    moduleCmds   _    = ["spell"]
-    moduleHelp _ _    = "@spell <word>, show spelling of word"
-
-    process _ _ _ _ [] = return ["No word to spell."]
-    process _ _ _ _ s = do
-        ss <- liftIO (spell s) 
-        return [showClean $ take 5 ss]
+    moduleCmds   _  = ["spell"]
+    moduleHelp _ _  = "@spell <word>, show spelling of word"
+    process_ _ _ [] = return ["No word to spell."]
+    process_ _ _ s  = do ss <- liftIO (spell s) ; return [showClean $ take 5 ss]

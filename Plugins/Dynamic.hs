@@ -28,7 +28,7 @@ instance Module DynamicModule () where
         mapM_ (\p -> load p >> liftIO (putChar '.' >> hFlush stdout)) plugins
         liftIO $ putStrLn " done."
 
-    process _ _ _ s rest = case s of
+    process_ _ s rest = case s of
         "dynamic-load"      -> 
                 do load rest; return ["module loaded"]
         "dynamic-unload"    -> 

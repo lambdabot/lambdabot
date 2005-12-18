@@ -39,19 +39,21 @@ instance Module TopicModule () where
                    "topic-cons", "topic-snoc",
                    "topic-tail", "topic-init", "topic-null"]
 
-  process _ _ _ "topic-cons" text = alterTopic chan (topic_item :)
+  process_ _ "topic-cons" text = alterTopic chan (topic_item :)
         where (chan, topic_item) = splitFirstWord text
 
-  process _ _ _ "topic-snoc" text = alterTopic chan (snoc topic_item)
+  process_ _ "topic-snoc" text = alterTopic chan (snoc topic_item)
         where (chan, topic_item) = splitFirstWord text
 
-  process _ _ _ "topic-tail" chan = alterTopic chan tail
-  process _ _ _ "topic-init" chan = alterTopic chan init
-  process _ _ _ "topic-null" chan = send (IRC.setTopic chan "[]") >> return []
-  process _ _ _ "topic-tell" chan = lookupTopic chan $ \maybetopic ->
+  process_ _ "topic-tail" chan = alterTopic chan tail
+  process_ _ "topic-init" chan = alterTopic chan init
+  process_ _ "topic-null" chan = send (IRC.setTopic chan "[]") >> return []
+  process_ _ "topic-tell" chan = lookupTopic chan $ \maybetopic ->
         case maybetopic of
             Just x  -> return [x]
             Nothing -> return ["Do not know that channel"]
+
+------------------------------------------------------------------------
 
 -- | 'lookupTopic' Takes a channel and a modifier function f. It then
 --   proceeds to look up the channel topic for the channel given, returning

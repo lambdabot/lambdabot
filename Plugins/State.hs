@@ -18,6 +18,6 @@ instance Module StateModule String where
     moduleHelp    _ _ = "@state - we all know it's evil"
     moduleDefState  _ = return "This page left blank."
     moduleSerialize _ = Just stdSerial
-    process _ _ _ _ rest = do
+    process_ _ _ rest = do
        modstate <- withMS $ \ms writer -> writer rest >> return ms
        return [modstate]

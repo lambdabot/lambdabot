@@ -31,15 +31,12 @@ theModule :: MODULE
 theModule = MODULE $ PrettyModule ()
 
 instance Module PrettyModule (String -> IO String) where
-    moduleCmds _      = ["pretty"]
-    moduleHelp _ _    = "Echo haskell code in a pretty-printed manner"
-    process _ _ _ _ r = prettyCmd r
+    moduleCmds _   = ["pretty"]
+    moduleHelp _ _ = "Echo haskell code in a pretty-printed manner"
+    process_ _ _ r = prettyCmd r
 
 ------------------------------------------------------------------------
 
--- FIXME: the solution of prefixing code with a module prelude
---   is pretty ugly, but for the moment it works well enough!
---
 prettyCmd :: String -> ModuleLB (String -> IO String)
 prettyCmd rest = 
     let code = dropWhile (`elem` " \t>") rest
@@ -50,7 +47,7 @@ prettyCmd rest =
             (ParseOk a)           -> doPretty a
             (ParseFailed loc msg) -> let (SrcLoc _ _ col) = loc in
                 (show msg ++ " at column " ++ show (col - prefLen)) : []
-    in return result -- will this work?
+    in return result -- XXX will this work? No, spaces are compressed.
 
 -- | calculates "desired" indentation and return pretty-printed declarations
 -- the indentation calculations are still pretty much rough guesswork.

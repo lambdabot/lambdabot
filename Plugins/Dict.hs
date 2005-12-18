@@ -23,9 +23,9 @@ instance Module DictModule () where
     moduleHelp _ _ = getHelp []
     moduleCmds _   = "dict" : "dict-help" : dictNames
 
-    process _ _ _ "dict" _         = return [quickHelp]
-    process _ _ _ "dict-help" rest = return [getHelp (words rest)]
-    process _ _ _ cmd rest = do
+    process_ _ "dict"      _    = return [quickHelp]
+    process_ _ "dict-help" rest = return [getHelp (words rest)]
+    process_ _ cmd         rest = do
         results <- mapM doLookup (parseTerms rest)
         return [concat results]
       where

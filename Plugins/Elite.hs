@@ -20,7 +20,7 @@ data Elite = Elite
 instance Module Elite () where
     moduleCmds _   = ["elite"]
     moduleHelp _ _ = "Translating english to elitespeak"
-    process _ _ _ _ args = do 
+    process_ _ _ args = do 
         result <- case words args of
                      [] -> return "Say again?"
                      wds -> do let instr = map toLower (unwords wds)
