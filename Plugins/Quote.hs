@@ -35,26 +35,31 @@ instance Module QuoteModule () where
 arrRandom :: IO String
 arrRandom = Util.stdGetRandItem arrList
 
--- | A list of arr-quotes
+-- | Some pirate quotes
 arrList :: [String]
-arrList = [
-           "Avast!"
-          ,"Shiver me timbers!"
-          ,"Yeh scurvy dog..."
-          ,"I heard andersca is a pirate"
-          ,"I'll keel haul ya fer that!"
-          ,"I'd like to drop me anchor in her lagoon"
-          ,"Well me hearties, let's see what crawled out of the bung hole..."
-          ,"I want me grog!"
-          ,"Drink up, me hearties"
-          ,"Is that a hornpipe in yer pocket, or arr ya just happy ta see me?"
-          ,"Get out of me way, yeh landlubber"
-          ,"Smartly me lass"
-          ,"Arrr!"
-          ,"Ahoy mateys"
-          ,"Aye"
-          ,"Aye Aye Cap'n"
-          ,"This is the END for you, you gutter-crawling cur!"
-          ,"May the clap make ye incapable of Cracking Jenny's Tea Cup."
-          ,"Eat maggoty hardtack, ye unkempt, jenny frequentin', son of a gun."
-          ]
+arrList = 
+    ["Avast!"
+    ,"Shiver me timbers!"
+    ,"Yeh scurvy dog..."
+    ,"I heard andersca is a pirate"
+    ,"I'll keel haul ya fer that!"
+    ,"I'd like to drop me anchor in her lagoon"
+    ,"Well me 'earties, let's see what crawled out of the bung hole..."
+    ,"I want me grog!"
+    ,"Drink up, me 'earties"
+    ,"Is that a hornpipe in yer pocket, or arr ya just happy ta see me?"
+    ,"Get out of me way, yeh landlubber"
+    ,"Smartly me lass"
+    ,"Arrr!"
+    ,"Ahoy mateys"
+    ,"Aye"
+    ,"Aye Aye Cap'n"
+    ,"This is the END for you, you gutter-crawling cur!"
+    ,"May the clap make ye incapable of Cracking Jenny's Tea Cup."
+    ,"Eat maggoty hardtack, ye unkempt, jenny frequentin', son of a gun."
+    ,"Swab the deck!"
+    ,"Keelhaul the swabs!"
+    ,"Yo ho ho, and a bottle of rum!"
+    ,"I'll crush ye barnacles!"
+    ,"Har de har har!"
+    ]
