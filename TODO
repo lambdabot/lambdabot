@@ -2,8 +2,13 @@ Dons:
   - a dynamic Config.hs module.
   - a scripting interface, expose module ops to a scripting module
   - look at pinging the server
- - composable plugins, with @.
-    -- the Module:process method needs to return :: IO [String]
+
+ - things that should work:
+        pl     . djinn
+        type   . djinn $ xs == xs
+        pretty . djinn
+        pretty . pl
+        djinn . hoogle
 
 Todo:
 * Better error reporting when connections fail at startup
