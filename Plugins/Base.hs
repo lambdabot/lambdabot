@@ -17,7 +17,6 @@ import Control.Monad.Error
 import Control.Monad.State  (MonadState(..), when, unless, gets)
 
 import GHC.IOBase           (Exception(NoMethodError))
-import System.IO
 
 newtype BaseModule = BaseModule ()
 
