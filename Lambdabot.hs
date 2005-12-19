@@ -579,20 +579,27 @@ class Module m s | m -> s where
     moduleExit      :: m -> ModuleT s LB ()
 
     -- | Process a command a user sent, the resulting string is draw in
-    -- some fashion.
+    -- some fashion. If the `process' function doesn't exist, we catch
+    -- an exception when we try to call it, and instead call `process_'
+    -- which is guaranteed to at least have a default instance.
+    -- This magic (well, for Haskell) occurs in Base.hs
+    --
     process         :: m                    -- ^ phantom     (required)
         -> IRC.Message                      -- ^ the message (uneeded by most?)
         -> String                           -- ^ target      (not needed)
         -> String                           -- ^ command
         -> String                           -- ^ the arguments to the command
-        -> ModuleT s LB [String]            -- ^ maybe output
+        -> ModuleLB s                       -- ^ maybe output
 
-    -- | Like process, but commonly used args are ignored
+    -- | Like process, but uncommonly used args are ignored
     -- Lambdabot will attempt to run process first, and then fall back
-    -- to process_, whic has a default instance.
+    -- to process_, which in turn has a default instance.
+    --
     process_ :: m                           -- ^ phantom
-        ->  String -> String                   -- ^ command, args
-        -> ModuleT s LB [String]            -- ^ maybe output
+        ->  String -> String                -- ^ command, args
+        -> ModuleLB s                       -- ^ maybe output
+
+------------------------------------------------------------------------
 
     process_ _ _ _     = return []
     moduleHelp m _     = concat (map ('@':) (moduleCmds m))
@@ -604,10 +611,16 @@ class Module m s | m -> s where
     moduleSerialize _  = Nothing
     moduleDefState  _  = return $ error "state not initalized"
 
--- | An existential type holding a module.
+------------------------------------------------------------------------
+
+-- | An existential type holding a module, used to represent modules on
+-- the value level, for manipluation at runtime by the dynamic linker.
+--
 data MODULE = forall m s. (Module m s) => MODULE m
 
 data ModuleRef = forall m s. (Module m s) => ModuleRef m (MVar s) String
+
+------------------------------------------------------------------------
 
 toFilename :: String -> String
 toFilename = ("State/"++)

@@ -295,8 +295,7 @@ doPRIVMSG' myname msg
                             (do mstrs <- catchError -- :: m a -> (e -> m a) -> m a
                                         (process m msg towhere cmd' rest)
                                         (\ex -> case (ex :: IRCError) of 
-                                            (IRCRaised (NoMethodError _)) -> do
-                                                liftIO $ hPutStrLn stderr "NO METHOD ERROR"
+                                            (IRCRaised (NoMethodError _)) ->
                                                 process_ m cmd' rest
                                             _ -> throwError ex)
                                 case mstrs of
