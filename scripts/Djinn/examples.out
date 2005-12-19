@@ -1,163 +1,154 @@
 id :: a -> a
-id x1 = x1
+id a = a
 const :: a -> b -> a
-const x1 _ = x1
+const a _ = a
 fst :: (a, b) -> a
-fst (v2, _) = v2
+fst (a, _) = a
 snd :: (a, b) -> b
-snd (_, v3) = v3
+snd (_, a) = a
 swap :: (a, b) -> (b, a)
-swap (v2, v3) = (v3, v2)
+swap (a, b) = (b, a)
 compose :: (b -> c) -> (a -> b) -> a -> c
-compose x1 x2 x3 = x1 (x2 x3)
+compose a b c = a (b c)
 curry :: ((a, b) -> c) -> a -> b -> c
-curry x1 c3 c4 = x1 (c3, c4)
+curry a b c = a (b, c)
 uncurry :: (a -> b -> c) -> (a, b) -> c
-uncurry x1 (v3, v4) = x1 v3 v4
+uncurry a (b, c) = a b c
 flip :: (a -> b -> c) -> b -> a -> c
-flip x1 x2 x3 = x1 x3 x2
+flip a b c = a c b
 -- undefined cannot be realized.
 either :: (a -> b) -> (c -> b) -> Either a c -> b
-either x1 x2 x3 =
-         case x3 of
-         Left v6 -> x1 v6
-         Right v7 -> x2 v7
+either a b c =
+         case c of
+         Left d -> a d
+         Right e -> b e
 maybe :: b -> (a -> b) -> Maybe a -> b
-maybe x1 x2 x3 =
-        case x3 of
-        Nothing -> x1
-        Just v6 -> x2 v6
+maybe a b c =
+        case c of
+        Nothing -> a
+        Just d -> b d
 returnC :: a -> C a
-returnC x1 x2 = x2 x1
+returnC a b = b a
 bindC :: C a -> (a -> C b) -> C b
-bindC x1 x2 x3 = x1 (\ c15 -> x2 c15 x3)
+bindC a b c = a (\ d -> b d c)
 callCC :: ((a -> C b) -> C a) -> C a
-callCC x1 x2 = x1 (\ c15 _ -> x2 c15) x2
+callCC a b = a (\ c _ -> b c) b
 returnS :: a -> S s a
-returnS x1 x2 = (x1, x2)
+returnS a b = (a, b)
 bindS :: S s a -> (a -> S s b) -> S s b
-bindS x1 x2 x3 =
-        case x1 x3 of
-        (v4, v5) -> x2 v4 v5
+bindS a b c =
+        case a c of
+        (d, e) -> b d e
 returnSD :: a -> SD s a
-returnSD x1 = SD (\ c16 -> (x1, c16))
+returnSD a = SD (\ b -> (a, b))
 bindSD :: SD s a -> (a -> SD s b) -> SD s b
-bindSD x1 x4 =
-         case x1 of
-         SD v3 -> SD (\ c26 ->
-                      case v3 c26 of
-                      (c27, c28) -> case x4 c27 of
-                                    SD c30 -> c30 c28)
+bindSD a b =
+         case a of
+         SD c -> SD (\ d ->
+                     case c d of
+                     (e, f) -> case b e of
+                               SD g -> g f)
 returnCD :: a -> CD r a
-returnCD x1 = CD (\ c15 -> c15 x1)
+returnCD a = CD (\ b -> b a)
 bindCD :: CD r a -> (a -> CD r b) -> CD r b
-bindCD x1 x4 =
-         case x1 of
-         CD v3 -> CD (\ c49 ->
-                      v3 (\ c50 ->
-                          case x4 c50 of
-                          CD c52 -> c52 c49))
+bindCD a b =
+         case a of
+         CD c -> CD (\ d ->
+                     c (\ e ->
+                        case b e of
+                        CD f -> f d))
 callCCD :: ((a -> CD r b) -> CD r a) -> CD r a
-callCCD x1 =
-          CD (\ c68 ->
-              case x1 (\ c69 -> CD (\ _ -> c68 c69)) of
-              CD c72 -> c72 c68)
+callCCD a =
+          CD (\ b ->
+              case a (\ c -> CD (\ _ -> b c)) of
+              CD d -> d b)
 returnM :: a -> Maybe a
 returnM = Just
 bindM :: Maybe a -> (a -> Maybe b) -> Maybe b
-bindM x1 x4 =
-        case x1 of
+bindM a b =
+        case a of
         Nothing -> Nothing
-        Just v7 -> x4 v7
+        Just c -> b c
 handleM :: Maybe a -> Maybe a -> Maybe a
-handleM x1 x4 =
-          case x1 of
-          Nothing -> x4
-          Just v5 -> Just v5
+handleM a b =
+          case a of
+          Nothing -> b
+          Just c -> Just c
 returnSX :: a -> SX s a
-returnSX x1 x2 = (x2, Just x1)
+returnSX a b = (b, Just a)
 bindSX :: SX s a -> (a -> SX s b) -> SX s b
-bindSX x1 x2 x3 =
-         case x1 x3 of
-         (v4, v5) -> case v5 of
-                     Nothing -> (v4, Nothing)
-                     Just v10 -> x2 v10 v4
+bindSX a b c =
+         case a c of
+         (d, e) -> case e of
+                   Nothing -> (d, Nothing)
+                   Just f -> b f d
 handleSX :: SX s a -> SX s a -> SX s a
-handleSX x1 x2 x3 =
-           case x2 x3 of
-           (v4, v5) -> case v5 of
-                       Nothing -> x1 x3
-                       Just v8 -> case x1 x3 of
-                                  (v9, v10) -> case v10 of
-                                               Nothing -> (v9, Just v8)
-                                               Just v18 -> (v4, Just v18)
+handleSX a b c =
+           case b c of
+           (d, e) -> case e of
+                     Nothing -> a c
+                     Just f -> case a c of
+                               (g, h) -> case h of
+                                         Nothing -> (g, Just f)
+                                         Just i -> (d, Just i)
 bool1 :: Bool -> Bool
-bool1 x1 = x1
+bool1 a = a
 bool2 :: Bool -> Bool -> Bool
-bool2 x1 x4 =
-        case x1 of
-        False -> x4
+bool2 a b =
+        case a of
+        False -> b
         True -> False
-rot :: (a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z) -> (z, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y)
-rot (v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15,
-     v16, v17, v18, v19, v20, v21, v22, v23, v24, v25, v26, v27) =
-      (v27, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15,
-       v16, v17, v18, v19, v20, v21, v22, v23, v24, v25, v26)
+rot :: (a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, aa, ab, ac) -> (z, aa, ab, ac, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y)
+rot (a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u,
+     v, w, x, y, z, x1, x2, x3) =
+      (z, x1, x2, x3, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q,
+       r, s, t, u, v, w, x, y)
 f :: Either () (a, b) -> Either () (b, a)
-f x1 =
-    case x1 of
+f a =
+    case a of
     Left _ -> Left ()
-    Right (v13, v14) -> Right (v14, v13)
+    Right (b, c) -> Right (c, b)
 f :: a -> a -> a
-f _ x2 = x2
+f _ a = a
 -- or
-f x1 _ = x1
+f a _ = a
 f :: Either () (a, b) -> Either () (b, a)
-f x1 =
-    case x1 of
+f a =
+    case a of
     Left _ -> Left ()
-    Right (v13, v14) -> Right (v14, v13)
--- or
-f x1 =
-    case x1 of
-    Left _ -> Left ()
-    Right (v15, v16) -> Right (v16, v15)
+    Right (b, c) -> Right (c, b)
 -- or
 f _ = Left ()
 f :: a -> (a -> a) -> a
-f x1 x2 = x2 x1
+f a b = b a
 -- or
-f x1 _ = x1
+f a _ = a
 f :: (a -> a) -> a -> a
-f x1 = x1
+f a = a
 -- or
-f x1 x2 = x1 x2
+f a b = a b
 -- or
-f _ x2 = x2
+f _ a = a
 f1 :: ((((a, b) -> f) -> Either (a -> f) (b -> f)) -> f) -> f
-f1 x1 =
-     x1 (\ c64 ->
-         Right (\ _ ->
-                x1 (\ _ ->
-                    Right (\ c120 -> x1 (\ _ -> Left (\ c122 -> c64 (c122, c120)))))))
+f1 a =
+     a (\ b ->
+        Right (\ _ ->
+               a (\ _ -> Right (\ c -> a (\ _ -> Left (\ d -> b (d, c)))))))
 f2 :: ((Either (a -> f) (b -> f) -> (a, b) -> f) -> f) -> f
-f2 x1 =
-     x1 (\ c16 ->
-         case c16 of
-         Left c18 -> \ (c20, _) -> c18 c20
-         Right c23 -> \ (_, c26) -> c23 c26)
+f2 a =
+     a (\ b ->
+        case b of
+        Left c -> \ (d, _) -> c d
+        Right e -> \ (_, f) -> e f)
 null :: List a -> Bool
-null x7 =
-       case out x7 of
+null a =
+       case out a of
        Nil -> False
        Cons _ _ -> True
 exm :: Not (Not (Either a (Not a)))
-exm x1 = void (x1 (Right (\ c23 -> x1 (Left c23))))
+exm a = void (a (Right (\ b -> a (Left b))))
 foo :: Not (c -> d) -> (Not (Not c), Not d)
-foo x1 =
-      (\ x4 -> void (x1 (\ c15 -> void (x4 c15))),
-       \ x13 -> x1 (\ _ -> x13))
+foo a = (\ b -> void (a (\ c -> void (b c))), \ d -> a (\ _ -> d))
 peirce :: Not (Not (((a -> b) -> a) -> a))
-peirce x1 =
-         void (x1 (\ c25 ->
-                   void (x1 (\ _ -> c25 (\ c37 -> void (x1 (\ _ -> c37)))))))
+peirce a =
+         void (a (\ b -> void (a (\ _ -> b (\ c -> void (a (\ _ -> c)))))))

@@ -4,8 +4,9 @@
 --
 module LJTFormula(Symbol(..), Formula(..), (<->), (&), (|:), fnot, false, true,
 	ConsDesc(..),
-	Term(..), applys
+	Term(..), applys, freeVars
 	) where
+import List(union, (\\))
 
 infixr 2 :->
 infix  2 <->
@@ -78,7 +79,8 @@ data Term
 	| Csplit Int
 	| Cinj ConsDesc Int
 	| Ccases [ConsDesc]
-    deriving (Eq)
+	| Xsel Int Int Term		--- XXX just temporary by MJ
+    deriving (Eq, Ord)
 
 instance Show Term where
     showsPrec p (Var s) = showsPrec p s
@@ -88,7 +90,14 @@ instance Show Term where
     showsPrec _ (Ctuple i) = showString $ "Tuple" ++ show i
     showsPrec _ (Csplit n) = showString $ "split" ++ show n
     showsPrec _ (Ccases cds) = showString $ "cases" ++ show (length cds)
+    showsPrec p (Xsel i n e) = showParen (p > 0) $ showString ("sel_" ++ show i ++ "_" ++ show n) . showString " " . showsPrec 2 e
 
 applys :: Term -> [Term] -> Term
 applys f as = foldl Apply f as
 
+freeVars :: Term -> [Symbol]
+freeVars (Var s) = [s]
+freeVars (Lam s e) = freeVars e \\ [s]
+freeVars (Apply f a) = freeVars f `union` freeVars a
+freeVars (Xsel _ _ e) = freeVars e
+freeVars _ = []

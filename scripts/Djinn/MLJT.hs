@@ -4,7 +4,6 @@
 --
 import IO
 import System
-import LJTFormula
 import LJTParse
 import MJ
 

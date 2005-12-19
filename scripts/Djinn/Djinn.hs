@@ -13,6 +13,7 @@ import System
 
 import REPL
 import LJT
+--import MJ
 import HTypes
 import HCheck(htCheckEnv, htCheckType)
 import Help

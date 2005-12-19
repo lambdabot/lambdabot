@@ -7,7 +7,7 @@ module HTypes(HKind(..), HType(..), HSymbol, hTypeToFormula, pHSymbol, pHType, p
 import Text.PrettyPrint.HughesPJ(Doc, renderStyle, style, text, (<>), parens, ($$), vcat, punctuate,
 	 sep, fsep, nest, comma, (<+>))
 import Char(isAlphaNum, isAlpha, isUpper)
-import List(union)
+import List(union, (\\))
 import Monad(zipWithM)
 import Text.ParserCombinators.ReadP
 import LJTFormula
@@ -204,9 +204,9 @@ ppExpr p (HEApply f a) = pparens (p > 1) $ ppExpr 1 f <+> ppExpr 2 a
 ppExpr _ (HECon s) = text s
 ppExpr _ (HEVar s) = text s
 ppExpr _ (HETuple es) = parens $ fsep $ punctuate comma (map (ppExpr 0) es)
-ppExpr _ (HECase s alts) = (text "case" <+> ppExpr 0 s <+> text "of") $$
+ppExpr p (HECase s alts) = pparens (p > 0) $ (text "case" <+> ppExpr 0 s <+> text "of") $$
 			    vcat (map ppAlt alts)
-  where ppAlt (p, e) = ppPat 0 p <+> text "->" <+> ppExpr 0 e
+  where ppAlt (pp, e) = ppPat 0 pp <+> text "->" <+> ppExpr 0 e
 
 
 pparens :: Bool -> Doc -> Doc
@@ -215,11 +215,12 @@ pparens False d = d
 
 -------------------------------
 
+
 unSymbol :: Symbol -> HSymbol
 unSymbol (Symbol s) = s
 
 termToHExpr :: Term -> HExpr
-termToHExpr term = etaReduce $ remUnusedVars $ fst $ conv [] term
+termToHExpr term = niceNames $ etaReduce $ remUnusedVars $ fst $ conv [] term
   where conv _vs (Var s) = (HEVar $ unSymbol s, [])
 	conv vs (Lam s te) = 
 		let hs = unSymbol s
@@ -282,6 +283,15 @@ termToHExpr term = etaReduce $ remUnusedVars $ fst $ conv [] term
 
 	hETuple [e] = e
 	hETuple es = HETuple es
+
+niceNames :: HExpr -> HExpr
+niceNames e =
+    let bvars = filter (/= "_") $ getBinderVarsHE e
+	nvars = [[c] | c <- ['a'..'z']] ++ [ "x" ++ show i | i <- [1::Integer ..]]
+	freevars = getAllVars e \\ bvars
+	vars = nvars \\ freevars
+	sub = zip bvars vars
+    in  hESubst sub e
 
 hELam :: [HPat] -> HExpr -> HExpr
 hELam [] e = e
@@ -383,9 +393,9 @@ remUnusedVars expr = fst $ remE expr
 	remE (HECase e alts) =
 	    let (e', es) = remE e
 		(alts', sss) = unzip [ let (ee', ss) = remE ee in ((remP ss p, ee'), ss) | (p, ee) <- alts ]
-	    in  case alts of
+	    in  case alts' of
 		[(HPVar "_", b)] -> (b, concat sss)
-		_ -> (HECase e' alts', es ++ concat sss)
+		_ -> (hECase e' alts', es ++ concat sss)
 	remE e@(HECon _) = (e, [])
 	remE e@(HEVar v) = (e, [v])
 	remP vs p@(HPVar v) = if v `elem` vs then p else HPVar "_"
@@ -397,17 +407,32 @@ remUnusedVars expr = fst $ remE expr
 	hPTuple ps = HPTuple ps
 
 getBinderVars :: HClause -> [HSymbol]
-getBinderVars (HClause _ pats expr) = concatMap gbPat pats ++ gbExp expr
-  where gbExp (HELam ps e) = concatMap gbPat ps ++ gbExp e
+getBinderVars (HClause _ pats expr) = concatMap getBinderVarsHP pats ++ getBinderVarsHE expr
+
+getBinderVarsHE :: HExpr -> [HSymbol]
+getBinderVarsHE expr = gbExp expr
+  where gbExp (HELam ps e) = concatMap getBinderVarsHP ps ++ gbExp e
 	gbExp (HEApply f a) = gbExp f ++ gbExp a
 	gbExp (HETuple es) = concatMap gbExp es
-	gbExp (HECase se alts) = gbExp se ++ concatMap (\ (p, e) -> gbPat p ++ gbExp e) alts
+	gbExp (HECase se alts) = gbExp se ++ concatMap (\ (p, e) -> getBinderVarsHP p ++ gbExp e) alts
 	gbExp _ = []
-	gbPat (HPVar s) = [s]
+
+getBinderVarsHP :: HPat -> [HSymbol]
+getBinderVarsHP pat = gbPat pat
+  where	gbPat (HPVar s) = [s]
 	gbPat (HPCon _) = []
 	gbPat (HPTuple ps) = concatMap gbPat ps
 	gbPat (HPAt s p) = s : gbPat p
 	gbPat (HPApply f a) = gbPat f ++ gbPat a
+
+getAllVars :: HExpr -> [HSymbol]
+getAllVars expr = gaExp expr
+  where gaExp (HELam _ps e) = gaExp e
+	gaExp (HEApply f a) = gaExp f `union` gaExp a
+	gaExp (HETuple es) = foldr union [] (map gaExp es)
+	gaExp (HECase se alts) = foldr union (gaExp se) (map (\ (_p, e) -> gaExp e) alts)
+	gaExp (HEVar s) = [s]
+	gaExp _ = []
 
 etaReduce :: HExpr -> HExpr
 etaReduce expr = fst $ eta expr

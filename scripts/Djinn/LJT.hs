@@ -27,6 +27,16 @@ import LJTFormula
 import Debug.Trace
 mtrace :: String -> a -> a
 mtrace m x = if debug then trace m x else x
+wrap :: (Show a, Show b) => String -> a -> b -> b
+wrap fun args ret = mtrace (fun ++ ": " ++ show args) $
+		    let o = show ret in seq o $ 
+		    mtrace (fun ++ " returns: " ++ o) ret
+wrapM :: (Show a, Show b, Monad m) => String -> a -> m b -> m b
+wrapM fun args mret = do
+    () <- mtrace (fun ++ ": " ++ show args) $ return ()
+    ret <- mret
+    () <- mtrace (fun ++ " returns: " ++ show ret) $ return ()
+    return ret
 debug :: Bool
 debug = False
 
@@ -174,6 +184,9 @@ type AtomFs = [AtomF]
 findAtoms :: Symbol -> AtomFs -> [Term]
 findAtoms s atoms = [ p | AtomF p s' <- atoms, s == s' ]
 
+--removeAtom :: Symbol -> AtomFs -> AtomFs
+--removeAtom s atoms = [ a | a@(AtomF _ s') <- atoms, s /= s' ]
+
 addAtom :: AtomF -> AtomFs -> AtomFs
 addAtom a as = if a `elem` as then as else a : as
 
@@ -276,14 +289,14 @@ type Goal = Formula
 --
 redant :: MoreSolutions -> Antecedents -> AtomImps -> NestImps -> AtomFs -> Goal -> P Proof
 redant more antes atomImps nestImps atoms goal =
-    mtrace ("redant " ++ show (antes, atomImps, nestImps, atoms, goal)) $
+    wrapM "redant" (antes, atomImps, nestImps, atoms, goal) $
     case antes of
     [] -> redsucc goal
     a:l -> redant1 a l goal
   where redant0 l g = redant more l atomImps nestImps atoms g
 	redant1 :: Antecedent -> Antecedents -> Goal -> P Proof
 	redant1 a@(A p f) l g = 
-	    mtrace ("redant1 " ++ show ((a, l), atomImps, nestImps, atoms, g)) $
+	    wrapM "redant1" ((a, l), atomImps, nestImps, atoms, g) $
 	    if f == g then
 	        -- The goal is the antecedent, we're done.
 	        -- XXX But we might want more?
@@ -315,39 +328,54 @@ redant more antes atomImps nestImps atoms goal =
 	       return $ applys (Ccases (map fst ds)) (p : zipWith Lam vs ps)
 	redant1' (A p (a :-> b)) l g = redantimp p a b l g
 
-	-- Reduce an implication antecedent
 	redantimp :: Term -> Formula -> Formula -> Antecedents -> Goal -> P Proof
+	redantimp t c d a g =
+	    wrapM "redantimp" (c,d,a,g) $
+	    redantimp' t c d a g
+
+	-- Reduce an implication antecedent
+	redantimp' :: Term -> Formula -> Formula -> Antecedents -> Goal -> P Proof
 	-- p : PVar s -> b
-	redantimp p (PVar s) b l g = redantimpatom p s b l g
+	redantimp' p (PVar s) b l g = redantimpatom p s b l g
 	-- p : (c & d) -> b
-	redantimp p (Conj cs) b l g = do
+	redantimp' p (Conj cs) b l g = do
 	    x <- newSym "x"
 	    let imp = foldr (:->) b cs
 	    gp <- redant1 (A (Var x) imp) l g
 	    subst (curryt (length cs) p) x gp
 	-- p : (c | d) -> b
-	redantimp p (Disj ds) b l g = do
+	redantimp' p (Disj ds) b l g = do
 	    vs <- mapM (const (newSym "d")) ds
 	    gp <- redant0 (zipWith (\ v (_, d) -> A (Var v) (d :-> b)) vs ds ++ l) g
 	    foldM (\ r (i, v, (cd, _)) -> subst (inj cd i p) v r) gp (zip3 [0..] vs ds)
 	-- p : (c -> d) -> b
-	redantimp p (c :-> d) b l g = redantimpimp p c d b l g
+	redantimp' p (c :-> d) b l g = redantimpimp p c d b l g
+
+	redantimpimp :: Term -> Formula -> Formula -> Formula -> Antecedents -> Goal -> P Proof
+	redantimpimp f b c d a g =
+	    wrapM "redantimpimp" (b,c,d,a,g) $
+	    redantimpimp' f b c d a g
 
 	-- Reduce a double implication antecedent
-	redantimpimp :: Term -> Formula -> Formula -> Formula -> Antecedents -> Goal -> P Proof
+	redantimpimp' :: Term -> Formula -> Formula -> Formula -> Antecedents -> Goal -> P Proof
 	-- next clause exploits ~(C->D) <=> (~~C & ~D)
 	-- which isn't helpful when D = false
-	redantimpimp p c d (Disj []) l g | d /= false = do
+	redantimpimp' p c d (Disj []) l g | d /= false = do
 	    x <- newSym "x"
 	    y <- newSym "y"
 	    gp <- redantimpimp (Var x) c false false (A (Var y) (d :-> false) : l) g
 	    cImpDImpFalse x y p gp
 	-- p : (c -> d) -> b
-	redantimpimp p c d b l g = redant more l atomImps (addNestImp (NestImp p c d b) nestImps) atoms g
+	redantimpimp' p c d b l g = redant more l atomImps (addNestImp (NestImp p c d b) nestImps) atoms g
 
 	-- Reduce an atomic implication
 	redantimpatom :: Term -> Symbol -> Formula -> Antecedents -> Goal -> P Proof
-	redantimpatom p s b l g = 
+	redantimpatom p s b l g =
+	    wrapM "redantimpatom" (s,b,l,g) $
+	    redantimpatom' p s b l g
+
+	redantimpatom' :: Term -> Symbol -> Formula -> Antecedents -> Goal -> P Proof
+	redantimpatom' p s b l g = 
 	  do
             a <- cutSearch more $ many (findAtoms s atoms)
             x <- newSym "x"
@@ -358,7 +386,7 @@ redant more antes atomImps nestImps atoms goal =
             (mtrace "redantimpatom: RRR" $
              redant more l (insert atomImps (AtomImp s [A p b])) nestImps atoms g)
 {-
-	    let ps = findAtoms s atoms
+	    let ps = wrap "redantimpatom findAtoms" atoms $ findAtoms s atoms
 	    in  if not (null ps) then do
 		    a <- cutSearch more $ many ps
 		    x <- newSym "x"
@@ -372,18 +400,18 @@ redant more antes atomImps nestImps atoms goal =
 	-- Reduce the goal, with all antecedents already being classified
 	redsucc :: Goal -> P Proof
 	redsucc g =
-	    mtrace ("redsucc " ++ show (g, atomImps, nestImps, atoms)) $
+	    wrapM "redsucc" (g, atomImps, nestImps, atoms) $
 	    redsucc' g
 
 	redsucc' :: Goal -> P Proof
 	redsucc' a@(PVar s) =
-	    cutSearch more $ many (findAtoms s atoms)
+	    (cutSearch more $ many (findAtoms s atoms))
 	  `mplus`
 	    -- The posin check is an optimization.  It gets a little slower without the test.
-	    if posin s atomImps nestImps then
+	    (if posin s atomImps nestImps then
 	        redsucc_choice a
 	    else
-		none
+		none)
 	redsucc' (Conj cs) = do
 	    ps <- mapM redsucc cs
 	    return $ applys (Ctuple (length cs)) ps
@@ -402,9 +430,16 @@ redant more antes atomImps nestImps atoms goal =
 	-- of form (C->D)->B  in nestImps to choose from!
 	-- Which one to take first? We user the order heuristic.
 	redsucc_choice :: Goal -> P Proof
-	redsucc_choice g = do
+	redsucc_choice g =
+	    wrapM "redsucc_choice" g $
+	    redsucc_choice' g
+
+	redsucc_choice' :: Goal -> P Proof
+	redsucc_choice' g = do
 	    let ordImps = order nestImps g atomImps
-	    (NestImp p c d b, restImps) <- select ordImps
+	    (NestImp p c d b, restImps) <- 
+		mtrace ("redsucc_choice: order=" ++ show ordImps) $
+		select ordImps
 	    x <- newSym "x"
 	    z <- newSym "z"
 	    qz <- redant more [A (Var z) $ d :-> b] atomImps restImps atoms (c :-> d)
