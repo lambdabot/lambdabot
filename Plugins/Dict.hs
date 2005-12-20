@@ -56,7 +56,7 @@ dictTable =
     , ("world02" , ((dict_org, "world02"),  "CIA World Factbook 2002"))
     , ("vera"    , ((dict_org, "vera"),
            "V.E.R.A.: Virtual Entity of Relevant Acronyms"))
-    , ("prelude" , ((moertel_com, "prelude"), "Haskell Standard Prelude"))
+--  , ("prelude" , ((moertel_com, "prelude"), "Haskell Standard Prelude"))
     , ("lojban"  , ((lojban_org, "lojban"), "Search lojban.org"))
     ]
     where

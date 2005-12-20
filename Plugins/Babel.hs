@@ -40,7 +40,7 @@ instance Module BabelModule Quotes where
         moduleSerialize _       = Just mapListPackedSerial
         moduleDefState  _       = return M.empty
 
-        moduleCmds _ = ["babel", "remember", "quote", "ghc"]
+        moduleCmds _ = ["babel", "remember", "quote", "quote-add", "ghc"]
 
         moduleHelp _ "babel"    = concat ["usage: babel lang lang phrase"]
         moduleHelp _ "ghc"      = "GHC!"
