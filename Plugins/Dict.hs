@@ -61,7 +61,7 @@ dictTable =
     ]
     where
     dict_org    = Dict.QC "dict.org" 2628
-    moertel_com = Dict.QC "dict.moertel.com" 2628
+--  moertel_com = Dict.QC "dict.moertel.com" 2628
     lojban_org  = Dict.QC "lojban.org" 2628
 
 dictNames :: [String]
