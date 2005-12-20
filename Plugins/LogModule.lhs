@@ -13,7 +13,7 @@
 > import LBState
 > import qualified IRC
 
-> import Util ((</>))
+> import Util ((</>), lowerCaseString)
 
 > import Serial  ({-instances-})
 > import Config
@@ -24,7 +24,7 @@
 > import System.Time  
 > import System.Directory (createDirectoryIfMissing) 
 
-> import Control.Monad       (join)
+> import Control.Monad       (join, when)
 > import Control.Monad.Trans (liftIO, MonadIO, lift)
 > import Control.Monad.State (StateT, runStateT, gets, modify)
 
@@ -43,23 +43,28 @@ import ErrorUtils          (tryError)
 
 > data Event = 
 >     Said String ClockTime String
->     | Joined String ClockTime
->     | Parted String ClockTime -- covers quitting as well
->     | Renick String ClockTime String
+>     | Joined String String ClockTime
+>     | Parted String String ClockTime -- covers quitting as well
+>     | Renick String String ClockTime String
+
+FIXME --- maybe we should take into consideration nick changes?
 
 > filterNick :: String -> [Event] -> [Event]
 > filterNick who = filter filterOneNick 
 >     where
 >     filterOneNick (Said who' _ _) = who == who'
->     filterOneNick (Joined who' _) = who == who'
->     filterOneNick (Parted who' _)   = who == who'
->     filterOneNick (Renick old _ new) = who == old || who == new
+>     filterOneNick (Joined who' _ _) = who == who'
+>     filterOneNick (Parted who' _ _)   = who == who'
+>     filterOneNick (Renick old _ _ new) = who == old || who == new
 
 > instance Show Event where
->     show (Said nick ct what) = timeStamp ct ++ " <" ++ nick ++ "> " ++ what
->     show (Joined nick ct)    = timeStamp ct ++ " " ++ nick ++ " joined."
->     show (Parted nick ct)    = timeStamp ct ++ " " ++ nick ++ " left."
->     show (Renick nick ct new) = timeStamp ct ++ " " ++ nick ++ " is now " ++ new ++ "."
+>     show (Said nick ct what)       = timeStamp ct ++ " <" ++ nick ++ "> " ++ what
+>     show (Joined nick user ct)     = timeStamp ct ++ " " ++ nick 
+>                                      ++ " (" ++ user ++ ") joined."
+>     show (Parted nick user ct)     = timeStamp ct ++ " " ++ nick
+>                                      ++ " (" ++ user ++ ") left."
+>     show (Renick nick user ct new) = timeStamp ct ++ " " ++ nick
+>                                      ++ " (" ++ user ++ ") is now " ++ new ++ "."
 
 > type DateStamp = (Int, Month, Int)
 > type History   = [Event]
@@ -75,9 +80,8 @@ import ErrorUtils          (tryError)
 > defaultNLines = 10
 
 > commands :: [(String,String)]
-> commands = [("last", "@last [<user>] [<count>] The last <count> (default 10) posts"),
+> commands = [("last", "@last <channel> [<user>] [<count>] The last <count> (default 10) posts to channel <channel>."),
 >       ("log-email", "@log-email <email> [<start-date>] Email the log to the given address (default to todays)")]
-
 
 > instance Module LogModule LogState where
 >    moduleHelp _ s      = fromJust $ lookup s commands
@@ -89,26 +93,30 @@ import ErrorUtils          (tryError)
 Over all channels?  Maybe we want to intersect this with channels we are interested in.
 
 >    moduleInit _        = mapM_ (\(t, f) -> ircSignalConnect t $ liftC f) 
->                            [("PRIVMSG", msgCB), ("JOIN", joinCB), ("PART", quitCB), ("QUIT", quitCB), ("NICK", nickCB)]
+>                            [("PRIVMSG", msgCB), ("JOIN", joinCB), 
+>                             ("PART", quitCB), ("QUIT", quitCB), ("NICK", nickCB)]
 >              where 
->              liftC f = withLogMS $ \msg ct -> withValidLogW (f msg ct) ct (head $ IRC.channels msg)
-    
+>              liftC f = withLogMS $ \msg ct -> when (notMe msg) $ 
+>                        withValidLogW (f msg ct) ct (head $ IRC.channels msg)
+>              -- We don't log /msgs to the lambdabot ... 
+>              notMe msg = myname /= (lowerCaseString . head $ IRC.channels msg)
+>              
 >    process _ msg target "last" rest = showHistory msg target rest
 
 FIXME --- we only do this for one channel.  Maybe allow an extra argument?
 
 > showHistory :: IRC.Message -> String -> String -> ModuleLB LogState
-> showHistory msg _ args = do
+> showHistory _ _ args = do
 >                       fm <- readMS
 >                       return [unlines . reverse $ map show $ take nLines (lines' fm)]
 >     where
->     nLines = case argsS of { _:y:_ -> read y; _ -> defaultNLines }
+>     channel = case argsS of { x:_ -> x; _ -> error "The channel name is required" }
+>     nLines = case argsS of { _:_:y:_ -> read y; _ -> defaultNLines }
 >     lines' fm = case argsS of 
->                   x:_ -> filterNick x $ history fm
->                   _   -> history fm
->     history fm = fromMaybe [] $ M.lookup chan fm >>= \(_, _, his) -> return his
+>                   _:x:_ -> filterNick x $ history fm
+>                   _     -> history fm
+>     history fm = fromMaybe [] $ M.lookup channel fm >>= \(_, _, his) -> return his
 >     argsS = words args
->     chan = head $ IRC.channels msg
  
 | State manipulation functions
 
@@ -197,10 +205,10 @@ FIXME --- we only do this for one channel.  Maybe allow an extra argument?
 ------------------------------------------------------------------------
 -- | The bot's name, lowercase
 
-> {-
+> 
 > myname :: String
 > myname = lowerCaseString (name config)
-> -}
+> 
 
 > showWidth :: Int -> Int -> String
 > showWidth width n = zeroes ++ num
@@ -218,8 +226,10 @@ FIXME --- we only do this for one channel.  Maybe allow an extra argument?
 > dateStamp :: ClockTime -> DateStamp
 > dateStamp ct = let cal = toUTCTime ct in (ctDay cal, ctMonth cal, ctYear cal)
 
+We flush on each operation to ensure logs are up to date.
+
 > logString :: Handle -> String -> LB ()
-> logString hdl str = liftIO $ hPutStrLn hdl str
+> logString hdl str = liftIO $ hPutStrLn hdl str >> hFlush hdl
 
 | Callback for when somebody joins. Log it.
 
@@ -228,8 +238,9 @@ FIXME --- we only do this for one channel.  Maybe allow an extra argument?
 >                logString hdl $ show new
 >                return $ new : his
 >     where
->     new  = Joined nick ct
+>     new  = Joined nick user ct
 >     nick = IRC.nick msg
+>     user = IRC.fullName msg
 
 | when somebody quits
 
@@ -238,18 +249,21 @@ FIXME --- we only do this for one channel.  Maybe allow an extra argument?
 >                logString hdl $ show new
 >                return $ new : his
 >     where
->     new  = Parted nick ct
+>     new  = Parted nick user ct
 >     nick = IRC.nick msg
+>     user = IRC.fullName msg
 
-| when somebody changes his\/her name
+| when somebody changes his\/her name.  We should only do this for channels 
+that the user is currently on ...
 
 > nickCB :: IRC.Message -> ClockTime -> Handle -> History -> LB History
 > nickCB msg ct hdl his = do
 >                logString hdl $ show new
 >                return $ new : his
 >     where
->     new  = Renick nick ct newnick
+>     new  = Renick nick user ct newnick
 >     nick = IRC.nick msg
+>     user = IRC.fullName msg
 >     newnick = drop 1 $ head (msgParams msg)
 
 | When somebody speaks, log it.

@@ -33,6 +33,10 @@ mkMessage cmd params
 nick     :: Message -> String
 nick msg = fst $ breakOnGlue "!" (msgPrefix msg)
 
+-- | 'fullName' extracts the full user name involved in a given message.
+fullName     :: Message -> String
+fullName msg = snd $ breakOnGlue "!" (msgPrefix msg)
+
 -- | 'channels' extracts the channels a Message operate on.
 channels :: Message -> [String]
 channels msg
