@@ -1,0 +1,129 @@
+
+  The Lambda Shell
+-==================-
+
+== What is it?
+
+It is a feature-rich shell environment and command-line tool for
+evaluating terms of the pure, untyped lambda calculus.  The Lambda
+Shell builds on the shell creation framework Shellac, and showcases
+most of Shellac's features.
+
+Features:
+  -- evalutate lambda terms directly from the shell prompt using
+     normal or applicative order.  In normal order, one can evaluate
+     to normal form, head normal form, or weak head normal form.
+  -- define aliases for lambda terms using a top level, non-recursive
+     'let' construct.
+  -- Show traces of term evaluation, or dump the trace to a file
+  -- Count the number of reductions when evaluating terms
+  -- test two lambda terms for confluence (that is; if two
+     terms, when evaluated to normal form, are alpha equivalant)
+  -- programs can be entered from the command line (using the -e option)
+     or piped into stdin (using the -s option)
+
+
+An example session:
+-------------------------------
+
+$ labmdaShell
+
+The Lambda Shell, version 0.1
+Copyright 2005, Robert Dockins
+
+
+The Lambda Shell comes with ABSOLUTELY NO WARRANTY; for details
+type ':nowarranty'.  This is free software, and you are welcome to
+redistribute it under certain conditions; type ':gpl'
+for details
+
+
+> (\x y. x) (\a. a) (\b. b)
+\a. a
+
+> :load prelude.lam
+
+> :show four
+four = succ three
+
+> four
+\f. \x. f (f (f (f x)))
+
+> mul two three
+\f. \x. f (f (f (f (f (f x)))))
+
+> let x = plus six two
+
+> x == eight
+equal
+
+> x == nine
+not equal
+
+> :hnf
+using reduction strategy: head normal form
+
+> let l = insertSort (cons two (cons three (cons one nil)))
+
+> index zero l
+one
+463 reductions
+
+> index one l
+two
+2135 reductions
+
+> index two l
+three
+5720 reductions
+
+> :quit
+
+$
+
+-----------------------------------------------
+
+
+== Why do I care?
+
+Because you are a lambda calculus nut, and you just can't get enough.
+Or, the lambda shell could be a worthwhile teaching tool.  The command
+line features (especially confluence testing) could lend themselves to
+automatic grading.  Also, the lambda shell is a good example of
+how to write a shell using Shellac.
+
+
+
+== How is it licensed?
+
+The Lambda Shell is licensed under the GNU GPL version 2.  See
+the LICENSE file for details.
+
+
+
+== How do I build it?
+
+The lambda shell uses a Cabal build system.  The follwing
+commands assume you have a haskell interpreter in your system
+path named 'runhaskell'.  All commands are run from
+this directory.  If Shellac is installed as a user package, you
+will need to add the '--user' flag to your configure commands.
+
+To install for the whole system:
+
+runhaskell Setup.hs configure
+runhaskell Setup.hs build
+runhaskell Setup.hs install
+
+To install for a single user:
+
+runhaskell Setup.hs configure --prefix=/home/<username>
+runhaskell Setup.hs build
+runhaskell Setup.hs install --user
+
+
+== Who is responsable for this mess?
+
+You can send bug reports, rants and comments to:
+
+  Robert Dockins <robdockins AT fastmail.fm>
