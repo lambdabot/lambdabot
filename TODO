@@ -2,6 +2,7 @@ Dons:
   - a dynamic Config.hs module.
   - a scripting interface, expose module ops to a scripting module
   - look at pinging the server
+ - plugin for `lambdaShell'
 
  - things that should work:
         pl     . djinn

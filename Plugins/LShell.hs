@@ -18,7 +18,6 @@ import PosixCompat
 import Control.Monad.Trans      (liftIO)
 import Text.Regex
 import Util                     (dropNL, (<$>))
-import System.Directory         (findExecutable)
 
 newtype LShellModule = LShellModule ()
 
@@ -41,14 +40,10 @@ instance Module LShellModule () where
 
 lambdashell :: String -> IO [String]
 lambdashell src = do
-    m <- findExecutable "lambdaShell"
-    case m of
-        Nothing -> return ["Cannot find lambdaShell"]
-        Just binary -> do
-            (out,_,_) <- popen binary [] $ Just $ 
-                            ":load State/prelude.lam" <$> src <$> ":quit"
-            let o = dropNL . doclean . last . init . drop 11 . lines $ out
-            return [o]
+    (out,_,_) <- popen "./lambda" [] $ Just $ 
+                    ":load State/prelude.lam" <$> src <$> ":quit"
+    let o = dropNL . doclean . last . init . drop 11 . lines $ out
+    return [o]
 
 --
 -- Clean up djinn output
