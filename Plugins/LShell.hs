@@ -42,7 +42,8 @@ lambdashell :: String -> IO [String]
 lambdashell src = do
     (out,_,_) <- popen "./lambda" [] $ Just $ 
                     ":load State/prelude.lam" <$> src <$> ":quit"
-    let o = dropNL . doclean . last . init . drop 11 . lines $ out
+    let o = let s = init . drop 11 . lines $ out 
+            in if null s then "Terminated" else dropNL . doclean . last $ s
     return [o]
 
 --
