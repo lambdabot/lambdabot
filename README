@@ -6,6 +6,9 @@ Build a newer Cabal than v1.0 if you haven't already (instructions in
 the Cabal README file), which lives at:
         $ darcs get http://cvs.haskell.org/darcs/cabal
 
+To build the `lambdaShell` plugin you need to install Shellac:
+        $ darcs get http://www.eecs.tufts.edu/~rdocki01/shell/
+
 Build the FastPackedString library without the mmap extensions:
         $ darcs get --partial http://www.cse.unsw.edu.au/~dons/code/fps
         $ cd fps
