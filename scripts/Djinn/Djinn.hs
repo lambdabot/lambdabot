@@ -179,7 +179,7 @@ runCmd s (Query i g) =
 		        if sorted s then
 			    map snd $ sortBy (\ (x,_) (y,_) -> compare x y) $ map f $ take (cutOff s) ps
 			else
-			    map (termToHClause i) ps
+			    map (termToHClause i) $ take (cutOff s) ps
 	        pr = putStrLn . hPrClause
 	    when (debug s) $ putStrLn ("+++ " ++ show (head ps))
 	    putStrLn $ i ++ " :: " ++ show g
