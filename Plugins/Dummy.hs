@@ -27,6 +27,7 @@ instance Module DummyModule [String] where
         "paste"       -> "paste page url"
         "docs"        -> "@docs <lib>, lookup the url for this library's documentation"
         "libsrc"      -> "@libsrc <lib>, lookup the url for the darcs source for a library"
+        "fptools"     -> "@fptools <lib>, lookup url for darcs src"
         "learn"       -> "another url"
         "eurohaskell" -> "urls are good"
         "moo"         -> "vegan-friendly command"
@@ -60,10 +61,16 @@ dummylst = [("dummy",       \_ -> "dummy"),
                      Nothing -> x ++ " not available"
                      Just m  -> "http://haskell.org/ghc/docs/latest/html/libraries/" <>
                                 (P.unpack m) </> map (choice (=='.') (const '-') id) x <.> "html"),
+
             ("libsrc",      \x -> case M.lookup (P.pack x) docAssocs of
                Nothing -> x ++ " not available"
                Just m  -> "http://darcs.complete.org/fptools/libraries/" <>
                           (P.unpack m) </> map (choice (=='.') (const '/') id) x <.> "hs"),
+            ("fptools",     \x -> case M.lookup (P.pack x) docAssocs of
+               Nothing -> x ++ " not available"
+               Just m  -> "http://darcs.complete.org/fptools/libraries/" <>
+                          (P.unpack m) </> map (choice (=='.') (const '/') id) x <.> "hs"),
+
             ("learn",       \_ -> "http://www.haskell.org/learning.html"),
             ("map",       \_ -> "http://www.haskell.org/hawiki/HaskellUserLocations"),
 
