@@ -3,6 +3,9 @@
 --
 -- (c) 2005 Samuel Bronson
 --
+-- Joel Koerwer 11-01-2005 generalized query for different methods
+--   and added extractConversion to make things like @google 1+2 work
+--
 module Plugins.Search (theModule) where
 
 import Util
@@ -13,7 +16,9 @@ import MiniHTTP
 import Data.Maybe               (fromMaybe)
 import Data.List                (findIndex)
 import Control.Monad.State      (MonadIO, liftIO)
+import Control.Monad            (mplus)
 import Network.URI              (parseURI)
+import Text.Regex               (mkRegex, matchRegexAll, subRegex)
 
 ------------------------------------------------------------------------
 
@@ -41,8 +46,10 @@ instance Module SearchModule () where
 searchCmd :: String -> String -> LB [String]
 searchCmd _ []        = return ["Empty search."]
 searchCmd engine rest = do
-        result <- liftIO $ query engine rest
-        return [extractLoc result] -- ?
+        headers <- liftIO $ query "HEAD" engine rest
+        body <- liftIO $ query "GET" engine rest
+        return [fromMaybe "No Result Found." $ 
+                    extractLoc headers `mplus` extractConversion body] -- ?
 
 queryUrl :: String -> String -> String
 queryUrl engine q = prefix ++ urlEncode q ++ suffix
@@ -50,21 +57,38 @@ queryUrl engine q = prefix ++ urlEncode q ++ suffix
     (prefix, suffix) = fromMaybe (error "search: invalid command")
                                  (lookup engine engines)
 
-query :: String -> String -> IO [String]
-query engine q = readPage (proxy config) uri request ""
+query :: String -> String -> String -> IO [String]
+query meth engine q = readPage (proxy config) uri request ""
     where url = queryUrl engine q
           Just uri = parseURI url
-          request = ["HEAD " ++ url ++ " HTTP/1.0", ""]
+          request = [meth ++ " " ++ url ++ " HTTP/1.0", ""]
 
-extractLoc :: [String] -> String
+extractLoc :: [String] -> Maybe String
 extractLoc [] = error "No response, something weird is up."
-extractLoc (_:headers) =
-        fromMaybe "No result found."
-                  (lookup "Location" $ concatMap f headers)
-
+extractLoc (_:headers) = lookup "Location" $ concatMap f headers
         where f s = case findIndex (==':') s of
                           Just n  -> [(take n s, drop (n+2) s)]
                           Nothing -> []
+
+extractConversion :: [String] -> Maybe String
+extractConversion [] = error 
+    "conv: No response, something weird is up."
+extractConversion ls = let
+    regex1 = mkRegex "<font size=\\+1><b>"
+    regex2 = mkRegex "</b>"
+    getConv a = do 
+        (_,_,s,_) <- matchRegexAll regex1 a
+        (s',_,_,_) <- matchRegexAll regex2 s
+        return s'
+
+    searchAndReplace new regex = \s -> subRegex (mkRegex regex) s new
+    replaceFuncs = zipWith searchAndReplace
+                        [    "^",       "",      "x",                      ","]
+                        ["<sup>", "</sup>", "&#215;", "<font size=-2> </font>"]
+    pipeline [] a = a
+    pipeline (f:fs) a = pipeline fs $ f a
+    in
+    (getConv $ last ls) >>= return . pipeline replaceFuncs
 
 -- ---------------------------------------------------------------------
 -- Testing only
