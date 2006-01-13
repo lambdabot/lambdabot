@@ -83,7 +83,7 @@ kealList =
     ,"perhaps i just genius and never tested"
     ,"and yes that was with zero formal training in all realms"
     ,"somone would expect that trees 500gb hdds of expressions as if they were floppy dicks"
-    ,"can you make a macro that builds the expression accoridng to a genetic algorithm where you decide  where you decide what is good and what is bad?"
+    ,"can you make a macro that builds the expression accoridng to a genetic algorithm where you decide what is good and what is bad?"
     ,"T could perform expressions 600mb and bigger"
     ,"what is the max amount of operands haskell can handle in a single expression?"
     ,"T seems to be haskell, except with a decent interface at this point"
