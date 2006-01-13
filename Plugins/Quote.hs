@@ -120,4 +120,6 @@ kealList =
     ,"i need math friendly compiler to compile for jvm or flash"
     ,"Cale etc already pointed out Haskell is puny to nothing to emulate using my barrage of mathematic theories"
     ,"i prove infinity never ends in both directions"
+    ,"are you saying i am MegaMonad?"
+    ,"Keal angry @ dons"
     ]
