@@ -16,7 +16,7 @@ theModule :: MODULE
 theModule = MODULE $ QuoteModule ()
 
 instance Module QuoteModule () where
-    moduleCmds           _ = ["fortune","yow","arr"]
+    moduleCmds           _ = ["fortune","yow","arr","keal"]
     moduleHelp _ "fortune" = "Provide a random fortune"
     moduleHelp _ "yow"     = "Yow!"
     moduleHelp _ "arr"     = "Talk to a pirate"
@@ -119,4 +119,5 @@ kealList =
     ,"can haskell compile flash animations and java apps?"
     ,"i need math friendly compiler to compile for jvm or flash"
     ,"Cale etc already pointed out Haskell is puny to nothing to emulate using my barrage of mathematic theories"
+    ,"i prove infinity never ends in both directions"
     ]
