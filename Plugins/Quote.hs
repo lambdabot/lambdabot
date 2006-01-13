@@ -122,4 +122,7 @@ kealList =
     ,"i prove infinity never ends in both directions"
     ,"are you saying i am MegaMonad?"
     ,"Keal angry @ dons"
+    ,"i can explain why something is without knowing what the rules decided by man are"
+    ,"making a bot of me is highly offensive"
+    ,"just seeing how offtopic i could get everyone"
     ]
