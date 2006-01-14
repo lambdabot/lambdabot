@@ -25,7 +25,9 @@ import qualified Control.Exception (catch)
 
 rlimit = ResourceLimit 3
 
-context = prehier ++ datas ++ qualifieds ++ controls
+context = prehier ++ datas ++ qualifieds ++ controls ++ other
+
+other = ["Text.Printf"]
 
 prehier = ["Char", "List", "Maybe", "Numeric", "Random" ]
 
