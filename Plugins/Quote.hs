@@ -125,4 +125,10 @@ kealList =
     ,"i can explain why something is without knowing what the rules decided by man are"
     ,"making a bot of me is highly offensive"
     ,"just seeing how offtopic i could get everyone"
+    ,"intuitive != imperative"
+    ,"doubles and floats cause b*(Floor[v/b^p]/b-Floor[Floor[v/b^p]/b) to fuck up"
+    ,"what are epsilons?"
+    ,"haskell always said undefined"
+    ,"bot seems useless"
+    ,"when i put what i dat recoved from that tile into a ti92. the damn thing blew up"
     ]
