@@ -136,4 +136,5 @@ kealList =
     ,"i suggest you tear apart a 20q and plug it with the alg"
     ,"nsa has all the profiling info you need to come up with the correct survey answers"
     ,"write an algorthim that generates the correct responses for a phone survey based on number of rings whether answered how quickly hung up on and the mood of the receiver"
+    ,"where can i find opensource schematics of Linus Torvalds' x86 clone?"
     ]
