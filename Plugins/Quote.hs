@@ -69,6 +69,9 @@ arrList =
     ,"Har de har har!"
     ]
 
+--
+-- Actual quotes from an asshat called Keal over Jan 12-14 2006.
+--
 kealList :: [String]
 kealList =
     ["endian mirrors the decimal"
@@ -137,4 +140,10 @@ kealList =
     ,"nsa has all the profiling info you need to come up with the correct survey answers"
     ,"write an algorthim that generates the correct responses for a phone survey based on number of rings whether answered how quickly hung up on and the mood of the receiver"
     ,"where can i find opensource schematics of Linus Torvalds' x86 clone?"
+    ,"need to plan a fieldtrip to Frederick B. Mancoff of Freescale Semiconductor"
+    ,"ghc need to have plugin that allow copy paste in xp"
+    ,"know you know this 24 periods Keal SecretTM"
+    ,"tomorrow i share next mathematical secrety"
+    ,"nsa prevent me from returning to math on efnet"
+    ,"nsa try kill me numerous times"
     ]
