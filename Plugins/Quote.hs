@@ -106,7 +106,7 @@ kealList =
     ,"i just got banned from math because i not have good ability to convey thoughts"
     ,"i lack in verbal and social expression"
     ,"i try make program called Glyph to do it but my script lang called T too slow. i invent T"
-    ,"can GMP support KealDigit? invent KealDigit"
+    ,"can GMP support KealDigit? I invent KealDigit"
     ,"with KealDigit quantum crackproof encryption possible"
     ,"i show how spell triangle in less than three corners using darkmanifold"
     ,"can haskell pipe the raw irrational megaequation into an analog device"
