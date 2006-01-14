@@ -131,4 +131,9 @@ kealList =
     ,"haskell always said undefined"
     ,"bot seems useless"
     ,"when i put what i dat recoved from that tile into a ti92. the damn thing blew up"
+    ,"i think it because mathematics damage you cpu"
+    ,"ithink has to do with hardcased government failsafe in chip"
+    ,"i suggest you tear apart a 20q and plug it with the alg"
+    ,"nsa has all the profiling info you need to come up with the correct survey answers"
+    ,"write an algorthim that generates the correct responses for a phone survey based on number of rings whether answered how quickly hung up on and the mood of the receiver"
     ]
