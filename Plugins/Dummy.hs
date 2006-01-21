@@ -34,6 +34,7 @@ instance Module DummyModule [String] where
         "map"         -> "#haskell user map"
         "botsnack"    -> "bot-feeder"
         "get-shapr"   -> "summon shapr instantly"
+        "shootout"    -> "the debian language shootout"
         _             -> "dummy module"
 
   process_ _ "moo" _ = do
@@ -45,40 +46,42 @@ instance Module DummyModule [String] where
        Just f  -> return $ lines $ f rest
 
 dummylst :: [(String, String -> String)]
-dummylst = [("dummy",       \_ -> "dummy"),
-            -- todo more h4sh style functoins...
-            ("id",          id),
-            ("get-shapr",   \_ -> "shapr!!"),
-            ("eurohaskell", \_ -> unlines ["less talks, more code!",
-                                           "http://www.haskell.org/hawiki/EuroHaskell",
-                                           "EuroHaskell - Haskell Hackfest - Summer 2005 ",
-                                                "- Gothenburg, Sweden"]),
-            ("wiki",        \x -> "http://www.haskell.org/hawiki/" ++ x),
-            ("paste",       \_ -> "http://www.haskell.org/hawiki/HaskellIrcPastePage"),
-            ("docs",        \x -> case x of
-               [] -> "http://haskell.org/ghc/docs/latest/html/libraries/index.html"
-               _  -> case M.lookup (P.pack x) docAssocs of
-                     Nothing -> x ++ " not available"
-                     Just m  -> "http://haskell.org/ghc/docs/latest/html/libraries/" <>
-                                (P.unpack m) </> map (choice (=='.') (const '-') id) x <.> "html"),
+dummylst = 
+    [("dummy",       \_ -> "dummy"),
+    -- todo more h4sh style functoins...
+    ("id",          id),
+    ("get-shapr",   const "shapr!!"),
+    ("eurohaskell", \_ -> unlines ["less talks, more code!",
+                                   "http://www.haskell.org/hawiki/EuroHaskell",
+                                   "EuroHaskell - Haskell Hackfest - Summer 2005 ",
+                                        "- Gothenburg, Sweden"]),
+    ("wiki",        \x -> "http://www.haskell.org/hawiki/" ++ x),
+    ("paste",       \_ -> "http://www.haskell.org/hawiki/HaskellIrcPastePage"),
+    ("docs",        \x -> case x of
+       [] -> "http://haskell.org/ghc/docs/latest/html/libraries/index.html"
+       _  -> case M.lookup (P.pack x) docAssocs of
+             Nothing -> x ++ " not available"
+             Just m  -> "http://haskell.org/ghc/docs/latest/html/libraries/" <>
+                        (P.unpack m) </> map (choice (=='.') (const '-') id) x <.> "html"),
 
-            ("libsrc",      \x -> case M.lookup (P.pack x) docAssocs of
-               Nothing -> x ++ " not available"
-               Just m  -> "http://darcs.complete.org/fptools/libraries/" <>
-                          (P.unpack m) </> map (choice (=='.') (const '/') id) x <.> "hs"),
-            ("fptools",     \x -> case M.lookup (P.pack x) docAssocs of
-               Nothing -> x ++ " not available"
-               Just m  -> "http://darcs.complete.org/fptools/libraries/" <>
-                          (P.unpack m) </> map (choice (=='.') (const '/') id) x <.> "hs"),
+    ("libsrc",      \x -> case M.lookup (P.pack x) docAssocs of
+       Nothing -> x ++ " not available"
+       Just m  -> "http://darcs.complete.org/fptools/libraries/" <>
+                  (P.unpack m) </> map (choice (=='.') (const '/') id) x <.> "hs"),
+    ("fptools",     \x -> case M.lookup (P.pack x) docAssocs of
+       Nothing -> x ++ " not available"
+       Just m  -> "http://darcs.complete.org/fptools/libraries/" <>
+                  (P.unpack m) </> map (choice (=='.') (const '/') id) x <.> "hs"),
 
-            ("learn",       \_ -> "http://www.haskell.org/learning.html"),
-            ("map",       \_ -> "http://www.haskell.org/hawiki/HaskellUserLocations"),
-
-            ("botsnack",    \_ -> ":)")]
+    ("learn",    const "http://www.haskell.org/learning.html"),
+    ("map",      const "http://www.haskell.org/hawiki/HaskellUserLocations"),
+    ("shootout", const "http://shootout.alioth.debian.org/gp4/benchmark.php?test=all&lang=all"),
+    ("botsnack", const ":)")]
 
 {-# INLINE choice #-}
 choice :: (r -> Bool) -> (r -> a) -> (r -> a) -> (r -> a)
 choice p f g x = if p x then f x else g x
+
 -- Generalizations:
 -- choice :: ArrowChoice (~>) => r ~> Bool -> r ~> a -> r ~> a -> r ~> a
 -- choice :: Monad m => m Bool -> m a -> m a -> m a
