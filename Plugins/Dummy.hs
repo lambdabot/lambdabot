@@ -35,6 +35,7 @@ instance Module DummyModule [String] where
         "botsnack"    -> "bot-feeder"
         "get-shapr"   -> "summon shapr instantly"
         "shootout"    -> "the debian language shootout"
+        "faq"         -> "answer frequently asked questions about haskell"
         _             -> "dummy module"
 
   process_ _ "moo" _ = do
@@ -51,6 +52,7 @@ dummylst =
     -- todo more h4sh style functoins...
     ("id",          id),
     ("get-shapr",   const "shapr!!"),
+    ("faq",         const "The answer is: Yes! Haskell can do that."),
     ("eurohaskell", \_ -> unlines ["less talks, more code!",
                                    "http://www.haskell.org/hawiki/EuroHaskell",
                                    "EuroHaskell - Haskell Hackfest - Summer 2005 ",
