@@ -17,11 +17,11 @@ import System.Random
 import System.Exit              (exitWith, ExitCode(ExitSuccess))
 import System.IO                (getContents, putStrLn)
 import System.Posix.Resource    (setResourceLimit,
-			         Resource(ResourceCPUTime), 
+                                 Resource(ResourceCPUTime), 
                                  ResourceLimits(ResourceLimits),
-			         ResourceLimit(ResourceLimit))
+                                 ResourceLimit(ResourceLimit))
 
-import qualified Control.Exception (catch)
+import qualified Control.Exception
 
 rlimit = ResourceLimit 3
 
@@ -54,6 +54,8 @@ main = do
                          ")") context
         when (isJust s) $ Control.Exception.catch 
                     (putStrLn $ fromJust s)
-                    (\e -> putStrLn $ "Exception: " ++ show e )
+                    (\e -> Control.Exception.handle (const $ putStrLn "Exception") $ do
+                                e' <- Control.Exception.evaluate e
+                                putStrLn $ "Exception: " ++ show e')
     exitWith ExitSuccess
 
