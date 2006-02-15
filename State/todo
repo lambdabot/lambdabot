@@ -26,3 +26,19 @@ sarahbot style @tell
 dons
 @tell command - relays a message to someone when they next speak
 beelsebob_
+@seen on lambdabot should report lambdabot's channels too
+dons
+when printing first lines of infinite things (or all cases with nonexact), should say 'at least'
+ski
+provide '@more <number>', at least for privmsg
+ski
+'@todo-remove <number>' for priviledged users, and possibly the user who added the todo note (is @todo-replace worth it ?)
+ski
+BUG: @pl (\_ -> return ()) --> const return
+dons
+"@tell command to make lambdabot give someone a message when they're next seen"
+beelsebob_
+"@remind command formatted as '@remind <person> {at <time> | in <time interval>} {to | about} <reminder message>' to get lambdabot to remind someone to do something"
+beelsebob_
+"@pester command to make lambdabot pester you in PM to do something"
+beelsebob_

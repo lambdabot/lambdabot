@@ -4,7 +4,6 @@
 module Plugins.Dummy (theModule) where
 
 import Lambdabot
-import LBState
 import Util
 import Plugins.Dummy.DocAssocs (docAssocs)
 import Plugins.Dummy.Moo (cows)
@@ -19,7 +18,8 @@ theModule = MODULE $ DummyModule ()
 instance Module DummyModule [String] where
   moduleDefState _ = return $ cycle cows
 
-  moduleCmds   _ = "moo" : map fst dummylst
+  moduleCmds   _ = {-"moo" : -} map fst dummylst
+
   moduleHelp _ s = case s of
         "dummy"       -> "print a string constant"
         "id"          -> "the identiy plugin"
@@ -38,9 +38,13 @@ instance Module DummyModule [String] where
         "faq"         -> "answer frequently asked questions about haskell"
         _             -> "dummy module"
 
-  process_ _ "moo" _ = do
-        cow' <- withMS $ \(cow:farm) writer -> writer farm >> return cow
-        return (lines cow')
+{-
+  process _ _ src "moo" _ = do
+        cow' <- withMS $ \(cow:farm) writer -> do
+          writer farm
+          return cow
+        mapM_ (ircPrivmsg' src) (lines cow')
+-}
 
   process_ _ cmd rest = case lookup cmd dummylst of
        Nothing -> error "Dummy: invalid command"

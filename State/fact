@@ -12,6 +12,10 @@ bzip2
 bzip2 is an open source data compression algorithm and program developed by Julian Seward. Seward made the first public release of bzip2, version 0.15, in July 1996. He's also known as a GHC hacker.
 dsl
 Domain specific language
+fact
+A fact is a fact is a fact is a fact. Or not.
+faggot
+luqui
 flip
 f a b = f b a
 foo
@@ -26,6 +30,8 @@ hsu
 I know nothing about Haskell Secret Underground.
 lambdabot
 Lambdabot is a bot of curious opinions, and is female.
+libdpf
+an LGPL licensed plain C pdf reading library.
 pizza
 Eat pizza, but don't let it eat you.
 pseudonym
@@ -38,6 +44,8 @@ samb_lambdabot
 @fact lambdabot
 samb_lambdabot.
 @fact lambdabot
+spam
+spacko does it frequently
 tmr
 The Monad.Reader http://www.haskell.org/tmrwiki/FrontPage
 welfare

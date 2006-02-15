@@ -33,9 +33,7 @@ data Config = Config {
 
         -- which ghci to use (in @type)
         ghci        :: FilePath,
-
-        -- where to dump output.  should be outputDir ++ "/" ++ pluginName
-        outputDir :: String
+	outputDir   :: FilePath
 }
 
 --
@@ -45,14 +43,16 @@ config :: Config
 config = Config {
         name            = "lambdabot",
         userinfo        = "Lambda_Robots:_100%_Loyal",
-        host            = "irc.freenode.net",
+        host            = "chat.au.freenode.net",
 
         port            = 6667,
         verbose         = True,
         textwidth       = 75,
         moresize        = 5,
         proxy           = Just ("www-proxy",3128),
-        autojoin        = ["#haskell"],
+        autojoin        = ["#haskell","#haskell-blah","#flippi"
+                 	  ,"#haskell-overflow","#gentoo-haskell"
+			  ,"#haskell.it","#haskell.es","#ScannedInAvian"],
 
         admins          = [
                 "Pseudonym",    "shapr", "Heffalump",    "Igloo",  
@@ -64,5 +64,5 @@ config = Config {
         fptoolsPath     = "/home/dons/fptools",
 
         ghci            = "ghci",
-        outputDir	    = "State/"
+	outputDir           = "State/"
    }

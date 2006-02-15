@@ -16,12 +16,18 @@ bnfc
 http://www.cs.chalmers.se/~markus/BNFC/
 buddha
 http://www.cs.mu.oz.au/~bjpop/buddha/
+c--
+www.cminusminus.org
 c2hs
 http://www.cse.unsw.edu.au/~chak/haskell/c2hs/
 cabal
 http://www.haskell.org/cabal
 cabal-get
 http://hackage.haskell.org/darcs/cabal-get-bootstrap/
+cairo
+http://haskell.org/gtk2hs/
+commentary
+http://www.cse.unsw.edu.au/~chak/haskell/ghc/comm/
 conjure
 http://j.mongers.org/pub/haskell/darcs/conjure/
 cpphs
@@ -38,6 +44,10 @@ darcs-ghc
 darcs get http://cvs.haskell.org/darcs/ghc
 darcs-libs
 darcs get http://cvs.haskell.org/darcs/libraries
+darcsweb
+http://users.auriga.wearlab.de/~alb/darcsweb/
+diet
+http://web.engr.oregonstate.edu/~erwig/diet/
 djinn
 darcs get http://darcs.augustsson.net/Darcs/Djinn
 drift
@@ -48,8 +58,12 @@ ffi
 http://www.cse.unsw.edu.au/~chak/haskell/ffi/
 fgl
 http://www.cs.orst.edu/~erwig/fgl/
+filepath
+http://scannedinavian.org/~lemmih/FilePath
 flippi
 http://www.flippac.org/projects/flippi/
+foo
+@yow
 fps
 http://www.cse.unsw.edu.au/~dons/fps.html
 fptools
@@ -64,6 +78,8 @@ ghc
 http://haskell.org/ghc
 ghc-api
 http://www.scannedinavian.org/~lemmih/ghc-api/
+ghc-bugs
+http://www.haskell.org/ghc/reportabug
 ghc-src
 http://scannedinavian.org/~lemmih/ghc-src
 ginsu
@@ -78,18 +94,32 @@ gtk2hs
 http://haskell.org/gtk2hs/
 h4sh
 http://www.cse.unsw.edu.au/~dons/h4sh.html
+hackage
+http://hackage.haskell.org/trac/hackage
+hackagedb
+http://hackage.haskell.org/ModHackage/Hackage.hs?action=home
+hacle
+http://www-users.cs.york.ac.uk/~mfn/hacle/
 haddock
 http://www.haskell.org/haddock/
 happy
 http://www.haskell.org/happy/
+hare
+http://www.cs.kent.ac.uk/projects/refactor-fp/hare.html
 harp
 http://www.cs.chalmers.se/~d00nibro/harp
 harrorth
 http://perlcabal.org/~nothingmuch/harrorth/
+hashell
+haskell.org/hashell
 haskell
 http://haskell.org/
+haskell'
+http://hackage.haskell.org/trac/haskell-prime
 haskell-mode
 http://www.iro.umontreal.ca/~monnier/elisp/
+haskell-prime
+http://hackage.haskell.org/trac/haskell-prime
 haskell.vim
 http://urchin.earth.li/~ian/vim/haskell.vim
 haskell98
@@ -104,6 +134,8 @@ hasktags
 http://www.cl.cam.ac.uk/users/rje33/software.html
 hasp
 http://scannedinavian.com/~lemmih/hasp
+haste
+http://haste.dyndns.org:8080/
 hat
 http://www.cs.york.ac.uk/fp/hat
 hawiki
@@ -115,7 +147,7 @@ http://www.haskell.org/communities/
 helium
 http://www.cs.uu.nl/research/projects/helium/
 hide
-http://www.haskell.org/hawiki/hIDE
+http://haskell.org/haskellwiki/HIDE
 hier
 http://haskell.org/ghc/docs/latest/html/libraries/index.html
 hlist
@@ -123,7 +155,7 @@ http://homepages.cwi.nl/~ralf/hlist/
 hmake
 http://haskell.org/hmake
 hmp3
-darcs get --partial http://www.cse.unsw.edu.au/~dons/code/hmp3
+http://www.cse.unsw.edu.au/~dons/hmp3.html
 hoogle
 http://www.haskell.org/hoogle
 hop
@@ -142,6 +174,8 @@ hsgnutls
 http://www.cs.helsinki.fi/u/ekarttun/hsgnutls
 hsp
 http://www.cs.chalmers.se/~d00nibro/hsp
+hsql
+http://htoolkit.sourceforge.net
 hsx
 http://www.cs.chalmers.se/~d00nibro/haskell-src-exts/
 htf
@@ -170,8 +204,14 @@ ion
 http://modeemi.cs.tut.fi/~tuomov/ion/
 jhc
 http://repetae.net/john/computer/jhc/
+joinhs
+http://www.haskell.org/tmrwiki/JoinHs
 lambdabot
 http://www.cse.unsw.edu.au/~dons/lambdabot.html
+lambdashell
+darcs get http://www.eecs.tufts.edu/~rdocki01/lambda/
+lambdatex
+http://www.cse.unsw.edu.au/~patrykz/lambdaTeX/
 lhs2tex
 http://www.cs.uu.nl/~andres/lhs2tex
 libs
@@ -182,8 +222,12 @@ lispyprojects
 http://www.codersbase.com/Projects
 logs
 http://tunes.org/~nef/logs/haskell/
+ltu
+http://lambda-the-ultimate.org/
 missingh
 http://quux.org/devel/missingh
+morrow
+http://www.cs.uu.nl/~daan/morrow/
 network-alt
 http://www.cs.helsinki.fi/u/ekarttun/network-alt/
 newbinary
@@ -194,12 +238,16 @@ nymphaea
 http://haskell.galois.com/~paolo/nymphaea
 ones
 ones = 1 : ones
+oohaskell
+http://homepages.cwi.nl/~ralf/OOHaskell/
 openbsd
 http://openbsd.org/
 parsec
 http://www.cs.ruu.nl/~daan/parsec.html
 paste
 http://paste.lisp.org/new/haskell
+phrac
+http://www.cse.unsw.edu.au/~pls/repos/phrac/
 pivotal
 http://www.cs.kent.ac.uk/projects/pivotal
 pugs
@@ -209,7 +257,7 @@ http://www.sourceforge.net/projects/qforeign/
 quickcheck
 http://www.cs.chalmers.se/~rjmh/QuickCheck/
 ranged-sets
-https://sourceforge.net/projects/ranged-sets/
+http://sourceforge.net/projects/ranged-sets/
 riot
 http://iki.fi/tuomov/riot/
 sequence
@@ -218,6 +266,10 @@ serth
 http://www.cs.helsinki.fi/u/ekarttun/SerTH/
 shapr
 http://www.ScannedInAvian.com/
+shaskell
+http://davidmercer.nfshost.com/projects/shaskell/shaskell.html
+shellac
+darcs get http://www.eecs.tufts.edu/~rdocki01/shell/
 soe
 http://haskell.org/soe/
 soegtk
@@ -226,6 +278,12 @@ stm
 http://research.microsoft.com/Users/simonpj/papers/stm/
 tmr
 http://www.haskell.org/tmrwiki/FrontPage
+tutorial
+http://www.haskell.org/tutorial/
+uuag
+http://www.cs.uu.nl/wiki/HUT/AttributeGrammarSystem
+w3m
+http://w3m.sourceforge.net/
 wash
 http://www.informatik.uni-freiburg.de/~thiemann/haskell/WASH/
 winhugs
@@ -234,6 +292,8 @@ wxhaskell
 http://wxhaskell.sourceforge.net/
 yaht
 http://www.isi.edu/%7Ehdaume/htut/
+yampa
+http://www.haskell.org/yampa/
 yhc
 http://www.cs.york.ac.uk/~ndm/yhc
 yi

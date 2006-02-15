@@ -1,3 +1,9 @@
+
+
+##C++
+ haskell == plain english ??
+[asking about C++ rules] vincenz: how should we know what those rules mean ?
+
 <basti_>
 Snow doeth lay upon the lands. Even with cunning newtype; deriving the newtype is recursive. Great leaders brings less pain.
 
@@ -5,10 +11,20 @@ Alanna
 Saying that Java is nice because it works on all OS's is like saying that anal sex is nice because it works on all genders.
 
 Cale
+The perfect programming language is mathematics, but that only runs on mathematicians.
 Beware of the function [a] -> a. For it may contain trappes and sprynges of great variety and harm.
+
+ChilliX
+You need to seek a balance between category theory and VLSI
+
+ChrisKuklewicz
+Are there little known Haskell idioms for doing math? Is there an undocumented -funleash-fortran parameter?
 
 ChristopherHendrie
 Sometimes I wonder if Java will be indirectly responsible for hastening the adoption of functional programming languages
+
+Foo
+Bar
 
 Gahhh
 monads are usually a personal experience.
@@ -17,28 +33,63 @@ HavocPennington
 Haskell is the least-broken programming language available today.
 
 Heffalump
+docs aren't all that useful, generally
 CPP leads to suffering
 
 Itkovian
 real programmers don't write docs, if it was hard to write, it should be hard to understand
 
 JaffaCake
+not all IOError->String functions are created equal :)
 I'm afraid I'm completely IA64-ignorant (and hoping to remain that way until IA64 goes away :-)
+
+JohnMeacham
+There will also be a karaoke competition to determine the fate of the monomorphism restriction.
+Type theory makes totally awesome material for bar room shit talk.
+Last night I was at this dive bar listening to live music and there was this cute girl I was talking too while this guy was there, we started ribbing each other in the appropriate way when confronted with the situation of two guys talking to the same girl, and our jeers eventually turned technical until we were arguing about haskell, perl, and pugs development. it turning out he was one of the pugs de
+
+Oleg
+The implementation of RSA on type level is left for future work
+
+PaulGraham
+An algorithm for lazy evaluation of research papers: Just write whatever you want and don't cite any previous work, and indignant readers will send you references to all the papers you should have cited.
+
+Paul_Graham
+I get the impression that using [Haskell] would feel like reading a novel written by a literary critic.
 
 Pseudonym
 I think principal types are overrated
 Lazy evalution is really, really trippy.
 Well, personally, I don't think dumb people should be let near a programming language.
 
+S.Behrens
+or maybe she is the Queen of Sciences and he is the Mack Daddy.
+Computer science is the womanizer, and math is the pure-hearted girl he won't call the next day.
+
 SamB
+because sliced bread gives horribly uninformative error messages?
+because sliced bread gives horribly uninformative error messages?
+C is a good language. If what you want is an assembly language where you can't be sure what anything does
+fworp: next time, load your shirt up in to GHCi *before* having it printed
 Boy, point-free Arrows are worse than Forth...
+
+SebastianHanowski
+I tried to formalise a proof of rev (rev l)  = l i found in W. Kluges book "Abstract Computing Machines - A Lambda Calculus Perspective" which is pretty much a 'Pimp My Ride' for SECD-machines.
 
 SyntaxNinja
 I think that the compiler authors will fly here from England just to kill me if I did that
 
+Taral
+But I can do DP in C, which has no RT
+How do you add an @quote?
+How do you add an @quote?
+
 adept
 Tried to co-read and co-understand comonads, but got co-re dump
 I think I need cobrain to understand coeffects
+
+astrolabe
+I put my thing in inverted commas because it isn't a really stalactite, but it looks like one, and contains nitrates from urea.
 
 autrijus
 Mechanical and super-natty! Inspect the result and *if* happy; freeze, sell and get some sleep!
@@ -53,19 +104,42 @@ I'm not encouraged by the comment "i don't know haskell, but CL is much better",
 chromatic
 My productivity increased when Autrijus told me about Haskell's trace function. He called it a refreshing desert in the oasis of referential transparency.
 
+cjs
+I have to explain this shit to people. I mean, I start out right, "Hey, you know how you always have these bugs because what you thought was in the variable is not there?" And I get all of these nods of agreement. "Well, I've found a new language that solves that problem." Audience: "Ooooh! How?" Me: "There's no variables!" And then they all start moving away from me slowly....
+
+conjure
+BitTorrent client in (hopefully) 10,000 lines: darcs get http://j.mongers.org/pub/haskell/darcs/conjure/
+
 darius
 Well profiling does add a bit of reflection, but it should have the good sense not too go near the barbed wire fences and armed guards.
 I imagine XSLT programmers say "It's a one pager" the way most other programmers say "It's a one liner".
+
+dcnstrct
+even the #lisp people say go with haskell
 
 desrt
 man... there's this whole dark side to haskell that dr. kahl didn't teach us in 3e03
 
 dons
+note to self: grep only works on disks
+but let is more lazy ;)
+who was it who said (shapr?) that they welcome their competitors using languages other than haskell? it's a bad sign if your enemies start coding in haskell!
 the type system is *great* for coding while sleepy.. you just hack any garbage together, and let the type checker deal with it
 boegel, stop polluting the quote-space please
 I don't mind autoconf, except for the fact that it's stupid and ugly
 
+franka
+Yes, he is humping the thick of thongs.
+I don't like it if it's too hard
+
+gFunk
+[the main advantage of functional programs are that they're] incorrect the first 1000 times you try to compile it!
+
 ghc
+ld64: INFO    171: Multigot invoked. Gp relative region broken up into 2 separate regions.
+ld64: WARNING 47 : This module contains branch instruction(s) that might degrade performance on an R4000 processor.
+Unable to mmap( MAP_FIXED ) for Jump Islands
+Only unit numeric type pattern is valid
 yi-static: internal error: TSO object entered!
 deadlock: main thread blocked in a strange way
 Bad eta expand
@@ -111,7 +185,7 @@ parse error on input
 lexical error in string/character literal
 primitive string literal must contain only characters <= '\\\\xFF\\'
 invalid character
-parse error (possibly incorrect indentation)
+PArse error (possibly incorrect indentation)
 Can't match unequal length lists
 Kind error
 Cannot unify a type variable with a type scheme
@@ -199,11 +273,18 @@ gzl
 hakko
 most programmers have a lot of religious issues about their work, yes.
 
+ihope
+Laziness if free, but it doesn't always pay off.
+
 jjuggle
 I was riding around town and this cop on patrol on a bike rode up next to me and said, "There's always a show off." I offered to teach him to ride and help set up a unicycle patrol squad, but he declined.
 
 jlouis
 Q: When does one know he has programmed too much Haskell? A: When he uses == and /= in everyday IRC chat or when he tries to fix a relationship by passing himself as a continuation
+
+joelr
+the learning curve is far steeper with Haskell but it is far more elegant and readable
+Fundeps, existential types, HList take a while to grasp
 
 kolmodin
 i.e. I would rather lose my left arm than write it in Java
@@ -212,17 +293,26 @@ kzm
 My program contains a bug.  How ungrateful, after all I've done for it.
 
 lambdabot
+Couldn't match kind `?? -> ? -> *' against `(* -> *) -> * -> *'
 of course i'm female
 lambdabot hasn't said anything memorable
 
 lispy
-i just remembered this dream i had the other morning.  I was trying to tell my alarm clock how to snooze by using a list comprehension
+I just remembered this dream i had the other morning.  I was trying to tell my alarm clock how to snooze by using a list comprehension
 
 malcolm
+I don't believe you need to invoke the full awesome majesty of Template Haskell
 Most software doesn't need to be fast.  But all software needs a fighting chance of correctness
 
 mattam
 [Monads are] much more elegant [than soccer] in general.
+
+mikaeli
+hmm, one national tv station I was watching while eating breakfast crashed with bsod. I guess that's what you get for running windows in production use
+My friend bought a new laptop; it had MSBLASTER preinstalled. I couldn't believe it either and installed XP and the apps many times, run virus killers and everytime the blaster came back. Everything was packed on a rescue cd. And virus was in m$ works installation files.
+
+musasabi
+<musasabi> no reason to reinvent the whole wheel  <musasabi> (usually reinvented wheels end up square)
 
 mwc
 I actually got away with running Haskell through a TeX pretty printer and handing it in as pseudocode
@@ -236,6 +326,9 @@ Freeze!
 pesco
 "Scientists Reveal: Human Consciousness Stems From Two Files in Different Directories!"
 
+reddi
+and now i know: IT DOES NOT WORK ALWAYS ;-)
+
 reffie
 yi is clearly the editor of the future.
 
@@ -243,6 +336,10 @@ samc
 monads are hard, let's go shopping
 
 shapr
+Programming is the Magic Executable Fridge Poetry, it is machines made of thought, fueled by ideas.
+The legal system is the ultimate denial of service attack.
+I don't know why the GHC team won't accept my spoonIO patch
+I've toked on so many lambdas I'm getting dependent types
 Anyway, I'm just a walking index into the Haskell world. I can tell you a little bit about many things, but I will quickly forward you to the experts for more detail.
 I am hexed and vexed ;-)
 Academics are continually chewing pieces off of impossible and making them merely difficult.
@@ -260,6 +357,7 @@ tomasz
 After all, return is only a fancy name for liftM0 :-)
 
 tromp
+the number of legal 17x17 Go positions is 9895749638558742166 modulo 18446744073709551577 :)
 The number of legal 16x16 Go positions is 4813066963822755416429056022484299646486874100967249263944719599975607459850502222039591149331431805524655467453067042377
 The base of liberties in Go is 2.975734192
 the number of legal 15x15 Go positions is 10751464308361383118768413754866123809733788820327844402764601662870883601711298309339239868998337801509491
@@ -270,9 +368,16 @@ number of 13x13 go positions is 372497923076863964422949047670245176742491579482
 vegai
 Hey Haskell! Give me that File! -Naah, I'm too lazy. *thinks* I'll give you a cookie if you tell me how many letters that file has! -Oh, ok!
 
+vincenz
+I'm not looking at a way to do hetero
+
 vixen
 If you see this, gentle sir, know that you are being trolled by a poorly configured VixenLove program
 
 wilx
 I mean, besides the murders, it all looks so nice.
+
+xerox
+> take 10 lol where lol = "ol" : zipWith (:) (intersperse 'o' $ cycle "l") lol
+you know, befunge is probably the only language I've seen where you can run code pasted from IRC with the <nick> tags still in place ;-)
 
