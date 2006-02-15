@@ -57,7 +57,7 @@ STATICS=       Base System Dict Dummy Karma \
                Todo Spell Haddock Code Hoogle Where \
                Elite Localtime Poll Djinn Pretty Compose LShell
 #              Lambda DarcsPatchWatch LogModule
-LD_OPTS=       -package network -package posix -package parsec -package fps
+LD_OPTS=       -package network -package posix -package parsec -package fps -package haskell-src
 endif
 
 GHC_VERSION=	@GHC_VERSION@
