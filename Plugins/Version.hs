@@ -23,6 +23,6 @@ instance Module VersionModule () where
                      "and darcs repo of this bot"
     process_ _ _ _ = return . (:[]) $ concat
                 ["lambdabot 3p", PATCH_COUNT, ", ",
-                 "GHC ", GHC_VERSION, " (", PLATFORM, ")",
+                 "GHC ", GHC_VERSION, " (", PLATFORM, " ", CPU, ")",
                  "\n", "darcs get ", REPO_PATH ]
 

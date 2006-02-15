@@ -56,7 +56,7 @@ config = Config {
 
         admins          = [
                 "Pseudonym",    "shapr", "Heffalump",    "Igloo",  
-                "Cale",         "dons", "TheHunter",    "jlouis"
+                "Cale",         "dons", "TheHunter",    "musasabi"
         ],
 
         hooglePath      = "/home/dons/hoogle",

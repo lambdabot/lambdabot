@@ -81,6 +81,9 @@ AC_SUBST(GHC_LIB_PATH)
 PLATFORM=`uname -ms`
 AC_SUBST(PLATFORM)
 
+CPU=`grep 'model name' /proc/cpuinfo | sed 's/.*: //' || true`
+AC_SUBST(CPU)
+
 REPO_PATH=`sed -n 1p _darcs/prefs/repos`
 AC_SUBST(REPO_PATH)
 
