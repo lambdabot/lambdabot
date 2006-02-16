@@ -22,8 +22,11 @@ type TimeMap = M.Map String  -- the person who's time we requested
 instance Module LocaltimeModule TimeMap where
 
   moduleHelp _ _      = "print a user's local time"
-  moduleCmds   _      = ["localtime", "localtime-reply"]
+  moduleCmds   _      = ["time", "localtime", "localtime-reply"]
   moduleDefState _    = return M.empty
+
+  -- synonym
+  process x y z "time" a = process x y z "localtime" a
 
   -- record this person as a callback, for when we (asynchronously) get a result
   process _ _ whoAsked "localtime" rawWho = do
