@@ -23,11 +23,15 @@ instance Module DummyModule [String] where
   moduleHelp _ s = case s of
         "dummy"       -> "print a string constant"
         "id"          -> "the identiy plugin"
-        "wiki"        -> "wiki urls"
+        "wiki"        -> "URLs of wiki pages"
+        "oldwiki"     -> "URLs of the old hawiki pages"
         "paste"       -> "paste page url"
+
         "docs"        -> "@docs <lib>, lookup the url for this library's documentation"
-        "libsrc"      -> "@libsrc <lib>, lookup the url for the darcs source for a library"
-        "fptools"     -> "@fptools <lib>, lookup url for darcs src"
+
+        "libsrc"      -> "@libsrc <lib>, lookup the url of fptools libraries"
+        "fptools"     -> "@fptools <lib>, lookup url of ghc base library modules"
+
         "learn"       -> "another url"
         "eurohaskell" -> "urls are good"
         "moo"         -> "vegan-friendly command"
@@ -61,8 +65,12 @@ dummylst =
                                    "http://www.haskell.org/hawiki/EuroHaskell",
                                    "EuroHaskell - Haskell Hackfest - Summer 2005 ",
                                         "- Gothenburg, Sweden"]),
-    ("wiki",        \x -> "http://www.haskell.org/hawiki/" ++ x),
+
+    ("wiki",        \x -> "http://www.haskell.org/haskellwiki/" ++ x),
+    ("oldwiki",     \x -> "http://www.haskell.org/hawiki/" ++ x),
+
     ("paste",       \_ -> "http://www.haskell.org/hawiki/HaskellIrcPastePage"),
+
     ("docs",        \x -> case x of
        [] -> "http://haskell.org/ghc/docs/latest/html/libraries/index.html"
        _  -> case M.lookup (P.pack x) docAssocs of
@@ -74,9 +82,10 @@ dummylst =
        Nothing -> x ++ " not available"
        Just m  -> "http://darcs.complete.org/fptools/libraries/" <>
                   (P.unpack m) </> map (choice (=='.') (const '/') id) x <.> "hs"),
+
     ("fptools",     \x -> case M.lookup (P.pack x) docAssocs of
        Nothing -> x ++ " not available"
-       Just m  -> "http://darcs.complete.org/fptools/libraries/" <>
+       Just m  -> "http://darcs.haskell.org/packages/base/" <>
                   (P.unpack m) </> map (choice (=='.') (const '/') id) x <.> "hs"),
 
     ("learn",    const "http://www.haskell.org/learning.html"),
