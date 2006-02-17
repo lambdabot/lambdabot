@@ -85,7 +85,7 @@ dummylst =
 
     ("fptools",     \x -> case M.lookup (P.pack x) docAssocs of
        Nothing -> x ++ " not available"
-       Just m  -> "http://darcs.haskell.org/packages/base/" <>
+       Just m  -> "http://darcs.haskell.org/packages/" <>
                   (P.unpack m) </> map (choice (=='.') (const '/') id) x <.> "hs"),
 
     ("learn",    const "http://www.haskell.org/learning.html"),
