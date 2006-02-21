@@ -4,6 +4,7 @@
 --
 module IRC where
 
+import Data.Char (chr,isSpace)
 import DeepSeq
 import Util (split, breakOnGlue, clean)
 import qualified Util (concatWith)
@@ -48,10 +49,14 @@ channels msg
 privmsg :: String -- ^ Who should recieve the message (nick)
 	-> String -- ^ What is the message?
 	-> Message -- ^ Constructed message
-privmsg who msg = mkMessage "PRIVMSG" [who, ':' : clean_msg]
-    where clean_msg = case concatMap clean msg of
+privmsg who msg = if action then mkMessage "PRIVMSG" [who, ':':(chr 0x1):("ACTION " ++ clean_msg ++ ((chr 0x1):[]))]
+                            else mkMessage "PRIVMSG" [who, ':' : clean_msg]
+    where cleaned_msg = case concatMap clean msg of
               str@('@':_) -> ' ':str
               str         -> str
+	  (clean_msg,action) = case cleaned_msg of
+	      ('/':'m':'e':r) -> (dropWhile isSpace r,True)
+	      str             -> (str,False)
 
 -- | 'setTopic' takes a channel and a topic. It then returns the message
 --   which sets the channels topic.
