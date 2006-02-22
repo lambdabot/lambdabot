@@ -30,7 +30,6 @@ module Util (
 
 import Config
 
-import Debug.Trace
 import Data.List                (intersperse, isPrefixOf)
 import Data.Char                (isSpace, toLower, toUpper)
 import Control.Monad.State      (when,MonadIO(..))
@@ -195,8 +194,8 @@ getRandItem mylist rng = (mylist !! index,newRng)
 --   you use the Operating Systems provided RNG instead of rolling your own
 --   and the state of the RNG is hidden, so one don't need to pass it
 --   explicitly.
-stdGetRandItem :: Show a => [a] -> IO a
-stdGetRandItem lst = trace (show lst) $ getStdRandom $ getRandItem lst
+stdGetRandItem :: [a] -> IO a
+stdGetRandItem lst = getStdRandom $ getRandItem lst
 
 ------------------------------------------------------------------------
 
