@@ -80,7 +80,7 @@ FIXME --- maybe we should take into consideration nick changes?
 > defaultNLines = 10
 
 > commands :: [(String,String)]
-> commands = [("last", "@last <channel> [<user>] [<count>] The last <count> (default 10) posts to channel <channel>."),
+> commands = [("last", "@last <channel> [<count>] [<user>] The last <count> (default 10) posts to channel <channel>."),
 >       ("log-email", "@log-email <email> [<start-date>] Email the log to the given address (default to todays)")]
 
 > instance Module LogModule LogState where
@@ -94,7 +94,8 @@ Over all channels?  Maybe we want to intersect this with channels we are interes
 
 >    moduleInit _        = mapM_ (\(t, f) -> ircSignalConnect t $ liftC f) 
 >                            [("PRIVMSG", msgCB), ("JOIN", joinCB), 
->                             ("PART", quitCB), ("QUIT", quitCB), ("NICK", nickCB)]
+>                             ("PART", partCB), -- ("QUIT", quitCB), 
+>                                               ("NICK", nickCB)]
 >              where 
 >              liftC f = withLogMS $ \msg ct -> when (notMe msg) $ 
 >                        withValidLogW (f msg ct) ct (head $ IRC.channels msg)
@@ -111,10 +112,10 @@ FIXME --- we only do this for one channel.  Maybe allow an extra argument?
 >                       return [unlines . reverse $ map show $ take nLines (lines' fm)]
 >     where
 >     channel = case argsS of { x:_ -> x; _ -> error "The channel name is required" }
->     nLines = case argsS of { _:_:y:_ -> read y; _ -> defaultNLines }
+>     nLines = case argsS of { _:y:_ -> read y; _ -> defaultNLines }
 >     lines' fm = case argsS of 
->                   _:x:_ -> filterNick x $ history fm
->                   _     -> history fm
+>                   _:_:x:_ -> filterNick x $ history fm
+>                   _       -> history fm
 >     history fm = fromMaybe [] $ M.lookup channel fm >>= \(_, _, his) -> return his
 >     argsS = words args
  
@@ -143,7 +144,7 @@ FIXME --- we only do this for one channel.  Maybe allow an extra argument?
 > openChannelFile chan ct = 
 >     liftIO $ createDirectoryIfMissing True dir >> openFile file AppendMode
 >     where
->     file = dir ++ (dateToString date)
+>     file = dir ++ (dateToString date) ++ ".txt"
 >     dir = outputDir config </> "/Log/" ++ host config ++ "/" ++ chan ++ "/"
 >     date = dateStamp ct
 
@@ -217,7 +218,7 @@ FIXME --- we only do this for one channel.  Maybe allow an extra argument?
 >     num = show n
 
 > dateToString :: DateStamp -> String
-> dateToString (d, m, y) = (showWidth 2 d) ++ "-" ++ (showWidth 2 $ fromEnum m + 1) ++ "-" ++ (showWidth 2 y)
+> dateToString (d, m, y) = (showWidth 2 y) ++ "-" ++ (showWidth 2 $ fromEnum m + 1) ++ "-" ++ (showWidth 2 d)
 
 > timeStamp :: ClockTime -> String
 > timeStamp ct = let cal = toUTCTime ct in 
@@ -244,8 +245,8 @@ We flush on each operation to ensure logs are up to date.
 
 | when somebody quits
 
-> quitCB :: IRC.Message -> ClockTime -> Handle -> History -> LB History
-> quitCB msg ct hdl his = do
+> partCB :: IRC.Message -> ClockTime -> Handle -> History -> LB History
+> partCB msg ct hdl his = do
 >                logString hdl $ show new
 >                return $ new : his
 >     where
