@@ -18,7 +18,7 @@ import Config               (proxy,config)
 import qualified Map as M
 import qualified Data.FastPackedString as P
 
-import Data.Maybe           (fromMaybe,fromJust)
+import Data.Maybe      
 import Data.Char            (toLower)
 import Data.List
 
@@ -40,15 +40,15 @@ instance Module BabelModule Quotes where
         moduleSerialize _       = Just mapListPackedSerial
         moduleDefState  _       = return M.empty
 
-        moduleCmds _ = ["babel", "remember", "quote", "quote-add", "ghc"]
+        moduleCmds _ = ["babel", {-"remember",-} "quote", {-"quote-add",-} "ghc"]
 
         moduleHelp _ "babel"    = concat ["usage: babel lang lang phrase"]
         moduleHelp _ "ghc"      = "GHC!"
         moduleHelp _ _          = help
 
-        process_ m "remember"  s = process_ m "quote-add" (dropSpace s) -- synonym
+--      process_ m "remember"  s = process_ m "quote-add" (dropSpace s) -- synonym
         process_ _ "babel"     s = run_babel s
-        process_ _ "quote-add" s = run_remember (dropSpace s)
+--      process_ _ "quote-add" s = run_remember (dropSpace s)
         process_ _ "quote"     s = run_quote    (dropSpace s)
         process_ _ "ghc"       _ = run_quote    "ghc"
 
@@ -157,6 +157,7 @@ run_last src i = do
 -- the @remember command stores away a quotation by a user, for future
 -- use by @quote
 
+{-
 run_remember :: String -> ModuleLB Quotes
 run_remember str = do
     let (name,q') = break (== ' ') str
@@ -166,6 +167,7 @@ run_remember str = do
           fm' = M.insert (P.pack name) (P.pack q : ss) fm
       writer fm'
     return []
+-}
 
 --
 --  the @quote command, takes a user name to choose a random quote from
