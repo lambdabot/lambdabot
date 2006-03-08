@@ -25,8 +25,8 @@ instance DeepSeq Message where
 
 -- | 'mkMessage' creates a new message from a cmd and a list of parameters.
 mkMessage :: String -- ^ Command
-	  -> [String] -- ^ Parameters
-	  -> Message -- ^ Returns: The created message
+          -> [String] -- ^ Parameters
+          -> Message -- ^ Returns: The created message
 mkMessage cmd params
   = Message { msgPrefix = "", msgCommand = cmd, msgParams = params }
 
@@ -47,22 +47,22 @@ channels msg
 
 -- | 'privmsg' creates a private message to the person designated.
 privmsg :: String -- ^ Who should recieve the message (nick)
-	-> String -- ^ What is the message?
-	-> Message -- ^ Constructed message
+        -> String -- ^ What is the message?
+        -> Message -- ^ Constructed message
 privmsg who msg = if action then mkMessage "PRIVMSG" [who, ':':(chr 0x1):("ACTION " ++ clean_msg ++ ((chr 0x1):[]))]
                             else mkMessage "PRIVMSG" [who, ':' : clean_msg]
     where cleaned_msg = case concatMap clean msg of
               str@('@':_) -> ' ':str
               str         -> str
-	  (clean_msg,action) = case cleaned_msg of
-	      ('/':'m':'e':r) -> (dropWhile isSpace r,True)
-	      str             -> (str,False)
+          (clean_msg,action) = case cleaned_msg of
+              ('/':'m':'e':r) -> (dropWhile isSpace r,True)
+              str             -> (str,False)
 
 -- | 'setTopic' takes a channel and a topic. It then returns the message
 --   which sets the channels topic.
 setTopic :: String -- ^ Channel
-	 -> String -- ^ Topic
-	 -> Message
+         -> String -- ^ Topic
+         -> Message
 setTopic chan topic = mkMessage "TOPIC" [chan, ':' : topic]
 
 -- | 'getTopic' Returns the topic for a channel, given as a String
