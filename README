@@ -72,3 +72,8 @@ REPOSITORY:
 Our darcs repository is located at:
     http://www.cse.unsw.edu.au/~dons/lambdabot
     http://www.ScannedInAvian.org/repos/lambdabot
+
+CONTRIBUTING:
+
+Use 'darcs send' to submit patches to dons. Add yourself to the AUTHORS
+file if you haven't already.
