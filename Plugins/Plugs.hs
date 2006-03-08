@@ -50,6 +50,7 @@ plugs src = do
 clean :: String -> String
 clean s | Just _         <- no_io      `matchRegex`    s = "No IO allowed\n"
         | Just _         <- terminated `matchRegex`    s = "Terminated\n"
+        | Just _         <- hput       `matchRegex`    s = "Terminated\n"
         | Just _         <- stack_o_f  `matchRegex`    s = "Stack overflow\n"
         | Just _         <- loop       `matchRegex`    s = "Loop\n"
         | Just _         <- undef      `matchRegex`    s = "Undefined\n"
@@ -87,6 +88,7 @@ clean s | Just _         <- no_io      `matchRegex`    s = "No IO allowed\n"
         columnnum  = mkRegex " at <[^\\.]*\\.[^\\.]*>:[^ ]*"
         nomatch    = mkRegex "Couldn't match[^\n]*\n"
         inaninst   = mkRegex "^[ \t]*In a.*$"
+        hput       = mkRegex "<stdout>: hPutStr"
 
 ------------------------------------------------------------------------
 --
