@@ -53,7 +53,7 @@ darcs get http://darcs.augustsson.net/Darcs/Djinn
 drift
 http://repetae.net/john/computer/haskell/DrIFT/
 epigram
-http://sneezy.cs.nott.ac.uk/epigram/
+http://www.e-pig.org/
 ffi
 http://www.cse.unsw.edu.au/~chak/haskell/ffi/
 fgl
@@ -280,6 +280,8 @@ tmr
 http://www.haskell.org/tmrwiki/FrontPage
 tutorial
 http://www.haskell.org/tutorial/
+twig
+http://www.uploadthis.co.uk/uploads/Twigathy/timetable.html
 uuag
 http://www.cs.uu.nl/wiki/HUT/AttributeGrammarSystem
 w3m
