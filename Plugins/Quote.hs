@@ -5,7 +5,12 @@ module Plugins.Quote (theModule) where
 
 import Plugins.Quote.Fortune      (randFortune)
 import Lambdabot
-import Util                     (stdGetRandItem)
+import Util
+import qualified Data.FastPackedString as P
+import LBState
+import qualified Data.Map as M
+import Serial
+import Data.Maybe
 
 import Control.Monad.Trans      (liftIO)
 
@@ -15,21 +20,72 @@ newtype QuoteModule = QuoteModule ()
 theModule :: MODULE
 theModule = MODULE $ QuoteModule ()
 
-instance Module QuoteModule () where
-    moduleCmds           _ = ["fortune","yow","arr","keal"]
+type Quotes = M.Map P.FastString [P.FastString]
+
+instance Module QuoteModule Quotes where
+    moduleCmds           _ = ["quote", "remember", "ghc", "fortune","yow","arr","keal"]
+
     moduleHelp _ "fortune" = "Provide a random fortune"
     moduleHelp _ "yow"     = "Yow!"
     moduleHelp _ "arr"     = "Talk to a pirate"
     moduleHelp _ "keal"    = "Talk like Keal"
+    moduleHelp _ "ghc"      = "GHC!"
+    moduleHelp _ _          = help
 
-    process_ _ cmd _ = do
-       quote <- liftIO $ case cmd of
-                  "fortune" -> randFortune Nothing
-                  "yow"     -> randFortune (Just "zippy")
-                  "keal"    -> kealRandom
-                  "arr"     -> arrRandom
-                  _ -> error "QuoteModule: bad string"
-       return [quote]
+    moduleSerialize _       = Just mapListPackedSerial
+    moduleDefState  _       = return M.empty
+
+    process_ _ cmd s = case cmd of
+          "remember" -> runRemember (dropSpace s)
+          "quote"    -> runQuote    (dropSpace s)
+          "ghc"      -> runQuote    "ghc"
+          "fortune"  -> return `fmap` liftIO (randFortune Nothing)
+          "yow"      -> return `fmap` liftIO (randFortune (Just "zippy"))
+          "keal"     -> return `fmap` liftIO kealRandom
+          "arr"      -> return `fmap` liftIO arrRandom
+
+help :: String
+help = "@quote [nick]/@remember [nick] [quote]\n" ++
+   "Quote somebody, a random person, or save a memorable quote"
+
+------------------------------------------------------------------------
+
+-- the @remember command stores away a quotation by a user, for future
+-- use by @quote
+
+-- error handling!
+runRemember :: String -> ModuleLB Quotes
+runRemember str = do
+    case break (== ' ') str of
+        (_,[])    -> return ["Incorrect arguments to quote"]
+        (name,q') -> do let q = tail q'
+                        withMS $ \fm writer -> do
+                        let ss  = fromMaybe [] (M.lookup (P.pack name) fm)
+                            fm' = M.insert (P.pack name) (P.pack q : ss) fm
+                        writer fm'
+                        return []
+
+--
+--  the @quote command, takes a user name to choose a random quote from
+--
+runQuote :: String -> ModuleLB Quotes
+runQuote name = do
+    fm <- readMS
+    if M.null fm then return ["No quotes yet."] else do
+
+        let pnm = P.pack name
+            qs' = M.lookup pnm fm
+
+        (nm,qs) <- if not (P.null pnm)
+                   then return (pnm,qs') -- (FastString, Maybe [FastString])
+                   else do (nm',rs') <- liftIO $ stdGetRandItem (M.toList fm) -- random person
+                           return (nm', Just rs')
+        case qs of
+            Nothing   -> return [P.unpack nm ++ " hasn't said anything memorable"]
+            Just msgs -> do msg <- liftIO $ stdGetRandItem msgs
+                            return $ if not (P.null pnm)
+                                then ["  " ++ (P.unpack msg)]
+                                else [(P.unpack nm)++" says: " ++ (P.unpack msg)]
 
 ------------------------------------------------------------------------
 

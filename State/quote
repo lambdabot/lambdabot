@@ -1,5 +1,3 @@
-
-
 ##C++
  haskell == plain english ??
 [asking about C++ rules] vincenz: how should we know what those rules mean ?
@@ -23,9 +21,6 @@ Are there little known Haskell idioms for doing math? Is there an undocumented -
 ChristopherHendrie
 Sometimes I wonder if Java will be indirectly responsible for hastening the adoption of functional programming languages
 
-Foo
-Bar
-
 Gahhh
 monads are usually a personal experience.
 
@@ -40,7 +35,7 @@ Itkovian
 real programmers don't write docs, if it was hard to write, it should be hard to understand
 
 JaffaCake
-not all IOError->String functions are created equal :)
+not all IOError -> String functions are created equal :)
 I'm afraid I'm completely IA64-ignorant (and hoping to remain that way until IA64 goes away :-)
 
 JohnMeacham
@@ -53,8 +48,6 @@ The implementation of RSA on type level is left for future work
 
 PaulGraham
 An algorithm for lazy evaluation of research papers: Just write whatever you want and don't cite any previous work, and indignant readers will send you references to all the papers you should have cited.
-
-Paul_Graham
 I get the impression that using [Haskell] would feel like reading a novel written by a literary critic.
 
 Pseudonym
@@ -67,8 +60,7 @@ or maybe she is the Queen of Sciences and he is the Mack Daddy.
 Computer science is the womanizer, and math is the pure-hearted girl he won't call the next day.
 
 SamB
-because sliced bread gives horribly uninformative error messages?
-because sliced bread gives horribly uninformative error messages?
+Because sliced bread gives horribly uninformative error messages?
 C is a good language. If what you want is an assembly language where you can't be sure what anything does
 fworp: next time, load your shirt up in to GHCi *before* having it printed
 Boy, point-free Arrows are worse than Forth...
@@ -81,7 +73,6 @@ I think that the compiler authors will fly here from England just to kill me if 
 
 Taral
 But I can do DP in C, which has no RT
-How do you add an @quote?
 How do you add an @quote?
 
 adept
@@ -107,9 +98,6 @@ My productivity increased when Autrijus told me about Haskell's trace function. 
 cjs
 I have to explain this shit to people. I mean, I start out right, "Hey, you know how you always have these bugs because what you thought was in the variable is not there?" And I get all of these nods of agreement. "Well, I've found a new language that solves that problem." Audience: "Ooooh! How?" Me: "There's no variables!" And then they all start moving away from me slowly....
 
-conjure
-BitTorrent client in (hopefully) 10,000 lines: darcs get http://j.mongers.org/pub/haskell/darcs/conjure/
-
 darius
 Well profiling does add a bit of reflection, but it should have the good sense not too go near the barbed wire fences and armed guards.
 I imagine XSLT programmers say "It's a one pager" the way most other programmers say "It's a one liner".
@@ -127,10 +115,6 @@ who was it who said (shapr?) that they welcome their competitors using languages
 the type system is *great* for coding while sleepy.. you just hack any garbage together, and let the type checker deal with it
 boegel, stop polluting the quote-space please
 I don't mind autoconf, except for the fact that it's stupid and ugly
-
-franka
-Yes, he is humping the thick of thongs.
-I don't like it if it's too hard
 
 gFunk
 [the main advantage of functional programs are that they're] incorrect the first 1000 times you try to compile it!
@@ -274,7 +258,7 @@ hakko
 most programmers have a lot of religious issues about their work, yes.
 
 ihope
-Laziness if free, but it doesn't always pay off.
+Laziness is free, but it doesn't always pay off.
 
 jjuggle
 I was riding around town and this cop on patrol on a bike rode up next to me and said, "There's always a show off." I offered to teach him to ride and help set up a unicycle patrol squad, but he declined.
@@ -294,7 +278,7 @@ My program contains a bug.  How ungrateful, after all I've done for it.
 
 lambdabot
 Couldn't match kind `?? -> ? -> *' against `(* -> *) -> * -> *'
-of course i'm female
+Of course i'm female
 lambdabot hasn't said anything memorable
 
 lispy
@@ -320,17 +304,11 @@ I actually got away with running Haskell through a TeX pretty printer and handin
 ndm
 the only language i've seen which is ugly at a deeper level than syntax is perl
 
-ozone
-Freeze!
-
 pesco
 "Scientists Reveal: Human Consciousness Stems From Two Files in Different Directories!"
 
 reddi
 and now i know: IT DOES NOT WORK ALWAYS ;-)
-
-reffie
-yi is clearly the editor of the future.
 
 samc
 monads are hard, let's go shopping
@@ -356,20 +334,8 @@ I think blackdog is right
 tomasz
 After all, return is only a fancy name for liftM0 :-)
 
-tromp
-the number of legal 17x17 Go positions is 9895749638558742166 modulo 18446744073709551577 :)
-The number of legal 16x16 Go positions is 4813066963822755416429056022484299646486874100967249263944719599975607459850502222039591149331431805524655467453067042377
-The base of liberties in Go is 2.975734192
-the number of legal 15x15 Go positions is 10751464308361383118768413754866123809733788820327844402764601662870883601711298309339239868998337801509491
-the number of 14x14 Go positions is 212667732900366224249789357650440598098805861083269127196623872213228196352455447575029701325
-the number of 13x13 go positions is 37249792307686396442294904767024517674249157948208717533254799550970595875237705
-number of 13x13 go positions is 37249792307686396442294904767024517674249157948208717533254799550970595875237705
-
 vegai
 Hey Haskell! Give me that File! -Naah, I'm too lazy. *thinks* I'll give you a cookie if you tell me how many letters that file has! -Oh, ok!
-
-vincenz
-I'm not looking at a way to do hetero
 
 vixen
 If you see this, gentle sir, know that you are being trolled by a poorly configured VixenLove program

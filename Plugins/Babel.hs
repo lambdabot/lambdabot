@@ -10,13 +10,8 @@
 module Plugins.Babel (theModule) where
 
 import Lambdabot
-import LBState
-import Serial
-import Util         hiding (split)
 import MiniHTTP
 import Config               (proxy,config)
-import qualified Map as M
-import qualified Data.FastPackedString as P
 
 import Data.Maybe      
 import Data.Char            (toLower)
@@ -34,26 +29,11 @@ newtype BabelModule = BabelModule ()
 theModule :: MODULE
 theModule = MODULE $ BabelModule ()
 
-type Quotes = M.Map P.FastString [P.FastString]
+instance Module BabelModule () where
 
-instance Module BabelModule Quotes where
-        moduleSerialize _       = Just mapListPackedSerial
-        moduleDefState  _       = return M.empty
-
-        moduleCmds _ = ["babel", {-"remember",-} "quote", {-"quote-add",-} "ghc"]
-
+        moduleCmds _ = ["babel"]
         moduleHelp _ "babel"    = concat ["usage: babel lang lang phrase"]
-        moduleHelp _ "ghc"      = "GHC!"
-        moduleHelp _ _          = help
-
---      process_ m "remember"  s = process_ m "quote-add" (dropSpace s) -- synonym
         process_ _ "babel"     s = run_babel s
---      process_ _ "quote-add" s = run_remember (dropSpace s)
-        process_ _ "quote"     s = run_quote    (dropSpace s)
-        process_ _ "ghc"       _ = run_quote    "ghc"
-
---      moduleHelp _ "timein"   = return "@timein <city>, report the local time in <city>"
---      process _ _ src "last"  s     = run_last  src s
 
         {-
         -- totally unrelated :}
@@ -63,10 +43,6 @@ instance Module BabelModule Quotes where
             else do (o,_,_) <- liftIO $ popen "timein" [s] Nothing
                     ircPrivmsg src $ "  " ++ o
         -}
-
-help :: String
-help = "@quote <nick>/@quote-add <nick> <quote>\n" ++
-   "Quote somebody, or a random person, or save a memorable quote"
 
 --
 -- The @babel command.
@@ -90,104 +66,6 @@ run_babel' ["help"]      = return $ ["usage: babel lang lang phrase"]
 run_babel' ["languages"] = return $ [show shortLangs]
 run_babel' [f,t,i]       = do p <- liftIO $ babelFish f t i ; return [p]
 run_babel' _             = return ["bzzt."]
-
-{-
---
--- grab the history and translate it
---
-doHistory :: String -> String -> Int -> LB [String]
-doHistory f t i = do
-        ss <- getHistory i
-        if (null ss)
-            then return []
-            else do let (ns,ms) = unzip ss
-                    ms' <- liftIO $ mapM (babelFish f t) ms
-                    return $! indent (ns,ms')
-
---
--- given a regex, find the most recent line in the history that
--- matches the regex, and translate it
---
--- have to reverse history, as we want to search from the most recent
--- backwards.
---
-doLookup :: String -> String -> String -> LB [String]
-doLookup f t r = do
-        ss <- getHistory 100 -- all the lines
-        case find matches (reverse ss) of
-                Nothing    -> return []
-                Just (n,v) -> do v' <- liftIO $ babelFish f t v
-                                 return $! indent ([n],[v'])
-    where regex = mkRegex r
-          matches (_nic,s) = isJust $ regex `matchRegex` s
-
-isLookup ('!':_) = True
-isLookup _       = False
-
--- is this going to parse as an integer?
-isNum :: [Char] -> Bool
-isNum ss = foldr (&&) True (map isDigit ss)
-
--- pretty print the history, in  "nic> msg" form
-indent :: ([[Char]], [[Char]]) -> [[Char]]
-indent (ns,ms) = zipWith (\a b -> a++"> "++b) ns ms
-
--- ---------------------------------------------------------------------
--- the @last command
---
-run_last :: String -> String -> LB ()
-
--- no args, return 5 lines
-run_last src [] = do hs <- getHistory 5
-                     let o = map (\s -> "  "++s) (indent (unzip hs))
-                     ircPrivmsg src (unlines o)
-
--- otherwise, 'i' lines of history
-run_last src i = do
-        o <- if isNum i
-             then do hs <- getHistory (read i)
-                     return $! indent (unzip hs)
-             else return ["bzzt."]
-        let o' = map (\s -> "  "++s) o
-        ircPrivmsg src (unlines o')
--}
-
-------------------------------------------------------------------------
-
--- the @remember command stores away a quotation by a user, for future
--- use by @quote
-
-{-
-run_remember :: String -> ModuleLB Quotes
-run_remember str = do
-    let (name,q') = break (== ' ') str
-        q = if null q' then q' else tail q'
-    withMS $ \fm writer -> do
-      let ss  = fromMaybe [] (M.lookup (P.pack name) fm)
-          fm' = M.insert (P.pack name) (P.pack q : ss) fm
-      writer fm'
-    return []
--}
-
---
---  the @quote command, takes a user name to choose a random quote from
---
-run_quote :: String -> ModuleLB Quotes
-run_quote name = do
-    fm <- readMS
-    let pnm = P.pack name
-        qs' = M.lookup pnm fm
-
-    (nm,qs) <- if not (P.null pnm)
-               then return (pnm,qs') -- (FastString, Maybe [FastString])
-               else do (nm',rs') <- liftIO $ stdGetRandItem (M.toList fm) -- random person
-                       return (nm', Just rs')
-    case qs of
-        Nothing   -> return [P.unpack nm ++ " hasn't said anything memorable"]
-        Just msgs -> do msg <- liftIO $ stdGetRandItem msgs
-                        return $ if not (P.null pnm)
-                            then ["  " ++ (P.unpack msg)]
-                            else [(P.unpack nm)++" says: " ++ (P.unpack msg)]
 
 ------------------------------------------------------------------------
 
