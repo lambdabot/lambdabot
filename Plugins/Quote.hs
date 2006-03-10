@@ -63,7 +63,7 @@ runRemember str = do
                         let ss  = fromMaybe [] (M.lookup (P.pack name) fm)
                             fm' = M.insert (P.pack name) (P.pack q : ss) fm
                         writer fm'
-                        return []
+                        return ["Done."]
 
 --
 --  the @quote command, takes a user name to choose a random quote from
