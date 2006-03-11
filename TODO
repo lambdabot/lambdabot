@@ -2,9 +2,8 @@ Dons:
   - a dynamic Config.hs module.
   - a scripting interface, expose module ops to a scripting module
   - look at pinging the server
- - plugin for `lambdaShell'
 
- - things that should work:
+  - things that should work:
         pl     . djinn
         type   . djinn $ xs == xs
         pretty . djinn
@@ -12,31 +11,31 @@ Dons:
         djinn . hoogle
 
 Todo:
-* Better error reporting when connections fail at startup
-* FactModule - make "foo?" equal to "lambdabot: @fact foo"
-* fsbot-style factoid parsing, 
-* real hostmask matching
-* refactor utility functions out of the modules ex. gets(\s -> lookupFM ...)
-* @fact-to ircnick key for sending factoids via privmsg
-* reformat/refill output to allow for fewer longer lines.
-* multiple servers
-* factor out an IRC library
-* update the README
-* send alternate nickname?
-* automatically filter out blanks lines, ie. in dictionary output
+    * Better error reporting when connections fail at startup
+    * FactModule - make "foo?" equal to "lambdabot: @fact foo"
+    * fsbot-style factoid parsing, 
+    * real hostmask matching
+    * refactor utility functions out of the modules ex. gets(\s -> lookupFM ...)
+    * @fact-to ircnick key for sending factoids via privmsg
+    * reformat/refill output to allow for fewer longer lines.
+    * multiple servers
+    * factor out an IRC library
+    * update the README
+    * send alternate nickname?
+    * automatically filter out blanks lines, ie. in dictionary output
 
 2.0 release list:
-* @more needs to check for really really long lines
+    * @more needs to check for really really long lines
 
 Wishlist:
 
-* search ghc haddocks by function name and type name and ghc command line option searching ;-)
-* search Haskell 98 report
-* search citeseer
-* search local database of researching paper by keyword (swish++ ?)
-* search haskell-wiki
-* channel statistics, logs, record of pasted urls
-* unit tests, quickcheck tests, written tests... ok, maybe not written
-* Some support for bot clients to be able to do their own request/response stuff
+    * search ghc haddocks by function name and type name and ghc command line option searching ;-)
+    * search Haskell 98 report
+    * search citeseer
+    * search local database of researching paper by keyword (swish++ ?)
+    * search haskell-wiki
+    * channel statistics, logs, record of pasted urls
+    * unit tests, quickcheck tests, written tests... ok, maybe not written
+    * Some support for bot clients to be able to do their own request/response stuff
 
 * add your wishes here ...
