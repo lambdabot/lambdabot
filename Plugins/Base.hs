@@ -245,7 +245,7 @@ doPRIVMSG' myname msg
           (cmd, params) = breakOnGlue " " wholeCmd
       in doPublicMsg cmd (dropWhile (==' ') params)
 
-  | (commands `arePrefixesOf` text) -- elem of prefixes
+  | (commands `arePrefixesOf` text) && length text > 1 -- elem of prefixes
     = let (cmd, params) = breakOnGlue " " (dropWhile (==' ') text)
       in doPublicMsg cmd (dropWhile (==' ') params)
 
