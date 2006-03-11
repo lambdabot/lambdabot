@@ -34,3 +34,11 @@ The static binary only contains hs-plugins.
 ------------------------------------------------------------------------
 
 Plugins live in Plugins/ and inhabit the Plugins.* namespace.
+
+------------------------------------------------------------------------
+
+INOVKING COMMANDS
+
+Each plugin lists the commands it will provide in its Module instance.
+Commands to lambdabot are prefixed with certain magic characters,
+described in Plugins/Base.hs. 
