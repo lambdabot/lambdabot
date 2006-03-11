@@ -18,6 +18,14 @@ import Control.Monad.State  (MonadState(..), when, unless, gets)
 
 import GHC.IOBase           (Exception(NoMethodError))
 
+-- valid command prefixes
+commands :: [String]
+commands  = ["@","!","$","?","\\",".","%","&"]
+
+-- valid eval prefixes
+evals  :: [String]
+evals   = [">","#","|"]
+
 newtype BaseModule = BaseModule ()
 
 theModule :: MODULE
@@ -217,6 +225,12 @@ doPRIVMSG msg = do
     -- debugStrLn (show msg) 
     doPRIVMSG' (name config) msg
 
+arePrefixesOf :: [String] -> String -> Bool
+arePrefixesOf = flip (any . flip isPrefixOf)
+
+arePrefixesWithSpaceOf :: [String] -> String -> Bool
+arePrefixesWithSpaceOf els str = any (flip isPrefixOf str) $ map (++" ") els
+
 --
 -- | What does the bot respond to?
 --
@@ -231,12 +245,12 @@ doPRIVMSG' myname msg
           (cmd, params) = breakOnGlue " " wholeCmd
       in doPublicMsg cmd (dropWhile (==' ') params)
 
-  | ("@" `isPrefixOf` text)
+  | (commands `arePrefixesOf` text) -- elem of prefixes
     = let (cmd, params) = breakOnGlue " " (dropWhile (==' ') text)
       in doPublicMsg cmd (dropWhile (==' ') params)
 
   -- special syntax for @eval
-  | "> " `isPrefixOf` text
+  | evals `arePrefixesWithSpaceOf` text
     = let expr = drop 2 text
       in doPublicMsg "@eval" (dropWhile (==' ') expr)
 
@@ -248,13 +262,13 @@ doPRIVMSG' myname msg
     text = tail (head (tail (msgParams msg)))
     (who, _) = breakOnGlue "!" (msgPrefix msg)
 
-    doPersonalMsg ('@':c) r = doMsg c r who
-    doPersonalMsg (">")   r = doMsg "eval" r who
-    doPersonalMsg _ _       = doIGNORE msg
+    doPersonalMsg s r | commands `arePrefixesOf`          s = doMsg (tail s) r who
+                      | evals    `arePrefixesWithSpaceOf` s = doMsg "eval"   r who
+                      | otherwise                           = doIGNORE msg
 
-    doPublicMsg ('@':c) r   = doMsg c r alltargets
-    doPublicMsg (">")   r   = doMsg "eval" r alltargets
-    doPublicMsg _ _         = doIGNORE msg
+    doPublicMsg s r | commands `arePrefixesOf` s = doMsg (tail s)        r alltargets
+                    | evals    `arePrefixesWithSpaceOf` s = doMsg "eval" r alltargets
+                    | otherwise                           = doIGNORE msg
 
     doMsg cmd rest towhere = do
         let ircmsg = ircPrivmsg towhere
