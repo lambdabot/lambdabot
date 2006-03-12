@@ -262,13 +262,13 @@ doPRIVMSG' myname msg
     text = tail (head (tail (msgParams msg)))
     (who, _) = breakOnGlue "!" (msgPrefix msg)
 
-    doPersonalMsg s r | commands `arePrefixesOf`          s = doMsg (tail s) r who
-                      | evals    `arePrefixesWithSpaceOf` s = doMsg "eval"   r who
-                      | otherwise                           = doIGNORE msg
+    doPersonalMsg s r | commands `arePrefixesOf` s = doMsg (tail s) r who
+                      | s `elem` evals             = doMsg "eval"   r who
+                      | otherwise                  = doIGNORE msg
 
-    doPublicMsg s r | commands `arePrefixesOf` s = doMsg (tail s)        r alltargets
-                    | evals    `arePrefixesWithSpaceOf` s = doMsg "eval" r alltargets
-                    | otherwise                           = doIGNORE msg
+    doPublicMsg s r   | commands `arePrefixesOf` s          = doMsg (tail s)        r alltargets
+                      | evals    `arePrefixesWithSpaceOf` s = doMsg "eval" r alltargets
+                      | otherwise                           = doIGNORE msg
 
     doMsg cmd rest towhere = do
         let ircmsg = ircPrivmsg towhere
@@ -280,7 +280,7 @@ doPRIVMSG' myname msg
             _ | otherwise     -> case closests cmd allcmds of
                   (n,[s]) | n < e ,  ms == [] -> docmd s -- unique edit match
                   (n,ss)  | n < e || ms /= []            -- some possibilities
-                          -> ircmsg$ "Maybe you meant: "++showClean(nub(ms++ss))
+                          -> ircmsg $ "Maybe you meant: "++showClean(nub(ms++ss))
                   _ -> docmd cmd         -- no prefix, edit distance too far
         where 
             e = 3   -- edit distance cut off. Seems reasonable for small words
