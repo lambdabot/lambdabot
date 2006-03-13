@@ -21,6 +21,9 @@ Are there little known Haskell idioms for doing math? Is there an undocumented -
 ChristopherHendrie
 Sometimes I wonder if Java will be indirectly responsible for hastening the adoption of functional programming languages
 
+DukeDave
+what, if your kids start doing drugs? or worse, business school
+
 Gahhh
 monads are usually a personal experience.
 
@@ -49,6 +52,9 @@ The implementation of RSA on type level is left for future work
 PaulGraham
 An algorithm for lazy evaluation of research papers: Just write whatever you want and don't cite any previous work, and indignant readers will send you references to all the papers you should have cited.
 I get the impression that using [Haskell] would feel like reading a novel written by a literary critic.
+
+Philippa
+hey, if the guy wants a monadectomy that's his choice
 
 Pseudonym
 I think principal types are overrated
@@ -271,12 +277,13 @@ the learning curve is far steeper with Haskell but it is far more elegant and re
 Fundeps, existential types, HList take a while to grasp
 
 kolmodin
-i.e. I would rather lose my left arm than write it in Java
+I would rather lose my left arm than write it in Java
 
 kzm
 My program contains a bug.  How ungrateful, after all I've done for it.
 
 lambdabot
+Occurs check: cannot construct the infinite type: a
 Couldn't match kind `?? -> ? -> *' against `(* -> *) -> * -> *'
 Of course i'm female
 lambdabot hasn't said anything memorable

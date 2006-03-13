@@ -26,6 +26,8 @@ cabal-get
 http://hackage.haskell.org/darcs/cabal-get-bootstrap/
 cairo
 http://haskell.org/gtk2hs/
+catch
+http://www.cs.york.ac.uk/~ndm/projects/catch.php
 commentary
 http://www.cse.unsw.edu.au/~chak/haskell/ghc/comm/
 conjure
@@ -44,6 +46,8 @@ darcs-ghc
 darcs get http://cvs.haskell.org/darcs/ghc
 darcs-libs
 darcs get http://cvs.haskell.org/darcs/libraries
+darcs-server
+http://www.equational.org/darcs-server
 darcsweb
 http://users.auriga.wearlab.de/~alb/darcsweb/
 diet
