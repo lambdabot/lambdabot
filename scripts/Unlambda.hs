@@ -67,7 +67,7 @@ data Exp
 --
 parse :: Handle -> IO Exp
 parse h = do
-  c <- hGetChar h
+  c <- catch (hGetChar h) (\_ -> error "Parse error at end of file")
   case toLower c of
     c | c `elem` " \t\n"  -> parse h
     '`' -> do e1 <- parse h
