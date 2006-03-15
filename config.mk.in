@@ -44,8 +44,8 @@ PLUGINS=       Dict Dummy Karma Quote Seen State \
                Topic Type Plugs Babel Version More Pl \
                Help Dice Search Vixen Fact Spell Todo \
                Haddock Code Hoogle Where Elite Localtime Poll \
-               Djinn Pretty Compose LShell
-#              LogModule Lambda DarcsPatchWatch 
+               Djinn Pretty Compose Lambda Unlambda
+#              LogModule LShell DarcsPatchWatch 
 
 STATICS=       Base System Dynamic
 LD_OPTS=       -package plugins
@@ -55,8 +55,8 @@ STATICS=       Base System Dict Dummy Karma \
                Quote Seen State Topic Type Plugs Babel \
                Version More Pl Help Dice Search Vixen Fact \
                Todo Spell Haddock Code Hoogle Where \
-               Elite Localtime Poll Djinn Pretty Compose LShell
-#              Lambda DarcsPatchWatch LogModule
+               Elite Localtime Poll Djinn Pretty Compose Lambda Unlambda
+#              LShell DarcsPatchWatch LogModule
 LD_OPTS=       -package network -package posix -package parsec -package fps -package haskell-src
 endif
 
