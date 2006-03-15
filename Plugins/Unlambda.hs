@@ -14,6 +14,7 @@ module Plugins.Unlambda (theModule) where
 import Lambdabot hiding (clean)
 import Text.Regex
 import PosixCompat
+import System.Exit
 
 newtype UnlambdaModule = UnlambdaModule ()
 
@@ -32,11 +33,12 @@ binary = "./unlambda"
 
 unlambda :: String -> IO String
 unlambda src = do
-    (out,err,_) <- popen binary [] (Just src)
+    (out,err,c) <- popen binary [] (Just src)
     let o = unlines . take 20 . lines . clean $ out
         e = unlines . take 20 . lines . clean $ err
     return $ case () of {_
-        | null o && null e -> []
+        | c /= ExitSuccess -> "Done."
+        | null o && null e -> "Done."
         | null o           -> e
         | otherwise        -> o
     }
@@ -46,6 +48,7 @@ unlambda src = do
 --
 clean :: String -> String
 clean s | Just _         <- terminated `matchRegex`    s = "Terminated\n"
+        | Just _         <- terminated `matchRegex`    s = "Terminated\n"
         | otherwise      = s
     where terminated = mkRegex "waitForProc"
 

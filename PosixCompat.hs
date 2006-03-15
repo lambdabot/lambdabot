@@ -3,20 +3,12 @@
 --
 module PosixCompat (popen) where
 
-#if __GLASGOW_HASKELL__ >= 604
 import System.Exit
 import System.IO
 import System.Process
 import Control.Concurrent       (forkIO)
-#else
-import qualified Posix as P
-#endif
 
 import qualified Control.Exception
-
-#if __GLASGOW_HASKELL__ >= 604
-
-type ProcessID = ProcessHandle
 
 --
 -- Ignoring exit status for now.
@@ -30,7 +22,7 @@ type ProcessID = ProcessHandle
 -- Posix.popen doesn't have this problem, so maybe we can reproduce its
 -- pipe handling somehow.
 --
-popen :: FilePath -> [String] -> Maybe String -> IO (String,String,ProcessID)
+popen :: FilePath -> [String] -> Maybe String -> IO (String,String,ExitCode)
 popen file args minput =
     Control.Exception.handle (\e -> return ([],show e,error (show e))) $ do
 
@@ -55,28 +47,6 @@ popen file args minput =
     -- And now we wait. We must wait after we read, unsurprisingly.
     -- blocks without -threaded, you're warned.
     -- and maybe the process has already completed..
-    Control.Exception.catch (waitForProcess pid) (\_ -> return ExitSuccess)
+    e <- Control.Exception.catch (waitForProcess pid) (\_ -> return ExitSuccess)
 
-    return (output,errput,pid)
-
-#else
-
---
--- catch so that we can deal with forkProcess failing gracefully.  and
--- getProcessStatus is needed so as not to get a bunch of zombies,
--- leading to forkProcess failing.
---
--- Large amounts of input will cause problems with blocking as we wait
--- on the process to finish. Make sure no lambdabot processes will
--- generate 1000s of lines of output.
---
-popen :: FilePath -> [String] -> Maybe String -> IO (String,String,P.ProcessID)
-popen f s m = 
-        Control.Exception.handle (\e -> return ([], show e, error $ show e )) $ do
-            x@(_,_,pid) <- P.popen f s m 
-            b <- P.getProcessStatus True False pid  -- wait
-            return $ case b of    
-                Nothing -> ([], "process has disappeared", pid)
-                _       -> x
-
-#endif
+    return (output,errput,e)
