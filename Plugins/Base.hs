@@ -20,11 +20,11 @@ import GHC.IOBase           (Exception(NoMethodError))
 
 -- valid command prefixes
 commands :: [String]
-commands  = ["@","?","\\","%","&"]
+commands  = ["@","?","\\"]
 
 -- valid eval prefixes
 evals  :: [String]
-evals   = [">","#"]
+evals   = [">"]
 
 newtype BaseModule = BaseModule ()
 
