@@ -360,11 +360,12 @@ reduceIndent _ msg = return $ map redLine msg where
 ircPrivmsg :: String -- ^ The channel\/user.
    -> String         -- ^ The message.
    -> LB ()
+
 ircPrivmsg who msg = do 
   filters <- gets ircOutputFilters
   sendlines <- foldr (\f -> (=<<) (f who)) (return $ lines msg) $ map snd filters
   -- Hardcoded defaults: maximal ten lines, maximal 100 chars/line
-  mapM_ (ircPrivmsg' who . take 100) $ take 10 sendlines
+  mapM_ (ircPrivmsg' who . take (Config.textwidth Config.config)) $ take 10 sendlines
 
 -- TODO: rename, don't export
 ircPrivmsg' :: String -> String -> LB ()

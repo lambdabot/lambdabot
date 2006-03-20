@@ -47,7 +47,7 @@ config = Config {
 
         port            = 6667,
         verbose         = True,
-        textwidth       = 75,
+        textwidth       = 350,
         moresize        = 5,
         proxy           = Just ("www-proxy",3128),
         autojoin        = ["#haskell","#haskell-blah","#flippi"
