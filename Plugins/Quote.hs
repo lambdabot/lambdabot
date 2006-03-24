@@ -23,7 +23,7 @@ theModule = MODULE $ QuoteModule ()
 type Quotes = M.Map P.FastString [P.FastString]
 
 instance Module QuoteModule Quotes where
-    moduleCmds           _ = ["quote", "remember", "ghc", "fortune","yow","arr","keal"]
+    moduleCmds           _ = ["quote", "remember", "ghc", "fortune","yow","arr","keal","b52s"]
 
     moduleHelp _ "fortune" = "Provide a random fortune"
     moduleHelp _ "yow"     = "Yow!"
