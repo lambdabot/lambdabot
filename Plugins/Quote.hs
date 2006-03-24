@@ -29,7 +29,8 @@ instance Module QuoteModule Quotes where
     moduleHelp _ "yow"     = "Yow!"
     moduleHelp _ "arr"     = "Talk to a pirate"
     moduleHelp _ "keal"    = "Talk like Keal"
-    moduleHelp _ "ghc"      = "GHC!"
+    moduleHelp _ "ghc"     = "GHC!"
+    moduleHelp _ "b52s"    = "Anyone noticed the b52s sound a lot like zippy?"
     moduleHelp _ _          = help
 
     moduleSerialize _       = Just mapListPackedSerial
@@ -43,6 +44,7 @@ instance Module QuoteModule Quotes where
           "yow"      -> return `fmap` liftIO (randFortune (Just "zippy"))
           "keal"     -> return `fmap` liftIO kealRandom
           "arr"      -> return `fmap` liftIO arrRandom
+          "b52s"     -> return `fmap` liftIO b52sRandom
 
 help :: String
 help = "@quote [nick]/@remember [nick] [quote]\n" ++
@@ -95,6 +97,11 @@ arrRandom = Util.stdGetRandItem arrList
 
 kealRandom :: IO String
 kealRandom = Util.stdGetRandItem kealList
+
+b52sRandom :: IO String
+b52sRandom = Util.stdGetRandItem b52sList
+
+------------------------------------------------------------------------
 
 -- | Some pirate quotes
 arrList :: [String]
@@ -219,4 +226,18 @@ kealList =
     ,"pork steaks taste like dick"
     ,"i dont really eat vegetables unless cheese is a vegetable"
     ,"the [nsa] even make light green both ways once"
+    ]
+
+--
+-- Quotes from the lyrics of B52s songs. They remind me (dons) of zippy.
+-- 
+b52s = 
+    [ "His ear lobe fell in the deep. Someone reached in and grabbed it. It was a rock lobster!"
+    , "Watch out for that piranha. There goes a narwhale. HERE COMES A BIKINI WHALE!"
+    , "She drove a Plymouth Satellite faster than the speed of light!"
+    , "Some say she's from Mars, or one of the seven stars that shine after 3:30 in the morning. WELL SHE ISN'T."
+    , "It's a dreary downtown day, but at the end of my 40 foot leash is my little friend quiche."
+    , "Girl from Ipanema, she goes to Greenland"
+    , "Hot pants explosion at the factory!"
+    , "You belong in Ripley's Believe It Or Not"
     ]
