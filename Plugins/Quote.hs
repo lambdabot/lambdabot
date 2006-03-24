@@ -99,7 +99,7 @@ kealRandom :: IO String
 kealRandom = Util.stdGetRandItem kealList
 
 b52sRandom :: IO String
-b52sRandom = Util.stdGetRandItem b52sList
+b52sRandom = Util.stdGetRandItem b52s
 
 ------------------------------------------------------------------------
 
@@ -231,6 +231,7 @@ kealList =
 --
 -- Quotes from the lyrics of B52s songs. They remind me (dons) of zippy.
 -- 
+b52s :: [String]
 b52s = 
     [ "His ear lobe fell in the deep. Someone reached in and grabbed it. It was a rock lobster!"
     , "Watch out for that piranha. There goes a narwhale. HERE COMES A BIKINI WHALE!"
