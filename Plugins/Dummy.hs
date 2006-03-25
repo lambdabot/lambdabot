@@ -40,6 +40,8 @@ instance Module DummyModule [String] where
         "get-shapr"   -> "summon shapr instantly"
         "shootout"    -> "the debian language shootout"
         "faq"         -> "answer frequently asked questions about haskell"
+
+        "palomer"     -> "sound a bit like palomer on a bad day"
         _             -> "dummy module"
 
 {-
@@ -91,7 +93,8 @@ dummylst =
     ("learn",    const "http://www.haskell.org/learning.html"),
     ("map",      const "http://www.haskell.org/hawiki/HaskellUserLocations"),
     ("shootout", const "http://shootout.alioth.debian.org/gp4/benchmark.php?test=all&lang=all"),
-    ("botsnack", const ":)")]
+    ("botsnack", const ":)"),
+    ("palomer",  const "hrmph")]
 
 {-# INLINE choice #-}
 choice :: (r -> Bool) -> (r -> a) -> (r -> a) -> (r -> a)
