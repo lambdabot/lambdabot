@@ -583,7 +583,7 @@ offlineReaderLoop threadmain chanr _chanw _h syncR syncW = do
                             '>':xs -> "@eval " ++ xs
                             _      -> "@"      ++ dropWhile (== ' ') s'
 
-                let m  = IRC.Message { IRC.msgPrefix  = "user!n=user@null"
+                let m  = IRC.Message { IRC.msgPrefix  = "dons!n=user@null"
                                      , IRC.msgCommand = "PRIVMSG"
                                      , IRC.msgParams  = ["#haskell",":" ++ msg ]
                                      }
