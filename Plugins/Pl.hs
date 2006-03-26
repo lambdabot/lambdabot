@@ -7,6 +7,8 @@
 --      http://www.cs.kent.ac.uk/projects/refactor-fp/catalogue/
 --      http://www.cs.kent.ac.uk/projects/refactor-fp/catalogue/RefacIdeasAug03.html
 --
+-- Use more Arrow stuff
+--
 -- TODO would be to plug into HaRe and use some of their refactorings.
 --
 module Plugins.Pl (theModule) where

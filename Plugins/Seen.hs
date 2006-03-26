@@ -14,7 +14,7 @@ import ErrorUtils          (tryError)
 import LBState
 import Lambdabot
 import Serial  ({-instances-})
-import Util (lowerCaseString, firstWord, listToStr, debugStrLn)
+import Util (lowerCaseString, firstWord, listToStr)
 import qualified IRC
 
 import qualified Map as M
@@ -375,7 +375,7 @@ withSeenFM f msg = do
       ct <- liftIO getClockTime
       case f msg state ct nick of
           Right newstate -> writer newstate
-          Left err -> debugStrLn $ "SeenModule> " ++ err
+          Left _         -> return () -- debugStrLn $ "SeenModule> " ++ err
 
 -- | Update the user status.
 updateJ :: Maybe ClockTime -- ^ If the bot joined the channel, the time that 

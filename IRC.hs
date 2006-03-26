@@ -110,32 +110,25 @@ encodeMessage msg
 -- | 'decodeMessage' Takes an input line from the IRC protocol stream
 --   and decodes it into a message.
 decodeMessage :: String -> Message
-decodeMessage line
-  = let (prefix, rest1) = decodePrefix (,) line in
-    let (cmd, rest2)    = decodeCmd (,) rest1 in
-    let params          = decodeParams rest2 in
-    Message { msgPrefix = prefix, msgCommand = cmd, msgParams = params }
+decodeMessage line =
+    let (prefix, rest1) = decodePrefix (,) line
+        (cmd, rest2)    = decodeCmd (,) rest1
+        params          = decodeParams rest2
+    in Message { msgPrefix = prefix, msgCommand = cmd, msgParams = params }
   where
-    decodePrefix k (':':cs)
-      = decodePrefix' k cs
-      where
-        decodePrefix' j ""       = j "" ""
-        decodePrefix' j (' ':ds) = j "" ds
-        decodePrefix' j (c:ds)   = decodePrefix' (\xs ys -> j (c:xs) ys) ds
+    decodePrefix k (':':cs) = decodePrefix' k cs
+      where decodePrefix' j ""       = j "" ""
+            decodePrefix' j (' ':ds) = j "" ds
+            decodePrefix' j (c:ds)   = decodePrefix' (\xs ys -> j (c:xs) ys) ds
 
-    decodePrefix k cs
-      = k "" cs
+    decodePrefix k cs = k "" cs
 
-    decodeCmd k []
-      = k "" ""
-    decodeCmd k (' ':cs)
-      = k "" cs
-    decodeCmd k (c:cs)
-      = decodeCmd (\xs ys -> k (c:xs) ys) cs
+    decodeCmd k []       = k "" ""
+    decodeCmd k (' ':cs) = k "" cs
+    decodeCmd k (c:cs)   = decodeCmd (\xs ys -> k (c:xs) ys) cs
 
     decodeParams :: String -> [String]
-    decodeParams xs
-      = decodeParams' [] [] xs
+    decodeParams xs = decodeParams' [] [] xs
       where
         decodeParams' param params []
           | null param = reverse params
@@ -146,5 +139,4 @@ decodeMessage line
         decodeParams' param params rest@(c@':' : cs)
           | null param = reverse (rest : params)
           | otherwise  = decodeParams' (c:param) params cs
-        decodeParams' param params (c:cs)
-          = decodeParams' (c:param) params cs
+        decodeParams' param params (c:cs) = decodeParams' (c:param) params cs

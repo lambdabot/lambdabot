@@ -4,7 +4,7 @@
 --
 module Lambdabot (
         MODULE(..), Module(..),
-        ModuleT, ModState, ModuleLB,
+        ModuleT, ModState, ModuleLB, Mode(..),
 
         IRC.Message(..), 
         IRCRState(..), IRCRWState(..), IRCError(..), 
@@ -46,7 +46,7 @@ import Prelude hiding   (mod, catch)
 
 import Network          (withSocketsDo, connectTo, PortID(PortNumber))
 
-import System.IO        (Handle, hGetLine, hPutStr, hClose,
+import System.IO        (Handle, hGetLine, hPutStr, hClose, stdin, stdout,
                          hSetBuffering, BufferMode(NoBuffering))
                          
 
@@ -75,6 +75,8 @@ import Control.Monad.Reader
 import Control.Monad.State
 import Control.Monad.Error (MonadError (..))
 import Control.Monad.Trans      ( liftIO )
+
+import System.Console.Readline ( readline )
 
 ------------------------------------------------------------------------
 
@@ -209,21 +211,19 @@ catchLock = unsafePerformIO $ newEmptyMVar
 #endif  
 
 withIrcSignalCatch :: (MonadError e m,MonadIO m) => m () -> m ()
-withIrcSignalCatch m 
-  = do liftIO $ installHandler sigPIPE Ignore Nothing
-       liftIO $ installHandler sigALRM Ignore Nothing
-       threadid <- liftIO $ myThreadId
-       withHandlerList ircSignalsToCatch (ircSignalHandler threadid) m
+withIrcSignalCatch m = do 
+    liftIO $ installHandler sigPIPE Ignore Nothing
+    liftIO $ installHandler sigALRM Ignore Nothing
+    threadid <- liftIO myThreadId
+    withHandlerList ircSignalsToCatch (ircSignalHandler threadid) m
 
 -- "Phantom Error". Maybe we should handle both errors separately?
-data IRCError = IRCRaised Exception 
-              | SignalCaught Signal 
-  deriving Show
+data IRCError = IRCRaised Exception | SignalCaught Signal deriving Show
 
 -- | The IRC Monad. The reader transformer holds information about the
 --   connection to the IRC server.
-newtype LB a 
-  = LB { runLB :: ReaderT (IORef (Maybe IRCRState), IORef IRCRWState) IO a }
+newtype LB a = LB { runLB :: ReaderT (IORef (Maybe IRCRState),IORef IRCRWState) IO a }
+
 #ifndef __HADDOCK__
   deriving (Monad,Functor,MonadIO)
 #endif
@@ -401,93 +401,98 @@ handleIrc handler m = catchError m $ \e -> case e of
         IRCRaised s -> handler $ show s
         _           -> throwError e
 
+------------------------------------------------------------------------
+--
+-- Lambdabot modes, networked , or command line
+--
+data Mode = Online | Offline deriving Eq
+
 --
 -- | run the IRC monad
 --
-runIrc :: LB a -> LB () -> S.DynLoad -> IO ()
-runIrc initialise m ld = withSocketsDo $ do
-        ex <- try $ evalLB
-                 (initialise >> withIrcSignalCatch (runIrc' m))
-                 (initState (Config.admins Config.config))
-        either (\e->putStrLn ("runIRC: caught exception: "++show e)) (return) ex
-      where
-        initState as = IRCRWState {
-                ircPrivilegedUsers = M.fromList [(a,True)|a <- as],
-                ircChannels        = M.empty,
-                ircModules         = M.empty,
-                ircCallbacks       = M.empty,
-                ircOutputFilters   = [
-                    ("",cleanOutput),
-                    ("",lineify),
-                    ("",cleanOutput),
-                    ("",reduceIndent),
-                    ("",checkRecip) ],
-                ircCommands        = M.empty,
-                ircPrivCommands    = [],
-                ircStayConnected   = True,
-                ircDynLoad         = ld
-            }
+runIrc :: Mode -> LB a -> LB () -> S.DynLoad -> IO ()
+runIrc mode initialise loop ld = withSocketsDo $ do
+    ex <- try $ evalLB
+             (initialise >> withIrcSignalCatch (runIrc' mode loop))
+             (initState (Config.admins Config.config) ld)
+    either (\e -> putStrLn ("runIRC: caught exception: "++show e)) (return) ex
 
-{-
-traceError :: (MonadIO m,MonadError e m,Show e) => m a -> m a
-traceError = handleError (\e -> liftIO (print e) >> throwError e)
+initState :: [String] -> S.DynLoad -> IRCRWState
+initState as ld = IRCRWState {
+        ircPrivilegedUsers = M.fromList $ zip as (repeat True),
+        ircChannels        = M.empty,
+        ircModules         = M.empty,
+        ircCallbacks       = M.empty,
+        ircOutputFilters   = [
+            ("",cleanOutput),
+            ("",lineify),
+            ("",cleanOutput),
+            ("",reduceIndent),
+            ("",checkRecip) ],
+        ircCommands        = M.empty,
+        ircPrivCommands    = [],
+        ircStayConnected   = True,
+        ircDynLoad         = ld
+    }
 
-traceException :: (MonadIO m,MonadException m) => m a -> m a
-traceException = handleM (\e -> liftIO (print e) >> throwM e)
--}
+------------------------------------------------------------------------
 
-runIrc' :: LB () -> LB ()
-runIrc' m = do  
-        let portnum  = PortNumber $ fromIntegral (Config.port Config.config)
+--
+-- Actually connect to the irc server
+--
+runIrc' :: Mode -> LB a -> LB ()
+runIrc' mode loop = do
 
-        s <- liftIO $ connectTo (Config.host Config.config) portnum
+    (hin,hout,rloop,wloop) <- case mode of
+        Online  -> do
+            let portnum  = PortNumber $ fromIntegral (Config.port Config.config)
+            s <- liftIO $ connectTo (Config.host Config.config) portnum
+            return (s,s,readerLoop,writerLoop)
+        Offline -> return (stdin, stdout, offlineReaderLoop, offlineWriterLoop)
 
-        tryErrorJust (isEOFon s) $ do 
-            liftIO $ hSetBuffering s NoBuffering
-            threadmain <- liftIO $ myThreadId
-            chanr      <- liftIO $ newChan
-            chanw      <- liftIO $ newChan
-            threadr    <- liftIO $ forkIO $ readerLoop threadmain chanr chanw s
-            threadw    <- liftIO $ forkIO $ writerLoop threadmain chanw s
+    tryErrorJust (isEOFon hin) $ do 
+        liftIO $ hSetBuffering hout NoBuffering
+        liftIO $ hSetBuffering hin  NoBuffering
+        threadmain <- liftIO myThreadId
+        chanr      <- liftIO newChan
+        chanw      <- liftIO newChan
+        syncR      <- liftIO $ newMVar () -- used in offline to make threads synchronous
+        syncW      <- liftIO newEmptyMVar
+        threadr    <- liftIO $ forkIO $ rloop threadmain chanr chanw hin syncR syncW
+        threadw    <- liftIO $ forkIO $ wloop threadmain chanw hout syncR syncW
 
-            let chans = IRCRState {
-                            ircServer      = Config.host Config.config,
-                            ircReadChan    = chanr,
-                            ircReadThread  = threadr,
-                            ircWriteChan   = chanw,
-                            ircWriteThread = threadw }
+        let chans = IRCRState {
+                        ircServer      = Config.host Config.config,
+                        ircReadChan    = chanr,
+                        ircReadThread  = threadr,
+                        ircWriteChan   = chanw,
+                        ircWriteThread = threadw }
 
-            finallyError 
-               (localLB (Just chans) $ catchSignals $ m >> ircQuit "terminated") 
-               (liftIO $ do 
-                   killThread threadr
-                   killThread threadw
-                   hClose s)
+        finallyError 
+           (localLB (Just chans) $ catchSignals $ loop >> ircQuit "terminated") 
+           (liftIO $ do killThread threadr
+                        killThread threadw
+                        when (mode == Online) $ hClose hin)
 
-        reconn <- gets ircStayConnected
-        case reconn of
-          True  -> runIrc' m
-          False -> exitModules
+    reconn <- gets ircStayConnected
+    if reconn then runIrc' mode loop else exitModules
 
   where
 #if __GLASGOW_HASKELL__ >= 600
         isEOFon s (IRCRaised (IOException e)) 
-            = if isEOFError e && ioeGetHandle e == Just s
-              then Just () else Nothing
+            = if isEOFError e && ioeGetHandle e == Just s then Just () else Nothing
 #else
         isEOFon s (IRCRaised e) 
-            = if isEOFError e && ioeGetHandle e == Just s
-              then Just () else Nothing
+            = if isEOFError e && ioeGetHandle e == Just s then Just () else Nothing
 #endif        
         isEOFon _ _ = Nothing
         isSignal (SignalCaught s) = Just s
         isSignal _ = Nothing
+
         -- catches a signal, quit with message
-        catchSignals n = catchErrorJust isSignal n $
-             \s -> do tryError $ ircQuit (ircSignalMessage s)
-                      -- forkIO $ threadDelay 1000000 >> throw ...
-                      --throwError (SignalCaught s)
-                      return ()
+        catchSignals n = catchErrorJust isSignal n $ \s -> do 
+             tryError $ ircQuit (ircSignalMessage s)
+             return ()
 
         exitModules = do
           mods <- gets $ M.elems . ircModules
@@ -497,49 +502,126 @@ runIrc' m = do
             moduleExit mod
             writeGlobalState mod name
 
-
-readerLoop :: ThreadId -> Chan IRC.Message -> Chan IRC.Message -> Handle -> IO ()
-readerLoop threadmain chanr chanw h
-  = do  liftIO (putStrLn "Running reader loop...")
-        exc <- try readerLoop'
-        case exc of
-           Left (AsyncException ThreadKilled) -> return ()
-           Left err -> throwTo threadmain err
-           Right _ -> return ()
+------------------------------------------------------------------------
+--
+-- online reader loop
+--
+readerLoop :: ThreadId -> Chan IRC.Message -> Chan IRC.Message -> Handle 
+           -> MVar () -> MVar () -> IO ()
+readerLoop threadmain chanr chanw h _ _ = do 
+    liftIO (putStrLn "Running reader loop...")
+    exc <- try readerLoop'
+    case exc of
+        Left (AsyncException ThreadKilled) -> return ()
+        Left err                           -> throwTo threadmain err
+        Right _                            -> return ()
   where
-    readerLoop'
-      = do line <- hGetLine h
-           let  line' = [ c | c <- line, c /= '\n', c /= '\r' ]
-           case line' of
-                ('P':'I':'N':'G':' ':rest)
-                    -> writeChan chanw (IRC.mkMessage "PONG" [rest])
-                _   -> writeChan chanr (IRC.decodeMessage line')
-           readerLoop'
+    readerLoop' = do 
+        line <- hGetLine h
+        let line' = [ c | c <- line, c /= '\n', c /= '\r' ]
+        case line' of
+            ('P':'I':'N':'G':' ':rest) -> writeChan chanw (IRC.mkMessage "PONG" [rest])
+            _                          -> writeChan chanr (IRC.decodeMessage line')
+        readerLoop'
 {-# INLINE readerLoop #-}
 
+--
+-- online writer loop
+--
 -- flood control: RFC 2813, section 5.8
-writerLoop :: ThreadId -> Chan IRC.Message -> Handle -> IO ()
-writerLoop threadmain chanw h
-  = do sem1 <- newQSem 0
-       sem2 <- newQSem 5
-       forkIO $ sequence_ . repeat $ do
+writerLoop :: ThreadId -> Chan IRC.Message -> Handle -> MVar () -> MVar () -> IO ()
+writerLoop threadmain chanw h _ _ = do 
+    sem1 <- newQSem 0
+    sem2 <- newQSem 5
+    forkIO $ sequence_ . repeat $ do
            waitQSem sem1
            threadDelay 2000000
            signalQSem sem2
-       exc <- try $ writerLoop' (sem1,sem2)
-       case exc of
+    exc <- try $ writerLoop' (sem1,sem2)
+    case exc of
            Left (AsyncException ThreadKilled) 
              -> try (hPutStr h "QUIT :died unexpectedly\r") >> return ()
            Left e  -> throwTo threadmain e
            Right _ -> return ()
+
   where
-    writerLoop' sems@(sem1,sem2)
-      = do msg <- readChan chanw
+    writerLoop' sems@(sem1,sem2) = do 
+           msg <- readChan chanw
            waitQSem sem2
            hPutStr h $ IRC.encodeMessage msg "\r"
            signalQSem sem1
            writerLoop' sems
 {-# INLINE writerLoop #-}
+
+------------------------------------------------------------------------
+
+-- 
+-- Offline reader and writer loops. A prompt with line editing
+-- Takes a string from stdin, wraps it as an irc message, and _blocks_
+-- waiting for the writer thread (to keep things in sync).
+--
+offlineReaderLoop :: ThreadId -> Chan IRC.Message -> Chan IRC.Message -> Handle 
+                  -> MVar () -> MVar () -> IO ()
+offlineReaderLoop threadmain chanr _chanw _h syncR syncW = do 
+    exc <- try readerLoop'
+    case exc of
+        Right _                            -> return ()
+        Left (AsyncException ThreadKilled) -> error "QUIT"
+        Left e                             -> throwTo threadmain e
+  where
+    readerLoop' = do 
+
+        takeMVar syncR
+
+        s <- readline "lambdabot> " -- read stdin
+        case s of
+            Nothing -> error "EOF"
+            Just x -> let s' = dropWhile isSpace x 
+                      in if null s' then putMVar syncR () >> readerLoop' else do
+
+                let msg = case s' of
+                            '>':xs -> "@eval " ++ xs
+                            _      -> "@"      ++ dropWhile (== ' ') s'
+
+                let m  = IRC.Message { IRC.msgPrefix  = "user!n=user@null"
+                                     , IRC.msgCommand = "PRIVMSG"
+                                     , IRC.msgParams  = ["#haskell",":" ++ msg ]
+                                     }
+                writeChan chanr m
+
+                putMVar syncW ()
+
+                readerLoop'
+
+--
+-- Print to stdout
+--
+offlineWriterLoop :: ThreadId -> Chan IRC.Message -> Handle 
+                  -> MVar () -> MVar () -> IO ()
+offlineWriterLoop threadmain chanw h syncR syncW = do 
+    exc <- try writerLoop'
+    case exc of
+        Right _                            -> return ()
+        Left (AsyncException ThreadKilled) -> error "QUIT"
+        Left e                             -> throwTo threadmain e
+  where
+    writerLoop' = do 
+
+        takeMVar syncW
+
+        let loop = do 
+            msg <- readChan chanw   -- eventually 'send' puts a message on this chan
+            let str = case (tail . IRC.msgParams) msg of
+                        []    -> []
+                        (x:_) -> tail x
+            hPutStr h (str ++ "\n")     -- write stdout
+            b <- isEmptyChan chanw
+            when (not b) loop
+        loop
+
+        putMVar syncR ()
+
+        writerLoop'
 
 ------------------------------------------------------------------------
 

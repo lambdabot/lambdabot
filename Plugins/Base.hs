@@ -79,8 +79,7 @@ doUNKNOWN msg
 -}
 
 doIGNORE :: Callback
-doIGNORE msg
-  = debugStrLn $ show msg
+doIGNORE msg = debugStrLn $ show msg
  --   = debugStrLn $ "IGNORING> <" ++ msgPrefix msg ++
 --      "> [" ++ msgCommand msg ++ "] " ++ show (msgParams msg)
 
@@ -221,9 +220,7 @@ doRPL_ENDOFMOTD _msg = return ()
 -}
 
 doPRIVMSG :: ModState BaseState Callback
-doPRIVMSG msg = do
-    -- debugStrLn (show msg) 
-    doPRIVMSG' (name config) msg
+doPRIVMSG msg = doPRIVMSG' (name config) msg
 
 arePrefixesOf :: [String] -> String -> Bool
 arePrefixesOf = flip (any . flip isPrefixOf)
