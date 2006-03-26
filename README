@@ -14,15 +14,6 @@ Build the FastPackedString library:
         $ runhaskell Setup.hs build
         $ runhaskell Setup.hs install
 
-Build hs-plugins:
-        $ cd ..
-        $ darcs get --partial http://www.cse.unsw.edu.au/~dons/code/hs-plugins
-        $ cd hs-plugins/
-        $ chmod +x Setup.lhs configure
-        $ ./Setup.lhs configure --prefix=/usr/local
-        $ ./Setup.lhs build
-        $ ./Setup.lhs install
-
 And then build lambdabot:
         $ cd ..
         $ darcs get --partial http://www.cse.unsw.edu.au/~dons/code/lambdabot
@@ -42,12 +33,23 @@ src of the broken plugin to find out what files it requires.
 Plugins are added or removed config.mk and removing them from the list
 of PLUGINS.
 
-For compiling with profiling on, or to compile a static binary
-(obviating the need for hs-plugins!), try
+For compiling with profiling on:
 
     make way=p
-or
-    make static=yes
+
+To compile a dynamic version, with reloadable plugins:
+
+    Build hs-plugins:
+        $ cd ..
+        $ darcs get --partial http://www.cse.unsw.edu.au/~dons/code/hs-plugins
+        $ cd hs-plugins/
+        $ chmod +x Setup.lhs configure
+        $ ./Setup.lhs configure --prefix=/usr/local
+        $ ./Setup.lhs build
+        $ ./Setup.lhs install
+
+    Then
+        $ make dynamic=yes
 
 To build really quickly, for testing:
 
