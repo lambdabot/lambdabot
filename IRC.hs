@@ -27,8 +27,7 @@ instance DeepSeq Message where
 mkMessage :: String -- ^ Command
           -> [String] -- ^ Parameters
           -> Message -- ^ Returns: The created message
-mkMessage cmd params
-  = Message { msgPrefix = "", msgCommand = cmd, msgParams = params }
+mkMessage cmd params = Message { msgPrefix = "", msgCommand = cmd, msgParams = params }
 
 -- | 'nick' extracts the nickname involved in a given message.
 nick :: Message -> String

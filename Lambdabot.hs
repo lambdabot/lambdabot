@@ -412,10 +412,11 @@ data Mode = Online | Offline deriving Eq
 --
 runIrc :: Mode -> LB a -> LB () -> S.DynLoad -> IO ()
 runIrc mode initialise loop ld = withSocketsDo $ do
-    ex <- try $ evalLB
+    try $ evalLB
              (initialise >> withIrcSignalCatch (runIrc' mode loop))
              (initState (Config.admins Config.config) ld)
-    either (putStrLn . ("runIRC: caught exception: " ++) . show) (return) ex
+    return ()
+    
 
 initState :: [String] -> S.DynLoad -> IRCRWState
 initState as ld = IRCRWState {
@@ -540,7 +541,7 @@ writerLoop threadmain chanw h _ _ = do
     exc <- try $ writerLoop' (sem1,sem2)
     case exc of
            Left (AsyncException ThreadKilled) 
-             -> try (hPutStr h "QUIT :died unexpectedly\r") >> return ()
+             -> try (hPutStr h "QUIT : died unexpectedly\r") >> return ()
            Left e  -> throwTo threadmain e
            Right _ -> return ()
 
@@ -566,12 +567,12 @@ offlineReaderLoop threadmain chanr _chanw _h syncR syncW = do
     exc <- try readerLoop'
     case exc of
         Right _                            -> return ()
-        Left (AsyncException ThreadKilled) -> error "QUIT"
+        Left (AsyncException ThreadKilled) -> error "quit"
         Left e                             -> throwTo threadmain e
   where
     readerLoop' = do 
 
-        takeMVar syncR
+        takeMVar syncR  -- wait till writer lets us proceed
 
         s <- readline "lambdabot> " -- read stdin
         case s of
@@ -580,16 +581,18 @@ offlineReaderLoop threadmain chanr _chanw _h syncR syncW = do
                       in if null s' then putMVar syncR () >> readerLoop' else do
 
                 let msg = case s' of
+                            "quit" -> error "<quit>"
                             '>':xs -> "@eval " ++ xs
                             _      -> "@"      ++ dropWhile (== ' ') s'
 
+                msg `seq` return () -- force error, perhaps. I know I'm bad
+
                 let m  = IRC.Message { IRC.msgPrefix  = "dons!n=user@null"
                                      , IRC.msgCommand = "PRIVMSG"
-                                     , IRC.msgParams  = ["#haskell",":" ++ msg ]
-                                     }
+                                     , IRC.msgParams  = ["#haskell",":" ++ msg ] }
                 writeChan chanr m
 
-                putMVar syncW ()
+                putMVar syncW () -- let writer go 
 
                 readerLoop'
 
@@ -602,12 +605,12 @@ offlineWriterLoop threadmain chanw h syncR syncW = do
     exc <- try writerLoop'
     case exc of
         Right _                            -> return ()
-        Left (AsyncException ThreadKilled) -> error "QUIT"
+        Left (AsyncException ThreadKilled) -> return () -- silently quit
         Left e                             -> throwTo threadmain e
   where
     writerLoop' = do 
 
-        takeMVar syncW
+        takeMVar syncW -- wait for reader to let us go
 
         let loop = do 
             msg <- readChan chanw   -- eventually 'send' puts a message on this chan
@@ -619,7 +622,7 @@ offlineWriterLoop threadmain chanw h syncR syncW = do
             when (not b) loop
         loop
 
-        putMVar syncR ()
+        putMVar syncR () -- now allow writer to go
 
         writerLoop'
 
