@@ -66,6 +66,10 @@ CONNECTING:
 OFFLINE MODE:
     ./lambdabot
 
+SCRIPTS:
+    The scripts directory contains some shell scripts for Vim editor support
+    They are self-explanatory
+
 KNOWN BUGS:
 
 Bug reports, patches, new modules etc, contact:

@@ -415,7 +415,7 @@ runIrc mode initialise loop ld = withSocketsDo $ do
     ex <- try $ evalLB
              (initialise >> withIrcSignalCatch (runIrc' mode loop))
              (initState (Config.admins Config.config) ld)
-    either (\e -> putStrLn ("runIRC: caught exception: "++show e)) (return) ex
+    either (putStrLn . ("runIRC: caught exception: " ++) . show) (return) ex
 
 initState :: [String] -> S.DynLoad -> IRCRWState
 initState as ld = IRCRWState {
