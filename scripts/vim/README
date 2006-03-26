@@ -1,0 +1,11 @@
+Vim support for lambdabot
+
+To use, 
+    * install these scripts into your path somewhere
+    
+From within Vim, type:
+    !!foo
+
+where 'foo' is the script to run, and it will replace the contents of
+the current line, with the result filtered through that lambdabot
+command.

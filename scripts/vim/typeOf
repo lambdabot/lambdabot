@@ -1,0 +1,12 @@
+#!/bin/sh
+
+# Copyright (c) 2005 Don Stewart - http://www.cse.unsw.edu.au/~dons
+# GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
+
+# input is a top level .hs decls
+
+FILE=$*
+DECL=`cat`
+ID=`echo $DECL | sed 's/^\([^ ]*\).*/\1/'`
+echo ":t $ID" | ghci -v0 -cpp -fglasgow-exts -w $FILE
+echo $DECL
