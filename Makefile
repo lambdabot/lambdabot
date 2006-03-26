@@ -1,5 +1,9 @@
 # Lambdabot makefile
 
+ifneq "$(dynamic)" "yes"
+static=yes
+endif
+
 MAKEFLAGS += --no-builtin-rules
 .SUFFIXES:
 
