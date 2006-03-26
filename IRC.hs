@@ -70,7 +70,7 @@ getTopic :: String -> Message
 getTopic chan = mkMessage "TOPIC" [chan]
 
 -- | 'quit' creates a server QUIT message. The input string given is the
---   quitmessage, given to other parties when leaving the network.
+--   quit message, given to other parties when leaving the network.
 quit :: String -> Message
 quit msg = mkMessage "QUIT" [':' : msg]
 
