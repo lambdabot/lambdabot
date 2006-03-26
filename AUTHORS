@@ -1,47 +1,86 @@
 Andrew J. Bromage <ajb@spamcop.net> aka Pseudonym on #haskell
-* the 'bot itself
+    * the 'bot itself
 
 Shae M. Erisson <shae@ScannedInAvian.com> aka shapr on #haskell
-* FactModule
-* FortuneModule
-* StateModule
-* SystemModule
+    * FactModule
+    * FortuneModule
+    * StateModule
+    * SystemModule
 
 Taylor Campbell <riastradh@users.sourceforge.net> aka Riastradh on #haskell
-* KarmaModule
+    * KarmaModule
 
 Derek Elkins <ddarius@users.sourceforge.net> aka Darius on #haskell
-* EvalModule
+    * EvalModule
 
 Sven M. Hallberg <pesco@haquebright.de> aka pesco on #haskell
-* TopicModule
+    * TopicModule
 
 Tom Moertel <tom@moertel.com> aka tmoertel on #haskell
-* DictModule
+    * DictModule
 
 Mats-Ola Persson <polli@users.sourceforge.net> aka polli on #haskell
-* rewrite of the plugin system
+    * rewrite of the plugin system
 
 Ganesh Sittampalam <ganesh@earth.li> aka Heffalump on #haskell
-* Various restructuring to improve bot robustness
-* Dynamic module loading
+    * Various restructuring to improve bot robustness
+    * Dynamic module loading
 
 Don Stewart <dons@cse.unsw.edu.au> aka dons on #haskell
-* New build system, 6.4 port, dynamic module loading with hs-plugins
-* Simplfied module interface
-* BabelModule, PlugsModule, VersionModule, SpellModule, Unlambda, Djinn
-* General hacking
+    * New build system, 6.4 port, dynamic module loading with hs-plugins
+    * Simplfied module interface
+    * BabelModule, PlugsModule, VersionModule, SpellModule, Unlambda, Djinn
+    * Offline mode
+    * General hacking
 
 Jesper Louis Andersen <jlouis@mongers.org> aka jlouis on #haskell
-* Code/Documentation cleanups
+    * Code/Documentation cleanups
 
 Thomas Jäger <TheHunter2000@web.de> aka TheHunter on #haskell
-* PlModule
-* General hacking/refactoring.
+    * PlModule
+    * General hacking/refactoring.
 
 Stefan Wehr <mail@stefanwehr.de> aka stefanw on #haskell
-* DarcsPatchWatch module
+    * DarcsPatchWatch module
 
 Simon Winwood
-* Log module
+    * Log module
 
+Mark Wotton (blackdog)
+    * Vixen
+
+Paolo Martini (xerox)
+    * @hoogle, @botsnack, work on @karma
+
+Vaclav Haisman
+    * Tweaks to textual interface
+
+Joel Koerwer
+    * google calculator
+
+Josef Svenningsson
+    * @elite
+
+Ketil Malde
+    * Improved @seen
+
+Echo Nolan
+    * grammar
+
+Samuel Bronson
+    * Improved search code. @google
+
+Peter Davis
+    * @moos ++
+
+andres@cs.uu.nl
+    * line breaks, topics, 
+
+Kenneth Hoste
+    * @vote
+
+softpro@gmx.net
+    * @pretty
+
+tatd2@kent.ac.uk
+    * actions / slapping
