@@ -60,6 +60,12 @@ or
 
 to clean the tree.
 
+CONNECTING:
+    ./lambdabot --online
+
+OFFLINE MODE:
+    ./lambdabot
+
 KNOWN BUGS:
 
 Bug reports, patches, new modules etc, contact:
