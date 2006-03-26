@@ -4,12 +4,11 @@
 # GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
 
 #
-# A shell script to be called from vim, to automatically refactor a code
-# fragment.
+# Generic lambdabot binding
 #
 # Select the expression you want to refactor, on a line of its own, and
 # in vim, type:
-#       !!pl
+#       !!bot cmd
 #
 # (Assuming your lambdabot is installed in $HOME/lambdabot, it will
 # replace the expression with the pointfree version
@@ -17,5 +16,4 @@
 
 DECL=`cat`
 cd $HOME/lambdabot/
-echo "pl $DECL" | ./lambdabot | sed '$d;s/lambdabot> //'
-
+echo "$* $DECL" | ./lambdabot | sed '$d;s/lambdabot> //'
