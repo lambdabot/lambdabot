@@ -119,13 +119,13 @@ decodeMessage line =
     decodePrefix k (':':cs) = decodePrefix' k cs
       where decodePrefix' j ""       = j "" ""
             decodePrefix' j (' ':ds) = j "" ds
-            decodePrefix' j (c:ds)   = decodePrefix' (\xs ys -> j (c:xs) ys) ds
+            decodePrefix' j (c:ds)   = decodePrefix' (j . (c:)) ds
 
     decodePrefix k cs = k "" cs
 
     decodeCmd k []       = k "" ""
     decodeCmd k (' ':cs) = k "" cs
-    decodeCmd k (c:cs)   = decodeCmd (\xs ys -> k (c:xs) ys) cs
+    decodeCmd k (c:cs)   = decodeCmd (k . (c:)) cs
 
     decodeParams :: String -> [String]
     decodeParams xs = decodeParams' [] [] xs
