@@ -1,4 +1,7 @@
 --
+-- Copyright (c) 2006 Don Stewart - http://www.cse.unsw.edu.au/~dons
+-- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
+--
 -- | String and other utilities
 --
 module Util (
@@ -46,9 +49,10 @@ import System.Random hiding (split)
 -- | 'concatWith' joins lists with the given glue elements. Example:
 --
 -- > concatWith ", " ["one","two","three"] ===> "one, two, three"
-concatWith:: [a]   -- ^ Glue to join with
-	  -> [[a]] -- ^ Elements to glue together
-	  -> [a]   -- ^ Result: glued-together list
+concatWith  :: [a]   -- ^ Glue to join with
+            -> [[a]] -- ^ Elements to glue together
+            -> [a]   -- ^ Result: glued-together list
+
 concatWith glue xs = (concat . intersperse glue) xs
 
 
@@ -101,7 +105,7 @@ snoc x xs = xs ++ [x]
 after :: String -- ^ Prefix string
       -> String -- ^ Data string
       -> String -- ^ Result: Data string with Prefix string and excess whitespace
-	        --     removed
+                --     removed
 after [] ys     = dropWhile isSpace ys
 after (_:_) [] = error "after: (:) [] case"
 after (x:xs) (y:ys)
@@ -112,7 +116,7 @@ after (x:xs) (y:ys)
 --
 -- > split_first_word "A fine day" ===> ("A", "fine day)
 splitFirstWord :: String -- ^ String to be broken
-		 -> (String, String)
+                 -> (String, String)
 splitFirstWord xs = (w, dropWhile isSpace xs')
   where (w, xs') = break isSpace xs
 
@@ -127,12 +131,12 @@ firstWord = takeWhile (not . isSpace)
 --   it outputs the String given. Else, it is a no-op.
 
 debugStr :: (MonadIO m) => String -> m ()
-debugStr x = when (verbose config) $ liftIO (putStr x)
+debugStr = when (verbose config) . liftIO . putStr
 
 -- | 'debugStrLn' is a version of 'debugStr' that adds a newline to the end
 --   of the string outputted.
 debugStrLn :: (MonadIO m) => [Char] -> m ()
-debugStrLn x = debugStr ( x ++ "\n" )
+debugStrLn x = debugStr (x ++ "\n")
 
 -- | 'lowerCaseString' transforms the string given to lower case.
 --
@@ -180,9 +184,9 @@ listToStr conj (item:items) =
 --   then returns a random element from the list, paired with the altered
 --   state of the RNG
 getRandItem :: (RandomGen g) =>
-	       [a] -- ^ The list to pick a random item from
-	    -> g   -- ^ The RNG to use
-	    -> (a, g) -- ^ A pair of the item, and the new RNG seed
+               [a] -- ^ The list to pick a random item from
+            -> g   -- ^ The RNG to use
+            -> (a, g) -- ^ A pair of the item, and the new RNG seed
 getRandItem [] _       = error "getRandItem: empty list"
 getRandItem mylist rng = (mylist !! index,newRng)
                          where
@@ -195,7 +199,7 @@ getRandItem mylist rng = (mylist !! index,newRng)
 --   and the state of the RNG is hidden, so one don't need to pass it
 --   explicitly.
 stdGetRandItem :: [a] -> IO a
-stdGetRandItem lst = getStdRandom $ getRandItem lst
+stdGetRandItem = getStdRandom . getRandItem
 
 ------------------------------------------------------------------------
 
@@ -216,7 +220,7 @@ clean x | x == '\CR' = []
 
 -- | show a list without heavyweight formatting
 showClean :: (Show a) => [a] -> String
-showClean s = concatWith " " (map (init . tail . show) s)
+showClean = concatWith " " . map (init . tail . show)
 
 dropNL :: [Char] -> [Char]
 dropNL = reverse . dropWhile (== '\n') . reverse
@@ -269,7 +273,7 @@ lvn' (t:ts) (dlh:dlt) c ndl ld | length dlt > 0 = lvn' ts dlt c (ndl ++ [m]) m
 lvn' _ _ _ _  _  = error "levenshtein, ran out of numbers"
 
 dif :: Char -> Char -> Int
-dif s t = fromEnum (s /= t)
+dif = (fromEnum .) . (/=)
 
 {-
 --
@@ -350,7 +354,7 @@ a  <> b = a ++ b
 a  <$> b = a ++ "\n" ++ b
 
 basename :: FilePath -> FilePath
-basename p = reverse $ takeWhile (/= '/') $ reverse p
+basename = reverse . takeWhile ('/' /=) . reverse
 
 dirname :: FilePath -> FilePath
 dirname p  =
@@ -359,7 +363,7 @@ dirname p  =
         p' -> p'
 
 dropSuffix :: FilePath -> FilePath
-dropSuffix f = reverse . tail . dropWhile (/= '.') $ reverse f
+dropSuffix = reverse . tail . dropWhile ('.' /=) . reverse
 
 joinPath :: FilePath -> FilePath -> FilePath
 joinPath p q =
