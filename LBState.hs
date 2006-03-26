@@ -46,7 +46,7 @@ modifyMS f = liftIO $ modifyMVar_ ?ref (return . f)
 
 -- | Write the module's private state. Try to use withMS instead.
 writeMS :: s -> ModuleT s LB ()
-writeMS s = modifyMS (const s)
+writeMS = modifyMS . const
 
 -- | This datatype allows modules to conviently maintain both global 
 --   (i.e. for all clients they're interacting with) and private state.

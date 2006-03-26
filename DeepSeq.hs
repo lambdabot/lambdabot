@@ -11,7 +11,7 @@ module DeepSeq where
 --   deep sequenced.
 class DeepSeq a where
   deepSeq :: a -> b -> b
-  deepSeq = seq			-- default, for simple cases
+  deepSeq = seq         -- default, for simple cases
 
 infixr 0 `deepSeq`, $!!
 
@@ -36,37 +36,37 @@ instance  (DeepSeq a, DeepSeq b, DeepSeq c) => DeepSeq (a, b, c)  where
 instance  (DeepSeq a, DeepSeq b, DeepSeq c, DeepSeq d)
     => DeepSeq (a, b, c, d) where
   deepSeq (a, b, c, d) y = deepSeq a
-			   $ deepSeq b
-			   $ deepSeq c
-			   $ deepSeq d y
+               $ deepSeq b
+               $ deepSeq c
+               $ deepSeq d y
 
 instance  (DeepSeq a, DeepSeq b, DeepSeq c, DeepSeq d, DeepSeq e)
     => DeepSeq (a, b, c, d, e)  where
   deepSeq (a, b, c, d, e) y = deepSeq a
-			      $ deepSeq b
-			      $ deepSeq c
-			      $ deepSeq d
-			      $ deepSeq e y
+                  $ deepSeq b
+                  $ deepSeq c
+                  $ deepSeq d
+                  $ deepSeq e y
 
 instance  (DeepSeq a, DeepSeq b, DeepSeq c, DeepSeq d, DeepSeq e, DeepSeq f)
     => DeepSeq (a, b, c, d, e, f)  where
   deepSeq (a, b, c, d, e, f) y = deepSeq a
-				 $ deepSeq b
-				 $ deepSeq c
-				 $ deepSeq d
-				 $ deepSeq e
-				 $ deepSeq f y
+                 $ deepSeq b
+                 $ deepSeq c
+                 $ deepSeq d
+                 $ deepSeq e
+                 $ deepSeq f y
 
 instance  (DeepSeq a, DeepSeq b, DeepSeq c, DeepSeq d,
-	   DeepSeq e, DeepSeq f, DeepSeq g)
+       DeepSeq e, DeepSeq f, DeepSeq g)
     => DeepSeq (a, b, c, d, e, f, g)  where
   deepSeq (a, b, c, d, e, f, g) y = deepSeq a
-				    $ deepSeq b
-				    $ deepSeq c
-				    $ deepSeq d
-				    $ deepSeq e
-				    $ deepSeq f
-				    $ deepSeq g y
+                    $ deepSeq b
+                    $ deepSeq c
+                    $ deepSeq d
+                    $ deepSeq e
+                    $ deepSeq f
+                    $ deepSeq g y
 
 instance  DeepSeq Bool
 instance  DeepSeq Char

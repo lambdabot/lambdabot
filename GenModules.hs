@@ -43,9 +43,9 @@ main = do argv <- getArgs
 --
 processStatics :: [String] -> [String]
 processStatics m = concat [begin,
-			   map doimport m,
-			   middle,
-			   map doload m]
+                           map doimport m,
+                           middle,
+                           map doload m]
  where
     canon = (Util.dropSpace.)
     canonU = canon Util.upperize

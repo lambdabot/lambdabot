@@ -31,12 +31,12 @@ mkMessage cmd params
   = Message { msgPrefix = "", msgCommand = cmd, msgParams = params }
 
 -- | 'nick' extracts the nickname involved in a given message.
-nick     :: Message -> String
-nick msg = fst $ breakOnGlue "!" (msgPrefix msg)
+nick :: Message -> String
+nick = fst . breakOnGlue "!" . msgPrefix
 
 -- | 'fullName' extracts the full user name involved in a given message.
-fullName     :: Message -> String
-fullName msg = snd $ breakOnGlue "!" (msgPrefix msg)
+fullName :: Message -> String
+fullName = snd . breakOnGlue "!" . msgPrefix
 
 -- | 'channels' extracts the channels a Message operate on.
 channels :: Message -> [String]

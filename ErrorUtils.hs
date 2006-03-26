@@ -30,7 +30,7 @@ handleErrorJust :: MonadError e m => (e -> Maybe b) -- ^ Decider
                 -> (b -> m a) -- ^ Handler
                 -> m a -- ^ Monad
                 -> m a -- ^ Resulting Monad
-handleErrorJust decide = flip $ catchErrorJust decide
+handleErrorJust = flip . catchErrorJust
 
 -- | 'tryError' uses Either to explicitly define the outcome of a
 --   monadic operation. An error is caught and placed into Right,
@@ -71,9 +71,7 @@ bracketError :: MonadError e m => m a -- ^ Before (in-guard) monad
              -> (a -> m b) -- ^ After (out-guard) operation. Fed output of before
              -> (a -> m c) -- ^ Monad to work on. Fed with output of before
              -> m c -- ^ Resulting monad.
-bracketError before after m
- = do v <- before
-      finallyError (m v) (after v)
+bracketError before after m = do v <- before; finallyError (m v) (after v)
 
 -- | 'bracketError_' is the non-bound version of 'bracketError'. The
 --   naming scheme follows usual Haskell convention.
