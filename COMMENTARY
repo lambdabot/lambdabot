@@ -42,3 +42,10 @@ INOVKING COMMANDS
 Each plugin lists the commands it will provide in its Module instance.
 Commands to lambdabot are prefixed with certain magic characters,
 described in Plugins/Base.hs. 
+
+ONLINE/OFFLINE MODES
+
+Lambdabot can run in an offline mode. This is in fact the default mode
+now, and invoking lambdabot with --online is the way to connect to an
+irc server. Otherwise you just get a prompt, and a chance to interact
+with the plugins.
