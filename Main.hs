@@ -44,6 +44,8 @@ offlineMain = mainloop
 
 ------------------------------------------------------------------------
 
+-- it's all asynchronous, remember, the reader and writer threads
+-- communicating over chans in the LB state. maybe its too much?
 mainloop :: LB ()
 mainloop = do 
     msg <- ircRead
