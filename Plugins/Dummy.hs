@@ -83,6 +83,7 @@ dummylst =
              Just m  -> "http://haskell.org/ghc/docs/latest/html/libraries/" <>
                         (P.unpack m) </> map (choice (=='.') (const '-') id) x <.> "html")
 
+    -- broken:
     ,("libsrc",      \x -> case M.lookup (P.pack x) docAssocs of
        Nothing -> x ++ " not available"
        Just m  -> "http://darcs.complete.org/fptools/libraries/" <>

@@ -11,7 +11,7 @@ import Serial (readM)
 import Plugins.Pl.Common
 
 import Data.Array
-import qualified Set as S
+import qualified Data.Set as S
 
 import Control.Monad.Fix (fix)
 
