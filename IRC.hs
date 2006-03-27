@@ -5,12 +5,10 @@
 module IRC where
 
 import Data.Char (chr,isSpace)
-import DeepSeq
 import Util (split, breakOnGlue, clean)
 import qualified Util (concatWith)
 
 -- | An IRC message is a prefix, a command and a list of parameters.
---   They can be DeepSeq'ed.
 data Message
   = Message {
         msgPrefix   :: String,
@@ -18,10 +16,6 @@ data Message
         msgParams   :: [String]
   }
   deriving (Show)
-
-instance DeepSeq Message where
-  deepSeq m
-    = deepSeq (msgPrefix m) . deepSeq (msgCommand m) . deepSeq (msgParams m)
 
 -- | 'mkMessage' creates a new message from a cmd and a list of parameters.
 mkMessage :: String -- ^ Command

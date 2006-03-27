@@ -30,7 +30,6 @@ module Lambdabot (
   ) where
 
 import qualified Config (config, name, admins, host, port, textwidth)
-import DeepSeq          (($!!))
 import ErrorUtils       (bracketError, tryErrorJust, finallyError, catchErrorJust, tryError)
 import Util             (clean, lowerCaseString)
 import Serial
@@ -323,11 +322,10 @@ ircRead = do
     liftIO (readChan chanr)
 
 send :: IRC.Message -> LB ()
+send (IRC.Message x y z) | x `seq` y `seq` z `seq` False = undefined -- strictify
 send line = do  
     chanw <- asks ircWriteChan
-    -- use DeepSeq's $!! to ensure that any Haskell errors in line
-    -- are caught now, rather than later on in the other thread
-    liftIO (writeChan chanw $!! line)
+    liftIO (writeChan chanw $! line)
 
 ----------------------------------------------------------------------
 
