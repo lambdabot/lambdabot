@@ -29,7 +29,7 @@ type HoogleState = [String]
 instance Module HoogleModule HoogleState where
     moduleDefState _ = return []
     moduleCmds   _ = ["hoogle", "hoogle+"]
-    moduleHelp _ _ = "@hoogle <expr>, Haskell API Search for either names, or types."
+    moduleHelp _ _ = "hoogle <expr>. Haskell API Search for either names, or types."
 
     process_ _ "hoogle" s = do 
         o <- liftIO $ hoogle s

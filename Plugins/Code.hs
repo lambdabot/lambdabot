@@ -1,5 +1,5 @@
 -- 
--- Copyright (c) 2005 Don Stewart - http://www.cse.unsw.edu.au/~dons
+-- Copyright (c) 2005-6 Don Stewart - http://www.cse.unsw.edu.au/~dons
 -- 
 -- This program is free software; you can redistribute it and/or
 -- modify it under the terms of the GNU General Public License as
@@ -43,8 +43,8 @@ instance Module CodeModule [FilePath] where
   moduleDefState _ = liftIO $ getSourceFiles $ 
         fptoolsPath config </> "libraries" </> "base"
 
-  moduleHelp _ _ = "@code, print random line of code from $fptools"
-  moduleCmds   _ = [ "code" ]
+  moduleHelp _ _ = "code. Print random line of code from $fptools"
+  moduleCmds   _ = ["code"]
 
   process_ _ "code" _ = do
         fs   <- readMS

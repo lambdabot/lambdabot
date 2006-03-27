@@ -20,7 +20,7 @@ type HaddockState = M.Map P.FastString [P.FastString]
 
 instance Module HaddockModule HaddockState where
     moduleCmds      _ = ["index"]
-    moduleHelp    _ _ = "@index <ident> returns the modules in which <ident> is defined"
+    moduleHelp    _ _ = "index <ident>. Returns the Haskell modules in which <ident> is defined"
     moduleDefState  _ = return M.empty
     moduleSerialize _ = Just $ Serial { deserialize = Just . readPacked
                                       , serialize   = const Nothing }

@@ -51,14 +51,13 @@ instance Module EvalModule EvalState where
            }
 
     moduleHelp _ s = case s of
-        "lambda"         -> "@lambda expr - evaluate the lambda calculus expression, expr"
-        "define"         -> "@define name expr - define name to be expr"
-        "get-definition" -> "@get-definition name - get the expression defining name"
-        "definitions"    -> "@definitions [prefix] - get the definitions starting with prefix"
-        "del-definition" -> "@del-definition name - delete name"
-        "set-fuel"       -> "@set-fuel ticks - how many ticks before @lambda runs out of fuel"
-        "resume"         -> "@resume - continue an expression that has run out of fuel"
-        _                -> "EvalModule: don't know command " ++ show s
+        "lambda"         -> "lambda <expr>. Evaluate the lambda calculus expression, <expr>"
+        "define"         -> "define <name> <expr>. Define name to be expr"
+        "get-definition" -> "get-definition <name>. Get the expression defining name"
+        "definitions"    -> "definitions <prefix>. Get the definitions starting with prefix"
+        "del-definition" -> "del-definition <name>. Delete name"
+        "set-fuel"       -> "set-fuel <ticks>. How many ticks before @lambda runs out of fuel"
+        "resume"         -> "resume. Continue an expression that has run out of fuel"
 
     moduleCmds   _ = ["lambda","define","get-definition","definitions","resume"]
     modulePrivs  _ = ["set-fuel","del-definition"]

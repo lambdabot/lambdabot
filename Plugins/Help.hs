@@ -15,7 +15,7 @@ theModule :: MODULE
 theModule = MODULE $ HelpModule ()
 
 instance Module HelpModule () where
-    moduleHelp _ _ = "@help <command> - ask for help for <command>" -- default output
+    moduleHelp _ _ = "help <command>. Ask for help for <command>. Try 'list' for all commands"
     moduleCmds   _ = ["help"]
     process_ _ cmd rest = doHelp cmd rest
 

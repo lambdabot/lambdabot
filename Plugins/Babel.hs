@@ -1,17 +1,18 @@
 --
--- Copyright (c) 2004-5 Don Stewart - http://www.cse.unsw.edu.au/~dons
 -- Copyright (c) 2004 Simon Winwood - http://www.cse.unsw.edu.au/~sjw
+-- Copyright (c) 2004-6 Don Stewart - http://www.cse.unsw.edu.au/~dons
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
 --
 
 --
--- | A translator module for lambdabot, also provides some quote code.
+-- | A translator module for lambdabot, a binding to babelfish
 --
 module Plugins.Babel (theModule) where
 
 import Lambdabot
 import MiniHTTP
 import Config               (proxy,config)
+import Util
 
 import Data.Maybe      
 import Data.Char            (toLower)
@@ -31,18 +32,12 @@ theModule = MODULE $ BabelModule ()
 
 instance Module BabelModule () where
 
-        moduleCmds _ = ["babel"]
-        moduleHelp _ "babel"    = concat ["usage: babel lang lang phrase"]
-        process_ _ "babel"     s = run_babel s
-
-        {-
-        -- totally unrelated :}
-        process _ _ src "timein" s =
-          if s == "help"
-            then ircPrivmsg src "  http://www.timeanddate.com"
-            else do (o,_,_) <- liftIO $ popen "timein" [s] Nothing
-                    ircPrivmsg src $ "  " ++ o
-        -}
+        moduleCmds _   = ["babel"]
+        process_   _ _ = babel
+        moduleHelp _ _ = "babel <lang1> <lang2> <phrase>.\n\ 
+                         \Translate a phrase in lang1 to lang2.\n\ 
+                         \Language is an element of\n" ++ 
+                         showClean supportedLangs
 
 --
 -- The @babel command.
@@ -53,19 +48,19 @@ instance Module BabelModule () where
 --
 -- TODO add range/context. i.e. !f-3 or 5-4
 --
-run_babel :: String -> LB [String]
-run_babel s = do
-        let cmd = split ' ' 3 s
-        msg <- run_babel' cmd
-        let msg' = map ("  " ++) msg
-        return [unlines msg']
+babel :: String -> LB [String]
+babel s = do
+    let cmd = split2 ' ' 3 s
+    msg <- babel' cmd
+    let msg' = map ("  " ++) msg
+    return [unlines msg']
 
 -- help msg
-run_babel' :: (MonadIO m) => [String] -> m [String]
-run_babel' ["help"]      = return $ ["usage: babel lang lang phrase"]
-run_babel' ["languages"] = return $ [show shortLangs]
-run_babel' [f,t,i]       = do p <- liftIO $ babelFish f t i ; return [p]
-run_babel' _             = return ["bzzt."]
+babel' :: (MonadIO m) => [String] -> m [String]
+babel' ["help"]      = return $ ["usage: babel lang lang phrase"]
+babel' ["languages"] = return $ [show shortLangs]
+babel' [f,t,i]       = do p <- liftIO $ babelFish f t i ; return [p]
+babel' _             = return ["bzzt."]
 
 ------------------------------------------------------------------------
 
@@ -74,19 +69,20 @@ babelFishURL = "http://babelfish.altavista.com/babelfish/tr"
 
 supportedLangs :: [([Char], [Char])]
 supportedLangs =
-    [("german", "de"),
-     ("greek", "el"),
-     ("english", "en"),
-     ("spanish", "es"),
-     ("french", "fr"),
-     ("italian", "it"),
-     ("japanese", "ja"),
-     ("korean", "ko"),
-     ("dutch", "nl"),
-     ("portuguese", "pt"),
-     ("russian", "ru"),
-     ("chinese-simp", "zh"),
-     ("chinese-trad", "zt")]
+    [("german", "de")
+    ,("greek", "el")
+    ,("english", "en")
+    ,("spanish", "es")
+    ,("french", "fr")
+    ,("italian", "it")
+    ,("dutch", "nl")
+    ,("portuguese", "pt")
+--   ("japanese", "ja")
+--   ("korean", "ko")
+--   ("russian", "ru")
+--   ("chinese-simp", "zh")
+--   ("chinese-trad", "zt")
+     ]
 
 shortLangs :: [[Char]]
 shortLangs = ["de","el","en","es","fr","it","ja","ko","nl","pt","ru","zh","zt"]
@@ -145,14 +141,13 @@ babelFish inLang outLang string = do
     where
     uri = (fromJust $ parseURI babelFishURL)
 
+--------------------------------------------------------------
 
-------------------------------------------------------------------------
-
-split :: Char -> Int -> String -> [String]
-split c i s =
-        let fn 0 t = t:[]
-            fn j t = let (xs,ys) = break (== c) t
-                     in case ys of
-                        [] -> xs:[]
-                        _  -> xs: fn (j-1) (tail ys)
-        in fn (i-1) s
+        {-
+        -- totally unrelated :}
+        process _ _ src "timein" s =
+          if s == "help"
+            then ircPrivmsg src "  http://www.timeanddate.com"
+            else do (o,_,_) <- liftIO $ popen "timein" [s] Nothing
+                    ircPrivmsg src $ "  " ++ o
+        -}

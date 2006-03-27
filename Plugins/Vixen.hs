@@ -22,7 +22,7 @@ theModule = MODULE $ VixenModule ()
 
 instance Module VixenModule (String -> IO String) where
     moduleCmds   _   = ["vixen"]
-    moduleHelp _ _   = "sergeant curry's lonely hearts club"
+    moduleHelp _ _   = "vixen <phrase>. Sergeant Curry's lonely hearts club"
     moduleDefState _ = return $ mkVixen
     process_ _ _ rest = vixenCmd rest
 

@@ -18,8 +18,7 @@ import Data.List                (findIndex)
 import Control.Monad.State      (MonadIO, liftIO)
 import Control.Monad            (mplus)
 import Network.URI              (parseURI)
-import Text.Regex               (mkRegex, matchRegexAll, subRegex)
-
+import Text.Regex               (mkRegex, matchRegexAll, subRegex) 
 ------------------------------------------------------------------------
 
 newtype SearchModule = SearchModule ()
@@ -33,12 +32,10 @@ engines =  [("google",    ("http://www.google.com/search?hl=en&q=",
             ("wikipedia", ("http://en.wikipedia.org/wiki/Special:Search?search=", ""))]
 
 instance Module SearchModule () where
-    moduleHelp _ s = case s of
-         "google"    -> "@google <expr>, search google and show url of first hit"
-         "wikipedia" -> "@wikipedia <expr>, search wikipedia and show url of first hit"
-         _           -> "module for doing searches"
-
-    moduleCmds      _ = map fst engines
+    moduleHelp _ s      = case s of
+         "google"    -> "google <expr>. Search google and show url of first hit"
+         "wikipedia" -> "wikipedia <expr>. Search wikipedia and show url of first hit"
+    moduleCmds      _   = map fst engines
     process_ _ cmd rest = searchCmd cmd (dropSpace rest)
 
 ------------------------------------------------------------------------

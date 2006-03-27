@@ -15,9 +15,8 @@ theModule = MODULE $ StateModule ()
 
 instance Module StateModule String where
     moduleCmds      _ = ["state"]
-    moduleHelp    _ _ = "@state - we all know it's evil"
-    moduleDefState  _ = return "This page left blank."
+    moduleHelp    _ _ = "state [expr]. Get or set a state variable."
+    moduleDefState  _ = return "This page intentionally left blank."
     moduleSerialize _ = Just stdSerial
-    process_ _ _ rest = do
-       modstate <- withMS $ \ms writer -> writer rest >> return ms
-       return [modstate]
+    process_ _ _ rest = do modstate <- withMS $ \ms writer -> writer rest >> return ms
+                           return [modstate]

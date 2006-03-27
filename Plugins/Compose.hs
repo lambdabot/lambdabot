@@ -23,15 +23,17 @@ theModule = MODULE $ ComposeModule ()
 
 instance Module ComposeModule () where
     moduleCmds _   = [".", "compose"]
-    moduleHelp _ _ = "@compose/@. is the composition of two plugins, where: . f g xs == g xs >>= f"
-    process    _ a b _ args =
-        case split " " args of
-            (f:g:xs) -> do
-                f' <- lookupP (a,b) f
-                g' <- lookupP (a,b) g
-                compose f' g' (concat $ intersperse " " xs)
+    moduleHelp _ _ = ". <cmd1> <cmd2> [args].\n\ 
+                     \. [or compose] is the composition of two plugins\n\ 
+                     \ The following semantics are used: . f g xs == g xs >>= f"
 
-            _ -> return ["Not enough arguments to @."]
+    process    _ a b _ args = case split " " args of
+        (f:g:xs) -> do
+            f' <- lookupP (a,b) f
+            g' <- lookupP (a,b) g
+            compose f' g' (concat $ intersperse " " xs)
+
+        _ -> return ["Not enough arguments to @."]
 
 
 -- | Compose two plugin functions

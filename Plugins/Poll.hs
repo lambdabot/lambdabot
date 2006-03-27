@@ -69,15 +69,14 @@ instance Module VoteModule VoteState where
 --
    -- todo, should @vote foo automagically add foo as a possibility? 
     moduleHelp   _ s = case s of
-        "poll-list"     -> "@poll-list                 shows all current polls"
-        "poll-show"     -> "@poll-show <poll>            shows all choices for some poll"
-        "poll-add"      -> "@poll-add <name>             adds a new poll, with no candidates"
-        "choice-add"    -> "@choice-add <poll> <choice>  adds a new choice to the given poll"
-        "vote"          -> "@vote <poll> <choice>        vote for <choice> in <poll>"
-        "poll-result"   -> "@poll-result <poll>          show result for given poll"
-        "poll-close"    -> "@poll-close <poll>           closes a poll"
-        "poll-remove"   -> "@poll-remove <poll>          removes a poll"
-        _               -> "vote plugin - run elections on various topics"
+        "poll-list"     -> "poll-list                   Shows all current polls"
+        "poll-show"     -> "poll-show <poll>            Shows all choices for some poll"
+        "poll-add"      -> "poll-add <name>             Adds a new poll, with no candidates"
+        "choice-add"    -> "choice-add <poll> <choice>  Adds a new choice to the given poll"
+        "vote"          -> "vote <poll> <choice>        Vote for <choice> in <poll>"
+        "poll-result"   -> "poll-result <poll>          Show result for given poll"
+        "poll-close"    -> "poll-close <poll>           Closes a poll"
+        "poll-remove"   -> "poll-remove <poll>          Removes a poll"
     
     moduleDefState _  = return M.empty
     moduleSerialize _ = Just voteSerial

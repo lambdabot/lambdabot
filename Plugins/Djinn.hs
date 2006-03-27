@@ -40,14 +40,13 @@ type Decl = String
 instance Module DjinnModule DjinnEnv where
 
         moduleHelp _ s = case s of
-            "djinn"     -> "Generates Haskell code from a type.\n" ++
+            "djinn"     -> "djinn <type>.\nGenerates Haskell code from a type.\n" ++
                            "http://darcs.augustsson.net/Darcs/Djinn"
-            "djinn-add" -> "Define a new function type or type synonym"
-            "djinn-del" -> "Remove a symbol from the environment"
-            "djinn-clr" -> "Reset the djinn environment"
-            "djinn-env" -> "Show the current djinn environment"
-            "djinn-ver" -> "Show current djinn version"
-            _           -> error "invalid command to Djinn.moduleHelp"
+            "djinn-add" -> "djinn-add <expr>.\nDefine a new function type or type synonym"
+            "djinn-del" -> "djinn-del <ident>.\nRemove a symbol from the environment"
+            "djinn-clr" -> "djinn-clr.\nReset the djinn environment"
+            "djinn-env" -> "djinn-env.\nShow the current djinn environment"
+            "djinn-ver" -> "djinn-ver.\nShow current djinn version"
 
         moduleCmds      _ = ["djinn"
                             ,"djinn-add"
@@ -88,7 +87,7 @@ instance Module DjinnModule DjinnEnv where
             return $ prelude ++ st
 
         -- Reset the env
-        process_ _ "djinn-clr"  _ = modifyMS (flip (,) [] . fst) >> return []
+        process_ _ "djinn-clr" _ = modifyMS (flip (,) [] . fst) >> return []
 
         -- Remove sym from environment. We let djinn do the hard work of
         -- looking up the symbols.

@@ -25,12 +25,12 @@ type Quotes = M.Map P.FastString [P.FastString]
 instance Module QuoteModule Quotes where
     moduleCmds           _ = ["quote", "remember", "ghc", "fortune","yow","arr","keal","b52s"]
 
-    moduleHelp _ "fortune" = "Provide a random fortune"
-    moduleHelp _ "yow"     = "Yow!"
-    moduleHelp _ "arr"     = "Talk to a pirate"
-    moduleHelp _ "keal"    = "Talk like Keal"
-    moduleHelp _ "ghc"     = "GHC!"
-    moduleHelp _ "b52s"    = "Anyone noticed the b52s sound a lot like zippy?"
+    moduleHelp _ "fortune" = "fortune. Provide a random fortune"
+    moduleHelp _ "yow"     = "yow. The zippy man."
+    moduleHelp _ "arr"     = "arr. Talk to a pirate"
+    moduleHelp _ "keal"    = "keal. Talk like Keal"
+    moduleHelp _ "ghc"     = "ghc. Choice quotes from GHC."
+    moduleHelp _ "b52s"    = "b52s. Anyone noticed the b52s sound a lot like zippy?"
     moduleHelp _ _          = help
 
     moduleSerialize _       = Just mapListPackedSerial
@@ -47,8 +47,8 @@ instance Module QuoteModule Quotes where
           "b52s"     -> return `fmap` liftIO b52sRandom
 
 help :: String
-help = "@quote [nick]/@remember [nick] [quote]\n" ++
-   "Quote somebody, a random person, or save a memorable quote"
+help = "quote <nick>\nremember <nick> <quote>\n\ 
+       \Quote somebody, a random person, or save a memorable quote"
 
 ------------------------------------------------------------------------
 

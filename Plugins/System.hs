@@ -33,19 +33,19 @@ instance Module SystemModule ClockTime where
 
 syscmds :: M.Map String String
 syscmds = M.fromList
-       [("listchans",   "show channels bot has joined")
-       ,("listmodules", "show available plugins")
-       ,("listcommands","listcommands [module|command]\n"++
+       [("listchans",   "Show channels bot has joined")
+       ,("listmodules", "listmodules. Show available plugins")
+       ,("list",        "list [module|command]\n"++
                         "show all commands or command for [module]")
-       ,("echo",        "echo irc protocol string")
-       ,("uptime",      "show uptime")]
+       ,("echo",        "echo <msg>. echo irc protocol string")
+       ,("uptime",      "uptime. Show uptime")]
 
 privcmds :: M.Map String String
 privcmds = M.fromList [
         ("join",        "join <channel>")
        ,("leave",       "leave <channel>")
        ,("part",        "part <channel>")
-       ,("msg",         "msg someone")
+       ,("msg",         "msg <nick> <string>. Msg someone or some channel")
        ,("quit",        "quit [msg], have the bot exit with msg")
        ,("reconnect",   "reconnect to channel")]
 
@@ -59,10 +59,10 @@ doSystem msg target cmd rest = get >>= \s -> case cmd of
 
   "listchans"   -> return [pprKeys (ircChannels s)]
   "listmodules" -> return [pprKeys (ircModules s) ]
-  "listcommands" 
+  "list" 
         | null rest -> case target of
-              ('#':_) -> return ["use listcommands [module|command]. " ++ 
-                                 "Modules are:\n" ++ pprKeys (ircModules s)]
+              ('#':_) -> return ["list [module|command]. " ++ 
+                                 "Where modules is one of:\n" ++ pprKeys (ircModules s)]
               _       -> listAll
         | otherwise -> listModule rest >>= return . (:[])
 
@@ -82,6 +82,7 @@ doSystem msg target cmd rest = get >>= \s -> case cmd of
 
   "reconnect" -> do ircReconnect $ if null rest then "request" else rest
                     return []
+
   "echo" -> return [concat ["echo; msg:", show msg, " rest:", show rest]]
 
   "uptime" -> do
@@ -105,7 +106,10 @@ listModule query = withModule ircModules query fromCommand printProvides
     printProvides m = do
         let cmds = moduleCmds m
         privs <- gets ircPrivCommands
-        return $ concat [?name, " provides: ", showClean $ cmds\\privs]
+        let cmds' = cmds \\ privs -- don't display privledged commands
+        return . concat $ if null cmds' 
+                            then [?name, " has no visible commands"]
+                            else [?name, " provides: ", showClean $ cmds\\privs]
 
 pprKeys :: (Show k) => M.Map k a -> String
 pprKeys m = showClean (M.keys m)

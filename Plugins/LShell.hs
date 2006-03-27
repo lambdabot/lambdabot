@@ -26,7 +26,8 @@ theModule = MODULE $ LShellModule ()
 
 instance Module LShellModule () where
     moduleCmds   _ = ["lam"]
-    moduleHelp _ _ = "Evaluate terms of the pure, untyped lambda calculus" <$>
+    moduleHelp _ _ = "lam <expr>\n\ 
+                     \Evaluate terms of the pure, untyped lambda calculus" <$>
                      "darcs get http://www.eecs.tufts.edu/~rdocki01/lambda"
 
     -- rule out attempts to do IO

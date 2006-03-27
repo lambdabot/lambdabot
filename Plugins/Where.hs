@@ -32,9 +32,8 @@ instance Module WhereModule WhereState where
 
   moduleCmds _ = ["where", "what", "where+" ]
   moduleHelp _ s = case s of
-    "where"    -> "@where <key>, return element associated with key"
-    "where+"   -> "@where+ <key> <elem>, define an association"
-    _          -> "Remember urls of open source projects"
+    "where"    -> "where <key>. Return element associated with key"
+    "where+"   -> "where+ <key> <elem>. Define an association"
 
   moduleDefState  _ = return $ M.empty
   moduleSerialize _ = Just mapPackedSerial

@@ -22,9 +22,9 @@ type Karma m a = ModuleT KarmaState m a
 instance Module KarmaModule KarmaState where
 
     moduleCmds _ = ["karma", "karma+", "karma-"]
-    moduleHelp _ "karma"  = "return a person's karma value"
-    moduleHelp _ "karma+" = "increment someone's karma"
-    moduleHelp _ "karma-" = "decrement someone's karma"
+    moduleHelp _ "karma"  = "karma <nick>. Return a person's karma value"
+    moduleHelp _ "karma+" = "karma+ <nick>. Increment someone's karma"
+    moduleHelp _ "karma-" = "karma- <nick>. Decrement someone's karma"
 
     moduleDefState  _ = return $ M.empty
     moduleSerialize _ = Just mapSerial

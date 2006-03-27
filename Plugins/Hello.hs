@@ -11,6 +11,7 @@ theModule :: MODULE
 theModule = MODULE $ HelloModule ()
 
 instance Module HelloModule where
-    commands _    = ["hello","goodbye"]
+    moduleCmds _    = ["hello","goodbye"]
+    moduleHelp _    = "hello/goodbye <arg>. Simplest possible plugin" 
     process_ _ xs = return ["Hello world. " ++ xs]
 

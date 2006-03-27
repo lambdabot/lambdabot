@@ -18,7 +18,7 @@ theModule = MODULE $ QuoteModule ()
 
 instance Module QuoteModule () where
     moduleCmds           _ = ["slap"]
-    moduleHelp _ "slap"    = "Slap someone ammusingly"
+    moduleHelp _ "slap"    = "slap <nick>. Slap someone amusingly."
 
     process _ msg _ cmd rest = do
        quote <- liftIO $ case cmd of

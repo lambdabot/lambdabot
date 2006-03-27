@@ -22,7 +22,7 @@ theModule = MODULE $ UnlambdaModule ()
 
 instance Module UnlambdaModule () where
     moduleCmds   _ = ["unlambda"]
-    moduleHelp _ _ = "@unlambda <expr>\nEvaluate an unlambda expression"
+    moduleHelp _ _ = "unlambda <expr>. Evaluate an unlambda expression"
     process_ _ _ s = liftIO (unlambda s) >>= return . (:[])
 
 ------------------------------------------------------------------------

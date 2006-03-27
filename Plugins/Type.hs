@@ -38,11 +38,11 @@ theModule = MODULE $ TypeModule ()
 
 instance Module TypeModule () where
      moduleCmds        _  = ["type", "kind"]
-     moduleHelp _ "kind"  = "@kind: return the kind of a type (GHC)"
-     moduleHelp _ _       = "@type: return the type of a value"
+     moduleHelp _ "kind"  = "kind <type>. Return the kind of a type"
+     moduleHelp _ _       = "type <expr>. Return the type of a value"
      process_ _ s expr = flip query_ghci expr $ case s of 
-                                                "type" -> ":t"
-                                                "kind" -> ":k"
+                                                    "type" -> ":t"
+                                                    "kind" -> ":k"
 
 ------------------------------------------------------------------------
 

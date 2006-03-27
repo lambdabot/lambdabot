@@ -21,7 +21,7 @@ type TimeMap = M.Map String  -- the person who's time we requested
 
 instance Module LocaltimeModule TimeMap where
 
-  moduleHelp _ _      = "print a user's local time"
+  moduleHelp _ _      = "time <user>. Print a user's local time. User's client must support ctcp pings."
   moduleCmds   _      = ["time", "localtime", "localtime-reply"]
   moduleDefState _    = return M.empty
 

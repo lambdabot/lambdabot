@@ -1,7 +1,7 @@
 --
--- | 
 -- Module    : Fact
 -- Copyright : 2003 Shae Erisson
+-- Copyright : 2005-06 Don Stewart
 --
 -- License:     lGPL
 --
@@ -33,7 +33,7 @@ instance Module FactModule FactState where
   moduleCmds   _ = ["fact","fact-set","fact-delete"
                    ,"fact-cons","fact-snoc","fact-update"]
   moduleHelp _ s = case s of
-    "fact"        -> "@fact <fact>, Retrieve a fact from the database"
+    "fact"        -> "fact <fact>, Retrieve a fact from the database"
     "fact-set"    -> "Define a new fact, guard if exists"
     "fact-update" -> "Define a new fact, overwriting"
     "fact-delete" -> "Delete a fact from the database"

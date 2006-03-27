@@ -46,8 +46,8 @@ instance Module PlModule PlState where
 
     moduleCmds _   = ["pointless","pl-resume","pl"]
 
-    moduleHelp _ "pl-resume" = "@pl-resume - resume a suspended pointless transformation."
-    moduleHelp _ _           = "@pointless <expr> - play with pointfree code"
+    moduleHelp _ "pl-resume" = "pl-resume. Resume a suspended pointless transformation."
+    moduleHelp _ _           = "pointless <expr>. Play with pointfree code."
 
     moduleDefState _ = return $ mkGlobalPrivate 15 ()
 

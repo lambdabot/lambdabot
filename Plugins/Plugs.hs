@@ -25,7 +25,7 @@ theModule = MODULE $ PlugsModule ()
 
 instance Module PlugsModule () where
     moduleCmds   _ = ["eval"]
-    moduleHelp _ _ = "@eval <expr>\nYou have Haskell, 3 seconds and no IO. Go nuts!"
+    moduleHelp _ _ = "eval <expr>\nYou have Haskell, 3 seconds and no IO. Go nuts!"
     process_ _ _ s = liftIO (plugs s) >>= return . (:[])
 
 ------------------------------------------------------------------------

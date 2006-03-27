@@ -123,10 +123,10 @@ instance Module DarcsPatchWatch DarcsPatchWatchState where
     moduleCmds  _ = ["repos", "repo-add", "repo-del"]
 
     moduleHelp    _ s = case s of
-        "repos"        -> "@repos, list all registered darcs repositories"
-        "repo-add"     -> "@repo-add path, add a repository"
-        "repo-del"     -> "@repo-del path, delete a repository"
-        _              -> "Watch darcs repositories. Provides @repos, @repo-add, @repo-del"
+        "repos"        -> "repos. List all registered darcs repositories"
+        "repo-add"     -> "repo-add <path>. Add a repository"
+        "repo-del"     -> "repo-del <path>. Delete a repository"
+        _              -> "Watch darcs repositories. Provides: repos, repo-add, repo-del"
 
     moduleSerialize _ = Just stateSerial
     moduleDefState  _ = return (DarcsPatchWatchState Nothing [])

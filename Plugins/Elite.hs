@@ -1,13 +1,16 @@
+--
 -- (c) Josef Svenningsson, 2005
 -- Licence: No licence, public domain
 --
 -- Inspired by the following page:
 -- http://www.microsoft.com/athome/security/children/kidtalk.mspx
+--
 module Plugins.Elite (theModule) where
 
 import Lambdabot
 import Util
 
+import Control.Arrow
 import Control.Monad.State
 import Data.Char
 import Text.Regex
@@ -19,7 +22,7 @@ data Elite = Elite
 
 instance Module Elite () where
     moduleCmds _   = ["elite"]
-    moduleHelp _ _ = "Translating english to elitespeak"
+    moduleHelp _ _ = "elite <phrase>. Translate English to elitespeak"
     process_ _ _ args = do 
         result <- case words args of
                      [] -> return "Say again?"
@@ -50,7 +53,7 @@ isJustEmpty (Just ([],_,_,_),_) = True
 isJustEmpty (_,_)                = False
 
 ruleList :: [(Regex,String)]
-ruleList = map (\ (regex,subst) -> (mkRegex regex,subst))
+ruleList = map (first mkRegex)
            [("a","4")
            ,("b","8")
            ,("c","(")

@@ -34,8 +34,7 @@ theModule = MODULE $ BaseModule ()
 type BaseState = GlobalPrivate () ()
 
 instance Module BaseModule BaseState where
-    moduleHelp  _ _   = "lambdabot irc handler"
-    moduleDefState  _ = return (mkGlobalPrivate 20 ())
+    moduleDefState  _ = return $ mkGlobalPrivate 20 ()
     moduleInit _ = do 
              ircSignalConnect "PING"    doPING
              ircSignalConnect "NOTICE"  doNOTICE

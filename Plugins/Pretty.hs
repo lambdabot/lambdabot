@@ -32,7 +32,7 @@ theModule = MODULE $ PrettyModule ()
 
 instance Module PrettyModule (String -> IO String) where
     moduleCmds _   = ["pretty"]
-    moduleHelp _ _ = "Echo haskell code in a pretty-printed manner"
+    moduleHelp _ _ = "pretty <expr>. Display haskell code in a pretty-printed manner"
     process_ _ _ r = prettyCmd r
 
 ------------------------------------------------------------------------

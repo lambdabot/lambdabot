@@ -1,4 +1,9 @@
 {-# OPTIONS -fvia-C -O2 -optc-O3 #-}
+--
+-- Todo, use Language.Haskell
+--
+-- Doesn't handle string literals?
+--
 module Plugins.Pl.Parser (parsePF) where
 
 import Plugins.Pl.Common

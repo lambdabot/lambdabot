@@ -16,7 +16,7 @@ type MoreState = GlobalPrivate () [String]
 
 -- the @more state is handled centrally
 instance Module MoreModule MoreState where
-    moduleHelp _ _ = "@more - return more bot output"
+    moduleHelp _ _ = "@more. Return more output from the bot buffer."
     moduleCmds   _ = ["more"]
     moduleDefState _ = return $ mkGlobalPrivate 20 ()
     moduleInit   _ = ircInstallOutputFilter moreFilter

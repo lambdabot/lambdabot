@@ -23,9 +23,9 @@ instance Module TodoModule TodoState where
     moduleCmds  _ = ["todo", "todo-add"] 
     modulePrivs _ = ["todo-delete"]
     moduleHelp _ s = case s of
-        "todo"        -> "@todo, list todo entries"
-        "todo-add"    -> "@todo-add <idea>, add a todo entry"
-        "todo-delete" -> "@todo-delete <m>, delete a todo entry (for admins)" 
+        "todo"        -> "todo. List todo entries"
+        "todo-add"    -> "todo-add <idea>. Add a todo entry"
+        "todo-delete" -> "todo-delete <n>. Delete a todo entry (for admins)" 
         _ -> "Keep a todo list. Provides @todo, @todo-add, @todo-delete"
 
     moduleDefState  _ = return ([] :: TodoState)
@@ -37,7 +37,6 @@ instance Module TodoModule TodoState where
            "todo"        -> getTodo todoList rest
            "todo-add"    -> addTodo sender rest
            "todo-delete" -> delTodo rest
-           _ -> error "unimplemented command"
 
         where sender = IRC.nick msg
 

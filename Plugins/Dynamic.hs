@@ -1,6 +1,8 @@
 --
+-- Copyright (c) 2004-06 Don Stewart - http://www.cse.unsw.edu.au/~dons
+-- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
+-- 
 -- | Dynamic module, binding to the dynamic linker
--- Reimplemented 2004-5 by dons to use hs-plugins.
 --
 module Plugins.Dynamic (theModule) where
 
@@ -29,12 +31,9 @@ instance Module DynamicModule () where
         liftIO $ putStrLn " done."
 
     process_ _ s rest = case s of
-        "dynamic-load"      -> 
-                do load rest; return ["module loaded"]
-        "dynamic-unload"    -> 
-                do unload rest; return ["module unloaded"]
-        "dynamic-reload"    -> 
-                do unload rest; load rest; return ["module reloaded"]
+        "dynamic-load"      -> load rest                >> return ["module loaded"]
+        "dynamic-unload"    -> unload rest              >> return ["module unloaded"]
+        "dynamic-reload"    -> unload rest >> load rest >> return ["module reloaded"]
 
 --
 -- | Load value "theModule" from each plugin, given simple name of a

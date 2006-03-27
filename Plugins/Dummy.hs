@@ -1,5 +1,6 @@
 --
 -- | Simple template module
+-- Contains many constant bot commands.
 --
 module Plugins.Dummy (theModule) where
 
@@ -16,33 +17,31 @@ theModule :: MODULE
 theModule = MODULE $ DummyModule ()
 
 instance Module DummyModule [String] where
-  moduleDefState _ = return $ cycle cows
+  moduleDefState = const . return . cycle $ cows
 
   moduleCmds   _ = {-"moo" : -} map fst dummylst
 
   moduleHelp _ s = case s of
-        "dummy"       -> "print a string constant"
-        "id"          -> "the identiy plugin"
-        "wiki"        -> "URLs of wiki pages"
-        "oldwiki"     -> "URLs of the old hawiki pages"
-        "paste"       -> "paste page url"
+        "dummy"       -> "dummy. Print a string constant"
+        "id"          -> "id <arg>. The identiy plugin"
+        "wiki"        -> "wiki <page>. URLs of Haskell wiki pages"
+        "oldwiki"     -> "oldwiki <page>. URLs of the old hawiki pages"
+        "paste"       -> "paste. Paste page url"
 
-        "docs"        -> "@docs <lib>, lookup the url for this library's documentation"
+        "docs"        -> "docs <lib>. Lookup the url for this library's documentation"
+        "libsrc"      -> "libsrc <lib>. Lookup the url of fptools libraries"
+        "fptools"     -> "fptools <lib>. Lookup url of ghc base library modules"
 
-        "libsrc"      -> "@libsrc <lib>, lookup the url of fptools libraries"
-        "fptools"     -> "@fptools <lib>, lookup url of ghc base library modules"
+        "learn"       -> "learn. The learning page url."
+        "eurohaskell" -> "eurohaskell. Historical."
+        "moo"         -> "moo. Vegans rock!"
+        "map"         -> "map. #haskell user map"
+        "botsnack"    -> "botsnakc. Feeds the bot a snack."
+        "get-shapr"   -> "get-shapr. Summon shapr instantly"
+        "shootout"    -> "shootout. The debian language shootout"
+        "faq"         -> "faq. Answer frequently asked questions about Haskell"
 
-        "learn"       -> "another url"
-        "eurohaskell" -> "urls are good"
-        "moo"         -> "vegan-friendly command"
-        "map"         -> "#haskell user map"
-        "botsnack"    -> "bot-feeder"
-        "get-shapr"   -> "summon shapr instantly"
-        "shootout"    -> "the debian language shootout"
-        "faq"         -> "answer frequently asked questions about haskell"
-
-        "palomer"     -> "sound a bit like palomer on a bad day"
-        _             -> "dummy module"
+        "palomer"     -> "palomer. Sound a bit like palomer on a bad day"
 
 {-
   process _ _ src "moo" _ = do
@@ -58,48 +57,39 @@ instance Module DummyModule [String] where
 
 dummylst :: [(String, String -> String)]
 dummylst = 
-    [("dummy",       \_ -> "dummy"),
-    -- todo more h4sh style functoins...
-    ("id",          id),
-    ("get-shapr",   const "shapr!!"),
-    ("faq",         const "The answer is: Yes! Haskell can do that."),
-    ("eurohaskell", \_ -> unlines ["less talks, more code!",
-                                   "http://www.haskell.org/hawiki/EuroHaskell",
-                                   "EuroHaskell - Haskell Hackfest - Summer 2005 ",
-                                        "- Gothenburg, Sweden"]),
+    [("id",         id)
 
-    ("wiki",        \x -> "http://www.haskell.org/haskellwiki/" ++ x),
-    ("oldwiki",     \x -> "http://www.haskell.org/hawiki/" ++ x),
+    ,("dummy",      const "dummy")
+    ,("get-shapr",  const "shapr!!")
+    ,("faq",        const "The answer is: Yes! Haskell can do that.")
+    ,("paste",      const "http://www.haskell.org/hawiki/HaskellIrcPastePage")
+    ,("learn",      const "http://www.haskell.org/learning.html")
+    ,("map",        const "http://www.haskell.org/hawiki/HaskellUserLocations")
+    ,("shootout",   const "http://shootout.alioth.debian.org/gp4/benchmark.php?test=all&lang=all")
+    ,("botsnack",   const ":)")
+    ,("palomer",    const "hrmph")
 
-    ("paste",       \_ -> "http://www.haskell.org/hawiki/HaskellIrcPastePage"),
+    ,("eurohaskell", const "less talks, more code!\n\ 
+                          \http://www.haskell.org/hawiki/EuroHaskell\n\ 
+                          \EuroHaskell - Haskell Hackfest - Summer 2005 - Gothenburg, Sweden")
 
-    ("docs",        \x -> case x of
+    ,("wiki",        ("http://www.haskell.org/haskellwiki/" ++))
+    ,("oldwiki",     ("http://www.haskell.org/hawiki/" ++))
+
+    ,("docs",        \x -> case x of
        [] -> "http://haskell.org/ghc/docs/latest/html/libraries/index.html"
        _  -> case M.lookup (P.pack x) docAssocs of
              Nothing -> x ++ " not available"
              Just m  -> "http://haskell.org/ghc/docs/latest/html/libraries/" <>
-                        (P.unpack m) </> map (choice (=='.') (const '-') id) x <.> "html"),
+                        (P.unpack m) </> map (choice (=='.') (const '-') id) x <.> "html")
 
-    ("libsrc",      \x -> case M.lookup (P.pack x) docAssocs of
+    ,("libsrc",      \x -> case M.lookup (P.pack x) docAssocs of
        Nothing -> x ++ " not available"
        Just m  -> "http://darcs.complete.org/fptools/libraries/" <>
-                  (P.unpack m) </> map (choice (=='.') (const '/') id) x <.> "hs"),
+                  (P.unpack m) </> map (choice (=='.') (const '/') id) x <.> "hs")
 
-    ("fptools",     \x -> case M.lookup (P.pack x) docAssocs of
+    ,("fptools",     \x -> case M.lookup (P.pack x) docAssocs of
        Nothing -> x ++ " not available"
        Just m  -> "http://darcs.haskell.org/packages/" <>
-                  (P.unpack m) </> map (choice (=='.') (const '/') id) x <.> "hs"),
-
-    ("learn",    const "http://www.haskell.org/learning.html"),
-    ("map",      const "http://www.haskell.org/hawiki/HaskellUserLocations"),
-    ("shootout", const "http://shootout.alioth.debian.org/gp4/benchmark.php?test=all&lang=all"),
-    ("botsnack", const ":)"),
-    ("palomer",  const "hrmph")]
-
-{-# INLINE choice #-}
-choice :: (r -> Bool) -> (r -> a) -> (r -> a) -> (r -> a)
-choice p f g x = if p x then f x else g x
-
--- Generalizations:
--- choice :: ArrowChoice (~>) => r ~> Bool -> r ~> a -> r ~> a -> r ~> a
--- choice :: Monad m => m Bool -> m a -> m a -> m a
+                  (P.unpack m) </> map (choice (=='.') (const '/') id) x <.> "hs")
+    ]
