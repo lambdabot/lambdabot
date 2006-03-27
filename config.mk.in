@@ -43,9 +43,10 @@ ifneq "$(static)" "yes"
 PLUGINS=       Dict Dummy Karma Quote Seen State \
                Topic Type Plugs Babel Version More Pl \
                Help Dice Search Vixen Fact Spell Todo \
-               Haddock Code Hoogle Where Elite Localtime Poll \
-               Djinn Pretty Compose Lambda Unlambda
-#              LogModule LShell DarcsPatchWatch 
+               Haddock Hoogle Where Elite Localtime Poll \
+               Djinn Pretty Compose Lambda Unlambda Log \
+               Slap
+#              LShell DarcsPatchWatch Code
 
 STATICS=       Base System Dynamic
 LD_OPTS=       -package plugins
@@ -54,9 +55,10 @@ PLUGINS=
 STATICS=       Base System Dict Dummy Karma \
                Quote Seen State Topic Type Plugs Babel \
                Version More Pl Help Dice Search Vixen Fact \
-               Todo Spell Haddock Code Hoogle Where \
-               Elite Localtime Poll Djinn Pretty Compose Lambda Unlambda
-#              LShell DarcsPatchWatch LogModule
+               Todo Spell Haddock Hoogle Where \
+               Elite Localtime Poll Djinn Pretty Compose \
+               Lambda Unlambda Log Slap
+#              LShell DarcsPatchWatch Code
 LD_OPTS=       -package network -package posix -package parsec -package fps -package haskell-src -package readline
 endif
 
