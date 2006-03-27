@@ -29,7 +29,8 @@ main' dyn = do
     x    <- getArgs
     case x of
         ["--online"] -> runIrc Online  loadStaticModules onlineMain  load
-        _            -> runIrc Offline loadStaticModules offlineMain load
+        []           -> runIrc Offline loadStaticModules offlineMain load
+        _            -> putStrLn "Usage: lambdabot [--online]"
 
     where load = fromMaybe (error "no dynamic loading") dyn
 
