@@ -6,7 +6,7 @@
 --
 module Util (
         concatWith,
-        split,
+        split, split2,
         breakOnGlue,
         clean,
         dropSpace,
@@ -26,6 +26,7 @@ module Util (
         expandTab,
         closest, closests,
         withMWriter, parIO, timeout,
+        choice,
 
         (</>), (<.>), (<+>), (<>), (<$>),
         basename, dirname, dropSuffix, joinPath
@@ -68,6 +69,16 @@ split glue xs = split' xs
     split' xs' = piece : split' (dropGlue rest)
         where (piece, rest) = breakOnGlue glue xs'
     dropGlue = drop (length glue)
+
+-- a variant?
+split2 :: Char -> Int -> String -> [String]
+split2 c i s =
+        let fn 0 t = t:[]
+            fn j t = let (xs,ys) = break (== c) t
+                     in case ys of
+                        [] -> xs:[]
+                        _  -> xs: fn (j-1) (tail ys)
+        in fn (i-1) s
 
 
 -- | Break off the first piece of a list held together by glue,
@@ -371,3 +382,11 @@ joinPath p q =
       '/':_ -> p ++ q
       []    -> q
       _     -> p ++ "/" ++ q
+
+{-# INLINE choice #-}
+choice :: (r -> Bool) -> (r -> a) -> (r -> a) -> (r -> a)
+choice p f g x = if p x then f x else g x
+
+-- Generalizations:
+-- choice :: ArrowChoice (~>) => r ~> Bool -> r ~> a -> r ~> a -> r ~> a
+-- choice :: Monad m => m Bool -> m a -> m a -> m a
