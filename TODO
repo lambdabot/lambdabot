@@ -20,7 +20,6 @@ Todo:
     * reformat/refill output to allow for fewer longer lines.
     * multiple servers
     * factor out an IRC library
-    * update the README
     * send alternate nickname?
     * automatically filter out blanks lines, ie. in dictionary output
 
@@ -37,5 +36,6 @@ Wishlist:
     * channel statistics, logs, record of pasted urls
     * unit tests, quickcheck tests, written tests... ok, maybe not written
     * Some support for bot clients to be able to do their own request/response stuff
+    * vim/emacs support
 
 * add your wishes here ...
