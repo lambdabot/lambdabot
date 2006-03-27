@@ -96,3 +96,15 @@ Data.Map/Data.FiniteMap.
 We try to adopt the coding guidelines of the GHC project. Take a look at
 the GHC libraries, in particular Data.Map, as the library modules follows
 the guiding principles well.
+
+*** Writing Module instances
+
+moduleHelp should be provided for each command.
+The help format is:
+    "command <arg1> <arg2>. Description goes here"
+
+No leading @ should be prefixed to the command (as this is meaningless
+in offline mode). The command should end in a fullstop, followed by a
+sentence or two describing the command.
+
+Check in offline mode that 'help command' looks good.
