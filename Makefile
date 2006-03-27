@@ -220,7 +220,7 @@ djinn: scripts/Djinn/Djinn.hs
 unlambda: scripts/Unlambda.hs
 	$(GHC) -O -package posix -o $@ $<
 
-CLEANS+= runplugs djinn
+CLEANS+= runplugs djinn unlambda
 CLEANS+= Regex_hsc.c Regex.hs
 
 -include depend
