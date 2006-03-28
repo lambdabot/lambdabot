@@ -1,6 +1,7 @@
-{-# OPTIONS -fasm #-}
+{-# OPTIONS -cpp -fasm #-}
 --
 -- (c) The University of Glasgow 2002
+-- (c) Don Stewart 2005-6
 --
 -- Binary I/O library, with special tweaks for GHC
 -- and

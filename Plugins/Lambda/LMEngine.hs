@@ -164,20 +164,6 @@ instance Pause EvalMonad Result where
 -- Environment and EvalMonad
 -- Comment out what isn't true, uncomment what is
 
-#if __GLASGOW_HASKELL__ <= 604
-
-{-# NOINLINE evalMonadTypeCon #-}
-evalMonadTypeCon :: TyCon
-evalMonadTypeCon = mkTyCon "EM"
-
-instance (Typeable a) => Typeable (EvalMonad a) where
-#if __GLASGOW_HASKELL__ >= 603
-    typeOf _ = mkTyConApp evalMonadTypeCon [typeOf (undefined :: a)]
-#else
-    typeOf _ = mkAppTy evalMonadTypeCon [typeOf (undefined :: a)]
-#endif
-#endif
-
 instance Monad EvalMonad where
     return = EM . return
     (EM m) >>= f = EM $ m >>= (runEM . f)

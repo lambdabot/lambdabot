@@ -15,19 +15,16 @@ import qualified Control.Exception as C (catch)
 --
 -- No good for win32
 --
-#if __GLASGOW_HASKELL__ >= 600
 import System.Posix
-#else
-import Posix
-#endif
 
 -- | The 'filelist' function returns a List of fortune files from the
 --   configured 'fortunePath' directory.
 filelist :: IO [String]
-filelist = do filelist'<- C.catch (getDirectoryContents $ fortunePath config)
-                                  (\_ -> return [])
-              let files = filter (not . isSuffixOf ".dat") filelist'
-              join (return (filterM isFile (map (fortunePath config ++) files)))
+filelist = do
+    filelist'<- C.catch (getDirectoryContents $ fortunePath config)
+                        (\_ -> return [])
+    let files = filter (not . isSuffixOf ".dat") filelist'
+    join (return (filterM isFile (map (fortunePath config ++) files)))
 
 -- | Select a random fortune file
 fileRandom :: IO FilePath
@@ -43,21 +40,18 @@ fortunesParse filename = do
 -- | Given a FilePath of a fortune file, select and return a random fortune from
 --   it.
 fortuneRandom :: FilePath -> IO String
-fortuneRandom filename
-    = do
-      fortunesList <- fortunesParse filename
-      stdGetRandItem fortunesList
+fortuneRandom filename = do
+    fortunesList <- fortunesParse filename
+    stdGetRandItem fortunesList
 
 -- | Given an optional fortune section, return a random fortune. If Nothing,
 --   then a random fortune from all fortune files is returned. If Just section,
 --   then a random fortune from the given section is returned.
 randFortune :: (Maybe FilePath) -> IO String
-randFortune section =
-  case section of Nothing -> fortuneRandom =<< fileRandom
-	          Just fname -> fortuneRandom =<< (return (fortunePath config ++ fname))
+randFortune section = case section of
+    Nothing    -> fortuneRandom =<< fileRandom
+    Just fname -> fortuneRandom =<< (return (fortunePath config ++ fname))
 
 -- | 'isFile' is a predicate wheter or not a given FilePath is a file.
 isFile :: FilePath -> IO Bool
-isFile x = do
-           fs <- getFileStatus x
-           return $ isRegularFile fs
+isFile x = getFileStatus x >>= \fs -> return $ isRegularFile fs

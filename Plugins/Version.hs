@@ -1,3 +1,4 @@
+{-# OPTIONS -cpp #-}
 --
 -- Copyright (c) 2005-6 Don Stewart - http://www.cse.unsw.edu.au/~dons
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)

@@ -1,3 +1,4 @@
+{-# OPTIONS -cpp #-}
 --
 -- | Lambdabot monad and parts of the IRC protocol binding
 -- TODO : Move IRC protocol stuff into IRC.hs.
@@ -49,18 +50,12 @@ import System.IO        (Handle, hGetLine, hPutStr, hClose, stdin, stdout,
                          hSetBuffering, BufferMode(NoBuffering))
                          
 
-#if __GLASGOW_HASKELL__ >= 600
 import System.IO.Error  (isEOFError, ioeGetHandle)
 
 # ifndef mingw32_HOST_OS
 import System.Posix.Signals
 import System.IO.Unsafe         (unsafePerformIO)
 # endif
-
-#else
-import Posix
-import System.IO.Error
-#endif
 
 import Data.Char                (toLower, isAlphaNum, isSpace)
 import Data.List                (isSuffixOf, inits, tails)
@@ -94,16 +89,6 @@ data IRCRState
         ircWriteChan   :: Chan IRC.Message,
         ircWriteThread :: ThreadId
   }
-
-{-
-data Connection = Connection {
-  server    :: String,
-  readChan  :: Chan RMessage,
-  writeChan :: Chan (WMessage, IO ()),
-  thread    :: MVar (Maybe ThreadID),
-  handle    :: Handle
-}
--}
 
 type Callback = IRC.Message -> LB ()
 -- | target, message
@@ -166,51 +151,46 @@ withHandlerList sl h m = foldr (\s -> withHandler s (h s)) m sl
 ircSignalsToCatch :: [Signal]
 ircSignalsToCatch = [
 #ifndef mingw32_HOST_OS
-#if __GLASGOW_HASKELL__ >= 600
                      busError,
-#endif
                      segmentationViolation,
                      keyboardSignal,softwareTermination,
                      keyboardTermination,lostConnection
-#endif                     
+#endif
                      ]
 
 ircSignalMessage :: Signal -> [Char]
 ircSignalMessage s
 #ifndef mingw32_HOST_OS
-#if __GLASGOW_HASKELL__ >= 600
-                   | s==busError = "killed by SIGBUS"
-#endif
-                   | s==segmentationViolation = "killed by SIGSEGV"
-                   | s==keyboardSignal = "killed by SIGINT"
-                   | s==softwareTermination = "killed by SIGTERM"
-                   | s==keyboardTermination = "killed by SIGQUIT"
-                   | s==lostConnection = "killed by SIGHUP"
+   | s==busError                = "killed by SIGBUS"
+   | s==segmentationViolation   = "killed by SIGSEGV"
+   | s==keyboardSignal          = "killed by SIGINT"
+   | s==softwareTermination     = "killed by SIGTERM"
+   | s==keyboardTermination     = "killed by SIGQUIT"
+   | s==lostConnection          = "killed by SIGHUP"
 #endif
  -- this case shouldn't happen if the list of messages is kept up to date
  -- with the list of signals caught
-                   | otherwise = "killed by unknown signal"
+   | otherwise                  = "killed by unknown signal"
 
 ircSignalHandler :: ThreadId -> Signal -> Handler
 ircSignalHandler threadid s
 #ifdef mingw32_HOST_OS
   = ()
-#else  
-  = Catch $ do
-      putMVar catchLock ()
-      throwDynTo threadid $ SignalException s
-                                
+#else
+  = Catch $ do putMVar catchLock ()
+               throwDynTo threadid $ SignalException s
+
 -- This is clearly a hack, but I have no idea how to accomplish the same
 -- thing correctly. The main problem is that signals are often thrown multiple
 -- times, and the threads start killing each other if we allow the
 -- SignalException to be thrown more than once.
-{-# NOINLINE catchLock #-}      
-catchLock :: MVar ()            
+{-# NOINLINE catchLock #-}
+catchLock :: MVar ()
 catchLock = unsafePerformIO $ newEmptyMVar
-#endif  
+#endif
 
 withIrcSignalCatch :: (MonadError e m,MonadIO m) => m () -> m ()
-withIrcSignalCatch m = do 
+withIrcSignalCatch m = do
     liftIO $ installHandler sigPIPE Ignore Nothing
     liftIO $ installHandler sigALRM Ignore Nothing
     threadid <- liftIO myThreadId
@@ -477,13 +457,8 @@ runIrc' mode loop = do
     if reconn then runIrc' mode loop else exitModules
 
   where
-#if __GLASGOW_HASKELL__ >= 600
-        isEOFon s (IRCRaised (IOException e)) 
+        isEOFon s (IRCRaised (IOException e))
             = if isEOFError e && ioeGetHandle e == Just s then Just () else Nothing
-#else
-        isEOFon s (IRCRaised e) 
-            = if isEOFError e && ioeGetHandle e == Just s then Just () else Nothing
-#endif        
         isEOFon _ _ = Nothing
         isSignal (SignalCaught s) = Just s
         isSignal _ = Nothing
