@@ -19,9 +19,7 @@ data Config = Config {
         autojoin  :: [String],      -- ^ List of channels to autojoin
         admins    :: [String],      -- ^ List of nicknames that are admins
         proxy     :: Maybe ([Char], Integer), -- ^ A proxy given as
-	                                      --   a pair of host and port.
-
-        hooglePath :: FilePath,     -- ^ path to hoogle directory
+                                              --   a pair of host and port.
 
         -- | The 'path' component is a string to the location where the fortune files
         --   are located. On some systems, this is /usr/share/games/fortunes, on others
@@ -33,7 +31,7 @@ data Config = Config {
 
         -- which ghci to use (in @type)
         ghci        :: FilePath,
-	outputDir   :: FilePath
+        outputDir   :: FilePath
 }
 
 --
@@ -59,10 +57,9 @@ config = Config {
                 "Cale",         "dons", "TheHunter",    "musasabi"
         ],
 
-        hooglePath      = "/home/dons/hoogle",
         fortunePath     = "/home/dons/fortune/",
         fptoolsPath     = "/home/dons/fptools",
 
         ghci            = "ghci",
-	outputDir           = "State/"
+        outputDir       = "State/"
    }

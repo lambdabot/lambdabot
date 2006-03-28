@@ -69,9 +69,9 @@ ALL_OBJS=	$(addsuffix .$(way_)o,$(basename $(ALL_SRCS)))
 # Now, get down to business
 #
 ifneq "$(static)" "yes"
-all: lambdabot modules runplugs djinn unlambda
+all: lambdabot modules runplugs djinn unlambda hoogle
 else
-all: lambdabot modules djinn unlambda
+all: lambdabot modules djinn unlambda hoogle
 endif
 
 #
@@ -220,7 +220,10 @@ djinn: scripts/Djinn/Djinn.hs
 unlambda: scripts/Unlambda.hs
 	$(GHC) -O -package posix -o $@ $<
 
-CLEANS+= runplugs djinn unlambda
+hoogle:
+	( cd scripts/hoogle && $(MAKE) && mv $@ ../.. && cp hoogle.txt ../.. )
+
+CLEANS+= runplugs djinn unlambda hoogle hoogle.txt
 CLEANS+= Regex_hsc.c Regex.hs
 
 -include depend

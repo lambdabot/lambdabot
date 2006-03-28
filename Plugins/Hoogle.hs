@@ -13,9 +13,7 @@ import Lambdabot
 import PosixCompat
 import LBState
 import Serial 
-import Util
 import Data.List
-import qualified Config
 
 import Control.Monad.Trans ( liftIO )
 
@@ -31,7 +29,7 @@ instance Module HoogleModule HoogleState where
     moduleCmds   _ = ["hoogle", "hoogle+"]
     moduleHelp _ _ = "hoogle <expr>. Haskell API Search for either names, or types."
 
-    process_ _ "hoogle" s = do 
+    process_ _ "hoogle" s = do
         o <- liftIO $ hoogle s
         let (this,that) = splitAt 3 o
         writeMS that
@@ -47,10 +45,10 @@ instance Module HoogleModule HoogleState where
 ------------------------------------------------------------------------
 
 hoogleBinary :: FilePath
-hoogleBinary = Config.hooglePath Config.config </> "hoogle"
+hoogleBinary = "./hoogle"
 
 hoogleText :: FilePath
-hoogleText = Config.hooglePath Config.config </> "src" </> "hoogle.txt"
+hoogleText = "./hoogle.txt"
 
 -- arbitrary cutoff point
 cutoff :: Int
@@ -58,17 +56,17 @@ cutoff = -10
 
 -- | Actually run the hoogle binary
 hoogle :: String -> IO [String]
-hoogle query = do 
+hoogle query = do
         let args = ["--count", "20"
                    ,"-l", hoogleText
                    ,"--verbose"
-                   ,query]         
+                   ,query]
         (out,err,_) <- popen hoogleBinary args (Just "")
         return $ result out err
 
-    where result [] [] = ["An error occured."]
+    where result [] [] = ["A Hoogle error occured."]
           result [] ys = [ys]
-          result xs _  = 
+          result xs _  =
                 let xs' = map toPair $ lines xs
                     res = map snd $ filter ((>=cutoff) . fst) xs'
                 in if null res
