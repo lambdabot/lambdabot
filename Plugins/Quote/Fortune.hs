@@ -15,7 +15,7 @@ import qualified Control.Exception as C (catch)
 --
 -- No good for win32
 --
-import System.Posix
+import System.Posix (isRegularFile, getFileStatus)
 
 -- | The 'filelist' function returns a List of fortune files from the
 --   configured 'fortunePath' directory.
@@ -40,9 +40,7 @@ fortunesParse filename = do
 -- | Given a FilePath of a fortune file, select and return a random fortune from
 --   it.
 fortuneRandom :: FilePath -> IO String
-fortuneRandom filename = do
-    fortunesList <- fortunesParse filename
-    stdGetRandItem fortunesList
+fortuneRandom = (stdGetRandItem =<<) . fortunesParse
 
 -- | Given an optional fortune section, return a random fortune. If Nothing,
 --   then a random fortune from all fortune files is returned. If Just section,
@@ -54,4 +52,4 @@ randFortune section = case section of
 
 -- | 'isFile' is a predicate wheter or not a given FilePath is a file.
 isFile :: FilePath -> IO Bool
-isFile x = getFileStatus x >>= \fs -> return $ isRegularFile fs
+isFile = (isRegularFile `fmap`) . getFileStatus
