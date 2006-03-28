@@ -41,7 +41,7 @@ datas   = map ("Data." ++) [
                 "Maybe", "Ratio", "Tree", "Tuple", "Typeable", "Word" 
               ]
 
-controls = map ("Control." ++) ["Monad", "Monad.Reader", "Monad.Fix", "Arrow"]
+controls = map ("Control." ++) ["Monad", "Monad.State", "Monad.Reader", "Monad.Fix", "Arrow"]
 
 main = do
     setResourceLimit ResourceCPUTime (ResourceLimits rlimit rlimit)
