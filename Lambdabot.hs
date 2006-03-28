@@ -48,7 +48,6 @@ import Network          (withSocketsDo, connectTo, PortID(PortNumber))
 
 import System.IO        (Handle, hGetLine, hPutStr, hClose, stdin, stdout,
                          hSetBuffering, BufferMode(NoBuffering))
-                         
 
 import System.IO.Error  (isEOFError, ioeGetHandle)
 
@@ -70,7 +69,7 @@ import Control.Monad.State
 import Control.Monad.Error (MonadError (..))
 import Control.Monad.Trans      ( liftIO )
 
-import System.Console.Readline ( readline )
+import System.Console.Readline  (readline, addHistory)
 
 ------------------------------------------------------------------------
 
@@ -186,7 +185,7 @@ ircSignalHandler threadid s
 -- SignalException to be thrown more than once.
 {-# NOINLINE catchLock #-}
 catchLock :: MVar ()
-catchLock = unsafePerformIO $ newEmptyMVar
+catchLock = unsafePerformIO newEmptyMVar
 #endif
 
 withIrcSignalCatch :: (MonadError e m,MonadIO m) => m () -> m ()
@@ -543,15 +542,16 @@ offlineReaderLoop threadmain chanr _chanw _h syncR syncW = do
         Left (AsyncException ThreadKilled) -> error "quit"
         Left e                             -> throwTo threadmain e
   where
-    readerLoop' = do 
+    readerLoop' = do
 
         takeMVar syncR  -- wait till writer lets us proceed
 
         s <- readline "lambdabot> " -- read stdin
         case s of
             Nothing -> error "EOF"
-            Just x -> let s' = dropWhile isSpace x 
+            Just x -> let s' = dropWhile isSpace x
                       in if null s' then putMVar syncR () >> readerLoop' else do
+                addHistory s'
 
                 let msg = case s' of
                             "quit" -> error "<quit>"
