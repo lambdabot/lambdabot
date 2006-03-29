@@ -10,6 +10,8 @@ Dons:
         pretty . pl
         djinn . hoogle
 
+  - Minho, .pt's pointfree lib.
+
 Todo:
     * Better error reporting when connections fail at startup
     * FactModule - make "foo?" equal to "lambdabot: @fact foo"
