@@ -28,7 +28,7 @@ theModule = MODULE $ DrHyloModule ()
 
 instance L.Module DrHyloModule () where
 
-    process_ _ _ xs = liftIO (hylo xs) >>= return . (:[])
+    process_ _ _ xs = liftIO (hylo xs)
 
     moduleCmds _   = ["hylo"]
     moduleHelp _ _ = "hylo <expr>. Derive hylomorphism for <expr>. Based on DrHylo. \n\ 
@@ -39,10 +39,10 @@ instance L.Module DrHyloModule () where
 
 ------------------------------------------------------------------------
 
-hylo :: String -> IO String
+hylo :: String -> IO [String]
 hylo xs = do
     s <- parse xs
-    return . unlines . drop 4 . lines . prettyPrint . dhModule $ s
+    return . drop 4 . lines . prettyPrint . dhModule $ s
 
 ------------------------------------------------------------------------
 
