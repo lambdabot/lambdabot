@@ -63,6 +63,8 @@ instance Module CodeModule [FilePath] where
 -- work out our list of potential source files
 -- evil!
 --
+-- Going to be expensive at startup, no?
+--
 getSourceFiles :: FilePath -> IO [FilePath]
 getSourceFiles d = do
         (o,_,_) <- popen "/usr/bin/find" [d,"-name","*.hs","-o","-name","*.lhs"] Nothing
