@@ -151,7 +151,7 @@ instance Module DarcsPatchWatch DarcsPatchWatchState where
 --
 printRepos :: String -> DPW [String]
 printRepos [] = getRepos >>= return . (:[]) . showRepos
-printRepos _  = error "@todo given arguments, try @todo-add or @listcommands todo"
+printRepos _  = error "@todo given arguments, try @todo-add or @list todo"
 
 addRepo :: String -> DPW [String]
 addRepo rest | null (dropSpace rest) = return ["argument required"]

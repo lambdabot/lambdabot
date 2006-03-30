@@ -289,7 +289,7 @@ doPRIVMSG' myname msg
             docmd cmd' = do
               mapLB forkIO $ withPS towhere $ \_ _ -> do
                 let act = withModule ircCommands cmd'   -- Important. 
-                      (ircPrivmsg towhere ("Unknown command, try @listcommands."))
+                      (ircPrivmsg towhere ("Unknown command, try @list"))
                       (\m -> do
                         -- debugStrLn (show msg)
                         privs <- gets ircPrivCommands

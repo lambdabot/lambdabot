@@ -43,7 +43,7 @@ instance Module TodoModule TodoState where
 -- | Print todo list
 getTodo :: TodoState -> String -> ModuleLB TodoState
 getTodo todoList [] = return [formatTodo todoList]
-getTodo _ _         = error "@todo has no args, try @todo-add or @listcommands todo"
+getTodo _ _         = error "@todo has no args, try @todo-add or @list todo"
  
 -- | Pretty print todo list
 formatTodo :: [(P.FastString, P.FastString)] -> String
