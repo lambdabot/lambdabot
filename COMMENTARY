@@ -49,3 +49,23 @@ Lambdabot can run in an offline mode. This is in fact the default mode
 now, and invoking lambdabot with --online is the way to connect to an
 irc server. Otherwise you just get a prompt, and a chance to interact
 with the plugins.
+
+DEVELOPMENT
+
+When testing out a new plugin,
+    a) compile with "way=fast" . This is substantially faster
+    b) don't go online, just use offline mode
+
+ADDING A NEW PLUGIN
+
+* Just create the module in Plugins/*
+* Ensure it implements the Module class (see Hello.hs for the bare minimum).
+* Add your plugin's module name to config.mk.in, for the static and dynamic plugin lists.
+
+PLUGIN STATE
+
+Plugins may have local state. If a plugin provides an Serialiser (via
+the moduleSerialize method), this state will be automatically read and
+written to disk on module load/unload, respectively.
+
+A default state may be provided via the `moduleDefState` method.
