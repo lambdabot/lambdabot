@@ -24,11 +24,14 @@ And then build lambdabot:
         $ make          # you could try -j2
         $ ./lambdabot
 
+Optionally, for the Haskell eval plugin to work, you need to also
+install hs-plugins: http://www.cse.unsw.edu.au/~dons/hs-plugins
+Build instructions for hs-plugins below.
+
 After this, you'll notice some of the plugins don't seem to work. They
-require extra local files. For example, @hoogle needs the 'hoogle'
-binary to be installed in the path, @yow needs a fortune file directory,
-@code needs fptools. This will be fixed eventually, but for now read the
-src of the broken plugin to find out what files it requires.
+require extra local files. @yow needs a fortune file directory and @code needs 
+fptools. You can provide paths to these files in the Config.hs module,
+or just live with those plugins not working.
 
 Plugins are added or removed config.mk and removing them from the list
 of PLUGINS.
@@ -37,9 +40,8 @@ For compiling with profiling on:
 
     make way=p
 
-To compile a dynamic version, with reloadable plugins:
-
-    Build hs-plugins:
+To compile a dynamic version, with reloadable plugins.
+Build hs-plugins:
         $ cd ..
         $ darcs get --partial http://www.cse.unsw.edu.au/~dons/code/hs-plugins
         $ cd hs-plugins/

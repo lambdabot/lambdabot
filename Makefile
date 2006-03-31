@@ -68,11 +68,7 @@ ALL_OBJS=	$(addsuffix .$(way_)o,$(basename $(ALL_SRCS)))
 #
 # Now, get down to business
 #
-ifneq "$(static)" "yes"
 all: lambdabot modules runplugs djinn unlambda hoogle
-else
-all: lambdabot modules djinn unlambda hoogle
-endif
 
 #
 # TODO should be just PLUGIN_OBJS
@@ -211,10 +207,8 @@ distclean: clean
 	rm -rf autom4te.cache
 	rm -f GenModules Modules.hs Modules.o-boot Modules.*-boot
 
-ifneq "$(static)" "yes"
 runplugs: scripts/RunPlugs.hs
 	$(GHC) -O -package posix -package plugins -o $@ $<
-endif
 
 djinn: scripts/Djinn/Djinn.hs
 	( cd scripts/Djinn && $(GHC) -O --make -o $@ Djinn.hs && mv $@ ../.. )
