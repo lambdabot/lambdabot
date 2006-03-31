@@ -17,7 +17,7 @@ import Data.Maybe               (fromMaybe)
 import Data.List                (findIndex)
 import Control.Monad.State      (MonadIO, liftIO)
 import Control.Monad            (mplus)
-import Network.URI              (parseURI)
+import Network.URI              (parseURI, URI(uriPath, uriQuery, uriFragment))
 import Text.Regex               (mkRegex, matchRegexAll, subRegex) 
 ------------------------------------------------------------------------
 
@@ -29,12 +29,15 @@ theModule = MODULE $ SearchModule ()
 engines :: [(String, (String, String))]
 engines =  [("google",    ("http://www.google.com/search?hl=en&q=",
                            "&btnI=I%27m+Feeling+Lucky")),
-            ("wikipedia", ("http://en.wikipedia.org/wiki/Special:Search?search=", ""))]
+            ("wikipedia", ("http://en.wikipedia.org/wiki/Special:Search?search=", "")),
+            ("gsite",     ("http://www.google.ca/search?hl=en&q=site%3A", "&btnI=I%27m+Feeling+Lucky"))
+           ]
 
 instance Module SearchModule () where
     moduleHelp _ s      = case s of
          "google"    -> "google <expr>. Search google and show url of first hit"
          "wikipedia" -> "wikipedia <expr>. Search wikipedia and show url of first hit"
+         "gsite"     -> "gsite <site> <expr>. Search <site> for <expr> using google"
     moduleCmds      _   = map fst engines
     process_ _ cmd rest = searchCmd cmd (dropSpace rest)
 
@@ -58,7 +61,11 @@ query :: String -> String -> String -> IO [String]
 query meth engine q = readPage (proxy config) uri request ""
     where url = queryUrl engine q
           Just uri = parseURI url
-          request = [meth ++ " " ++ url ++ " HTTP/1.0", ""]
+          abs_path = uriPath uri ++ uriQuery uri ++ uriFragment uri
+          request  = case proxy config of
+                        Nothing -> [meth ++ " " ++ abs_path ++ " HTTP/1.0", ""]
+                        _       -> [meth ++ " " ++ url ++ " HTTP/1.0", ""]
+                       
 
 extractLoc :: [String] -> Maybe String
 extractLoc [] = error "No response, something weird is up."

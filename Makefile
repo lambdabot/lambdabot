@@ -203,6 +203,8 @@ clean:
 	rm -f *~ */*~
 	rm -f lambdabot lambdabot.prof depend depend.bak
 	rm -rf $(CLEANS)
+	cd scripts/Djinn && make clean
+	cd scripts/hoogle && make clean
 
 distclean: clean
 	rm -f config.mk config.h config.log config.status configure
@@ -221,7 +223,7 @@ unlambda: scripts/Unlambda.hs
 	$(GHC) -O -package posix -o $@ $<
 
 hoogle:
-	( cd scripts/hoogle && $(MAKE) && mv $@ ../.. && cp hoogle.txt ../.. )
+	( cd scripts/hoogle && $(MAKE) && mv hoogle_ ../../hoogle && cp hoogle.txt ../.. )
 
 CLEANS+= runplugs djinn unlambda hoogle hoogle.txt
 CLEANS+= Regex_hsc.c Regex.hs

@@ -10,11 +10,13 @@ HC_OPTS=        -O
 all: hoogle
 
 hoogle: 
-	cd src && $(GHC) $(HC_OPTS) --make -o $@ CmdLine.hs
-	mv src/hoogle .
+	cd src && $(GHC) $(HC_OPTS) --make -o hoogle_  CmdLine.hs
+	mv src/hoogle_ .
 	cp src/hoogle.txt .
 
 
 clean:
-	rm -rf hoogle
+	rm -rf hoogle_
 	find src -name '*.hi' -o -name '*.o' -exec rm -rf {} \;
+	rm -f src/*.o src/*.hi src/*/*.o src/*/*.hi
+	rm -f hoogle.txt

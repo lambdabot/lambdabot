@@ -44,5 +44,5 @@ install:	djinn
 
 .PHONY: clean
 clean:
-	rm -f djinn MLJT a.out *.o *.hi *.old out */*.o
+	rm -f djinn MLJT a.out *.o *.hi *.old out */*.o */*.hi
 	cd tests; ${MAKE} clean

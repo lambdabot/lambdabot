@@ -45,9 +45,9 @@ privcmds = M.fromList [
         ("join",        "join <channel>")
        ,("leave",       "leave <channel>")
        ,("part",        "part <channel>")
-       ,("msg",         "msg <nick> <string>. Msg someone or some channel")
+       ,("msg",         "msg <nick or channel> <msg>")
        ,("quit",        "quit [msg], have the bot exit with msg")
-       ,("reconnect",   "reconnect to channel")]
+       ,("reconnect",   "reconnect to server")]
 
 ------------------------------------------------------------------------
 

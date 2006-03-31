@@ -122,10 +122,13 @@ doNOTICE msg =
 
 doJOIN :: Callback
 doJOIN msg
-  = do let (_, _:loc) = breakOnGlue ":" (head (msgParams msg))
-       s <- get
+  = do s <- get
        put (s { ircChannels = M.insert  (mkCN loc) "[currently unknown]" (ircChannels s)}) -- the empty topic causes problems
        send $ IRC.getTopic loc -- initialize topic
+   where (_, aloc) = breakOnGlue ":" (head (msgParams msg))
+         loc       = case aloc of 
+                        [] -> [] 
+                        _  -> tail aloc
 
 doPART :: Callback
 doPART msg
