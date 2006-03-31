@@ -22,7 +22,7 @@ instance Module MoreModule MoreState where
     process      _ _ target _ _ = do
         morestate <- readPS target
         case morestate of
-            Nothing -> return [] -- silently fail, it's ok.
+            Nothing -> return []
             Just ls -> do mapM_ (ircPrivmsg' target) =<< moreFilter target ls
                           return []       -- special
 

@@ -1,14 +1,13 @@
 {-# OPTIONS -cpp #-}
 --
 -- | Lambdabot monad and parts of the IRC protocol binding
--- TODO : Move IRC protocol stuff into IRC.hs.
 --
 module Lambdabot (
         MODULE(..), Module(..),
         ModuleT, ModState, ModuleLB, Mode(..),
 
-        IRC.Message(..), 
-        IRCRState(..), IRCRWState(..), IRCError(..), 
+        IRC.Message(..),
+        IRCRState(..), IRCRWState(..), IRCError(..),
 
         LB, mapLB, lbIO,
 
@@ -27,7 +26,7 @@ module Lambdabot (
 
         clean, checkPrivs, mkCN, handleIrc, runIrc,
 
-        liftIO,
+        liftIO, io,
   ) where
 
 import qualified Config (config, name, admins, host, port)
@@ -90,25 +89,26 @@ data IRCRState
   }
 
 type Callback = IRC.Message -> LB ()
--- | target, message
+
 type OutputFilter = String -> [String] -> LB [String]
--- type OutputFilter = String -> [String] -> ContT [String] IRC [String]
 
 -- | Global read\/write state.
-data IRCRWState
-  = IRCRWState {
-        ircPrivilegedUsers :: Map String Bool,
-        ircChannels        :: Map ChanName String, 
-            -- ^ maps channel names to topics
-        ircModules         :: Map String ModuleRef,
-        ircCallbacks       :: Map String [(String,Callback)],
-        ircOutputFilters   :: [(String,OutputFilter)], 
-            -- ^ Output filters, invoked from right to left
-        ircCommands        :: Map String ModuleRef,
-        ircPrivCommands    :: [String],
-        ircStayConnected   :: Bool,
-        ircDynLoad         :: S.DynLoad
-  }
+data IRCRWState = IRCRWState {
+    ircPrivilegedUsers :: Map String Bool,
+
+    ircChannels        :: Map ChanName String,
+        -- ^ maps channel names to topics
+
+    ircModules         :: Map String ModuleRef,
+    ircCallbacks       :: Map String [(String,Callback)],
+    ircOutputFilters   :: [(String,OutputFilter)],
+        -- ^ Output filters, invoked from right to left
+
+    ircCommands        :: Map String ModuleRef,
+    ircPrivCommands    :: [String],
+    ircStayConnected   :: Bool,
+    ircDynLoad         :: S.DynLoad
+}
 
 newtype ChanName = ChanName { getCN :: String } -- should be abstract, always lowercase
   deriving (Eq, Ord)
@@ -116,32 +116,30 @@ newtype ChanName = ChanName { getCN :: String } -- should be abstract, always lo
 instance Show ChanName where
   show (ChanName x) = show x
 
--- only use the "smart constructor":
+-- | only use the "smart constructor":
 mkCN :: String -> ChanName
 mkCN = ChanName . map toLower
 
 -- Man, I hate dynamics
-newtype SignalException = SignalException Signal
-  deriving Typeable
+newtype SignalException = SignalException Signal deriving Typeable
 
-withHandler :: (MonadIO m,MonadError e m)
-            => Signal 
-            -> Handler 
-            -> m () 
-            -> m ()
+------------------------------------------------------------------------
+
+withHandler :: (MonadIO m,MonadError e m) => Signal -> Handler -> m () -> m ()
+
 #ifdef mingw32_HOST_OS
 withHandler s h m = return ()
 #else
-withHandler s h m 
-  = bracketError (liftIO $ installHandler s h Nothing)
-                 (\oldh -> liftIO $ installHandler s oldh Nothing)
-                 (\_ -> m)
+withHandler s h m
+  = bracketError (io $ installHandler s h Nothing)
+                 (\oldh -> io $ installHandler s oldh Nothing)
+                 (const m)
 #endif
 
 withHandlerList :: (MonadError e m,MonadIO m)
                 => [Signal]
-                -> (Signal -> Handler) 
-                -> m () 
+                -> (Signal -> Handler)
+                -> m ()
                 -> m ()
 withHandlerList sl h m = foldr (\s -> withHandler s (h s)) m sl
 
@@ -190,9 +188,9 @@ catchLock = unsafePerformIO newEmptyMVar
 
 withIrcSignalCatch :: (MonadError e m,MonadIO m) => m () -> m ()
 withIrcSignalCatch m = do
-    liftIO $ installHandler sigPIPE Ignore Nothing
-    liftIO $ installHandler sigALRM Ignore Nothing
-    threadid <- liftIO myThreadId
+    io $ installHandler sigPIPE Ignore Nothing
+    io $ installHandler sigALRM Ignore Nothing
+    threadid <- io myThreadId
     withHandlerList ircSignalsToCatch (ircSignalHandler threadid) m
 
 -- "Phantom Error". Maybe we should handle both errors separately?
@@ -216,8 +214,8 @@ lbIO k = LB $ ReaderT $ \r -> k (\(LB m) -> m `runReaderT` r)
 
 -- All of IRCErrorT's (RIP) functionality can be shrunk down to that.
 instance MonadError IRCError LB where
-  throwError (IRCRaised e) = liftIO $ throwIO e
-  throwError (SignalCaught e) = liftIO $ evaluate (throwDyn $ SignalException e)
+  throwError (IRCRaised e) = io $ throwIO e
+  throwError (SignalCaught e) = io $ evaluate (throwDyn $ SignalException e)
   m `catchError` h = lbIO $ \conv -> (conv m
               `catchDyn` \(SignalException e) -> conv $ h $ SignalCaught e)
               `catch` \e -> conv $ h $ IRCRaised e
@@ -226,16 +224,16 @@ instance MonadError IRCError LB where
 -- Actually, this isn't a reader anymore
 instance MonadReader IRCRState LB where
   ask = LB $ fmap (maybe (error "No connection") id) $
-    liftIO . readIORef =<< asks fst
+    io . readIORef =<< asks fst
   local = error "You are not supposed to call local"
 
 localLB :: Maybe IRCRState -> LB a -> LB a
 localLB new (LB m) = LB $ do
     ref <- asks fst
-    old <- liftIO $ readIORef ref
-    liftIO $ writeIORef ref new
+    old <- io $ readIORef ref
+    io $ writeIORef ref new
     res <- m
-    liftIO $ writeIORef ref old
+    io $ writeIORef ref old
     return res
 
 instance MonadState IRCRWState LB where
@@ -265,6 +263,7 @@ type ModState s a = (?ref :: MVar s, ?name :: String) => a
 ircSignOn :: String -> String -> LB ()
 ircSignOn nick ircname = do
     server <- asks ircServer
+
     -- password support. TODO: Move this to IRC?
     send $ IRC.mkMessage "USER" [nick, "localhost", server, ircname]
     send $ IRC.mkMessage "NICK" [nick]
@@ -304,7 +303,7 @@ send :: IRC.Message -> LB ()
 send (IRC.Message x y z) | x `seq` y `seq` z `seq` False = undefined -- strictify
 send line = do
     chanw <- asks ircWriteChan
-    liftIO (writeChan chanw $! line)
+    io (writeChan chanw $! line)
 
 ----------------------------------------------------------------------
 
@@ -430,20 +429,20 @@ runIrc' mode loop = do
     (hin,hout,rloop,wloop) <- case mode of
         Online  -> do
             let portnum  = PortNumber $ fromIntegral (Config.port Config.config)
-            s <- liftIO $ connectTo (Config.host Config.config) portnum
+            s <- io $ connectTo (Config.host Config.config) portnum
             return (s,s,readerLoop,writerLoop)
         Offline -> return (stdin, stdout, offlineReaderLoop, offlineWriterLoop)
 
     tryErrorJust (isEOFon hin) $ do
-        liftIO $ hSetBuffering hout NoBuffering
-        liftIO $ hSetBuffering hin  NoBuffering
-        threadmain <- liftIO myThreadId
-        chanr      <- liftIO newChan
-        chanw      <- liftIO newChan
-        syncR      <- liftIO $ newMVar () -- used in offline to make threads synchronous
-        syncW      <- liftIO newEmptyMVar
-        threadr    <- liftIO $ forkIO $ rloop threadmain chanr chanw hin syncR syncW
-        threadw    <- liftIO $ forkIO $ wloop threadmain chanw hout syncR syncW
+        io $ hSetBuffering hout NoBuffering
+        io $ hSetBuffering hin  NoBuffering
+        threadmain <- io myThreadId
+        chanr      <- io newChan
+        chanw      <- io newChan
+        syncR      <- io $ newMVar () -- used in offline to make threads synchronous
+        syncW      <- io newEmptyMVar
+        threadr    <- io $ forkIO $ rloop threadmain chanr chanw hin syncR syncW
+        threadw    <- io $ forkIO $ wloop threadmain chanw hout syncR syncW
 
         let chans = IRCRState {
                         ircServer      = Config.host Config.config,
@@ -454,9 +453,9 @@ runIrc' mode loop = do
 
         finallyError
            (localLB (Just chans) $ catchSignals $ loop >> ircQuit "terminated")
-           (liftIO $ do killThread threadr
-                        killThread threadw
-                        when (mode == Online) $ hClose hin)
+           (io $ do killThread threadr
+                    killThread threadw
+                    when (mode == Online) $ hClose hin)
 
     reconn <- gets ircStayConnected
     if reconn then runIrc' mode loop else exitModules
@@ -488,7 +487,7 @@ runIrc' mode loop = do
 readerLoop :: ThreadId -> Chan IRC.Message -> Chan IRC.Message -> Handle
            -> MVar () -> MVar () -> IO ()
 readerLoop threadmain chanr chanw h _ _ = do
-    liftIO (putStrLn "Running reader loop...")
+    io (putStrLn "Running reader loop...")
     exc <- try readerLoop'
     case exc of
         Left (AsyncException ThreadKilled) -> return ()
@@ -539,6 +538,10 @@ writerLoop threadmain chanw h _ _ = do
 -- Offline reader and writer loops. A prompt with line editing
 -- Takes a string from stdin, wraps it as an irc message, and _blocks_
 -- waiting for the writer thread (to keep things in sync).
+--
+-- We (incorrectly) assume there's at least one write for every read.
+-- If a command returns no output (i.e. @more on an empty buffer) then
+-- we block in offline mode :(
 -- 
 -- the mvars are used to keep the normally async threads in step.
 --
@@ -698,10 +701,10 @@ writeGlobalState :: Module m s => m -> String -> ModuleT s LB ()
 writeGlobalState mod name = case moduleSerialize mod of
   Nothing  -> return ()
   Just ser -> do
-    state <- liftIO $ readMVar ?ref -- readMS
+    state <- io $ readMVar ?ref -- readMS
     case serialize ser state of
         Nothing  -> return ()   -- do not write any state
-        Just out -> liftIO $ P.writeFile (toFilename name) out
+        Just out -> io $ P.writeFile (toFilename name) out
 
 readFile' :: String -> IO P.FastString
 readFile' = P.mmapFile
@@ -723,9 +726,9 @@ readGlobalState mod name =
 --
 ircInstallModule :: MODULE -> String -> LB ()
 ircInstallModule (MODULE mod) modname = do  
-    savedState <- liftIO $ readGlobalState mod modname
+    savedState <- io $ readGlobalState mod modname
     state      <- maybe (moduleDefState mod) return savedState
-    ref        <- liftIO $ newMVar state
+    ref        <- io $ newMVar state
 
     let modref = ModuleRef mod ref modname
     let ?ref = ref; ?name = modname -- yikes
@@ -769,7 +772,7 @@ ircLoad :: FilePath -> S.Symbol -> LB (S.Module, a)
 ircLoad mod sym = do
     s <- get
     let fn  = S.dynload (ircDynLoad s)
-    liftIO $ (fn mod sym)
+    io $ (fn mod sym)
 
 --
 -- | Dynamically unload a module
@@ -777,7 +780,7 @@ ircLoad mod sym = do
 ircUnload :: FilePath -> LB ()
 ircUnload mod = do
     s <- get
-    liftIO $ (S.unload (ircDynLoad s)) (S.Module mod)
+    io $ (S.unload (ircDynLoad s)) (S.Module mod)
 
 ------------------------------------------------------------------------
 
@@ -807,7 +810,7 @@ checkPrivs msg = gets (isJust . M.lookup (IRC.nick msg) . ircPrivilegedUsers)
 withModule :: (Ord k)
   => (IRCRWState -> Map k ModuleRef)
   -> k
-  -> LB a 
+  -> LB a
   -> (forall mod s. Module mod s => mod -> ModuleT s LB a)
   -> LB a
 
@@ -820,3 +823,10 @@ withModule dict modname def f = do
 
 getDictKeys :: (MonadState s m) => (s -> Map k a) -> m [k]
 getDictKeys dict = gets (M.keys . dict)
+
+------------------------------------------------------------------------
+
+-- convenience:
+io :: forall a (m :: * -> *). (MonadIO m) => IO a -> m a
+io = liftIO
+{-# INLINE io #-}

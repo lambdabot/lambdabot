@@ -14,7 +14,7 @@ import Data.List            (isPrefixOf,nub)
 import Text.Regex           (mkRegex, matchRegexAll)
 import Control.Concurrent
 import Control.Monad.Error
-import Control.Monad.State  (MonadState(..), when, unless, gets)
+import Control.Monad.State  (MonadState(..), when, gets)
 
 import GHC.IOBase           (Exception(NoMethodError))
 
@@ -272,7 +272,7 @@ doPRIVMSG' myname msg
     doMsg cmd rest towhere = do
         let ircmsg = ircPrivmsg towhere
         allcmds <- getDictKeys ircCommands
-        let ms = filter (isPrefixOf cmd) allcmds
+        let ms      = filter (isPrefixOf cmd) allcmds
         case ms of
             [s] -> docmd s                  -- a unique prefix
             _ | cmd `elem` ms -> docmd cmd  -- correct command (usual case)
@@ -281,7 +281,7 @@ doPRIVMSG' myname msg
                   (n,ss)  | n < e || ms /= []            -- some possibilities
                           -> ircmsg $ "Maybe you meant: "++showClean(nub(ms++ss))
                   _ -> docmd cmd         -- no prefix, edit distance too far
-        where 
+        where
             e = 3   -- edit distance cut off. Seems reasonable for small words
             -- Concurrency: We ensure that only one module communicates with
             -- each target at once.
@@ -292,41 +292,41 @@ doPRIVMSG' myname msg
             docmd cmd' = do
               mapLB forkIO $ withPS towhere $ \_ _ -> do
                 let act = withModule ircCommands cmd'   -- Important. 
-                      (ircPrivmsg towhere ("Unknown command, try @list"))
-                      (\m -> do
-                        -- debugStrLn (show msg)
+                      (ircPrivmsg towhere ("Unknown command, try @list")) (\m -> do
                         privs <- gets ircPrivCommands
-                        ok <- case cmd' `elem` privs of
-                          False -> return True
-                          True  -> checkPrivs msg
-                        when ok $
-                          handleIrc 
+                        ok    <- if cmd' `notElem` privs
+                                 then return True
+                                 else checkPrivs msg
+                        if not ok
+                          then ircPrivmsg towhere "Not enough privileges"
+                          else handleIrc
                             (ircPrivmsg towhere.((?name++" module failed: ")++))
 
-                            -- Attempt to run first process, then process_
+                            -- Two-level function dispatch.
+                            -- Attempt to run first `process', 
+                            -- if that doesn't exist, catch the
+                            -- execption, and fall back to `process_',
+                            -- which has a default implementation
+
                             (do mstrs <- catchError -- :: m a -> (e -> m a) -> m a
                                         (process m msg towhere cmd' rest)
-                                        (\ex -> case (ex :: IRCError) of 
+                                        (\ex -> case (ex :: IRCError) of
                                             (IRCRaised (NoMethodError _)) ->
                                                 process_ m cmd' rest
                                             _ -> throwError ex)
                                 case mstrs of
-                                    [] -> return ()
                                     _  -> mapM_ (ircPrivmsg towhere) mstrs)
-                                    -- todo, think about how to post-process...
+                      )
 
-                        unless ok $ ircPrivmsg towhere "Not enough privileges")
                 mapLB (timeout $ 15*1000*1000) act
                 return ()
               return ()
 
-
 ------------------------------------------------------------------------
 
 maybeCommand :: String -> String -> Maybe String
-maybeCommand nm text =
-    let re = mkRegex (nm ++ "[.:,]*[[:space:]]*")
-    in case matchRegexAll re text of
+maybeCommand nm text = case matchRegexAll re text of
       Nothing -> Nothing
       Just (_, _, cmd, _) -> Just cmd
+    where re = mkRegex (nm ++ "[.:,]*[[:space:]]*")
 

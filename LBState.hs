@@ -1,3 +1,6 @@
+--
+-- Support for the LB (LambdaBot) monad
+--
 module LBState (
         -- ** Functions to access the module's state
         readMS, withMS, modifyMS, writeMS,
