@@ -13,9 +13,6 @@ data Config = Config {
         userinfo  :: String,        -- ^ The userinfo string for lambdabot
         host      :: String,        -- ^ Host to join
         port      :: Int,           -- ^ The port number to use on the host
-        verbose   :: Bool,          -- ^ Should lambdabot be verbose?
-        moresize  :: Int,           -- ^ How many lines is output before \@more?
-        textwidth :: Int,           -- ^ How many columns should we use
         autojoin  :: [String],      -- ^ List of channels to autojoin
         admins    :: [String],      -- ^ List of nicknames that are admins
         proxy     :: Maybe ([Char], Integer), -- ^ A proxy given as
@@ -44,9 +41,6 @@ config = Config {
         host            = "chat.au.freenode.net",
 
         port            = 6667,
-        verbose         = True,
-        textwidth       = 350,
-        moresize        = 5,
         proxy           = Just ("www-proxy",3128),
         autojoin        = ["#haskell","#haskell-blah","#flippi"
                  	  ,"#haskell-overflow","#gentoo-haskell"
