@@ -22,7 +22,7 @@ module Plugins.Type (theModule) where
 import Lambdabot
 import Config
 import Util                 (expandTab)
-import PosixCompat          (popen)
+import Process
 
 import Maybe (mapMaybe)
 import Control.Monad.Trans (liftIO)

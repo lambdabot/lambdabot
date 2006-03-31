@@ -9,7 +9,7 @@ module Plugins.Spell (theModule) where
 
 import Util          (split,showClean)
 import Lambdabot     (MODULE(..), Module(..),liftIO)
-import PosixCompat
+import Process
 import Data.Maybe   (fromMaybe)
 import Text.Regex
 

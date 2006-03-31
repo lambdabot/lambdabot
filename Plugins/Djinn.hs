@@ -14,7 +14,7 @@ module Plugins.Djinn (theModule) where
 import LBState
 import Lambdabot      hiding  (clean)
 import Util           hiding  (clean)
-import PosixCompat
+import Process
 
 import System.IO
 

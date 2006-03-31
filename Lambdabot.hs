@@ -30,7 +30,7 @@ module Lambdabot (
         liftIO,
   ) where
 
-import qualified Config (config, name, admins, host, port, textwidth)
+import qualified Config (config, name, admins, host, port)
 import ErrorUtils       (bracketError, tryErrorJust, finallyError, catchErrorJust, tryError)
 import Util             (clean, lowerCaseString)
 import Serial
@@ -231,26 +231,26 @@ instance MonadReader IRCRState LB where
 
 localLB :: Maybe IRCRState -> LB a -> LB a
 localLB new (LB m) = LB $ do
-  ref <- asks fst
-  old <- liftIO $ readIORef ref
-  liftIO $ writeIORef ref new
-  res <- m
-  liftIO $ writeIORef ref old
-  return res
+    ref <- asks fst
+    old <- liftIO $ readIORef ref
+    liftIO $ writeIORef ref new
+    res <- m
+    liftIO $ writeIORef ref old
+    return res
 
 instance MonadState IRCRWState LB where
-  get = LB $ do
-    ref <- asks snd
-    lift $ readIORef ref
-  put x = LB $ do
-    ref <- asks snd
-    lift $ writeIORef ref x
-  
+    get = LB $ do
+        ref <- asks snd
+        lift $ readIORef ref
+    put x = LB $ do
+        ref <- asks snd
+        lift $ writeIORef ref x
+
 evalLB :: LB a -> IRCRWState -> IO a
 evalLB (LB lb) rws = do
-  ref <- newIORef rws
-  ref' <- newIORef Nothing
-  lb `runReaderT` (ref',ref)
+    ref  <- newIORef rws
+    ref' <- newIORef Nothing
+    lb `runReaderT` (ref',ref)
 
 -- | This \"transformer\" encodes the additional information a module might 
 --   need to access its name or its state.
@@ -263,9 +263,9 @@ type ModuleLB m = ModuleT m LB [String]
 type ModState s a = (?ref :: MVar s, ?name :: String) => a
 
 ircSignOn :: String -> String -> LB ()
-ircSignOn nick ircname = do 
+ircSignOn nick ircname = do
     server <- asks ircServer
-    -- TODO: Move this to IRC?
+    -- password support. TODO: Move this to IRC?
     send $ IRC.mkMessage "USER" [nick, "localhost", server, ircname]
     send $ IRC.mkMessage "NICK" [nick]
     mpasswd <- liftIO (handleJust ioErrors (const (return "")) $
@@ -275,7 +275,7 @@ ircSignOn nick ircname = do
       Just passwd -> ircPrivmsg "nickserv" $ "identify " ++ passwd
 
 ircGetChannels :: LB [String]
-ircGetChannels = do 
+ircGetChannels = do
     chans <- gets ircChannels
     return $ map getCN (M.keys chans)
 
@@ -285,86 +285,93 @@ ircGetChannels = do
 -- closed by the finallyError in runIrc'
 
 ircQuit :: String -> LB ()
-ircQuit msg = do 
+ircQuit msg = do
     modify $ \state -> state { ircStayConnected = False }
-    send $ IRC.quit msg
+    send   $ IRC.quit msg
     liftIO $ threadDelay 1000
 
 ircReconnect :: String -> LB ()
-ircReconnect msg = do 
+ircReconnect msg = do
     send $ IRC.quit msg
     liftIO $ threadDelay 1000
 
 ircRead :: LB IRC.Message
-ircRead = do 
+ircRead = do
     chanr <- asks ircReadChan
     liftIO (readChan chanr)
 
 send :: IRC.Message -> LB ()
 send (IRC.Message x y z) | x `seq` y `seq` z `seq` False = undefined -- strictify
-send line = do  
+send line = do
     chanw <- asks ircWriteChan
     liftIO (writeChan chanw $! line)
 
 ----------------------------------------------------------------------
 
+textwidth :: Int
+textwidth = 350 -- IRC maximum msg length, minus a bit for safety.
+
 lineify, checkRecip, cleanOutput, reduceIndent :: OutputFilter
 -- | wrap long lines.
-lineify _ msg = return $ mlines $ unlines msg
+lineify = const (return . mlines . unlines)
 
 -- | Don't send any output to alleged bots.
 checkRecip who msg
-  | who == Config.name Config.config = return []
+  | who == Config.name Config.config       = return []
   | "bot" `isSuffixOf` lowerCaseString who = return []
-  | otherwise = return msg
+  | otherwise                              = return msg
 
 -- | For now, this just checks for duplicate empty lines.
-cleanOutput _ msg = return $ remDups True msg' where
-  remDups True  ("":xs) =    remDups True xs
-  remDups False ("":xs) = "":remDups True xs
-  remDups _     (x: xs) = x: remDups False xs
-  remDups _     []      = []
-  msg' = map (reverse . dropWhile isSpace . reverse) msg
+cleanOutput _ msg = return $ remDups True msg'
+    where
+        remDups True  ("":xs) =    remDups True xs
+        remDups False ("":xs) = "":remDups True xs
+        remDups _     (x: xs) = x: remDups False xs
+        remDups _     []      = []
+        msg' = map (reverse . dropWhile isSpace . reverse) msg
 
 -- | Divide the lines' indent by three.
-reduceIndent _ msg = return $ map redLine msg where
-  redLine (' ':' ':' ':xs) = ' ': redLine xs
-  redLine (' ':' ':xs)     = ' ': redLine xs
-  redLine xs               = xs
+reduceIndent _ msg = return $ map redLine msg 
+    where
+        redLine (' ':' ':' ':xs) = ' ': redLine xs
+        redLine (' ':' ':xs)     = ' ': redLine xs
+        redLine xs               = xs
+
+-- ---------------------------------------------------------------------
 
 -- | Send a message to a channel\/user. If the message is too long, the rest
 --   of it is saved in the (global) more-state.
 ircPrivmsg :: String -- ^ The channel\/user.
-   -> String         -- ^ The message.
-   -> LB ()
+           -> String -- ^ The message.
+           -> LB ()
 
-ircPrivmsg who msg = do 
-  filters <- gets ircOutputFilters
-  sendlines <- foldr (\f -> (=<<) (f who)) (return $ lines msg) $ map snd filters
-  -- Hardcoded defaults: maximal ten lines, maximal 100 chars/line
-  mapM_ (ircPrivmsg' who . take (Config.textwidth Config.config)) $ take 10 sendlines
+ircPrivmsg who msg = do
+    filters   <- gets ircOutputFilters
+    sendlines <- foldr (\f -> (=<<) (f who)) ((return . lines) msg) $ map snd filters
+    mapM_ (ircPrivmsg' who . take textwidth) $ take 10 sendlines
 
--- TODO: rename, don't export
+-- A raw send version
 ircPrivmsg' :: String -> String -> LB ()
 ircPrivmsg' who "" = ircPrivmsg' who " "
 ircPrivmsg' who msg = send $ IRC.privmsg who msg
 
 -- ---------------------------------------------------------------------
--- | output filter (should consider a fmt(1)-like algorithm
+-- | Output filter
 --
-mlines          :: String -> [String]
-mlines s        = mbreak =<< lines s where
-  mbreak :: String -> [String]
-  mbreak xs
-    | null bs = [as]
-    | otherwise = (as++cs):filter (not . null) (mbreak (dropWhile isSpace ds))
-    where 
-    (as,bs) = splitAt (w-n) xs
-    breaks  = filter (not . isAlphaNum . last . fst) $ drop 1 $
-      take n $ zip (inits bs) (tails bs)
-    (cs,ds) = last $ (take n bs, drop n bs): breaks
-    w = Config.textwidth Config.config
-    n = 10
+mlines :: String -> [String]
+mlines = (mbreak =<<) . lines
+    where
+        mbreak :: String -> [String]
+        mbreak xs
+            | null bs   = [as]
+            | otherwise = (as++cs) : filter (not . null) (mbreak (dropWhile isSpace ds))
+            where
+                (as,bs) = splitAt (w-n) xs
+                breaks  = filter (not . isAlphaNum . last . fst) $ drop 1 $
+                                  take n $ zip (inits bs) (tails bs)
+                (cs,ds) = last $ (take n bs, drop n bs): breaks
+                w = textwidth
+                n = 10
 
 -- ---------------------------------------------------------------------
 
@@ -393,7 +400,6 @@ runIrc mode initialise loop ld = withSocketsDo $ do
              (initialise >> withIrcSignalCatch (runIrc' mode loop))
              (initState (Config.admins Config.config) ld)
     return ()
-    
 
 initState :: [String] -> S.DynLoad -> IRCRWState
 initState as ld = IRCRWState {
@@ -428,7 +434,7 @@ runIrc' mode loop = do
             return (s,s,readerLoop,writerLoop)
         Offline -> return (stdin, stdout, offlineReaderLoop, offlineWriterLoop)
 
-    tryErrorJust (isEOFon hin) $ do 
+    tryErrorJust (isEOFon hin) $ do
         liftIO $ hSetBuffering hout NoBuffering
         liftIO $ hSetBuffering hin  NoBuffering
         threadmain <- liftIO myThreadId
@@ -446,8 +452,8 @@ runIrc' mode loop = do
                         ircWriteChan   = chanw,
                         ircWriteThread = threadw }
 
-        finallyError 
-           (localLB (Just chans) $ catchSignals $ loop >> ircQuit "terminated") 
+        finallyError
+           (localLB (Just chans) $ catchSignals $ loop >> ircQuit "terminated")
            (liftIO $ do killThread threadr
                         killThread threadw
                         when (mode == Online) $ hClose hin)
@@ -463,7 +469,7 @@ runIrc' mode loop = do
         isSignal _ = Nothing
 
         -- catches a signal, quit with message
-        catchSignals n = catchErrorJust isSignal n $ \s -> do 
+        catchSignals n = catchErrorJust isSignal n $ \s -> do
              tryError $ ircQuit (ircSignalMessage s)
              return ()
 
@@ -471,17 +477,17 @@ runIrc' mode loop = do
           mods <- gets $ M.elems . ircModules
           (`mapM_` mods) $ \(ModuleRef mod ref name) -> do
             -- Call ircUnloadModule?
-            let ?ref = ref; ?name = name 
+            let ?ref = ref; ?name = name
             moduleExit mod
             writeGlobalState mod name
 
 ------------------------------------------------------------------------
 --
--- online reader loop
+-- online reader loop, the mvars are unused
 --
-readerLoop :: ThreadId -> Chan IRC.Message -> Chan IRC.Message -> Handle 
+readerLoop :: ThreadId -> Chan IRC.Message -> Chan IRC.Message -> Handle
            -> MVar () -> MVar () -> IO ()
-readerLoop threadmain chanr chanw h _ _ = do 
+readerLoop threadmain chanr chanw h _ _ = do
     liftIO (putStrLn "Running reader loop...")
     exc <- try readerLoop'
     case exc of
@@ -489,7 +495,7 @@ readerLoop threadmain chanr chanw h _ _ = do
         Left err                           -> throwTo threadmain err
         Right _                            -> return ()
   where
-    readerLoop' = do 
+    readerLoop' = do
         line <- hGetLine h
         let line' = [ c | c <- line, c /= '\n', c /= '\r' ]
         case line' of
@@ -502,8 +508,9 @@ readerLoop threadmain chanr chanw h _ _ = do
 -- online writer loop
 --
 -- flood control: RFC 2813, section 5.8
+--
 writerLoop :: ThreadId -> Chan IRC.Message -> Handle -> MVar () -> MVar () -> IO ()
-writerLoop threadmain chanw h _ _ = do 
+writerLoop threadmain chanw h _ _ = do
     sem1 <- newQSem 0
     sem2 <- newQSem 5
     forkIO $ sequence_ . repeat $ do
@@ -512,13 +519,13 @@ writerLoop threadmain chanw h _ _ = do
            signalQSem sem2
     exc <- try $ writerLoop' (sem1,sem2)
     case exc of
-           Left (AsyncException ThreadKilled) 
+           Left (AsyncException ThreadKilled)
              -> try (hPutStr h "QUIT : died unexpectedly\r") >> return ()
            Left e  -> throwTo threadmain e
            Right _ -> return ()
 
   where
-    writerLoop' sems@(sem1,sem2) = do 
+    writerLoop' sems@(sem1,sem2) = do
            msg <- readChan chanw
            waitQSem sem2
            hPutStr h $ IRC.encodeMessage msg "\r"
@@ -532,10 +539,12 @@ writerLoop threadmain chanw h _ _ = do
 -- Offline reader and writer loops. A prompt with line editing
 -- Takes a string from stdin, wraps it as an irc message, and _blocks_
 -- waiting for the writer thread (to keep things in sync).
+-- 
+-- the mvars are used to keep the normally async threads in step.
 --
-offlineReaderLoop :: ThreadId -> Chan IRC.Message -> Chan IRC.Message -> Handle 
+offlineReaderLoop :: ThreadId -> Chan IRC.Message -> Chan IRC.Message -> Handle
                   -> MVar () -> MVar () -> IO ()
-offlineReaderLoop threadmain chanr _chanw _h syncR syncW = do 
+offlineReaderLoop threadmain chanr _chanw _h syncR syncW = do
     exc <- try readerLoop'
     case exc of
         Right _                            -> return ()
@@ -564,28 +573,26 @@ offlineReaderLoop threadmain chanr _chanw _h syncR syncW = do
                                      , IRC.msgCommand = "PRIVMSG"
                                      , IRC.msgParams  = ["#haskell",":" ++ msg ] }
                 writeChan chanr m
-
                 putMVar syncW () -- let writer go 
-
                 readerLoop'
 
 --
 -- Print to stdout
 --
-offlineWriterLoop :: ThreadId -> Chan IRC.Message -> Handle 
+offlineWriterLoop :: ThreadId -> Chan IRC.Message -> Handle
                   -> MVar () -> MVar () -> IO ()
-offlineWriterLoop threadmain chanw h syncR syncW = do 
+offlineWriterLoop threadmain chanw h syncR syncW = do
     exc <- try writerLoop'
     case exc of
         Right _                            -> return ()
         Left (AsyncException ThreadKilled) -> return () -- silently quit
         Left e                             -> throwTo threadmain e
   where
-    writerLoop' = do 
+    writerLoop' = do
 
         takeMVar syncW -- wait for reader to let us go
 
-        let loop = do 
+        let loop = do
             msg <- readChan chanw   -- eventually 'send' puts a message on this chan
             let str = case (tail . IRC.msgParams) msg of
                         []    -> []
@@ -596,7 +603,6 @@ offlineWriterLoop threadmain chanw h syncR syncW = do
         loop
 
         putMVar syncR () -- now allow writer to go
-
         writerLoop'
 
 ------------------------------------------------------------------------

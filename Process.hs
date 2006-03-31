@@ -1,7 +1,10 @@
 --
+-- Copyright (c) 2004-6 Don Stewart - http://www.cse.unsw.edu.au/~dons
+-- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
+--
 -- | A Posix.popen compatibility mapping.
 --
-module PosixCompat (popen) where
+module Process (popen) where
 
 import System.Exit
 import System.IO

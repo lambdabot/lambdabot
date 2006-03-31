@@ -10,7 +10,7 @@
 module Plugins.Hoogle (theModule) where
 
 import Lambdabot
-import PosixCompat
+import Process
 import LBState
 import Serial 
 import Data.List

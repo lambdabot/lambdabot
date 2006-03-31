@@ -13,7 +13,7 @@ module Plugins.Unlambda (theModule) where
 
 import Lambdabot hiding (clean)
 import Text.Regex
-import PosixCompat
+import Process
 
 newtype UnlambdaModule = UnlambdaModule ()
 

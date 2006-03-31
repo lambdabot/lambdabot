@@ -22,7 +22,7 @@ import Serial
 import Lambdabot hiding (send)
 import LBState
 import Util
-import PosixCompat ( popen )
+import Process
 
 newtype DarcsPatchWatch = DarcsPatchWatch ()
 

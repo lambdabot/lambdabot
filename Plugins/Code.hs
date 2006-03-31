@@ -26,7 +26,7 @@ module Plugins.Code where
 import Lambdabot
 import LBState
 import Util
-import PosixCompat
+import Process
 import Config
 
 import Control.Monad.Trans      ( liftIO )

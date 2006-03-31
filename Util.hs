@@ -32,11 +32,9 @@ module Util (
         basename, dirname, dropSuffix, joinPath
     ) where
 
-import Config
-
 import Data.List                (intersperse, isPrefixOf)
 import Data.Char                (isSpace, toLower, toUpper)
-import Control.Monad.State      (when,MonadIO(..))
+import Control.Monad.State      (MonadIO(..))
 
 import Data.IORef               (newIORef, readIORef, writeIORef)
 import Control.Concurrent       (MVar, newEmptyMVar, takeMVar, tryPutMVar, putMVar,
@@ -142,7 +140,7 @@ firstWord = takeWhile (not . isSpace)
 --   it outputs the String given. Else, it is a no-op.
 
 debugStr :: (MonadIO m) => String -> m ()
-debugStr = when (verbose config) . liftIO . putStr
+debugStr = liftIO . putStr
 
 -- | 'debugStrLn' is a version of 'debugStr' that adds a newline to the end
 --   of the string outputted.

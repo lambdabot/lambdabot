@@ -13,7 +13,7 @@ module Plugins.Plugs (theModule) where
 
 import Util             (expandTab,dropNL)
 import Lambdabot      hiding  (clean)
-import PosixCompat
+import Process
 
 import Control.Monad.Trans      ( liftIO )
 import Text.Regex

@@ -14,7 +14,7 @@
 module Plugins.LShell where
 
 import Lambdabot
-import PosixCompat
+import Process
 import Control.Monad.Trans      (liftIO)
 import Text.Regex
 import Util                     (dropNL, (<$>))
