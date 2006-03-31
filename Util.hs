@@ -21,7 +21,7 @@ module Util (
         upperize, lowerize,
         quote,
         listToStr,
-        getRandItem, stdGetRandItem,
+        getRandItem, stdGetRandItem, randomElem,
         showClean,
         expandTab,
         closest, closests,
@@ -209,6 +209,9 @@ getRandItem mylist rng = (mylist !! index,newRng)
 --   explicitly.
 stdGetRandItem :: [a] -> IO a
 stdGetRandItem = getStdRandom . getRandItem
+
+randomElem :: [a] -> IO a
+randomElem = stdGetRandItem
 
 ------------------------------------------------------------------------
 
