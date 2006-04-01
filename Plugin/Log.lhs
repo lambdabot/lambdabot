@@ -12,7 +12,7 @@
 > import Plugin
 > import qualified IRC
 
-> import qualified Map as M
+> import qualified Data.Map as M
 
 > import System.Time  
 > import System.Directory (createDirectoryIfMissing) 

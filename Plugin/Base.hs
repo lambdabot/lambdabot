@@ -4,8 +4,10 @@
 module Plugin.Base (theModule) where
 
 import Plugin
+
 import qualified IRC
-import qualified Map as M   (insert, delete)
+
+import qualified Data.Map as M   (insert, delete)
 
 import Control.Concurrent
 import Control.Monad.State  (MonadState(..), when, gets)

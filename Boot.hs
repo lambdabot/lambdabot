@@ -19,12 +19,12 @@
 
 module Boot ( main ) where
 
-import Map (Map)
-import qualified Map    as M hiding (Map)
 import qualified Shared as S
 
 import System.Plugins.Load
 
+import Data.Map (Map)
+import qualified Data.Map    as M hiding (Map)
 import Data.IORef
 import System.IO.Unsafe       ( unsafePerformIO )
 import System.Exit            ( exitFailure )

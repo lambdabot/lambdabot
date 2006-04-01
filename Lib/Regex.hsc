@@ -17,7 +17,7 @@
 -- | Interface to the POSIX regular expression library.
 --
 
-module Regex (
+module Lib.Regex (
 
     -- * The @Regex@ type
     Regex,      -- abstract

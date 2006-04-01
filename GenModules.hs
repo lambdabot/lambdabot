@@ -8,7 +8,7 @@
 --
 module Main where
 
-import qualified Util
+import qualified Lib.Util as Util
 
 import Data.Char
 import Data.List

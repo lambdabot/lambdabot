@@ -12,7 +12,7 @@ module LBState (
   ) where
 
 import Lambdabot
-import Util (withMWriter)
+import Lib.Util (withMWriter)
 
 import Control.Concurrent
 import Control.Monad.Trans (liftIO)

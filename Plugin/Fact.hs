@@ -11,7 +11,7 @@
 module Plugin.Fact (theModule) where
 
 import Plugin
-import qualified Map as M
+import qualified Data.Map as M
 import qualified Data.FastPackedString as P
 
 ------------------------------------------------------------------------

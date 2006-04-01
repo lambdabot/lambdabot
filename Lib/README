@@ -1,0 +1,25 @@
+Our own custom libraries for various plugin functions.
+
+AltTime.hs
+    alternate version of the time library
+
+Binary.hs
+    a binary io lib
+
+Map.hs
+    a wrapper over Data.Map with extras
+
+MiniHTTP.hs
+    a mini http server
+
+Process.hs
+    a wrapper over System.Process
+
+Regex.hsc
+    a fast packed string regex library
+
+Serial.hs
+    a serialisation api
+
+Util.hs
+    miscellaneous string, and other, functions

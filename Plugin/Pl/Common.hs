@@ -16,7 +16,7 @@ module Plugin.Pl.Common (
 
 import Data.Maybe (isJust, fromJust)
 import Data.List (intersperse, minimumBy)
-import qualified Map as M
+import qualified Data.Map as M
 
 import Control.Monad
 import Control.Arrow (first, second, (***), (&&&), (|||), (+++))

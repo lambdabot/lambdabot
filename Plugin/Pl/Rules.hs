@@ -7,7 +7,8 @@
 --
 module Plugin.Pl.Rules (RewriteRule(..), rules, fire) where
 
-import Serial (readM)
+import Lib.Serial (readM)
+
 import Plugin.Pl.Common
 
 import Data.Array

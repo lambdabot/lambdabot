@@ -9,7 +9,7 @@ import Plugin
 import Plugin.Dummy.DocAssocs (docAssocs)
 import Plugin.Dummy.Moo (cows)
 
-import qualified Map as M
+import qualified Data.Map as M
 import qualified Data.FastPackedString as P
 
 newtype DummyModule = DummyModule ()

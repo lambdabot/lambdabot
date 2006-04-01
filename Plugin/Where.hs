@@ -12,7 +12,7 @@ module Plugin.Where (theModule) where
 
 import Plugin
 import qualified Data.FastPackedString as P
-import qualified Map as M
+import qualified Data.Map as M
 
 ------------------------------------------------------------------------
 

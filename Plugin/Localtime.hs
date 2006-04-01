@@ -8,7 +8,7 @@
 module Plugin.Localtime (theModule) where
 
 import Plugin
-import qualified Map as M
+import qualified Data.Map as M
 
 newtype LocaltimeModule = LocaltimeModule ()
 

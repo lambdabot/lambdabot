@@ -11,7 +11,7 @@ module Plugin.Poll (theModule) where
 
 import Plugin hiding (choice)
 import qualified Data.FastPackedString as P
-import qualified Map as M
+import qualified Data.Map as M
 
 newtype VoteModule = VoteModule ()
 

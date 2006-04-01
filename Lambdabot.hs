@@ -31,15 +31,16 @@ module Lambdabot (
 
 import qualified Config (config, name, admins, host, port)
 import ErrorUtils       (bracketError, tryErrorJust, finallyError, catchErrorJust, tryError)
-import Util             (lowerCaseString)
-import Serial
 import qualified IRC
+import qualified Shared as S
+
+import Lib.Util             (lowerCaseString, addList)
+import Lib.Serial
+
+import Data.Map (Map)
+import qualified Data.Map as M hiding (Map)
 
 import qualified Data.FastPackedString as P
-
-import Map (Map)
-import qualified Map as M hiding (Map)
-import qualified Shared as S
 
 import Prelude hiding   (mod, catch)
 
@@ -741,7 +742,7 @@ ircInstallModule (MODULE mod) modname = do
         cmdmap = ircCommands s
     put $ s {
       ircModules = M.insert modname modref modmap,
-      ircCommands = M.addList [ (cmd,modref) | cmd <- cmds++privs ] cmdmap,
+      ircCommands = addList [ (cmd,modref) | cmd <- cmds++privs ] cmdmap,
       ircPrivCommands = ircPrivCommands s ++ privs
     }
 

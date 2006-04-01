@@ -9,7 +9,7 @@
 module Plugin.Search (theModule) where
 
 import Plugin
-import MiniHTTP
+import Lib.MiniHTTP
 import Control.Monad            (mplus)
 
 newtype SearchModule = SearchModule ()

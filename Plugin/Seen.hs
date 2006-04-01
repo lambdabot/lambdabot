@@ -7,13 +7,14 @@
 --
 module Plugin.Seen (theModule) where
 
-import AltTime
-import Binary
 import Plugin
+import Lib.AltTime
+import Lib.Binary
+
 import ErrorUtils          (tryError)
 import qualified IRC
 
-import qualified Map as M
+import qualified Data.Map as M
 import qualified Data.FastPackedString as P
 
 import System.Directory
@@ -277,7 +278,7 @@ getAnswer msg rest seenFM now
 joinCB :: IRC.Message -> SeenState -> ClockTime -> Nick -> Either String SeenState
 joinCB msg fm _ct nick
   | nick == (P.pack myname) = Right fm
-  | otherwise               = Right $ M.insertUpd (updateJ Nothing (map P.pack $ IRC.channels msg)) 
+  | otherwise               = Right $ insertUpd (updateJ Nothing (map P.pack $ IRC.channels msg)) 
                                          nick newInfo fm
   where newInfo = Present Nothing (map P.pack $ IRC.channels msg)
 
@@ -333,7 +334,7 @@ joinChanCB msg fm now _nick
     l = msgParams msg
     chan = P.pack $ l !! 2
     chanUsers = map P.pack $ words (drop 1 (l !! 3)) -- remove ':'
-    insertNick fm' u = M.insertUpd (updateJ (Just now) [chan])
+    insertNick fm' u = insertUpd (updateJ (Just now) [chan])
                                     (P.pack . lowerCaseString . P.unpack .  unUserMode $ u)
                                     (Present Nothing [chan])
                                     fm'

@@ -7,7 +7,7 @@ module Plugin.Vixen where
 
 import Plugin.Vixen.VixenState
 import Plugin hiding (Regex, matchRegex)
-import Regex
+import Lib.Regex
 import qualified Data.FastPackedString as P
 
 newtype VixenModule = VixenModule ()

@@ -9,7 +9,7 @@ module Plugin.Topic (theModule) where
 
 import Plugin
 import qualified IRC
-import qualified Map as M
+import qualified Data.Map as M
 
 import Control.Monad.State (gets)
 

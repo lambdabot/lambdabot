@@ -3,7 +3,8 @@ module Plugin.Lambda.ListTerm where
 
 import Plugin.Lambda.LangPack
 import Plugin.Lambda.LambdaTerm
-import Map (Map)
+
+import Data.Map (Map)
 
 import Data.Dynamic
 import Control.Monad.Error

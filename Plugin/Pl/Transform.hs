@@ -8,7 +8,7 @@ import Plugin.Pl.Rules
 import Plugin.Pl.PrettyPrinter
 
 import Data.List (nub)
-import qualified Map as M
+import qualified Data.Map as M
 
 import Data.Graph (stronglyConnComp, flattenSCC, flattenSCCs)
 import Control.Monad.State

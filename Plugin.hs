@@ -10,10 +10,11 @@ module Plugin (
 
         module Lambdabot,
         module LBState,
-        module Util,
-        module Serial,
         module Config,
-        module Process,
+
+        module Lib.Util,
+        module Lib.Serial,
+        module Lib.Process,
 
         module Data.List,
         module Data.Char,
@@ -28,10 +29,11 @@ module Plugin (
 
 import Lambdabot
 import LBState
-import Util
-import Serial
 import Config
-import Process
+
+import Lib.Util
+import Lib.Serial
+import Lib.Process
 
 import Data.List
 import Data.Char

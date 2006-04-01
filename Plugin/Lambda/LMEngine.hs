@@ -15,8 +15,8 @@ import Plugin.Lambda.RelTerm
 import Plugin.Lambda.ListTerm
 import Plugin.Lambda.LMParser
 
-import Map (Map)
-import qualified Map as Map hiding (Map)
+import Data.Map (Map)
+import qualified Data.Map as Map hiding (Map)
 
 import Data.Maybe           (fromJust)
 import Data.Dynamic

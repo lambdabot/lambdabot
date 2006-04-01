@@ -1,7 +1,7 @@
 
 module Plugin.Dummy.DocAssocs (docAssocs) where
 
-import qualified Map as M
+import qualified Data.Map as M
 import qualified Data.FastPackedString as P
 
 -- pack all these strings

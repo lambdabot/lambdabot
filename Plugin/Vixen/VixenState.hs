@@ -9,7 +9,7 @@
 --
 module Plugin.Vixen.VixenState where
 
-import Regex
+import Lib.Regex
 
 import qualified Data.FastPackedString as P
 import qualified Control.Exception     as C (catch)
@@ -23,7 +23,7 @@ type RespChoice = [(Regex, WTree)]
 -- wrap mkRegex for better error reporting
 mkRegex :: P.FastString -> Regex
 mkRegex x = unsafePerformIO $
-    C.catch (regcomp x regExtended) $ \e -> 
+    C.catch (regcomp x regExtended) $ \e ->
         error $ "mkRegex failed on input " ++ (show x) ++ "\n" ++ show e
 
 state :: RespChoice

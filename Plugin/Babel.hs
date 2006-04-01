@@ -10,7 +10,7 @@
 module Plugin.Babel (theModule) where
 
 import Plugin
-import MiniHTTP
+import Lib.MiniHTTP
 
 ------------------------------------------------------------------------
 

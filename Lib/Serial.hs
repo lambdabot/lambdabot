@@ -19,7 +19,7 @@
 --
 -- | Serialisation
 --
-module Serial (
+module Lib.Serial (
         Serial(..), 
         stdSerial, mapSerial, listSerial, 
         mapPackedSerial, assocListPackedSerial, mapListPackedSerial,
@@ -29,8 +29,8 @@ module Serial (
 
 import Data.Maybe               (mapMaybe)
 
-import Map (Map)
-import qualified Map as M
+import Data.Map (Map)
+import qualified Data.Map as M
 
 import Data.FastPackedString (FastString)
 import qualified Data.FastPackedString as P

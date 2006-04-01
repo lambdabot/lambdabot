@@ -70,3 +70,15 @@ the moduleSerialize method), this state will be automatically read and
 written to disk on module load/unload, respectively.
 
 A default state may be provided via the `moduleDefState` method.
+
+LIBRARIES
+
+Libraries of common functoins are in Lib, they include code for:
+    * munging strings
+    * getting random elements
+    * serialising data
+    * doing regexes on packed strings
+read the Lib/README for more info
+
+Most of these libs are available when you import Plugin, some require
+explicit imports.

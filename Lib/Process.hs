@@ -4,7 +4,7 @@
 --
 -- | A Posix.popen compatibility mapping.
 --
-module Process (popen) where
+module Lib.Process (popen) where
 
 import System.Exit
 import System.IO

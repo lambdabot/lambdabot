@@ -4,7 +4,7 @@
 -- <http://www.dtek.chalmers.se/~d00bring/haskell-xml-rpc/http.html>
 --
 
-module MiniHTTP (
+module Lib.MiniHTTP (
         Proxy,
         mkPost,
         readPage,

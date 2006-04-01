@@ -1,14 +1,14 @@
 --
 -- | Time compatibility layer
 --
-module AltTime (
+module Lib.AltTime (
     ClockTime,
     getClockTime, diffClockTimes, addToClockTime, timeDiffPretty,
     module System.Time
   ) where
 
-import Util (listToStr)
-import Binary
+import Lib.Util (listToStr)
+import Lib.Binary
 
 import Control.Arrow (first)
 

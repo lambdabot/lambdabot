@@ -4,9 +4,9 @@
 module Plugin.System (theModule) where
 
 import Plugin
-import AltTime
+import Lib.AltTime
 import qualified IRC
-import qualified Map as M       (Map,keys,fromList,lookup,union)
+import qualified Data.Map as M       (Map,keys,fromList,lookup,union)
 
 import Control.Monad.State      (MonadState(get), gets)
 

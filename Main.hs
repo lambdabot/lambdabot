@@ -8,7 +8,8 @@ import Lambdabot
 import qualified IRC
 import Config
 import Modules
-import qualified Map as M
+
+import qualified Data.Map as M
 
 import System.Environment
 

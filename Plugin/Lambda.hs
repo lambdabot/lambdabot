@@ -6,7 +6,8 @@ module Plugin.Lambda (theModule) where
 import Plugin
 import Plugin.Lambda.LMEngine (evaluate, define, resume, Environment)
 
-import qualified Map as M
+import qualified Data.Map as M
+import Lib.Util (mapMaybeMap)
 
 import Data.Dynamic                     (Dynamic)
 
@@ -130,7 +131,7 @@ loadDefinitions s = do
   let rests = mapMaybe readM rest
   -- parse the lot. :/
   let dMap = M.fromList $! rests
-      eMap = M.mapMaybe ((const Nothing `either` \x -> Just $! x) . define) $ dMap
+      eMap = mapMaybeMap ((const Nothing `either` \x -> Just $! x) . define) $ dMap
 
       keys = M.keys eMap
   

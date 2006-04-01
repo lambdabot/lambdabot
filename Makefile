@@ -12,7 +12,7 @@ include config.mk
 #
 #  All directories to look for sources
 #
-ALL_DIRS=	.  Plugin \
+ALL_DIRS=	.  Lib Plugin \
                Plugin/Dict  Plugin/Lambda \
                Plugin/Quote Plugin/Pl \
                Plugin/Vixen Plugin/Dummy
@@ -26,7 +26,7 @@ EXCLUDED_SRCS+= Plugin/Lambda/tests.hs Plugin/Pl/Test.hs GenModules.hs
 #
 # Generated at build time
 #
-EXTRA_SRCS=Modules.hs Regex.hs
+EXTRA_SRCS=Modules.hs Lib/Regex.hs
 
 ifeq "$(static)" "yes"
 EXCLUDED_SRCS+=Boot.hs Plugin/Dynamic.hs
@@ -101,7 +101,7 @@ Modules.hs: config.mk GenModules
 
 GenModules: GenModules.hs
 	@$(GHC) $(HC_OPTS) -package mtl \
-	  Config.hs Map.hs Util.hs GenModules.hs -o GenModules
+	  Config.hs Lib/Util.hs GenModules.hs -o GenModules
 
 #
 # Link the bot.
@@ -116,7 +116,7 @@ lambdabot: $(ALL_OBJS)
 ifeq "$(static)" "yes"
 	$(GHC) $(PKG_OPTS) $(LD_OPTS) -v0 $(ALL_OBJS) -o $@
 else
-	$(GHC) $(PKG_OPTS) $(LD_OPTS) -v0 -main-is Boot.main Boot.$(way_)o Shared.$(way_)o Map.$(way_)o -o $@
+	$(GHC) $(PKG_OPTS) $(LD_OPTS) -v0 -main-is Boot.main Boot.$(way_)o Shared.$(way_)o -o $@
 endif
 	strip $@
 
@@ -220,6 +220,6 @@ hoogle:
 	( cd scripts/hoogle && $(MAKE) && mv hoogle_ ../../hoogle && cp hoogle.txt ../.. )
 
 CLEANS+= runplugs djinn unlambda hoogle hoogle.txt
-CLEANS+= Regex_hsc.c Regex.hs
+CLEANS+= Lib/Regex_hsc.c Lib/Regex.hs
 
 -include depend

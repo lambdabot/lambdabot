@@ -3,8 +3,8 @@ module Plugin.Lambda.LambdaTerm where
 
 import Plugin.Lambda.LangPack
 
-import Map (Map)
-import qualified Map as Map hiding (Map)
+import Data.Map (Map)
+import qualified Data.Map as Map hiding (Map)
 
 import Control.Monad.Error
 import Control.Monad.State

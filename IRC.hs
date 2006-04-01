@@ -4,9 +4,10 @@
 --
 module IRC where
 
+import Lib.Util (split, breakOnGlue, clean)
+import qualified Lib.Util as Util (concatWith) 
+
 import Data.Char (chr,isSpace)
-import Util (split, breakOnGlue, clean)
-import qualified Util (concatWith)
 
 -- | An IRC message is a prefix, a command and a list of parameters.
 data Message

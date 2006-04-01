@@ -4,8 +4,8 @@
 module Plugin.Quote.Fortune where
 
 import Config
-import Util (stdGetRandItem)
-import qualified Util hiding (stdGetRandItem)
+import Lib.Util (stdGetRandItem, split)
+import qualified Lib.Util hiding (stdGetRandItem)
 
 import Data.List
 import Control.Monad
@@ -35,7 +35,7 @@ fortunesParse :: FilePath -> IO [String]
 fortunesParse filename = do
     rawfs <- C.catch (readFile filename)
                      (\_ -> return "Couldn't find fortune file")
-    return $ Util.split "%\n" rawfs
+    return $ split "%\n" rawfs
 
 -- | Given a FilePath of a fortune file, select and return a random fortune from
 --   it.

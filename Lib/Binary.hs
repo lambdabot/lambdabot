@@ -13,7 +13,7 @@
 -- where you can obtain the original version of the Binary library, namely
 --     http://www.cs.york.ac.uk/fp/nhc98/
 
-module Binary ( Binary(..), openBinIO_, putByte, getWord8 ) where
+module Lib.Binary ( Binary(..), openBinIO_, putByte, getWord8 ) where
 
 #include "MachDeps.h"
 

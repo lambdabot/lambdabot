@@ -5,7 +5,7 @@ module Plugin.Karma (theModule) where
 
 import Plugin
 import qualified IRC
-import qualified Map as M
+import qualified Data.Map as M
 
 newtype KarmaModule = KarmaModule ()
 

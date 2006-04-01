@@ -4,7 +4,7 @@
 --
 -- | String and other utilities
 --
-module Util (
+module Lib.Util (
         concatWith,
         split, split2,
         breakOnGlue,
@@ -29,14 +29,19 @@ module Util (
         choice,
 
         (</>), (<.>), (<+>), (<>), (<$>),
-        basename, dirname, dropSuffix, joinPath
+        basename, dirname, dropSuffix, joinPath,
+
+        addList, mapMaybeMap, insertUpd, 
     ) where
 
 import Data.List                (intersperse, isPrefixOf)
 import Data.Char                (isSpace, toLower, toUpper)
+import Data.Maybe
 import Control.Monad.State      (MonadIO(..))
 
+import qualified Data.Map as M
 import Data.IORef               (newIORef, readIORef, writeIORef)
+
 import Control.Concurrent       (MVar, newEmptyMVar, takeMVar, tryPutMVar, putMVar,
                                  forkIO, killThread, threadDelay)
 import Control.Exception        (bracket)
@@ -391,3 +396,18 @@ choice p f g x = if p x then f x else g x
 -- Generalizations:
 -- choice :: ArrowChoice (~>) => r ~> Bool -> r ~> a -> r ~> a -> r ~> a
 -- choice :: Monad m => m Bool -> m a -> m a -> m a
+
+------------------------------------------------------------------------
+
+addList :: (Ord k) => [(k,a)] -> M.Map k a -> M.Map k a
+addList l m = M.union (M.fromList l) m
+{-# INLINE addList #-}
+
+-- | Data.Maybe.mapMaybe for Maps
+mapMaybeMap :: Ord k => (a -> Maybe b) -> M.Map k a -> M.Map k b
+mapMaybeMap f = fmap fromJust . M.filter isJust . fmap f
+
+-- | This makes way more sense than @insertWith@ because we don't need to
+--   remember the order of arguments of @f@.
+insertUpd :: Ord k => (a -> a) -> k -> a -> M.Map k a -> M.Map k a
+insertUpd f = M.insertWith (\_ -> f)
