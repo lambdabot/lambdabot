@@ -4,7 +4,6 @@
 module Plugin.More (theModule) where
 
 import Plugin
-import LBState
 
 newtype MoreModule = MoreModule ()
 

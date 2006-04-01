@@ -8,7 +8,6 @@
 module Plugin.Localtime (theModule) where
 
 import Plugin
-import LBState
 import qualified Map as M
 
 newtype LocaltimeModule = LocaltimeModule ()

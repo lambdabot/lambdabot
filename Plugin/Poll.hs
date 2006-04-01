@@ -10,7 +10,6 @@
 module Plugin.Poll (theModule) where
 
 import Plugin hiding (choice)
-import LBState
 import qualified Data.FastPackedString as P
 import qualified Map as M
 

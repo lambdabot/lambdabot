@@ -61,6 +61,7 @@ ADDING A NEW PLUGIN
 * Just create the module in Plugins/*
 * Ensure it implements the Module class (see Hello.hs for the bare minimum).
 * Add your plugin's module name to config.mk.in, for the static and dynamic plugin lists.
+* import Plugin to get most common functions
 
 PLUGIN STATE
 

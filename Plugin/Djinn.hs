@@ -10,12 +10,7 @@
 --
 module Plugin.Djinn (theModule) where
 
-import LBState
 import Plugin
-
-import Data.Either
-
-------------------------------------------------------------------------
 
 newtype DjinnModule = DjinnModule ()
 
@@ -25,8 +20,6 @@ theModule = MODULE $ DjinnModule ()
 -- | We can accumulate an interesting environment
 type DjinnEnv = ([Decl] {- prelude -}, [Decl])
 type Decl = String
-
-------------------------------------------------------------------------
 
 instance Module DjinnModule DjinnEnv where
 

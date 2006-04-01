@@ -5,14 +5,10 @@
 --
 module Plugin.Vixen where
 
-import Plugin hiding (Regex, matchRegex)
-
-import LBState
-import Regex
 import Plugin.Vixen.VixenState
+import Plugin hiding (Regex, matchRegex)
+import Regex
 import qualified Data.FastPackedString as P
-
-------------------------------------------------------------------------
 
 newtype VixenModule = VixenModule ()
 
@@ -25,8 +21,6 @@ instance Module VixenModule (String -> IO String) where
     moduleDefState _ = return $ mkVixen
     process_ _ _ rest = do responder <- readMS
                            ios (responder rest)
-
-------------------------------------------------------------------------
 
 mkVixen :: String -> IO String
 mkVixen question = vixen (mkResponses state) question

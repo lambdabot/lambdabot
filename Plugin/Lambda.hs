@@ -6,7 +6,6 @@ module Plugin.Lambda (theModule) where
 import Plugin
 import Plugin.Lambda.LMEngine (evaluate, define, resume, Environment)
 
-import LBState
 import qualified Map as M
 
 import Data.Dynamic                     (Dynamic)

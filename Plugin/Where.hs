@@ -11,7 +11,6 @@
 module Plugin.Where (theModule) where
 
 import Plugin
-import LBState
 import qualified Data.FastPackedString as P
 import qualified Map as M
 

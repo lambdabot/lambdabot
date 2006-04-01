@@ -5,7 +5,6 @@ module Plugin.Help (theModule) where
 
 import Plugin
 import Control.Exception    (Exception(..), evaluate)
-import Control.Monad.Trans
 
 newtype HelpModule = HelpModule ()
 

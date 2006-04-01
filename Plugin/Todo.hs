@@ -6,7 +6,6 @@
 module Plugin.Todo (theModule) where
 
 import Plugin
-import LBState
 import qualified IRC
 import qualified Data.FastPackedString as P
 

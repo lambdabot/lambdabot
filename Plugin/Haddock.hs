@@ -4,9 +4,8 @@
 module Plugin.Haddock (theModule) where
 
 import Plugin
-import LBState
-import qualified Map as M
 
+import qualified Map as M
 import qualified Data.FastPackedString as P
 
 newtype HaddockModule = HaddockModule ()

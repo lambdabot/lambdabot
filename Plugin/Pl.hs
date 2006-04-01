@@ -14,7 +14,6 @@
 module Plugin.Pl (theModule) where
 
 import Plugin
-import LBState
 
 import Plugin.Pl.Common          (TopLevel, mapTopLevel, getExpr)
 import Plugin.Pl.Parser          (parsePF)

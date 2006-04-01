@@ -4,7 +4,6 @@
 module Plugin.Base (theModule) where
 
 import Plugin
-import LBState
 import qualified IRC
 import qualified Map as M   (insert, delete)
 

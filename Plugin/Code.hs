@@ -8,7 +8,6 @@
 module Plugin.Code where
 
 import Plugin
-import LBState
 
 newtype CodeModule = CodeModule ()
 

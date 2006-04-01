@@ -10,7 +10,6 @@
 module Plugin.Hoogle (theModule) where
 
 import Plugin
-import LBState
 
 newtype HoogleModule = HoogleModule ()
 

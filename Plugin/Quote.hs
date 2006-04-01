@@ -6,9 +6,9 @@ module Plugin.Quote (theModule) where
 import Plugin.Quote.Fortune      (randFortune)
 
 import Plugin
-import qualified Data.FastPackedString as P
-import LBState
+
 import qualified Data.Map as M
+import qualified Data.FastPackedString as P
 
 ------------------------------------------------------------------------
 newtype QuoteModule = QuoteModule ()

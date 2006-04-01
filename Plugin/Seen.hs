@@ -11,7 +11,6 @@ import AltTime
 import Binary
 import Plugin
 import ErrorUtils          (tryError)
-import LBState
 import qualified IRC
 
 import qualified Map as M

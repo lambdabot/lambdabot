@@ -4,7 +4,6 @@
 module Plugin.Paste (theModule) where
 
 import Plugin
-import LBState
 import Control.Concurrent
 
 newtype PasteModule = PasteModule ()

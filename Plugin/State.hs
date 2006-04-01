@@ -5,7 +5,6 @@
 module Plugin.State (theModule) where
 
 import Plugin
-import LBState
 
 newtype StateModule = StateModule ()
 

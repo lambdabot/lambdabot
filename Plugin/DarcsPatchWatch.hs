@@ -9,7 +9,6 @@
 module Plugin.DarcsPatchWatch (theModule) where
 
 import Plugin
-import LBState
 
 import qualified Data.FastPackedString as P
 import Prelude hiding ( catch )

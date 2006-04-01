@@ -9,28 +9,16 @@
 
 > module Plugin.Log (theModule) where
 
-> import Lambdabot
-> import LBState
+> import Plugin
 > import qualified IRC
-
-> import Util ((</>), lowerCaseString)
-
-> import Serial  ({-instances-})
-> import Config
 
 > import qualified Map as M
 
-> import System.IO 
 > import System.Time  
 > import System.Directory (createDirectoryIfMissing) 
 
 > import Control.Monad       (join, when)
-> import Control.Monad.Trans (liftIO, MonadIO, lift)
 > import Control.Monad.State (StateT, runStateT, gets, modify)
-
-> import Maybe (fromJust, fromMaybe)
-
-import ErrorUtils          (tryError)
 
 ------------------------------------------------------------------------
 
@@ -126,7 +114,7 @@ FIXME --- we only do this for one channel.  Maybe allow an extra argument?
 > cleanLogState :: LogModule -> ModuleT LogState LB ()
 > cleanLogState  _ = 
 >     withMS $ \state writer -> do
->                       liftIO $ M.fold (\(hdl, _, _) iom -> iom >> hClose hdl) (return ()) state
+>                       io $ M.fold (\(hdl, _, _) iom -> iom >> hClose hdl) (return ()) state
 >                       writer M.empty
 
 | Takes a state manipulation monad and executes it on the current
@@ -135,14 +123,14 @@ FIXME --- we only do this for one channel.  Maybe allow an extra argument?
 > withLogMS :: (IRC.Message -> ClockTime -> Log a) -> IRC.Message -> ModuleT LogState LB a
 > withLogMS f msg = 
 >     withMS $ \state writer -> do
->                       ct <- liftIO getClockTime
+>                       ct <- io getClockTime
 >                       (r, ls) <- runStateT (f msg ct) state
 >                       writer ls
 >                       return r
 
 > openChannelFile :: Channel -> ClockTime -> Log Handle
 > openChannelFile chan ct = 
->     liftIO $ createDirectoryIfMissing True dir >> openFile file AppendMode
+>     io $ createDirectoryIfMissing True dir >> openFile file AppendMode
 >     where
 >     file = dir ++ (dateToString date) ++ ".txt"
 >     dir = outputDir config </> "/Log/" ++ host config ++ "/" ++ chan ++ "/"
@@ -171,14 +159,14 @@ FIXME --- we only do this for one channel.  Maybe allow an extra argument?
 > closeChannel :: Channel -> Log ()
 > closeChannel chan = do 
 >             (hdl, _, _) <- join $ gets (M.lookup chan)
->             liftIO $ hClose hdl
+>             io $ hClose hdl
 >             modify (M.delete chan)
 > -}
 
 > reopenChannelMaybe :: Channel -> ClockTime -> Log ()
 > reopenChannelMaybe chan ct = whenChannel chan (\_ d _ -> d == date) (return ()) $ do 
 >             (hdl, _, _) <- join $ gets (M.lookup chan)
->             liftIO $ hClose hdl
+>             io $ hClose hdl
 >             hdl' <- openChannelFile chan ct
 >             modify (M.adjust (\ (_, _, his) -> (hdl', date, his)) chan)
 >      where
@@ -230,7 +218,7 @@ FIXME --- we only do this for one channel.  Maybe allow an extra argument?
 We flush on each operation to ensure logs are up to date.
 
 > logString :: Handle -> String -> LB ()
-> logString hdl str = liftIO $ hPutStrLn hdl str >> hFlush hdl
+> logString hdl str = io $ hPutStrLn hdl str >> hFlush hdl
 
 | Callback for when somebody joins. Log it.
 
