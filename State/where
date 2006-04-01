@@ -28,6 +28,8 @@ cairo
 http://haskell.org/gtk2hs/
 catch
 http://www.cs.york.ac.uk/~ndm/projects/catch.php
+cayenne
+http://www.cs.chalmers.se/~augustss/cayenne/index.html
 commentary
 http://www.cse.unsw.edu.au/~chak/haskell/ghc/comm/
 conjure
@@ -58,6 +60,8 @@ drift
 http://repetae.net/john/computer/haskell/DrIFT/
 epigram
 http://www.e-pig.org/
+fastcgi
+http://www.cs.chalmers.se/~bringert/darcs/haskell-fastcgi/
 ffi
 http://www.cse.unsw.edu.au/~chak/haskell/ffi/
 fgl
@@ -98,6 +102,8 @@ gtk2hs
 http://haskell.org/gtk2hs/
 h4sh
 http://www.cse.unsw.edu.au/~dons/h4sh.html
+hac
+http://haskell.org/haskellwiki/HAC
 hackage
 http://hackage.haskell.org/trac/hackage
 hackagedb
@@ -109,7 +115,7 @@ http://www.haskell.org/haddock/
 happy
 http://www.haskell.org/happy/
 hare
-http://www.cs.kent.ac.uk/projects/refactor-fp/hare.html
+http://www.cs.kent.ac.uk/projects/refactor-fp/
 harp
 http://www.cs.chalmers.se/~d00nibro/harp
 harrorth
@@ -120,6 +126,8 @@ haskell
 http://haskell.org/
 haskell'
 http://hackage.haskell.org/trac/haskell-prime
+haskell-for-mathematicians
+http://sigfpe.blogspot.com/2006/01/eleven-reasons-to-use-haskell-as.html
 haskell-mode
 http://www.iro.umontreal.ca/~monnier/elisp/
 haskell-prime
@@ -172,6 +180,8 @@ hs-fltk
 http://www.cs.helsinki.fi/u/ekarttun/hs-fltk/
 hs-plugins
 http://www.cse.unsw.edu.au/~dons/hs-plugins/
+hscurses
+http://www.informatik.uni-freiburg.de/~wehr/haskell/
 hsfltk
 http://www.cs.helsinki.fi/u/ekarttun/hs-fltk/
 hsgnutls
@@ -228,6 +238,8 @@ logs
 http://tunes.org/~nef/logs/haskell/
 ltu
 http://lambda-the-ultimate.org/
+minho
+http://wiki.di.uminho.pt/wiki/bin/view/PURe/PUReSoftware
 missingh
 http://quux.org/devel/missingh
 morrow
@@ -236,6 +248,8 @@ network-alt
 http://www.cs.helsinki.fi/u/ekarttun/network-alt/
 newbinary
 darcs get http://www.n-heptane.com/nhlab/repos/NewBinary
+nhc
+http://haskell.org/nhc98
 nhc98
 http://haskell.org/nhc98
 nymphaea
@@ -254,6 +268,10 @@ phrac
 http://www.cse.unsw.edu.au/~pls/repos/phrac/
 pivotal
 http://www.cs.kent.ac.uk/projects/pivotal
+planet-haskell
+http://antti-juhani.kaijanaho.fi/planet-haskell/
+planethaskell
+http://antti-juhani.kaijanaho.fi/planet-haskell/
 pugs
 http://www.pugscode.org/
 qforeign
@@ -280,12 +298,16 @@ soegtk
 http://haskell.org/~duncan/soe/
 stm
 http://research.microsoft.com/Users/simonpj/papers/stm/
+style
+http://haskell.org/haskellwiki/Programming_guidelines
 tmr
 http://www.haskell.org/tmrwiki/FrontPage
 tutorial
 http://www.haskell.org/tutorial/
 twig
 http://www.uploadthis.co.uk/uploads/Twigathy/timetable.html
+unlambda
+http://www.madore.org/~david/programs/unlambda/
 uuag
 http://www.cs.uu.nl/wiki/HUT/AttributeGrammarSystem
 w3m

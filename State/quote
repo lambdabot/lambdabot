@@ -46,6 +46,9 @@ There will also be a karaoke competition to determine the fate of the monomorphi
 Type theory makes totally awesome material for bar room shit talk.
 Last night I was at this dive bar listening to live music and there was this cute girl I was talking too while this guy was there, we started ribbing each other in the appropriate way when confronted with the situation of two guys talking to the same girl, and our jeers eventually turned technical until we were arguing about haskell, perl, and pugs development. it turning out he was one of the pugs de
 
+Lemmih
+calling an out-of-scope function isn't as easy as I had hoped
+
 Oleg
 The implementation of RSA on type level is left for future work
 
@@ -81,6 +84,9 @@ Taral
 But I can do DP in C, which has no RT
 How do you add an @quote?
 
+TuringTest
+They got it work in Haskell without understanding Haskell.  It is quite an achievement, of some description.
+
 adept
 Tried to co-read and co-understand comonads, but got co-re dump
 I think I need cobrain to understand coeffects
@@ -115,6 +121,7 @@ desrt
 man... there's this whole dark side to haskell that dr. kahl didn't teach us in 3e03
 
 dons
+ihope reaches level 4 hacker
 note to self: grep only works on disks
 but let is more lazy ;)
 who was it who said (shapr?) that they welcome their competitors using languages other than haskell? it's a bad sign if your enemies start coding in haskell!
@@ -337,6 +344,9 @@ skew
 We don't believe in constant factors.
 Swapping is just a constant factor
 I think blackdog is right
+
+tennin
+[very #haskell] anyone know of any good books/papers on the application of category theory to databases?
 
 tomasz
 After all, return is only a fancy name for liftM0 :-)
