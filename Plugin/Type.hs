@@ -19,14 +19,7 @@
 --
 module Plugin.Type (theModule) where
 
-import Lambdabot
-import Config
-import Util                 (expandTab)
-import Process
-
-import Maybe (mapMaybe)
-import Control.Monad.Trans (liftIO)
-import Text.Regex
+import Plugin
 
 --
 --     And thus the plugin:
@@ -128,10 +121,10 @@ query_ghci' cmd expr = do
        (output, errors, _) <- popen (ghci config) ["-fglasgow-exts","-fno-th"]
                                        (Just (command cmd (stripComments expr)))
        let ls = extract_signatures output
-       return $ if null ls 
+       return $ if null ls
                 then unlines . take 3 . lines . expandTab . cleanRE $ errors -- "bzzt" 
                 else ls
-  where 
+  where
      cleanRE :: String -> String
      cleanRE s
         | Just _         <- notfound `matchRegex` s = "Couldn\'t find qualified module.\nMaybe you\'re using the wrong syntax: Data.List.(\\\\) instead of (Data.List.\\\\)?"
@@ -141,4 +134,4 @@ query_ghci' cmd expr = do
      notfound = mkRegex "Failed to load interface"
 
 query_ghci :: String -> String -> LB [String]
-query_ghci y z = liftIO (query_ghci' y z) >>= return . (:[])
+query_ghci y z = ios (query_ghci' y z)

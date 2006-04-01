@@ -9,7 +9,7 @@
 --
 module Plugin.Version (theModule) where
 
-import Lambdabot
+import Plugin
 
 #include "config.h"
 
@@ -22,7 +22,7 @@ instance Module VersionModule () where
     moduleCmds   _ = ["version", "source"]
     moduleHelp _ _ = "version/source. Report the build date, ghc version " ++ 
                      "and darcs repo of this bot"
-    process_ _ _ _ = return . (:[]) $ concat
+    process_ _ _ _ = ios . return $ concat
                 ["lambdabot 3p", PATCH_COUNT, ", ",
                  "GHC ", GHC_VERSION, " (", PLATFORM, " ", CPU, ")",
                  "\n", "darcs get ", REPO_PATH ]

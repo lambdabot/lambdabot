@@ -5,15 +5,10 @@ module Plugin.Quote (theModule) where
 
 import Plugin.Quote.Fortune      (randFortune)
 
-import Lambdabot
-import Util
+import Plugin
 import qualified Data.FastPackedString as P
 import LBState
 import qualified Data.Map as M
-import Serial
-import Data.Maybe
-
-import Control.Monad.Trans      (liftIO)
 
 ------------------------------------------------------------------------
 newtype QuoteModule = QuoteModule ()
@@ -41,11 +36,11 @@ instance Module QuoteModule Quotes where
           "remember" -> runRemember (dropSpace s)
           "quote"    -> runQuote    (dropSpace s)
           "ghc"      -> runQuote    "ghc"
-          "fortune"  -> return `fmap` liftIO (randFortune Nothing)
-          "yow"      -> return `fmap` liftIO (randFortune (Just "zippy"))
-          "keal"     -> return `fmap` liftIO kealRandom
-          "arr"      -> return `fmap` liftIO arrRandom
-          "b52s"     -> return `fmap` liftIO b52sRandom
+          "fortune"  -> return `fmap` io (randFortune Nothing)
+          "yow"      -> return `fmap` io (randFortune (Just "zippy"))
+          "keal"     -> return `fmap` io kealRandom
+          "arr"      -> return `fmap` io arrRandom
+          "b52s"     -> return `fmap` io b52sRandom
 
 help :: String
 help = "quote <nick>\nremember <nick> <quote>\n\ 
@@ -61,31 +56,31 @@ runRemember :: String -> ModuleLB Quotes
 runRemember str = do
     case break (== ' ') str of
         (_,[])    -> return ["Incorrect arguments to quote"]
-        (name,q') -> do let q = tail q'
-                        withMS $ \fm writer -> do
-                        let ss  = fromMaybe [] (M.lookup (P.pack name) fm)
-                            fm' = M.insert (P.pack name) (P.pack q : ss) fm
+        (nm,q') -> do let q = tail q'
+                      withMS $ \fm writer -> do
+                        let ss  = fromMaybe [] (M.lookup (P.pack nm) fm)
+                            fm' = M.insert (P.pack nm) (P.pack q : ss) fm
                         writer fm'
                         return ["Done."]
 
 --
---  the @quote command, takes a user name to choose a random quote from
+--  the @quote command, takes a user nm to choose a random quote from
 --
 runQuote :: String -> ModuleLB Quotes
-runQuote name = do
+runQuote name' = do
     fm <- readMS
     if M.null fm then return ["No quotes yet."] else do
 
-        let pnm = P.pack name
+        let pnm = P.pack name'
             qs' = M.lookup pnm fm
 
         (nm,qs) <- if not (P.null pnm)
                    then return (pnm,qs') -- (FastString, Maybe [FastString])
-                   else do (nm',rs') <- liftIO $ stdGetRandItem (M.toList fm) -- random person
+                   else do (nm',rs') <- io $ randomElem (M.toList fm) -- random person
                            return (nm', Just rs')
         case qs of
             Nothing   -> return [P.unpack nm ++ " hasn't said anything memorable"]
-            Just msgs -> do msg <- liftIO $ stdGetRandItem msgs
+            Just msgs -> do msg <- io $ randomElem msgs
                             return $ if not (P.null pnm)
                                 then ["  " ++ (P.unpack msg)]
                                 else [(P.unpack nm)++" says: " ++ (P.unpack msg)]
@@ -94,19 +89,19 @@ runQuote name = do
 
 -- | Return a random arr-quote
 arrRandom :: IO String
-arrRandom = Util.stdGetRandItem arrList
+arrRandom = randomElem arrList
 
 kealRandom :: IO String
-kealRandom = Util.stdGetRandItem kealList
+kealRandom = randomElem kealList
 
 b52sRandom :: IO String
-b52sRandom = Util.stdGetRandItem b52s
+b52sRandom = randomElem b52s
 
 ------------------------------------------------------------------------
 
 -- | Some pirate quotes
 arrList :: [String]
-arrList = 
+arrList =
     ["Avast!"
     ,"Shiver me timbers!"
     ,"Yeh scurvy dog..."
@@ -233,7 +228,7 @@ kealList =
 -- Quotes from the lyrics of B52s songs. They remind me (dons) of zippy.
 -- 
 b52s :: [String]
-b52s = 
+b52s =
     [ "His ear lobe fell in the deep. Someone reached in and grabbed it. It was a rock lobster!"
     , "Watch out for that piranha. There goes a narwhale. HERE COMES A BIKINI WHALE!"
     , "She drove a Plymouth Satellite faster than the speed of light!"

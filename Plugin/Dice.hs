@@ -9,7 +9,6 @@ import Plugin
 
 import Data.Char                        (isSpace)
 import Control.Monad                    (replicateM,foldM)
-import Control.Monad.Trans              (liftIO)
 import System.Random                    (randomRIO)
 import Text.ParserCombinators.Parsec
 
@@ -21,7 +20,7 @@ theModule = MODULE $ DiceModule ()
 instance Module DiceModule () where
     moduleCmds   _  = ["dice"]
     moduleHelp _ _  = "dice <expr>. Throw random dice. <expr> is of the form 3d6+2."
-    process_ _ _ xs = liftIO (dice xs) >>= return . (:[])
+    process_ _ _ xs = ios (dice xs)
 
 dice :: String -> IO String
 dice str = case parse expr "dice" (filter (not.isSpace) str) of

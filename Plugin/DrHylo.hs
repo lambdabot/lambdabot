@@ -38,9 +38,7 @@ instance P.Module DrHyloModule () where
 ------------------------------------------------------------------------
 
 hylo :: String -> IO [String]
-hylo xs = do
-    s <- parse xs
-    return . drop 4 . lines . prettyPrint . dhModule $ s
+hylo = ((drop 4 . lines . prettyPrint . dhModule) `fmap`) . parse
 
 ------------------------------------------------------------------------
 
@@ -52,21 +50,25 @@ mkHsImportDecl n = HsImportDecl mkLoc (Module n) False Nothing Nothing
 dhModule :: HsModule -> HsModule
 dhModule (HsModule loc name exports imports decls) =
     let decls' = map aux decls
-        imports' = imports++[mkHsImportDecl "Pointless.Combinators", mkHsImportDecl "Pointless.Functors", mkHsImportDecl "Pointless.RecursionPatterns"]
+        imports' = imports++[ mkHsImportDecl "Pointless.Combinators"
+                            , mkHsImportDecl "Pointless.Functors"
+                            , mkHsImportDecl "Pointless.RecursionPatterns"]
     in HsModule loc name exports imports' decls'
-    where aux d = case (evalStateT (dhDecl d) initialSt) 
+    where aux d = case (evalStateT (dhDecl d) initialSt)
                   of Just d' -> d'
                      Nothing -> d
 
 dhDecl :: HsDecl -> ST HsDecl
-dhDecl (HsFunBind matches) = 
+dhDecl (HsFunBind matches) =
     do setNMatches (sum (map aux matches))
        sequence (map dMatch matches)
        functor <- gets functor
        cata <- gets cata
        ana <- gets ana
        name <- gets name
-       return (mkHylo (fromJust name) (HsTyApp (HsTyVar (mkName "Mu")) (foldr1 mkSum functor)) ana cata)
+       return (mkHylo (fromJust name)
+                    (HsTyApp (HsTyVar (mkName "Mu"))
+                       (foldr1 mkSum functor)) ana cata)
     where aux (HsMatch _ _ _ (HsUnGuardedRhs _) _) = 1
           aux (HsMatch _ _ _ (HsGuardedRhss l) _) = length l
 dhDecl _ = fail "Hylo derivation is only applied to functions"

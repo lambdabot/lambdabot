@@ -7,12 +7,11 @@
 --
 module Plugin.Topic (theModule) where
 
-import Lambdabot
+import Plugin
 import qualified IRC
 import qualified Map as M
 
 import Control.Monad.State (gets)
-import Util                (snoc, splitFirstWord)
 
 newtype TopicModule = TopicModule ()
 
@@ -48,10 +47,10 @@ instance Module TopicModule () where
   process_ _ "topic-tail" chan = alterTopic chan tail
   process_ _ "topic-init" chan = alterTopic chan init
   process_ _ "topic-null" chan = send (IRC.setTopic chan "[]") >> return []
-  process_ _ "topic-tell" chan = lookupTopic chan $ \maybetopic ->
+  process_ _ "topic-tell" chan = lookupTopic chan $ \maybetopic -> return $
         case maybetopic of
-            Just x  -> return [x]
-            Nothing -> return ["Do not know that channel"]
+            Just x  -> [x]
+            Nothing -> ["Do not know that channel"]
 
 ------------------------------------------------------------------------
 

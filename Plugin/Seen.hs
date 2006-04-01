@@ -9,26 +9,19 @@ module Plugin.Seen (theModule) where
 
 import AltTime
 import Binary
-import Config
+import Plugin
 import ErrorUtils          (tryError)
 import LBState
-import Lambdabot
-import Serial  ({-instances-})
-import Util (lowerCaseString, firstWord, listToStr)
 import qualified IRC
 
 import qualified Map as M
 import qualified Data.FastPackedString as P
 
-import Data.List           ((\\), nub)
-
-import System.IO
 import System.Directory
 
 import System.Time (normalizeTimeDiff) -- or export from AltTime.hs?
 
 import Control.Monad       (unless, zipWithM_)
-import Control.Monad.Trans (liftIO, MonadIO)
 
 ------------------------------------------------------------------------
 
@@ -158,7 +151,7 @@ instance Module SeenModule SeenState where
       tryError $ send . IRC.names =<< ircGetChannels
 
       -- and suck in our state:
-      s  <- liftIO $ do 
+      s  <- io $ do 
               b <- doesFileExist "State/seen"
               if b 
                 then do
@@ -174,12 +167,12 @@ instance Module SeenModule SeenState where
     moduleExit _ = do
       chans <- ircGetChannels
       unless (null chans) $ do
-            ct    <- liftIO getClockTime
+            ct    <- io getClockTime
             modifyMS $ botPart ct (map P.pack chans)
 
         -- and write out our state:
       s <- readMS
-      liftIO $ do 
+      io $ do 
               h  <- openFile "State/seen" WriteMode
               bh <- openBinIO_ h
               {-# SCC "Seen.get" #-}put_ bh s
@@ -188,7 +181,7 @@ instance Module SeenModule SeenState where
     
     process _ msg _ _ rest = do 
          seenFM <- readMS
-         now    <- liftIO getClockTime
+         now    <- io getClockTime
          return [unlines $ getAnswer msg rest seenFM now]
 
 ------------------------------------------------------------------------
@@ -372,7 +365,7 @@ withSeenFM :: (IRC.Message -> SeenState -> ClockTime -> Nick
 withSeenFM f msg = do 
     let nick = P.pack . lowerCaseString . P.unpack . unUserMode . P.pack . IRC.nick $ msg
     withMS $ \state writer -> do
-      ct <- liftIO getClockTime
+      ct <- io getClockTime
       case f msg state ct nick of
           Right newstate -> writer newstate
           Left _         -> return () -- debugStrLn $ "SeenModule> " ++ err

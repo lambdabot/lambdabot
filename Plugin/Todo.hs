@@ -5,10 +5,9 @@
 --
 module Plugin.Todo (theModule) where
 
-import Lambdabot
+import Plugin
 import LBState
 import qualified IRC
-import Serial
 import qualified Data.FastPackedString as P
 
 newtype TodoModule = TodoModule ()
@@ -20,17 +19,17 @@ theModule = MODULE $ TodoModule ()
 type TodoState = [(P.FastString, P.FastString)]
 
 instance Module TodoModule TodoState where
-    moduleCmds  _ = ["todo", "todo-add"] 
+    moduleCmds  _ = ["todo", "todo-add"]
     modulePrivs _ = ["todo-delete"]
     moduleHelp _ s = case s of
         "todo"        -> "todo. List todo entries"
         "todo-add"    -> "todo-add <idea>. Add a todo entry"
-        "todo-delete" -> "todo-delete <n>. Delete a todo entry (for admins)" 
+        "todo-delete" -> "todo-delete <n>. Delete a todo entry (for admins)"
         _ -> "Keep a todo list. Provides @todo, @todo-add, @todo-delete"
 
     moduleDefState  _ = return ([] :: TodoState)
     moduleSerialize _ = Just assocListPackedSerial
-    
+
     process _ msg _ cmd rest = do
        todoList <- readMS
        case cmd of

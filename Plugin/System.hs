@@ -3,17 +3,13 @@
 --
 module Plugin.System (theModule) where
 
-import Lambdabot
+import Plugin
 import LBState
 import qualified IRC
-import Util                     (breakOnGlue,showClean)
 import AltTime
 import qualified Map as M       (Map,keys,fromList,lookup,union)
 
-import Data.Maybe               (fromMaybe)
-import Data.List                ((\\))
 import Control.Monad.State      (MonadState(get), gets)
-import Control.Monad.Trans      (liftIO)
 
 ------------------------------------------------------------------------
 
@@ -26,7 +22,7 @@ instance Module SystemModule ClockTime where
     moduleCmds   _   = M.keys syscmds
     modulePrivs  _   = M.keys privcmds
     moduleHelp _ s   = fromMaybe defaultHelp (M.lookup s $ syscmds `M.union` privcmds)
-    moduleDefState _ = liftIO getClockTime
+    moduleDefState _ = io getClockTime
     process      _   = doSystem
 
 ------------------------------------------------------------------------
@@ -87,7 +83,7 @@ doSystem msg target cmd rest = get >>= \s -> case cmd of
 
   "uptime" -> do
           loaded <- readMS
-          now    <- liftIO getClockTime
+          now    <- io getClockTime
           let diff = timeDiffPretty $ now `diffClockTimes` loaded
           return ["uptime: " ++ diff]
 

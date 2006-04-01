@@ -5,13 +5,12 @@
 --
 module Plugin.Vixen where
 
-import Lambdabot
+import Plugin hiding (Regex, matchRegex)
+
 import LBState
 import Regex
 import Plugin.Vixen.VixenState
-import Util (stdGetRandItem)
 import qualified Data.FastPackedString as P
-import Control.Monad.State      (MonadIO, liftIO)
 
 ------------------------------------------------------------------------
 
@@ -24,13 +23,8 @@ instance Module VixenModule (String -> IO String) where
     moduleCmds   _   = ["vixen"]
     moduleHelp _ _   = "vixen <phrase>. Sergeant Curry's lonely hearts club"
     moduleDefState _ = return $ mkVixen
-    process_ _ _ rest = vixenCmd rest
-
-vixenCmd :: String -> ModuleLB (String -> IO String)
-vixenCmd rest = do 
-    responder <- readMS
-    result    <- liftIO $  responder rest
-    return [result]
+    process_ _ _ rest = do responder <- readMS
+                           ios (responder rest)
 
 ------------------------------------------------------------------------
 

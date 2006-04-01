@@ -3,12 +3,8 @@
 --
 module Plugin.Slap (theModule) where
 
-import Lambdabot
+import Plugin
 import qualified IRC
-import Util                     (stdGetRandItem)
-
-import Control.Monad.Trans      (liftIO)
-import Control.Monad            (ap)
 
 ------------------------------------------------------------------------
 newtype QuoteModule = QuoteModule ()
@@ -17,24 +13,19 @@ theModule :: MODULE
 theModule = MODULE $ QuoteModule ()
 
 instance Module QuoteModule () where
-    moduleCmds           _ = ["slap"]
-    moduleHelp _ "slap"    = "slap <nick>. Slap someone amusingly."
-
-    process _ msg _ cmd rest = do
-       quote <- liftIO $ case cmd of
-                  "slap"  -> slapRandom (if rest == "me" then sender else rest)
-                  _ -> error "QuoteModule: bad string"
-       return [quote]
+    moduleCmds _           = ["slap"]
+    moduleHelp _ _         = "slap <nick>. Slap someone amusingly."
+    process _ msg _ _ rest = ios $ slapRandom (if rest == "me" then sender else rest)
        where sender = IRC.nick msg
 
 ------------------------------------------------------------------------
 
 -- | Return a random arr-quote
 slapRandom :: String -> IO String
-slapRandom x = ap (Util.stdGetRandItem slapList) (return x)
+slapRandom = (randomElem slapList `ap`) . return
 
 slapList :: [String -> String]
-slapList = 
+slapList =
     [("/me slaps " ++)
     ,(\x -> "/me smacks " ++ x ++ " about with a large trout")
     ,("/me beats up " ++)

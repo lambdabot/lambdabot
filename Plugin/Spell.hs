@@ -31,7 +31,7 @@ args = ["pipe"]
 -- 'String' is a word to check the spelling of.
 --
 spell :: String -> IO [String]
-spell word = spellWithDict word Nothing [] 
+spell word = spellWithDict word Nothing []
 
 --
 -- | Like 'spell', but you can specify which dictionary and pass extra

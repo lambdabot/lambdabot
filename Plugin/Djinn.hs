@@ -10,19 +10,10 @@
 --
 module Plugin.Djinn (theModule) where
 
--- import Serial
 import LBState
-import Lambdabot
-import Util           hiding  (clean)
-import Process
+import Plugin
 
-import System.IO
-
-import Data.List                (intersperse, nub)
 import Data.Either
-
-import Control.Monad.Trans      (liftIO)
-import Text.Regex
 
 ------------------------------------------------------------------------
 
@@ -58,7 +49,7 @@ instance Module DjinnModule DjinnEnv where
         moduleSerialize _ = Nothing -- Just listSerial
 
         moduleDefState  _ = do
-            st <- liftIO $ getDjinnEnv ([],[]) -- get the prelude
+            st <- io $ getDjinnEnv ([],[]) -- get the prelude
             return (either (const []) snd{-!-} st, [])
 
         -- rule out attempts to do IO, if these get into the env,
@@ -70,13 +61,13 @@ instance Module DjinnModule DjinnEnv where
         -- Normal commands
         process_ _ "djinn" s = do
                 (_,env) <- readMS
-                e       <- liftIO $ djinn env $ ":set +sorted" <$> "f ?" <+> s
+                e       <- io $ djinn env $ ":set +sorted" <$> "f ?" <+> s
                 return $ either id (tail . lines) e
 
         -- Augment environment. Have it checked by djinn.
         process_ _ "djinn-add"  s = do
-            (p,st)  <- readMS 
-            est     <- liftIO $ getDjinnEnv $ (p, dropSpace s : st)
+            (p,st)  <- readMS
+            est     <- io $ getDjinnEnv $ (p, dropSpace s : st)
             case est of
                 Left e     -> return [head e]
                 Right st'' -> modifyMS (const st'') >> return []
@@ -93,7 +84,7 @@ instance Module DjinnModule DjinnEnv where
         -- looking up the symbols.
         process_ _ "djinn-del" s =  do
             (_,env) <- readMS
-            eenv <- liftIO $ djinn env $ ":delete" <+> dropSpace s <$> ":environment"
+            eenv <- io $ djinn env $ ":delete" <+> dropSpace s <$> ":environment"
             case eenv of
                 Left e     -> return [head e]
                 Right env' -> do 
@@ -103,8 +94,8 @@ instance Module DjinnModule DjinnEnv where
 
         -- Version number
         process_ _ "djinn-ver"  _ = do
-            (out,_,_) <- liftIO $ popen binary [] (Just ":q")
-            let v = dropNL . clean . drop 18 . head . lines $ out
+            (out,_,_) <- io $ popen binary [] (Just ":q")
+            let v = dropNL . clean_ . drop 18 . head . lines $ out
             return [v]
 
 ------------------------------------------------------------------------
@@ -128,7 +119,7 @@ djinn :: [Decl] -> String -> IO (Either [String] String)
 djinn env' src = do
     let env = concat . intersperse "\n" $ env'
     (out,_,_) <- popen binary [] (Just (env <$> src <$> ":q"))
-    let o = dropNL . clean . unlines . init . drop 2 . lines $ out
+    let o = dropNL . clean_ . unlines . init . drop 2 . lines $ out
     return $ case () of {_
         | Just _ <- failed `matchRegexAll` o -> Left (lines o)
         | Just _ <- unify  `matchRegexAll` o -> Left (lines o)
@@ -141,8 +132,8 @@ djinn env' src = do
 --
 -- Clean up djinn output
 --
-clean :: String -> String
-clean s | Just (a,_,b,_) <- prompt `matchRegexAll` s = a ++ clean b
+clean_ :: String -> String
+clean_ s | Just (a,_,b,_) <- prompt `matchRegexAll` s = a ++ clean_ b
         | otherwise      = s
     where
         prompt = mkRegex "Djinn>[^\n]*\n"

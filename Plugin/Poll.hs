@@ -9,13 +9,10 @@
 --
 module Plugin.Poll (theModule) where
 
-import Lambdabot
+import Plugin hiding (choice)
 import LBState
-import Serial
-import Maybe
 import qualified Data.FastPackedString as P
 import qualified Map as M
-import Data.List
 
 newtype VoteModule = VoteModule ()
 

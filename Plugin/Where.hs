@@ -10,10 +10,8 @@
 --
 module Plugin.Where (theModule) where
 
-import Lambdabot
+import Plugin
 import LBState
-import Util
-import Serial
 import qualified Data.FastPackedString as P
 import qualified Map as M
 
