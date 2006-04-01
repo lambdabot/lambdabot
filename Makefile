@@ -199,8 +199,8 @@ clean:
 	rm -f *~ */*~
 	rm -f lambdabot lambdabot.prof depend depend.bak
 	rm -rf $(CLEANS)
-	cd scripts/Djinn && make clean
-	cd scripts/hoogle && make clean
+	cd scripts/Djinn && $(MAKE) clean
+	cd scripts/hoogle && $(MAKE) clean
 
 distclean: clean
 	rm -f config.mk config.h config.log config.status configure
