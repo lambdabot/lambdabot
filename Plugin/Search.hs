@@ -11,9 +11,6 @@ module Plugin.Search (theModule) where
 import Plugin
 import MiniHTTP
 import Control.Monad            (mplus)
-import Network.URI              (parseURI)
-import Text.Regex               (mkRegex, matchRegexAll, subRegex) 
-------------------------------------------------------------------------
 
 newtype SearchModule = SearchModule ()
 
@@ -21,10 +18,14 @@ theModule :: MODULE
 theModule = MODULE $ SearchModule ()
 
 engines :: [(String, (String, String))]
-engines =  [("google",    ("http://www.google.com/search?hl=en&q=",
-                           "&btnI=I%27m+Feeling+Lucky")),
-            ("wikipedia", ("http://en.wikipedia.org/wiki/Special:Search?search=", "")),
-            ("gsite",     ("http://www.google.ca/search?hl=en&q=site%3A", "&btnI=I%27m+Feeling+Lucky"))
+engines =  [("google"
+           ,("http://www.google.com/search?hl=en&q=","&btnI=I%27m+Feeling+Lucky")),
+
+            ("wikipedia"
+           ,("http://en.wikipedia.org/wiki/Special:Search?search=", "")),
+
+            ("gsite"
+           ,("http://www.google.ca/search?hl=en&q=site%3A", "&btnI=I%27m+Feeling+Lucky"))
            ]
 
 instance Module SearchModule () where
@@ -33,17 +34,17 @@ instance Module SearchModule () where
          "wikipedia" -> "wikipedia <expr>. Search wikipedia and show url of first hit"
          "gsite"     -> "gsite <site> <expr>. Search <site> for <expr> using google"
     moduleCmds      _   = map fst engines
-    process_ _ cmd rest = searchCmd cmd (dropSpace rest)
+    process_ _          = (. dropSpace) . searchCmd
 
 ------------------------------------------------------------------------
 
 searchCmd :: String -> String -> LB [String]
 searchCmd _ []        = return ["Empty search."]
 searchCmd engine rest = do
-        headers <- io $ queryit "HEAD" engine rest
-        body    <- io $ queryit "GET" engine rest
-        return [fromMaybe "No Result Found." $ 
-                    extractLoc headers `mplus` extractConversion body] -- ?
+    headers <- io $ queryit "HEAD" engine rest
+    body    <- io $ queryit "GET" engine rest
+    return [fromMaybe "No Result Found." $
+                extractLoc headers `mplus` extractConversion body] -- ?
 
 queryUrl :: String -> String -> String
 queryUrl engine q = prefix ++ urlEncode q ++ suffix
@@ -59,7 +60,7 @@ queryit meth engine q = readPage (proxy config) uri request ""
           request  = case proxy config of
                         Nothing -> [meth ++ " " ++ abs_path ++ " HTTP/1.0", ""]
                         _       -> [meth ++ " " ++ url ++ " HTTP/1.0", ""]
-                       
+
 
 extractLoc :: [String] -> Maybe String
 extractLoc [] = error "No response, something weird is up."
@@ -69,12 +70,11 @@ extractLoc (_:headers) = lookup "Location" $ concatMap f headers
                           Nothing -> []
 
 extractConversion :: [String] -> Maybe String
-extractConversion [] = error 
-    "conv: No response, something weird is up."
+extractConversion [] = error "conv: No response, something weird is up."
 extractConversion ls = let
     regex1 = mkRegex "<font size=\\+1><b>"
     regex2 = mkRegex "</b>"
-    getConv a = do 
+    getConv a = do
         (_,_,s,_) <- matchRegexAll regex1 a
         (s',_,_,_) <- matchRegexAll regex2 s
         return s'
