@@ -31,7 +31,7 @@ import Data.Char
 import System.IO
 import System.Posix.Resource
 
-rlimit = ResourceLimit 1
+rlimit = ResourceLimit 5
 
 main = setResourceLimit ResourceCPUTime (ResourceLimits rlimit rlimit) >> run
 
