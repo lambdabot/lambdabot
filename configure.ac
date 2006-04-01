@@ -92,7 +92,7 @@ PATCH_COUNT=`darcs changes --xml-output 2> /dev/null | sed -n '/TAG/q;/^<\/patch
 AC_SUBST(PATCH_COUNT)
 
 # need to recompile this if configure is rerun
-touch Plugins/Version.hs
+touch Plugin/Version.hs
 
 AC_CHECK_PROG(HaddockCmd,haddock,haddock)
 AC_CHECK_PROG(AspellCmd,aspell,aspell)

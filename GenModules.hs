@@ -52,9 +52,9 @@ processStatics m = concat [begin,
     canonL = canon Util.lowerize
 
     begin        = ["module Modules where", "import Lambdabot", ""]
-    doimport nm  = "import qualified Plugins." ++ canonU nm
+    doimport nm  = "import qualified Plugin." ++ canonU nm
     middle       = ["","loadStaticModules :: LB ()","loadStaticModules"," = do"]
-    doload nm   = " ircInstallModule Plugins." ++ canonU nm  ++
+    doload nm   = " ircInstallModule Plugin." ++ canonU nm  ++
                      ".theModule " ++ show (canonL $ nm)
 
 processDynamics :: [String] -> String

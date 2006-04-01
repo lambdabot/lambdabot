@@ -12,16 +12,16 @@ include config.mk
 #
 #  All directories to look for sources
 #
-ALL_DIRS=	.  Plugins \
-               Plugins/Dict  Plugins/Lambda \
-               Plugins/Quote Plugins/Pl \
-               Plugins/Vixen Plugins/Dummy
+ALL_DIRS=	.  Plugin \
+               Plugin/Dict  Plugin/Lambda \
+               Plugin/Quote Plugin/Pl \
+               Plugin/Vixen Plugin/Dummy
 
 # Not used, not built, bit dodgy as we are relying on ALL_DIRS to ignore
 # the subdirs of EXCLUDED_MODS. The following additional srcs will not be built
 EXCLUDED_MODS=	Hello Cmafihe
-EXCLUDED_SRCS=	$(addprefix Plugins/, $(addsuffix .hs,$(EXCLUDED_MODS)))
-EXCLUDED_SRCS+= Plugins/Lambda/tests.hs Plugins/Pl/Test.hs GenModules.hs
+EXCLUDED_SRCS=	$(addprefix Plugin/, $(addsuffix .hs,$(EXCLUDED_MODS)))
+EXCLUDED_SRCS+= Plugin/Lambda/tests.hs Plugin/Pl/Test.hs GenModules.hs
 
 #
 # Generated at build time
@@ -29,7 +29,7 @@ EXCLUDED_SRCS+= Plugins/Lambda/tests.hs Plugins/Pl/Test.hs GenModules.hs
 EXTRA_SRCS=Modules.hs Regex.hs
 
 ifeq "$(static)" "yes"
-EXCLUDED_SRCS+=Boot.hs Plugins/Dynamic.hs
+EXCLUDED_SRCS+=Boot.hs Plugin/Dynamic.hs
 endif
 
 #

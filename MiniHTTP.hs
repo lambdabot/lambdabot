@@ -5,12 +5,13 @@
 --
 
 module MiniHTTP (
-		 Proxy,
-		 mkPost,
-		 readPage,
-		 urlEncode,
-		 urlDecode,
-		) where
+        Proxy,
+        mkPost,
+        readPage,
+        urlEncode,
+        urlDecode,
+        module Network.URI
+    ) where
 
 import Data.Maybe (fromMaybe)
 import Data.Bits  ((.&.))

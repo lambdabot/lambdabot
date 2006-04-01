@@ -24,14 +24,14 @@ module Lambdabot (
 
         ircLoad, ircUnload,
 
-        clean, checkPrivs, mkCN, handleIrc, runIrc,
+        checkPrivs, mkCN, handleIrc, runIrc,
 
-        liftIO, io,
+        io,
   ) where
 
 import qualified Config (config, name, admins, host, port)
 import ErrorUtils       (bracketError, tryErrorJust, finallyError, catchErrorJust, tryError)
-import Util             (clean, lowerCaseString)
+import Util             (lowerCaseString)
 import Serial
 import qualified IRC
 
@@ -808,11 +808,11 @@ checkPrivs msg = gets (isJust . M.lookup (IRC.nick msg) . ircPrivilegedUsers)
 -- succeeds.
 --
 withModule :: (Ord k)
-  => (IRCRWState -> Map k ModuleRef)
-  -> k
-  -> LB a
-  -> (forall mod s. Module mod s => mod -> ModuleT s LB a)
-  -> LB a
+           => (IRCRWState -> Map k ModuleRef)
+           -> k
+           -> LB a
+           -> (forall mod s. Module mod s => mod -> ModuleT s LB a)
+           -> LB a
 
 withModule dict modname def f = do
     maybemod <- gets (M.lookup modname . dict)
