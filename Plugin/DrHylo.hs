@@ -26,7 +26,7 @@ theModule = MODULE $ DrHyloModule ()
 
 instance P.Module DrHyloModule () where
 
-    process_ _ _ xs = liftIO (hylo xs)
+    process_ _ _ xs = io (hylo xs)
 
     moduleCmds _   = ["hylo"]
     moduleHelp _ _ = "hylo <expr>. Derive hylomorphism for <expr>. Based on DrHylo. \n\ 
@@ -34,8 +34,6 @@ instance P.Module DrHyloModule () where
                       \ http://wiki.di.uminho.pt/twiki/bin/view/Alcino/PointlessHaskell\n\ 
                       \Mirrored:\n\
                       \  http://www.cse.unsw.edu.au/~dons/Pointless/"
-
-------------------------------------------------------------------------
 
 hylo :: String -> IO [String]
 hylo = ((drop 4 . lines . prettyPrint . dhModule) `fmap`) . parse
