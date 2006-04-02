@@ -427,6 +427,8 @@ initState as ld = IRCRWState {
 runIrc' :: Mode -> LB a -> LB ()
 runIrc' mode loop = do
 
+    -- in offline mode we connect to stdin/stdout. in online mode our
+    -- handles are network pipes
     (hin,hout,rloop,wloop) <- case mode of
         Online  -> do
             let portnum  = PortNumber $ fromIntegral (Config.port Config.config)
@@ -450,7 +452,8 @@ runIrc' mode loop = do
                         ircReadChan    = chanr,
                         ircReadThread  = threadr,
                         ircWriteChan   = chanw,
-                        ircWriteThread = threadw }
+                        ircWriteThread = threadw
+                    }
 
         finallyError
            (localLB (Just chans) $ catchSignals $ loop >> ircQuit "terminated")
@@ -462,29 +465,35 @@ runIrc' mode loop = do
     if reconn then runIrc' mode loop else exitModules
 
   where
-        isEOFon s (IRCRaised (IOException e))
-            = if isEOFError e && ioeGetHandle e == Just s then Just () else Nothing
-        isEOFon _ _ = Nothing
-        isSignal (SignalCaught s) = Just s
-        isSignal _ = Nothing
+    isEOFon s (IRCRaised (IOException e))
+        | isEOFError e && ioeGetHandle e == Just s = Just ()
+    isEOFon _ _ = Nothing
 
-        -- catches a signal, quit with message
-        catchSignals n = catchErrorJust isSignal n $ \s -> do
-             tryError $ ircQuit (ircSignalMessage s)
-             return ()
+    isSignal (SignalCaught s) = Just s
+    isSignal _                = Nothing
 
-        exitModules = do
-          mods <- gets $ M.elems . ircModules
-          (`mapM_` mods) $ \(ModuleRef mod ref name) -> do
-            -- Call ircUnloadModule?
-            let ?ref = ref; ?name = name
+    -- catches a signal, quit with message
+    catchSignals n = catchErrorJust isSignal n $ \s -> do
+         tryError $ ircQuit (ircSignalMessage s)
+         return ()
+
+    exitModules = do
+        mods <- gets $ M.elems . ircModules
+        (`mapM_` mods) $ \(ModuleRef mod ref name) -> do
+            let ?ref = ref; ?name = name -- Call ircUnloadModule?
             moduleExit mod
             writeGlobalState mod name
 
 ------------------------------------------------------------------------
 --
--- online reader loop, the mvars are unused
+-- Lambdabot is asynchronous. We has reader and writer threads, and they
+-- don't know about each other.
 --
+-- However, in Offline mode, we need to keep them in lock step. this
+-- complicates things.
+--
+
+-- Online reader loop, the mvars are unused
 readerLoop :: ThreadId -> Chan IRC.Message -> Chan IRC.Message -> Handle
            -> MVar () -> MVar () -> IO ()
 readerLoop threadmain chanr chanw h _ _ = do
@@ -507,7 +516,7 @@ readerLoop threadmain chanr chanw h _ _ = do
 --
 -- online writer loop
 --
--- flood control: RFC 2813, section 5.8
+-- Implements flood control: RFC 2813, section 5.8
 --
 writerLoop :: ThreadId -> Chan IRC.Message -> Handle -> MVar () -> MVar () -> IO ()
 writerLoop threadmain chanw h _ _ = do
@@ -523,7 +532,6 @@ writerLoop threadmain chanw h _ _ = do
              -> try (hPutStr h "QUIT : died unexpectedly\r") >> return ()
            Left e  -> throwTo threadmain e
            Right _ -> return ()
-
   where
     writerLoop' sems@(sem1,sem2) = do
            msg <- readChan chanw
@@ -556,9 +564,7 @@ offlineReaderLoop threadmain chanr _chanw _h syncR syncW = do
         Left e                             -> throwTo threadmain e
   where
     readerLoop' = do
-
         takeMVar syncR  -- wait till writer lets us proceed
-
         s <- readline "lambdabot> " -- read stdin
         case s of
             Nothing -> error "EOF"
@@ -581,7 +587,7 @@ offlineReaderLoop threadmain chanr _chanw _h syncR syncW = do
                 readerLoop'
 
 --
--- Print to stdout
+-- Offline writer. Print to stdout
 --
 offlineWriterLoop :: ThreadId -> Chan IRC.Message -> Handle
                   -> MVar () -> MVar () -> IO ()
@@ -598,6 +604,9 @@ offlineWriterLoop threadmain chanw h syncR syncW = do
 
         let loop = do
             msg <- readChan chanw   -- eventually 'send' puts a message on this chan
+                                    -- if no message appears, we never
+                                    -- get anything here, and then we
+                                    -- don't let the prompt proceed. Bad.
             let str = case (tail . IRC.msgParams) msg of
                         []    -> []
                         (x:_) -> tail x
