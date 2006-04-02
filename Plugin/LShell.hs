@@ -11,16 +11,7 @@
 --          darcs get http://www.eecs.tufts.edu/~rdocki01/lambda/
 --
 
-module Plugin.LShell where
-
-import Plugin
-
-newtype LShellModule = LShellModule ()
-
-theModule :: MODULE
-theModule = MODULE $ LShellModule ()
-
-instance Module LShellModule () where
+PLUGIN(LShell)
     moduleCmds   _ = ["lam"]
     moduleHelp _ _ = "lam <expr>\n\ 
                      \Evaluate terms of the pure, untyped lambda calculus" <$>

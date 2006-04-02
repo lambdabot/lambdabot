@@ -68,7 +68,10 @@ ALL_OBJS=	$(addsuffix .$(way_)o,$(basename $(ALL_SRCS)))
 #
 # Now, get down to business
 #
-all: lambdabot modules runplugs djinn unlambda hoogle
+all: dsl lambdabot modules runplugs djinn unlambda hoogle
+
+dsl: scripts/dsl.hs
+	$(GHC) -o $@ $<
 
 #
 # TODO should be just PLUGIN_OBJS
@@ -80,7 +83,7 @@ modules: $(ALL_OBJS)
 # Dependency generation
 # Need to remove -prof -auto-all from the ghc flags:
 #
-depend: $(ALL_SRCS)
+depend: dsl $(ALL_SRCS)
 	@echo -n "Rebuilding dependencies ... "
 	$(GHC) -cpp $(HC_OPTS) $(PKG_OPTS) -M -optdep-f -optdepdepend $(ALL_SRCS) || rm depend
 	@echo "done."
@@ -219,7 +222,7 @@ unlambda: scripts/Unlambda.hs
 hoogle:
 	( cd scripts/hoogle && $(MAKE) && mv hoogle_ ../../hoogle && cp hoogle.txt ../.. )
 
-CLEANS+= runplugs djinn unlambda hoogle hoogle.txt
+CLEANS+= runplugs djinn unlambda hoogle hoogle.txt dsl
 CLEANS+= Lib/Regex_hsc.c Lib/Regex.hs
 
 -include depend

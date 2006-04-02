@@ -9,21 +9,10 @@
 -- http://www.madore.org/~david/programs/unlambda/
 --
 
-module Plugin.Unlambda (theModule) where
-
-import Plugin
-
-newtype UnlambdaModule = UnlambdaModule ()
-
-theModule :: MODULE
-theModule = MODULE $ UnlambdaModule ()
-
-instance Module UnlambdaModule () where
+PLUGIN(Unlambda)
     moduleCmds   _ = ["unlambda"]
     moduleHelp _ _ = "unlambda <expr>. Evaluate an unlambda expression"
     process_ _ _ s = ios (unlambda s)
-
-------------------------------------------------------------------------
 
 binary :: String
 binary = "./unlambda"

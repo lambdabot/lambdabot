@@ -5,16 +5,7 @@
 -- | Interface to /aspell/, an open source spelling checker, from a
 -- suggestion by Kai Engelhardt. Requires you to install aspell.
 --
-module Plugin.Spell (theModule) where
-
-import Plugin
-
-newtype SpellModule = SpellModule ()
-
-theModule :: MODULE
-theModule = MODULE $ SpellModule ()
-
-instance Module SpellModule () where
+PLUGIN(Spell)
     moduleCmds   _  = ["spell"]
     moduleHelp _ _  = "spell <word>. Show spelling of word"
     process_ _ _ [] = return ["No word to spell."]

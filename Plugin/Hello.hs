@@ -1,17 +1,11 @@
 --
 -- | Hello world plugin
+-- 
+-- Illustrates the use of our preprocessor, dsl.lhs to generate the
+-- module syntax for us.
 --
-module Plugin.Hello (theModule) where
-
-import Plugin
-
-newtype HelloModule = HelloModule ()
-
-theModule :: MODULE
-theModule = MODULE $ HelloModule ()
-
-instance Module HelloModule where
-    moduleCmds _    = ["hello","goodbye"]
-    moduleHelp _    = "hello/goodbye <arg>. Simplest possible plugin" 
+PLUGIN(Hello)
+    moduleCmds _  = ["hello","goodbye"]
+    moduleHelp _  = "hello/goodbye <arg>. Simplest possible plugin" 
     process_ _ xs = return ["Hello world. " ++ xs]
 

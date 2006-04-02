@@ -17,27 +17,13 @@
 --     Well, what do you know, this plugin enables lambdabot to automate
 --     that lookup for you and your fellow lambda hackers.
 --
-module Plugin.Type (theModule) where
-
-import Plugin
-
---
---     And thus the plugin:
---
-newtype TypeModule = TypeModule ()
-
-theModule :: MODULE
-theModule = MODULE $ TypeModule ()
-
-instance Module TypeModule () where
+PLUGIN(Type)
      moduleCmds        _  = ["type", "kind"]
      moduleHelp _ "kind"  = "kind <type>. Return the kind of a type"
      moduleHelp _ _       = "type <expr>. Return the type of a value"
-     process_ _ s expr = flip query_ghci expr $ case s of 
+     process_ _ s expr = flip query_ghci expr $ case s of
                                                     "type" -> ":t"
                                                     "kind" -> ":k"
-
-------------------------------------------------------------------------
 
 --     In accordance with the KISS principle, the plan is to delegate all
 --     the hard work! To get the type of foo, pipe

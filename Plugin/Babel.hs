@@ -7,23 +7,13 @@
 --
 -- | A translator module for lambdabot, a binding to babelfish
 --
-module Plugin.Babel (theModule) where
-
-import Plugin
-
-newtype BabelModule = BabelModule ()
-
-theModule :: MODULE
-theModule = MODULE $ BabelModule ()
-
-instance Module BabelModule () where
-
-        moduleCmds _   = ["babel"]
-        process_   _ _ = babel
-        moduleHelp _ _ = "babel <lang1> <lang2> <phrase>.\n\ 
-                         \Translate a phrase in lang1 to lang2.\n\ 
-                         \Language is an element of\n" ++ 
-                         showClean supportedLangs
+PLUGIN(Babel)
+    moduleCmds _   = ["babel"]
+    process_   _ _ = babel
+    moduleHelp _ _ = "babel <lang1> <lang2> <phrase>.\n\ 
+                     \Translate a phrase in lang1 to lang2.\n\ 
+                     \Language is an element of\n" ++ 
+                     showClean supportedLangs
 
 --
 -- The @babel command.

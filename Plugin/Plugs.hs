@@ -9,21 +9,10 @@
 -- requires the 'runplugs' utility available with the hs-plugins library.
 -- in '$hsplugins/examples/hmake/one-shot'
 --
-module Plugin.Plugs (theModule) where
-
-import Plugin
-
-newtype PlugsModule = PlugsModule ()
-
-theModule :: MODULE
-theModule = MODULE $ PlugsModule ()
-
-instance Module PlugsModule () where
+PLUGIN(Plugs)
     moduleCmds   _ = ["eval"]
     moduleHelp _ _ = "eval <expr>\nYou have Haskell, 3 seconds and no IO. Go nuts!"
     process_ _ _ s = ios (plugs s)
-
-------------------------------------------------------------------------
 
 binary :: String
 binary = "./runplugs"
