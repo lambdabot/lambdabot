@@ -48,12 +48,15 @@ offlineMain = mainloop
 -- it's all asynchronous, remember, the reader and writer threads
 -- communicating over chans in the LB state. maybe its too much?
 mainloop :: LB ()
-mainloop = do 
-    msg <- ircRead
-    s   <- get
-    case M.lookup (msgCommand msg) (ircCallbacks s) of
-         Just cbs -> allCallbacks (map snd cbs) msg
-         _        -> return ()
+mainloop = do
+    mmsg <- ircRead
+    case mmsg of
+        Nothing -> return ()
+        Just msg -> do
+            s   <- get
+            case M.lookup (msgCommand msg) (ircCallbacks s) of
+                 Just cbs -> allCallbacks (map snd cbs) msg
+                 _        -> return ()
     mainloop
 
 -- If an error reaches allCallbacks, then all we can sensibly do is

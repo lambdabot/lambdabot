@@ -120,7 +120,7 @@ doJOIN :: Callback
 doJOIN msg
   = do s <- get
        put (s { ircChannels = M.insert  (mkCN loc) "[currently unknown]" (ircChannels s)}) -- the empty topic causes problems
-       send $ IRC.getTopic loc -- initialize topic
+       send_ $ IRC.getTopic loc -- initialize topic
    where (_, aloc) = breakOnGlue ":" (head (msgParams msg))
          loc       = case aloc of 
                         [] -> [] 
@@ -149,7 +149,7 @@ doTOPIC msg
          put (s { ircChannels = M.insert (mkCN loc) (tail $ head $ tail $ msgParams msg) (ircChannels s)})
 
 doRPL_WELCOME :: Callback
-doRPL_WELCOME _msg = mapM_ (send . IRC.join) (autojoin config)
+doRPL_WELCOME _msg = mapM_ (send_ . IRC.join) (autojoin config)
 
 doQUIT :: Callback
 doQUIT msg = doIGNORE msg
@@ -275,7 +275,7 @@ doPRIVMSG' myname msg
             _ | otherwise     -> case closests cmd allcmds of
                   (n,[s]) | n < e ,  ms == [] -> docmd s -- unique edit match
                   (n,ss)  | n < e || ms /= []            -- some possibilities
-                          -> ircmsg $ "Maybe you meant: "++showClean(nub(ms++ss))
+                          -> ircmsg . Just $ "Maybe you meant: "++showClean(nub(ms++ss))
                   _ -> docmd cmd         -- no prefix, edit distance too far
         where
             e = 3   -- edit distance cut off. Seems reasonable for small words
@@ -288,15 +288,15 @@ doPRIVMSG' myname msg
             docmd cmd' = do
               mapLB forkIO $ withPS towhere $ \_ _ -> do
                 let act = withModule ircCommands cmd'   -- Important. 
-                      (ircPrivmsg towhere ("Unknown command, try @list")) (\m -> do
+                      (ircPrivmsg towhere (Just "Unknown command, try @list")) (\m -> do
                         privs <- gets ircPrivCommands
                         ok    <- if cmd' `notElem` privs
                                  then return True
                                  else checkPrivs msg
                         if not ok
-                          then ircPrivmsg towhere "Not enough privileges"
+                          then ircPrivmsg towhere $ Just "Not enough privileges"
                           else handleIrc
-                            (ircPrivmsg towhere.((?name++" module failed: ")++))
+                            (ircPrivmsg towhere . Just .((?name++" module failed: ")++))
 
                             -- Two-level function dispatch.
                             -- Attempt to run first `process', 
@@ -311,7 +311,8 @@ doPRIVMSG' myname msg
                                                 process_ m cmd' rest
                                             _ -> throwError ex)
                                 case mstrs of
-                                    _  -> mapM_ (ircPrivmsg towhere) mstrs)
+                                    [] -> ircPrivmsg towhere Nothing
+                                    _  -> mapM_ (ircPrivmsg towhere . Just) mstrs)
                       )
 
                 mapLB (timeout $ 15*1000*1000) act

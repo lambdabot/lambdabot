@@ -63,12 +63,12 @@ doSystem msg target cmd rest = get >>= \s -> case cmd of
 
   ------------------------------------------------------------------------
 
-  "join"  -> send (IRC.join rest) >> return []        -- system commands
-  "leave" -> send (IRC.part rest) >> return []     
-  "part"  -> send (IRC.part rest) >> return []     
+  "join"  -> send_ (IRC.join rest) >> return []        -- system commands
+  "leave" -> send_ (IRC.part rest) >> return []     
+  "part"  -> send_ (IRC.part rest) >> return []     
 
    -- writes to another location:
-  "msg"   -> ircPrivmsg tgt txt' >> return []
+  "msg"   -> ircPrivmsg tgt (Just txt') >> return []
                   where (tgt, txt) = breakOnGlue " " rest
                         txt'       = dropWhile (== ' ') txt
 

@@ -32,7 +32,7 @@ instance Module LocaltimeModule TimeMap where
         let (whoToPing,_) = break (== ' ') rawWho
         modifyMS $ \st -> M.insertWith (++) whoToPing [whoAsked] st
         -- this is a CTCP time call, which returns a NOTICE
-        ircPrivmsg' whoToPing "\^ATIME\^A"      -- has to be raw
+        ircPrivmsg' whoToPing (Just "\^ATIME\^A")     -- has to be raw
         return []
 
   -- the Base module caught the NOTICE TIME, mapped it to a PRIVMGS, and here it is :)
@@ -46,5 +46,5 @@ instance Module LocaltimeModule TimeMap where
             Just xs -> do set (M.insert whoGotPinged [] st) -- clear the callback state
                           return xs
     let msg = "Local time for " ++ whoGotPinged ++ " is " ++ time
-    flip mapM_ targets $ flip ircPrivmsg' msg
+    flip mapM_ targets $ flip ircPrivmsg' (Just msg)
     return []

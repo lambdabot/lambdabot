@@ -226,7 +226,7 @@ checkRepo r = do
                         lastN = repo_nlinesAtLastAnnouncement r
                         new = take (length olines - lastN) olines
                     when (not (null new)) $
-                        send_ $ mkMsg (repo_location r) (parseDarcsMsg (unlines new))
+                        send' $ mkMsg (repo_location r) (parseDarcsMsg (unlines new))
                     return (length olines)
 
        now <- io getClockTime
@@ -234,7 +234,7 @@ checkRepo r = do
        return $ r { repo_nlinesAtLastAnnouncement = nlines
                   , repo_lastAnnounced = Just ct }
     where
-        send_ s = ircPrivmsg announceTarget s
+       send' = ircPrivmsg announceTarget . Just
 
 mkMsg :: String -> (String,String,Integer) -> String
 mkMsg r (who,msg,0) = "[" ++ basename r ++ ":" ++ who ++ "] " ++ msg

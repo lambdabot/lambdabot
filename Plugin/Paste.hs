@@ -16,8 +16,8 @@ announceTarget = "#haskell" -- hmm :/
 
 instance Module PasteModule ThreadId where
     moduleInit _ = do
-      tid <- lbIO (\conv -> 
-        forkIO $ pasteListener $ conv . ircPrivmsg announceTarget)
+      tid <- lbIO (\conv ->
+        forkIO $ pasteListener $ conv . ircPrivmsg announceTarget . Just)
       writeMS tid
     moduleExit _ = io . killThread =<< readMS
 

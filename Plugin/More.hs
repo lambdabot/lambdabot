@@ -22,7 +22,7 @@ instance Module MoreModule MoreState where
         morestate <- readPS target
         case morestate of
             Nothing -> return []
-            Just ls -> do mapM_ (ircPrivmsg' target) =<< moreFilter target ls
+            Just ls -> do mapM_ (ircPrivmsg' target . Just) =<< moreFilter target ls
                           return []       -- special
 
 moreFilter :: String -> [String] -> ModuleLB MoreState

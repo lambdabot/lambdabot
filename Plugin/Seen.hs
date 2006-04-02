@@ -148,7 +148,7 @@ instance Module SeenModule SeenState where
         ["JOIN", "PART", "QUIT", "NICK", "353",      "PRIVMSG"] $ map withSeenFM
         [joinCB, partCB, quitCB, nickCB, joinChanCB, msgCB]
       -- This magically causes the 353 callback to be invoked :)
-      tryError $ send . IRC.names =<< ircGetChannels
+      tryError $ send_ . IRC.names =<< ircGetChannels
 
       -- and suck in our state:
       s  <- io $ do 

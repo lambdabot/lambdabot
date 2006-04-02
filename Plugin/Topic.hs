@@ -46,7 +46,7 @@ instance Module TopicModule () where
 
   process_ _ "topic-tail" chan = alterTopic chan tail
   process_ _ "topic-init" chan = alterTopic chan init
-  process_ _ "topic-null" chan = send (IRC.setTopic chan "[]") >> return []
+  process_ _ "topic-null" chan = send (Just (IRC.setTopic chan "[]")) >> return []
   process_ _ "topic-tell" chan = lookupTopic chan $ \maybetopic -> return $
         case maybetopic of
             Just x  -> [x]
@@ -73,10 +73,10 @@ alterTopic chan f =
   let p maybetopic =
         case maybetopic of
           Just x -> case reads x of
-                [(xs, "")] -> do send $ IRC.setTopic chan (show $ f $ xs)
+                [(xs, "")] -> do send . Just $ IRC.setTopic chan (show $ f $ xs)
                                  return []
                 [(xs, r)] | length r <= 2
-                  -> do send $ IRC.setTopic chan (show $ f $ xs)
+                  -> do send . Just $ IRC.setTopic chan (show $ f $ xs)
                         return ["ignoring bogus characters: " ++ r]
 
                 _ -> return ["Topic does not parse. Should be of the form [\"...\",...,\"...\"]"]

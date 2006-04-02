@@ -13,7 +13,7 @@ module Lambdabot (
 
         withModule, getDictKeys,
 
-        send,
+        send, send_,
         ircPrivmsg, ircPrivmsg', -- not generally used
         ircQuit, ircReconnect,
         ircGetChannels,
@@ -83,11 +83,13 @@ type SignalSet = ()
 data IRCRState
   = IRCRState {
         ircServer      :: String,
-        ircReadChan    :: Chan IRC.Message,
+        ircReadChan    :: Pipe,
         ircReadThread  :: ThreadId,
-        ircWriteChan   :: Chan IRC.Message,
+        ircWriteChan   :: Pipe,
         ircWriteThread :: ThreadId
   }
+
+type Pipe = Chan (Maybe IRC.Message)
 
 type Callback = IRC.Message -> LB ()
 
@@ -266,13 +268,13 @@ ircSignOn nick ircname = do
     server <- asks ircServer
 
     -- password support. TODO: Move this to IRC?
-    send $ IRC.mkMessage "USER" [nick, "localhost", server, ircname]
-    send $ IRC.mkMessage "NICK" [nick]
+    send . Just $ IRC.mkMessage "USER" [nick, "localhost", server, ircname]
+    send . Just $ IRC.mkMessage "NICK" [nick]
     mpasswd <- liftIO (handleJust ioErrors (const (return "")) $
                        readFile "State/passwd")
     case readM mpasswd of
       Nothing     -> return ()
-      Just passwd -> ircPrivmsg "nickserv" $ "identify " ++ passwd
+      Just passwd -> ircPrivmsg "nickserv" $ Just $ "identify " ++ passwd
 
 ircGetChannels :: LB [String]
 ircGetChannels = do
@@ -287,24 +289,30 @@ ircGetChannels = do
 ircQuit :: String -> LB ()
 ircQuit msg = do
     modify $ \state -> state { ircStayConnected = False }
-    send   $ IRC.quit msg
+    send  . Just $ IRC.quit msg
     liftIO $ threadDelay 1000
 
 ircReconnect :: String -> LB ()
 ircReconnect msg = do
-    send $ IRC.quit msg
+    send . Just $ IRC.quit msg
     liftIO $ threadDelay 1000
 
-ircRead :: LB IRC.Message
+ircRead :: LB (Maybe IRC.Message)
 ircRead = do
     chanr <- asks ircReadChan
     liftIO (readChan chanr)
 
-send :: IRC.Message -> LB ()
-send (IRC.Message x y z) | x `seq` y `seq` z `seq` False = undefined -- strictify
+-- 
+-- convenient wrapper
+--
+send_ :: IRC.Message -> LB ()
+send_ = send . Just
+
+send :: Maybe IRC.Message -> LB ()
+send (Just (IRC.Message x y z)) | x `seq` y `seq` z `seq` False = undefined -- strictify
 send line = do
     chanw <- asks ircWriteChan
-    io (writeChan chanw $! line)
+    io (writeChan chanw line)
 
 ----------------------------------------------------------------------
 
@@ -341,19 +349,21 @@ reduceIndent _ msg = return $ map redLine msg
 
 -- | Send a message to a channel\/user. If the message is too long, the rest
 --   of it is saved in the (global) more-state.
-ircPrivmsg :: String -- ^ The channel\/user.
-           -> String -- ^ The message.
+ircPrivmsg :: String        -- ^ The channel\/user.
+           -> Maybe String  -- ^ The message.
            -> LB ()
 
-ircPrivmsg who msg = do
+ircPrivmsg who Nothing = ircPrivmsg' who Nothing
+ircPrivmsg who (Just msg) = do
     filters   <- gets ircOutputFilters
     sendlines <- foldr (\f -> (=<<) (f who)) ((return . lines) msg) $ map snd filters
-    mapM_ (ircPrivmsg' who . take textwidth) $ take 10 sendlines
+    mapM_ (\s -> ircPrivmsg' who (Just $ take textwidth s)) (take 10 sendlines)
 
 -- A raw send version
-ircPrivmsg' :: String -> String -> LB ()
-ircPrivmsg' who "" = ircPrivmsg' who " "
-ircPrivmsg' who msg = send $ IRC.privmsg who msg
+ircPrivmsg' :: String -> Maybe String -> LB ()
+ircPrivmsg' who (Just "")  = ircPrivmsg' who (Just " ")
+ircPrivmsg' who (Just msg) = send . Just $ IRC.privmsg who msg
+ircPrivmsg' _   Nothing    = send Nothing
 
 -- ---------------------------------------------------------------------
 -- | Output filter
@@ -494,8 +504,7 @@ runIrc' mode loop = do
 --
 
 -- Online reader loop, the mvars are unused
-readerLoop :: ThreadId -> Chan IRC.Message -> Chan IRC.Message -> Handle
-           -> MVar () -> MVar () -> IO ()
+readerLoop :: ThreadId -> Pipe -> Pipe -> Handle -> MVar () -> MVar () -> IO ()
 readerLoop threadmain chanr chanw h _ _ = do
     io (putStrLn "Running reader loop...")
     exc <- try readerLoop'
@@ -508,8 +517,8 @@ readerLoop threadmain chanr chanw h _ _ = do
         line <- hGetLine h
         let line' = [ c | c <- line, c /= '\n', c /= '\r' ]
         case line' of
-            ('P':'I':'N':'G':' ':rest) -> writeChan chanw (IRC.mkMessage "PONG" [rest])
-            _                          -> writeChan chanr (IRC.decodeMessage line')
+            ('P':'I':'N':'G':' ':rest) -> writeChan chanw (Just $ IRC.mkMessage "PONG" [rest])
+            _                          -> writeChan chanr (Just $ IRC.decodeMessage line')
         readerLoop'
 {-# INLINE readerLoop #-}
 
@@ -518,7 +527,7 @@ readerLoop threadmain chanr chanw h _ _ = do
 --
 -- Implements flood control: RFC 2813, section 5.8
 --
-writerLoop :: ThreadId -> Chan IRC.Message -> Handle -> MVar () -> MVar () -> IO ()
+writerLoop :: ThreadId -> Pipe -> Handle -> MVar () -> MVar () -> IO ()
 writerLoop threadmain chanw h _ _ = do
     sem1 <- newQSem 0
     sem2 <- newQSem 5
@@ -534,9 +543,12 @@ writerLoop threadmain chanw h _ _ = do
            Right _ -> return ()
   where
     writerLoop' sems@(sem1,sem2) = do
-           msg <- readChan chanw
+           mmsg <- readChan chanw
            waitQSem sem2
-           hPutStr h $ IRC.encodeMessage msg "\r"
+           case mmsg of
+            Nothing  -> return ()
+            Just msg -> do
+               hPutStr h $ IRC.encodeMessage msg "\r"
            signalQSem sem1
            writerLoop' sems
 {-# INLINE writerLoop #-}
@@ -554,7 +566,7 @@ writerLoop threadmain chanw h _ _ = do
 -- 
 -- the mvars are used to keep the normally async threads in step.
 --
-offlineReaderLoop :: ThreadId -> Chan IRC.Message -> Chan IRC.Message -> Handle
+offlineReaderLoop :: ThreadId -> Pipe -> Pipe -> Handle
                   -> MVar () -> MVar () -> IO ()
 offlineReaderLoop threadmain chanr _chanw _h syncR syncW = do
     exc <- try readerLoop'
@@ -582,15 +594,14 @@ offlineReaderLoop threadmain chanr _chanw _h syncR syncW = do
                 let m  = IRC.Message { IRC.msgPrefix  = "dons!n=user@null"
                                      , IRC.msgCommand = "PRIVMSG"
                                      , IRC.msgParams  = ["#haskell",":" ++ msg ] }
-                writeChan chanr m
+                writeChan chanr (Just m)
                 putMVar syncW () -- let writer go 
                 readerLoop'
 
 --
 -- Offline writer. Print to stdout
 --
-offlineWriterLoop :: ThreadId -> Chan IRC.Message -> Handle
-                  -> MVar () -> MVar () -> IO ()
+offlineWriterLoop :: ThreadId -> Pipe -> Handle -> MVar () -> MVar () -> IO ()
 offlineWriterLoop threadmain chanw h syncR syncW = do
     exc <- try writerLoop'
     case exc of
@@ -603,14 +614,15 @@ offlineWriterLoop threadmain chanw h syncR syncW = do
         takeMVar syncW -- wait for reader to let us go
 
         let loop = do
-            msg <- readChan chanw   -- eventually 'send' puts a message on this chan
-                                    -- if no message appears, we never
-                                    -- get anything here, and then we
-                                    -- don't let the prompt proceed. Bad.
-            let str = case (tail . IRC.msgParams) msg of
-                        []    -> []
-                        (x:_) -> tail x
-            hPutStr h (str ++ "\n")     -- write stdout
+            mmsg <- readChan chanw
+            case mmsg of
+                Nothing  -> return ()
+                Just msg -> do
+                    let str = case (tail . IRC.msgParams) msg of
+                                []    -> []
+                                (x:_) -> tail x
+                    hPutStr h (str ++ "\n")     -- write stdout
+            threadDelay 25 -- just for fun.
             b <- isEmptyChan chanw
             when (not b) loop
         loop
