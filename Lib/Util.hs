@@ -31,7 +31,9 @@ module Lib.Util (
         (</>), (<.>), (<+>), (<>), (<$>),
         basename, dirname, dropSuffix, joinPath,
 
-        addList, mapMaybeMap, insertUpd, 
+        addList, mapMaybeMap, insertUpd,
+
+        pprKeys,
     ) where
 
 import Data.List                (intersperse, isPrefixOf)
@@ -411,3 +413,8 @@ mapMaybeMap f = fmap fromJust . M.filter isJust . fmap f
 --   remember the order of arguments of @f@.
 insertUpd :: Ord k => (a -> a) -> k -> a -> M.Map k a -> M.Map k a
 insertUpd f = M.insertWith (\_ -> f)
+
+--  | Print map keys
+pprKeys :: (Show k) => M.Map k a -> String
+pprKeys = showClean . M.keys
+

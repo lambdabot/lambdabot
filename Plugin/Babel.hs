@@ -10,9 +10,6 @@
 module Plugin.Babel (theModule) where
 
 import Plugin
-import Lib.MiniHTTP
-
-------------------------------------------------------------------------
 
 newtype BabelModule = BabelModule ()
 

@@ -50,11 +50,11 @@ cutoff = -10
 
 -- | Actually run the hoogle binary
 hoogle :: String -> IO [String]
-hoogle query = do
+hoogle s = do
         let args = ["--count", "20"
                    ,"-l", hoogleText
                    ,"--verbose"
-                   ,query]
+                   ,s]
         (out,err,_) <- popen hoogleBinary args (Just "")
         return $ result out err
 
@@ -67,8 +67,8 @@ hoogle query = do
                    then ["No matches, try a more general search"]
                    else res
 
-          toPair s = let (res, meta)  = break (=='@') s
-                         rank = takeWhile (/=' ') . drop 2 $ meta
-                     in case readM rank :: Maybe Int of
-                        Just n  -> (n,res)
-                        Nothing -> (0,res)
+          toPair s' = let (res, meta)  = break (=='@') s'
+                          rank = takeWhile (/=' ') . drop 2 $ meta
+                      in case readM rank :: Maybe Int of
+                         Just n  -> (n,res)
+                         Nothing -> (0,res)

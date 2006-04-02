@@ -92,19 +92,16 @@ listAll :: LB [String]
 listAll = get >>= mapM listModule . M.keys . ircModules
 
 listModule :: String -> LB String
-listModule query = withModule ircModules query fromCommand printProvides
+listModule s = withModule ircModules s fromCommand printProvides
   where
-    fromCommand = withModule ircCommands query
-        (return $ "No module \""++query++"\" loaded")
+    fromCommand = withModule ircCommands s
+        (return $ "No module \""++s++"\" loaded")
         printProvides
-    
+
     printProvides m = do
         let cmds = moduleCmds m
         privs <- gets ircPrivCommands
         let cmds' = cmds \\ privs -- don't display privledged commands
-        return . concat $ if null cmds' 
-                            then [?name, " has no visible commands"]
-                            else [?name, " provides: ", showClean $ cmds\\privs]
-
-pprKeys :: (Show k) => M.Map k a -> String
-pprKeys m = showClean (M.keys m)
+        return . concat $ if null cmds'
+                          then [?name, " has no visible commands"]
+                          else [?name, " provides: ", showClean cmds']

@@ -185,11 +185,11 @@ delRepo rest = do
 
 mkRepo :: String -> LB (Either String Repo)
 mkRepo pref_ =
-    do x <- io     $ do let path = mkInventoryPath pref_
-                            pref = dropSpace pref_
-                        perms <- getPermissions path
-                        return (Right (pref, perms))
-                     `catch` (\e -> return $ Left (show e))
+    do x <- io $ do let pth  = mkInventoryPath pref_
+                        pref = dropSpace pref_
+                    perms <- getPermissions pth
+                    return (Right (pref, perms))
+                      `catch` (\e -> return $ Left (show e))
        case x of
          Left e -> return $ Left e
          Right (pref, perms)
