@@ -14,8 +14,6 @@ import Plugin
 import qualified Data.FastPackedString as P
 import qualified Data.Map as M
 
-------------------------------------------------------------------------
-
 newtype WhereModule = WhereModule ()
 
 theModule :: MODULE
@@ -32,15 +30,14 @@ instance Module WhereModule WhereState where
     "where"    -> "where <key>. Return element associated with key"
     "where+"   -> "where+ <key> <elem>. Define an association"
 
-  moduleDefState  _ = return $ M.empty
+  moduleDefState  _ = return M.empty
   moduleSerialize _ = Just mapPackedSerial
 
-  process_ _ cmd rest = do
-        result <- withMS $ \factFM writer -> case words rest of
+  process_ _ cmd rest = list $ withMS $ \factFM writer -> 
+        case words rest of
             []         -> return "@where <key>, return element associated with key"
             (fact:dat) -> processCommand factFM writer
                                 (lowerCaseString fact) cmd (unwords dat)
-        return [result]
 
 ------------------------------------------------------------------------
 
@@ -60,7 +57,7 @@ getWhere fm fact =
         Just x  -> P.unpack x
 
 updateWhere :: Bool -> WhereState -> WhereWriter -> String -> String -> Where LB String
-updateWhere _guard factFM writer fact dat = do 
+updateWhere _guard factFM writer fact dat = do
         writer $ M.insert (P.pack fact) (P.pack dat) factFM
         return "Done."
 

@@ -7,7 +7,6 @@ module Plugin.Dice (theModule) where
 
 import Plugin
 
-import Data.Char                        (isSpace)
 import Control.Monad                    (replicateM,foldM)
 import System.Random                    (randomRIO)
 import Text.ParserCombinators.Parsec
@@ -33,8 +32,8 @@ eval = foldM ef 0
     where ef acc (v,1) = return (acc+v)
           ef acc (n,d) = if n > 100
                             then return 0
-                            else do list <- replicateM n (randomRIO (1,d))
-                                    return (acc + sum list)
+                            else do ls <- replicateM n (randomRIO (1,d))
+                                    return (acc + sum ls)
 
 
 expr :: CharParser st [(Int, Int)]

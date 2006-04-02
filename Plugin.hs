@@ -6,7 +6,7 @@
 -- Simplifies import lists, and abstracts over common patterns
 --
 module Plugin (
-        ios,
+        ios, list,
 
         module Lambdabot,
         module LBState,
@@ -49,5 +49,8 @@ import Control.Monad.Error
 import Control.Monad.Trans
 
 -- | convenience, we often want to perform some io, get a string, and box it.
-ios :: (Functor m, MonadIO m) => IO a -> m [a]
-ios = (return `fmap`) . io
+ios  :: (Functor m, MonadIO m) => IO a -> m [a]
+ios  = list . io
+
+list :: (Functor m, Monad m) => m a -> m [a]
+list = (return `fmap`)
