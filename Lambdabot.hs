@@ -466,6 +466,7 @@ runIrc' mode loop = do
                     }
 
         finallyError
+           -- identify
            (localLB (Just chans) $ catchSignals $ loop >> ircQuit "terminated")
            (io $ do killThread threadr
                     killThread threadw

@@ -61,6 +61,12 @@ runRemember str = do
                         let ss  = fromMaybe [] (M.lookup (P.pack nm) fm)
                             fm' = M.insert (P.pack nm) (P.pack q : ss) fm
                         writer fm'
+
+                        -- and flush to disk too, just in case.
+                        -- should probably have general support for this.
+                        -- maybe even a @flush plugin.
+                        io $ P.writeFile ("State/quote") (showPacked fm')
+
                         return ["Done."]
 
 --

@@ -101,7 +101,6 @@ instance Packable (Map FastString [FastString]) where
 
 
         showPacked m = P.unlines . concatMap (\(k,vs) -> k : vs ++ [P.empty]) $ M.toList m
-        
 
 instance Packable (Map FastString FastString) where
         readPacked ps = M.fromList (readKV (P.lines ps))
