@@ -21,7 +21,7 @@ ALL_DIRS=	.  Lib Plugin \
 # the subdirs of EXCLUDED_MODS. The following additional srcs will not be built
 EXCLUDED_MODS=	Hello Cmafihe
 EXCLUDED_SRCS=	$(addprefix Plugin/, $(addsuffix .hs,$(EXCLUDED_MODS)))
-EXCLUDED_SRCS+= Plugin/Lambda/tests.hs Plugin/Pl/Test.hs GenModules.hs
+EXCLUDED_SRCS+= Plugin/Lambda/tests.hs Plugin/Pl/Test.hs
 
 #
 # Generated at build time
@@ -71,7 +71,7 @@ ALL_OBJS=	$(addsuffix .$(way_)o,$(basename $(ALL_SRCS)))
 all: dsl lambdabot modules runplugs djinn unlambda hoogle
 
 dsl: scripts/dsl.hs
-	$(GHC) -o $@ $<
+	$(GHC) -O -o $@ $<
 
 #
 # TODO should be just PLUGIN_OBJS
@@ -90,21 +90,20 @@ depend: dsl $(ALL_SRCS)
 
 #
 # Slight magic. Note how we're passing values defined in config.mk
-# as commmand line args to GenModules.lhs
+# as commmand line args to GenModules.hs
 #
 # Modules is imported recursively, so we break the loop with a .hs-boot
 # file (.hi-boot with <604). That code is below:
 #
 
-Modules.hs: config.mk GenModules
+Modules.hs: config.mk genmodules
 	@echo -n "Generating module list ... "
 	@echo $(MODULE_HI_BOOT) > Modules.$(RECURSIVE_MODULE_SUFFIX)
-	@./GenModules $(PLUGINS) "," $(STATICS)
+	./genmodules $(PLUGINS) "," $(STATICS)
 	@echo "done."
 
-GenModules: GenModules.hs
-	@$(GHC) $(HC_OPTS) -package mtl \
-	  Config.hs Lib/Util.hs GenModules.hs -o GenModules
+genmodules: scripts/GenModules.hs
+	$(GHC) $(HC_OPTS) -package mtl Config.hs Lib/Util.hs scripts/GenModules.hs -o genmodules
 
 #
 # Link the bot.
@@ -208,7 +207,7 @@ clean:
 distclean: clean
 	rm -f config.mk config.h config.log config.status configure
 	rm -rf autom4te.cache
-	rm -f GenModules Modules.hs Modules.o-boot Modules.*-boot
+	rm -f genmodules Modules.hs Modules.o-boot Modules.*-boot
 
 runplugs: scripts/RunPlugs.hs
 	$(GHC) -O -package posix -package plugins -o $@ $<
