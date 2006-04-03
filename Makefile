@@ -68,7 +68,7 @@ ALL_OBJS=	$(addsuffix .$(way_)o,$(basename $(ALL_SRCS)))
 #
 # Now, get down to business
 #
-all: dsl lambdabot modules runplugs djinn unlambda hoogle
+all: lambdabot modules runplugs djinn unlambda hoogle
 
 dsl: scripts/dsl.hs
 	$(GHC) -O -o $@ $<
@@ -77,7 +77,7 @@ dsl: scripts/dsl.hs
 # TODO should be just PLUGIN_OBJS
 #
 .PHONY: modules
-modules: $(ALL_OBJS)
+modules: dsl $(ALL_OBJS)
 
 #
 # Dependency generation
@@ -109,7 +109,7 @@ genmodules: scripts/GenModules.hs
 # Link the bot.
 # TODO: depends should only be $(BOT_OBJS), not plugins too.
 #
-lambdabot: $(ALL_OBJS)
+lambdabot: dsl $(ALL_OBJS)
 	@if test "x$(way)" = "xp" ; then \
 		for i in *.p_o ; do \
 			ln -f -s $$i `echo $$i | sed 's/p_//'` ; \
