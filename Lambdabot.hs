@@ -317,7 +317,7 @@ send line = do
 ----------------------------------------------------------------------
 
 textwidth :: Int
-textwidth = 100 -- IRC maximum msg length, minus a bit for safety.
+textwidth = 200 -- IRC maximum msg length, minus a bit for safety.
 
 lineify, checkRecip, cleanOutput, reduceIndent :: OutputFilter
 -- | wrap long lines.
