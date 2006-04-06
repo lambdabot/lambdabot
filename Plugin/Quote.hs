@@ -41,8 +41,8 @@ instance Module QuoteModule Quotes where
           "ghc"      -> runQuote    "ghc"
           "fortune"  -> return `fmap` io (randFortune Nothing)
           "yow"      -> return `fmap` io (randFortune (Just "zippy"))
-          "keal"     -> return `fmap` io (randomElem arrList)
-          "arr"      -> return `fmap` io (randomElem kealList)
+          "keal"     -> return `fmap` io (randomElem kealList)
+          "arr"      -> return `fmap` io (randomElem arrList)
           "b52s"     -> return `fmap` io (randomElem b52s)
           "brain"    -> return `fmap` io (randomElem brain)
 
