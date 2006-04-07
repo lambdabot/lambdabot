@@ -35,7 +35,7 @@ instance Module SearchModule () where
          "wikipedia" -> "wikipedia <expr>. Search wikipedia and show url of first hit"
          "gsite"     -> "gsite <site> <expr>. Search <site> for <expr> using google"
          "gwiki"     -> "wiki <expr>. Search (new) haskell.org wiki for <expr> using google."
-    moduleCmds      _   = "wiki" : map fst engines
+    moduleCmds      _   = "gwiki" : map fst engines
     process_ _ "gwiki" e = ((. dropSpace) . searchCmd) "gsite" ("haskell.org/haskellwiki/" ++ e)
     process_ _ s      e = ((. dropSpace) . searchCmd) s e
 
