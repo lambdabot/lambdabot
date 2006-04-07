@@ -34,6 +34,9 @@ Heffalump
 docs aren't all that useful, generally
 CPP leads to suffering
 
+Igloo
+[dons: anyone know what happened to [the] Haskell wishlist?]  Igloo: Did it have "Crush Java" listed?
+
 Itkovian
 real programmers don't write docs, if it was hard to write, it should be hard to understand
 
@@ -45,6 +48,10 @@ JohnMeacham
 There will also be a karaoke competition to determine the fate of the monomorphism restriction.
 Type theory makes totally awesome material for bar room shit talk.
 Last night I was at this dive bar listening to live music and there was this cute girl I was talking too while this guy was there, we started ribbing each other in the appropriate way when confronted with the situation of two guys talking to the same girl, and our jeers eventually turned technical until we were arguing about haskell, perl, and pugs development. it turning out he was one of the pugs de
+
+Korollary
+an olegweek is a complex entity with an imaginary part
+an olegweek is a complex entity with an imaginary part
 
 Lemmih
 calling an out-of-scope function isn't as easy as I had hoped
@@ -121,6 +128,7 @@ desrt
 man... there's this whole dark side to haskell that dr. kahl didn't teach us in 3e03
 
 dons
+Haskell: The language that never sells out!
 ihope reaches level 4 hacker
 note to self: grep only works on disks
 but let is more lazy ;)
@@ -327,6 +335,9 @@ and now i know: IT DOES NOT WORK ALWAYS ;-)
 samc
 monads are hard, let's go shopping
 
+sethk
+it's certainly true that you can clobber the stack in C without even getting out of bed in the morning
+
 shapr
 Programming is the Magic Executable Fridge Poetry, it is machines made of thought, fueled by ideas.
 The legal system is the ultimate denial of service attack.
@@ -351,6 +362,9 @@ tennin
 tomasz
 After all, return is only a fancy name for liftM0 :-)
 
+twb
+But, I love my job. It's like being in a rock band. i.e. no pay, but fun.
+
 vegai
 Hey Haskell! Give me that File! -Naah, I'm too lazy. *thinks* I'll give you a cookie if you tell me how many letters that file has! -Oh, ok!
 
@@ -359,6 +373,9 @@ If you see this, gentle sir, know that you are being trolled by a poorly configu
 
 wilx
 I mean, besides the murders, it all looks so nice.
+
+xahlee
+The Haskell Logo is the perfection of logos
 
 xerox
 > take 10 lol where lol = "ol" : zipWith (:) (intersperse 'o' $ cycle "l") lol
