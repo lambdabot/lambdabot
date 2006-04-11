@@ -73,9 +73,11 @@ go _ _      = []   -- unterminated
 --     match each against the regex, and take the last substring match from
 --     each successful match.
 --
+-- TODO, just use ghci -v0
+--
 extract_signatures :: String -> String
 extract_signatures output
-        = removeExp . unlines . map expandTab . mapMaybe last' . 
+        = removeExp . unlines . map expandTab . mapMaybe last' .
           mapMaybe (matchRegex signature_regex) .
           reverse . drop 1 . reverse . drop 7 . lines $ output
         where
@@ -102,15 +104,31 @@ extract_signatures output
 --
 --     With this the command handler can be easily defined using popen:
 --
+-- TODO, bring more modules into scope.
+--
 query_ghci' :: String -> String -> IO String
 query_ghci' cmd expr = do
        (output, errors, _) <- popen (ghci config) ["-fglasgow-exts","-fno-th"]
-                                       (Just (command cmd (stripComments expr)))
+                                       (Just (context ++ command cmd (stripComments expr)))
        let ls = extract_signatures output
        return $ if null ls
                 then unlines . take 3 . lines . expandTab . cleanRE $ errors -- "bzzt" 
                 else ls
   where
+     context = concatMap (\m -> ":m + "++m++"\n") $
+                    prehier ++ datas ++ qualifieds ++ controls ++ other
+
+     other      = ["Text.Printf"]
+     prehier    = ["Char", "List", "Maybe", "Numeric", "Random" ]
+     qualifieds = []
+     datas   = map ("Data." ++) [
+                    "Array",
+                    "Bits", "Bool", "Char", "Dynamic", "Either",
+                    "Graph", "Int", "Ix", "List",
+                    "Maybe", "Ratio", "Tree", "Tuple", "Typeable", "Word"
+                  ]
+     controls = map ("Control." ++) ["Monad", "Monad.State", "Monad.Reader", "Monad.Fix", "Arrow"]
+
      cleanRE :: String -> String
      cleanRE s
         | Just _         <- notfound `matchRegex` s = "Couldn\'t find qualified module.\nMaybe you\'re using the wrong syntax: Data.List.(\\\\) instead of (Data.List.\\\\)?"
