@@ -265,11 +265,18 @@ getAnswer msg rest seenFM now
       | all (==' ') diff = "just now"
       | otherwise        = diff ++ " ago" 
       where diff = timeDiffPretty . diffClockTimes now $ past
+
+    prettyMissed (Stopped _) ifMissed _     = ifMissed ++ "."
+    prettyMissed _           _ ifNotMissed  = ifNotMissed ++ "."
+
+{-
     prettyMissed (Stopped missed) ifMissed _
       | missedPretty <- timeDiffPretty missed, 
         any (/=' ') missedPretty
       = concat [ifMissed, "I have missed ", missedPretty, " since then."]
+
     prettyMissed _ _ ifNotMissed = ifNotMissed ++ "."
+-}
 
 
 -- | Callback for when somebody joins. If it is not the bot that joins, record
