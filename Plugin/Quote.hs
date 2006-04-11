@@ -21,7 +21,7 @@ type Quotes = M.Map P.FastString [P.FastString]
 
 instance Module QuoteModule Quotes where
     moduleCmds           _ = ["quote", "remember", "ghc", "fortune"
-                             ,"yow","arr","keal","b52s","brain"]
+                             ,"yow","arr","keal","b52s","brain","palomer"]
 
     moduleHelp _ "fortune" = "fortune. Provide a random fortune"
     moduleHelp _ "yow"     = "yow. The zippy man."
@@ -30,7 +30,8 @@ instance Module QuoteModule Quotes where
     moduleHelp _ "ghc"     = "ghc. Choice quotes from GHC."
     moduleHelp _ "b52s"    = "b52s. Anyone noticed the b52s sound a lot like zippy?"
     moduleHelp _ "brain"   = "brain. Pinky and the Brain"
-    moduleHelp _ _          = help
+    moduleHelp _ "palomer" = "palomer. Sound a bit like palomer on a good day."
+    moduleHelp _ _         = help -- required
 
     moduleSerialize _       = Just mapListPackedSerial
     moduleDefState  _       = return M.empty
@@ -45,6 +46,7 @@ instance Module QuoteModule Quotes where
           "arr"      -> return `fmap` io (randomElem arrList)
           "b52s"     -> return `fmap` io (randomElem b52s)
           "brain"    -> return `fmap` io (randomElem brain)
+          "palomer"  -> return `fmap` io (randomElem palomer)
 
 help :: String
 help = "quote <nick>\nremember <nick> <quote>\n\ 
@@ -94,3 +96,5 @@ runQuote name' = do
                             return $ if not (P.null pnm)
                                 then ["  " ++ (P.unpack msg)]
                                 else [(P.unpack nm)++" says: " ++ (P.unpack msg)]
+
+

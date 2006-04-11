@@ -42,7 +42,6 @@ instance Module DummyModule [String] where
         "shootout"    -> "shootout. The debian language shootout"
         "faq"         -> "faq. Answer frequently asked questions about Haskell"
 
-        "palomer"     -> "palomer. Sound a bit like palomer on a bad day"
 
 {-
   process _ _ src "moo" _ = do
@@ -68,7 +67,6 @@ dummylst =
     ,("map",        const "http://www.haskell.org/hawiki/HaskellUserLocations")
     ,("shootout",   const "http://shootout.alioth.debian.org/gp4/benchmark.php?test=all&lang=all")
     ,("botsnack",   const ":)")
-    ,("palomer",    const "hrmph")
 
     ,("eurohaskell", const "less talks, more code!\n\ 
                           \http://www.haskell.org/hawiki/EuroHaskell\n\ 
