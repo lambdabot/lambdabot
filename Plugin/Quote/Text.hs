@@ -223,3 +223,19 @@ brain =
     , "I think so, Brain, but I didn?t know 90210 was a real zip code! Will Tori be there?"
     , "The game does not conclude until the woman with the eating disorder ululates."
     ]
+
+--
+-- Girl 19, Apr 11, 2006
+--
+girl19 :: [[Char]]
+girl19 =
+    ["is this a help channel for hackers-beginners?"
+    ,"I have been into not actually hacking, but social engineering"
+    ,"I have stolen about 50 msn and yahoo accounts"
+    ,"I'm in Moscow, Russia"
+    ,"nobody can catch me"
+    ,"well.. I never hacked Russians"
+    ,"am I supposed to be frantic with terror and anxiety?"
+    ,"LOL"
+    ,"I've always found myself unequal to the intellectual pressure of programming"
+    ]
