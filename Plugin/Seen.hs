@@ -233,7 +233,7 @@ getAnswer msg rest seenFM now
         Nothing          -> concat [" I don't know when ", nick, " last spoke."]
         Just (ct,missed) -> prettyMissed (Stopped missed)
                (concat [" I last heard ", nick, " speak ", 
-                        lastSpoke, ", but "])
+                        lastSpoke {-, ", but "-}])
                (" Last spoke " ++ lastSpoke)
           where lastSpoke = clockDifference ct
      ]
