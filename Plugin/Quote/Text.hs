@@ -3,6 +3,13 @@
 --
 module Plugin.Quote.Text where
 
+-- | Some funny palomer-isms
+palomer :: [String]
+palomer =
+    ["blargh!"
+    ,"hrmph"
+    ]
+
 -- | Some pirate quotes
 arrList :: [String]
 arrList =
