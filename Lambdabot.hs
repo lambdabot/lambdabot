@@ -253,15 +253,20 @@ evalLB (LB lb) rws = do
     ref' <- newIORef Nothing
     lb `runReaderT` (ref',ref)
 
+--
 -- | This \"transformer\" encodes the additional information a module might 
 --   need to access its name or its state.
+--
+-- TODO: remove implicit parameters. It won't be valid Haskell'
+--
 type ModuleT s m a = (?ref :: MVar s, ?name :: String) => m a
+
+-- Name !!!
+type ModState s a = (?ref :: MVar s, ?name :: String) => a
 
 -- | A nicer synonym for some ModuleT stuffs
 type ModuleLB m = ModuleT m LB [String]
 
--- Name !!!
-type ModState s a = (?ref :: MVar s, ?name :: String) => a
 
 ircSignOn :: String -> String -> LB ()
 ircSignOn nick ircname = do
@@ -339,7 +344,7 @@ cleanOutput _ msg = return $ remDups True msg'
         msg' = map (reverse . dropWhile isSpace . reverse) msg
 
 -- | Divide the lines' indent by three.
-reduceIndent _ msg = return $ map redLine msg 
+reduceIndent _ msg = return $ map redLine msg
     where
         redLine (' ':' ':' ':xs) = ' ': redLine xs
         redLine (' ':' ':xs)     = ' ': redLine xs
@@ -491,6 +496,8 @@ runIrc' mode loop = do
     exitModules = do
         mods <- gets $ M.elems . ircModules
         (`mapM_` mods) $ \(ModuleRef mod ref name) -> do
+
+            -- stick them in the monad state instead.
             let ?ref = ref; ?name = name -- Call ircUnloadModule?
             moduleExit mod
             writeGlobalState mod name
@@ -754,6 +761,8 @@ ircInstallModule (MODULE mod) modname = do
     ref        <- io $ newMVar state
 
     let modref = ModuleRef mod ref modname
+
+    -- TODO
     let ?ref = ref; ?name = modname -- yikes
     moduleInit mod
     let cmds  = moduleCmds mod
@@ -812,11 +821,13 @@ ircSignalConnect str f
     = do s <- get
          let cbs = ircCallbacks s
          case M.lookup str cbs of 
+              -- TODO
               Nothing -> put (s { ircCallbacks = M.insert str [(?name,f)]    cbs}) 
               Just fs -> put (s { ircCallbacks = M.insert str ((?name,f):fs) cbs}) 
 
 ircInstallOutputFilter :: OutputFilter -> ModuleT s LB ()
 ircInstallOutputFilter f = modify $ \s -> 
+  -- TODO
   s { ircOutputFilters = (?name, f): ircOutputFilters s }
 
 -- | Checks if the given user has admin permissions and excecute the action
@@ -840,6 +851,7 @@ withModule :: (Ord k)
 withModule dict modname def f = do
     maybemod <- gets (M.lookup modname . dict)
     case maybemod of
+      -- TODO
       Just (ModuleRef m ref name) -> let ?ref = ref; ?name = name in f m
       _                           -> def
 
