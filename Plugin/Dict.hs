@@ -7,10 +7,7 @@ module Plugin.Dict (theModule) where
 import Plugin
 import qualified Plugin.Dict.DictLookup as Dict
 
-newtype DictModule = DictModule ()
-
-theModule :: MODULE
-theModule = MODULE $ DictModule ()
+PLUGIN Dict
 
 -- | This is the module handler.  Here we process commands from users.
 

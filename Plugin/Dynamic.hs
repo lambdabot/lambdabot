@@ -11,10 +11,7 @@ import {-# SOURCE #-} Modules   (plugins)
 import Plugin
 import Control.Monad.State
 
-newtype DynamicModule = DynamicModule ()
-
-theModule :: MODULE
-theModule = MODULE $ DynamicModule ()
+PLUGIN Dynamic
 
 instance Module DynamicModule () where
 

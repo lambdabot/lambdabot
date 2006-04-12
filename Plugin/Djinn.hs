@@ -12,10 +12,7 @@ module Plugin.Djinn (theModule) where
 
 import Plugin
 
-newtype DjinnModule = DjinnModule ()
-
-theModule :: MODULE
-theModule = MODULE $ DjinnModule ()
+PLUGIN Djinn
 
 -- | We can accumulate an interesting environment
 type DjinnEnv = ([Decl] {- prelude -}, [Decl])

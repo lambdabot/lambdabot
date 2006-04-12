@@ -14,10 +14,7 @@ import Plugin
 import qualified Data.FastPackedString as P
 import qualified Data.Map as M
 
-newtype WhereModule = WhereModule ()
-
-theModule :: MODULE
-theModule = MODULE $ WhereModule()
+PLUGIN Where
 
 type WhereState         = M.Map P.FastString P.FastString
 type WhereWriter        = WhereState -> LB ()

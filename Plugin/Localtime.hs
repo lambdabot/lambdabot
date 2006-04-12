@@ -10,10 +10,7 @@ module Plugin.Localtime (theModule) where
 import Plugin
 import qualified Data.Map as M
 
-newtype LocaltimeModule = LocaltimeModule ()
-
-theModule :: MODULE
-theModule = MODULE $ LocaltimeModule ()
+PLUGIN Localtime
 
 type TimeMap = M.Map String  -- the person who's time we requested
                     [String] -- a list of targets waiting on this time

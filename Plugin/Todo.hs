@@ -9,10 +9,7 @@ import Plugin
 import qualified IRC
 import qualified Data.FastPackedString as P
 
-newtype TodoModule = TodoModule ()
-
-theModule :: MODULE
-theModule = MODULE $ TodoModule ()
+PLUGIN Todo
 
 -- A list of key/elem pairs with an ordering determined by its position in the list
 type TodoState = [(P.FastString, P.FastString)]

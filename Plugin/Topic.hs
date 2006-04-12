@@ -13,10 +13,7 @@ import qualified Data.Map as M
 
 import Control.Monad.State (gets)
 
-newtype TopicModule = TopicModule ()
-
-theModule :: MODULE
-theModule = MODULE $ TopicModule ()
+PLUGIN Topic
 
 instance Module TopicModule () where
   moduleHelp _ s = case s of

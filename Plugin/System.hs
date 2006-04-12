@@ -10,12 +10,7 @@ import qualified Data.Map as M       (Map,keys,fromList,lookup,union)
 
 import Control.Monad.State      (MonadState(get), gets)
 
-------------------------------------------------------------------------
-
-newtype SystemModule = SystemModule ()
-
-theModule :: MODULE
-theModule = MODULE $ SystemModule ()
+PLUGIN System
 
 instance Module SystemModule ClockTime where
     moduleCmds   _   = M.keys syscmds

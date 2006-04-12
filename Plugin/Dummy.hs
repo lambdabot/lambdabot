@@ -12,10 +12,7 @@ import Plugin.Dummy.Moo (cows)
 import qualified Data.Map as M
 import qualified Data.FastPackedString as P
 
-newtype DummyModule = DummyModule ()
-
-theModule :: MODULE
-theModule = MODULE $ DummyModule ()
+PLUGIN Dummy
 
 instance Module DummyModule [String] where
   moduleDefState = const . return . cycle $ cows

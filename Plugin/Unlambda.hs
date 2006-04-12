@@ -8,8 +8,13 @@
 --
 -- http://www.madore.org/~david/programs/unlambda/
 --
+module Plugin.Unlambda (theModule) where
 
-PLUGIN(Unlambda)
+import Plugin
+
+PLUGIN Unlambda
+
+instance Module UnlambdaModule () where
     moduleCmds   _ = ["unlambda"]
     moduleHelp _ _ = "unlambda <expr>. Evaluate an unlambda expression"
     process_ _ _ s = ios (unlambda s)

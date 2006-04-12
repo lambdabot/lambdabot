@@ -5,10 +5,7 @@ module Plugin.More (theModule) where
 
 import Plugin
 
-newtype MoreModule = MoreModule ()
-
-theModule :: MODULE
-theModule = MODULE $ MoreModule ()
+PLUGIN More
 
 type MoreState = GlobalPrivate () [String]
 

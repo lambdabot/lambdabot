@@ -8,10 +8,7 @@ import Plugin
 import qualified Data.Map as M
 import qualified Data.FastPackedString as P
 
-newtype HaddockModule = HaddockModule ()
-
-theModule :: MODULE
-theModule = MODULE $ HaddockModule ()
+PLUGIN Haddock
 
 type HaddockState = M.Map P.FastString [P.FastString]
 

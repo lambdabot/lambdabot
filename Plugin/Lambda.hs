@@ -13,10 +13,7 @@ import Data.Dynamic                     (Dynamic)
 
 import qualified Data.FastPackedString as P
 
-newtype EvalModule = EvalModule ()
-
-theModule :: MODULE
-theModule = MODULE $ EvalModule ()
+PLUGIN Eval
 
 initFuel, maxFuel :: Int
 initFuel = 1000

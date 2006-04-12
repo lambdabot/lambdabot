@@ -10,7 +10,13 @@
 --
 -- | Lambdabot version information
 --
-PLUGIN(Version)
+module Plugin.Version where
+
+import Plugin
+
+PLUGIN Version
+
+instance Module VersionModule () where
     moduleCmds   _ = ["version", "source"]
     moduleHelp _ _ = "version/source. Report the build date, ghc version " ++ 
                      "and darcs repo of this bot"

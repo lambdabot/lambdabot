@@ -10,10 +10,7 @@ import Plugin hiding (Regex, matchRegex)
 import Lib.Regex
 import qualified Data.FastPackedString as P
 
-newtype VixenModule = VixenModule ()
-
-theModule :: MODULE
-theModule = MODULE $ VixenModule ()
+PLUGIN Vixen
 
 instance Module VixenModule (String -> IO String) where
     moduleCmds   _   = ["vixen"]

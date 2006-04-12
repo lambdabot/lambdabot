@@ -13,12 +13,7 @@ import Plugin hiding (choice)
 import qualified Data.FastPackedString as P
 import qualified Data.Map as M
 
-newtype VoteModule = VoteModule ()
-
-theModule :: MODULE
-theModule = MODULE $ VoteModule ()
-
-------------------------------------------------------------------------
+PLUGIN Vote
 
 newPoll :: Poll
 newPoll = (True,[])

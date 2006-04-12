@@ -23,12 +23,7 @@ import System.Time (normalizeTimeDiff) -- or export from AltTime.hs?
 
 import Control.Monad       (unless, zipWithM_)
 
-------------------------------------------------------------------------
-
-newtype SeenModule = SeenModule ()
-
-theModule :: MODULE
-theModule = MODULE $ SeenModule ()
+PLUGIN Seen
 
 -- Try using packed strings?
 

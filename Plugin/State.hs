@@ -6,10 +6,7 @@ module Plugin.State (theModule) where
 
 import Plugin
 
-newtype StateModule = StateModule ()
-
-theModule :: MODULE
-theModule = MODULE $ StateModule ()
+PLUGIN State
 
 instance Module StateModule String where
     moduleCmds      _ = ["state"]

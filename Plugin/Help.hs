@@ -6,10 +6,7 @@ module Plugin.Help (theModule) where
 import Plugin
 import Control.Exception    (Exception(..), evaluate)
 
-newtype HelpModule = HelpModule ()
-
-theModule :: MODULE
-theModule = MODULE $ HelpModule ()
+PLUGIN Help
 
 instance Module HelpModule () where
     moduleHelp _ _ = "help <command>. Ask for help for <command>. Try 'list' for all commands"

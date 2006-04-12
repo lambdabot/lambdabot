@@ -11,11 +11,7 @@ import Plugin
 import qualified Data.Map as M
 import qualified Data.FastPackedString as P
 
-------------------------------------------------------------------------
-newtype QuoteModule = QuoteModule ()
-
-theModule :: MODULE
-theModule = MODULE $ QuoteModule ()
+PLUGIN Quote
 
 type Quotes = M.Map P.FastString [P.FastString]
 

@@ -12,10 +12,7 @@ module Plugin.Search (theModule) where
 import Plugin
 import Control.Monad            (mplus)
 
-newtype SearchModule = SearchModule ()
-
-theModule :: MODULE
-theModule = MODULE $ SearchModule ()
+PLUGIN Search
 
 engines :: [(String, (String, String))]
 engines =

@@ -7,7 +7,13 @@
 --
 -- | A translator module for lambdabot, a binding to babelfish
 --
-PLUGIN(Babel)
+module Plugin.Babel where
+
+import Plugin
+
+PLUGIN Babel
+
+instance Module BabelModule () where
     moduleCmds _   = ["babel"]
     process_   _ _ = babel
     moduleHelp _ _ = "babel <lang1> <lang2> <phrase>.\n\ 

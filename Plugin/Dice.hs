@@ -11,10 +11,7 @@ import Control.Monad                    (replicateM,foldM)
 import System.Random                    (randomRIO)
 import Text.ParserCombinators.Parsec
 
-newtype DiceModule = DiceModule ()
-
-theModule :: MODULE
-theModule = MODULE $ DiceModule ()
+PLUGIN Dice
 
 instance Module DiceModule () where
     moduleCmds   _  = ["dice"]

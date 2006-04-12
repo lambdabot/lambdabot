@@ -6,11 +6,7 @@ module Plugin.Slap (theModule) where
 import Plugin
 import qualified IRC
 
-------------------------------------------------------------------------
-newtype QuoteModule = QuoteModule ()
-
-theModule :: MODULE
-theModule = MODULE $ QuoteModule ()
+PLUGIN Quote
 
 instance Module QuoteModule () where
     moduleCmds _           = ["slap"]

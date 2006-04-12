@@ -9,7 +9,13 @@
 -- requires the 'runplugs' utility available with the hs-plugins library.
 -- in '$hsplugins/examples/hmake/one-shot'
 --
-PLUGIN(Plugs)
+module Plugin.Plugs where
+
+import Plugin
+
+PLUGIN Plugs
+
+instance Module PlugsModule () where
     moduleCmds   _ = ["eval"]
     moduleHelp _ _ = "eval <expr>\nYou have Haskell, 3 seconds and no IO. Go nuts!"
     process_ _ _ s = ios (plugs s)

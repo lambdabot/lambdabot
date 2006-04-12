@@ -17,18 +17,12 @@ main = do
     readFile i >>= writeFile o . expand
 
 expand [] = []
-expand ('P':'L':'U':'G':'I':'N':'(':xs) = render name ++ tail rest
-    where (name, rest) = break (==')') xs
+expand ('P':'L':'U':'G':'I':'N':' ':xs) = render name ++ tail rest
+    where (name, rest) = break (=='\n') xs
 expand (x:xs) = x : expand xs
 
 render name =
-    "module Plugin."++name++" (theModule) where     \n\
-    \\n\
-    \import Plugin                                  \n\
-    \\n\
-    \newtype "++name++"Module = "++name++"Module () \n\
-    \\n\
-    \theModule :: MODULE                            \n\
-    \theModule = MODULE $ "++name++"Module ()       \n\
-    \\n\
-    \instance Module "++name++"Module () where      \n"
+   "newtype "++name++"Module = "++name++"Module () \n\ 
+    \\n\ 
+    \theModule :: MODULE                            \n\ 
+    \theModule = MODULE $ "++name++"Module ()       \n"

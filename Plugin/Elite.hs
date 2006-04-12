@@ -12,21 +12,17 @@ import Plugin
 import Control.Arrow
 import Control.Monad.State
 
-theModule :: MODULE
-theModule = MODULE $ Elite
+PLUGIN Elite
 
-data Elite = Elite
-
-instance Module Elite () where
+instance Module EliteModule () where
     moduleCmds _   = ["elite"]
     moduleHelp _ _ = "elite <phrase>. Translate English to elitespeak"
-    process_ _ _ args = do 
-        result <- case words args of
-                     [] -> return "Say again?"
-                     wds -> do let instr = map toLower (unwords wds)
-                               transWords <- translate instr
-                               return transWords
-        return [result]
+    process_ _ _ args = ios $
+        case words args of
+             [] -> return "Say again?"
+             wds -> do let instr = map toLower (unwords wds)
+                       transWords <- translate instr
+                       return transWords
 
 translate :: MonadIO m => String -> m String
 translate []  = return []

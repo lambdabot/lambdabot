@@ -16,10 +16,7 @@ import qualified Data.FastPackedString as P
 
 ------------------------------------------------------------------------
 
-newtype FactModule = FactModule ()
-
-theModule :: MODULE
-theModule = MODULE $ FactModule()
+PLUGIN Fact
 
 type FactState  = M.Map P.FastString P.FastString
 type FactWriter = FactState -> LB ()

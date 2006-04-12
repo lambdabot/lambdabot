@@ -19,10 +19,7 @@ import Control.Monad.State
 import Plugin hiding (Module, Config(..))
 import qualified Plugin as P (Module)
 
-newtype DrHyloModule = DrHyloModule ()
-
-theModule :: MODULE
-theModule = MODULE $ DrHyloModule ()
+PLUGIN DrHylo
 
 instance P.Module DrHyloModule () where
 

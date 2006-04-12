@@ -17,7 +17,13 @@
 --     Well, what do you know, this plugin enables lambdabot to automate
 --     that lookup for you and your fellow lambda hackers.
 --
-PLUGIN(Type)
+module Plugin.Type where
+
+import Plugin
+
+PLUGIN Type
+
+instance Module TypeModule () where
      moduleCmds        _  = ["type", "kind"]
      moduleHelp _ "kind"  = "kind <type>. Return the kind of a type"
      moduleHelp _ _       = "type <expr>. Return the type of a value"

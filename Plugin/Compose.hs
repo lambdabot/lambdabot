@@ -14,10 +14,7 @@ import Plugin
 import Control.Monad.State
 import GHC.IOBase   (Exception(NoMethodError))
 
-newtype ComposeModule = ComposeModule ()
-
-theModule :: MODULE
-theModule = MODULE $ ComposeModule ()
+PLUGIN Compose
 
 instance Module ComposeModule () where
     moduleCmds _   = [".", "compose"]

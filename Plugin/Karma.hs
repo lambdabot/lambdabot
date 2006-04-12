@@ -7,10 +7,7 @@ import Plugin
 import qualified IRC
 import qualified Data.Map as M
 
-newtype KarmaModule = KarmaModule ()
-
-theModule :: MODULE
-theModule = MODULE $ KarmaModule ()
+PLUGIN Karma
 
 type KarmaState = M.Map String Integer
 type Karma m a = ModuleT KarmaState m a

@@ -11,10 +11,7 @@ module Plugin.Hoogle (theModule) where
 
 import Plugin
 
-newtype HoogleModule = HoogleModule ()
-
-theModule :: MODULE
-theModule = MODULE $ HoogleModule ()
+PLUGIN Hoogle
 
 type HoogleState = [String]
 

@@ -9,22 +9,19 @@ module Plugin.Code where
 
 import Plugin
 
-newtype CodeModule = CodeModule ()
-
-theModule :: MODULE
-theModule = MODULE $ CodeModule ()
+PLUGIN Code
 
 instance Module CodeModule [FilePath] where
 
-  moduleDefState _ = io $ getSourceFiles $ 
+  moduleDefState _ = io $ getSourceFiles $
         fptoolsPath config </> "libraries" </> "base"
 
   moduleHelp _ _ = "code. Print random line of code from $fptools"
   moduleCmds   _ = ["code"]
 
   process_ _ "code" _ = do
-        fs   <- readMS
-        (file,line) <- liftIO $ do 
+        fs <- readMS
+        (file,line) <- liftIO $ do
                     f    <- stdGetRandItem fs
                     h    <- openFile f ReadMode
                     s    <- hGetContents h

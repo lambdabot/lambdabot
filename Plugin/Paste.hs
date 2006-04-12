@@ -6,10 +6,7 @@ module Plugin.Paste (theModule) where
 import Plugin
 import Control.Concurrent
 
-newtype PasteModule = PasteModule ()
-
-theModule :: MODULE
-theModule = MODULE $ PasteModule ()
+PLUGIN Paste
 
 announceTarget :: String
 announceTarget = "#haskell" -- hmm :/

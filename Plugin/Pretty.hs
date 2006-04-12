@@ -21,10 +21,7 @@ import Language.Haskell.Parser
 import Language.Haskell.Syntax hiding (Module)
 import Language.Haskell.Pretty
 
-newtype PrettyModule = PrettyModule ()
-
-theModule :: MODULE
-theModule = MODULE $ PrettyModule ()
+PLUGIN Pretty
 
 instance Module PrettyModule (String -> IO String) where
     moduleCmds _   = ["pretty"]

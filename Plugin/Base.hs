@@ -22,16 +22,13 @@ commands  = ["@","?"]
 evals  :: [String]
 evals   = [">"]
 
-newtype BaseModule = BaseModule ()
-
-theModule :: MODULE
-theModule = MODULE $ BaseModule ()
+PLUGIN Base
 
 type BaseState = GlobalPrivate () ()
 
 instance Module BaseModule BaseState where
     moduleDefState  _ = return $ mkGlobalPrivate 20 ()
-    moduleInit _ = do 
+    moduleInit _ = do
              ircSignalConnect "PING"    doPING
              ircSignalConnect "NOTICE"  doNOTICE
              ircSignalConnect "PART"    doPART
@@ -296,6 +293,7 @@ doPRIVMSG' myname msg
                         if not ok
                           then ircPrivmsg towhere $ Just "Not enough privileges"
                           else handleIrc
+                            -- TODO
                             (ircPrivmsg towhere . Just .((?name++" module failed: ")++))
 
                             -- Two-level function dispatch.
