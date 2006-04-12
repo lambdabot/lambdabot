@@ -123,19 +123,19 @@ instance Show ChanName where
 mkCN :: String -> ChanName
 mkCN = ChanName . map toLower
 
+------------------------------------------------------------------------
+-- The signal story.
+
 -- Man, I hate dynamics
 newtype SignalException = SignalException Signal deriving Typeable
 
-------------------------------------------------------------------------
-
 withHandler :: (MonadIO m,MonadError e m) => Signal -> Handler -> m () -> m ()
-
 #ifdef mingw32_HOST_OS
 withHandler s h m = return ()
 #else
 withHandler s h m
-  = bracketError (io $ installHandler s h Nothing)
-                 (\oldh -> io $ installHandler s oldh Nothing)
+  = bracketError (io (installHandler s h Nothing))
+                 (io . flip (installHandler s) Nothing)
                  (const m)
 #endif
 
@@ -144,19 +144,23 @@ withHandlerList :: (MonadError e m,MonadIO m)
                 -> (Signal -> Handler)
                 -> m ()
                 -> m ()
-withHandlerList sl h m = foldr (\s -> withHandler s (h s)) m sl
+withHandlerList sl h m = foldr (withHandler `ap` h) m sl
 
+--
 -- be careful adding signals, some signals can't be caught and installHandler
 -- just raises an exception if you try
+--
 ircSignalsToCatch :: [Signal]
 ircSignalsToCatch = [
 #ifndef mingw32_HOST_OS
-                     busError,
-                     segmentationViolation,
-                     keyboardSignal,softwareTermination,
-                     keyboardTermination,lostConnection
+    busError,
+    segmentationViolation,
+    keyboardSignal,
+    softwareTermination,
+    keyboardTermination,
+    lostConnection
 #endif
-                     ]
+    ]
 
 ircSignalMessage :: Signal -> [Char]
 ircSignalMessage s
@@ -168,8 +172,8 @@ ircSignalMessage s
    | s==keyboardTermination     = "killed by SIGQUIT"
    | s==lostConnection          = "killed by SIGHUP"
 #endif
- -- this case shouldn't happen if the list of messages is kept up to date
- -- with the list of signals caught
+-- this case shouldn't happen if the list of messages is kept up to date
+-- with the list of signals caught
    | otherwise                  = "killed by unknown signal"
 
 ircSignalHandler :: ThreadId -> Signal -> Handler
@@ -213,7 +217,7 @@ mapLB f = LB . mapReaderT f . runLB -- lbIO (\conv -> f (conv lb))
 -- lbIO return :: LB (LB a -> IO a)
 -- CPS to work around predicativiy of haskell's type system.
 lbIO :: ((forall a. LB a -> IO a) -> IO b) -> LB b
-lbIO k = LB $ ReaderT $ \r -> k (\(LB m) -> m `runReaderT` r)
+lbIO k = LB . ReaderT $ \r -> k (\(LB m) -> m `runReaderT` r)
 
 -- All of IRCErrorT's (RIP) functionality can be shrunk down to that.
 instance MonadError IRCError LB where
@@ -282,9 +286,7 @@ ircSignOn nick ircname = do
       Just passwd -> ircPrivmsg "nickserv" $ Just $ "identify " ++ passwd
 
 ircGetChannels :: LB [String]
-ircGetChannels = do
-    chans <- gets ircChannels
-    return $ map getCN (M.keys chans)
+ircGetChannels = (map getCN . M.keys) `fmap` gets ircChannels
 
 -- quit and reconnect wait 1s after sending a QUIT to give the connection
 -- a chance to close gracefully (and interrupt the wait with an exception)
@@ -471,11 +473,10 @@ runIrc' mode loop = do
                     }
 
         finallyError
-           -- identify
            (localLB (Just chans) $ catchSignals $ loop >> ircQuit "terminated")
-           (io $ do killThread threadr
-                    killThread threadw
-                    when (mode == Online) $ hClose hin)
+
+           -- threads blocked on foreign calls ignore killThread.
+           (io $ when (mode == Online) $ hClose hin)
 
     reconn <- gets ircStayConnected
     if reconn then runIrc' mode loop else exitModules
@@ -513,13 +514,9 @@ runIrc' mode loop = do
 
 -- Online reader loop, the mvars are unused
 readerLoop :: ThreadId -> Pipe -> Pipe -> Handle -> MVar () -> MVar () -> IO ()
-readerLoop threadmain chanr chanw h _ _ = do
+readerLoop _threadmain chanr chanw h _ _ = do
     io (putStrLn "Running reader loop...")
-    exc <- try readerLoop'
-    case exc of
-        Left (AsyncException ThreadKilled) -> return ()
-        Left err                           -> throwTo threadmain err
-        Right _                            -> return ()
+    readerLoop'
   where
     readerLoop' = do
         line <- hGetLine h
@@ -536,19 +533,14 @@ readerLoop threadmain chanr chanw h _ _ = do
 -- Implements flood control: RFC 2813, section 5.8
 --
 writerLoop :: ThreadId -> Pipe -> Handle -> MVar () -> MVar () -> IO ()
-writerLoop threadmain chanw h _ _ = do
+writerLoop _threadmain chanw h _ _ = do
     sem1 <- newQSem 0
     sem2 <- newQSem 5
     forkIO $ sequence_ . repeat $ do
            waitQSem sem1
            threadDelay 2000000
            signalQSem sem2
-    exc <- try $ writerLoop' (sem1,sem2)
-    case exc of
-           Left (AsyncException ThreadKilled)
-             -> try (hPutStr h "QUIT : died unexpectedly\r") >> return ()
-           Left e  -> throwTo threadmain e
-           Right _ -> return ()
+    writerLoop' (sem1,sem2)
   where
     writerLoop' sems@(sem1,sem2) = do
            mmsg <- readChan chanw
@@ -576,12 +568,7 @@ writerLoop threadmain chanw h _ _ = do
 --
 offlineReaderLoop :: ThreadId -> Pipe -> Pipe -> Handle
                   -> MVar () -> MVar () -> IO ()
-offlineReaderLoop threadmain chanr _chanw _h syncR syncW = do
-    exc <- try readerLoop'
-    case exc of
-        Right _                            -> return ()
-        Left (AsyncException ThreadKilled) -> error "quit"
-        Left e                             -> throwTo threadmain e
+offlineReaderLoop _threadmain chanr _chanw _h syncR syncW = readerLoop'
   where
     readerLoop' = do
         takeMVar syncR  -- wait till writer lets us proceed
@@ -610,12 +597,7 @@ offlineReaderLoop threadmain chanr _chanw _h syncR syncW = do
 -- Offline writer. Print to stdout
 --
 offlineWriterLoop :: ThreadId -> Pipe -> Handle -> MVar () -> MVar () -> IO ()
-offlineWriterLoop threadmain chanw h syncR syncW = do
-    exc <- try writerLoop'
-    case exc of
-        Right _                            -> return ()
-        Left (AsyncException ThreadKilled) -> return () -- silently quit
-        Left e                             -> throwTo threadmain e
+offlineWriterLoop _threadmain chanw h syncR syncW = writerLoop'
   where
     writerLoop' = do
 
