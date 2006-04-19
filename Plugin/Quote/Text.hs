@@ -8,6 +8,7 @@ palomer :: [String]
 palomer =
     ["blargh!"
     ,"hrmph"
+    ,"They're telling you lies!"
     ]
 
 -- | Some pirate quotes
