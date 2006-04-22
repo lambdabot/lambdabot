@@ -9,6 +9,7 @@ palomer =
     ["blargh!"
     ,"hrmph"
     ,"They're telling you lies!"
+    ,"Scalliwags!"
     ]
 
 -- | Some pirate quotes
