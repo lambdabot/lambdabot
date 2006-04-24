@@ -17,7 +17,7 @@ import System.Random
 import System.Exit              (exitWith, ExitCode(ExitSuccess))
 import System.IO                (getContents, putStrLn)
 import System.Posix.Resource    (setResourceLimit,
-                                 Resource(ResourceCPUTime), 
+                                 Resource(ResourceCPUTime),
                                  ResourceLimits(ResourceLimits),
                                  ResourceLimit(ResourceLimit))
 
@@ -25,7 +25,7 @@ import qualified Control.Exception
 
 rlimit = ResourceLimit 3
 
-context = prehier ++ datas ++ qualifieds ++ controls ++ other ++ template
+context = prehier ++ datas ++ qualifieds ++ controls ++ other ++ template ++ extras
 
 other = ["Text.Printf"]
 
@@ -45,11 +45,14 @@ datas   = map ("Data." ++) [
 controls = map ("Control." ++) ["Monad", "Monad.State", "Monad.Reader", "Monad.Fix", "Arrow"]
 
 --
--- experiment. see if TH is safe with runIO and friends hidden.
+-- See if TH is safe with runIO and friends hidden.
 --
--- but do we need -package template-haskell?
+-- Be very careful here. The semantics of what is safe and unsafe is a
+-- bit blurry. It depends on what GHC allows.
 --
-template = ["Language.Haskell.TH hiding (runIO)"]
+template = ["Language.Haskell.TH hiding (runIO,reify)"]
+
+extras = ["Eval"]
 
 main = do
     setResourceLimit ResourceCPUTime (ResourceLimits rlimit rlimit)
