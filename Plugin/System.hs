@@ -58,9 +58,10 @@ doSystem msg target cmd rest = get >>= \s -> case cmd of
 
   ------------------------------------------------------------------------
 
+  --TODO error handling
   "join"  -> send_ (IRC.join rest) >> return []        -- system commands
-  "leave" -> send_ (IRC.part rest) >> return []     
-  "part"  -> send_ (IRC.part rest) >> return []     
+  "leave" -> send_ (IRC.part rest) >> return []
+  "part"  -> send_ (IRC.part rest) >> return []
 
    -- writes to another location:
   "msg"   -> ircPrivmsg tgt (Just txt') >> return []

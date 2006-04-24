@@ -22,15 +22,18 @@ type Where m a          = ModuleT WhereState m a
 
 instance Module WhereModule WhereState where
 
-  moduleCmds _ = ["where", "what", "where+" ]
+  moduleCmds _ = ["where", "url", "what", "where+" ]
   moduleHelp _ s = case s of
     "where"    -> "where <key>. Return element associated with key"
+    "what"     -> "what <key>. Return element associated with key"
+    "url"      -> "url <key>. Return element associated with key"
+
     "where+"   -> "where+ <key> <elem>. Define an association"
 
   moduleDefState  _ = return M.empty
   moduleSerialize _ = Just mapPackedSerial
 
-  process_ _ cmd rest = list $ withMS $ \factFM writer -> 
+  process_ _ cmd rest = list $ withMS $ \factFM writer ->
         case words rest of
             []         -> return "@where <key>, return element associated with key"
             (fact:dat) -> processCommand factFM writer
@@ -44,6 +47,7 @@ processCommand :: WhereState -> WhereWriter
 processCommand factFM writer fact cmd dat = case cmd of
         "where"     -> return $ getWhere factFM fact
         "what"      -> return $ getWhere factFM fact -- an alias
+        "url"       -> return $ getWhere factFM fact -- an alias
         "where+"    -> updateWhere True factFM writer fact dat
         _           -> return "Unknown command."
 

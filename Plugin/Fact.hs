@@ -42,8 +42,8 @@ instance Module FactModule FactState where
         result <- withMS $ \factFM writer -> case words rest of
             []         -> return "I can not handle empty facts."
             (fact:dat) -> processCommand factFM writer
-                                (P.pack $ lowerCaseString fact) 
-                                cmd 
+                                (P.pack $ lowerCaseString fact)
+                                cmd
                                 (P.pack $ unwords dat)
         return [result]
 
@@ -52,7 +52,7 @@ instance Module FactModule FactState where
 processCommand :: FactState -> FactWriter
                -> P.FastString -> String -> P.FastString -> Fact LB String
 processCommand factFM writer fact cmd dat = case cmd of
-        "fact"        -> return $ getFact factFM fact 
+        "fact"        -> return $ getFact factFM fact
         "fact-set"    -> updateFact True factFM writer fact dat
         "fact-update" -> updateFact False factFM writer fact dat
         "fact-cons"   -> alterFact ((dat `P.append` (P.pack " ")) `P.append`) factFM writer fact
@@ -66,7 +66,7 @@ updateFact guarded factFM writer fact dat =
         then return "Fact already exists, not updating"
         else writer ( M.insert fact dat factFM ) >> return "Fact recorded."
 
-alterFact :: (P.FastString -> P.FastString) 
+alterFact :: (P.FastString -> P.FastString)
           -> FactState -> FactWriter -> P.FastString -> Fact LB String
 alterFact f factFM writer fact =
     case M.lookup fact factFM of
