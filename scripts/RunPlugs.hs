@@ -7,7 +7,7 @@
 -- | Runplugs: use hs-plugins to run a Haskell expression under
 -- controlled conditions.
 --
-import System.Eval.Haskell             (unsafeEval)
+import System.Eval.Haskell      (unsafeEval_)
 
 import Data.Char                (chr)
 import Data.Maybe               (isJust, fromJust)
@@ -25,7 +25,7 @@ import qualified Control.Exception
 
 rlimit = ResourceLimit 3
 
-context = prehier ++ datas ++ qualifieds ++ controls ++ other
+context = prehier ++ datas ++ qualifieds ++ controls ++ other ++ template
 
 other = ["Text.Printf"]
 
@@ -44,19 +44,28 @@ datas   = map ("Data." ++) [
 
 controls = map ("Control." ++) ["Monad", "Monad.State", "Monad.Reader", "Monad.Fix", "Arrow"]
 
+--
+-- experiment. see if TH is safe with runIO and friends hidden.
+--
+-- but do we need -package template-haskell?
+--
+template = ["Language.Haskell.TH hiding (runIO)"]
+
 main = do
     setResourceLimit ResourceCPUTime (ResourceLimits rlimit rlimit)
     s <- getLine
     when (not . null $ s) $ do
         x <- sequence (take 3 (repeat $ getStdRandom (randomR (97,122)) >>= return . chr))
-        s <- unsafeEval ("let { "++x++
+        s <- unsafeEval_ ("let { "++x++
                          " = \n# 1 \"<irc>\"\n"++s++
                          "\n} in take 2048 (show "++x++
-                         ")") context
-        when (isJust s) $ Control.Exception.catch 
-                    (putStrLn $ fromJust s)
-                    (\e -> Control.Exception.handle (const $ putStrLn "Exception") $ do
-                                e' <- Control.Exception.evaluate e
-                                putStrLn $ "Exception: " ++ show e')
+                         ")") context ["-fth"] [] []
+        case s of
+            Left  e -> mapM_ putStrLn e
+            Right v -> Control.Exception.catch
+                (putStrLn v)
+                (\e -> Control.Exception.handle (const $ putStrLn "Exception") $ do
+                            e' <- Control.Exception.evaluate e
+                            putStrLn $ "Exception: " ++ show e')
     exitWith ExitSuccess
 
