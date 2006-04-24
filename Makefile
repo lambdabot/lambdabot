@@ -210,8 +210,8 @@ distclean: clean
 	rm -f genmodules Modules.hs Modules.o-boot Modules.*-boot
 
 runplugs: scripts/RunPlugs.hs
-	$(GHC) -O -c scripts/Eval.hs
-	mv scripts/Eval.{o,hi} .	
+	$(GHC) -O -c scripts/ShowQ.hs
+	mv scripts/ShowQ.{o,hi} .	
 	$(GHC) -O -package posix -package plugins -o $@ $<
 
 djinn: scripts/Djinn/Djinn.hs
