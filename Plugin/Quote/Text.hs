@@ -10,6 +10,7 @@ palomer =
     ,"hrmph"
     ,"They're telling you lies!"
     ,"Scalliwags!"
+    ,"learning vim is pointless"
     ]
 
 -- | Some pirate quotes
