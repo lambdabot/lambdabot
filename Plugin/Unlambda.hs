@@ -25,8 +25,8 @@ binary = "./unlambda"
 unlambda :: String -> IO String
 unlambda src = do
     (out,err,_) <- popen binary [] (Just src)
-    let o = unlines . take 20 . lines . cleanit $ out
-        e = unlines . take 20 . lines . cleanit $ err
+    let o = unlines . take 6 . lines . cleanit $ out
+        e = unlines . take 6 . lines . cleanit $ err
     return $ case () of {_
         | null o && null e -> "Done."
         | null o           -> e
