@@ -242,3 +242,16 @@ girl19 =
     ,"LOL"
     ,"I've always found myself unequal to the intellectual pressure of programming"
     ]
+
+--
+-- v used to be a bug in @eval.  See the logs from April 9, 2006.
+--
+notoriousV :: [[Char]]
+notoriousV =
+    [show "\"\\\"\\\\\\\"\\\\\\"
+    ,show "\"\\\"\\\\\\\"\\\\\\\\\\\\\\\"\\\\\\\\\\"
+    ,show "\""
+    ,show "\"#$%&'()*+,\""
+    ,"Exception: <<loop>>"
+    ,"Just 'J'"
+    ]
