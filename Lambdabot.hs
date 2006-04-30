@@ -37,6 +37,7 @@ import qualified Shared as S
 import Lib.Util             (lowerCaseString, addList)
 import Lib.Serial
 
+import Data.List            (isPrefixOf)
 import Data.Map (Map)
 import qualified Data.Map as M hiding (Map)
 
@@ -46,7 +47,7 @@ import Prelude hiding   (mod, catch)
 
 import Network          (withSocketsDo, connectTo, PortID(PortNumber))
 
-import System.IO        (Handle, hClose, stdin, stdout,
+import System.IO        (Handle, hClose, hGetLine, stdin, stdout,
                          hSetBuffering, BufferMode(NoBuffering))
 
 import System.IO.Error  (isEOFError, ioeGetHandle)
@@ -519,14 +520,23 @@ readerLoop _threadmain chanr chanw h _ _ = do
     readerLoop'
   where
     readerLoop' = do
+        line <- hGetLine h
+        let line' = filter (/= '\n') line
+        if pING `isPrefixOf` line'
+            then writeChan chanw (Just $ IRC.mkMessage "PONG" [drop 5 line'])
+            else writeChan chanr (Just $ IRC.decodeMessage line')
+        readerLoop'
+
+    pING = "PING "
+{-
         line <- P.hGetLine h
         let line' = P.filterNotChar '\n' line
         if pING `P.isPrefixOf` line'
             then writeChan chanw (Just $ IRC.mkMessage "PONG" [P.unpack $ P.drop 5 line'])
             else writeChan chanr (Just $ IRC.decodeMessage (P.unpack line'))
         readerLoop'
+-}
 
-    pING = P.packAddress "PING "#
 {-# INLINE readerLoop #-}
 
 --
