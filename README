@@ -1,28 +1,17 @@
 INSTALL:
 
-You'll need GHC >= 6.4.
+You'll need GHC >= 6.4
 
-If your Cabal isn't recent (i.e. it's only 1.0) then bulid a newer
-Cabal (instructions in the Cabal README file), which lives at:
-        $ darcs get http://cvs.haskell.org/darcs/cabal
-
-Build the FastPackedString library:
-        $ darcs get --partial http://www.cse.unsw.edu.au/~dons/code/fps
-        $ cd fps
-        $ ln -s fps.cabal.no-mmap fps.cabal
-        $ runhaskell Setup.hs configure --prefix=/home/dons
-        $ runhaskell Setup.hs build
-        $ runhaskell Setup.hs install
+Build the Data.ByteString library at http://www.cse.unsw.edu.au/~dons,
+version 0.4 and later are ok.
 
 And then build lambdabot:
-        $ cd ..
-        $ darcs get --partial http://www.cse.unsw.edu.au/~dons/code/lambdabot
-        $ cd lambdabot/
-        $ autoconf
-        $ ./configure
-        -- edit Config.hs to your requirements
-        $ make          # you could try -j2
-        $ ./lambdabot
+    $ cd lambdabot/
+    $ autoconf
+    $ ./configure
+    -- edit Config.hs to your requirements
+    $ make
+    $ ./lambdabot
 
 Optionally, for the Haskell eval plugin to work, you need to also
 install hs-plugins: http://www.cse.unsw.edu.au/~dons/hs-plugins
