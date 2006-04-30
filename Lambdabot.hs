@@ -40,13 +40,13 @@ import Lib.Serial
 import Data.Map (Map)
 import qualified Data.Map as M hiding (Map)
 
-import qualified Data.ByteString as P
+import qualified Data.ByteString.Char8 as P
 
 import Prelude hiding   (mod, catch)
 
 import Network          (withSocketsDo, connectTo, PortID(PortNumber))
 
-import System.IO        (Handle, hGetLine, hPutStr, hClose, stdin, stdout,
+import System.IO        (Handle, hClose, stdin, stdout,
                          hSetBuffering, BufferMode(NoBuffering))
 
 import System.IO.Error  (isEOFError, ioeGetHandle)
@@ -519,12 +519,14 @@ readerLoop _threadmain chanr chanw h _ _ = do
     readerLoop'
   where
     readerLoop' = do
-        line <- hGetLine h
-        let line' = [ c | c <- line, c /= '\n', c /= '\r' ]
-        case line' of
-            ('P':'I':'N':'G':' ':rest) -> writeChan chanw (Just $ IRC.mkMessage "PONG" [rest])
-            _                          -> writeChan chanr (Just $ IRC.decodeMessage line')
+        line <- P.hGetLine h
+        let line' = P.filterNotChar '\n' line
+        if pING `P.isPrefixOf` line'
+            then writeChan chanw (Just $ IRC.mkMessage "PONG" [P.unpack $ P.drop 5 line'])
+            else writeChan chanr (Just $ IRC.decodeMessage (P.unpack line'))
         readerLoop'
+
+    pING = P.packAddress "PING "#
 {-# INLINE readerLoop #-}
 
 --
@@ -547,8 +549,7 @@ writerLoop _threadmain chanw h _ _ = do
            waitQSem sem2
            case mmsg of
             Nothing  -> return ()
-            Just msg -> do
-               hPutStr h $ IRC.encodeMessage msg "\r"
+            Just msg -> P.hPut h $ P.pack $ IRC.encodeMessage msg "\r"
            signalQSem sem1
            writerLoop' sems
 {-# INLINE writerLoop #-}
@@ -611,7 +612,7 @@ offlineWriterLoop _threadmain chanw h syncR syncW = writerLoop'
                     let str = case (tail . IRC.msgParams) msg of
                                 []    -> []
                                 (x:_) -> tail x
-                    hPutStr h (str ++ "\n")     -- write stdout
+                    P.hPut h (P.pack $ str ++ "\n")     -- write stdout
             threadDelay 25 -- just for fun.
             b <- isEmptyChan chanw
             when (not b) loop
