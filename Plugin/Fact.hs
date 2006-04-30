@@ -12,13 +12,13 @@ module Plugin.Fact (theModule) where
 
 import Plugin
 import qualified Data.Map as M
-import qualified Data.FastPackedString as P
+import qualified Data.ByteString.Char8 as P
 
 ------------------------------------------------------------------------
 
 PLUGIN Fact
 
-type FactState  = M.Map P.FastString P.FastString
+type FactState  = M.Map P.ByteString P.ByteString
 type FactWriter = FactState -> LB ()
 type Fact m a   = ModuleT FactState m a
 
@@ -50,7 +50,7 @@ instance Module FactModule FactState where
 ------------------------------------------------------------------------
 
 processCommand :: FactState -> FactWriter
-               -> P.FastString -> String -> P.FastString -> Fact LB String
+               -> P.ByteString -> String -> P.ByteString -> Fact LB String
 processCommand factFM writer fact cmd dat = case cmd of
         "fact"        -> return $ getFact factFM fact
         "fact-set"    -> updateFact True factFM writer fact dat
@@ -60,21 +60,21 @@ processCommand factFM writer fact cmd dat = case cmd of
         "fact-delete" -> writer ( M.delete fact factFM ) >> return "Fact deleted."
         _ -> return "Unknown command."
 
-updateFact :: Bool -> FactState -> FactWriter -> P.FastString -> P.FastString -> Fact LB String
+updateFact :: Bool -> FactState -> FactWriter -> P.ByteString -> P.ByteString -> Fact LB String
 updateFact guarded factFM writer fact dat =
     if guarded && M.member fact factFM
         then return "Fact already exists, not updating"
         else writer ( M.insert fact dat factFM ) >> return "Fact recorded."
 
-alterFact :: (P.FastString -> P.FastString)
-          -> FactState -> FactWriter -> P.FastString -> Fact LB String
+alterFact :: (P.ByteString -> P.ByteString)
+          -> FactState -> FactWriter -> P.ByteString -> Fact LB String
 alterFact f factFM writer fact =
     case M.lookup fact factFM of
         Nothing -> return "A fact must exist to alter it"
         Just x  -> do writer $ M.insert fact (f x) factFM
                       return "Fact altered."
 
-getFact :: M.Map P.FastString P.FastString -> P.FastString -> String
+getFact :: M.Map P.ByteString P.ByteString -> P.ByteString -> String
 getFact fm fact = case M.lookup fact fm of
         Nothing -> "I know nothing about " ++ P.unpack fact
         Just x  -> P.unpack fact ++ ": " ++ P.unpack x

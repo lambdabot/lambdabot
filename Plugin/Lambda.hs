@@ -11,7 +11,7 @@ import Lib.Util (mapMaybeMap)
 
 import Data.Dynamic                     (Dynamic)
 
-import qualified Data.FastPackedString as P
+import qualified Data.ByteString.Char8 as P
 
 PLUGIN Eval
 

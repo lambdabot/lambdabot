@@ -29,7 +29,7 @@ import System.IO as IO  (Handle, hPutChar, hGetChar)
 import GHC.IOBase       (IO(..))
 import GHC.Exts
 
-import qualified Data.FastPackedString as P (hGet,FastString(..),hPut)
+import qualified Data.ByteString as P (hGet,ByteString(..),hPut)
 
 ------------------------------------------------------------------------
 
@@ -236,7 +236,7 @@ instance Binary a => Binary (Maybe a) where
                             _ -> do x <- get bh; return (Just x)
 
 -- Instances for FastPackedStrings
-instance Binary P.FastString where
+instance Binary P.ByteString where
     put_ bh@(BinIO ix_r h) ps@(P.PS _ptr _s l) = do
             put_ bh l   -- size
             ix <- readFastMutInt ix_r
@@ -247,7 +247,7 @@ instance Binary P.FastString where
     get bh@(BinIO ix_r h) = do
             l  <- get bh
             ix <- readFastMutInt ix_r
-            ps <- {-#SCC "Binary.FastString.get" #-}P.hGet h l
+            ps <- {-#SCC "Binary.ByteString.get" #-}P.hGet h l
             writeFastMutInt ix_r (ix+l)
             return $! ps
 

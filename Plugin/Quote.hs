@@ -9,11 +9,11 @@ import Plugin.Quote.Text
 import Plugin
 
 import qualified Data.Map as M
-import qualified Data.FastPackedString as P
+import qualified Data.ByteString.Char8 as P
 
 PLUGIN Quote
 
-type Quotes = M.Map P.FastString [P.FastString]
+type Quotes = M.Map P.ByteString [P.ByteString]
 
 instance Module QuoteModule Quotes where
     moduleCmds           _ = ["quote", "remember", "ghc", "fortune"
@@ -85,7 +85,7 @@ runQuote name' = do
             qs' = M.lookup pnm fm
 
         (nm,qs) <- if not (P.null pnm)
-                   then return (pnm,qs') -- (FastString, Maybe [FastString])
+                   then return (pnm,qs') -- (ByteString, Maybe [ByteString])
                    else do (nm',rs') <- io $ randomElem (M.toList fm) -- random person
                            return (nm', Just rs')
         case qs of

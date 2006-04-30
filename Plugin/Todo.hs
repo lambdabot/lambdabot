@@ -7,12 +7,12 @@ module Plugin.Todo (theModule) where
 
 import Plugin
 import qualified IRC
-import qualified Data.FastPackedString as P
+import qualified Data.ByteString.Char8 as P
 
 PLUGIN Todo
 
 -- A list of key/elem pairs with an ordering determined by its position in the list
-type TodoState = [(P.FastString, P.FastString)]
+type TodoState = [(P.ByteString, P.ByteString)]
 
 instance Module TodoModule TodoState where
     moduleCmds  _ = ["todo", "todo-add"]
@@ -41,7 +41,7 @@ getTodo todoList [] = return [formatTodo todoList]
 getTodo _ _         = error "@todo has no args, try @todo-add or @list todo"
  
 -- | Pretty print todo list
-formatTodo :: [(P.FastString, P.FastString)] -> String
+formatTodo :: [(P.ByteString, P.ByteString)] -> String
 formatTodo [] = "Nothing to do!"
 formatTodo todoList =
     unlines $ map (\(n::Int, (idea, nick)) -> concat $ 

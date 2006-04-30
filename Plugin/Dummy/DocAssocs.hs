@@ -2,46 +2,46 @@
 module Plugin.Dummy.DocAssocs (docAssocs) where
 
 import qualified Data.Map as M
-import qualified Data.FastPackedString as P
+import qualified Data.ByteString as P
 
 -- pack all these strings
 
-base :: P.FastString
+base :: P.ByteString
 base = P.unsafePackAddress 4 "base"#
-stm :: P.FastString
+stm :: P.ByteString
 stm  = P.unsafePackAddress 3 "stm"#
-mtl :: P.FastString
+mtl :: P.ByteString
 mtl  = P.unsafePackAddress 3 "mtl"#
-fgl :: P.FastString
+fgl :: P.ByteString
 fgl  = P.unsafePackAddress 3 "fgl"#
-qc  :: P.FastString
+qc  :: P.ByteString
 qc   = P.unsafePackAddress 10 "QuickCheck"#
-hunit  :: P.FastString
+hunit  :: P.ByteString
 hunit = P.unsafePackAddress 5 "HUnit"#
-parsec  :: P.FastString
+parsec  :: P.ByteString
 parsec = P.unsafePackAddress 6 "parsec"#
-unix  :: P.FastString
+unix  :: P.ByteString
 unix   = P.unsafePackAddress 4 "unix"#
-readline :: P.FastString
+readline :: P.ByteString
 readline = P.unsafePackAddress 8 "readline"#
-network :: P.FastString
+network :: P.ByteString
 network  = P.unsafePackAddress 7 "network"#
-th :: P.FastString
+th :: P.ByteString
 th       = P.unsafePackAddress 16 "template-haskell"#
-hs :: P.FastString
+hs :: P.ByteString
 hs       = P.unsafePackAddress 11 "haskell-src"#
-cabal :: P.FastString
+cabal :: P.ByteString
 cabal    = P.unsafePackAddress 5 "Cabal"#
-hgl :: P.FastString
+hgl :: P.ByteString
 hgl      = P.unsafePackAddress 3 "HGL"#
-glut :: P.FastString
+glut :: P.ByteString
 glut     = P.unsafePackAddress 4 "GLUT"#
-x11 :: P.FastString
+x11 :: P.ByteString
 x11      = P.unsafePackAddress 3 "X11"#
-opengl :: P.FastString
+opengl :: P.ByteString
 opengl   = P.unsafePackAddress 6 "OpenGL"#
 
-docAssocs :: M.Map P.FastString P.FastString
+docAssocs :: M.Map P.ByteString P.ByteString
 docAssocs = {-# SCC "Dummy.DocAssocs" #-} M.fromList [
   (P.packAddress "Control.Arrow"#, base),
   (P.packAddress "Control.Concurrent"#, base),

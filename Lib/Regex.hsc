@@ -23,7 +23,7 @@ module Lib.Regex (
     Regex,      -- abstract
 
     -- * Compiling a regular expression
-    regcomp,    -- :: FastString -> Int -> IO Regex
+    regcomp,    -- :: ByteString -> Int -> IO Regex
 
     -- ** Flags for regcomp
     regExtended,    -- (flag to regcomp) use extended regex syntax
@@ -47,7 +47,7 @@ import Foreign.ForeignPtr
 import Foreign
 import System.IO.Unsafe     (unsafePerformIO)
 
-import qualified Data.FastPackedString as P
+import qualified Data.ByteString as P
 
 type CRegex = ()
 
@@ -57,7 +57,7 @@ newtype Regex = Regex (ForeignPtr CRegex)
 -- ---------------------------------------------------------------------
 -- | Compiles a regular expression
 --
-regcomp :: P.FastString    -- ^ The regular expression to compile
+regcomp :: P.ByteString    -- ^ The regular expression to compile
         -> Int        -- ^ Flags (summed together)
         -> IO Regex   -- ^ Returns: the compiled regular expression
 

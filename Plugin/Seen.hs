@@ -15,7 +15,7 @@ import ErrorUtils          (tryError)
 import qualified IRC
 
 import qualified Data.Map as M
-import qualified Data.FastPackedString as P
+import qualified Data.ByteString.Char8 as P
 
 import System.Directory
 
@@ -28,10 +28,10 @@ PLUGIN Seen
 -- Try using packed strings?
 
 -- | The type of channels
-type Channel = P.FastString
+type Channel = P.ByteString
 
 -- | The type of nicknames
-type Nick = P.FastString
+type Nick = P.ByteString
 
 -- | We last heard the user speak at ClockTime; since then we have missed
 --   TimeDiff of him because we were absent.

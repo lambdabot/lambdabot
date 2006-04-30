@@ -6,11 +6,11 @@ module Plugin.Haddock (theModule) where
 import Plugin
 
 import qualified Data.Map as M
-import qualified Data.FastPackedString as P
+import qualified Data.ByteString.Char8 as P
 
 PLUGIN Haddock
 
-type HaddockState = M.Map P.FastString [P.FastString]
+type HaddockState = M.Map P.ByteString [P.ByteString]
 
 instance Module HaddockModule HaddockState where
     moduleCmds      _ = ["index"]

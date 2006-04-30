@@ -8,7 +8,7 @@ module Plugin.Vixen where
 import Plugin.Vixen.VixenState
 import Plugin hiding (Regex, matchRegex)
 import Lib.Regex
-import qualified Data.FastPackedString as P
+import qualified Data.ByteString.Char8 as P
 
 PLUGIN Vixen
 
@@ -27,7 +27,7 @@ vixen :: (String -> WTree) -> String -> IO String
 vixen responder them = do x <- randomWTreeElt (responder them)
                           return (P.unpack x)
 
-randomWTreeElt :: WTree -> IO P.FastString
+randomWTreeElt :: WTree -> IO P.ByteString
 randomWTreeElt (Leaf a)  = return a
 randomWTreeElt (Node ls) = stdGetRandItem ls >>= randomWTreeElt
 

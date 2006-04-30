@@ -32,8 +32,8 @@ import Data.Maybe               (mapMaybe)
 import Data.Map (Map)
 import qualified Data.Map as M
 
-import Data.FastPackedString (FastString)
-import qualified Data.FastPackedString as P
+import qualified Data.ByteString.Char8 as P
+import Data.ByteString.Char8 (ByteString)
 
 ------------------------------------------------------------------------
 
@@ -41,8 +41,8 @@ import qualified Data.FastPackedString as P
 -- elimination for persistent state on a per-module basis.
 --
 data Serial s = Serial {
-        serialize   :: s -> Maybe FastString,
-        deserialize :: FastString -> Maybe s
+        serialize   :: s -> Maybe ByteString,
+        deserialize :: ByteString -> Maybe s
      }
 
 -- | Default `instance' for a Serial
@@ -67,7 +67,7 @@ listSerial = Serial {
         deserialize = Just . mapMaybe (readM . P.unpack) . P.lines
    }
 
-packedListSerial :: Serial [P.FastString]
+packedListSerial :: Serial [P.ByteString]
 packedListSerial = Serial {
         serialize   = Just . P.unlines,
         deserialize = Just . P.lines
@@ -86,14 +86,14 @@ readM s = case [x | (x,t) <- {-# SCC "Serial.readM.reads" #-} reads s    -- bad!
 
 
 class Packable t where
-        readPacked :: FastString -> t
-        showPacked :: t -> FastString
+        readPacked :: ByteString -> t
+        showPacked :: t -> ByteString
 
 -- | An instance for Map Packed [Packed]
-instance Packable (Map FastString [FastString]) where
+instance Packable (Map ByteString [ByteString]) where
         readPacked ps = M.fromList (readKV (P.lines ps))
                 where
-                readKV :: [FastString] -> [(FastString,[FastString])]
+                readKV :: [ByteString] -> [(ByteString,[ByteString])]
                 readKV []       =  []
                 readKV (k:rest) = 
                         let (vs, rest') = break (== P.empty) rest
@@ -102,30 +102,30 @@ instance Packable (Map FastString [FastString]) where
 
         showPacked m = P.unlines . concatMap (\(k,vs) -> k : vs ++ [P.empty]) $ M.toList m
 
-instance Packable (Map FastString FastString) where
+instance Packable (Map ByteString ByteString) where
         readPacked ps = M.fromList (readKV (P.lines ps))
                 where
-                  readKV :: [FastString] -> [(FastString,FastString)]
+                  readKV :: [ByteString] -> [(ByteString,ByteString)]
                   readKV []         = []
                   readKV (k:v:rest) = (k,v) : readKV rest
                   readKV _      = error "Serial.readPacked: parse failed"
 
         showPacked m  = P.unlines . concatMap (\(k,v) -> [k,v]) $ M.toList m
 
-instance Packable ([(FastString,FastString)]) where
+instance Packable ([(ByteString,ByteString)]) where
         readPacked ps = readKV (P.lines ps)
                 where
-                  readKV :: [FastString] -> [(FastString,FastString)]
+                  readKV :: [ByteString] -> [(ByteString,ByteString)]
                   readKV []         = []
                   readKV (k:v:rest) = (k,v) : readKV rest
                   readKV _          = error "Serial.readPacked: parse failed"
 
         showPacked = P.unlines . concatMap (\(k,v) -> [k,v])
 
-instance Packable (M.Map P.FastString (Bool, [(String, Int)])) where
+instance Packable (M.Map P.ByteString (Bool, [(String, Int)])) where
     readPacked = M.fromList . readKV . P.lines
         where
-          readKV :: [P.FastString] -> [(P.FastString,(Bool, [(String, Int)]))]
+          readKV :: [P.ByteString] -> [(P.ByteString,(Bool, [(String, Int)]))]
           readKV []         = []
           readKV (k:v:rest) = (k, (read . P.unpack) v) : readKV rest
           readKV _          = error "Vote.readPacked: parse failed"
@@ -133,15 +133,15 @@ instance Packable (M.Map P.FastString (Bool, [(String, Int)])) where
     showPacked m = P.unlines . concatMap (\(k,v) -> [k,P.pack . show $ v]) $ M.toList m
 
 -- And for packed string maps
-mapPackedSerial :: Serial (Map FastString FastString)
+mapPackedSerial :: Serial (Map ByteString ByteString)
 mapPackedSerial = Serial (Just . showPacked) (Just . readPacked)
 
 -- And for list of packed string maps
-mapListPackedSerial :: Serial (Map FastString [FastString])
+mapListPackedSerial :: Serial (Map ByteString [ByteString])
 mapListPackedSerial = Serial (Just . showPacked) (Just . readPacked)
 
 -- And for association list
-assocListPackedSerial   :: Serial ([(FastString,FastString)])
+assocListPackedSerial   :: Serial ([(ByteString,ByteString)])
 assocListPackedSerial = Serial (Just . showPacked) (Just . readPacked)
 
 ------------------------------------------------------------------------

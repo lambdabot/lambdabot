@@ -11,12 +11,12 @@
 module Plugin.Where (theModule) where
 
 import Plugin
-import qualified Data.FastPackedString as P
+import qualified Data.ByteString.Char8 as P
 import qualified Data.Map as M
 
 PLUGIN Where
 
-type WhereState         = M.Map P.FastString P.FastString
+type WhereState         = M.Map P.ByteString P.ByteString
 type WhereWriter        = WhereState -> LB ()
 type Where m a          = ModuleT WhereState m a
 

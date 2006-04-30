@@ -11,17 +11,17 @@ module Plugin.Vixen.VixenState where
 
 import Lib.Regex
 
-import qualified Data.FastPackedString as P
+import qualified Data.ByteString as P
 import qualified Control.Exception     as C (catch)
 import System.IO.Unsafe (unsafePerformIO)
 
-data WTree = Leaf P.FastString | Node [WTree]
+data WTree = Leaf P.ByteString | Node [WTree]
   deriving Show
 
 type RespChoice = [(Regex, WTree)]
 
 -- wrap mkRegex for better error reporting
-mkRegex :: P.FastString -> Regex
+mkRegex :: P.ByteString -> Regex
 mkRegex x = unsafePerformIO $
     C.catch (regcomp x regExtended) $ \e ->
         error $ "mkRegex failed on input " ++ (show x) ++ "\n" ++ show e

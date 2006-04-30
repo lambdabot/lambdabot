@@ -40,7 +40,7 @@ import Lib.Serial
 import Data.Map (Map)
 import qualified Data.Map as M hiding (Map)
 
-import qualified Data.FastPackedString as P
+import qualified Data.ByteString as P
 
 import Prelude hiding   (mod, catch)
 
@@ -473,13 +473,13 @@ runIrc' mode loop = do
                     }
 
         finallyError
-           (localLB (Just chans) $ catchSignals $ loop >> ircQuit "terminated")
+           (localLB (Just chans) $ catchSignals $ loop >> ircQuit "Terminated")
 
            -- threads blocked on foreign calls ignore killThread.
            (io $ when (mode == Online) $ hClose hin)
 
     reconn <- gets ircStayConnected
-    if reconn then runIrc' mode loop else exitModules
+    if reconn && mode == Online then runIrc' mode loop else exitModules
 
   where
     isEOFon s (IRCRaised (IOException e))
@@ -574,7 +574,7 @@ offlineReaderLoop _threadmain chanr _chanw _h syncR syncW = readerLoop'
         takeMVar syncR  -- wait till writer lets us proceed
         s <- readline "lambdabot> " -- read stdin
         case s of
-            Nothing -> error "EOF"
+            Nothing -> error "<eof>"
             Just x -> let s' = dropWhile isSpace x
                       in if null s' then putMVar syncR () >> readerLoop' else do
                 addHistory s'
@@ -718,8 +718,8 @@ writeGlobalState mod name = case moduleSerialize mod of
         Nothing  -> return ()   -- do not write any state
         Just out -> io $ P.writeFile (toFilename name) out
 
-readFile' :: String -> IO P.FastString
-readFile' = P.mmapFile
+readFile' :: String -> IO P.ByteString
+readFile' = P.readFile
 {-# INLINE readFile' #-}
 
 readGlobalState :: Module m s => m -> String -> IO (Maybe s)

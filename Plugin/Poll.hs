@@ -10,7 +10,7 @@
 module Plugin.Poll (theModule) where
 
 import Plugin hiding (choice)
-import qualified Data.FastPackedString as P
+import qualified Data.ByteString.Char8 as P
 import qualified Data.Map as M
 
 PLUGIN Vote
@@ -34,7 +34,7 @@ voteOnPoll (o,poll) choice =
 
 type Count             = Int
 type Candidate         = String
-type PollName          = P.FastString
+type PollName          = P.ByteString
 type Poll              = (Bool, [(Candidate, Count)])
 type VoteState         = M.Map PollName Poll
 type VoteWriter        = VoteState -> LB ()

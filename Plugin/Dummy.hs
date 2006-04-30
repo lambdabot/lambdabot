@@ -10,7 +10,7 @@ import Plugin.Dummy.DocAssocs (docAssocs)
 import Plugin.Dummy.Moo (cows)
 
 import qualified Data.Map as M
-import qualified Data.FastPackedString as P
+import qualified Data.ByteString.Char8 as P
 
 PLUGIN Dummy
 

@@ -10,7 +10,7 @@ module Plugin.DarcsPatchWatch (theModule) where
 
 import Plugin
 
-import qualified Data.FastPackedString as P
+import qualified Data.ByteString.Char8 as P
 import Prelude hiding ( catch )
 
 import Control.Concurrent
