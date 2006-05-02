@@ -521,7 +521,7 @@ readerLoop _threadmain chanr chanw h _ _ = do
   where
     readerLoop' = do
         line <- hGetLine h
-        let line' = filter (/= '\n') line
+        let line' = filter (\c -> c /= '\n' && c /= '\r') line
         if pING `isPrefixOf` line'
             then writeChan chanw (Just $ IRC.mkMessage "PONG" [drop 5 line'])
             else writeChan chanr (Just $ IRC.decodeMessage line')
