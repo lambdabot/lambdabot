@@ -6,11 +6,14 @@ module Plugin.Quote.Text where
 -- | Some funny palomer-isms
 palomer :: [String]
 palomer =
-    ["blargh!"
-    ,"hrmph"
+    ["Blargh!"
+    ,"Hrmph"
     ,"They're telling you lies!"
     ,"Scalliwags!"
-    ,"learning vim is pointless"
+    ,"Learning vim is pointless"
+    ,"Pfft"
+    ,"Pfft, my type inference algorithm takes hours on a 2 line program"
+    ,"Hrmph, looks like I killed the channel"
     ]
 
 -- | Some pirate quotes
