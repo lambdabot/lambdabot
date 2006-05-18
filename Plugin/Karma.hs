@@ -6,6 +6,7 @@ module Plugin.Karma (theModule) where
 import Plugin
 import qualified IRC
 import qualified Data.Map as M
+import Text.Printf
 
 PLUGIN Karma
 
@@ -14,22 +15,24 @@ type Karma m a = ModuleT KarmaState m a
 
 instance Module KarmaModule KarmaState where
 
-    moduleCmds _ = ["karma", "karma+", "karma-"]
-    moduleHelp _ "karma"  = "karma <nick>. Return a person's karma value"
-    moduleHelp _ "karma+" = "karma+ <nick>. Increment someone's karma"
-    moduleHelp _ "karma-" = "karma- <nick>. Decrement someone's karma"
+    moduleCmds _ = ["karma", "karma+", "karma-", "karma-all"]
+    moduleHelp _ "karma"     = "karma <nick>. Return a person's karma value"
+    moduleHelp _ "karma+"    = "karma+ <nick>. Increment someone's karma"
+    moduleHelp _ "karma-"    = "karma- <nick>. Decrement someone's karma"
+    moduleHelp _ "karma-all" = "karma-all. List all karma"
 
     moduleDefState  _ = return $ M.empty
     moduleSerialize _ = Just mapSerial
 
+    process      _ _ _ "karma-all" _ = listKarma
     process      _ msg _ cmd rest =
         case words rest of
           []       -> tellKarma sender sender
           (nick:_) -> do
               case cmd of
-                 "karma"  -> tellKarma        sender nick
-                 "karma+" -> changeKarma 1    sender nick
-                 "karma-" -> changeKarma (-1) sender nick
+                 "karma"     -> tellKarma        sender nick
+                 "karma+"    -> changeKarma 1    sender nick
+                 "karma-"    -> changeKarma (-1) sender nick
                  _        -> error "KarmaModule: can't happen"
         where sender = IRC.nick msg
 
@@ -44,6 +47,12 @@ tellKarma sender nick = do
     return [concat [if sender == nick then "You have" else nick ++ " has"
                    ," a karma of "
                    ,show karma]]
+
+listKarma :: Karma LB [String]
+listKarma = do
+    ks <- M.toList `fmap` readMS
+    let ks' = sortBy (\(_,e) (_,e') -> e' `compare` e) ks
+    return $ map (\(k,e) -> printf "%-20s %4d" k e :: String) ks'
 
 changeKarma :: Integer -> String -> String -> Karma LB [String]
 changeKarma km sender nick
