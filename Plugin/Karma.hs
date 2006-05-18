@@ -52,7 +52,7 @@ listKarma :: Karma LB [String]
 listKarma = do
     ks <- M.toList `fmap` readMS
     let ks' = sortBy (\(_,e) (_,e') -> e' `compare` e) ks
-    return $ map (\(k,e) -> printf "%-20s %4d" k e :: String) ks'
+    return $ (:[]) . unlines $ map (\(k,e) -> printf " %-20s %4d" k e :: String) ks'
 
 changeKarma :: Integer -> String -> String -> Karma LB [String]
 changeKarma km sender nick
