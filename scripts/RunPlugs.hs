@@ -27,7 +27,7 @@ rlimit = ResourceLimit 3
 
 context = prelude ++ prehier ++ datas ++ qualifieds ++ controls ++ other ++ template ++ extras
 
-prelude = ["qualified Prelude as P"]
+prelude = ["qualified Prelude as P", "Prelude"]
 
 other = ["Text.Printf"]
 
