@@ -59,8 +59,8 @@ main = do
     when (not . null $ s) $ do
         x <- sequence (take 3 (repeat $ getStdRandom (randomR (97,122)) >>= return . chr))
         s <- unsafeEval_ ("let { "++x++
-                         " = \n# 1 \"<irc>\"\n"++s++
-                         "\n} in take 2048 (show "++x++
+                         " = \n# 1 \"<irc>\"\n("++s++
+                         ")\n} in take 2048 (show "++x++
                          ")") context ["-fth"] [] []
         case s of
             Left  e -> mapM_ putStrLn e
