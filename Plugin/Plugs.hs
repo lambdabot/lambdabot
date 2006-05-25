@@ -30,8 +30,8 @@ plugs src = do
         e = unlines . take 3 . lines . expandTab . dropNL . clean_ $ err
     return $ case () of {_
         | null o && null e -> "Terminated\n"
-        | null o           -> e
-        | otherwise        -> o
+        | null o           -> " " ++ e
+        | otherwise        -> " " ++ o
     }
 
 --
