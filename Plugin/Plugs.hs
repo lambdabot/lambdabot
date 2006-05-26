@@ -12,6 +12,7 @@
 module Plugin.Plugs where
 
 import Plugin
+import Lib.Parser
 
 PLUGIN Plugs
 
@@ -25,15 +26,21 @@ binary = "./runplugs"
 
 plugs :: String -> IO String
 plugs src = do
-    (out,err,_) <- popen binary [] (Just src)
-    let o = unlines . take 3 . lines . expandTab . dropWhile (=='\n') . dropNL . clean_ $ out
-        e = unlines . take 3 . lines . expandTab . dropWhile (=='\n') . dropNL . clean_ $ err
-    print (o,e)
-    return $ case () of {_
-        | null o && null e -> "Terminated\n"
-        | null o           -> " " ++ e
-        | otherwise        -> " " ++ o
-    }
+    -- first, verify the source is actually a Haskell 98 expression, to
+    -- avoid code injection bugs.
+    case parseExpr src of
+        ParseFailed _ e -> return $ " " ++ e
+        ParseOk     _   -> do
+            (out,err,_) <- popen binary [] (Just src)
+            let o = unlines . munge $ out
+                e = unlines . munge $ err
+            return $ case () of {_
+                | null o && null e -> "Terminated\n"
+                | null o           -> " " ++ e
+                | otherwise        -> " " ++ o
+            }
+
+            where munge = take 3 . lines . expandTab . dropWhile (=='\n') . dropNL . clean_ 
 
 --
 -- Clean up runplugs' output
