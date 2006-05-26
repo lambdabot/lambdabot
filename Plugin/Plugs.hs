@@ -26,8 +26,9 @@ binary = "./runplugs"
 plugs :: String -> IO String
 plugs src = do
     (out,err,_) <- popen binary [] (Just src)
-    let o = unlines . take 3 . lines . expandTab . dropNL . clean_ $ out
-        e = unlines . take 3 . lines . expandTab . dropNL . clean_ $ err
+    let o = unlines . take 3 . lines . expandTab . dropWhile (=='\n') . dropNL . clean_ $ out
+        e = unlines . take 3 . lines . expandTab . dropWhile (=='\n') . dropNL . clean_ $ err
+    print (o,e)
     return $ case () of {_
         | null o && null e -> "Terminated\n"
         | null o           -> " " ++ e

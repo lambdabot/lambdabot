@@ -19,6 +19,7 @@ palomer =
     ,"Category theory is the Paris Hilton of mathematics"
     ,"That's nuts!"
     ,"Brump!"
+    ,"I think you're all nuts"
     ]
 
 -- | Some pirate quotes
