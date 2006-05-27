@@ -103,7 +103,7 @@
 ("foldr"," \\c n l.if null l then n else c (head l) (foldr c n (tail l))")
 ("foldr1"," \\f l.if null (tail l) then head l else f (head l) (foldr1 f (tail l))")
 ("followLinks"," foldTerm (\\v.readLPRef v `bind` maybe (return (Var v)) followLinks) (\\a ts.sequence ts `bind` \\ts'.return (Term a ts'))")
-("foo"," \"Idag har jag cyklat enhjuling!\"")
+("foo"," 3")
 ("free"," newLPRef Nothing `bind` \\ref. return (Var ref)")
 ("freevars"," type (\\x.[x]) (\\t1 t2.freevars t1 `union` freevars t2) (\\vs t.freevars t `diff` vs)")
 ("from"," enumFrom")

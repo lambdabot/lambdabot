@@ -34,6 +34,8 @@ commentary
 http://www.cse.unsw.edu.au/~chak/haskell/ghc/comm/
 conjure
 http://j.mongers.org/pub/haskell/darcs/conjure/
+conjure-alt
+http://darcs.haskell.org/~lemmih/conjure
 cpphs
 http://www.cs.york.ac.uk/fp/cpphs/
 ctk
@@ -67,7 +69,7 @@ http://www.cse.unsw.edu.au/~chak/haskell/ffi/
 fgl
 http://www.cs.orst.edu/~erwig/fgl/
 filepath
-http://scannedinavian.org/~lemmih/FilePath
+http://darcs.haskell.org/~lemmih/FilePath
 flippi
 http://www.flippac.org/projects/flippi/
 foo
@@ -112,6 +114,8 @@ hacle
 http://www-users.cs.york.ac.uk/~mfn/hacle/
 haddock
 http://www.haskell.org/haddock/
+halfs
+http://www.haskell.org/halfs
 happy
 http://www.haskell.org/happy/
 hare
@@ -156,6 +160,8 @@ haxml
 http://haskell.org/HaXml
 hcar
 http://www.haskell.org/communities/
+hdirect
+http://haskell.org/hdirect/
 helium
 http://www.cs.uu.nl/research/projects/helium/
 hide
@@ -192,12 +198,16 @@ hsp
 http://www.cs.chalmers.se/~d00nibro/hsp
 hsql
 http://htoolkit.sourceforge.net
+hssdl
+http://darcs.haskell.org/~lemmih/hsSDL
 hsx
 http://www.cs.chalmers.se/~d00nibro/haskell-src-exts/
 htf
 http://www.stefanwehr.de/darcs/HTF
 http
 http://www.haskell.org/http/
+http://darcs.haskell.org/~lemmih/filepath
+
 http://homepages.cwi.nl/~ralf/hlist/
 
 http://www.haskell.org/cabal
@@ -222,6 +232,8 @@ jhc
 http://repetae.net/john/computer/jhc/
 joinhs
 http://www.haskell.org/tmrwiki/JoinHs
+jregex
+http://repetae.net/john/computer/haskell/JRegex/
 lambdabot
 http://www.cse.unsw.edu.au/~dons/lambdabot.html
 lambdashell
@@ -256,6 +268,8 @@ nhc98
 http://haskell.org/nhc98
 nymphaea
 http://haskell.galois.com/~paolo/nymphaea
+omegagb
+http://www.mutantlemon.com/omegagb/
 ones
 ones = 1 : ones
 oohaskell
@@ -266,6 +280,8 @@ parsec
 http://www.cs.ruu.nl/~daan/parsec.html
 paste
 http://paste.lisp.org/new/haskell
+pastebin
+http://rafb.net/paste
 phrac
 http://www.cse.unsw.edu.au/~pls/repos/phrac/
 pivotal
@@ -294,6 +310,8 @@ shaskell
 http://davidmercer.nfshost.com/projects/shaskell/shaskell.html
 shellac
 darcs get http://www.eecs.tufts.edu/~rdocki01/shell/
+soc
+http://hackage.haskell.org/trac/summer-of-code/
 soe
 http://haskell.org/soe/
 soegtk
@@ -316,6 +334,8 @@ w3m
 http://w3m.sourceforge.net/
 wash
 http://www.informatik.uni-freiburg.de/~thiemann/haskell/WASH/
+winhaskell
+http://www-users.cs.york.ac.uk/~ndm/projects/winhaskell.php
 winhugs
 http://www.cs.york.ac.uk/~ndm/projects/winhugs.php
 wxhaskell
