@@ -13,6 +13,9 @@ data Config = Config {
         userinfo  :: String,        -- ^ The userinfo string for lambdabot
         host      :: String,        -- ^ Host to join
         port      :: Int,           -- ^ The port number to use on the host
+        verbose   :: Bool,          -- ^ Should lambdabot be verbose?
+        moresize  :: Int,           -- ^ How many lines is output before \@more?
+        textwidth :: Int,           -- ^ How many columns should we use
         autojoin  :: [String],      -- ^ List of channels to autojoin
         admins    :: [String],      -- ^ List of nicknames that are admins
         proxy     :: Maybe ([Char], Integer), -- ^ A proxy given as
@@ -38,13 +41,18 @@ config :: Config
 config = Config {
         name            = "lambdabot",
         userinfo        = "Lambda_Robots:_100%_Loyal",
-        host            = "chat.au.freenode.net",
+        host            = "chat.freenode.net",
 
         port            = 6667,
+        verbose         = True,
+        textwidth       = 350,
+        moresize        = 1,
         proxy           = Just ("www-proxy",3128),
         autojoin        = ["#haskell","#haskell-blah","#flippi"
                  	  ,"#haskell-overflow","#gentoo-haskell"
-			  ,"#haskell.it","#haskell.es","#ScannedInAvian"],
+                 	  ,"#haskell_ru", "#darcs"
+			  ,"#haskell.it","#haskell.se", "#haskell.es","#ScannedInAvian"],
+
 
         admins          = [
                 "Pseudonym",    "shapr", "Heffalump",    "Igloo",  
