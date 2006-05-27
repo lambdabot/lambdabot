@@ -221,7 +221,7 @@ unlambda: scripts/Unlambda.hs
 	$(GHC) -O -package posix -o $@ $<
 
 hoogle:
-	( cd scripts/hoogle && $(MAKE) && mv hoogle_ ../../hoogle && cp hoogle.txt ../.. )
+	( cd scripts/hoogle && $(MAKE) && mv hoogle ../../ && cp hoogle.txt ../.. )
 
 CLEANS+= runplugs djinn unlambda hoogle hoogle.txt dsl
 CLEANS+= Lib/Regex_hsc.c Lib/Regex.hs

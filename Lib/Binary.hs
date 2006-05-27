@@ -29,7 +29,8 @@ import System.IO as IO  (Handle, hPutChar, hGetChar)
 import GHC.IOBase       (IO(..))
 import GHC.Exts
 
-import qualified Data.ByteString as P (hGet,ByteString(..),hPut)
+import qualified Data.ByteString as P (hGet,hPut)
+import qualified Data.ByteString.Base as P (ByteString(..))
 
 ------------------------------------------------------------------------
 

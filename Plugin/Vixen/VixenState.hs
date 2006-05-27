@@ -11,7 +11,7 @@ module Plugin.Vixen.VixenState where
 
 import Lib.Regex
 
-import qualified Data.ByteString as P
+import qualified Data.ByteString.Base as P
 import qualified Control.Exception     as C (catch)
 import System.IO.Unsafe (unsafePerformIO)
 

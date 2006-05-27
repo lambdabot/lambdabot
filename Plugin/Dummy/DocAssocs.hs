@@ -2,7 +2,8 @@
 module Plugin.Dummy.DocAssocs (docAssocs) where
 
 import qualified Data.Map as M
-import qualified Data.ByteString as P
+import qualified Data.ByteString.Base as P
+import qualified Data.ByteString      as P  () -- instances
 
 -- pack all these strings
 
