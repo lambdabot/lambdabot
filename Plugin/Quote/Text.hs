@@ -10,16 +10,17 @@ palomer =
     ,"Hrmph"
     ,"They're telling you lies!"
     ,"Scalliwags!"
-    ,"Learning vim is pointless"
     ,"Pfft"
     ,"Pfft, my type inference algorithm takes hours on a 2 line program"
     ,"Hrmph, looks like I killed the channel"
-    ,"Soylent green is people"
     ,"As someone who's studied GADTs, I've never found a use for them."
     ,"Category theory is the Paris Hilton of mathematics"
     ,"That's nuts!"
     ,"Brump!"
     ,"I think you're all nuts"
+    ,"That's a lie"
+    ,"Learning vim is pointless"
+    ,"I think vim is good for the rubbish bin"
     ]
 
 -- | Some pirate quotes
