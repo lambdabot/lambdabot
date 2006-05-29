@@ -32,15 +32,19 @@ plugs src = do
         ParseFailed _ e -> return $ " " ++ e
         ParseOk     _   -> do
             (out,err,_) <- popen binary [] (Just src)
-            let o = unlines . munge $ out
-                e = unlines . munge $ err
+            let o = munge out
+                e = munge err
             return $ case () of {_
                 | null o && null e -> "Terminated\n"
                 | null o           -> " " ++ e
                 | otherwise        -> " " ++ o
             }
 
-            where munge = take 3 . lines . expandTab . dropWhile (=='\n') . dropNL . clean_ 
+            where lim = 80 -- perhaps change this based on whether we're in
+                           -- a /query (or /msg; whatever) with someone
+                  abbr s | length s > lim = take (lim - 3) s ++ "..."
+                         | otherwise      = s
+                  munge = abbr . expandTab . dropWhile (=='\n') . dropNL . clean_ 
 
 --
 -- Clean up runplugs' output
