@@ -17,8 +17,8 @@ import Lib.Parser
 PLUGIN Plugs
 
 instance Module PlugsModule () where
-    moduleCmds   _ = ["eval"]
-    moduleHelp _ _ = "eval <expr>\nYou have Haskell, 3 seconds and no IO. Go nuts!"
+    moduleCmds   _ = ["run"]
+    moduleHelp _ _ = "run <expr>\nYou have Haskell, 3 seconds and no IO. Go nuts!"
     process_ _ _ s = ios (plugs s)
 
 binary :: String

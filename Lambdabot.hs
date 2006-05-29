@@ -592,8 +592,8 @@ offlineReaderLoop _threadmain chanr _chanw _h syncR syncW = readerLoop'
 
                 let msg = case s' of
                             "quit" -> error "<quit>"
-                            '>':xs -> "@eval " ++ xs
-                            _      -> "@"      ++ dropWhile (== ' ') s'
+                            '>':xs -> "@run " ++ xs
+                            _      -> "@"     ++ dropWhile (== ' ') s'
 
                 msg `seq` return () -- force error, perhaps. I know I'm bad
 

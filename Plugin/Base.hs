@@ -243,10 +243,10 @@ doPRIVMSG' myname msg
     = let (cmd, params) = breakOnGlue " " (dropWhile (==' ') text)
       in doPublicMsg cmd (dropWhile (==' ') params)
 
-  -- special syntax for @eval
+  -- special syntax for @run
   | evals `arePrefixesWithSpaceOf` text
     = let expr = drop 2 text
-      in doPublicMsg "@eval" (dropWhile (==' ') expr)
+      in doPublicMsg "@run" (dropWhile (==' ') expr)
 
   | otherwise = doIGNORE msg
 
@@ -257,11 +257,11 @@ doPRIVMSG' myname msg
     (who, _) = breakOnGlue "!" (msgPrefix msg)
 
     doPersonalMsg s r | commands `arePrefixesOf` s = doMsg (tail s) r who
-                      | s `elem` evals             = doMsg "eval"   r who
+                      | s `elem` evals             = doMsg "run"   r who
                       | otherwise                  = doIGNORE msg
 
     doPublicMsg s r   | commands `arePrefixesOf` s          = doMsg (tail s)        r alltargets
-                      | evals    `arePrefixesWithSpaceOf` s = doMsg "eval" r alltargets
+                      | evals    `arePrefixesWithSpaceOf` s = doMsg "run" r alltargets
                       | otherwise                           = doIGNORE msg
 
     doMsg cmd rest towhere = do
