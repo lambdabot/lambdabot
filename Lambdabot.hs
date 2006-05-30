@@ -32,7 +32,7 @@ module Lambdabot (
 import qualified Config (config, name, admins, host, port)
 import ErrorUtils       (bracketError, tryErrorJust, finallyError, catchErrorJust, tryError)
 import qualified Message as Msg
-import qualified IRC (IrcMessage(..), mkMessage, quit, privmsg, readerLoop, writerLoop)
+import qualified IRC (IrcMessage(..), mkMessage, quit, privmsg, readerLoop, writerLoop, offlineReaderLoop, offlineWriterLoop)
 import qualified Shared as S
 
 import Lib.Util             (lowerCaseString, addList)
@@ -47,7 +47,7 @@ import Prelude hiding   (mod, catch)
 
 import Network          (withSocketsDo, connectTo, PortID(PortNumber))
 
-import System.IO        (Handle, hClose, stdin, stdout,
+import System.IO        (hClose, stdin, stdout,
                          hSetBuffering, BufferMode(NoBuffering))
 
 import System.IO.Error  (isEOFError, ioeGetHandle)
@@ -69,8 +69,6 @@ import Control.Monad.Reader
 import Control.Monad.State
 import Control.Monad.Error (MonadError (..))
 import Control.Monad.Trans      ( liftIO )
-
-import System.Console.Readline  (readline, addHistory)
 
 ------------------------------------------------------------------------
 
@@ -452,7 +450,7 @@ runIrc' mode loop = do
             let portnum  = PortNumber $ fromIntegral (Config.port Config.config)
             s <- io $ connectTo (Config.host Config.config) portnum
             return (s,s,IRC.readerLoop,IRC.writerLoop)
-        Offline -> return (stdin, stdout, offlineReaderLoop, offlineWriterLoop)
+        Offline -> return (stdin, stdout, IRC.offlineReaderLoop, IRC.offlineWriterLoop)
 
     tryErrorJust (isEOFon hin) $ do
         io $ hSetBuffering hout NoBuffering
@@ -504,79 +502,6 @@ runIrc' mode loop = do
             moduleExit mod
             writeGlobalState mod name
 
-------------------------------------------------------------------------
---
--- Lambdabot is asynchronous. We has reader and writer threads, and they
--- don't know about each other.
---
--- However, in Offline mode, we need to keep them in lock step. this
--- complicates things.
---
-
--- 
--- Offline reader and writer loops. A prompt with line editing
--- Takes a string from stdin, wraps it as an irc message, and _blocks_
--- waiting for the writer thread (to keep things in sync).
---
--- We (incorrectly) assume there's at least one write for every read.
--- If a command returns no output (i.e. @more on an empty buffer) then
--- we block in offline mode :(
--- 
--- the mvars are used to keep the normally async threads in step.
---
-offlineReaderLoop :: ThreadId -> Pipe -> Pipe -> Handle
-                  -> MVar () -> MVar () -> IO ()
-offlineReaderLoop _threadmain chanr _chanw _h syncR syncW = readerLoop'
-  where
-    readerLoop' = do
-        takeMVar syncR  -- wait till writer lets us proceed
-        s <- readline "lambdabot> " -- read stdin
-        case s of
-            Nothing -> error "<eof>"
-            Just x -> let s' = dropWhile isSpace x
-                      in if null s' then putMVar syncR () >> readerLoop' else do
-                addHistory s'
-
-                let msg = case s' of
-                            "quit" -> error "<quit>"
-                            '>':xs -> "@run " ++ xs
-                            _      -> "@"     ++ dropWhile (== ' ') s'
-
-                msg `seq` return () -- force error, perhaps. I know I'm bad
-
-                let m  = IRC.IrcMessage { IRC.msgPrefix  = "dons!n=user@null"
-                                        , IRC.msgCommand = "PRIVMSG"
-                                        , IRC.msgParams  = ["#haskell",":" ++ msg ] }
-                writeChan chanr (Just m)
-                putMVar syncW () -- let writer go 
-                readerLoop'
-
---
--- Offline writer. Print to stdout
---
-offlineWriterLoop :: ThreadId -> Pipe -> Handle -> MVar () -> MVar () -> IO ()
-offlineWriterLoop _threadmain chanw h syncR syncW = writerLoop'
-  where
-    writerLoop' = do
-
-        takeMVar syncW -- wait for reader to let us go
-
-        let loop = do
-            mmsg <- readChan chanw
-            case mmsg of
-                Nothing  -> return ()
-                Just msg -> do
-                    let str = case (tail . IRC.msgParams) msg of
-                                []    -> []
-                                (x:_) -> tail x
-                    P.hPut h (P.pack $ str ++ "\n")     -- write stdout
-            threadDelay 25 -- just for fun.
-            b <- isEmptyChan chanw
-            when (not b) loop
-        loop
-
-        putMVar syncR () -- now allow writer to go
-        writerLoop'
 
 ------------------------------------------------------------------------
 

@@ -5,6 +5,8 @@
 module IRC ( IrcMessage(..)
            , readerLoop
            , writerLoop
+           , offlineReaderLoop
+           , offlineWriterLoop
            , privmsg
            , quit
            , mkMessage -- TODO: remove?
@@ -16,10 +18,13 @@ import qualified Lib.Util as Util (concatWith)
 
 import Data.List (isPrefixOf)
 import Data.Char (chr,isSpace)
-import Control.Concurrent (ThreadId, MVar, readChan, writeChan, forkIO, newQSem, waitQSem, signalQSem, threadDelay)
+import Control.Concurrent (ThreadId, MVar, readChan, writeChan, forkIO, newQSem, waitQSem, signalQSem, threadDelay, takeMVar, putMVar, isEmptyChan)
 import Control.Monad.Trans ( MonadIO, liftIO )
+import Control.Monad (when)
 import System.IO (Handle, hGetLine)
 import qualified Data.ByteString.Char8 as P (pack, hPut)
+import System.Console.Readline  (readline, addHistory)
+
 
 -- | An IRC message is a prefix, a command and a list of parameters.
 data IrcMessage
@@ -158,6 +163,14 @@ decodeMessage line =
           | otherwise  = decodeParams' (c:param) params cs
         decodeParams' param params (c:cs) = decodeParams' (c:param) params cs
 
+------------------------------------------------------------------------
+--
+-- Lambdabot is asynchronous. We has reader and writer threads, and they
+-- don't know about each other.
+--
+-- However, in Offline mode, we need to keep them in lock step. this
+-- complicates things.
+--
 -- Online reader loop, the mvars are unused
 readerLoop :: ThreadId -> Pipe IrcMessage -> Pipe IrcMessage -> Handle -> MVar () -> MVar () -> IO ()
 readerLoop _threadmain chanr chanw h _ _ = do
@@ -199,6 +212,72 @@ writerLoop _threadmain chanw h _ _ = do
            signalQSem sem1
            writerLoop' sems
 {-# INLINE writerLoop #-}
+
+
+-- 
+-- Offline reader and writer loops. A prompt with line editing
+-- Takes a string from stdin, wraps it as an irc message, and _blocks_
+-- waiting for the writer thread (to keep things in sync).
+--
+-- We (incorrectly) assume there's at least one write for every read.
+-- If a command returns no output (i.e. @more on an empty buffer) then
+-- we block in offline mode :(
+-- 
+-- the mvars are used to keep the normally async threads in step.
+--
+offlineReaderLoop :: ThreadId -> Pipe IrcMessage -> Pipe IrcMessage -> Handle
+                  -> MVar () -> MVar () -> IO ()
+offlineReaderLoop _threadmain chanr _chanw _h syncR syncW = readerLoop'
+  where
+    readerLoop' = do
+        takeMVar syncR  -- wait till writer lets us proceed
+        s <- readline "lambdabot> " -- read stdin
+        case s of
+            Nothing -> error "<eof>"
+            Just x -> let s' = dropWhile isSpace x
+                      in if null s' then putMVar syncR () >> readerLoop' else do
+                addHistory s'
+
+                let msg = case s' of
+                            "quit" -> error "<quit>"
+                            '>':xs -> "@run " ++ xs
+                            _      -> "@"     ++ dropWhile (== ' ') s'
+
+                msg `seq` return () -- force error, perhaps. I know I'm bad
+
+                let m  = IRC.IrcMessage { IRC.msgPrefix  = "dons!n=user@null"
+                                        , IRC.msgCommand = "PRIVMSG"
+                                        , IRC.msgParams  = ["#haskell",":" ++ msg ] }
+                writeChan chanr (Just m)
+                putMVar syncW () -- let writer go 
+                readerLoop'
+
+--
+-- Offline writer. Print to stdout
+--
+offlineWriterLoop :: ThreadId -> Pipe IrcMessage -> Handle -> MVar () -> MVar () -> IO ()
+offlineWriterLoop _threadmain chanw h syncR syncW = writerLoop'
+  where
+    writerLoop' = do
+
+        takeMVar syncW -- wait for reader to let us go
+
+        let loop = do
+            mmsg <- readChan chanw
+            case mmsg of
+                Nothing  -> return ()
+                Just msg -> do
+                    let str = case (tail . IRC.msgParams) msg of
+                                []    -> []
+                                (x:_) -> tail x
+                    P.hPut h (P.pack $ str ++ "\n")     -- write stdout
+            threadDelay 25 -- just for fun.
+            b <- isEmptyChan chanw
+            when (not b) loop
+        loop
+
+        putMVar syncR () -- now allow writer to go
+        writerLoop'
 
 -- convenience:
 io :: forall a (m :: * -> *). (MonadIO m) => IO a -> m a
