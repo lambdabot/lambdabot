@@ -5,7 +5,7 @@ module Plugin.System (theModule) where
 
 import Plugin
 import Lib.AltTime
-import qualified IRC
+import qualified IRC (Message, join, part)
 import qualified Data.Map as M       (Map,keys,fromList,lookup,union)
 
 import Control.Monad.State      (MonadState(get), gets)

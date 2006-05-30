@@ -12,7 +12,7 @@ import Lib.AltTime
 import Lib.Binary
 
 import ErrorUtils          (tryError)
-import qualified IRC
+import qualified IRC (Message, names, channels, nick)
 
 import qualified Data.Map as M
 import qualified Data.ByteString.Char8 as P

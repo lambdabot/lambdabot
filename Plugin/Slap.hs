@@ -4,7 +4,7 @@
 module Plugin.Slap (theModule) where
 
 import Plugin
-import qualified IRC
+import qualified IRC (nick)
 
 PLUGIN Quote
 

@@ -5,7 +5,7 @@ module Main where
 
 import Shared
 import Lambdabot
-import qualified IRC
+import qualified IRC (Message)
 import Config
 import Modules
 

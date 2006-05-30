@@ -5,7 +5,7 @@ module Plugin.Base (theModule) where
 
 import Plugin
 
-import qualified IRC
+import qualified IRC (Message, getTopic, nick, join)
 
 import qualified Data.Map as M   (insert, delete)
 

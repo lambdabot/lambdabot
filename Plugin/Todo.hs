@@ -6,7 +6,7 @@
 module Plugin.Todo (theModule) where
 
 import Plugin
-import qualified IRC
+import qualified IRC (nick)
 import qualified Data.ByteString.Char8 as P
 
 PLUGIN Todo

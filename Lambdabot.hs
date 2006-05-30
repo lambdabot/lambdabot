@@ -31,7 +31,7 @@ module Lambdabot (
 
 import qualified Config (config, name, admins, host, port)
 import ErrorUtils       (bracketError, tryErrorJust, finallyError, catchErrorJust, tryError)
-import qualified IRC
+import qualified IRC (Message(..), mkMessage, quit, privmsg, encodeMessage, decodeMessage, nick)
 import qualified Shared as S
 
 import Lib.Util             (lowerCaseString, addList)

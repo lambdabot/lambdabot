@@ -4,7 +4,7 @@
 module Plugin.Karma (theModule) where
 
 import Plugin
-import qualified IRC
+import qualified IRC (nick)
 import qualified Data.Map as M
 import Text.Printf
 
