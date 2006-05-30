@@ -28,7 +28,7 @@ plugs :: String -> IO String
 plugs src = do
     -- first, verify the source is actually a Haskell 98 expression, to
     -- avoid code injection bugs.
-    case parseExpr src of
+    case parseExpr (src ++ "\n") of
         ParseFailed _ e -> return $ " " ++ e
         ParseOk     _   -> do
             (out,err,_) <- popen binary [] (Just src)
