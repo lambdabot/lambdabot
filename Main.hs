@@ -5,7 +5,7 @@ module Main where
 
 import Shared
 import Lambdabot
-import qualified IRC (Message)
+import qualified IRC (IrcMessage(..))
 import Config
 import Modules
 
@@ -54,7 +54,7 @@ mainloop = do
         Nothing -> return ()
         Just msg -> do
             s   <- get
-            case M.lookup (msgCommand msg) (ircCallbacks s) of
+            case M.lookup (IRC.msgCommand msg) (ircCallbacks s) of
                  Just cbs -> allCallbacks (map snd cbs) msg
                  _        -> return ()
     mainloop
@@ -63,7 +63,7 @@ mainloop = do
 -- write it on standard out. Hopefully BaseModule will have caught it already
 -- if it can see a better place to send it
 
-allCallbacks :: [IRC.Message -> LB ()] -> IRC.Message -> LB ()
+allCallbacks :: [IRC.IrcMessage -> LB ()] -> IRC.IrcMessage -> LB ()
 allCallbacks [] _ = return ()
 allCallbacks (f:fs) msg = do
     handleIrc (liftIO . putStrLn) (f msg)

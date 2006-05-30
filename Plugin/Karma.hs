@@ -4,7 +4,7 @@
 module Plugin.Karma (theModule) where
 
 import Plugin
-import qualified IRC (nick)
+import qualified Message (nick)
 import qualified Data.Map as M
 import Text.Printf
 
@@ -34,7 +34,7 @@ instance Module KarmaModule KarmaState where
                  "karma+"    -> changeKarma 1    sender nick
                  "karma-"    -> changeKarma (-1) sender nick
                  _        -> error "KarmaModule: can't happen"
-        where sender = IRC.nick msg
+        where sender = Message.nick msg
 
 ------------------------------------------------------------------------
 

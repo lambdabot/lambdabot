@@ -10,6 +10,7 @@
 module Plugin.Compose (theModule) where
 
 import Plugin
+import Message
 
 import Control.Monad.State
 import GHC.IOBase   (Exception(NoMethodError))
@@ -39,7 +40,7 @@ compose f g xs = g xs >>= f . unlines
 -- | Lookup the `process' method we're after, and apply it to the dummy args
 -- Fall back to process_ if there's no process.
 --
-lookupP :: (Message, String) -> String -> LB (String -> LB [String])
+lookupP :: Message a => (a, String) -> String -> LB (String -> LB [String])
 lookupP (a,b) cmd = withModule ircCommands cmd
     (error $ "Parse error: " ++ show cmd) 
     (\m -> do

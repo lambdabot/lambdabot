@@ -6,8 +6,8 @@ module Lambdabot (
         MODULE(..), Module(..),
         ModuleT, ModState, ModuleLB, Mode(..),
 
-        IRC.Message(..),
         IRCRState(..), IRCRWState(..), IRCError(..),
+        module Msg,
 
         LB, mapLB, lbIO,
 
@@ -31,7 +31,8 @@ module Lambdabot (
 
 import qualified Config (config, name, admins, host, port)
 import ErrorUtils       (bracketError, tryErrorJust, finallyError, catchErrorJust, tryError)
-import qualified IRC (Message(..), mkMessage, quit, privmsg, encodeMessage, decodeMessage, nick)
+import qualified Message as Msg
+import qualified IRC (IrcMessage(..), mkMessage, quit, privmsg, encodeMessage, decodeMessage, nick)
 import qualified Shared as S
 
 import Lib.Util             (lowerCaseString, addList)
@@ -90,9 +91,9 @@ data IRCRState
         ircWriteThread :: ThreadId
   }
 
-type Pipe = Chan (Maybe IRC.Message)
+type Pipe = Chan (Maybe IRC.IrcMessage)
 
-type Callback = IRC.Message -> LB ()
+type Callback = IRC.IrcMessage -> LB ()
 
 type OutputFilter = String -> [String] -> LB [String]
 
@@ -305,7 +306,7 @@ ircReconnect msg = do
     send . Just $ IRC.quit msg
     liftIO $ threadDelay 1000
 
-ircRead :: LB (Maybe IRC.Message)
+ircRead :: LB (Maybe IRC.IrcMessage)
 ircRead = do
     chanr <- asks ircReadChan
     liftIO (readChan chanr)
@@ -313,11 +314,11 @@ ircRead = do
 -- 
 -- convenient wrapper
 --
-send_ :: IRC.Message -> LB ()
+send_ :: IRC.IrcMessage -> LB ()
 send_ = send . Just
 
-send :: Maybe IRC.Message -> LB ()
-send (Just (IRC.Message x y z)) | x `seq` y `seq` z `seq` False = undefined -- strictify
+send :: Maybe IRC.IrcMessage -> LB ()
+send (Just (IRC.IrcMessage x y z)) | x `seq` y `seq` z `seq` False = undefined -- strictify
 send line = do
     chanw <- asks ircWriteChan
     io (writeChan chanw line)
@@ -597,9 +598,9 @@ offlineReaderLoop _threadmain chanr _chanw _h syncR syncW = readerLoop'
 
                 msg `seq` return () -- force error, perhaps. I know I'm bad
 
-                let m  = IRC.Message { IRC.msgPrefix  = "dons!n=user@null"
-                                     , IRC.msgCommand = "PRIVMSG"
-                                     , IRC.msgParams  = ["#haskell",":" ++ msg ] }
+                let m  = IRC.IrcMessage { IRC.msgPrefix  = "dons!n=user@null"
+                                        , IRC.msgCommand = "PRIVMSG"
+                                        , IRC.msgParams  = ["#haskell",":" ++ msg ] }
                 writeChan chanr (Just m)
                 putMVar syncW () -- let writer go 
                 readerLoop'
@@ -675,8 +676,8 @@ class Module m s | m -> s where
     -- which is guaranteed to at least have a default instance.
     -- This magic (well, for Haskell) occurs in Base.hs
     --
-    process         :: m                    -- ^ phantom     (required)
-        -> IRC.Message                      -- ^ the message (uneeded by most?)
+    process :: Msg.Message a => m           -- ^ phantom     (required)
+        -> a                                -- ^ the message (uneeded by most?)
         -> String                           -- ^ target      (not needed)
         -> String                           -- ^ command
         -> String                           -- ^ the arguments to the command
@@ -825,7 +826,7 @@ ircInstallOutputFilter f = modify $ \s ->
 
 -- | Checks if the given user has admin permissions and excecute the action
 --   only in this case.
-checkPrivs :: IRC.Message -> LB Bool
+checkPrivs :: IRC.IrcMessage -> LB Bool
 checkPrivs msg = gets (isJust . M.lookup (IRC.nick msg) . ircPrivilegedUsers)
 
 -- | Interpret an expression in the context of a module.

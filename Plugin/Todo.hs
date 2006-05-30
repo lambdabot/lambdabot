@@ -6,7 +6,7 @@
 module Plugin.Todo (theModule) where
 
 import Plugin
-import qualified IRC (nick)
+import qualified Message (nick)
 import qualified Data.ByteString.Char8 as P
 
 PLUGIN Todo
@@ -33,7 +33,7 @@ instance Module TodoModule TodoState where
            "todo-add"    -> addTodo sender rest
            "todo-delete" -> delTodo rest
 
-        where sender = IRC.nick msg
+        where sender = Message.nick msg
 
 -- | Print todo list
 getTodo :: TodoState -> String -> ModuleLB TodoState

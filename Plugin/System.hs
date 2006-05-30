@@ -5,7 +5,7 @@ module Plugin.System (theModule) where
 
 import Plugin
 import Lib.AltTime
-import qualified IRC (Message, join, part)
+import qualified Message (Message, joinChannel, partChannel)
 import qualified Data.Map as M       (Map,keys,fromList,lookup,union)
 
 import Control.Monad.State      (MonadState(get), gets)
@@ -44,7 +44,7 @@ privcmds = M.fromList [
 defaultHelp :: String
 defaultHelp = "system : irc management"
 
-doSystem :: IRC.Message -> String -> [Char] -> [Char] -> ModuleLB ClockTime
+doSystem :: Message.Message a => a -> String -> [Char] -> [Char] -> ModuleLB ClockTime
 doSystem msg target cmd rest = get >>= \s -> case cmd of
 
   "listchans"   -> return [pprKeys (ircChannels s)]
@@ -59,9 +59,9 @@ doSystem msg target cmd rest = get >>= \s -> case cmd of
   ------------------------------------------------------------------------
 
   --TODO error handling
-  "join"  -> send_ (IRC.join rest) >> return []        -- system commands
-  "leave" -> send_ (IRC.part rest) >> return []
-  "part"  -> send_ (IRC.part rest) >> return []
+  "join"  -> send_ (Message.joinChannel rest) >> return []        -- system commands
+  "leave" -> send_ (Message.partChannel rest) >> return []
+  "part"  -> send_ (Message.partChannel rest) >> return []
 
    -- writes to another location:
   "msg"   -> ircPrivmsg tgt (Just txt') >> return []

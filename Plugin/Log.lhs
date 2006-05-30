@@ -11,6 +11,7 @@
 
 > import Plugin
 > import qualified IRC
+> import qualified Message as Msg
 
 > import qualified Data.Map as M
 
@@ -94,7 +95,7 @@ Over all channels?  Maybe we want to intersect this with channels we are interes
 
 FIXME --- we only do this for one channel.  Maybe allow an extra argument?
 
-> showHistory :: IRC.Message -> String -> String -> ModuleLB LogState
+> showHistory :: Msg.Message a => a -> String -> String -> ModuleLB LogState
 > showHistory _ _ args = do
 >                       fm <- readMS
 >                       return [unlines . reverse $ map show $ take nLines (lines' fm)]
@@ -120,7 +121,7 @@ FIXME --- we only do this for one channel.  Maybe allow an extra argument?
 | Takes a state manipulation monad and executes it on the current
   state (and then updates it)
 
-> withLogMS :: (IRC.Message -> ClockTime -> Log a) -> IRC.Message -> ModuleT LogState LB a
+> withLogMS :: Msg.Message m => (m -> ClockTime -> Log a) -> m -> ModuleT LogState LB a
 > withLogMS f msg = 
 >     withMS $ \state writer -> do
 >                       ct <- io getClockTime
@@ -222,47 +223,47 @@ We flush on each operation to ensure logs are up to date.
 
 | Callback for when somebody joins. Log it.
 
-> joinCB :: IRC.Message -> ClockTime -> Handle -> History -> LB History
+> joinCB :: Msg.Message a => a -> ClockTime -> Handle -> History -> LB History
 > joinCB msg ct hdl his = do
 >                logString hdl $ show new
 >                return $ new : his
 >     where
 >     new  = Joined nick user ct
->     nick = IRC.nick msg
->     user = IRC.fullName msg
+>     nick = Msg.nick msg
+>     user = Msg.fullName msg
 
 | when somebody quits
 
-> partCB :: IRC.Message -> ClockTime -> Handle -> History -> LB History
+> partCB :: Msg.Message a => a -> ClockTime -> Handle -> History -> LB History
 > partCB msg ct hdl his = do
 >                logString hdl $ show new
 >                return $ new : his
 >     where
 >     new  = Parted nick user ct
->     nick = IRC.nick msg
->     user = IRC.fullName msg
+>     nick = Msg.nick msg
+>     user = Msg.fullName msg
 
 | when somebody changes his\/her name.  We should only do this for channels 
 that the user is currently on ...
 
-> nickCB :: IRC.Message -> ClockTime -> Handle -> History -> LB History
+> nickCB :: Msg.Message a => a -> ClockTime -> Handle -> History -> LB History
 > nickCB msg ct hdl his = do
 >                logString hdl $ show new
 >                return $ new : his
 >     where
 >     new  = Renick nick user ct newnick
->     nick = IRC.nick msg
->     user = IRC.fullName msg
->     newnick = drop 1 $ head (msgParams msg)
+>     nick = Msg.nick msg
+>     user = Msg.fullName msg
+>     newnick = drop 1 $ head (Msg.body msg)
 
 | When somebody speaks, log it.
 
-> msgCB :: IRC.Message -> ClockTime -> Handle -> History -> LB History
+> msgCB :: Msg.Message a => a -> ClockTime -> Handle -> History -> LB History
 > msgCB msg ct hdl his = do
 >                logString hdl $ show new
 >                return $ new : his
 >     where
 >     new  = Said nick ct said
->     nick = IRC.nick msg
->     said = tail . concat . tail $ msgParams msg -- each lines is :foo 
+>     nick = Msg.nick msg
+>     said = tail . concat . tail $ Msg.body msg -- each lines is :foo 
 

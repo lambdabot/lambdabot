@@ -4,36 +4,48 @@
 --
 module IRC where
 
+import Message
 import Lib.Util (split, breakOnGlue, clean)
 import qualified Lib.Util as Util (concatWith) 
 
 import Data.Char (chr,isSpace)
 
 -- | An IRC message is a prefix, a command and a list of parameters.
-data Message
-  = Message {
+data IrcMessage
+  = IrcMessage {
         msgPrefix   :: String,
         msgCommand  :: String,
         msgParams   :: [String]
   }
   deriving (Show)
 
+instance Message IrcMessage where
+  nick = IRC.nick
+  fullName = IRC.fullName
+  names = IRC.names
+  channels = IRC.channels
+  joinChannel = IRC.join
+  partChannel = IRC.part
+  getTopic = IRC.getTopic
+  setTopic = IRC.setTopic
+  body = IRC.msgParams
+
 -- | 'mkMessage' creates a new message from a cmd and a list of parameters.
 mkMessage :: String -- ^ Command
           -> [String] -- ^ Parameters
-          -> Message -- ^ Returns: The created message
-mkMessage cmd params = Message { msgPrefix = "", msgCommand = cmd, msgParams = params }
+          -> IrcMessage -- ^ Returns: The created message
+mkMessage cmd params = IrcMessage { msgPrefix = "", msgCommand = cmd, msgParams = params }
 
 -- | 'nick' extracts the nickname involved in a given message.
-nick :: Message -> String
+nick :: IrcMessage -> String
 nick = fst . breakOnGlue "!" . msgPrefix
 
 -- | 'fullName' extracts the full user name involved in a given message.
-fullName :: Message -> String
+fullName :: IrcMessage -> String
 fullName = snd . breakOnGlue "!" . msgPrefix
 
--- | 'channels' extracts the channels a Message operate on.
-channels :: Message -> [String]
+-- | 'channels' extracts the channels a IrcMessage operate on.
+channels :: IrcMessage -> [String]
 channels msg
   = let cstr = head $ msgParams msg
     in map (\(x:xs) -> if x == ':' then xs else x:xs) (split "," cstr)
@@ -42,7 +54,7 @@ channels msg
 -- | 'privmsg' creates a private message to the person designated.
 privmsg :: String -- ^ Who should recieve the message (nick)
         -> String -- ^ What is the message?
-        -> Message -- ^ Constructed message
+        -> IrcMessage -- ^ Constructed message
 privmsg who msg = if action then mkMessage "PRIVMSG" [who, ':':(chr 0x1):("ACTION " ++ clean_msg ++ ((chr 0x1):[]))]
                             else mkMessage "PRIVMSG" [who, ':' : clean_msg]
     where cleaned_msg = case concatMap clean msg of
@@ -56,29 +68,29 @@ privmsg who msg = if action then mkMessage "PRIVMSG" [who, ':':(chr 0x1):("ACTIO
 --   which sets the channels topic.
 setTopic :: String -- ^ Channel
          -> String -- ^ Topic
-         -> Message
+         -> IrcMessage
 setTopic chan topic = mkMessage "TOPIC" [chan, ':' : topic]
 
 -- | 'getTopic' Returns the topic for a channel, given as a String
-getTopic :: String -> Message
+getTopic :: String -> IrcMessage
 getTopic chan = mkMessage "TOPIC" [chan]
 
 -- | 'quit' creates a server QUIT message. The input string given is the
 --   quit message, given to other parties when leaving the network.
-quit :: String -> Message
+quit :: String -> IrcMessage
 quit msg = mkMessage "QUIT" [':' : msg]
 
 -- | 'join' creates a join message. String given is the location (channel)
 --   to join.
-join :: String -> Message
+join :: String -> IrcMessage
 join loc = mkMessage "JOIN" [loc]
 
 -- | 'part' parts the channel given.
-part :: String -> Message
+part :: String -> IrcMessage
 part loc = mkMessage "PART" [loc]
 
 -- | 'names' builds a NAMES message from a list of channels.
-names :: [String] -> Message
+names :: [String] -> IrcMessage
 names chans = mkMessage "NAMES" [Util.concatWith "," chans]
 
 ----------------------------------------------------------------------
@@ -88,7 +100,7 @@ names chans = mkMessage "NAMES" [Util.concatWith "," chans]
 --   giving this function a string will attach the string to the message
 --   and output a string containing IRC protocol commands ready for writing
 --   on the outgoing stream socket.
-encodeMessage :: Message -> String -> String
+encodeMessage :: IrcMessage -> String -> String
 encodeMessage msg
   = encodePrefix (msgPrefix msg) . encodeCommand (msgCommand msg)
           . encodeParams (msgParams msg)
@@ -103,12 +115,12 @@ encodeMessage msg
 
 -- | 'decodeMessage' Takes an input line from the IRC protocol stream
 --   and decodes it into a message.
-decodeMessage :: String -> Message
+decodeMessage :: String -> IrcMessage
 decodeMessage line =
     let (prefix, rest1) = decodePrefix (,) line
         (cmd, rest2)    = decodeCmd (,) rest1
         params          = decodeParams rest2
-    in Message { msgPrefix = prefix, msgCommand = cmd, msgParams = params }
+    in IrcMessage { msgPrefix = prefix, msgCommand = cmd, msgParams = params }
   where
     decodePrefix k (':':cs) = decodePrefix' k cs
       where decodePrefix' j ""       = j "" ""

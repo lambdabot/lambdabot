@@ -5,7 +5,7 @@ module Plugin.Base (theModule) where
 
 import Plugin
 
-import qualified IRC (Message, getTopic, nick, join)
+import IRC (IrcMessage(..), getTopic, nick, join)
 
 import qualified Data.Map as M   (insert, delete)
 
@@ -106,7 +106,7 @@ doNOTICE msg =
       -- the @localtime-reply plugin, which then passes the output to
       -- the appropriate client.
       timeReplyPrivMsg    = 
-            Message { msgPrefix  = msgPrefix (msg)
+         IrcMessage { msgPrefix  = msgPrefix (msg)
                     , msgCommand = "PRIVMSG"
                     , msgParams  = [head (msgParams msg)
                                    ,":@localtime-reply " ++ from ++ ":" ++
@@ -228,7 +228,7 @@ arePrefixesWithSpaceOf els str = any (flip isPrefixOf str) $ map (++" ") els
 --
 -- | What does the bot respond to?
 --
-doPRIVMSG' :: String -> IRC.Message -> ModuleT BaseState LB ()
+doPRIVMSG' :: String -> IRC.IrcMessage -> ModuleT BaseState LB ()
 doPRIVMSG' myname msg
   | myname `elem` targets
     = let (cmd, params) = breakOnGlue " " text
