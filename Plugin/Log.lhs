@@ -10,7 +10,6 @@
 > module Plugin.Log (theModule) where
 
 > import Plugin
-> import qualified IRC
 > import qualified Message as Msg
 
 > import qualified Data.Map as M
@@ -87,9 +86,9 @@ Over all channels?  Maybe we want to intersect this with channels we are interes
 >                                               ("NICK", nickCB)]
 >              where 
 >              liftC f = withLogMS $ \msg ct -> when (notMe msg) $ 
->                        withValidLogW (f msg ct) ct (head $ IRC.channels msg)
+>                        withValidLogW (f msg ct) ct (head $ Msg.channels msg)
 >              -- We don't log /msgs to the lambdabot ... 
->              notMe msg = myname /= (lowerCaseString . head $ IRC.channels msg)
+>              notMe msg = myname /= (lowerCaseString . head $ Msg.channels msg)
 >              
 >    process _ msg target "last" rest = showHistory msg target rest
 

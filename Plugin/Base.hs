@@ -5,7 +5,8 @@ module Plugin.Base (theModule) where
 
 import Plugin
 
-import IRC (IrcMessage(..), getTopic, nick, join)
+import IRC (IrcMessage(..))
+import Message (getTopic, nick, joinChannel)
 
 import qualified Data.Map as M   (insert, delete)
 
@@ -117,7 +118,7 @@ doJOIN :: Callback
 doJOIN msg
   = do s <- get
        put (s { ircChannels = M.insert  (mkCN loc) "[currently unknown]" (ircChannels s)}) -- the empty topic causes problems
-       send_ $ IRC.getTopic loc -- initialize topic
+       send_ $ getTopic loc -- initialize topic
    where (_, aloc) = breakOnGlue ":" (head (msgParams msg))
          loc       = case aloc of 
                         [] -> [] 
@@ -125,7 +126,7 @@ doJOIN msg
 
 doPART :: Callback
 doPART msg
-  = when (name config == IRC.nick msg) $ do  
+  = when (name config == nick msg) $ do  
         let loc = head (msgParams msg)
         s <- get
         put (s { ircChannels = M.delete (mkCN loc) (ircChannels s) })
@@ -146,7 +147,7 @@ doTOPIC msg
          put (s { ircChannels = M.insert (mkCN loc) (tail $ head $ tail $ msgParams msg) (ircChannels s)})
 
 doRPL_WELCOME :: Callback
-doRPL_WELCOME _msg = mapM_ (send_ . IRC.join) (autojoin config)
+doRPL_WELCOME _msg = mapM_ (send_ . joinChannel) (autojoin config)
 
 doQUIT :: Callback
 doQUIT msg = doIGNORE msg

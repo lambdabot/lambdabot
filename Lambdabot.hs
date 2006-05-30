@@ -32,13 +32,12 @@ module Lambdabot (
 import qualified Config (config, name, admins, host, port)
 import ErrorUtils       (bracketError, tryErrorJust, finallyError, catchErrorJust, tryError)
 import qualified Message as Msg
-import qualified IRC (IrcMessage(..), mkMessage, quit, privmsg, encodeMessage, decodeMessage, nick)
+import qualified IRC (IrcMessage(..), mkMessage, quit, privmsg, readerLoop, writerLoop)
 import qualified Shared as S
 
 import Lib.Util             (lowerCaseString, addList)
 import Lib.Serial
 
-import Data.List            (isPrefixOf)
 import Data.Map (Map)
 import qualified Data.Map as M hiding (Map)
 
@@ -48,7 +47,7 @@ import Prelude hiding   (mod, catch)
 
 import Network          (withSocketsDo, connectTo, PortID(PortNumber))
 
-import System.IO        (Handle, hClose, hGetLine, stdin, stdout,
+import System.IO        (Handle, hClose, stdin, stdout,
                          hSetBuffering, BufferMode(NoBuffering))
 
 import System.IO.Error  (isEOFError, ioeGetHandle)
@@ -452,7 +451,7 @@ runIrc' mode loop = do
         Online  -> do
             let portnum  = PortNumber $ fromIntegral (Config.port Config.config)
             s <- io $ connectTo (Config.host Config.config) portnum
-            return (s,s,readerLoop,writerLoop)
+            return (s,s,IRC.readerLoop,IRC.writerLoop)
         Offline -> return (stdin, stdout, offlineReaderLoop, offlineWriterLoop)
 
     tryErrorJust (isEOFon hin) $ do
@@ -513,59 +512,6 @@ runIrc' mode loop = do
 -- However, in Offline mode, we need to keep them in lock step. this
 -- complicates things.
 --
-
--- Online reader loop, the mvars are unused
-readerLoop :: ThreadId -> Pipe -> Pipe -> Handle -> MVar () -> MVar () -> IO ()
-readerLoop _threadmain chanr chanw h _ _ = do
-    io (putStrLn "Running reader loop...")
-    readerLoop'
-  where
-    readerLoop' = do
-        line <- hGetLine h
-        let line' = filter (\c -> c /= '\n' && c /= '\r') line
-        if pING `isPrefixOf` line'
-            then writeChan chanw (Just $ IRC.mkMessage "PONG" [drop 5 line'])
-            else writeChan chanr (Just $ IRC.decodeMessage line')
-        readerLoop'
-
-    pING = "PING "
-{-
-        line <- P.hGetLine h
-        let line' = P.filterNotChar '\n' line
-        if pING `P.isPrefixOf` line'
-            then writeChan chanw (Just $ IRC.mkMessage "PONG" [P.unpack $ P.drop 5 line'])
-            else writeChan chanr (Just $ IRC.decodeMessage (P.unpack line'))
-        readerLoop'
--}
-
-{-# INLINE readerLoop #-}
-
---
--- online writer loop
---
--- Implements flood control: RFC 2813, section 5.8
---
-writerLoop :: ThreadId -> Pipe -> Handle -> MVar () -> MVar () -> IO ()
-writerLoop _threadmain chanw h _ _ = do
-    sem1 <- newQSem 0
-    sem2 <- newQSem 5
-    forkIO $ sequence_ . repeat $ do
-           waitQSem sem1
-           threadDelay 2000000
-           signalQSem sem2
-    writerLoop' (sem1,sem2)
-  where
-    writerLoop' sems@(sem1,sem2) = do
-           mmsg <- readChan chanw
-           waitQSem sem2
-           case mmsg of
-            Nothing  -> return ()
-            Just msg -> P.hPut h $ P.pack $ IRC.encodeMessage msg "\r"
-           signalQSem sem1
-           writerLoop' sems
-{-# INLINE writerLoop #-}
-
-------------------------------------------------------------------------
 
 -- 
 -- Offline reader and writer loops. A prompt with line editing
@@ -827,7 +773,7 @@ ircInstallOutputFilter f = modify $ \s ->
 -- | Checks if the given user has admin permissions and excecute the action
 --   only in this case.
 checkPrivs :: IRC.IrcMessage -> LB Bool
-checkPrivs msg = gets (isJust . M.lookup (IRC.nick msg) . ircPrivilegedUsers)
+checkPrivs msg = gets (isJust . M.lookup (Msg.nick msg) . ircPrivilegedUsers)
 
 -- | Interpret an expression in the context of a module.
 -- Arguments are which map to use (@ircModules@ and @ircCommands@ are

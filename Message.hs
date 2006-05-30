@@ -1,4 +1,9 @@
+--
+-- Provides interface to messages, message pipes
+--
 module Message where
+
+import Control.Concurrent
 
 -- TODO: probably remove "Show a" later
 class Show a => Message a where
@@ -12,3 +17,5 @@ class Show a => Message a where
   setTopic :: String -> String -> a -- | 'setTopic' takes a channel and a topic. It then returns the message
                                     --   which sets the channels topic.
   body :: a -> [String] -- TODO: recheck this. It's usage heavily relies on the fact that message comes from IRC
+
+type Pipe a = Chan (Maybe a)

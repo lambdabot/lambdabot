@@ -2,13 +2,24 @@
 -- | The IRC module processes the IRC protocol and provides a nice API for sending
 --   and recieving IRC messages with an IRC server.
 --
-module IRC where
+module IRC ( IrcMessage(..)
+           , readerLoop
+           , writerLoop
+           , privmsg
+           , quit
+           , mkMessage -- TODO: remove?
+           ) where
 
 import Message
 import Lib.Util (split, breakOnGlue, clean)
 import qualified Lib.Util as Util (concatWith) 
 
+import Data.List (isPrefixOf)
 import Data.Char (chr,isSpace)
+import Control.Concurrent (ThreadId, MVar, readChan, writeChan, forkIO, newQSem, waitQSem, signalQSem, threadDelay)
+import Control.Monad.Trans ( MonadIO, liftIO )
+import System.IO (Handle, hGetLine)
+import qualified Data.ByteString.Char8 as P (pack, hPut)
 
 -- | An IRC message is a prefix, a command and a list of parameters.
 data IrcMessage
@@ -146,3 +157,50 @@ decodeMessage line =
           | null param = reverse (rest : params)
           | otherwise  = decodeParams' (c:param) params cs
         decodeParams' param params (c:cs) = decodeParams' (c:param) params cs
+
+-- Online reader loop, the mvars are unused
+readerLoop :: ThreadId -> Pipe IrcMessage -> Pipe IrcMessage -> Handle -> MVar () -> MVar () -> IO ()
+readerLoop _threadmain chanr chanw h _ _ = do
+    io (putStrLn "Running reader loop...")
+    readerLoop'
+  where
+    readerLoop' = do
+        line <- hGetLine h
+        let line' = filter (\c -> c /= '\n' && c /= '\r') line
+        if pING `isPrefixOf` line'
+            then writeChan chanw (Just $ IRC.mkMessage "PONG" [drop 5 line'])
+            else writeChan chanr (Just $ IRC.decodeMessage line')
+        readerLoop'
+
+    pING = "PING "
+{-# INLINE readerLoop #-}
+
+--
+-- online writer loop
+--
+-- Implements flood control: RFC 2813, section 5.8
+--
+writerLoop :: ThreadId -> Pipe IrcMessage -> Handle -> MVar () -> MVar () -> IO ()
+writerLoop _threadmain chanw h _ _ = do
+    sem1 <- newQSem 0
+    sem2 <- newQSem 5
+    forkIO $ sequence_ . repeat $ do
+           waitQSem sem1
+           threadDelay 2000000
+           signalQSem sem2
+    writerLoop' (sem1,sem2)
+  where
+    writerLoop' sems@(sem1,sem2) = do
+           mmsg <- readChan chanw
+           waitQSem sem2
+           case mmsg of
+            Nothing  -> return ()
+            Just msg -> P.hPut h $ P.pack $ IRC.encodeMessage msg "\r"
+           signalQSem sem1
+           writerLoop' sems
+{-# INLINE writerLoop #-}
+
+-- convenience:
+io :: forall a (m :: * -> *). (MonadIO m) => IO a -> m a
+io = liftIO
+{-# INLINE io #-}
