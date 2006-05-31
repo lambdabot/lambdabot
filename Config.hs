@@ -3,6 +3,8 @@
 --
 module Config where
 
+data Protocol = Irc | Xmpp
+
 -- | The 'Config' type provides configurations for lambdabot. It is used
 --   when lambdabot is started to determine the name of lambdabot, what
 --   IRC-network lambdabot should join, which channels lambdabot should
@@ -13,6 +15,7 @@ data Config = Config {
         userinfo  :: String,        -- ^ The userinfo string for lambdabot
         host      :: String,        -- ^ Host to join
         port      :: Int,           -- ^ The port number to use on the host
+        protocol  :: Protocol,      -- ^ either irc or xmpp/jabber
         verbose   :: Bool,          -- ^ Should lambdabot be verbose?
         moresize  :: Int,           -- ^ How many lines is output before \@more?
         textwidth :: Int,           -- ^ How many columns should we use
@@ -42,6 +45,7 @@ config = Config {
         name            = "lambdabot",
         userinfo        = "Lambda_Robots:_100%_Loyal",
         host            = "chat.freenode.net",
+        protocol        = Irc,
 
         port            = 6667,
         verbose         = True,

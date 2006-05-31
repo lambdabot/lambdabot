@@ -38,7 +38,7 @@ main' dyn = do
 ------------------------------------------------------------------------
 
 onlineMain :: LB ()
-onlineMain = ircSignOn (name config) (userinfo config) >> mainloop
+onlineMain = serverSignOn (protocol config) (name config) (userinfo config) >> mainloop
 
 offlineMain :: LB ()
 offlineMain = mainloop

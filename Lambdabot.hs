@@ -19,7 +19,7 @@ module Lambdabot (
         ircGetChannels,
         ircSignalConnect, Callback, ircInstallOutputFilter, OutputFilter,
         ircInstallModule, ircUnloadModule,
-        ircSignOn,
+        serverSignOn,
         ircRead,
 
         ircLoad, ircUnload,
@@ -29,7 +29,7 @@ module Lambdabot (
         io,
   ) where
 
-import qualified Config (config, name, admins, host, port)
+import qualified Config (config, name, admins, host, port, Protocol(..))
 import ErrorUtils       (bracketError, tryErrorJust, finallyError, catchErrorJust, tryError)
 import qualified Message as Msg
 import qualified IRC (IrcMessage, quit, privmsg, readerLoop, writerLoop, offlineReaderLoop, offlineWriterLoop, user, setNick)
@@ -270,6 +270,13 @@ type ModState s a = (?ref :: MVar s, ?name :: String) => a
 -- | A nicer synonym for some ModuleT stuffs
 type ModuleLB m = ModuleT m LB [String]
 
+
+serverSignOn :: Config.Protocol -> String -> String -> LB ()
+serverSignOn Config.Irc  nick userinfo = ircSignOn nick userinfo
+serverSignOn Config.Xmpp nick _        = jabberSignOn nick
+
+jabberSignOn :: String -> LB ()
+jabberSignOn _ = undefined
 
 ircSignOn :: String -> String -> LB ()
 ircSignOn nick ircname = do
