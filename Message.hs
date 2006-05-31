@@ -17,5 +17,6 @@ class Show a => Message a where
   setTopic :: String -> String -> a -- | 'setTopic' takes a channel and a topic. It then returns the message
                                     --   which sets the channels topic.
   body :: a -> [String] -- TODO: recheck this. It's usage heavily relies on the fact that message comes from IRC
+  command :: a -> String -- TODO: too IRC-specific
 
 type Pipe a = Chan (Maybe a)

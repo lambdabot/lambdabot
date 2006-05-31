@@ -2,7 +2,7 @@
 -- | The IRC module processes the IRC protocol and provides a nice API for sending
 --   and recieving IRC messages with an IRC server.
 --
-module IRC ( IrcMessage(..)
+module IRC ( IrcMessage
            , readerLoop
            , writerLoop
            , offlineReaderLoop
@@ -10,6 +10,8 @@ module IRC ( IrcMessage(..)
            , privmsg
            , quit
            , mkMessage -- TODO: remove?
+           , timeReply
+           , errShowMsg -- TODO: remove
            ) where
 
 import Message
@@ -45,6 +47,7 @@ instance Message IrcMessage where
   getTopic = IRC.getTopic
   setTopic = IRC.setTopic
   body = IRC.msgParams
+  command = IRC.msgCommand
 
 -- | 'mkMessage' creates a new message from a cmd and a list of parameters.
 mkMessage :: String -- ^ Command
@@ -109,6 +112,22 @@ part loc = mkMessage "PART" [loc]
 names :: [String] -> IrcMessage
 names chans = mkMessage "NAMES" [Util.concatWith "," chans]
 
+-- | Construct a privmsg from the CTCP TIME notice, to feed up to
+-- the @localtime-reply plugin, which then passes the output to
+-- the appropriate client.
+timeReply :: IrcMessage -> IrcMessage
+timeReply msg    = 
+   IrcMessage { msgPrefix  = msgPrefix (msg)
+              , msgCommand = "PRIVMSG"
+              , msgParams  = [head (msgParams msg)
+                             ,":@localtime-reply " ++ (IRC.nick msg) ++ ":" ++
+                                (init $ drop 7 (last (msgParams msg))) ]
+              }
+
+-- Only needed for Base.hs
+errShowMsg :: IrcMessage -> String
+errShowMsg msg = "ERROR> <" ++ msgPrefix msg ++
+      "> [" ++ msgCommand msg ++ "] " ++ show (msgParams msg)
 ----------------------------------------------------------------------
 -- Encoding and decoding of messages
 

@@ -5,8 +5,8 @@ module Plugin.Base (theModule) where
 
 import Plugin
 
-import IRC (IrcMessage(..))
-import Message (getTopic, nick, joinChannel)
+import IRC (IrcMessage, timeReply, errShowMsg)
+import Message (getTopic, nick, joinChannel, body)
 
 import qualified Data.Map as M   (insert, delete)
 
@@ -68,19 +68,18 @@ instance Module BaseModule BaseState where
 doUNKNOWN :: Callback
 doUNKNOWN msg
     = debugStrLn $ "UNKNOWN> <" ++ msgPrefix msg ++
-      "> [" ++ msgCommand msg ++ "] " ++ show (msgParams msg)
+      "> [" ++ msgCommand msg ++ "] " ++ show (body msg)
 -}
 
 doIGNORE :: Callback
 doIGNORE msg = debugStrLn $ show msg
  --   = debugStrLn $ "IGNORING> <" ++ msgPrefix msg ++
---      "> [" ++ msgCommand msg ++ "] " ++ show (msgParams msg)
+--      "> [" ++ msgCommand msg ++ "] " ++ show (body msg)
 
 
 doPING :: Callback
 doPING msg
-    = debugStrLn $ "ERROR> <" ++ msgPrefix msg ++
-      "> [" ++ msgCommand msg ++ "] " ++ show (msgParams msg)
+    = debugStrLn $ errShowMsg msg
 
 -- If this is a "TIME" then we need to pass it over to the localtime plugin
 -- otherwise, dump it to stdout
@@ -96,30 +95,18 @@ doNOTICE msg =
 
           -- need to say which module to run the privmsg in
 
-          doPRIVMSG timeReplyPrivMsg
+          doPRIVMSG (timeReply msg)
 
-     else debugStrLn $ "NOTICE: " ++ show (msgParams msg)
+     else debugStrLn $ "NOTICE: " ++ show (body msg)
     where
-      (from, _)       = breakOnGlue "!" (msgPrefix msg)
-      isCTCPTimeReply = ":\SOHTIME" `isPrefixOf` (last (msgParams msg)) 
-
-      -- construct a privmsg from the CTCP TIME notice, to feed up to
-      -- the @localtime-reply plugin, which then passes the output to
-      -- the appropriate client.
-      timeReplyPrivMsg    = 
-         IrcMessage { msgPrefix  = msgPrefix (msg)
-                    , msgCommand = "PRIVMSG"
-                    , msgParams  = [head (msgParams msg)
-                                   ,":@localtime-reply " ++ from ++ ":" ++
-                                      (init $ drop 7 (last (msgParams msg))) ]
-                    }
+      isCTCPTimeReply = ":\SOHTIME" `isPrefixOf` (last (body msg)) 
 
 doJOIN :: Callback
 doJOIN msg
   = do s <- get
        put (s { ircChannels = M.insert  (mkCN loc) "[currently unknown]" (ircChannels s)}) -- the empty topic causes problems
        send_ $ getTopic loc -- initialize topic
-   where (_, aloc) = breakOnGlue ":" (head (msgParams msg))
+   where (_, aloc) = breakOnGlue ":" (head (body msg))
          loc       = case aloc of 
                         [] -> [] 
                         _  -> tail aloc
@@ -127,7 +114,7 @@ doJOIN msg
 doPART :: Callback
 doPART msg
   = when (name config == nick msg) $ do  
-        let loc = head (msgParams msg)
+        let loc = head (body msg)
         s <- get
         put (s { ircChannels = M.delete (mkCN loc) (ircChannels s) })
 
@@ -142,9 +129,9 @@ doMODE msg
 
 doTOPIC :: Callback
 doTOPIC msg
-    = do let loc = (head (msgParams msg))
+    = do let loc = (head (body msg))
          s <- get
-         put (s { ircChannels = M.insert (mkCN loc) (tail $ head $ tail $ msgParams msg) (ircChannels s)})
+         put (s { ircChannels = M.insert (mkCN loc) (tail $ head $ tail $ body msg) (ircChannels s)})
 
 doRPL_WELCOME :: Callback
 doRPL_WELCOME _msg = mapM_ (send_ . joinChannel) (autojoin config)
@@ -193,10 +180,10 @@ doRPL_GLOBALUSERS _msg = return ()
 -}
 
 doRPL_TOPIC :: Callback
-doRPL_TOPIC msg -- nearly the same as doTOPIC but has our nick on the front of msgParams
-    = do let loc = (msgParams msg) !! 1
+doRPL_TOPIC msg -- nearly the same as doTOPIC but has our nick on the front of body
+    = do let loc = (body msg) !! 1
          s <- get
-         put (s { ircChannels = M.insert (mkCN loc) (tail $ last $ msgParams msg) (ircChannels s) })
+         put (s { ircChannels = M.insert (mkCN loc) (tail $ last $ body msg) (ircChannels s) })
 
 {-
 doRPL_NAMREPLY :: Callback
@@ -252,10 +239,10 @@ doPRIVMSG' myname msg
   | otherwise = doIGNORE msg
 
   where
-    alltargets = head (msgParams msg)
+    alltargets = head (body msg)
     targets = split "," alltargets
-    text = tail (head (tail (msgParams msg)))
-    (who, _) = breakOnGlue "!" (msgPrefix msg)
+    text = tail (head (tail (body msg)))
+    who = nick msg
 
     doPersonalMsg s r | commands `arePrefixesOf` s = doMsg (tail s) r who
                       | s `elem` evals             = doMsg "run"   r who
