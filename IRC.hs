@@ -29,9 +29,9 @@ import System.Console.Readline  (readline, addHistory)
 -- | An IRC message is a prefix, a command and a list of parameters.
 data IrcMessage
   = IrcMessage {
-        msgPrefix   :: String,
-        msgCommand  :: String,
-        msgParams   :: [String]
+        msgPrefix   :: !String,
+        msgCommand  :: !String,
+        msgParams   :: ![String]
   }
   deriving (Show)
 

@@ -315,7 +315,6 @@ send_ :: IRC.IrcMessage -> LB ()
 send_ = send . Just
 
 send :: Maybe IRC.IrcMessage -> LB ()
-send (Just (IRC.IrcMessage x y z)) | x `seq` y `seq` z `seq` False = undefined -- strictify
 send line = do
     chanw <- asks ircWriteChan
     io (writeChan chanw line)
