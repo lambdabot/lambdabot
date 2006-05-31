@@ -91,7 +91,7 @@ doNOTICE msg =
   --    withModule ircModules 
   --               "Localtime"
   --               (error "Plugin/Base: no Localtime plugin? So I can't handle CTCP time messges")
-  --               (\_ -> doPRIVMSG timeReplyPrivMsg)
+  --               (\_ -> doPRIVMSG (timeReply msg))
 
           -- need to say which module to run the privmsg in
 

@@ -32,7 +32,7 @@ module Lambdabot (
 import qualified Config (config, name, admins, host, port)
 import ErrorUtils       (bracketError, tryErrorJust, finallyError, catchErrorJust, tryError)
 import qualified Message as Msg
-import qualified IRC (IrcMessage, mkMessage, quit, privmsg, readerLoop, writerLoop, offlineReaderLoop, offlineWriterLoop)
+import qualified IRC (IrcMessage, quit, privmsg, readerLoop, writerLoop, offlineReaderLoop, offlineWriterLoop, user, setNick)
 import qualified Shared as S
 
 import Lib.Util             (lowerCaseString, addList)
@@ -276,8 +276,8 @@ ircSignOn nick ircname = do
     server <- asks ircServer
 
     -- password support. TODO: Move this to IRC?
-    send . Just $ IRC.mkMessage "USER" [nick, "localhost", server, ircname]
-    send . Just $ IRC.mkMessage "NICK" [nick]
+    send . Just $ IRC.user nick server ircname
+    send . Just $ IRC.setNick nick
     mpasswd <- liftIO (handleJust ioErrors (const (return "")) $
                        readFile "State/passwd")
     case readM mpasswd of

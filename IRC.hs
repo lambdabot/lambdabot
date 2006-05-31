@@ -9,9 +9,10 @@ module IRC ( IrcMessage
            , offlineWriterLoop
            , privmsg
            , quit
-           , mkMessage -- TODO: remove?
            , timeReply
            , errShowMsg -- TODO: remove
+           , user
+           , setNick
            ) where
 
 import Message
@@ -128,6 +129,12 @@ timeReply msg    =
 errShowMsg :: IrcMessage -> String
 errShowMsg msg = "ERROR> <" ++ msgPrefix msg ++
       "> [" ++ msgCommand msg ++ "] " ++ show (msgParams msg)
+
+user :: String -> String -> String -> IrcMessage
+user nick_ server ircname = IRC.mkMessage "USER" [nick_, "localhost", server, ircname]
+
+setNick :: String -> IrcMessage
+setNick nick_ = IRC.mkMessage "NICK" [nick_]
 ----------------------------------------------------------------------
 -- Encoding and decoding of messages
 
