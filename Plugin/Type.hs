@@ -75,16 +75,17 @@ go _ _      = []   -- unterminated
 --     through IRC.
 
 --
---     To get any signature line from the hugs output, split it into lines,
---     match each against the regex, and take the last substring match from
---     each successful match.
+--     We first strip 7 leading lines, which is the GHCi logo, then the final line,
+--     which is the last prompt, before filtering out the lines that match our regex,
+--     selecting the last subset match on each matching line before finally concatting
+--     the whole lot together again.
 --
 -- TODO, just use ghci -v0
 --
 extract_signatures :: String -> String
 extract_signatures output
-        = removeExp . unlines . map expandTab . mapMaybe last' .
-          mapMaybe (matchRegex signature_regex) .
+        = removeExp . concat . intersperse " " . map (dropWhile isSpace . expandTab) .
+          mapMaybe ((>>= last') . matchRegex signature_regex) .
           reverse . drop 1 . reverse . drop 7 . lines $ output
         where
         last' [] = Nothing
