@@ -46,7 +46,7 @@ PLUGINS=       Dict Dummy Karma Quote Seen State \
                Help Dice Search Vixen Fact Spell Todo \
                Haddock Hoogle Where Elite Localtime Poll \
                Djinn Pretty Compose Lambda Unlambda Log \
-               Slap DrHylo
+               Slap DrHylo Instances
 #              LShell DarcsPatchWatch Code
 
 STATICS=       Base System Dynamic
@@ -58,7 +58,7 @@ STATICS=       Base System Dict Dummy Karma \
                Version More Pl Help Dice Search Vixen Fact \
                Todo Spell Haddock Hoogle Where \
                Elite Localtime Poll Djinn Pretty Compose \
-               Lambda Unlambda Log Slap DrHylo
+               Lambda Unlambda Log Slap DrHylo Instances
 #              LShell DarcsPatchWatch Code
 LD_OPTS=       -package network -package posix -package parsec -package fps -package haskell-src -package readline
 endif
