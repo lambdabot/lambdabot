@@ -79,7 +79,7 @@ getInstances s cls | Nothing <- matchRegex (mkRegex $ "class " ++ cls ++ " ") s
                       -- can't trust those dodgy folk in #haskell
                       = ["Not a class! Perhaps you need to import the " ++
                          " module that defines it? Try @help instances-importing."]
-                   | otherwise = mapMaybe doParse (tail splut)
+                   | otherwise = sort $ mapMaybe doParse (tail splut)
     where splut = split "instance" s
           unbracket str | head str == '(' && last str == ')' && 
                           all (/=',') str && str /= "()" =
