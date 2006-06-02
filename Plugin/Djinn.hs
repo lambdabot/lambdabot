@@ -51,8 +51,13 @@ instance Module DjinnModule DjinnEnv where
         -- Normal commands
         process_ _ "djinn" s = do
                 (_,env) <- readMS
-                e       <- io $ djinn env $ ":set +sorted" <$> "f ?" <+> s
+                e       <- io $ djinn env $ ":set +sorted" <$> "f ?" <+> dropForall s
                 return $ either id (tail . lines) e
+            where
+            dropForall t
+            	| Just (_, _, x, _) <- matchRegexAll re t = x
+            	| otherwise = t
+            re = mkRegex "^forall [[:alnum:][:space:]]+\\."
 
         -- Augment environment. Have it checked by djinn.
         process_ _ "djinn-add"  s = do
