@@ -17,10 +17,12 @@ PLUGIN Dummy
 instance Module DummyModule [String] where
   moduleDefState = const . return . cycle $ cows
 
-  moduleCmds   _ = {-"moo" : -} map fst dummylst
+  moduleCmds   _ = "eval" : {-"moo" : -} map fst dummylst
 
   moduleHelp _ s = case s of
         "dummy"       -> "dummy. Print a string constant"
+        "eval"        -> "eval. Do nothing (perversely)"
+
         "id"          -> "id <arg>. The identiy plugin"
         "wiki"        -> "wiki <page>. URLs of Haskell wiki pages"
         "oldwiki"     -> "oldwiki <page>. URLs of the old hawiki pages"
@@ -47,10 +49,7 @@ instance Module DummyModule [String] where
           return cow
         mapM_ (ircPrivmsg' src) (lines cow')
 -}
-
-  process_ _ cmd rest = case lookup cmd dummylst of
-       Nothing -> error "Dummy: invalid command"
-       Just f  -> return $ lines $ f rest
+  process_ _ "eval" _ = return []
 
 dummylst :: [(String, String -> String)]
 dummylst = 
