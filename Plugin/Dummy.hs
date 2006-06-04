@@ -50,6 +50,10 @@ instance Module DummyModule [String] where
         mapM_ (ircPrivmsg' src) (lines cow')
 -}
   process_ _ "eval" _ = return []
+  process_ _ cmd rest = case lookup cmd dummylst of
+    Nothing -> error "Dummy: invalid command"
+    Just f  -> return $ lines $ f rest
+
 
 dummylst :: [(String, String -> String)]
 dummylst = 
