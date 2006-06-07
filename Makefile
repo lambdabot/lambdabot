@@ -20,7 +20,7 @@ ALL_DIRS=	.  Lib Plugin \
 # Not used, not built, bit dodgy as we are relying on ALL_DIRS to ignore
 # the subdirs of EXCLUDED_MODS. The following additional srcs will not be built
 EXCLUDED_MODS=	Hello Cmafihe
-EXCLUDED_SRCS=	$(addprefix Plugin/, $(addsuffix .hs,$(EXCLUDED_MODS)))
+EXCLUDED_SRCS=	Setup.hs $(addprefix Plugin/, $(addsuffix .hs,$(EXCLUDED_MODS)))
 EXCLUDED_SRCS+= Plugin/Lambda/tests.hs Plugin/Pl/Test.hs
 
 #
