@@ -3,21 +3,16 @@ INSTALL:
 You'll need GHC >= 6.4
 
 Build the Data.ByteString library at http://www.cse.unsw.edu.au/~dons,
-version 0.4 and later are ok.
+version 0.7 and later are ok.
 
-And then build lambdabot:
-    $ cd lambdabot/
-    $ autoconf
-    $ ./configure
+Build with cabal:
+    $ chmod +x Setup.hs configure
+    $ ./Setup.hs configure 
     -- edit Config.hs to your requirements
-    $ make
-    $ ./lambdabot
-
-Or build with cabal:
-    $ chmod +x Setup.hs
-    $ ./Setup.hs configure
     $ ./Setup.hs build
     $ ./dist/build/lambdabot
+
+------------------------------------------------------------------------
 
 Optionally, for the Haskell eval plugin to work, you need to also
 install hs-plugins: http://www.cse.unsw.edu.au/~dons/hs-plugins
@@ -30,6 +25,14 @@ or just live with those plugins not working.
 
 Plugins are added or removed config.mk and removing them from the list
 of PLUGINS.
+
+You can also build with GNU make, which is currently more flexible:
+    $ cd lambdabot/
+    $ autoconf
+    $ ./configure
+    -- edit Config.hs to your requirements
+    $ make
+    $ ./lambdabot
 
 For compiling with profiling on:
 
