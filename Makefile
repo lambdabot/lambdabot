@@ -218,9 +218,9 @@ clean:
 	cd scripts/hoogle && $(MAKE) clean
 
 distclean: clean
-	rm -f config.mk config.h config.log config.status configure
+	rm -f config.mk config.h config.log config.status
 	rm -rf autom4te.cache
-	rm -f genmodules Modules.hs Modules.o-boot Modules.*-boot
+	rm -f genmodules 
 
 runplugs: scripts/RunPlugs.hs scripts/ShowQ.hs
 	$(GHC) -O -c scripts/ShowQ.hs
