@@ -59,5 +59,7 @@ Executable:          lambdabot
 Main-is:             Main.hs
 extensions:          CPP
 other-modules:       Lib.Regex
-ghc-options:         -Wall -Werror -fglasgow-exts -pgmF dist/build/dsl/dsl -F -funbox-strict-fields -O -fasm -fno-warn-incomplete-patterns -fno-warn-missing-methods -fno-warn-orphans -I. -optl-Wl,-s -threaded
+ghc-options:         -Wall -Werror -fglasgow-exts -pgmF dist/build/dsl/dsl -F -Onot -fasm -fno-warn-incomplete-patterns -fno-warn-missing-methods -fno-warn-orphans -I. -threaded
 
+-- For a fast lambdabot
+-- ghc-options:         -Wall -Werror -fglasgow-exts -pgmF dist/build/dsl/dsl -F -funbox-strict-fields -O -fasm -fno-warn-incomplete-patterns -fno-warn-missing-methods -fno-warn-orphans -I. -optl-Wl,-s -threaded
