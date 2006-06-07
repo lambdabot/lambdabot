@@ -75,12 +75,13 @@ parseInstance cls = fmap dropSpace . eitherToMaybe
 -- | Split the input into a list of the instances, then run each instance 
 --   through the parser. Collect successes.
 getInstances :: String -> ClassName -> [Instance]
-getInstances s cls | Nothing <- matchRegex (mkRegex $ "class " ++ cls ++ " ") s
+getInstances s cls | Nothing <- matchRegex isClassRegex s
                       -- can't trust those dodgy folk in #haskell
                       = ["Not a class! Perhaps you need to import the " ++
                          " module that defines it? Try @help instances-importing."]
                    | otherwise = sort $ mapMaybe doParse (tail splut)
-    where splut = split "instance" s
+    where isClassRegex = mkRegex $ "class (\\([^)]+\\) => )?" ++ cls
+          splut        = split "instance" s
           unbracket str | head str == '(' && last str == ')' && 
                           all (/=',') str && str /= "()" =
                           init $ tail str
