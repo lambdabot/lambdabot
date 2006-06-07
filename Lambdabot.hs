@@ -576,7 +576,9 @@ class Module m s | m -> s where
 ------------------------------------------------------------------------
 
     process_ _ _ _        = return []
+#if __GLASGOW_HASKELL__ >= 605
     process _ _ _ _ _ = GHC.Err.noMethodBindingError "Lambdabot.process"#
+#endif
 
     moduleHelp m _     = concat (map ('@':) (moduleCmds m))
     modulePrivs _      = []

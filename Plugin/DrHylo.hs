@@ -26,11 +26,12 @@ instance P.Module DrHyloModule () where
     process_ _ _ xs = io (hylo xs)
 
     moduleCmds _   = ["hylo"]
-    moduleHelp _ _ = "hylo <expr>. Derive hylomorphism for <expr>. Based on DrHylo. \n\ 
-                      \Uses the Pointless.Combinators from: \n\ 
-                      \ http://wiki.di.uminho.pt/twiki/bin/view/Alcino/PointlessHaskell\n\ 
-                      \Mirrored:\n\ 
-                      \  http://www.cse.unsw.edu.au/~dons/Pointless/"
+    moduleHelp _ _ = unlines 
+       ["hylo <expr>. Derive hylomorphism for <expr>. Based on DrHylo."
+       ,"Uses the Pointless.Combinators from:"
+       ," http://wiki.di.uminho.pt/twiki/bin/view/Alcino/PointlessHaskell"
+       ,"Mirrored:"
+       ," http://www.cse.unsw.edu.au/~dons/Pointless/"]
 
 hylo :: String -> IO [String]
 hylo = ((drop 4 . lines . prettyPrint . dhModule) `fmap`) . parse

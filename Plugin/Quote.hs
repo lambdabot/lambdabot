@@ -54,8 +54,8 @@ instance Module QuoteModule Quotes where
                      -> return `fmap` io (randomElem notoriousV)
 
 help :: String
-help = "quote <nick>\nremember <nick> <quote>\n\ 
-       \Quote somebody, a random person, or save a memorable quote"
+help = "quote <nick>\nremember <nick> <quote>\n" ++
+       "Quote somebody, a random person, or save a memorable quote"
 
 ------------------------------------------------------------------------
 

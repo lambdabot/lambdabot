@@ -19,9 +19,9 @@ PLUGIN Compose
 
 instance Module ComposeModule () where
     moduleCmds _   = [".", "compose"]
-    moduleHelp _ _ = ". <cmd1> <cmd2> [args].\n\ 
-                     \. [or compose] is the composition of two plugins\n\ 
-                     \ The following semantics are used: . f g xs == g xs >>= f"
+    moduleHelp _ _ = unlines [". <cmd1> <cmd2> [args]."
+                             ,". [or compose] is the composition of two plugins"
+                             ," The following semantics are used: . f g xs == g xs >>= f"]
 
     process    _ a b _ args = case split " " args of
         (f:g:xs) -> do

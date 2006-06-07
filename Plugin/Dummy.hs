@@ -68,10 +68,6 @@ dummylst =
     ,("shootout",   const "http://shootout.alioth.debian.org/gp4/benchmark.php?test=all&lang=all")
     ,("botsnack",   const ":)")
 
-    ,("eurohaskell", const "less talks, more code!\n\ 
-                          \http://www.haskell.org/hawiki/EuroHaskell\n\ 
-                          \EuroHaskell - Haskell Hackfest - Summer 2005 - Gothenburg, Sweden")
-
     ,("wiki",        ("http://www.haskell.org/haskellwiki/" ++))
     ,("oldwiki",     ("http://www.haskell.org/hawiki/" ++))
 
