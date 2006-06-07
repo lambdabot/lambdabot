@@ -13,6 +13,12 @@ And then build lambdabot:
     $ make
     $ ./lambdabot
 
+Or build with cabal:
+    $ chmod +x Setup.hs
+    $ ./Setup.hs configure
+    $ ./Setup.hs build
+    $ ./dist/build/lambdabot
+
 Optionally, for the Haskell eval plugin to work, you need to also
 install hs-plugins: http://www.cse.unsw.edu.au/~dons/hs-plugins
 Build instructions for hs-plugins below.
