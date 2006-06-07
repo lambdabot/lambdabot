@@ -29,14 +29,14 @@ type ModuleName = String
 PLUGIN Instances
 
 instance Module InstancesModule () where
-    moduleCmds _ = ["instances", "instances-importing"]
+    moduleCmds _ = map fst help
     moduleHelp _ = fromJust . flip lookup help
     process_ _ "instances"           cls  = fetchInstances cls
     process_ _ "instances-importing" args = fetchInstancesImporting args
 
 -- | Lookup table for the help for this module
 help :: [(String, String)]
-help = [("instances", 
+help = [("instances",
           "instances <typeclass>. Fetch the instances of a typeclass."),
         ("instances-importing",
           "instances-importing [<module> [<module> [<module...]]] <typeclass>. " ++
@@ -93,7 +93,7 @@ getInstances s cls | Nothing <- matchRegex (mkRegex $ "class " ++ cls ++ " ") s
 -- | The standard modules we ask GHCi to load.
 stdMdls :: [ModuleName]
 stdMdls = controls
-    where monads   = map ("Monad."++) 
+    where monads   = map ("Monad."++)
                        [ "Cont", "Error", "Fix", "Reader", "RWS", "ST",
                          "State", "Trans", "Writer" ]
           controls = map ("Control." ++) $ monads ++ ["Arrow"]
@@ -115,8 +115,8 @@ fetchInstancesImporting args = ios (fetchInstances' cls mdls)
 -- | Interface with GHCi to get the input for the parser, then send it through
 --   the parser.
 fetchInstances' :: String -> [ModuleName] -> IO String
-fetchInstances' cls mdls = do 
-  (out, err, _) <- popen (ghci config) ["-fglasgow-exts"] $ 
+fetchInstances' cls mdls = do
+  (out, err, _) <- popen (ghci config) ["-fglasgow-exts"] $
                    Just (unlines [cxt, command])
   let is = getInstances out cls
   return $ if null is

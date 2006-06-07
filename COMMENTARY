@@ -53,8 +53,13 @@ with the plugins.
 DEVELOPMENT
 
 When testing out a new plugin,
+    0) test out the plugin in ghci in isolation. don't both linking the
+    rest of the bot.
+then try:
     a) compile with "way=fast" . This is substantially faster
     b) don't go online, just use offline mode
+or try:
+    c) compile with "way=ghci" . This is faster still.
 
 ADDING A NEW PLUGIN
 

@@ -68,7 +68,20 @@ ALL_OBJS=	$(addsuffix .$(way_)o,$(basename $(ALL_SRCS)))
 #
 # Now, get down to business
 #
-all: lambdabot modules runplugs djinn unlambda hoogle
+
+ifneq "$(way)" "ghci"
+
+all: dsl lambdabot modules runplugs djinn unlambda hoogle
+
+else
+
+HC_OPTS += -DGHCi
+all: dsl Lib/Regex.o Lib/Regex.o ghci
+
+endif
+
+ghci:
+	ghci $(HC_OPTS) Main.hs
 
 dsl: scripts/dsl.hs
 	$(GHC) -O -o $@ $<

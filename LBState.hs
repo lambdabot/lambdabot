@@ -38,9 +38,9 @@ readMS :: ModuleT s LB s
 readMS = liftIO $ readMVar ?ref
 
 -- | Produces a with-function. Needs a better name.
-accessorMS :: (s -> (t, t -> s)) -> 
+accessorMS :: (s -> (t, t -> s)) ->
   (t -> (t -> LB ()) -> LB a) -> ModuleT s LB a
-accessorMS decompose f = withMS $ \s writer -> 
+accessorMS decompose f = withMS $ \s writer ->
   let (t,k) = decompose s in f t (writer . k)
 
 -- | Modify the module's private state.
@@ -49,7 +49,7 @@ modifyMS f = liftIO $ modifyMVar_ ?ref (return . f)
 
 -- | Write the module's private state. Try to use withMS instead.
 writeMS :: s -> ModuleT s LB ()
-writeMS = modifyMS . const
+writeMS (x :: s) = modifyMS . const $ x     -- need to help out 6.5 
 
 -- | This datatype allows modules to conviently maintain both global 
 --   (i.e. for all clients they're interacting with) and private state.

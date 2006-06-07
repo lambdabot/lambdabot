@@ -16,7 +16,7 @@ GHC=            @WithGhc@
 HC_OPTS=        -Wall -Werror -fglasgow-exts -I.
 HC_OPTS+=       -pgmF ./dsl -F
 HC_OPTS+=       -funbox-strict-fields -O -fasm
-HC_OPTS+=       -fno-warn-incomplete-patterns -fno-warn-missing-methods
+HC_OPTS+=       -fno-warn-incomplete-patterns -fno-warn-missing-methods -fno-warn-orphans 
 #HC_OPTS+=       -Onot -H64m
 
 #HC_OPTS+=      -debug 

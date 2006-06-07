@@ -91,9 +91,10 @@ listModule :: String -> LB String
 listModule s = withModule ircModules s fromCommand printProvides
   where
     fromCommand = withModule ircCommands s
-        (return $ "No module \""++s++"\" loaded")
-        printProvides
+        (return $ "No module \""++s++"\" loaded") printProvides
 
+    -- ghc now needs a type annotation here
+    printProvides :: (forall mod s. Module mod s => mod -> ModuleT s LB String)
     printProvides m = do
         let cmds = moduleCmds m
         privs <- gets ircPrivCommands
@@ -101,3 +102,4 @@ listModule s = withModule ircModules s fromCommand printProvides
         return . concat $ if null cmds'
                           then [?name, " has no visible commands"]
                           else [?name, " provides: ", showClean cmds']
+

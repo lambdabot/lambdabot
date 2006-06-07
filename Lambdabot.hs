@@ -70,6 +70,10 @@ import Control.Monad.State
 import Control.Monad.Error (MonadError (..))
 import Control.Monad.Trans      ( liftIO )
 
+#if __GLASGOW_HASKELL__ >= 605
+import GHC.Err
+#endif
+
 ------------------------------------------------------------------------
 
 #ifdef mingw32_HOST_OS
@@ -553,7 +557,8 @@ class Module m s | m -> s where
     -- which is guaranteed to at least have a default instance.
     -- This magic (well, for Haskell) occurs in Base.hs
     --
-    process :: Msg.Message a => m           -- ^ phantom     (required)
+    process :: Msg.Message a
+        => m                                -- ^ phantom     (required)
         -> a                                -- ^ the message (uneeded by most?)
         -> String                           -- ^ target      (not needed)
         -> String                           -- ^ command
@@ -565,12 +570,14 @@ class Module m s | m -> s where
     -- to process_, which in turn has a default instance.
     --
     process_ :: m                           -- ^ phantom
-        ->  String -> String                -- ^ command, args
-        -> ModuleLB s                       -- ^ maybe output
+             -> String -> String            -- ^ command, args
+             -> ModuleLB s                  -- ^ maybe output
 
 ------------------------------------------------------------------------
 
-    process_ _ _ _     = return []
+    process_ _ _ _        = return []
+    process _ _ _ _ _ = GHC.Err.noMethodBindingError "Lambdabot.process"#
+
     moduleHelp m _     = concat (map ('@':) (moduleCmds m))
     modulePrivs _      = []
     moduleCmds      _  = []
