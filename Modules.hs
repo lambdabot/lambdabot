@@ -1,0 +1,84 @@
+module Modules where
+import Lambdabot
+
+import qualified Plugin.Base
+import qualified Plugin.System
+import qualified Plugin.Dict
+import qualified Plugin.Dummy
+import qualified Plugin.Karma
+import qualified Plugin.Quote
+import qualified Plugin.Seen
+import qualified Plugin.State
+import qualified Plugin.Topic
+import qualified Plugin.Type
+import qualified Plugin.Plugs
+import qualified Plugin.Babel
+import qualified Plugin.Version
+import qualified Plugin.More
+import qualified Plugin.Pl
+import qualified Plugin.Help
+import qualified Plugin.Dice
+import qualified Plugin.Search
+import qualified Plugin.Vixen
+import qualified Plugin.Fact
+import qualified Plugin.Todo
+import qualified Plugin.Spell
+import qualified Plugin.Haddock
+import qualified Plugin.Hoogle
+import qualified Plugin.Where
+import qualified Plugin.Elite
+import qualified Plugin.Localtime
+import qualified Plugin.Poll
+import qualified Plugin.Djinn
+import qualified Plugin.Pretty
+import qualified Plugin.Compose
+import qualified Plugin.Lambda
+import qualified Plugin.Unlambda
+import qualified Plugin.Log
+import qualified Plugin.Slap
+import qualified Plugin.DrHylo
+import qualified Plugin.Instances
+
+loadStaticModules :: LB ()
+loadStaticModules
+ = do
+ ircInstallModule Plugin.Base.theModule "base"
+ ircInstallModule Plugin.System.theModule "system"
+ ircInstallModule Plugin.Dict.theModule "dict"
+ ircInstallModule Plugin.Dummy.theModule "dummy"
+ ircInstallModule Plugin.Karma.theModule "karma"
+ ircInstallModule Plugin.Quote.theModule "quote"
+ ircInstallModule Plugin.Seen.theModule "seen"
+ ircInstallModule Plugin.State.theModule "state"
+ ircInstallModule Plugin.Topic.theModule "topic"
+ ircInstallModule Plugin.Type.theModule "type"
+ ircInstallModule Plugin.Plugs.theModule "plugs"
+ ircInstallModule Plugin.Babel.theModule "babel"
+ ircInstallModule Plugin.Version.theModule "version"
+ ircInstallModule Plugin.More.theModule "more"
+ ircInstallModule Plugin.Pl.theModule "pl"
+ ircInstallModule Plugin.Help.theModule "help"
+ ircInstallModule Plugin.Dice.theModule "dice"
+ ircInstallModule Plugin.Search.theModule "search"
+ ircInstallModule Plugin.Vixen.theModule "vixen"
+ ircInstallModule Plugin.Fact.theModule "fact"
+ ircInstallModule Plugin.Todo.theModule "todo"
+ ircInstallModule Plugin.Spell.theModule "spell"
+ ircInstallModule Plugin.Haddock.theModule "haddock"
+ ircInstallModule Plugin.Hoogle.theModule "hoogle"
+ ircInstallModule Plugin.Where.theModule "where"
+ ircInstallModule Plugin.Elite.theModule "elite"
+ ircInstallModule Plugin.Localtime.theModule "localtime"
+ ircInstallModule Plugin.Poll.theModule "poll"
+ ircInstallModule Plugin.Djinn.theModule "djinn"
+ ircInstallModule Plugin.Pretty.theModule "pretty"
+ ircInstallModule Plugin.Compose.theModule "compose"
+ ircInstallModule Plugin.Lambda.theModule "lambda"
+ ircInstallModule Plugin.Unlambda.theModule "unlambda"
+ ircInstallModule Plugin.Log.theModule "log"
+ ircInstallModule Plugin.Slap.theModule "slap"
+ ircInstallModule Plugin.DrHylo.theModule "drHylo"
+ ircInstallModule Plugin.Instances.theModule "instances"
+
+plugins :: [String]
+plugins = []

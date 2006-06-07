@@ -27,9 +27,9 @@ instance P.Module DrHyloModule () where
 
     moduleCmds _   = ["hylo"]
     moduleHelp _ _ = "hylo <expr>. Derive hylomorphism for <expr>. Based on DrHylo. \n\ 
-                      \Uses the Pointless.Combinators from: \n\
+                      \Uses the Pointless.Combinators from: \n\ 
                       \ http://wiki.di.uminho.pt/twiki/bin/view/Alcino/PointlessHaskell\n\ 
-                      \Mirrored:\n\
+                      \Mirrored:\n\ 
                       \  http://www.cse.unsw.edu.au/~dons/Pointless/"
 
 hylo :: String -> IO [String]

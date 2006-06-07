@@ -1,0 +1,63 @@
+--
+-- Cabal build system for lambdabot
+--
+-- Currently only builds the static version of the bot, which should be
+-- enough for most people
+--
+Name:                lambdabot
+Version:             4.0
+License:             GPL
+License-file:        LICENSE
+Author:              Don Stewart
+Maintainer:          dons@cse.unsw.edu.au
+Build-Depends:       base, unix, network, parsec, mtl, haskell-src, haskell98, readline, plugins>=1.0, fps>=0.7
+
+--
+-- first build the preprocessor
+--
+Executable:          dsl
+hs-source-dirs:      scripts/
+Main-is:             dsl.hs
+ghc-options:         -funbox-strict-fields -O
+
+--
+-- Hoogle
+--
+Executable:          hoogle
+hs-source-dirs:      scripts/hoogle/src
+Main-is:             CmdLine.hs
+ghc-options:         -O
+
+--
+-- Djinn
+--
+Executable:          djinn
+hs-source-dirs:      scripts/Djinn
+Main-is:             Djinn.hs
+ghc-options:         -funbox-strict-fields -O
+
+--
+-- Unlambda
+--
+Executable:          unlambda
+hs-source-dirs:      scripts/
+Main-is:             Unlambda.hs
+ghc-options:         -funbox-strict-fields -O
+
+--
+-- runplugs
+--
+Executable:          runplugs
+hs-source-dirs:      scripts/
+Main-is:             RunPlugs.hs
+ghc-options:         -funbox-strict-fields -O
+
+--
+-- Lambdabot
+--
+Executable:          lambdabot
+Main-is:             Main.hs
+extensions:          CPP
+other-modules:       Lib.Regex
+ghc-options:         -Wall -Werror -fglasgow-exts -pgmF dist/build/dsl/dsl -F -funbox-strict-fields -O -fasm -fno-warn-incomplete-patterns -fno-warn-missing-methods -fno-warn-orphans -I. -optl-Wl,-s -threaded
+
