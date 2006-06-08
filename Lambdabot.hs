@@ -9,7 +9,7 @@ module Lambdabot (
         IRCRState(..), IRCRWState(..), IRCError(..),
         module Msg,
 
-        LB, mapLB, lbIO,
+        LB, liftLB, lbIO,
 
         withModule, withAllModules, getDictKeys,
 
@@ -215,8 +215,8 @@ newtype LB a = LB { runLB :: ReaderT (IORef (Maybe IRCRState),IORef IRCRWState) 
 #endif
 
 -- | lift an io transformer into LB
-mapLB :: (IO a -> IO b) -> LB a -> LB b
-mapLB f = LB . mapReaderT f . runLB -- lbIO (\conv -> f (conv lb))
+liftLB :: (IO a -> IO b) -> LB a -> LB b
+liftLB f = LB . mapReaderT f . runLB -- lbIO (\conv -> f (conv lb))
 
 -- lbIO return :: LB (LB a -> IO a)
 -- CPS to work around predicativiy of haskell's type system.

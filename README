@@ -13,16 +13,14 @@ Build with cabal (easiest):
     $ ./Setup.hs install
     $ ./lambdabot
 
-You can also build with GNU make (most flexible):
-    $ chmod +x configure
-    $ ./configure
+You can also build with GNU make (flexible, allows profiling and dynamic builds):
+    $ sh ./configure
     -- edit Config.hs to your requirements
     $ make
     $ ./lambdabot
 
 Or with ghci (fastest)
-    $ chmod +x configure
-    $ ./configure
+    $ sh ./configure
     -- edit Config.hs to your requirements
     $ make way=ghci
 then

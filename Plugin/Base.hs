@@ -328,8 +328,9 @@ maybeCommand nm text = case matchRegexAll re text of
 
 -- | run an IO action in another thread, with a timeout, lifted into LB
 forkLB :: LB a -> LB ()
-forkLB f = (`mapLB` f) $ \g -> do
+forkLB f = (`liftLB` f) $ \g -> do
             forkIO $ do
                 timeout (15 * 1000 * 1000) g
                 return ()
             return ()
+
