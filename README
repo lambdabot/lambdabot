@@ -13,6 +13,19 @@ Build with cabal:
     $ ./Setup.hs install
     $ ./lambdabot
 
+You can also build with GNU make:
+    $ chmod +x configure
+    $ ./configure
+    -- edit Config.hs to your requirements
+    $ make
+    $ ./lambdabot
+
+Or with ghci:
+    $ chmod +x configure
+    $ ./configure
+    -- edit Config.hs to your requirements
+    $ make way=ghci
+
 ------------------------------------------------------------------------
 
 Optionally, for the Haskell eval plugin to work, you need to also
@@ -26,14 +39,6 @@ or just live with those plugins not working.
 
 Plugins are added or removed config.mk and removing them from the list
 of PLUGINS.
-
-You can also build with GNU make, which is currently more flexible:
-    $ cd lambdabot/
-    $ autoconf
-    $ ./configure
-    -- edit Config.hs to your requirements
-    $ make
-    $ ./lambdabot
 
 For compiling with profiling on:
 

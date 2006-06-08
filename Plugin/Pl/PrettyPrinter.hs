@@ -1,6 +1,5 @@
-
-{-# OPTIONS -fvia-C -O2 -optc-O3 #-}
-module Plugin.Pl.PrettyPrinter (Expr) where 
+{-# OPTIONS -fvia-C #-}
+module Plugin.Pl.PrettyPrinter (Expr) where
 
 -- Dummy export to make ghc -Wall happy
 

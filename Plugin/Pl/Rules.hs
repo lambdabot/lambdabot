@@ -1,4 +1,4 @@
-{-# OPTIONS -fvia-C -O2 -optc-O3 #-}
+{-# OPTIONS -fvia-C #-}
 {-# OPTIONS -fno-warn-name-shadowing #-}
 -- 6.4 gives a name shadow warning I haven't tracked down.
 

@@ -1,8 +1,8 @@
-{-# OPTIONS -fvia-C -O2 -optc-O3 #-}
+{-# OPTIONS -fvia-C #-}
 
 module Plugin.Pl.Common (
-        Fixity(..), Expr(..), Pattern(..), Decl(..), TopLevel(..), 
-        bt, sizeExpr, mapTopLevel, getExpr, 
+        Fixity(..), Expr(..), Pattern(..), Decl(..), TopLevel(..),
+        bt, sizeExpr, mapTopLevel, getExpr,
         operators, opchars, reservedOps, lookupOp, lookupFix, minPrec, maxPrec,
         comp, flip', id', const', scomb, cons, nil, fix', if',
         makeList, getList,
