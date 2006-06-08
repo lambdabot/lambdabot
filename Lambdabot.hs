@@ -565,6 +565,7 @@ class Module m s | m -> s where
         -> String                           -- ^ the arguments to the command
         -> ModuleLB s                       -- ^ maybe output
 
+    -- | Process contextual input.
     contextual :: Msg.Message a => m        -- ^ phantom     (required)
         -> a                                -- ^ the message (uneeded by most?)
         -> String                           -- ^ target      (not needed)
@@ -579,13 +580,16 @@ class Module m s | m -> s where
              -> String -> String            -- ^ command, args
              -> ModuleLB s                  -- ^ maybe output
 
+    -- | And like process_, but for contextual input
     contextual_ :: m                        -- ^ phantom
         -> String                           -- ^ the text
         -> ModuleLB s                       -- ^ maybe output
 
 ------------------------------------------------------------------------
 
+    contextual_ _ _    = return []
     process_ _ _ _     = return []
+
     moduleHelp m _     = concat (map ('@':) (moduleCmds m))
     modulePrivs _      = []
     moduleCmds      _  = []
@@ -594,6 +598,11 @@ class Module m s | m -> s where
     moduleSticky _     = False
     moduleSerialize _  = Nothing
     moduleDefState  _  = return $ error "state not initalized"
+
+-- work around weird issue in 6.5, where the missing default fails
+#if __GLASGOW_HASKELL__ >= 605
+    process _ _ _ _ _ = GHC.Err.noMethodBindingError "Lambdabot.process"#
+#endif
 
 ------------------------------------------------------------------------
 
