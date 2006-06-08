@@ -259,6 +259,8 @@ doPRIVMSG' myname msg
     -- check privledges, do any spell correction, dispatch, handling
     -- possible timeouts.
     --
+    -- todo, refactor
+    --
     doMsg cmd rest towhere = do
         let ircmsg = ircPrivmsg towhere
         allcmds <- getDictKeys ircCommands
@@ -277,20 +279,19 @@ doPRIVMSG' myname msg
             docmd cmd' =
               forkLB $ withPS towhere $ \_ _ -> do
                 withModule ircCommands cmd'   -- Important. 
-                    (ircPrivmsg towhere (Just "Unknown command, try @list")) (\m -> do
+                    (ircPrivmsg towhere (Just "Unknown command, try @list"))
+                    (\m -> do
                         privs <- gets ircPrivCommands
-                        ok    <- if cmd' `notElem` privs
-                                 then return True else checkPrivs msg
+                        ok    <- if cmd' `notElem` privs then return True else checkPrivs msg
                         if not ok
                           then ircPrivmsg towhere $ Just "Not enough privileges"
                           else catchIrc
-
-                            (do mstrs <- catchError -- :: m a -> (e -> m a) -> m a
-                                        (process m msg towhere cmd' rest)
-                                        (\ex -> case (ex :: IRCError) of -- dispatch
-                                            (IRCRaised (NoMethodError _)) ->
-                                                process_ m cmd' rest
-                                            _ -> throwError ex)
+                            (do mstrs <- catchError
+                                    (process m msg towhere cmd' rest)
+                                    (\ex -> case (ex :: IRCError) of -- dispatch
+                                                (IRCRaised (NoMethodError _)) ->
+                                                    process_ m cmd' rest
+                                                _ -> throwError ex)
                                 case mstrs of
                                     [] -> ircPrivmsg towhere Nothing
                                     _  -> mapM_ (ircPrivmsg towhere . Just) mstrs)
