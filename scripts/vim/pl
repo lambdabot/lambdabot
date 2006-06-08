@@ -17,5 +17,5 @@
 
 DECL=`cat`
 cd $HOME/lambdabot/
-echo "pl $DECL" | ./lambdabot | sed '$d;s/lambdabot> //'
+echo "pl $DECL" | ./lambdabot 2> /dev/null | sed '$d;/Irc/d;s/lambdabot> //'
 
