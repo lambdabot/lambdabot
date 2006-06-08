@@ -203,8 +203,9 @@ decodeMessage line =
 -- complicates things.
 --
 -- Online reader loop, the mvars are unused
+
 readerLoop :: ThreadId -> Pipe IrcMessage -> Pipe IrcMessage -> Handle -> MVar () -> MVar () -> IO ()
-readerLoop threadmain chanr chanw h _ _ = handle (throwTo threadmain) $ do
+readerLoop th chanr chanw h _ _ = handleIO th $ do
     io (putStrLn "Running reader loop...")
     readerLoop'
   where
@@ -225,7 +226,7 @@ readerLoop threadmain chanr chanw h _ _ = handle (throwTo threadmain) $ do
 -- Implements flood control: RFC 2813, section 5.8
 --
 writerLoop :: ThreadId -> Pipe IrcMessage -> Handle -> MVar () -> MVar () -> IO ()
-writerLoop threadmain chanw h _ _ = handle (throwTo threadmain) $ do
+writerLoop th chanw h _ _ = handleIO th $ do
     sem1 <- newQSem 0
     sem2 <- newQSem 5
     forkIO $ sequence_ . repeat $ do
@@ -258,8 +259,7 @@ writerLoop threadmain chanw h _ _ = handle (throwTo threadmain) $ do
 --
 offlineReaderLoop :: ThreadId -> Pipe IrcMessage -> Pipe IrcMessage -> Handle
                   -> MVar () -> MVar () -> IO ()
-offlineReaderLoop threadmain chanr _chanw _h syncR syncW =
-  handle (\e -> throwTo threadmain e) readerLoop'
+offlineReaderLoop th chanr _chanw _h syncR syncW = handleIO th readerLoop'
   where
     readerLoop' = do
         takeMVar syncR  -- wait till writer lets us proceed
@@ -290,8 +290,7 @@ offlineReaderLoop threadmain chanr _chanw _h syncR syncW =
 -- Offline writer. Print to stdout
 --
 offlineWriterLoop :: ThreadId -> Pipe IrcMessage -> Handle -> MVar () -> MVar () -> IO ()
-offlineWriterLoop threadmain chanw h syncR syncW =
-    handle (\e -> throwTo threadmain e) writerLoop'
+offlineWriterLoop th chanw h syncR syncW = handleIO th writerLoop'
   where
     writerLoop' = do
 
@@ -318,3 +317,15 @@ offlineWriterLoop threadmain chanw h syncR syncW =
 io :: forall a (m :: * -> *). (MonadIO m) => IO a -> m a
 io = liftIO
 {-# INLINE io #-}
+
+-- Thread handler, just catch particular things we want to throw out to
+-- the main thread, to force an exit. errorCalls are used by the
+-- reader/writer loops to exit. ioErrors are probably sockets closing.
+handleIO :: ThreadId -> IO () -> IO ()
+handleIO th = handleJust
+    (\e -> case () of { _
+                | Just _ <- errorCalls e -> Just e
+                | Just _ <- ioErrors   e -> Just e
+                | otherwise              -> Nothing
+    }) (\e -> throwTo th (error (show e)))
+

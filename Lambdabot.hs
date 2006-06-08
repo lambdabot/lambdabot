@@ -34,7 +34,7 @@ import qualified Message as Msg
 import qualified IRC    (IrcMessage, quit, privmsg, readerLoop
                         ,writerLoop, offlineReaderLoop, offlineWriterLoop, user, setNick)
 import qualified Shared as S
-import ErrorUtils       (bracketError, tryErrorJust, finallyError, catchErrorJust, tryError)
+import ErrorUtils
 
 import Lib.Util             (lowerCaseString, addList)
 import Lib.Serial
@@ -459,7 +459,7 @@ initState as ld = IRCRWState {
 -- Actually connect to the irc server
 --
 runIrc' :: Mode -> LB a -> LB ()
-runIrc' mode loop = do
+runIrc' mode loop = do -- exit cleanly
 
     -- in offline mode we connect to stdin/stdout. in online mode our
     -- handles are network pipes
@@ -495,12 +495,13 @@ runIrc' mode loop = do
            (localLB (Just chans) $ catchSignals $ loop >> ircQuit "Terminated")
 
            -- threads blocked on foreign calls ignore killThread.
-           (io $ when (mode == Online) $ hClose hin)
+           (io $ do when (mode == Online) $ hClose hin
+                    killThread threadr
+                    killThread threadw)
 
     reconn <- gets ircStayConnected
     if reconn && mode == Online
-        then runIrc' mode loop
-        else exitModules
+        then runIrc' mode loop else exitModules
 
   where
     isEOFon s (IRCRaised (IOException e))
