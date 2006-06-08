@@ -85,6 +85,9 @@ ADDING A NEW PLUGIN
 * Ensure it implements the Module class (see Hello.hs for the bare minimum).
 * Add your plugin's module name to config.mk.in, for the static and dynamic plugin lists.
 * import Plugin to get most common functions
+* rebuild using gmake, to get genmodules to regenerate Modules.hs
+
+N.B. you need to use the make path, not cabal, to regenerate the Modules.hs file.
 
 PLUGIN STATE
 
