@@ -80,7 +80,7 @@ getInstances s cls | Nothing <- matchRegex isClassRegex s
                       = ["Not a class! Perhaps you need to import the " ++
                          " module that defines it? Try @help instances-importing."]
                    | otherwise = sort $ mapMaybe doParse (tail splut)
-    where isClassRegex = mkRegex $ "class (\\([^)]+\\) => )?" ++ cls
+    where isClassRegex = mkRegex $ "class ([^\n]* )?" ++ cls ++ " [a-z]* where"
           splut        = split "instance" s
           unbracket str | head str == '(' && last str == ')' && 
                           all (/=',') str && str /= "()" =
