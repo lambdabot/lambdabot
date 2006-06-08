@@ -305,18 +305,14 @@ doPRIVMSG' myname msg
     -- we try to run the contextual functions from all modules, on every
     -- non-command. better hope this is efficient.
     --
-    doContextualMsg r =
-        withPS alltargets $ \_ _ -> do
-           withAllModules (\m ->
-              forkLB $ catchIrc
+    doContextualMsg r = do
+        withAllModules (\m ->
+            forkLB $ catchIrc
                 (do ms <- contextual m msg alltargets r
-                    case ms of
-                        [] -> return () -- ircPrivmsg alltargets Nothing
-                        _  -> mapM_ (ircPrivmsg alltargets . Just) ms
-
-                ) (\s -> debugStrLn
-                    (?name++" module failed in contextual handler: "++s)) ) -- stay quiet
-           return ()
+                    mapM_ (ircPrivmsg alltargets . Just) ms)
+                (\s -> debugStrLn
+                    (?name++" module failed in contextual handler: "++s)) )
+        return ()
 
 ------------------------------------------------------------------------
 
