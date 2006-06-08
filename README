@@ -5,7 +5,7 @@ You'll need GHC >= 6.4
 Build the Data.ByteString library at http://www.cse.unsw.edu.au/~dons,
 version 0.7 and later are ok.
 
-Build with cabal:
+Build with cabal (easiest):
     $ chmod +x Setup.hs configure
     $ ./Setup.hs configure --bindir=`pwd`
     -- edit Config.hs to your requirements
@@ -13,18 +13,22 @@ Build with cabal:
     $ ./Setup.hs install
     $ ./lambdabot
 
-You can also build with GNU make:
+You can also build with GNU make (most flexible):
     $ chmod +x configure
     $ ./configure
     -- edit Config.hs to your requirements
     $ make
     $ ./lambdabot
 
-Or with ghci:
+Or with ghci (fastest)
     $ chmod +x configure
     $ ./configure
     -- edit Config.hs to your requirements
     $ make way=ghci
+then
+    *Main> main
+or
+    *Main> online
 
 ------------------------------------------------------------------------
 
