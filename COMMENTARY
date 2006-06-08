@@ -60,6 +60,8 @@ then try:
     b) don't go online, just use offline mode
 or try:
     c) compile with "way=ghci" . This is faster still.
+       and then launch 'online' to connect, or 'main' to run in command
+       line mode. 
 
 ADDING A NEW PLUGIN
 

@@ -35,6 +35,12 @@ main' dyn = do
 
     where load = fromMaybe (error "no dynamic loading") dyn
 
+--
+-- special online target for ghci use
+online :: IO ()
+online = runIrc Online loadStaticModules onlineMain $
+            fromMaybe (error "no dynamic loading") Nothing
+
 ------------------------------------------------------------------------
 
 onlineMain :: LB ()

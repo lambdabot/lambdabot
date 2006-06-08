@@ -24,7 +24,7 @@ module Lambdabot (
 
         ircLoad, ircUnload,
 
-        checkPrivs, mkCN, handleIrc, runIrc,
+        checkPrivs, mkCN, handleIrc, catchIrc, runIrc,
 
         io,
   ) where
@@ -214,6 +214,7 @@ newtype LB a = LB { runLB :: ReaderT (IORef (Maybe IRCRState),IORef IRCRWState) 
   deriving (Monad,Functor,MonadIO)
 #endif
 
+-- | lift an io transformer into LB
 mapLB :: (IO a -> IO b) -> LB a -> LB b
 mapLB f = LB . mapReaderT f . runLB -- lbIO (\conv -> f (conv lb))
 
@@ -406,10 +407,14 @@ mlines = (mbreak =<<) . lines
 -- a bit. Can't just catch everything - in particular EOFs from the socket
 -- loops get thrown to this thread and we musn't just ignore them.
 --
-handleIrc :: (MonadError IRCError m) => (String -> m ()) -> m () -> m ()
+handleIrc :: MonadError IRCError m => (String -> m ()) -> m () -> m ()
 handleIrc handler m = catchError m $ \e -> case e of
         IRCRaised s -> handler $ show s
         _           -> throwError e
+
+-- Like handleIrc, but with arguments reversed
+catchIrc :: MonadError IRCError m => m () -> (String -> m ()) -> m ()
+catchIrc = flip handleIrc
 
 ------------------------------------------------------------------------
 --
@@ -560,15 +565,17 @@ class Module m s | m -> s where
     process :: Msg.Message a
         => m                                -- ^ phantom     (required)
         -> a                                -- ^ the message (uneeded by most?)
-        -> String                           -- ^ target      (not needed)
+        -> String                           -- ^ target
         -> String                           -- ^ command
         -> String                           -- ^ the arguments to the command
         -> ModuleLB s                       -- ^ maybe output
 
-    -- | Process contextual input.
-    contextual :: Msg.Message a => m        -- ^ phantom     (required)
-        -> a                                -- ^ the message (uneeded by most?)
-        -> String                           -- ^ target      (not needed)
+    -- | Process contextual input. A plugin that implements 'contextual'
+    -- is able to respond to text not part of a normal command.
+    contextual :: Msg.Message a
+        => m                                -- ^ phantom     (required)
+        -> a                                -- ^ the message
+        -> String                           -- ^ target
         -> String                           -- ^ the text
         -> ModuleLB s                       -- ^ maybe output
 
@@ -580,14 +587,9 @@ class Module m s | m -> s where
              -> String -> String            -- ^ command, args
              -> ModuleLB s                  -- ^ maybe output
 
-    -- | And like process_, but for contextual input
-    contextual_ :: m                        -- ^ phantom
-        -> String                           -- ^ the text
-        -> ModuleLB s                       -- ^ maybe output
-
 ------------------------------------------------------------------------
 
-    contextual_ _ _    = return []
+    contextual _ _ _ _ = return []
     process_ _ _ _     = return []
 
     moduleHelp m _     = concat (map ('@':) (moduleCmds m))
@@ -750,15 +752,13 @@ withModule dict modname def f = do
       Just (ModuleRef m ref name) -> let ?ref = ref; ?name = name in f m
       _                           -> def
 
-
-withAllModules :: (forall mod s. Module mod s => mod -> ModuleT s LB a)
-               -> LB [a]
-
+-- | Interpret a function in the context of all modules
+withAllModules :: (forall mod s. Module mod s => mod -> ModuleT s LB a) -> LB [a]
 withAllModules f = do
-  mods <- gets $ M.elems . ircModules
-  (`mapM` mods) $ \(ModuleRef mod ref name) -> do
-     let ?ref = ref; ?name = name   -- what is this line for?     
-     f mod
+    mods <- gets $ M.elems . ircModules :: LB [ModuleRef]
+    (`mapM` mods) $ \(ModuleRef m ref name) -> do
+        let ?ref = ref; ?name = name
+        f m
 
 getDictKeys :: (MonadState s m) => (s -> Map k a) -> m [k]
 getDictKeys dict = gets (M.keys . dict)

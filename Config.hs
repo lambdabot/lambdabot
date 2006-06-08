@@ -17,7 +17,6 @@ data Config = Config {
         port      :: Int,           -- ^ The port number to use on the host
         protocol  :: Protocol,      -- ^ either irc or xmpp/jabber
         verbose   :: Bool,          -- ^ Should lambdabot be verbose?
-        moresize  :: Int,           -- ^ How many lines is output before \@more?
         textwidth :: Int,           -- ^ How many columns should we use
         autojoin  :: [String],      -- ^ List of channels to autojoin
         admins    :: [String],      -- ^ List of nicknames that are admins
@@ -50,7 +49,6 @@ config = Config {
         port            = 6667,
         verbose         = True,
         textwidth       = 350,
-        moresize        = 1,
         proxy           = Just ("www-proxy",3128),
         autojoin        = ["#haskell","#haskell-blah","#flippi"
                  	  ,"#haskell-overflow","#gentoo-haskell"

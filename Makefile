@@ -76,7 +76,7 @@ all: dsl lambdabot modules runplugs djinn unlambda hoogle
 else
 
 HC_OPTS += -DGHCi
-all: dsl Lib/Regex.o ghci
+all: dsl Lib/Regex.o runplugs djinn unlambda hoogle ghci
 
 endif
 

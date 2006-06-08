@@ -253,25 +253,12 @@ doPRIVMSG' myname msg
                       | evals    `arePrefixesWithSpaceOf` s = doMsg "run" r alltargets
                       | otherwise                           = doIGNORE msg
 
-    doContextualMsg r = do
-      mapLB forkIO $ withPS alltargets $ \_ _ -> do
-        let actions = withAllModules (\m -> handleIrc
-             (ircPrivmsg alltargets . Just .((?name++" module failed: ")++))
-             (do mstrs <- catchError -- :: m a -> (e -> m a) -> m a
-                           (contextual m msg alltargets r)
-                           (\ex -> case (ex :: IRCError) of
-                                     (IRCRaised (NoMethodError _)) -> contextual_ m r
-                                     _                             -> throwError ex)
-                 case mstrs of
-                   [] -> ircPrivmsg alltargets Nothing
-                   _  -> mapM_ (ircPrivmsg alltargets . Just) mstrs)
-                )
-        -- dons: actions is LB [a], how do I run all of them making sure
-        -- none take more than 15 seconds each?
-        mapLB (timeout $ 15*1000*1000) actions
-        return ()
-      return ()
-
+    --
+    -- normal commands.
+    --
+    -- check privledges, do any spell correction, dispatch, handling
+    -- possible timeouts.
+    --
     doMsg cmd rest towhere = do
         let ircmsg = ircPrivmsg towhere
         allcmds <- getDictKeys ircCommands
@@ -286,46 +273,49 @@ doPRIVMSG' myname msg
                   _ -> docmd cmd         -- no prefix, edit distance too far
         where
             e = 3   -- edit distance cut off. Seems reasonable for small words
-            -- Concurrency: We ensure that only one module communicates with
-            -- each target at once.
-            -- Timeout: We kill the thread after 1 minute
-            --
-            -- Make sure to do the priv check on the post-spell-check cmd.
-            --
-            docmd cmd' = do
-              mapLB forkIO $ withPS towhere $ \_ _ -> do
-                let act = withModule ircCommands cmd'   -- Important. 
-                      (ircPrivmsg towhere (Just "Unknown command, try @list")) (\m -> do
+
+            docmd cmd' =
+              forkLB $ withPS towhere $ \_ _ -> do
+                withModule ircCommands cmd'   -- Important. 
+                    (ircPrivmsg towhere (Just "Unknown command, try @list")) $ \m -> do
                         privs <- gets ircPrivCommands
                         ok    <- if cmd' `notElem` privs
-                                 then return True
-                                 else checkPrivs msg
+                                 then return True else checkPrivs msg
                         if not ok
                           then ircPrivmsg towhere $ Just "Not enough privileges"
-                          else handleIrc
-                            -- TODO
-                            (ircPrivmsg towhere . Just .((?name++" module failed: ")++))
-
-                            -- Two-level function dispatch.
-                            -- Attempt to run first `process', 
-                            -- if that doesn't exist, catch the
-                            -- execption, and fall back to `process_',
-                            -- which has a default implementation
+                          else catchIrc
 
                             (do mstrs <- catchError -- :: m a -> (e -> m a) -> m a
                                         (process m msg towhere cmd' rest)
-                                        (\ex -> case (ex :: IRCError) of
+                                        (\ex -> case (ex :: IRCError) of -- dispatch
                                             (IRCRaised (NoMethodError _)) ->
                                                 process_ m cmd' rest
                                             _ -> throwError ex)
                                 case mstrs of
                                     [] -> ircPrivmsg towhere Nothing
                                     _  -> mapM_ (ircPrivmsg towhere . Just) mstrs)
-                      )
 
-                mapLB (timeout $ 15*1000*1000) act
-                return ()
-              return ()
+                            (ircPrivmsg towhere . Just .((?name++" module failed: ")++))
+
+    --
+    -- contextual messages are all input that isn't an explicit command.
+    -- they're passed to all modules (todo, sounds inefficient) for
+    -- scanning, and any that implement 'contextual' will reply.
+    --
+    -- we try to run the contextual functions from all modules, on every
+    -- non-command. better hope this is efficient.
+    --
+    doContextualMsg r =
+        withPS alltargets $ \_ _ -> do
+            withAllModules $ \m -> forkLB $ catchIrc
+                (do ms <- contextual m msg alltargets r
+                    case ms of
+                        [] -> return () -- ircPrivmsg alltargets Nothing
+                        _  -> mapM_ (ircPrivmsg alltargets . Just) ms
+
+                ) (\s -> debugStrLn
+                    (?name++" module failed in contextual handler: "++s)) -- stay quiet
+            return ()
 
 ------------------------------------------------------------------------
 
@@ -335,3 +325,10 @@ maybeCommand nm text = case matchRegexAll re text of
       Just (_, _, cmd, _) -> Just cmd
     where re = mkRegex (nm ++ "[.:,]*[[:space:]]*")
 
+-- | run an IO action in another thread, with a timeout, lifted into LB
+forkLB :: LB a -> LB ()
+forkLB f = (`mapLB` f) $ \g -> do
+            forkIO $ do
+                timeout (15 * 1000 * 1000) g
+                return ()
+            return ()

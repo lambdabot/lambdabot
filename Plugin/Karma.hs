@@ -24,10 +24,6 @@ instance Module KarmaModule KarmaState where
     moduleDefState  _ = return $ M.empty
     moduleSerialize _ = Just mapSerial
 
-    -- Just testing to see if the contextual hook is working, not really
-    -- useful here, but it was one of the first plugins I was looking at.
-    contextual   _ _ _ text = return ["Recv'd contextual message: " ++ text]
-
     process      _ _ _ "karma-all" _ = listKarma
     process      _ msg _ cmd rest =
         case words rest of
