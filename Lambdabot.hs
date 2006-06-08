@@ -509,13 +509,10 @@ runIrc' mode loop = do
          return ()
 
     exitModules = do
-        mods <- gets $ M.elems . ircModules
-        (`mapM_` mods) $ \(ModuleRef mod ref name) -> do
-
-            -- stick them in the monad state instead.
-            let ?ref = ref; ?name = name -- Call ircUnloadModule?
+        withAllModules (\mod -> do
             moduleExit mod
-            writeGlobalState mod name
+            writeGlobalState mod ?name)
+        return ()
 
 
 ------------------------------------------------------------------------
