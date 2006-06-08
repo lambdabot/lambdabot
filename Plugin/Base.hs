@@ -236,7 +236,8 @@ doPRIVMSG' myname msg
     = let expr = drop 2 text
       in doPublicMsg "@run" (dropWhile (==' ') expr)
 
-  | otherwise = doIGNORE msg
+  -- send to all modules for contextual processing
+  | otherwise = doContextualMsg text
 
   where
     alltargets = head (body msg)
@@ -251,6 +252,25 @@ doPRIVMSG' myname msg
     doPublicMsg s r   | commands `arePrefixesOf` s          = doMsg (tail s)        r alltargets
                       | evals    `arePrefixesWithSpaceOf` s = doMsg "run" r alltargets
                       | otherwise                           = doIGNORE msg
+
+    doContextualMsg r = do
+      mapLB forkIO $ withPS alltargets $ \_ _ -> do
+        let actions = withAllModules (\m -> handleIrc
+             (ircPrivmsg alltargets . Just .((?name++" module failed: ")++))
+             (do mstrs <- catchError -- :: m a -> (e -> m a) -> m a
+                           (contextual m msg alltargets r)
+                           (\ex -> case (ex :: IRCError) of
+                                     (IRCRaised (NoMethodError _)) -> contextual_ m r
+                                     _                             -> throwError ex)
+                 case mstrs of
+                   [] -> ircPrivmsg alltargets Nothing
+                   _  -> mapM_ (ircPrivmsg alltargets . Just) mstrs)
+                )
+        -- dons: actions is LB [a], how do I run all of them making sure
+        -- none take more than 15 seconds each?
+        mapLB (timeout $ 15*1000*1000) actions
+        return ()
+      return ()
 
     doMsg cmd rest towhere = do
         let ircmsg = ircPrivmsg towhere

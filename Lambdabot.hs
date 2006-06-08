@@ -11,7 +11,7 @@ module Lambdabot (
 
         LB, mapLB, lbIO,
 
-        withModule, getDictKeys,
+        withModule, withAllModules, getDictKeys,
 
         send, send_,
         ircPrivmsg, ircPrivmsg', -- not generally used
@@ -565,6 +565,12 @@ class Module m s | m -> s where
         -> String                           -- ^ the arguments to the command
         -> ModuleLB s                       -- ^ maybe output
 
+    contextual :: Msg.Message a => m        -- ^ phantom     (required)
+        -> a                                -- ^ the message (uneeded by most?)
+        -> String                           -- ^ target      (not needed)
+        -> String                           -- ^ the text
+        -> ModuleLB s                       -- ^ maybe output
+
     -- | Like process, but uncommonly used args are ignored
     -- Lambdabot will attempt to run process first, and then fall back
     -- to process_, which in turn has a default instance.
@@ -573,13 +579,13 @@ class Module m s | m -> s where
              -> String -> String            -- ^ command, args
              -> ModuleLB s                  -- ^ maybe output
 
+    contextual_ :: m                        -- ^ phantom
+        -> String                           -- ^ the text
+        -> ModuleLB s                       -- ^ maybe output
+
 ------------------------------------------------------------------------
 
-    process_ _ _ _        = return []
-#if __GLASGOW_HASKELL__ >= 605
-    process _ _ _ _ _ = GHC.Err.noMethodBindingError "Lambdabot.process"#
-#endif
-
+    process_ _ _ _     = return []
     moduleHelp m _     = concat (map ('@':) (moduleCmds m))
     modulePrivs _      = []
     moduleCmds      _  = []
@@ -735,6 +741,15 @@ withModule dict modname def f = do
       Just (ModuleRef m ref name) -> let ?ref = ref; ?name = name in f m
       _                           -> def
 
+
+withAllModules :: (forall mod s. Module mod s => mod -> ModuleT s LB a)
+               -> LB [a]
+
+withAllModules f = do
+  mods <- gets $ M.elems . ircModules
+  (`mapM` mods) $ \(ModuleRef mod ref name) -> do
+     let ?ref = ref; ?name = name   -- what is this line for?     
+     f mod
 
 getDictKeys :: (MonadState s m) => (s -> Map k a) -> m [k]
 getDictKeys dict = gets (M.keys . dict)

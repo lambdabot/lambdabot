@@ -224,7 +224,7 @@ distclean: clean
 
 runplugs: scripts/RunPlugs.hs scripts/ShowQ.hs
 	$(GHC) -O -c scripts/ShowQ.hs
-	mv scripts/ShowQ.{o,hi} .	
+	mv scripts/ShowQ.o scripts/ShowQ.hi .	
 	$(GHC) -O -package posix -package plugins -o $@ $<
 
 djinn: scripts/Djinn/Djinn.hs
