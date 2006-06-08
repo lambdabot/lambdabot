@@ -277,7 +277,7 @@ doPRIVMSG' myname msg
             docmd cmd' =
               forkLB $ withPS towhere $ \_ _ -> do
                 withModule ircCommands cmd'   -- Important. 
-                    (ircPrivmsg towhere (Just "Unknown command, try @list")) $ \m -> do
+                    (ircPrivmsg towhere (Just "Unknown command, try @list")) (\m -> do
                         privs <- gets ircPrivCommands
                         ok    <- if cmd' `notElem` privs
                                  then return True else checkPrivs msg
@@ -295,7 +295,7 @@ doPRIVMSG' myname msg
                                     [] -> ircPrivmsg towhere Nothing
                                     _  -> mapM_ (ircPrivmsg towhere . Just) mstrs)
 
-                            (ircPrivmsg towhere . Just .((?name++" module failed: ")++))
+                            (ircPrivmsg towhere . Just .((?name++" module failed: ")++)))
 
     --
     -- contextual messages are all input that isn't an explicit command.
@@ -307,15 +307,16 @@ doPRIVMSG' myname msg
     --
     doContextualMsg r =
         withPS alltargets $ \_ _ -> do
-            withAllModules $ \m -> forkLB $ catchIrc
+           withAllModules (\m ->
+              forkLB $ catchIrc
                 (do ms <- contextual m msg alltargets r
                     case ms of
                         [] -> return () -- ircPrivmsg alltargets Nothing
                         _  -> mapM_ (ircPrivmsg alltargets . Just) ms
 
                 ) (\s -> debugStrLn
-                    (?name++" module failed in contextual handler: "++s)) -- stay quiet
-            return ()
+                    (?name++" module failed in contextual handler: "++s)) ) -- stay quiet
+           return ()
 
 ------------------------------------------------------------------------
 
