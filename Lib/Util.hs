@@ -340,6 +340,7 @@ parIO a1 a2 = do
   killThread c2
   return r
 
+-- | run an action with a timeout
 timeout :: Int -> IO a -> IO (Maybe a)
 timeout n a = parIO (Just `fmap` a) (threadDelay n >> return Nothing)
 

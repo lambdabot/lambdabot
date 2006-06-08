@@ -9,10 +9,13 @@ module LBState (
         -- ** Utility functions for modules that need state for each target.
         GlobalPrivate(global), mkGlobalPrivate, withPS, readPS, withGS, readGS,
         writePS, writeGS,
+
+        -- * threads
+        forkLB
   ) where
 
 import Lambdabot
-import Lib.Util (withMWriter)
+import Lib.Util (withMWriter, timeout)
 
 import Control.Concurrent
 import Control.Monad.Trans (liftIO)
@@ -118,3 +121,12 @@ writePS who x = withPS who (\_ writer -> writer x)
 
 writeGS :: g -> ModuleT (GlobalPrivate g p) LB ()
 writeGS g = withGS (\_ writer -> writer g)
+
+-- | run an IO action in another thread, with a timeout, lifted into LB
+forkLB :: LB a -> LB ()
+forkLB f = (`liftLB` f) $ \g -> do
+            forkIO $ do
+                timeout (15 * 1000 * 1000) g
+                return ()
+            return ()
+

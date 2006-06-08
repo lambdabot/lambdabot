@@ -10,7 +10,6 @@ import Message (getTopic, nick, joinChannel, body)
 
 import qualified Data.Map as M   (insert, delete)
 
-import Control.Concurrent
 import Control.Monad.State  (MonadState(..), when, gets)
 
 import GHC.IOBase           (Exception(NoMethodError))
@@ -322,12 +321,4 @@ maybeCommand nm text = case matchRegexAll re text of
       Nothing -> Nothing
       Just (_, _, cmd, _) -> Just cmd
     where re = mkRegex (nm ++ "[.:,]*[[:space:]]*")
-
--- | run an IO action in another thread, with a timeout, lifted into LB
-forkLB :: LB a -> LB ()
-forkLB f = (`liftLB` f) $ \g -> do
-            forkIO $ do
-                timeout (15 * 1000 * 1000) g
-                return ()
-            return ()
 
