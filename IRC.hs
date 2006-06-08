@@ -21,12 +21,16 @@ import qualified Lib.Util as Util (concatWith)
 
 import Data.List (isPrefixOf)
 import Data.Char (chr,isSpace)
-import Control.Concurrent (ThreadId, MVar, readChan, writeChan, forkIO, newQSem, waitQSem, signalQSem, threadDelay, takeMVar, putMVar, isEmptyChan)
+
+import Control.Concurrent
+import Control.Exception
 import Control.Monad.Trans ( MonadIO, liftIO )
 import Control.Monad (when)
+
 import System.IO (Handle, hGetLine)
-import qualified Data.ByteString.Char8 as P (pack, hPut)
 import System.Console.Readline  (readline, addHistory)
+
+import qualified Data.ByteString.Char8 as P (pack, hPut)
 
 
 -- | An IRC message is a prefix, a command and a list of parameters.
@@ -54,6 +58,7 @@ instance Message IrcMessage where
 mkMessage :: String -- ^ Command
           -> [String] -- ^ Parameters
           -> IrcMessage -- ^ Returns: The created message
+
 mkMessage cmd params = IrcMessage { msgPrefix = "", msgCommand = cmd, msgParams = params }
 
 -- | 'nick' extracts the nickname involved in a given message.
@@ -199,7 +204,7 @@ decodeMessage line =
 --
 -- Online reader loop, the mvars are unused
 readerLoop :: ThreadId -> Pipe IrcMessage -> Pipe IrcMessage -> Handle -> MVar () -> MVar () -> IO ()
-readerLoop _threadmain chanr chanw h _ _ = do
+readerLoop threadmain chanr chanw h _ _ = handle (throwTo threadmain) $ do
     io (putStrLn "Running reader loop...")
     readerLoop'
   where
@@ -220,7 +225,7 @@ readerLoop _threadmain chanr chanw h _ _ = do
 -- Implements flood control: RFC 2813, section 5.8
 --
 writerLoop :: ThreadId -> Pipe IrcMessage -> Handle -> MVar () -> MVar () -> IO ()
-writerLoop _threadmain chanw h _ _ = do
+writerLoop threadmain chanw h _ _ = handle (throwTo threadmain) $ do
     sem1 <- newQSem 0
     sem2 <- newQSem 5
     forkIO $ sequence_ . repeat $ do
@@ -253,7 +258,8 @@ writerLoop _threadmain chanw h _ _ = do
 --
 offlineReaderLoop :: ThreadId -> Pipe IrcMessage -> Pipe IrcMessage -> Handle
                   -> MVar () -> MVar () -> IO ()
-offlineReaderLoop _threadmain chanr _chanw _h syncR syncW = readerLoop'
+offlineReaderLoop threadmain chanr _chanw _h syncR syncW =
+  handle (\e -> throwTo threadmain e) readerLoop'
   where
     readerLoop' = do
         takeMVar syncR  -- wait till writer lets us proceed
@@ -264,14 +270,16 @@ offlineReaderLoop _threadmain chanr _chanw _h syncR syncW = readerLoop'
                       in if null s' then putMVar syncR () >> readerLoop' else do
                 addHistory s'
 
-                let msg = case s' of
-                            "quit" -> error "<quit>"
-                            '>':xs -> "@run " ++ xs
-                            _      -> "@"     ++ dropWhile (== ' ') s'
+                let mmsg = case s' of
+                            "quit" -> Nothing
+                            '>':xs -> Just $ "@run " ++ xs
+                            _      -> Just $ "@"     ++ dropWhile (== ' ') s'
 
-                msg `seq` return () -- force error, perhaps. I know I'm bad
+                msg <- case mmsg of
+                    Nothing   -> error "<quit>"
+                    Just msg' -> return msg'
 
-                let m  = IRC.IrcMessage { IRC.msgPrefix  = "dons!n=user@null"
+                let m  = IRC.IrcMessage { IRC.msgPrefix  = "null!n=user@null"
                                         , IRC.msgCommand = "PRIVMSG"
                                         , IRC.msgParams  = ["#haskell",":" ++ msg ] }
                 writeChan chanr (Just m)
@@ -282,7 +290,8 @@ offlineReaderLoop _threadmain chanr _chanw _h syncR syncW = readerLoop'
 -- Offline writer. Print to stdout
 --
 offlineWriterLoop :: ThreadId -> Pipe IrcMessage -> Handle -> MVar () -> MVar () -> IO ()
-offlineWriterLoop _threadmain chanw h syncR syncW = writerLoop'
+offlineWriterLoop threadmain chanw h syncR syncW =
+    handle (\e -> throwTo threadmain e) writerLoop'
   where
     writerLoop' = do
 

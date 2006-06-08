@@ -59,9 +59,25 @@ then try:
     a) compile with "way=fast" . This is substantially faster
     b) don't go online, just use offline mode
 or try:
-    c) compile with "way=ghci" . This is faster still.
-       and then launch 'online' to connect, or 'main' to run in command
-       line mode. 
+
+GHCI:
+
+I'm experimenting in ghci these days. its a faster turn around, though
+you'll need at least 250M if you're doing a lot of reloading. Also, it
+helps to compile all the objects first, so they run a bit faster.
+
+    $ sh ./configure
+    -- edit Config.hs to your requirements
+    $ make way=ghci
+
+then use
+    *Main> main
+or
+    *Main> online
+
+To then try out changes, try:
+    *Main> :reload
+
 
 ADDING A NEW PLUGIN
 

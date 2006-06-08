@@ -30,24 +30,24 @@ module Lambdabot (
   ) where
 
 import qualified Config (config, name, admins, host, port, Protocol(..))
-import ErrorUtils       (bracketError, tryErrorJust, finallyError, catchErrorJust, tryError)
 import qualified Message as Msg
-import qualified IRC (IrcMessage, quit, privmsg, readerLoop, writerLoop, offlineReaderLoop, offlineWriterLoop, user, setNick)
+import qualified IRC    (IrcMessage, quit, privmsg, readerLoop
+                        ,writerLoop, offlineReaderLoop, offlineWriterLoop, user, setNick)
 import qualified Shared as S
+import ErrorUtils       (bracketError, tryErrorJust, finallyError, catchErrorJust, tryError)
 
 import Lib.Util             (lowerCaseString, addList)
 import Lib.Serial
 
 import Data.Map (Map)
 import qualified Data.Map as M hiding (Map)
-
 import qualified Data.ByteString.Char8 as P
 
 import Prelude hiding   (mod, catch)
 
 import Network          (withSocketsDo, connectTo, PortID(PortNumber))
 
-import System.IO        (hClose, stdin, stdout,
+import System.IO        (hClose, stdin, stdout, stderr, hFlush, hPutStr, hPutStrLn,
                          hSetBuffering, BufferMode(NoBuffering))
 
 import System.IO.Error  (isEOFError, ioeGetHandle)
@@ -428,7 +428,10 @@ data Mode = Online | Offline deriving Eq
 runIrc :: Mode -> LB a -> LB () -> S.DynLoad -> IO ()
 runIrc mode initialise loop ld = withSocketsDo $ do
     try $ evalLB
-             (initialise >> withIrcSignalCatch (runIrc' mode loop))
+             (do io $ hPutStr stderr "Initialising plugin state ... " >> hFlush stderr
+                 initialise
+                 io $ hPutStrLn stderr " done."
+                 withIrcSignalCatch (runIrc' mode loop))
              (initState (Config.admins Config.config) ld)
     return ()
 
@@ -475,6 +478,8 @@ runIrc' mode loop = do
         chanw      <- io newChan
         syncR      <- io $ newMVar () -- used in offline to make threads synchronous
         syncW      <- io newEmptyMVar
+
+        io $ hPutStr stderr "Forking threads ... \n" >> hFlush stderr
         threadr    <- io $ forkIO $ rloop threadmain chanr chanw hin syncR syncW
         threadw    <- io $ forkIO $ wloop threadmain chanw hout syncR syncW
 
@@ -493,7 +498,9 @@ runIrc' mode loop = do
            (io $ when (mode == Online) $ hClose hin)
 
     reconn <- gets ircStayConnected
-    if reconn && mode == Online then runIrc' mode loop else exitModules
+    if reconn && mode == Online
+        then runIrc' mode loop
+        else exitModules
 
   where
     isEOFon s (IRCRaised (IOException e))
@@ -649,7 +656,7 @@ readGlobalState mod name =
 -- | Register a module in the irc state
 --
 ircInstallModule :: MODULE -> String -> LB ()
-ircInstallModule (MODULE mod) modname = do  
+ircInstallModule (MODULE mod) modname = do
     savedState <- io $ readGlobalState mod modname
     state      <- maybe (moduleDefState mod) return savedState
     ref        <- io $ newMVar state
@@ -670,6 +677,7 @@ ircInstallModule (MODULE mod) modname = do
       ircCommands = addList [ (cmd,modref) | cmd <- cmds++privs ] cmdmap,
       ircPrivCommands = ircPrivCommands s ++ privs
     }
+    io $ hPutStr stderr "." >> hFlush stderr
 
 --
 -- | Unregister a module's entry in the irc state
@@ -745,7 +753,8 @@ withModule :: (Ord k)
 withModule dict modname def f = do
     maybemod <- gets (M.lookup modname . dict)
     case maybemod of
-      -- TODO
+      -- TODO stick this ref stuff in a monad instead. more portable in
+      -- the long run.
       Just (ModuleRef m ref name) -> let ?ref = ref; ?name = name in f m
       _                           -> def
 

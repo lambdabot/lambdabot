@@ -51,9 +51,9 @@ config = Config {
         textwidth       = 350,
         proxy           = Just ("www-proxy",3128),
         autojoin        = ["#haskell","#haskell-blah","#flippi"
-                 	  ,"#haskell-overflow","#gentoo-haskell"
-                 	  ,"#haskell_ru", "#darcs"
-			  ,"#haskell.it","#haskell.se", "#haskell.es","#ScannedInAvian"],
+                          ,"#haskell-overflow","#gentoo-haskell"
+                          ,"#haskell_ru", "#darcs"
+                          ,"#haskell.it","#haskell.se", "#haskell.es","#ScannedInAvian"],
 
 
         admins          = [
