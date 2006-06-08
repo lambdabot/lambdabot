@@ -5,7 +5,7 @@
 -- | String and other utilities
 --
 module Lib.Util (
-        concatWith,
+        concatWith, concatList,
         split, split2,
         breakOnGlue,
         clean,
@@ -34,6 +34,8 @@ module Lib.Util (
         addList, mapMaybeMap, insertUpd,
 
         pprKeys,
+
+        isLeft, isRight, unEither
     ) where
 
 import Data.List                (intersperse, isPrefixOf)
@@ -61,6 +63,13 @@ concatWith  :: [a]   -- ^ Glue to join with
 
 concatWith glue xs = (concat . intersperse glue) xs
 
+-- | Collapse a list of strings into a list, putting commas between the elements
+--   and an 'and' before the last one.
+-- > concatList ["one", "two", "three"] ===> "one, two and three"
+concatList :: [String] -> String
+concatList []  = ""
+concatList [x] = x
+concatList xs  = concatWith ", " (init xs) ++ " and " ++ last xs
 
 -- | Split a list into pieces that were held together by glue.  Example:
 --
@@ -419,3 +428,12 @@ insertUpd f = M.insertWith (\_ -> f)
 pprKeys :: (Show k) => M.Map k a -> String
 pprKeys = showClean . M.keys
 
+-- | Two functions that really should be in Data.Either
+isLeft, isRight :: Either a b -> Bool
+isLeft (Left _) = True
+isLeft _        = False
+isRight         = not . isLeft
+
+-- | Another useful Either function to easily get out of an Either
+unEither :: Either a a -> a
+unEither = either id id
