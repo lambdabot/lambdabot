@@ -15,9 +15,9 @@ Build-Depends:       base, unix, network, parsec, mtl, haskell-src, haskell98, r
 --
 -- first build the preprocessor
 --
-Executable:          dsl
+Executable:          BotPP
 hs-source-dirs:      scripts/
-Main-is:             dsl.hs
+Main-is:             BotPP.hs
 ghc-options:         -funbox-strict-fields -O
 
 --
@@ -59,7 +59,7 @@ Executable:          lambdabot
 Main-is:             Main.hs
 extensions:          CPP
 other-modules:       Lib.Regex
-ghc-options:         -Wall -Werror -fglasgow-exts -pgmF dist/build/dsl/dsl -F -Onot -fasm -fno-warn-incomplete-patterns -fno-warn-missing-methods -fno-warn-orphans -I. -threaded
+ghc-options:         -Wall -Werror -fglasgow-exts -pgmF dist/build/BotPP/BotPP -F -Onot -fasm -fno-warn-incomplete-patterns -fno-warn-missing-methods -fno-warn-orphans -I. -threaded
 
 -- For a fast lambdabot
 -- ghc-options:         -Wall -Werror -fglasgow-exts -pgmF dist/build/dsl/dsl -F -funbox-strict-fields -O -fasm -fno-warn-incomplete-patterns -fno-warn-missing-methods -fno-warn-orphans -I. -optl-Wl,-s -threaded

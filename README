@@ -7,21 +7,21 @@ version 0.7 and later are ok.
 
 Build with cabal (easiest):
     $ chmod +x Setup.hs configure
+    $ vi Config.hs
     $ ./Setup.hs configure --bindir=`pwd`
-    -- edit Config.hs to your requirements
     $ ./Setup.hs build
     $ ./Setup.hs install
     $ ./lambdabot
 
 You can also build with GNU make (flexible, allows profiling and dynamic builds):
+    $ vi Config.hs
     $ sh ./configure
-    -- edit Config.hs to your requirements
-    $ make
+    $ make 
     $ ./lambdabot
 
 Or with ghci (fastest)
+    $ vi Config.hs
     $ sh ./configure
-    -- edit Config.hs to your requirements
     $ make way=ghci
 then
     *Main> main

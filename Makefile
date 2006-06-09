@@ -71,32 +71,32 @@ ALL_OBJS=	$(addsuffix .$(way_)o,$(basename $(ALL_SRCS)))
 
 ifneq "$(way)" "ghci"
 
-all: dsl lambdabot modules runplugs djinn unlambda hoogle
+all: BotPP lambdabot modules runplugs djinn unlambda hoogle
 
 else
 
 HC_OPTS += -DGHCi
-all: dsl Lib/Regex.o runplugs djinn unlambda hoogle ghci
+all: BotPP Lib/Regex.o runplugs djinn unlambda hoogle ghci
 
 endif
 
 ghci:
 	ghci $(HC_OPTS) Main.hs
 
-dsl: scripts/dsl.hs
+BotPP: scripts/BotPP.hs
 	$(GHC) -O -o $@ $<
 
 #
 # TODO should be just PLUGIN_OBJS
 #
 .PHONY: modules
-modules: dsl $(ALL_OBJS)
+modules: BotPP $(ALL_OBJS)
 
 #
 # Dependency generation
 # Need to remove -prof -auto-all from the ghc flags:
 #
-depend: dsl $(ALL_SRCS)
+depend: BotPP $(ALL_SRCS)
 	@echo -n "Rebuilding dependencies ... "
 	$(GHC) -cpp $(HC_OPTS) $(PKG_OPTS) -M -optdep-f -optdepdepend $(ALL_SRCS) || rm depend
 	@echo "done."
@@ -109,20 +109,20 @@ depend: dsl $(ALL_SRCS)
 # file (.hi-boot with <604). That code is below:
 #
 
-Modules.hs: dsl config.mk genmodules
+Modules.hs: BotPP config.mk genmodules
 	@echo -n "Generating module list ... "
 	@echo $(MODULE_HI_BOOT) > Modules.$(RECURSIVE_MODULE_SUFFIX)
 	./genmodules $(PLUGINS) "," $(STATICS)
 	@echo "done."
 
-genmodules: dsl scripts/GenModules.hs
+genmodules: BotPP scripts/GenModules.hs
 	$(GHC) $(HC_OPTS) -package mtl Config.hs Lib/Util.hs scripts/GenModules.hs -o genmodules
 
 #
 # Link the bot.
 # TODO: depends should only be $(BOT_OBJS), not plugins too.
 #
-lambdabot: dsl $(ALL_OBJS)
+lambdabot: BotPP $(ALL_OBJS)
 	@if test "x$(way)" = "xp" ; then \
 		for i in *.p_o ; do \
 			ln -f -s $$i `echo $$i | sed 's/p_//'` ; \
@@ -236,7 +236,7 @@ unlambda: scripts/Unlambda.hs
 hoogle:
 	( cd scripts/hoogle && $(MAKE) && mv hoogle ../../ && cp hoogle.txt ../.. )
 
-CLEANS+= runplugs djinn unlambda hoogle hoogle.txt dsl
+CLEANS+= runplugs djinn unlambda hoogle hoogle.txt BotPP
 CLEANS+= Lib/Regex_hsc.c Lib/Regex.hs
 
 -include depend
