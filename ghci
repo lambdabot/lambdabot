@@ -4,7 +4,7 @@
 # GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
 
 # preprocess the regex lib
-if [ ! -e "Lib/Regex.hs" ] ; then
+if [ "Lib/Regex.hs" -ot "Lib/Regex.hsc" ] ; then
     hsc2hs -o Lib/Regex.hs Lib/Regex.hsc
 fi
 
