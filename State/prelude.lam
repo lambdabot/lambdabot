@@ -1,0 +1,153 @@
+# the church encoding for booleans
+true    = \t f. t;
+false   = \t f. f;
+if      = \b x y. b x y;
+not     = \x.   if x false true;
+and     = \x y. if x y false;
+or      = \x y. if x true y;
+xor     = \x y. if x (not y) y;
+
+# the church encoding for peano numbers
+zero    = \f x. x;
+succ    = \n f x. f (n f x);
+pred    = \n f x. n (\g h. h (g f)) (\u. x) (\u. u);
+
+# addition, subtraction and multiplication
+plus    = \m n f x. m f (n f x);
+sub     = \m n. (n pred) m;
+mul     = \m n f. m (n f);
+
+# some useful predicates on church numerals
+even    = \n. n not true;
+iszero  = \m. m (\x. false) true;
+lte     = \m n. iszero (sub m n);
+gte     = \m n. iszero (sub n m);
+eq      = \m n. and (lte m n) (gte m n);
+lt      = \m n. and (lte m n) (not (gte m n));
+gt      = \m n. and (gte m n) (not (lte m n));
+
+# aliases for the church numerals up to ten
+one   = succ zero;
+two   = succ one;
+three = succ two;
+four  = succ three;
+five  = succ four;
+six   = succ five;
+seven = succ six;
+eight = succ seven;
+nine  = succ eight;
+ten   = succ nine;
+
+# Turner's combinators
+I = \x .x;
+K = \x y. x;
+S = \f g x. (f x) (g x);
+W = \f x. f x x;
+B = \f g x. f (g x);
+
+# the fixpoint combinator
+Y = \f. (\x. f (x x)) \x. f (x x);
+
+# a divergent labmda term
+omega = (\x. x x) \x. x x;
+
+# integer exponentation
+pow = \m. Y (\powF n. n (\x. mul m x) one);
+
+# factorial
+fac = Y (\facF n. if (iszero n)
+                     one 
+                     (mul n (facF (pred n))));
+
+# the church encoding for pairs
+pair = \x y f. f x y;
+fst  = \p. p (\x y. x);
+snd  = \p. p (\x y. y);
+
+# now, encode ADTs
+match = \x pats. x (\n f. f (fst ((n snd) pats)));
+
+# the ADT representation of lists
+nil  = \    w. w zero (\f. f);
+cons = \h t w. w one  (\f. f h t);
+
+# head and tail, by pattern matching
+head = \l. match l (pair nil
+                   (pair (\h t. h)
+                    zero));
+
+tail = \l. match l (pair nil
+                   (pair (\h t. t)
+                    zero));
+
+# the ith element of a list
+index = \n l. head (n tail l);
+
+# right fold on a list
+foldr = \f z. Y (\foldF l. match l (pair z
+                                   (pair (\h t. f h (foldF t))
+                                    zero)));
+
+# left fold on a list
+foldl = \f. Y (\foldF r l. match l (pair r
+                                   (pair (\h t. foldF (f r h) t)
+                                    zero)));
+
+# the length of a list
+len = foldl (\x h. succ x) zero;
+
+# the mapping function on a list
+map = \f. Y (\mapF l. match l (pair nil
+                              (pair (\h t. cons (f h) (mapF t))
+                               zero)));
+
+# list generator
+unfold = \g until. Y (\unfoldF x. if (until x)
+                                       (cons x nil)
+                                       (cons x (unfoldF (g x))));
+
+# some other interesting list functions....
+
+iterate = \g. unfold g (K false);
+nats = iterate succ zero;
+
+upTo = \n. unfold succ (\x. gte x n) zero;
+
+zipWith = \f. Y (\zipF l1 l2. match l1
+                     (pair nil
+                     (pair (\h1 t1. match l2
+                        (pair nil
+                        (pair (\h2 t2.
+                           cons (f h1 h2) (zipF t1 t2))
+                         zero)))
+                       zero)));
+
+zip = zipWith pair;
+
+take = \n l. zipWith K l (tail (upTo n));
+drop = \n l. n tail l;
+
+minAux = foldl (\x y. if (lt y x) y x);
+
+min  = \l. match l
+             (pair nil
+             (pair minAux
+              zero));
+
+maxAux = foldl (\x y. if (gt y x) y x);
+
+max  = \l. match l
+             (pair nil
+             (pair maxAux
+              zero));
+
+remove = \x. Y (\removeF l. match l
+              (pair nil
+              (pair (\h t.
+                 if (eq h x) t (cons h (removeF t)))
+               zero)));
+
+insertSort = Y (\sortF l. match l
+             (pair nil
+             (pair (\h t. (\x. cons x (sortF (remove x l))) (minAux h t))
+              zero)));
