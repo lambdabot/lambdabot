@@ -185,4 +185,4 @@ getMessages n = do
 
 -- | Clear a user's messages
 clearMessages :: Nick -> Telling ()
-clearMessages = modifyMS . M.delete
+clearMessages n = modifyMS (M.delete n) -- pointfree won't work with impredicativity (?)
