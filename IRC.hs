@@ -30,7 +30,7 @@ import Control.Monad (when)
 import System.IO (Handle, hGetLine)
 import System.Console.Readline  (readline, addHistory)
 
-import qualified Data.ByteString.Char8 as P (pack, hPut)
+import qualified Data.ByteString.Char8 as P (pack, hPut, hPutStrLn)
 
 
 -- | An IRC message is a prefix, a command and a list of parameters.
@@ -304,7 +304,7 @@ offlineWriterLoop th chanw h syncR syncW = handleIO th writerLoop'
                     let str = case (tail . IRC.msgParams) msg of
                                 []    -> []
                                 (x:_) -> tail x
-                    P.hPut h (P.pack $ str ++ "\n")     -- write stdout
+                    P.hPutStrLn h (P.pack str)
             threadDelay 25 -- just for fun.
             b <- isEmptyChan chanw
             when (not b) loop
@@ -313,7 +313,7 @@ offlineWriterLoop th chanw h syncR syncW = handleIO th writerLoop'
         putMVar syncR () -- now allow writer to go
         writerLoop'
 
--- convenience:
+-- | convenience:
 io :: forall a (m :: * -> *). (MonadIO m) => IO a -> m a
 io = liftIO
 {-# INLINE io #-}
