@@ -6,7 +6,6 @@ Build the Data.ByteString library at http://www.cse.unsw.edu.au/~dons,
 version 0.7 and later are ok.
 
 Build with cabal (easiest):
-    $ chmod +x Setup.hs configure
     $ vi Config.hs
     $ ./Setup.hs configure --bindir=`pwd`
     $ ./Setup.hs build

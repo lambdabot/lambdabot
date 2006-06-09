@@ -1,4 +1,22 @@
 #!/bin/sh
 
+# Copyright (c) 2006 Don Stewart - http://www.cse.unsw.edu.au/~dons
+# GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
+
+# preprocess the regex lib
+if [ ! -e "Lib/Regex.hs" ] ; then
+    hsc2hs -o Lib/Regex.hs Lib/Regex.hsc
+fi
+
+# build the preprocessor
+if [ -e "BotPP" ] ; then
+	BotPP=BotPP
+elif [ -e "dist/build/BotPP/BotPP" ] ; then
+	BotPP=dist/build/BotPP/BotPP
+else
+    ghc -o BotPP -package fps scripts/BotPP.hs
+    BotPP=BotPP
+fi
+
 # run ghci with the right command line flags to launch lambdabot
 ghci -Wall -Werror -fglasgow-exts -I. -pgmF ./BotPP -F -fno-warn-incomplete-patterns -fno-warn-missing-methods -fno-warn-orphans -DGHCi $*
