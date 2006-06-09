@@ -11,6 +11,7 @@
 module Plugin.Djinn (theModule) where
 
 import Plugin
+import System.Directory
 
 PLUGIN Djinn
 
@@ -38,9 +39,15 @@ instance Module DjinnModule DjinnEnv where
 
         moduleSerialize _ = Nothing -- Just listSerial
 
+        -- this means djinn better be visible at boot time
         moduleDefState  _ = do
-            st <- io $ getDjinnEnv ([],[]) -- get the prelude
-            return (either (const []) snd{-!-} st, [])
+            -- check that's djinn's there, otherwise don't bother 
+            d <- io $ doesFileExist binary
+            if not d
+                then do io $ debugStrLn "Plugin.Djinn: couldn't find djinn binary"
+                        return ([],[])
+                else do st <- io $ getDjinnEnv ([],[]) -- get the prelude
+                        return (either (const []) snd{-!-} st, [])
 
         -- rule out attempts to do IO, if these get into the env,
         -- they'll be executed by djinn
