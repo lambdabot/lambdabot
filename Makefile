@@ -109,13 +109,13 @@ depend: dsl $(ALL_SRCS)
 # file (.hi-boot with <604). That code is below:
 #
 
-Modules.hs: config.mk genmodules
+Modules.hs: dsl config.mk genmodules
 	@echo -n "Generating module list ... "
 	@echo $(MODULE_HI_BOOT) > Modules.$(RECURSIVE_MODULE_SUFFIX)
 	./genmodules $(PLUGINS) "," $(STATICS)
 	@echo "done."
 
-genmodules: scripts/GenModules.hs
+genmodules: dsl scripts/GenModules.hs
 	$(GHC) $(HC_OPTS) -package mtl Config.hs Lib/Util.hs scripts/GenModules.hs -o genmodules
 
 #
