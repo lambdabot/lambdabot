@@ -49,21 +49,21 @@ module Plugin.Tell where
 
 import Control.Arrow (first)
 import qualified Data.Map as M
-import System.Time
 import Text.Printf (printf)
 
+import Lib.AltTime
 import Message
 import Plugin
 
 type Nick        = String
 -- | Was it @tell or @ask that was the original command?
-data NoteType    = Tell | Ask deriving (Show, Eq)
+data NoteType    = Tell | Ask deriving (Show, Eq, Read)
 -- | The Note datatype. Fields self-explanatory.
 data Note        = Note { noteSender   :: String, 
                           noteContents :: String, 
                           noteTime     :: ClockTime,
                           noteType     :: NoteType }
-                   deriving (Eq, Show{-, Read-})
+                   deriving (Eq, Show, Read)
 -- | The state. A map of (times we last told this nick they've got messages, the
 --   messages themselves)
 type NoticeBoard = M.Map Nick (Maybe ClockTime, [Note])
@@ -77,7 +77,7 @@ instance Module TellModule NoticeBoard where
     modulePrivs     _ = ["print-notices"]
     moduleHelp _      = fromJust . flip lookup help
     moduleDefState  _ = return M.empty
-    -- moduleSerialize _ = Just mapSerial -- ClockTime doesn't instantiate Read
+    moduleSerialize _ = Just mapSerial
 
     -- | Debug output the NoticeBoard
     process _ _ _ "print-notices" _ = liftM ((:[]) . show) readMS
@@ -136,17 +136,9 @@ help = [("tell",
 showNote :: ClockTime -> Note -> String
 showNote time note = res
     where diff         = time `diffClockTimes` noteTime note
-          diff'        = normalizeTimeDiff diff
-          mkAgo td msg = if td > 0 then Just (show td ++ msg) else Nothing
-          agos         = [ mkAgo (tdYear  diff') " years",
-                           mkAgo (tdMonth diff') " months",
-                           mkAgo (tdDay   diff') " days",
-                           mkAgo (tdHour  diff') " hours",
-                           mkAgo (tdMin   diff') " minutes" ]
-          agos'        = catMaybes agos
-          ago          = if null agos'
-                           then "less than a minute"
-                           else concatList agos'
+          ago          = case timeDiffPretty diff of
+                           [] -> "less than a minute"
+                           pr -> pr
           action       = case noteType note of Tell -> "said"; Ask -> "asked"
           res          = printf "%s %s %s ago: %s"
                            (noteSender note) action ago (noteContents note)
