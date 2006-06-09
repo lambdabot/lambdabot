@@ -69,7 +69,7 @@ regcomp ps flags = do
                 c_regcomp p cstr (fromIntegral flags)
     if (r == 0)
         then do
-             FC.addForeignPtrFinalizer regex_fpts $ regfree regex_fptr
+             FC.addForeignPtrFinalizer regex_fptr $ regfree regex_fptr
              return (Regex regex_fptr)
         else ioError $ userError $ "Error in pattern: " ++ (show ps)
 
@@ -125,12 +125,15 @@ foreign import ccall unsafe "regex.h regcomp"
     c_regcomp :: Ptr CRegex -> CString -> CInt -> IO CInt
 
 foreign import ccall  unsafe "regex.h regfree"
-    regfree :: Ptr CRegex -> IO ()
+    c_regfree :: Ptr CRegex -> IO ()
 
 foreign import ccall unsafe "regex.h regexec"
     cregexec :: Ptr CRegex
              -> Ptr CChar
              -> CSize -> Ptr CRegMatch -> CInt -> IO CInt
+
+regfree :: ForeignPtr CRegex -> IO ()
+regfree fp = withForeignPtr fp $ c_regfree
 
 ------------------------------------------------------------------------
 

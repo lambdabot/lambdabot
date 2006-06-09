@@ -64,7 +64,7 @@ modules s =
     ,pack "\n"]
     ++ (concatMap importify ms) ++
     [pack "loadStaticModules :: LB ()\n"
-    ,pack "loadStaticModules\n"]
+    ,pack "loadStaticModules = do\n"]
     ++ (concatMap instalify ms) ++
     [pack "plugins :: [String]\n"
     ,pack "plugins = []\n"]

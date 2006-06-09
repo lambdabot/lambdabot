@@ -27,11 +27,14 @@ Ganesh Sittampalam <ganesh@earth.li> aka Heffalump on #haskell
     * Dynamic module loading
 
 Don Stewart <dons@cse.unsw.edu.au> aka dons on #haskell
-    * New build system, 6.4 port, dynamic module loading with hs-plugins
+    * New build system, 6.4 port
+    * dynamic module loading with hs-plugins
     * Simplfied module interface
     * @babel, @plugs, @version, @code, @spell, @djinn, @unlambda, @hylo, @freshname
     * Offline mode
     * General hacking
+    * Cabalised build system
+    * GHCi build system
 
 Jesper Louis Andersen <jlouis@mongers.org> aka jlouis on #haskell
     * Code/Documentation cleanups
