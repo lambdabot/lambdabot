@@ -44,6 +44,7 @@ module Lib.Regex (
 import Foreign.C
 import Foreign.C.String
 import Foreign.ForeignPtr
+import qualified Foreign.Concurrent as FC
 import Foreign
 import System.IO.Unsafe     (unsafePerformIO)
 
@@ -68,9 +69,7 @@ regcomp ps flags = do
                 c_regcomp p cstr (fromIntegral flags)
     if (r == 0)
         then do
-#if !defined(GHCi)
-             addForeignPtrFinalizer ptr_regfree regex_fptr
-#endif
+             FC.addForeignPtrFinalizer regex_fpts $ regfree regex_fptr
              return (Regex regex_fptr)
         else ioError $ userError $ "Error in pattern: " ++ (show ps)
 
@@ -125,10 +124,8 @@ type CRegMatch = ()
 foreign import ccall unsafe "regex.h regcomp"
     c_regcomp :: Ptr CRegex -> CString -> CInt -> IO CInt
 
-#if !defined(GHCi)
-foreign import ccall  unsafe "regex.h &regfree"
-    ptr_regfree :: FunPtr (Ptr CRegex -> IO ())
-#endif
+foreign import ccall  unsafe "regex.h regfree"
+    regfree :: Ptr CRegex -> IO ()
 
 foreign import ccall unsafe "regex.h regexec"
     cregexec :: Ptr CRegex
