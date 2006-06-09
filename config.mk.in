@@ -37,7 +37,7 @@ PLUGINS=       Dict Dummy Karma Quote Seen State \
                Help Dice Search Vixen Fact Spell Todo \
                Haddock Hoogle Where Elite Localtime Poll \
                Djinn Pretty Compose Lambda Unlambda Log \
-               Slap DrHylo Instances Fresh Tell
+               Slap DrHylo Instances Fresh
 #              LShell DarcsPatchWatch Code
 
 STATICS=       Base System Dynamic
