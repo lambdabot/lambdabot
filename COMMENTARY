@@ -56,39 +56,22 @@ When testing out a new plugin,
     0) test out the plugin in ghci in isolation. don't both linking the
     rest of the bot.
 then try:
-    a) compile with "way=fast" . This is substantially faster
     b) don't go online, just use offline mode
-or try:
 
 GHCI:
 
-I'm experimenting in ghci these days. its a faster turn around, though
-you'll need at least 250M if you're doing a lot of reloading. Also, it
-helps to compile all the objects first, so they run a bit faster.
-
-    $ sh ./configure
-    -- edit Config.hs to your requirements
-    $ make way=ghci
-
-then use
-    *Main> main
-or
-    *Main> online
-
-To then try out changes, try:
-    *Main> :reload
-
+    You can quickly develop lambdabot inside ghci.
+    See the build details in README.
+    It works best if you've already compiled the objects once, then you
+    can quickly reload (interpreted) just the modules you're developing.
 
 ADDING A NEW PLUGIN
 
 * Just create the module in Plugins/*
 * add a PLUGIN Foo tag
 * implements the Module class (see Hello.hs for the bare minimum).
-* Add your plugin's module name to config.mk.in, for the static and dynamic plugin lists.
 * import Plugin to get most common functions
-* ./configure and make Modules.hs, to regenerate the modules list
-
-N.B. you need to use the make path, not cabal, to regenerate the Modules.hs file.
+* Add your plugin's canonical name to Modules.hs
 
 PLUGIN STATE
 

@@ -5,7 +5,7 @@ You'll need GHC >= 6.4
 Build the Data.ByteString library at http://www.cse.unsw.edu.au/~dons,
 version 0.7 and later are ok.
 
-Build with cabal (easiest):
+Build with cabal (simple)
     $ vi Config.hs
     $ chmod +x configure
     $ ./Setup.hs configure --bindir=`pwd`
