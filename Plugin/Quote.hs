@@ -16,7 +16,7 @@ PLUGIN Quote
 type Quotes = M.Map P.ByteString [P.ByteString]
 
 instance Module QuoteModule Quotes where
-    moduleCmds           _ = ["quote", "remember", "ghc", "fortune"
+    moduleCmds           _ = ["quote", {-"remember",-} "ghc", "fortune"
                              ,"yow","arr","keal","b52s","brain","palomer"
                              ,"girl19", "v", "yhjulwwiefzojcbxybbruweejw"]
 
