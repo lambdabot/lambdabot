@@ -82,10 +82,11 @@ To then try out changes, try:
 ADDING A NEW PLUGIN
 
 * Just create the module in Plugins/*
-* Ensure it implements the Module class (see Hello.hs for the bare minimum).
+* add a PLUGIN Foo tag
+* implements the Module class (see Hello.hs for the bare minimum).
 * Add your plugin's module name to config.mk.in, for the static and dynamic plugin lists.
 * import Plugin to get most common functions
-* rebuild using gmake, to get genmodules to regenerate Modules.hs
+* ./configure and make Modules.hs, to regenerate the modules list
 
 N.B. you need to use the make path, not cabal, to regenerate the Modules.hs file.
 
