@@ -19,7 +19,7 @@ instance Module DynamicModule () where
     moduleHelp _ _ = "An interface to dynamic linker"
     modulePrivs  _ = ["dynamic-load","dynamic-unload","dynamic-reload"]
 
-    moduleInit   _ = do 
+    moduleInit   _ = do
         liftIO $ putStr "Loading plugins\t" >> hFlush stdout
         mapM_ (\p -> load p >> liftIO (putChar '.' >> hFlush stdout)) plugins
         liftIO $ putStrLn " done."

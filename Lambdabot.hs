@@ -428,7 +428,7 @@ data Mode = Online | Offline deriving Eq
 runIrc :: Mode -> LB a -> LB () -> S.DynLoad -> IO ()
 runIrc mode initialise loop ld = withSocketsDo $ do
     try $ evalLB
-             (do io $ hPutStr stderr "Initialising plugin state ... " >> hFlush stderr
+             (do io $ hPutStr stderr "Initialising plugins ... " >> hFlush stderr
                  initialise
                  io $ hPutStrLn stderr " done."
                  withIrcSignalCatch (runIrc' mode loop))
