@@ -39,7 +39,6 @@ import qualified Plugin.Slap
 import qualified Plugin.DrHylo
 import qualified Plugin.Instances
 import qualified Plugin.Fresh
-import qualified Plugin.Tell
 
 loadStaticModules :: LB ()
 loadStaticModules
@@ -82,7 +81,6 @@ loadStaticModules
  ircInstallModule Plugin.DrHylo.theModule "drHylo"
  ircInstallModule Plugin.Instances.theModule "instances"
  ircInstallModule Plugin.Fresh.theModule "fresh"
- ircInstallModule Plugin.Tell.theModule "tell"
 
 plugins :: [String]
 plugins = []

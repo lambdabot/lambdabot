@@ -19,14 +19,14 @@ ALL_DIRS=	.  Lib Plugin \
 
 # Not used, not built, bit dodgy as we are relying on ALL_DIRS to ignore
 # the subdirs of EXCLUDED_MODS. The following additional srcs will not be built
-EXCLUDED_MODS=	Hello Cmafihe
+EXCLUDED_MODS=	Hello
 EXCLUDED_SRCS=	Setup.hs $(addprefix Plugin/, $(addsuffix .hs,$(EXCLUDED_MODS)))
 EXCLUDED_SRCS+= Plugin/Lambda/tests.hs Plugin/Pl/Test.hs
 
 #
 # Generated at build time
 #
-EXTRA_SRCS=Modules.hs Lib/Regex.hs
+EXTRA_SRCS=Lib/Regex.hs
 
 ifeq "$(static)" "yes"
 EXCLUDED_SRCS+=Boot.hs Plugin/Dynamic.hs
@@ -84,7 +84,7 @@ ghci:
 	ghci $(HC_OPTS) Main.hs
 
 BotPP: scripts/BotPP.hs
-	$(GHC) -O -o $@ $<
+	$(GHC) -package fps -o $@ $<
 
 #
 # TODO should be just PLUGIN_OBJS
@@ -100,23 +100,6 @@ depend: BotPP $(ALL_SRCS)
 	@echo -n "Rebuilding dependencies ... "
 	$(GHC) -cpp $(HC_OPTS) $(PKG_OPTS) -M -optdep-f -optdepdepend $(ALL_SRCS) || rm depend
 	@echo "done."
-
-#
-# Slight magic. Note how we're passing values defined in config.mk
-# as commmand line args to GenModules.hs
-#
-# Modules is imported recursively, so we break the loop with a .hs-boot
-# file (.hi-boot with <604). That code is below:
-#
-
-Modules.hs: BotPP config.mk genmodules
-	@echo -n "Generating module list ... "
-	@echo $(MODULE_HI_BOOT) > Modules.$(RECURSIVE_MODULE_SUFFIX)
-	./genmodules $(PLUGINS) "," $(STATICS)
-	@echo "done."
-
-genmodules: BotPP scripts/GenModules.hs
-	$(GHC) $(HC_OPTS) -package mtl Config.hs Lib/Util.hs scripts/GenModules.hs -o genmodules
 
 #
 # Link the bot.
@@ -174,38 +157,6 @@ endif
 	@touch $(patsubst %.hsc,%_hsc.c,$<)
 
 #
-# Building the haddocks (only if we have haddock)
-#
-.PHONY: docs
-
-ifneq "$(HADDOCK)" ""
-
-docs: .doc-stamp
-
-# break cyclic imports
-NO_DOCS=Modules.hs
-
-HS_PPS= $(addsuffix .raw-hs, \
-            $(filter-out $(basename $(NO_DOCS)), \
-                $(basename $(ALL_SRCS))))
-
-DOCDIR=doc
-
-.doc-stamp: $(HS_PPS)
-	@rm -rf $(DOCDIR)
-	@-mkdir $(DOCDIR)
-	$(HADDOCK) $(HADDOCK_OPTS) -o $(DOCDIR) $(HS_PPS) -k lambdabot
-	@touch .doc-stamp
-	@rm -f $(HS_PPS)
-
-CLEANS+= $(HS_PPS) $(DOCDIR) .doc-stamp
-
-else
-# else no haddock, html is empty.
-docs :
-endif
-
-#
 # clean rules
 #
 clean:
@@ -220,7 +171,6 @@ clean:
 distclean: clean
 	rm -f config.mk config.h config.log config.status
 	rm -rf autom4te.cache
-	rm -f genmodules 
 
 runplugs: scripts/RunPlugs.hs scripts/ShowQ.hs
 	$(GHC) -O -c scripts/ShowQ.hs

@@ -1,3 +1,4 @@
+{-# OPTIONS -O -funbox-strict-fields #-}
 -- Copyright (c) 2006 Don Stewart - http://www.cse.unsw.edu.au/~dons
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
 
@@ -13,9 +14,11 @@
 --
 
 import System.Environment
+import Data.Char
+import Data.List
+
+import Data.ByteString.Char8 (pack, ByteString)
 import qualified Data.ByteString.Char8 as B -- crank it up, yeah!
-import Data.ByteString.Char8 (pack, append, cons, ByteString)
-import Data.ByteString.Base ( unsafeTake)
 
 main = do
     [_,i,o] <- getArgs
@@ -33,10 +36,12 @@ expand l n xs
     | otherwise                            = expand l (n+1) xs
 
     where pref         = B.take n xs    -- accumulating an offset
-          (name, rest) = B.breakChar '\n' (B.drop (n+B.length pLUGIN) xs)
-          (name, rest) = B.breakChar '\n' (B.drop (n+B.length pLUGIN) xs)
+
           pLUGIN       = pack "PLUGIN "
+          (name, rest) = B.breakChar '\n' (B.drop (n+B.length pLUGIN) xs)
+
           mODULES      = pack "MODULES "
+          (name', rest') = B.breakChar '\n' (B.drop (n+B.length mODULES) xs)
 
 --
 -- render the plugin boiler plate
@@ -50,9 +55,24 @@ render name =
     \theModule = MODULE $ " : name : pack "Module ()       \n" : []
 
 --
--- collect all the plugin names
+-- Collect all the plugin names, and generate the Modules.hs file
 --
--- expandModules [] = []
--- expandModules xs =
---     let (,) = break (== ' ') xs
+modules :: ByteString -> [ByteString]
+modules s =
+    [pack "module Modules where\n"
+    ,pack "import Lambdabot\n"
+    ,pack "\n"]
+    ++ (concatMap importify ms) ++
+    [pack "loadStaticModules :: LB ()\n"
+    ,pack "loadStaticModules\n"]
+    ++ (concatMap instalify ms) ++
+    [pack "plugins :: [String]\n"
+    ,pack "plugins = []\n"]
+
+    where ms  = sort $ B.split ' ' s
+          importify x = [pack "import qualified Plugin.", x, B.singleton '\n']
+          instalify x = [pack "  ircInstallModule Plugin.",x
+                        ,pack ".theModule \""
+                        ,B.map toLower x
+                        , pack "\"\n"]
 
