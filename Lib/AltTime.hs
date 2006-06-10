@@ -22,6 +22,10 @@ import qualified System.Time as T
 --
 newtype ClockTime = ClockTime (T.ClockTime)
 
+instance Eq ClockTime where
+    ClockTime (T.TOD x1 y1) == ClockTime (T.TOD x2 y2) = 
+        x1 == x2 && y1 == y2
+
 instance Show ClockTime where
   showsPrec p (ClockTime (T.TOD x y)) = showsPrec p (x,y)
 

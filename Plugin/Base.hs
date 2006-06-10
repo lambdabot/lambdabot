@@ -281,7 +281,8 @@ doPRIVMSG' myname msg
                     (ircPrivmsg towhere (Just "Unknown command, try @list"))
                     (\m -> do
                         privs <- gets ircPrivCommands
-                        ok    <- if cmd' `notElem` privs then return True else checkPrivs msg
+                        ok    <- liftM2 (||) (return $ cmd' `notElem` privs)
+                                             (checkPrivs msg)
                         if not ok
                           then ircPrivmsg towhere $ Just "Not enough privileges"
                           else catchIrc

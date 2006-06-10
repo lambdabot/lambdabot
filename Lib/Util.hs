@@ -5,7 +5,7 @@
 -- | String and other utilities
 --
 module Lib.Util (
-        concatWith, concatList,
+        concatWith,
         split, split2,
         breakOnGlue,
         clean,
@@ -66,14 +66,6 @@ concatWith  :: [a]   -- ^ Glue to join with
             -> [a]   -- ^ Result: glued-together list
 
 concatWith glue xs = (concat . intersperse glue) xs
-
--- | Collapse a list of strings into a list, putting commas between the elements
---   and an 'and' before the last one.
--- > concatList ["one", "two", "three"] ===> "one, two and three"
-concatList :: [String] -> String
-concatList []  = ""
-concatList [x] = x
-concatList xs  = concatWith ", " (init xs) ++ " and " ++ last xs
 
 -- | Split a list into pieces that were held together by glue.  Example:
 --
