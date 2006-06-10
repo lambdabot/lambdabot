@@ -74,13 +74,20 @@ PLUGIN Tell
 
 instance Module TellModule NoticeBoard where
     moduleCmds      _ = ["tell", "ask", "messages", "messages?", "clear-messages"]
-    modulePrivs     _ = ["print-notices"]
-    moduleHelp _      = fromJust . flip lookup help
+    modulePrivs     _ = ["print-notices", "purge-notices"]
+    moduleHelp      _ = fromJust . flip lookup help
     moduleDefState  _ = return M.empty
     moduleSerialize _ = Just mapSerial
 
     -- | Debug output the NoticeBoard
     process _ _ _ "print-notices" _ = liftM ((:[]) . show) readMS
+
+    -- | Clear notes.
+    process _ _ _ "purge-notices" args = do
+        case words args of
+          [] -> writeMS M.empty
+          ns -> mapM_ clearMessages ns
+        return ["Messages purged."]
 
     -- | Clear a user's notes
     process _ msg _ "clear-messages" _ = 
@@ -130,7 +137,10 @@ help = [("tell",
          "messages?. Tells you whether you have any messages"),
         ("clear-messages",
          "clear-messages. Clears your messages."),
-        ("print-notices", "Print the current map of notes.") ]
+        ("print-notices", "print-notices. Print the current map of notes."),
+        ("purge-notices", "purge-notices [<nick> [<nick> [<nick> ...]]]]. " ++
+          "Clear all notes for specified nicks, or all notices if you don't "
+          ++ "specify a nick.")]
 
 -- | Take a note and the current time, then display it
 showNote :: ClockTime -> Note -> String
