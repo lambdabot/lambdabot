@@ -36,7 +36,7 @@ import qualified IRC    (IrcMessage, quit, privmsg, readerLoop
 import qualified Shared as S
 import ErrorUtils
 
-import Lib.Util             (lowerCaseString, addList)
+import Lib.Util             (lowerCaseString, addList,dropSpace)
 import Lib.Serial
 
 import Data.Map (Map)
@@ -255,6 +255,7 @@ instance MonadState IRCRWState LB where
         ref <- asks snd
         lift $ writeIORef ref x
 
+-- | run a computation in the LB monad
 evalLB :: LB a -> IRCRWState -> IO a
 evalLB (LB lb) rws = do
     ref  <- newIORef rws
@@ -275,7 +276,6 @@ type ModState s a = (?ref :: MVar s, ?name :: String) => a
 -- | A nicer synonym for some ModuleT stuffs
 type ModuleLB m = ModuleT m LB [String]
 
-
 serverSignOn :: Config.Protocol -> String -> String -> LB ()
 serverSignOn Config.Irc  nick userinfo = ircSignOn nick userinfo
 serverSignOn Config.Xmpp nick _        = jabberSignOn nick
@@ -288,6 +288,8 @@ ircSignOn nick ircname = do
     server <- asks ircServer
 
     -- password support. TODO: Move this to IRC?
+    -- If plugin initialising was delayed till after we connected, we'd
+    -- be able to write a Passwd plugin.
     send . Just $ IRC.user nick server ircname
     send . Just $ IRC.setNick nick
     mpasswd <- liftIO (handleJust ioErrors (const (return "")) $
@@ -336,26 +338,29 @@ send line = do
 textwidth :: Int
 textwidth = 200 -- IRC maximum msg length, minus a bit for safety.
 
-lineify, checkRecip, cleanOutput, reduceIndent :: OutputFilter
 -- | wrap long lines.
+lineify :: OutputFilter
 lineify = const (return . mlines . unlines)
 
 -- | Don't send any output to alleged bots.
+checkRecip :: OutputFilter
 checkRecip who msg
-  | who == Config.name Config.config       = return []
-  | "bot" `isSuffixOf` lowerCaseString who = return []
-  | otherwise                              = return msg
+    | who == Config.name Config.config       = return []
+    | "bot" `isSuffixOf` lowerCaseString who = return []
+    | otherwise                              = return msg
 
 -- | For now, this just checks for duplicate empty lines.
+cleanOutput :: OutputFilter
 cleanOutput _ msg = return $ remDups True msg'
     where
         remDups True  ("":xs) =    remDups True xs
         remDups False ("":xs) = "":remDups True xs
         remDups _     (x: xs) = x: remDups False xs
         remDups _     []      = []
-        msg' = map (reverse . dropWhile isSpace . reverse) msg
+        msg' = map dropSpace msg
 
 -- | Divide the lines' indent by three.
+reduceIndent :: OutputFilter
 reduceIndent _ msg = return $ map redLine msg
     where
         redLine (' ':' ':' ':xs) = ' ': redLine xs
@@ -427,13 +432,11 @@ data Mode = Online | Offline deriving Eq
 --
 runIrc :: Mode -> LB a -> LB () -> S.DynLoad -> IO ()
 runIrc mode initialise loop ld = withSocketsDo $ do
-    try $ evalLB
-             (do io $ hPutStr stderr "Initialising plugins ... " >> hFlush stderr
-                 initialise
-                 io $ hPutStrLn stderr " done."
-                 withIrcSignalCatch (runIrc' mode loop))
-             (initState (Config.admins Config.config) ld)
-    return ()
+    evalLB (do io $ hPutStr stderr "Initialising plugins ... " >> hFlush stderr
+               initialise
+               io $ hPutStrLn stderr " done."
+               withIrcSignalCatch (runIrc' mode loop))
+           (initState (Config.admins Config.config) ld)
 
 initState :: [String] -> S.DynLoad -> IRCRWState
 initState as ld = IRCRWState {
