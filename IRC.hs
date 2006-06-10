@@ -206,7 +206,7 @@ decodeMessage line =
 
 readerLoop :: ThreadId -> Pipe IrcMessage -> Pipe IrcMessage -> Handle -> MVar () -> MVar () -> IO ()
 readerLoop th chanr chanw h _ _ = handleIO th $ do
-    io (putStrLn "Running reader loop...")
+    io (putStrLn "Forking threads ...")
     readerLoop'
   where
     readerLoop' = do

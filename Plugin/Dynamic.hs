@@ -20,9 +20,7 @@ instance Module DynamicModule () where
     modulePrivs  _ = ["dynamic-load","dynamic-unload","dynamic-reload"]
 
     moduleInit   _ = do
-        liftIO $ putStr "Loading plugins\t" >> hFlush stdout
-        mapM_ (\p -> load p >> liftIO (putChar '.' >> hFlush stdout)) plugins
-        liftIO $ putStrLn " done."
+        mapM_ (\p -> load p >> liftIO (putChar '!' >> hFlush stdout)) plugins
 
     process_ _ s rest = case s of
         "dynamic-load"      -> load rest                >> return ["module loaded"]

@@ -38,14 +38,13 @@ instance Module FactModule FactState where
   moduleDefState _  = return $ M.empty
   moduleSerialize _ = Just mapPackedSerial
 
-  process_ _ cmd rest = do
-        result <- withMS $ \factFM writer -> case words rest of
+  process_ _ cmd rest =
+        list $ withMS $ \factFM writer -> case words rest of
             []         -> return "I can not handle empty facts."
             (fact:dat) -> processCommand factFM writer
                                 (P.pack $ lowerCaseString fact)
                                 cmd
                                 (P.pack $ unwords dat)
-        return [result]
 
 ------------------------------------------------------------------------
 

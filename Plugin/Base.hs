@@ -295,7 +295,7 @@ doPRIVMSG' myname msg
                                     [] -> ircPrivmsg towhere Nothing
                                     _  -> mapM_ (ircPrivmsg towhere . Just) mstrs)
 
-                            (ircPrivmsg towhere . Just .((?name++" module failed: ")++)))
+                            (ircPrivmsg towhere . Just .((?name++" module failed: ")++).show))
 
     --
     -- contextual messages are all input that isn't an explicit command.
@@ -305,13 +305,16 @@ doPRIVMSG' myname msg
     -- we try to run the contextual functions from all modules, on every
     -- non-command. better hope this is efficient.
     --
+    -- Note how we catch any plugin errors here, rather than letting
+    -- them bubble back up to the mainloop
+    --
     doContextualMsg r = do
         withAllModules (\m ->
             forkLB $ catchIrc
                 (do ms <- contextual m msg alltargets r
                     mapM_ (ircPrivmsg alltargets . Just) ms)
-                (\s -> debugStrLn
-                    (?name++" module failed in contextual handler: "++s)) )
+                (\e -> debugStrLn
+                    (?name++" module failed in contextual handler: "++show e)) )
         return ()
 
 ------------------------------------------------------------------------

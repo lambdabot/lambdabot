@@ -72,7 +72,7 @@ mainloop = do
 allCallbacks :: Message a => [a -> LB ()] -> a -> LB ()
 allCallbacks [] _ = return ()
 allCallbacks (f:fs) msg = do
-    handleIrc (liftIO . putStrLn) (f msg)
+    handleIrc (liftIO . putStrLn . ("Main: caught (and ignoring) "++). show) (f msg)
     allCallbacks fs msg
 
 ------------------------------------------------------------------------

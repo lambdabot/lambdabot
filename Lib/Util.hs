@@ -52,6 +52,8 @@ import Control.Exception        (bracket)
 
 import System.Random hiding (split)
 
+import System.IO
+
 ------------------------------------------------------------------------
 
 -- | 'concatWith' joins lists with the given glue elements. Example:
@@ -437,3 +439,5 @@ isRight         = not . isLeft
 -- | Another useful Either function to easily get out of an Either
 unEither :: Either a a -> a
 unEither = either id id
+
+
