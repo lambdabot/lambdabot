@@ -11,6 +11,7 @@ Build with cabal (simple)
     $ ./Setup.hs configure --bindir=`pwd`
     $ ./Setup.hs build
     $ ./Setup.hs install
+    $ ghc -c -odir . -hidir . scripts/ShowQ.hs
     $ ./lambdabot
 
 Or with ghci (fastest turn around)

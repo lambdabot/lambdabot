@@ -23,6 +23,9 @@ import System.Posix.Resource    (setResourceLimit,
 
 import qualified Control.Exception
 
+-- just for the cabal system
+import ShowQ
+
 rlimit = ResourceLimit 3
 
 context = prelude ++ prehier ++ datas ++ qualifieds ++ controls ++ other ++ template ++ extras
