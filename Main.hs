@@ -14,7 +14,7 @@ import qualified Data.Map as M
 import System.Environment
 
 import Data.Maybe
-import Control.Monad.State (get, liftIO)
+import Control.Monad.State (get, liftIO, modify)
 
 ------------------------------------------------------------------------
 
@@ -47,7 +47,11 @@ onlineMain :: LB ()
 onlineMain = serverSignOn (protocol config) (name config) (userinfo config) >> mainloop
 
 offlineMain :: LB ()
-offlineMain = mainloop
+offlineMain = do 
+  modify (\st -> let privUsers  = ircPrivilegedUsers st
+                     privUsers' = M.insert "null" True privUsers
+                 in st { ircPrivilegedUsers = privUsers' })
+  mainloop
 
 ------------------------------------------------------------------------
 
