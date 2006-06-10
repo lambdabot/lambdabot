@@ -3,7 +3,6 @@
 --
 -- The LB/Lambdabot monad
 -- Generic server connection,disconnection
--- Signal and exception handling
 -- The module typeclass, type and operations on modules
 --
 module Lambdabot (
