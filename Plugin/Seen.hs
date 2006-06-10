@@ -10,8 +10,8 @@ module Plugin.Seen (theModule) where
 import Plugin
 import Lib.AltTime
 import Lib.Binary
+import Lib.Error         (tryError)
 
-import ErrorUtils          (tryError)
 import qualified Message (Message, names, channels, nick, body)
 
 import qualified Data.Map as M

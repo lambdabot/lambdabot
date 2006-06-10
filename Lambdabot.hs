@@ -1,4 +1,3 @@
-{-# OPTIONS -cpp #-}
 --
 -- | The guts of lambdabot.
 --
@@ -30,48 +29,40 @@ module Lambdabot (
         ircLoad, ircUnload,
 
         checkPrivs, mkCN, handleIrc, catchIrc, runIrc,
-
-        io,
   ) where
 
-import qualified Config (config, name, admins, host, port, Protocol(..))
 import qualified Message as Msg
+import qualified Shared  as S
+import qualified Config (config, name, admins, host, port, Protocol(..))
 import qualified IRC    (IrcMessage, quit, privmsg, readerLoop
                         ,writerLoop, offlineReaderLoop, offlineWriterLoop, user, setNick)
-import qualified Shared as S
-import ErrorUtils
 
-import Lib.Util             (lowerCaseString, addList,dropSpace)
+import Lib.Signals
+import Lib.Util
 import Lib.Serial
-
-import Data.Map (Map)
-import qualified Data.Map as M hiding (Map)
-import qualified Data.ByteString.Char8 as P
 
 import Prelude hiding   (mod, catch)
 
 import Network          (withSocketsDo, connectTo, PortID(PortNumber))
 
-import System.IO
 import System.Exit
-
-# ifndef mingw32_HOST_OS
+import System.IO
 import System.Posix.Process
 import System.Posix.Signals
-import System.IO.Unsafe         (unsafePerformIO)
-# endif
 
 import Data.Char                (toLower, isAlphaNum, isSpace)
-import Data.List                (isSuffixOf, inits, tails)
-import Data.Typeable            (Typeable)
 import Data.IORef               (newIORef, IORef, readIORef, writeIORef)
+import Data.List                (isSuffixOf, inits, tails)
 import Data.Maybe               (isJust)
+import Data.Map (Map)
+import qualified Data.Map as M hiding (Map)
+import qualified Data.ByteString.Char8 as P
 
-import Control.Exception
 import Control.Concurrent
+import Control.Exception
+import Control.Monad.Error (MonadError (..))
 import Control.Monad.Reader
 import Control.Monad.State
-import Control.Monad.Error (MonadError (..))
 import Control.Monad.Trans      ( liftIO )
 
 #if __GLASGOW_HASKELL__ >= 605
@@ -79,12 +70,9 @@ import GHC.Err
 #endif
 
 ------------------------------------------------------------------------
-
-#ifdef mingw32_HOST_OS
-type Signal = ()
-type Handler = ()
-type SignalSet = ()
-#endif
+--
+-- Lambdabot state
+--
 
 -- | Global read-only state.
 data IRCRState
@@ -104,27 +92,26 @@ type OutputFilter = String -> [String] -> LB [String]
 
 -- | Global read\/write state.
 data IRCRWState = IRCRWState {
-    ircPrivilegedUsers :: Map String Bool,
+        ircPrivilegedUsers :: Map String Bool,
 
-    ircChannels        :: Map ChanName String,
-        -- ^ maps channel names to topics
+        ircChannels        :: Map ChanName String,
+            -- ^ maps channel names to topics
 
-    ircModules         :: Map String ModuleRef,
-    ircCallbacks       :: Map String [(String,Callback)],
-    ircOutputFilters   :: [(String,OutputFilter)],
-        -- ^ Output filters, invoked from right to left
+        ircModules         :: Map String ModuleRef,
+        ircCallbacks       :: Map String [(String,Callback)],
+        ircOutputFilters   :: [(String,OutputFilter)],
+            -- ^ Output filters, invoked from right to left
 
-    ircCommands        :: Map String ModuleRef,
-    ircPrivCommands    :: [String],
-    ircStayConnected   :: Bool,
-    ircDynLoad         :: S.DynLoad
-}
+        ircCommands        :: Map String ModuleRef,
+        ircPrivCommands    :: [String],
+        ircStayConnected   :: Bool,
+        ircDynLoad         :: S.DynLoad
+    }
 
 newtype ChanName = ChanName { getCN :: String } -- should be abstract, always lowercase
   deriving (Eq, Ord)
 
-instance Show ChanName where
-  show (ChanName x) = show x
+instance Show ChanName where show (ChanName x) = show x
 
 -- | only use the "smart constructor":
 mkCN :: String -> ChanName
@@ -132,16 +119,43 @@ mkCN = ChanName . map toLower
 
 -- ---------------------------------------------------------------------
 --
--- The LB monad
+-- The LB (LambdaBot) monad
 --
 
 -- | The IRC Monad. The reader transformer holds information about the
 --   connection to the IRC server.
-newtype LB a = LB { runLB :: ReaderT (IORef (Maybe IRCRState),IORef IRCRWState) IO a }
+--
+-- instances Monad, Functor, MonadIO, MonadState, MonadError
 
-#ifndef __HADDOCK__
+
+newtype LB a = LB { runLB :: ReaderT (IORef (Maybe IRCRState),IORef IRCRWState) IO a }
   deriving (Monad,Functor,MonadIO)
-#endif
+
+-- Actually, this isn't a reader anymore
+instance MonadReader IRCRState LB where
+    ask   = LB $ fmap (maybe (error "No connection") id) $
+                        io . readIORef =<< asks fst
+    local = error "You are not supposed to call local"
+
+instance MonadState IRCRWState LB where
+    get = LB $ do
+        ref <- asks snd
+        lift $ readIORef ref
+    put x = LB $ do
+        ref <- asks snd
+        lift $ writeIORef ref x
+
+-- And now a MonadError instance to map IRCErrors to MonadError in LB,
+-- so throwError and catchError "just work"
+instance MonadError IRCError LB where
+  throwError (IRCRaised e)    = io $ throwIO e
+  throwError (SignalCaught e) = io $ evaluate (throwDyn $ SignalException e)
+  m `catchError` h = lbIO $ \conv -> (conv m
+              `catchDyn` \(SignalException e) -> conv $ h $ SignalCaught e)
+              `catch` \e -> conv $ h $ IRCRaised e
+
+-- A type for handling both Haskell exceptions and external signals
+data IRCError = IRCRaised Exception | SignalCaught Signal deriving Show
 
 -- | lift an io transformer into LB
 liftLB :: (IO a -> IO b) -> LB a -> LB b
@@ -151,11 +165,6 @@ liftLB f = LB . mapReaderT f . runLB -- lbIO (\conv -> f (conv lb))
 -- CPS to work around predicativiy of haskell's type system.
 lbIO :: ((forall a. LB a -> IO a) -> IO b) -> LB b
 lbIO k = LB . ReaderT $ \r -> k (\(LB m) -> m `runReaderT` r)
-
--- Actually, this isn't a reader anymore
-instance MonadReader IRCRState LB where
-  ask   = LB $ fmap (maybe (error "No connection") id) $ io . readIORef =<< asks fst
-  local = error "You are not supposed to call local"
 
 -- | Take a state, and a lambdabot monad action, run the action,
 -- preserving the state before and after you run the action.
@@ -168,14 +177,6 @@ localLB new (LB m) = LB $ do
     io $ writeIORef ref old
     return res
 
-instance MonadState IRCRWState LB where
-    get = LB $ do
-        ref <- asks snd
-        lift $ readIORef ref
-    put x = LB $ do
-        ref <- asks snd
-        lift $ writeIORef ref x
-
 -- | run a computation in the LB monad
 evalLB :: LB a -> IRCRWState -> IO a
 evalLB (LB lb) rws = do
@@ -183,147 +184,9 @@ evalLB (LB lb) rws = do
     ref' <- newIORef Nothing
     lb `runReaderT` (ref',ref)
 
-------------------------------------------------------------------------
--- The signal story.
---
--- Posix signals are external events that invoke signal handlers in
--- Haskell. The signal handlers in turn throw dynamic exceptions.
--- Our instance of MonadError for LB maps the dynamic exceptions to
--- SignalCaughts, which can then be caught by a normal catchIrc or
--- handleIrc
---
--- Here's where we do that.
---
-
--- A new type for the SignalException, must be Typeable so we can make a
--- dynamic exception out of it.
-newtype SignalException = SignalException Signal deriving Typeable
-
---
--- A bit of sugar for installing a new handler
--- 
-withHandler :: (MonadIO m,MonadError e m) => Signal -> Handler -> m () -> m ()
-#ifdef mingw32_HOST_OS
-withHandler s h m = return ()
-#else
-withHandler s h m
-  = bracketError (io (installHandler s h Nothing))
-                 (io . flip (installHandler s) Nothing)
-                 (const m)
-#endif
-
--- And more sugar for installing a list of handlers
-withHandlerList :: (MonadError e m,MonadIO m)
-                => [Signal] -> (Signal -> Handler) -> m () -> m ()
-withHandlerList sl h m = foldr (withHandler `ap` h) m sl
-
---
--- Signals we care about. They're all fatal.
---
--- Be careful adding signals, some signals can't be caught and
--- installHandler just raises an exception if you try
---
-ircSignalsToCatch :: [Signal]
-ircSignalsToCatch = [
-#ifndef mingw32_HOST_OS
-    busError,
-    segmentationViolation,
-    keyboardSignal,
-    softwareTermination,
-    keyboardTermination,
-    lostConnection,
-    internalAbort
-#endif
-    ]
-
---
--- User friendly names for the signals that we can catch
---
-ircSignalMessage :: Signal -> [Char]
-ircSignalMessage s
-#ifndef mingw32_HOST_OS
-   | s==busError              = "SIGBUS"
-   | s==segmentationViolation = "SIGSEGV"
-   | s==keyboardSignal        = "SIGINT"
-   | s==softwareTermination   = "SIGTERM"
-   | s==keyboardTermination   = "SIGQUIT"
-   | s==lostConnection        = "SIGHUP"
-   | s==internalAbort         = "SIGABRT"
-#endif
--- this case shouldn't happen if the list of messages is kept up to date
--- with the list of signals caught
-   | otherwise                  = "killed by unknown signal"
-
---
--- The actual signal handler. It is this function we register for each
--- signal flavour. On receiving a signal, the signal handler maps the
--- signal to a a dynamic exception, and throws it out to the main
--- thread. The LB MonadError instance can then do its trickery to catch
--- it in handler/catchIrc
---
-ircSignalHandler :: ThreadId -> Signal -> Handler
-ircSignalHandler threadid s
-#ifdef mingw32_HOST_OS
-  = ()
-#else
-  = CatchOnce $ do
-        putMVar catchLock ()
-        releaseSignals
-        throwDynTo threadid $ SignalException s
-
---
--- | Release all signal handlers
---
-releaseSignals :: IO ()
-releaseSignals =
-    flip mapM_ ircSignalsToCatch
-               (\sig -> installHandler sig Default Nothing)
-
---
--- Mututally exclusive signal handlers
---
--- This is clearly a hack, but I have no idea how to accomplish the same
--- thing correctly. The main problem is that signals are often thrown
--- multiple times, and the threads start killing each other if we allow
--- the SignalException to be thrown more than once.
-{-# NOINLINE catchLock #-}
-catchLock :: MVar ()
-catchLock = unsafePerformIO newEmptyMVar
-#endif
-
---
--- | Register signal handlers to catch external signals
---
-withIrcSignalCatch :: (MonadError e m,MonadIO m) => m () -> m ()
-withIrcSignalCatch m = do
-    io $ installHandler sigPIPE Ignore Nothing
-    io $ installHandler sigALRM Ignore Nothing
-    threadid <- io myThreadId
-    withHandlerList ircSignalsToCatch (ircSignalHandler threadid) m
-
---
--- A type for handling both Haskell exceptions and external signals
---
-data IRCError = IRCRaised Exception | SignalCaught Signal deriving Show
-
---
--- And now a MonadError instance to map IRCErrors to MonadError in LB,
--- so throwError and catchError "just work"
---
-instance MonadError IRCError LB where
-  throwError (IRCRaised e)    = io $ throwIO e
-  throwError (SignalCaught e) = io $ evaluate (throwDyn $ SignalException e)
-  m `catchError` h = lbIO $ \conv -> (conv m
-              `catchDyn` \(SignalException e) -> conv $ h $ SignalCaught e)
-              `catch` \e -> conv $ h $ IRCRaised e
-
--- ---------------------------------------------------------------------
-
---
 -- May wish to add more things to the things caught, or restructure things 
 -- a bit. Can't just catch everything - in particular EOFs from the socket
 -- loops get thrown to this thread and we musn't just ignore them.
---
 handleIrc :: MonadError IRCError m => (IRCError -> m ()) -> m () -> m ()
 handleIrc handler m = catchError m handler
 
@@ -776,11 +639,6 @@ getDictKeys dict = gets (M.keys . dict)
 
 ------------------------------------------------------------------------
 
--- convenience:
-io :: forall a (m :: * -> *). (MonadIO m) => IO a -> m a
-io = liftIO
-{-# INLINE io #-}
-
 -- | Print a debug message, and perform an action
 withDebug :: String -> LB a -> LB ()
 withDebug s a = do
@@ -823,7 +681,6 @@ reduceIndent _ msg = return $ map redLine msg
         redLine (' ':' ':xs)     = ' ': redLine xs
         redLine xs               = xs
 
--- ---------------------------------------------------------------------
 -- | Output filter
 --
 mlines :: String -> [String]

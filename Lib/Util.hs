@@ -35,7 +35,9 @@ module Lib.Util (
 
         pprKeys,
 
-        isLeft, isRight, unEither
+        isLeft, isRight, unEither,
+
+        io
     ) where
 
 import Data.List                (intersperse, isPrefixOf)
@@ -440,4 +442,9 @@ isRight         = not . isLeft
 unEither :: Either a a -> a
 unEither = either id id
 
+
+-- convenience:
+io :: forall a (m :: * -> *). (MonadIO m) => IO a -> m a
+io = liftIO
+{-# INLINE io #-}
 

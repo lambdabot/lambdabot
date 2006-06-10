@@ -1,7 +1,7 @@
 --
 -- | Error utilities
 --
-module ErrorUtils where
+module Lib.Error where
 
 import Control.Monad       (liftM)
 import Control.Monad.Error (MonadError (..))
