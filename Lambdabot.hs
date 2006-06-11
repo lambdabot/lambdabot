@@ -129,7 +129,7 @@ mkCN = ChanName . map toLower
 
 
 newtype LB a = LB { runLB :: ReaderT (IORef (Maybe IRCRState),IORef IRCRWState) IO a }
-  deriving (Monad,Functor,MonadIO)
+    deriving (Monad,Functor,MonadIO)
 
 -- Actually, this isn't a reader anymore
 instance MonadReader IRCRState LB where
@@ -236,8 +236,6 @@ initState as ld = IRCRWState {
         ircDynLoad         = ld
     }
 
-------------------------------------------------------------------------
-
 --
 -- Actually connect to the irc server
 --
@@ -286,7 +284,7 @@ mainLoop mode loop = do
 
 -- | run 'exit' handler on modules
 runExitHandlers:: LB ()
-runExitHandlers = withAllModules moduleExit>> return ()
+runExitHandlers = withAllModules moduleExit >> return ()
 
 -- | flush state of modules
 flushModuleState :: LB ()
