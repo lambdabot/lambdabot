@@ -10,14 +10,15 @@ module LBState (
         GlobalPrivate(global), mkGlobalPrivate, withPS, readPS, withGS, readGS,
         writePS, writeGS,
 
-        -- * threads
-        forkLB
+        -- * more LB support
+        forkLB, liftLB
   ) where
 
 import Lambdabot
-import Lib.Util (withMWriter, timeout)
+import Lib.Util            (withMWriter, timeout)
 
 import Control.Concurrent
+import Control.Monad.Reader
 import Control.Monad.Trans (liftIO)
 
 -- withMWriter :: MVar a -> (a -> (a -> IO ()) -> IO b) -> IO b
@@ -130,3 +131,6 @@ forkLB f = (`liftLB` f) $ \g -> do
                 return ()
             return ()
 
+-- | lift an io transformer into LB
+liftLB :: (IO a -> IO b) -> LB a -> LB b
+liftLB f = LB . mapReaderT f . runLB -- lbIO (\conv -> f (conv lb))

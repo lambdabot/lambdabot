@@ -13,7 +13,7 @@ module Lambdabot (
         IRCRState(..), IRCRWState(..), IRCError(..),
         module Msg,
 
-        LB, liftLB, lbIO,
+        LB(..), lbIO,
 
         withModule, withAllModules, getDictKeys,
 
@@ -41,9 +41,9 @@ import Lib.Signals
 import Lib.Util
 import Lib.Serial
 
-import Prelude hiding   (mod, catch)
+import Prelude hiding           (mod, catch)
 
-import Network          (withSocketsDo, connectTo, PortID(PortNumber))
+import Network                  (withSocketsDo, connectTo, PortID(PortNumber))
 
 import System.Exit
 import System.IO
@@ -156,10 +156,6 @@ instance MonadError IRCError LB where
 
 -- A type for handling both Haskell exceptions and external signals
 data IRCError = IRCRaised Exception | SignalCaught Signal deriving Show
-
--- | lift an io transformer into LB
-liftLB :: (IO a -> IO b) -> LB a -> LB b
-liftLB f = LB . mapReaderT f . runLB -- lbIO (\conv -> f (conv lb))
 
 -- lbIO return :: LB (LB a -> IO a)
 -- CPS to work around predicativiy of haskell's type system.
@@ -275,10 +271,9 @@ mainLoop mode loop = do
                     ircWriteThread = threadw
                 }
 
-    catchIrc (localLB (Just chans) loop >> return ())
-
-        -- catch anything, print informative message, and clean up
-       (\e -> do
+    catchIrc
+       (localLB (Just chans) loop >> return ())
+       (\e -> do -- catch anything, print informative message, and clean up
             io $ hPutStrLn stderr $
                        (case e of
                             IRCRaised ex   -> "Exception: " ++ show ex
