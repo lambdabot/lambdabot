@@ -378,8 +378,6 @@ class Module m s | m -> s where
     process _ _ _ _ _ = GHC.Err.noMethodBindingError "Lambdabot.process"#
 #endif
 
-------------------------------------------------------------------------
-
 -- | An existential type holding a module, used to represent modules on
 -- the value level, for manipluation at runtime by the dynamic linker.
 --
@@ -401,10 +399,12 @@ type ModState s a = (?ref :: MVar s, ?name :: String) => a
 -- | A nicer synonym for some ModuleT stuffs
 type ModuleLB m = ModuleT m LB [String]
 
-------------------------------------------------------------------------
+-- ---------------------------------------------------------------------
+--
+-- Handling global state
+--
 
 -- | Peristence: write the global state out
---
 writeGlobalState :: Module m s => m -> String -> ModuleT s LB ()
 writeGlobalState mod name = case moduleSerialize mod of
   Nothing  -> return ()
@@ -414,19 +414,14 @@ writeGlobalState mod name = case moduleSerialize mod of
         Nothing  -> return ()   -- do not write any state
         Just out -> io $ P.writeFile (toFilename name) out
 
-readFile' :: String -> IO P.ByteString
-readFile' = P.readFile
-{-# INLINE readFile' #-}
-
+-- | Read it in
 readGlobalState :: Module m s => m -> String -> IO (Maybe s)
-readGlobalState mod name = 
-  case moduleSerialize mod of
-          Nothing  -> return Nothing
-          Just ser -> do
-            state  <- Just `fmap` readFile' (toFilename name) `catch` \_ -> return Nothing
-            state' <- {-# SCC "readGlobalState.1" #-} evaluate $ deserialize ser =<< state
-            return $! maybe Nothing (Just $!) $ state'
-{-# INLINE readGlobalState #-}
+readGlobalState mod name = case moduleSerialize mod of
+    Nothing  -> return Nothing
+    Just ser -> do
+        state <- Just `fmap` P.readFile (toFilename name) `catch` \_ -> return Nothing
+        let state' = deserialize ser =<< state -- Monad Maybe
+        return $ maybe Nothing (Just $) state'
 
 -- | helper
 toFilename :: String -> String
@@ -500,18 +495,17 @@ ircUnload mod = do
 ------------------------------------------------------------------------
 
 ircSignalConnect :: String -> Callback -> ModuleT s LB ()
-ircSignalConnect str f 
-    = do s <- get
-         let cbs = ircCallbacks s
-         case M.lookup str cbs of 
-              -- TODO
-              Nothing -> put (s { ircCallbacks = M.insert str [(?name,f)]    cbs}) 
-              Just fs -> put (s { ircCallbacks = M.insert str ((?name,f):fs) cbs}) 
+ircSignalConnect str f = do 
+    s <- get
+    let cbs = ircCallbacks s
+    case M.lookup str cbs of -- TODO
+        Nothing -> put (s { ircCallbacks = M.insert str [(?name,f)]    cbs})
+        Just fs -> put (s { ircCallbacks = M.insert str ((?name,f):fs) cbs})
 
 ircInstallOutputFilter :: OutputFilter -> ModuleT s LB ()
-ircInstallOutputFilter f = modify $ \s -> 
-  -- TODO
-  s { ircOutputFilters = (?name, f): ircOutputFilters s }
+ircInstallOutputFilter f =
+    modify $ \s ->
+        s { ircOutputFilters = (?name, f): ircOutputFilters s }
 
 -- | Checks if the given user has admin permissions and excecute the action
 --   only in this case.
