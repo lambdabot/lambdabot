@@ -1,3 +1,4 @@
+{-# OPTIONS -cpp #-}
 --
 -- | The guts of lambdabot.
 --

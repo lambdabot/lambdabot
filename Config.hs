@@ -57,7 +57,7 @@ config = Config {
 
 
         admins          = [
-                "Pseudonym",    "shapr", "Heffalump",    "Igloo",  
+                "Pseudonym",    "shapr", "Heffalump",    "Igloo",
                 "Cale",         "dons", "TheHunter",    "musasabi"
         ],
 
