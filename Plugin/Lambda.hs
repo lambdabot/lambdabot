@@ -32,14 +32,14 @@ outOfFuelMsg :: [Char]
 outOfFuelMsg = "out of fuel - use @resume to continue"
 
 type EvalGlobal = (Int, Environment, M.Map String String)
-type EvalState = GlobalPrivate EvalGlobal Dynamic 
+type EvalState = GlobalPrivate EvalGlobal Dynamic
 
 instance Module EvalModule EvalState where
-    moduleDefState _ = return $ mkGlobalPrivate (maxPrivate) 
+    moduleDefState _ = return $ mkGlobalPrivate (maxPrivate)
       (initFuel, initEnv, initDefns)
 
     moduleSerialize _ = Just $ Serial {
-              serialize = Just . (\(fuel,_,defns) -> 
+              serialize = Just . (\(fuel,_,defns) ->
                 P.pack . unlines $ show fuel: map show (M.toList defns)) . global,
               deserialize = fmap (mkGlobalPrivate maxPrivate) .  loadDefinitions . P.unpack
            }
