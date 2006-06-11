@@ -34,10 +34,10 @@ data ChanState = CS { chanHandle  :: Handle,
                       chanHistory :: [Event] }
                deriving (Show, Eq)
 type LogState = M.Map Channel ChanState
- 
+
 type Log a = ModuleT LogState LB a
 
-data Event = 
+data Event =
     Said String ClockTime String
     | Joined String String ClockTime
     | Parted String String ClockTime -- covers quitting as well
@@ -49,7 +49,7 @@ theModule = MODULE $ LogModule ()
 
 instance Show Event where
     show (Said nick ct what)       = timeStamp ct ++ " <" ++ nick ++ "> " ++ what
-    show (Joined nick user ct)     = timeStamp ct ++ " " ++ nick 
+    show (Joined nick user ct)     = timeStamp ct ++ " " ++ nick
                                      ++ " (" ++ user ++ ") joined."
     show (Parted nick user ct)     = timeStamp ct ++ " " ++ nick
                                      ++ " (" ++ user ++ ") left."
@@ -65,10 +65,10 @@ numLastLines = 10
 
 -- | Command -> Help lookup
 commands :: [(String,String)]
-commands = [("last", 
+commands = [("last",
              "@last <channel> [<count>] [<user>] The last <count> (default 10) "
                ++ "posts to channel <channel>."),
-            ("log-email", 
+            ("log-email",
              "@log-email <email> [<start-date>] Email the log to the given "
                ++ "address (default to todays)"),
             ("print-logs",
@@ -76,9 +76,9 @@ commands = [("last",
 
 -- | CTCP command -> logger function lookup
 loggers :: Msg.Message m => [(String, m -> ClockTime -> Event)]
-loggers = [("PRIVMSG", msgCB ), 
-           ("JOIN",    joinCB), 
-           ("PART",    partCB),  
+loggers = [("PRIVMSG", msgCB ),
+           ("JOIN",    joinCB),
+           ("PART",    partCB),
            ("NICK",    nickCB)]
 
 instance Module LogModule LogState where
@@ -89,18 +89,18 @@ instance Module LogModule LogState where
 
    contextual _ msg _ _ = do
      case lookup (Msg.command msg) loggers of
-       Just f -> do 
+       Just f -> do
          now <- io getClockTime
          -- map over the channels this message was directed to, adding to each
          -- of their log files.
-         when (notMe msg) $ 
+         when (notMe msg) $
            mapM_ (\c -> withValidLog (doLog c f msg) now c) (Msg.channels msg)
        Nothing -> return ()
      return []
      where notMe m = (lowerCaseString $ name config)
                        /= (lowerCaseString . head $ Msg.channels m)
                        -- We don't log /msgs to the lambdabot
-           doLog chan f m hdl ct = do 
+           doLog chan f m hdl ct = do
              let event = f m ct
              logString hdl (show event)
              appendEvent chan event
@@ -114,7 +114,7 @@ instance Module LogModule LogState where
 -- | Filter all the nicks by one person
 -- FIXME --- maybe we should take into consideration nick changes?
 filterNick :: String -> [Event] -> [Event]
-filterNick who = filter filterOneNick 
+filterNick who = filter filterOneNick
     where
     filterOneNick (Said who' _ _)      = who == who'
     filterOneNick (Joined who' _ _)    = who == who'
@@ -127,7 +127,7 @@ showHistory args = do
   st <- readMS
   case M.lookup chan' st of
     Just cs -> let his = chanHistory cs
-               in return [unlines . reverse . map show 
+               in return [unlines . reverse . map show
                           . take nLines'.  reverse $ lines' his]
     Nothing -> return ["I haven't got any logs for that channel."]
   where chan:nLines:nick:_ = map listToMaybeAll (words args ++ repeat "")
@@ -148,9 +148,9 @@ showWidth width n = zeroes ++ num
 
 -- | Show a TimeStamp.
 timeStamp :: ClockTime -> String
-timeStamp ct = let cal = toUTCTime ct 
-               in (showWidth 2 $ ctHour cal) ++ ":" ++ 
-                  (showWidth 2 $ ctMin cal)  ++ ":" ++ 
+timeStamp ct = let cal = toUTCTime ct
+               in (showWidth 2 $ ctHour cal) ++ ":" ++
+                  (showWidth 2 $ ctMin cal)  ++ ":" ++
                   (showWidth 2 $ ctSec cal)
 
 -- * Logging helpers
@@ -158,8 +158,8 @@ timeStamp ct = let cal = toUTCTime ct
 
 -- | Show a DateStamp.
 dateToString :: DateStamp -> String
-dateToString (d, m, y) = (showWidth 2 y) ++ "-" ++ 
-                         (showWidth 2 $ fromEnum m + 1) ++ "-" ++ 
+dateToString (d, m, y) = (showWidth 2 y) ++ "-" ++
+                         (showWidth 2 $ fromEnum m + 1) ++ "-" ++
                          (showWidth 2 d)
 
 -- | ClockTime -> DateStamp conversion
@@ -171,20 +171,25 @@ dateStamp ct = let cal = toUTCTime ct in (ctDay cal, ctMonth cal, ctYear cal)
 
 -- | Cleans up after the module (closes files)
 cleanLogState :: Log ()
-cleanLogState = 
+cleanLogState =
     withMS $ \state writer -> do
       io $ M.fold (\(CS hdl _ _) iom -> iom >> hClose hdl) (return ()) state
       writer M.empty
 
 -- | Fetch a channel from the internal map. Uses LB's fail if not found.
 getChannel :: Channel -> Log ChanState
-getChannel = (readMS >>=) . M.lookup
+getChannel c = (readMS >>=) . M.lookup $ c
 
 getDate :: Channel -> Log DateStamp
-getDate = fmap chanDate . getChannel
+getDate c = fmap chanDate . getChannel $ c
 
 getHandle :: Channel -> Log Handle
-getHandle = fmap chanHandle . getChannel
+getHandle c = fmap chanHandle . getChannel $ c 
+    -- add points. otherwise:
+    -- Unbound implicit parameters (?ref::GHC.IOBase.MVar LogState, ?name::String)
+    --  arising from instantiating a type signature at
+    -- Plugin/Log.hs:187:30-39
+    -- Probable cause: `getChannel' is applied to too few arguments
 
 {-getHistory :: Channel -> Log [Event]
 getHistory = fmap chanHistory . getChannel-}
