@@ -12,7 +12,7 @@
 -- through, as this was originall written before contextual, so used all kinds
 -- of voodoo. Cheers, David House <dmouse@gmail.com>
 
-module Plugin.Lognew (theModule) where
+module Plugin.Log (theModule) where
 
 import Plugin
 import qualified Message as Msg
