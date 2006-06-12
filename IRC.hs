@@ -43,16 +43,16 @@ data IrcMessage
   deriving (Show)
 
 instance Message IrcMessage where
-  nick = IRC.nick
-  fullName = IRC.fullName
-  names = IRC.names
-  channels = IRC.channels
-  joinChannel = IRC.join
-  partChannel = IRC.part
-  getTopic = IRC.getTopic
-  setTopic = IRC.setTopic
-  body = IRC.msgParams
-  command = IRC.msgCommand
+    nick        = IRC.nick
+    fullName    = IRC.fullName
+    names       = IRC.names
+    channels    = IRC.channels
+    joinChannel = IRC.join
+    partChannel = IRC.part
+    getTopic    = IRC.getTopic
+    setTopic    = IRC.setTopic
+    body        = IRC.msgParams
+    command     = IRC.msgCommand
 
 -- | 'mkMessage' creates a new message from a cmd and a list of parameters.
 mkMessage :: String -- ^ Command

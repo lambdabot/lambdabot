@@ -50,7 +50,7 @@ import System.IO
 import System.Posix.Process
 import System.Posix.Signals
 
-import Data.Char                (toLower, isAlphaNum, isSpace)
+import Data.Char
 import Data.IORef               (newIORef, IORef, readIORef, writeIORef)
 import Data.List                (isSuffixOf, inits, tails)
 import Data.Maybe               (isJust)
@@ -225,11 +225,11 @@ initState as ld = IRCRWState {
         ircModules         = M.empty,
         ircCallbacks       = M.empty,
         ircOutputFilters   = [
-            ("",cleanOutput),
-            ("",lineify),
-            ("",cleanOutput),
-            ("",reduceIndent),
-            ("",checkRecip) ],
+            ([],cleanOutput),
+            ([],lineify),
+            ([],cleanOutput),
+            ([],reduceIndent),
+            ([],checkRecip) ],
         ircCommands        = M.empty,
         ircPrivCommands    = [],
         ircStayConnected   = True,
@@ -468,9 +468,9 @@ ircUnloadModule modname = withModule ircModules modname (error "module not loade
         cmdmap = ircCommands s
         cbs    = ircCallbacks s
         ofs    = ircOutputFilters s
-    put $ s { ircCommands = M.filter (\(ModuleRef _ _ name) -> name /= modname) cmdmap }
-            { ircModules = M.delete modname modmap }
-            { ircCallbacks = filter ((/=modname) . fst) `fmap` cbs }
+    put $ s { ircCommands      = M.filter (\(ModuleRef _ _ name) -> name /= modname) cmdmap }
+            { ircModules       = M.delete modname modmap }
+            { ircCallbacks     = filter ((/=modname) . fst) `fmap` cbs }
             { ircOutputFilters = filter ((/=modname) . fst) ofs }
   )
 
@@ -639,9 +639,35 @@ withDebug s a = do
 textwidth :: Int
 textwidth = 200 -- IRC maximum msg length, minus a bit for safety.
 
+-- | For now, this just checks for duplicate empty lines.
+cleanOutput :: OutputFilter
+cleanOutput _ msg = return $ remDups True msg'
+    where
+        remDups True  ([]:xs) =    remDups True xs
+        remDups False ([]:xs) = []:remDups True xs
+        remDups _     (x: xs) = x: remDups False xs
+        remDups _     []      = []
+        msg' = map dropSpaceEnd msg
+
 -- | wrap long lines.
 lineify :: OutputFilter
 lineify = const (return . mlines . unlines)
+
+-- | break into lines
+mlines :: String -> [String]
+mlines = (mbreak =<<) . lines
+    where
+        mbreak :: String -> [String]
+        mbreak xs
+            | null bs   = [as]
+            | otherwise = (as++cs) : filter (not . null) (mbreak ds)
+            where
+                (as,bs) = splitAt (w-n) xs
+                breaks  = filter (not . isAlphaNum . last . fst) $ drop 1 $
+                                  take n $ zip (inits bs) (tails bs)
+                (cs,ds) = last $ (take n bs, drop n bs): breaks
+                w = textwidth
+                n = 10
 
 -- | Don't send any output to alleged bots.
 checkRecip :: OutputFilter
@@ -650,36 +676,9 @@ checkRecip who msg
     | "bot" `isSuffixOf` lowerCaseString who = return []
     | otherwise                              = return msg
 
--- | For now, this just checks for duplicate empty lines.
-cleanOutput :: OutputFilter
-cleanOutput _ msg = return $ remDups True msg'
-    where
-        remDups True  ("":xs) =    remDups True xs
-        remDups False ("":xs) = "":remDups True xs
-        remDups _     (x: xs) = x: remDups False xs
-        remDups _     []      = []
-        msg' = map dropSpaceEnd msg
-
 -- | Divide the lines' indent by two
 reduceIndent :: OutputFilter
 reduceIndent _ msg = return $ map redLine msg
     where
         redLine (' ':' ':xs)        = ' ':redLine xs
         redLine xs                  = xs
-
--- | Output filter
---
-mlines :: String -> [String]
-mlines = (mbreak =<<) . lines
-    where
-        mbreak :: String -> [String]
-        mbreak xs
-            | null bs   = [as]
-            | otherwise = (as++cs) : filter (not . null) (mbreak (dropWhile isSpace ds))
-            where
-                (as,bs) = splitAt (w-n) xs
-                breaks  = filter (not . isAlphaNum . last . fst) $ drop 1 $
-                                  take n $ zip (inits bs) (tails bs)
-                (cs,ds) = last $ (take n bs, drop n bs): breaks
-                w = textwidth
-                n = 10
