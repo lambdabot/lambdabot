@@ -7,9 +7,10 @@ version 0.7 and later are ok.
 
 Build with cabal (simple)
     $ vi Config.hs
-    $ chmod +x configure
+    $ chmod +x configure Setup.hs
     $ ./Setup.hs configure --bindir=`pwd`
-    $ ./build
+    $ ./Setup.hs build
+    $ ./Setup.hs install
     $ ./lambdabot
 
 Or with ghci (fastest turn around)
