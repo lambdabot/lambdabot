@@ -30,7 +30,11 @@ import System.IO.Unsafe       ( unsafePerformIO )
 import System.Exit            ( exitFailure )
 
 lambdabotMain :: [Char]
-lambdabotMain = "Main.o" -- entry point into yi lib
+lambdabotMain = lambdaPath ++ "Main.o" -- entry point into yi lib
+
+-- path to plugins
+lambdaPath :: String
+lambdaPath = "./dist/build/lambdabot/lambdabot-tmp/"
 
 mainSym :: Symbol
 mainSym  = "dynmain"        -- main entry point
@@ -42,7 +46,7 @@ mainSym  = "dynmain"        -- main entry point
 --
 main :: IO ()
 main = do
-    status  <- load lambdabotMain ["."] [] mainSym
+    status  <- load lambdabotMain [lambdaPath] [] mainSym
     dynmain <- case status of
         LoadSuccess _ v -> return (v :: MainType) -- should stick module in ioref
         LoadFailure e   -> do putStrLn "Unable to load Main, exiting"
@@ -59,7 +63,7 @@ type MainType = S.DynLoad -> IO ()
 -- | should insert m into a local IORef, for unload to work
 dLoad :: String -> String -> IO (S.Module,a)
 dLoad p s = do
-    mm <- load_ p ["."] s
+    mm <- load_ (lambdaPath ++ p) [lambdaPath] s
     case mm of
         LoadFailure e   -> error ("dLoad: "++show e)  -- throw this back to DynamicModule
         LoadSuccess m v -> do
