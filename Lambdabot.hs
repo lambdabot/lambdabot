@@ -658,15 +658,14 @@ cleanOutput _ msg = return $ remDups True msg'
         remDups False ("":xs) = "":remDups True xs
         remDups _     (x: xs) = x: remDups False xs
         remDups _     []      = []
-        msg' = map dropSpace msg
+        msg' = map dropSpaceEnd msg
 
--- | Divide the lines' indent by three.
+-- | Divide the lines' indent by two
 reduceIndent :: OutputFilter
 reduceIndent _ msg = return $ map redLine msg
     where
-        redLine (' ':' ':' ':xs) = ' ': redLine xs
-        redLine (' ':' ':xs)     = ' ': redLine xs
-        redLine xs               = xs
+        redLine (' ':' ':xs)        = ' ':redLine xs
+        redLine xs                  = xs
 
 -- | Output filter
 --

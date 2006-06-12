@@ -10,6 +10,7 @@ module Lib.Util (
         breakOnGlue,
         clean,
         dropSpace,
+        dropSpaceEnd,
         dropNL,
         snoc,
         after,
@@ -239,11 +240,15 @@ randomElem = stdGetRandItem
 ------------------------------------------------------------------------
 
 -- | 'dropSpace' takes as input a String and strips spaces from the
---   prefix as well as the postfix of the String. Example:
+--   prefix as well as the suffix of the String. Example:
 --
 -- > dropSpace "   abc  " ===> "abc"
 dropSpace :: [Char] -> [Char]
 dropSpace = let f = reverse . dropWhile isSpace in f . f
+
+-- | Drop space from the end of the string
+dropSpaceEnd :: [Char] -> [Char]
+dropSpaceEnd = reverse . dropWhile isSpace . reverse
 
 -- | 'clean' takes a Char x and returns [x] unless the Char is '\CR' in
 --   case [] is returned.
