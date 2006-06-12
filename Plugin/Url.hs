@@ -1,3 +1,6 @@
+--
+-- | Fetch URL page titles of HTML links.
+--
 module Plugin.Url (theModule) where
 
 import Plugin
@@ -5,7 +8,7 @@ import Plugin
 PLUGIN Url
 
 instance Module UrlModule () where
-    moduleHelp  _ "url-title"     = "url <url>. Return the page title of the url"
+    moduleHelp  _ "url-title"     = "url-title <url>. Fetch the page title."
     moduleCmds  _                 = ["url-title"]
     process_    _ "url-title" url = getPageTitle url
     contextual  _ _ _ text        = case containsUrl text of
@@ -32,6 +35,7 @@ instance Module UrlModule () where
 
 ------------------------------------------------------------------------
 
+-- | Searches a string for an embeddded URL and returns it.
 containsUrl :: String -> Maybe String
 containsUrl text = do
     (_,kind,rest,_) <- matchRegexAll begreg text
@@ -42,6 +46,7 @@ containsUrl text = do
 
 -- DONS Is there a nicer way to write this function?  My concern is
 -- the multiple case statements.
+-- | Fetches a page title for the specified URL.
 getPageTitle :: String -> LB [String]
 getPageTitle url = 
     case parseURI url of
@@ -51,7 +56,9 @@ getPageTitle url =
         return $ case extractTitle contents of
                    Nothing    -> [] -- Might be non-html content
                    Just title -> ["The title of that page is \""++title++"\""]
-
+-- | Fetch the contents of a URL following HTTP redirects.  It returns
+-- a list of strings comprising the server response which includes the
+-- status line, response headers, and body.
 getHtmlPage :: URI -> IO [String]
 getHtmlPage uri = do
     contents <- io $ getURIContents uri
@@ -60,12 +67,20 @@ getHtmlPage uri = do
       302       -> getHtmlPage $ fromJust $ locationHeader contents
       _         -> return contents
     where 
+      -- | Parse the HTTP response code from a line in the following
+      -- format: HTTP/1.1 200 Success.
       responseStatus hdrs = (read . (!!1) . words . (!!0)) hdrs :: Int
+
+      -- | Return the value of the "Location" header in the server
+      -- response 
       locationHeader hdrs = do
         header <- getHeader "Location" hdrs
         locuri <- parseURI header
         return locuri
 
+-- | Fetch the contents of a URL returning a list of strings
+-- comprising the server response which includes the status line,
+-- response headers, and body.
 getURIContents :: URI -> IO [String]
 getURIContents uri = readPage (proxy config) uri request ""
     where 
@@ -77,6 +92,10 @@ getURIContents uri = readPage (proxy config) uri request ""
                    url@('/':_) -> url
                    url         -> '/':url
 
+-- | Given a server response (list of Strings), return the text in
+-- between the title HTML element, only if it is text/html content.
+-- TODO: need to decode character entities (or at least the most
+-- common ones)
 extractTitle :: [String] -> Maybe String
 extractTitle contents 
     | isTextHtml contents = getTitle $ unlines contents
@@ -90,6 +109,7 @@ extractTitle contents
         (title,_,_,_) <- matchRegexAll endreg start
         return $ (unwords . words) title
 
+-- | Is the server response of type "text/html"?
 isTextHtml :: [String] -> Bool
 isTextHtml contents 
     | val == "text/html" = True
@@ -98,6 +118,12 @@ isTextHtml contents
       val        = takeWhile (/=';') ctype
       Just ctype = getHeader "Content-Type" contents
 
+-- | Retrieve the specified header from the server response being
+-- careful to strip the trailing carriage return.  I swiped this code
+-- from Search.hs, but had to modify it because it was not properly
+-- stripping off the trailing CR (must not have manifested itself as a 
+-- bug in that code; however, parseURI will fail against CR-terminated
+-- strings.
 getHeader :: String -> [String] -> Maybe String
 getHeader _   []     = Nothing
 getHeader hdr (_:hs) = lookup hdr $ concatMap mkassoc hs
