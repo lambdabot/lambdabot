@@ -1,1 +1,1 @@
-MODULES Base System Dict Dummy Karma Quote Seen State Topic Type Plugs Babel Version More Pl Help Dice Search Vixen Fact Todo Spell Haddock Hoogle Where Elite Localtime Poll Djinn Pretty Compose Lambda Unlambda Log Slap DrHylo Instances Fresh Tell Url
+MODULES Base System Dict Dummy Karma Quote Seen State Topic Type Eval Babel Version More Pl Help Dice Search Vixen Fact Todo Spell Haddock Hoogle Where Elite Localtime Poll Djinn Pretty Compose Lambda Unlambda Log Slap DrHylo Instances Fresh Tell Url

@@ -1,15 +1,12 @@
 --
--- Copyright (c) 2004 Donald Bruce Stewart - http://www.cse.unsw.edu.au/~dons
+-- Copyright (c) 2004-6 Donald Bruce Stewart - http://www.cse.unsw.edu.au/~dons
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
 --
 
 --
 -- | A Haskell evaluator for the pure part, using plugs
 --
--- requires the 'runplugs' utility available with the hs-plugins library.
--- in '$hsplugins/examples/hmake/one-shot'
---
-module Plugin.Plugs where
+module Plugin.Eval where
 
 import Plugin
 import Lib.Parser
