@@ -17,21 +17,46 @@ instance Module UrlModule Bool where
     process_    _ "url-on"    _   = writeMS True  >> return ["Url enabled"]
     process_    _ "url-off"   _   = writeMS False >> return ["Url disabled"]
 
-    contextual  _ _ _ text        = do alive <- readMS
-                                       if alive
-                                         then case containsUrl text of
-                                                    Nothing  -> return []
-                                                    Just url -> getPageTitle url
-                                         else return []
+    contextual  _ _ _ text        = do 
+      alive <- readMS
+      if alive && (not $ areSubstringsOf ignoredStrings text)
+        then case containsUrl text of
+               Nothing  -> return []
+               Just url -> getPageTitle url
+        else return []
 
 ------------------------------------------------------------------------
+
+-- | List of strings that, if present in a contextual message, will
+-- prevent the looking up of titles.  This list can be used to stop 
+-- responses to lisppaste for example.  Another important use is to
+-- another lambdabot looking up a url title that contains another 
+-- url in it (infinite loop).  Ideally, this list could be added to 
+-- by an admin via a privileged command (TODO).
+ignoredStrings :: [String]
+ignoredStrings = 
+    ["pasted",               -- Ignore lisppaste
+     "HaskellIrcPastePage",  -- Ignore paste page
+     "title of that page"]   -- Ignore others like me
+
+-- | Limit the maximum title length to prevent jokers from spamming
+-- the channel with specially crafted HTML pages.
+maxTitleLength :: Int
+maxTitleLength = 80
+
+-- | Suffixes that should be stripped off when identifying URLs in
+-- contextual messages.  These strings may be punctuation in the
+-- current sentence vs part of a URL.  Included here is the NUL
+-- character as well.
+ignoredUrlSuffixes :: [String]
+ignoredUrlSuffixes = [".", ",", ";", ")", "\"", "\1"]
 
 -- | Searches a string for an embeddded URL and returns it.
 containsUrl :: String -> Maybe String
 containsUrl text = do
     (_,kind,rest,_) <- matchRegexAll begreg text
     let url = takeWhile (/=' ') rest
-    return $ kind ++ url
+    return $ stripSuffixes ignoredUrlSuffixes $ kind ++ url
     where
       begreg = mkRegexWithOpts "https?://"  True False
 
@@ -41,10 +66,17 @@ getPageTitle url
     | Just uri <- parseURI url  = do
         contents <- io $ getHtmlPage uri
         return $ maybe []   -- may be non html
-                       (return . ("The title of that page is \"" ++) .  (++ "\""))
+                       (return . 
+                        ("The title of that page is \"" ++) . 
+                        (++ "\"") .
+                        limitLength)
                        (extractTitle contents)
 
     | otherwise = return ["You have specified an invalid URL"]
+    where
+      limitLength s 
+          | length s > maxTitleLength = (take maxTitleLength s) ++ " ..."
+          | otherwise                 = s
 
 -- | Fetch the contents of a URL following HTTP redirects.  It returns
 -- a list of strings comprising the server response which includes the
@@ -120,3 +152,21 @@ getHeader hdr (_:hs) = lookup hdr $ concatMap mkassoc hs
       mkassoc s  = case findIndex (==':') s of
                     Just n  -> [(take n s, removeCR $ drop (n+2) s)]
                     Nothing -> []
+
+-- | Utility function to remove potential suffixes from a string.
+-- Note, once a suffix is found, it is stripped and returned, no other
+-- suffixes are searched for at that point.
+stripSuffixes :: [String] -> String -> String
+stripSuffixes []   str   = str
+stripSuffixes (s:ss) str
+    | isSuffixOf s str   = take (length str - length s) $ str
+    | otherwise          = stripSuffixes ss str
+
+
+-- | Utility function to check of any of the Strings in the specified
+-- list are substrings of the String.
+areSubstringsOf :: [String] -> String -> Bool 
+areSubstringsOf = flip (any . flip isSubstringOf)
+    where
+      isSubstringOf s str = any (isPrefixOf s) (tails str)
+
