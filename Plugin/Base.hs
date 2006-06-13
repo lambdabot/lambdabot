@@ -59,13 +59,6 @@ instance Module BaseModule BaseState where
              ircSignalConnect "375"     doRPL_MOTDSTART
              ircSignalConnect "376"     doRPL_ENDOFMOTD -}
 
-{-
-doUNKNOWN :: Callback
-doUNKNOWN msg
-    = debugStrLn $ "UNKNOWN> <" ++ msgPrefix msg ++
-      "> [" ++ msgCommand msg ++ "] " ++ show (body msg)
--}
-
 doIGNORE :: Callback
 doIGNORE msg = debugStrLn $ show msg
  --   = debugStrLn $ "IGNORING> <" ++ msgPrefix msg ++
@@ -79,9 +72,9 @@ doPING msg
 -- If this is a "TIME" then we need to pass it over to the localtime plugin
 -- otherwise, dump it to stdout
 doNOTICE :: ModState BaseState Callback
-doNOTICE msg = 
-  if isCTCPTimeReply 
-     then do    
+doNOTICE msg =
+  if isCTCPTimeReply
+     then do
         -- bind implicit params to Localtime module. boo on implict params :/
   --    withModule ircModules 
   --               "Localtime"
@@ -134,68 +127,14 @@ doRPL_WELCOME _msg = mapM_ (send_ . joinChannel) (autojoin config)
 doQUIT :: Callback
 doQUIT msg = doIGNORE msg
 
-{-
-doRPL_YOURHOST :: Callback
-doRPL_YOURHOST _msg = return ()
-
-doRPL_CREATED :: Callback
-doRPL_CREATED _msg = return ()
-
-doRPL_MYINFO :: Callback
-doRPL_MYINFO _msg = return ()
--}
-
 doRPL_BOUNCE :: Callback
 doRPL_BOUNCE _msg = debugStrLn "BOUNCE!"
-
-{-
-doRPL_STATSCONN :: Callback
-doRPL_STATSCONN _msg = return ()
-
-doRPL_LUSERCLIENT :: Callback
-doRPL_LUSERCLIENT _msg = return ()
-
-doRPL_LUSEROP :: Callback
-doRPL_LUSEROP _msg = return ()
-
-doRPL_LUSERUNKNOWN :: Callback
-doRPL_LUSERUNKNOWN _msg = return ()
-
-doRPL_LUSERCHANNELS :: Callback
-doRPL_LUSERCHANNELS _msg = return ()
-
-doRPL_LUSERME :: Callback
-doRPL_LUSERME _msg = return ()
-
-doRPL_LOCALUSERS :: Callback
-doRPL_LOCALUSERS _msg = return ()
-
-doRPL_GLOBALUSERS :: Callback
-doRPL_GLOBALUSERS _msg = return ()
--}
 
 doRPL_TOPIC :: Callback
 doRPL_TOPIC msg -- nearly the same as doTOPIC but has our nick on the front of body
     = do let loc = (body msg) !! 1
          s <- get
          put (s { ircChannels = M.insert (mkCN loc) (tail $ last $ body msg) (ircChannels s) })
-
-{-
-doRPL_NAMREPLY :: Callback
-doRPL_NAMREPLY _msg = return ()
-
-doRPL_ENDOFNAMES :: Callback
-doRPL_ENDOFNAMES _msg = return ()
-
-doRPL_MOTD :: Callback
-doRPL_MOTD _msg = return ()
-
-doRPL_MOTDSTART :: Callback
-doRPL_MOTDSTART _msg = return ()
-
-doRPL_ENDOFMOTD :: Callback
-doRPL_ENDOFMOTD _msg = return ()
--}
 
 doPRIVMSG :: ModState BaseState Callback
 doPRIVMSG msg = do
@@ -320,3 +259,61 @@ maybeCommand nm text = case matchRegexAll re text of
       Just (_, _, cmd, _) -> Just cmd
     where re = mkRegex (nm ++ "[.:,]*[[:space:]]*")
 
+--
+-- And stuff we don't care about
+--
+
+{-
+doRPL_YOURHOST :: Callback
+doRPL_YOURHOST _msg = return ()
+
+doRPL_CREATED :: Callback
+doRPL_CREATED _msg = return ()
+
+doRPL_MYINFO :: Callback
+doRPL_MYINFO _msg = return ()
+
+doRPL_STATSCONN :: Callback
+doRPL_STATSCONN _msg = return ()
+
+doRPL_LUSERCLIENT :: Callback
+doRPL_LUSERCLIENT _msg = return ()
+
+doRPL_LUSEROP :: Callback
+doRPL_LUSEROP _msg = return ()
+
+doRPL_LUSERUNKNOWN :: Callback
+doRPL_LUSERUNKNOWN _msg = return ()
+
+doRPL_LUSERCHANNELS :: Callback
+doRPL_LUSERCHANNELS _msg = return ()
+
+doRPL_LUSERME :: Callback
+doRPL_LUSERME _msg = return ()
+
+doRPL_LOCALUSERS :: Callback
+doRPL_LOCALUSERS _msg = return ()
+
+doRPL_GLOBALUSERS :: Callback
+doRPL_GLOBALUSERS _msg = return ()
+
+doUNKNOWN :: Callback
+doUNKNOWN msg
+    = debugStrLn $ "UNKNOWN> <" ++ msgPrefix msg ++
+      "> [" ++ msgCommand msg ++ "] " ++ show (body msg)
+
+doRPL_NAMREPLY :: Callback
+doRPL_NAMREPLY _msg = return ()
+
+doRPL_ENDOFNAMES :: Callback
+doRPL_ENDOFNAMES _msg = return ()
+
+doRPL_MOTD :: Callback
+doRPL_MOTD _msg = return ()
+
+doRPL_MOTDSTART :: Callback
+doRPL_MOTDSTART _msg = return ()
+
+doRPL_ENDOFMOTD :: Callback
+doRPL_ENDOFMOTD _msg = return ()
+-}
