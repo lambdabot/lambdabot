@@ -14,12 +14,20 @@ import Lib.Parser
 PLUGIN Plugs
 
 instance Module PlugsModule () where
-    moduleCmds   _ = ["run"]
+    moduleCmds   _ = ["run"] -- not "eval", clashes with perl6 bot
     moduleHelp _ _ = "run <expr>\nYou have Haskell, 3 seconds and no IO. Go nuts!"
     process_ _ _ s = ios (plugs s)
+    contextual _ _ _ txt | isEval txt = ios . plugs . dropPrefix $ txt
+                         | otherwise  = return []
 
 binary :: String
 binary = "./runplugs"
+
+isEval :: String -> Bool
+isEval = ((evalPrefixes config) `arePrefixesWithSpaceOf`)
+
+dropPrefix :: String -> String
+dropPrefix = dropWhile (' ' ==) . drop 2
 
 plugs :: String -> IO String
 plugs src = do

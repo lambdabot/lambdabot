@@ -29,6 +29,7 @@ module Lib.Util (
         closest, closests,
         withMWriter, parIO, timeout,
         choice,
+        arePrefixesWithSpaceOf, arePrefixesOf,
 
         (</>), (<.>), (<+>), (<>), (<$>),
         basename, dirname, dropSuffix, joinPath,
@@ -456,3 +457,9 @@ io :: forall a (m :: * -> *). (MonadIO m) => IO a -> m a
 io = liftIO
 {-# INLINE io #-}
 
+
+arePrefixesWithSpaceOf :: [String] -> String -> Bool
+arePrefixesWithSpaceOf els str = any (flip isPrefixOf str) $ map (++" ") els
+
+arePrefixesOf :: [String] -> String -> Bool
+arePrefixesOf = flip (any . flip isPrefixOf)

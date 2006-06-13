@@ -33,7 +33,10 @@ data Config = Config {
 
         -- which ghci to use (in @type)
         ghci        :: FilePath,
-        outputDir   :: FilePath
+        outputDir   :: FilePath,
+
+        -- what prefixes to use for Haskell evalution
+        evalPrefixes :: [String]
 }
 
 --
@@ -65,5 +68,7 @@ config = Config {
         fptoolsPath     = "/home/dons/fptools",
 
         ghci            = "ghci",
-        outputDir       = "State/"
+        outputDir       = "State/",
+
+        evalPrefixes   = [">"]
    }

@@ -18,10 +18,6 @@ import GHC.IOBase           (Exception(NoMethodError))
 commands :: [String]
 commands  = ["@","?"]
 
--- valid eval prefixes
-evals  :: [String]
-evals   = [">"]
-
 PLUGIN Base
 
 type BaseState = GlobalPrivate () ()
@@ -206,12 +202,6 @@ doPRIVMSG msg = do
     debugStrLn (show msg)
     doPRIVMSG' (name config) msg
 
-arePrefixesOf :: [String] -> String -> Bool
-arePrefixesOf = flip (any . flip isPrefixOf)
-
-arePrefixesWithSpaceOf :: [String] -> String -> Bool
-arePrefixesWithSpaceOf els str = any (flip isPrefixOf str) $ map (++" ") els
-
 --
 -- | What does the bot respond to?
 --
@@ -230,10 +220,12 @@ doPRIVMSG' myname msg
     = let (cmd, params) = breakOnGlue " " (dropWhile (==' ') text)
       in doPublicMsg cmd (dropWhile (==' ') params)
 
+{-
   -- special syntax for @run
   | evals `arePrefixesWithSpaceOf` text
     = let expr = drop 2 text
       in doPublicMsg "@run" (dropWhile (==' ') expr)
+-}
 
   -- send to all modules for contextual processing
   | otherwise = doContextualMsg text
@@ -244,13 +236,15 @@ doPRIVMSG' myname msg
     text = tail (head (tail (body msg)))
     who = nick msg
 
-    doPersonalMsg s r | commands `arePrefixesOf` s = doMsg (tail s) r who
-                      | s `elem` evals             = doMsg "run"   r who
-                      | otherwise                  = doIGNORE msg
+    doPersonalMsg s r
+        | commands `arePrefixesOf` s = doMsg (tail s) r who
+        | s `elem` (evalPrefixes config)    = doMsg "run"   r who -- TODO
+        | otherwise                  = doIGNORE msg -- contextual?
 
-    doPublicMsg s r   | commands `arePrefixesOf` s          = doMsg (tail s)        r alltargets
-                      | evals    `arePrefixesWithSpaceOf` s = doMsg "run" r alltargets
-                      | otherwise                           = doIGNORE msg
+    doPublicMsg s r
+        | commands `arePrefixesOf` s                = doMsg (tail s)        r alltargets
+        | (evalPrefixes config) `arePrefixesWithSpaceOf` s = doMsg "run" r alltargets -- TODO
+        | otherwise                                 = doIGNORE msg -- contextual?
 
     --
     -- normal commands.
