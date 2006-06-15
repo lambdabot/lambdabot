@@ -1,17 +1,11 @@
 --
 -- Copyright (c) 2004 Thomas Jaeger
 -- Copyright (c) 2005 Simon Winwood
--- Copyright (c) 2005 Don Stewart - http://www.cse.unsw.edu.au/~dons
--- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
+-- Copyright (c) 2005 Don Stewart
+-- Copyright (c) 2005 David House <dmouse@gmail.com>
 --
 -- | Logging an IRC channel..
 --
-
--- This _should_ have a sane enough architecture. I gave it quite a thorough
--- overhaul Jun 06, but some bits of weird structuring might have slipped
--- through, as this was originall written before contextual, so used all kinds
--- of voodoo. Cheers, David House <dmouse@gmail.com>
-
 module Plugin.Log (theModule) where
 
 import Plugin
