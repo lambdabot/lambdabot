@@ -138,27 +138,29 @@ instance Module SeenModule SeenState where
     moduleCmds _        = ["seen"]
     moduleDefState _    = return M.empty
 
-    moduleInit _        = do 
-      zipWithM_ ircSignalConnect 
+    process _ msg _ _ rest = do
+         seenFM <- readMS
+         now    <- io getClockTime
+         return [unlines $ getAnswer msg rest seenFM now]
+
+    moduleInit _        = do
+      zipWithM_ ircSignalConnect
         ["JOIN", "PART", "QUIT", "NICK", "353",      "PRIVMSG"] $ map withSeenFM
         [joinCB, partCB, quitCB, nickCB, joinChanCB, msgCB]
+
       -- This magically causes the 353 callback to be invoked :)
       tryError $ send_ . Message.names =<< ircGetChannels
 
-      -- and suck in our state:
-      s  <- io $ do 
-              b <- doesFileExist "State/seen"
-              if b 
-                then do
-                  h  <- openFile "State/seen" ReadMode
-                  bh <- openBinIO_ h
-                  st <- {-# SCC "Seen.get" #-} get bh
-                  hClose h
-                  return st
-                else return M.empty -- if not, construct a default state.
-      writeMS s
-      return ()
-    
+      -- and suck in our state. We read directly from the handle, to avoid copying
+      b <- io $ doesFileExist "State/seen"
+      when b $ do
+          s <- io $ do h  <- openFile "State/seen" ReadMode
+                       bh <- openBinIO_ h
+                       st <- get bh
+                       hClose h
+                       return st
+          writeMS s
+
     moduleExit _ = do
       chans <- ircGetChannels
       unless (null chans) $ do
@@ -166,18 +168,12 @@ instance Module SeenModule SeenState where
             modifyMS $ botPart ct (map P.pack chans)
 
         -- and write out our state:
-      s <- readMS
-      io $ do 
-              h  <- openFile "State/seen" WriteMode
-              bh <- openBinIO_ h
-              {-# SCC "Seen.get" #-}put_ bh s
-              hClose h
-      return ()
-    
-    process _ msg _ _ rest = do 
-         seenFM <- readMS
-         now    <- io getClockTime
-         return [unlines $ getAnswer msg rest seenFM now]
+      withMS $ \s _ -> do
+          io $ do h  <- openFile "State/seen" WriteMode
+                  bh <- openBinIO_ h
+                  put_ bh s
+                  hClose h
+          return ()
 
 ------------------------------------------------------------------------
 -- | The bot's name, lowercase
