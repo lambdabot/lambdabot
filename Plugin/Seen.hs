@@ -132,6 +132,10 @@ instance Binary UserStatus where
             _ -> error "Seen.UserStatus.get"
 
 ------------------------------------------------------------------------
+--
+-- something's broken. doesn't seem to correctly keep the seen data over
+-- reboots anymore :/
+--
 
 instance Module SeenModule SeenState where
     moduleHelp _ _      = "seen <user>. Report if a user has been seen by the bot"
