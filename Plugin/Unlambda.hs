@@ -17,7 +17,7 @@ PLUGIN Unlambda
 instance Module UnlambdaModule () where
     moduleCmds   _ = ["unlambda"]
     moduleHelp _ _ = "unlambda <expr>. Evaluate an unlambda expression"
-    process_ _ _ s = ios (unlambda s)
+    process _ _ to _ s = ios80 to (unlambda s)
 
 binary :: String
 binary = "./unlambda"
