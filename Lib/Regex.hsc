@@ -49,6 +49,7 @@ import Foreign
 import System.IO.Unsafe     (unsafePerformIO)
 
 import qualified Data.ByteString as P
+import qualified Data.ByteString.Base as P (unsafeUseAsCString)
 
 type CRegex = ()
 
