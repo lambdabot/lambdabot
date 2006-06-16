@@ -38,7 +38,8 @@ ignoredStrings =
     ["paste",                -- Ignore lisppaste, rafb.net
      "cpp.sourcforge.net",   -- C++ paste bin
      "HaskellIrcPastePage",  -- Ignore paste page
-     "title of that page"]   -- Ignore others like me
+     "title of that page",   -- Ignore others like me
+     "Title:"]               -- and like the new me
 
 -- | Limit the maximum title length to prevent jokers from spamming
 -- the channel with specially crafted HTML pages.
