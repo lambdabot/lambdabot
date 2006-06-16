@@ -24,7 +24,7 @@
 --
 
 --
--- A time-limited unlambda
+-- A time- and output-limited unlambda
 --
 
 import Data.Char
@@ -38,7 +38,7 @@ main = setResourceLimit ResourceCPUTime (ResourceLimits rlimit rlimit) >> run
 run = do
   exp <- parse stdin
   let (Eval cp) = eval exp
-  cp Nothing (const return)
+  cp (Nothing, 2048) (const return)
 
 ------------------------------------------------------------------------
 -- Abstract syntax
@@ -108,9 +108,9 @@ sh Pipe       = showChar '|'
 ------------------------------------------------------------------------
 -- Eval monad
 
-newtype Eval a = Eval (Maybe Char -> Cont a -> IO Exp)
+newtype Eval a = Eval ((Maybe Char, Int) -> Cont a -> IO Exp)
 
-type Cont a = Maybe Char -> a -> IO Exp
+type Cont a = (Maybe Char, Int) -> a -> IO Exp
 
 instance Monad Eval where
 
@@ -123,12 +123,13 @@ instance Monad Eval where
 ------------------------------------------------------------------------
 -- Basics
 
-currentChar      = Eval (\dat cont -> cont dat dat)
-setCurrentChar c = Eval (\dat cont -> cont c ())
+currentChar      = Eval (\dat@(c,_) cont -> cont dat c)
+setCurrentChar c = Eval (\(_,i) cont -> cont (c,i) ())
 io iocp          = Eval (\dat cont -> iocp >>= cont dat)
 throw c x        = Eval (\dat cont -> c dat x)
 exit e           = Eval (\_ _ -> return e)
 callCC f         = Eval $ \dat cont -> let Eval cp2 = f cont in cp2 dat cont
+step             = Eval (\(c,i) cont -> if i<1 then return E else cont (c,i-1) ())
 
 ------------------------------------------------------------------------
 -- Interpretation in the Eval monad
@@ -151,7 +152,7 @@ apply C x        = callCC (\c -> apply x (Cont c))
 apply (Cont c) x = throw c x
 apply D x        = return x
 apply (D1 e) x   = do f <- eval e; apply f x
-apply (Dot c) x  = io (putChar c) >> return x
+apply (Dot c) x  = step >> io (putChar c) >> return x
 apply E x        = exit x
 
 apply At f = do
