@@ -68,7 +68,7 @@ getPageTitle url
         contents <- io $ getHtmlPage uri
         return $ maybe []   -- may be non html
                        (return . 
-                        ("The title of that page is \"" ++) . 
+                        ("Title: \"" ++) . 
                         (++ "\"") .
                         limitLength)
                        (extractTitle contents)
