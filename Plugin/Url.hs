@@ -35,7 +35,8 @@ instance Module UrlModule Bool where
 -- by an admin via a privileged command (TODO).
 ignoredStrings :: [String]
 ignoredStrings = 
-    ["pasted",               -- Ignore lisppaste
+    ["paste",                -- Ignore lisppaste, rafb.net
+     "cpp.sourcforge.net",   -- C++ paste bin
      "HaskellIrcPastePage",  -- Ignore paste page
      "title of that page"]   -- Ignore others like me
 
@@ -87,7 +88,8 @@ getHtmlPage uri = do
     case responseStatus contents of
       301       -> getHtmlPage $ fromJust $ locationHeader contents
       302       -> getHtmlPage $ fromJust $ locationHeader contents
-      _         -> return contents
+      200       -> return contents
+      _         -> return []
     where
       -- | Parse the HTTP response code from a line in the following
       -- format: HTTP/1.1 200 Success.
@@ -133,6 +135,7 @@ extractTitle contents
 
 -- | Is the server response of type "text/html"?
 isTextHtml :: [String] -> Bool
+isTextHtml []       = False
 isTextHtml contents = val == "text/html"
     where
       val        = takeWhile (/=';') ctype
