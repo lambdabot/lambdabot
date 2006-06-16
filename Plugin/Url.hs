@@ -27,6 +27,10 @@ instance Module UrlModule Bool where
 
 ------------------------------------------------------------------------
 
+-- | The string that I prepend to the quoted page title.
+myPrompt :: String
+myPrompt = "Title: "
+
 -- | List of strings that, if present in a contextual message, will
 -- prevent the looking up of titles.  This list can be used to stop 
 -- responses to lisppaste for example.  Another important use is to
@@ -38,8 +42,8 @@ ignoredStrings =
     ["paste",                -- Ignore lisppaste, rafb.net
      "cpp.sourcforge.net",   -- C++ paste bin
      "HaskellIrcPastePage",  -- Ignore paste page
-     "title of that page",   -- Ignore others like me
-     "Title:"]               -- and like the new me
+     "title of that page",   -- Ignore others like the old me
+     myPrompt]               -- Ignore others like me
 
 -- | Limit the maximum title length to prevent jokers from spamming
 -- the channel with specially crafted HTML pages.
@@ -69,7 +73,7 @@ getPageTitle url
         contents <- io $ getHtmlPage uri
         return $ maybe []   -- may be non html
                        (return . 
-                        ("Title: \"" ++) . 
+                        ((myPrompt ++ "\"") ++) . 
                         (++ "\"") .
                         limitLength)
                        (extractTitle contents)
