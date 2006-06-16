@@ -16,9 +16,9 @@ PLUGIN Plugs
 instance Module PlugsModule () where
     moduleCmds   _ = ["run"] -- not "eval", clashes with perl6 bot
     moduleHelp _ _ = "run <expr>\nYou have Haskell, 3 seconds and no IO. Go nuts!"
-    process_ _ _ s = ios (plugs s)
-    contextual _ _ _ txt | isEval txt = ios . plugs . dropPrefix $ txt
-                         | otherwise  = return []
+    process _ _ to _ s = ios80 to (plugs s)
+    contextual _ _ to txt | isEval txt = ios80 to . plugs . dropPrefix $ txt
+                          | otherwise  = return []
 
 binary :: String
 binary = "./runplugs"
@@ -45,11 +45,7 @@ plugs src = do
                 | otherwise        -> " " ++ o
             }
 
-            where lim = 80 -- perhaps change this based on whether we're in
-                           -- a /query (or /msg; whatever) with someone
-                  abbr s | length s > lim = take (lim - 3) s ++ "..."
-                         | otherwise      = s
-                  munge = abbr . expandTab . dropWhile (=='\n') . dropNL . clean_ 
+            where munge = expandTab . dropWhile (=='\n') . dropNL . clean_
 
 --
 -- Clean up runplugs' output
