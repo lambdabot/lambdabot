@@ -16,6 +16,7 @@ module Plugin (
         module Lib.Serial,
         module Lib.Process,
         module Lib.MiniHTTP,
+        module Lib.Url,
 
         module Data.List,
         module Data.Char,
@@ -36,6 +37,7 @@ import Lib.Util
 import Lib.Serial
 import Lib.Process
 import Lib.MiniHTTP
+import Lib.Url
 
 import Data.List
 import Data.Char
