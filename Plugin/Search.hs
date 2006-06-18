@@ -43,8 +43,11 @@ searchCmd _ []        = return ["Empty search."]
 searchCmd engine rest = do
     headers <- io $ queryit "HEAD" engine rest
     body    <- io $ queryit "GET" engine rest
-    return [fromMaybe "No Result Found." $
-                extractLoc headers `mplus` extractConversion body] -- ?
+    case getHeader "Location" headers `mplus` extractConversion body of
+      Just url -> do
+        title <- io $ urlPageTitle url (proxy config)
+        return $ maybe [url] (\t -> [url, t]) title
+      Nothing  -> return ["No Result Found."]
 
 queryUrl :: String -> String -> String
 queryUrl engine q = prefix ++ urlEncode q ++ suffix
@@ -60,13 +63,6 @@ queryit meth engine q = readPage (proxy config) uri request ""
           request  = case proxy config of
                         Nothing -> [meth ++ " " ++ abs_path ++ " HTTP/1.0", ""]
                         _       -> [meth ++ " " ++ url ++ " HTTP/1.0", ""]
-
-extractLoc :: [String] -> Maybe String
-extractLoc [] = error "No response, something weird is up."
-extractLoc (_:headers) = lookup "Location" $ concatMap f headers
-        where f s = case findIndex (==':') s of
-                          Just n  -> [(take n s, drop (n+2) s)]
-                          Nothing -> []
 
 extractConversion :: [String] -> Maybe String
 extractConversion [] = error "conv: No response, something weird is up."
