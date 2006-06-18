@@ -72,12 +72,21 @@ getHtmlPage uri proxy = do
 
       -- | Return the value of the "Location" header in the server
       -- response 
-      locationHeader hdrs = do
-        header <- getHeader "Location" hdrs
-        locuri <- parseURI header
-        return locuri
+      redirectedUrl hdrs 
+          | Just loc <- getHeader "Location" hdrs = 
+              case parseURI loc of
+                Nothing   -> (fromJust . parseURI) $ fullUrl loc
+                Just uri' -> uri'
+          | otherwise = error("No Location header found in 3xx response.")
 
-      redirectedUrl = fromJust . locationHeader 
+      -- | Construct a full absolute URL based on the current uri.  This is 
+      -- used when a Location header violates the HTTP RFC and does not send  
+      -- an absolute URI in the response, instead, a relative URI is sent, so 
+      -- we must manually construct the absolute URI.
+      fullUrl loc = let auth = fromJust $ uriAuthority uri 
+                    in (uriScheme uri) ++ "//" ++
+                       (uriRegName auth) ++
+                       loc
 
 -- | Fetch the contents of a URL returning a list of strings
 -- comprising the server response which includes the status line,
