@@ -36,7 +36,7 @@ maxTitleLength = 80
 urlPageTitle :: String -> Proxy -> IO (Maybe String)
 urlPageTitle url proxy = do
     title <- rawPageTitle url proxy
-    return $ maybe Nothing (return . prettyTitle) title
+    return $ maybe Nothing (return . prettyTitle . urlDecode) title
     where
       limitLength s
           | length s > maxTitleLength = (take maxTitleLength s) ++ " ..."
