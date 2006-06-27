@@ -38,7 +38,7 @@ urlPageTitle url proxy = do
     title <- rawPageTitle url proxy
     return $ maybe Nothing (return . prettyTitle) title
     where
-      limitLength s 
+      limitLength s
           | length s > maxTitleLength = (take maxTitleLength s) ++ " ..."
           | otherwise                 = s
 
@@ -83,7 +83,7 @@ getHtmlPage uri proxy = do
       -- used when a Location header violates the HTTP RFC and does not send  
       -- an absolute URI in the response, instead, a relative URI is sent, so 
       -- we must manually construct the absolute URI.
-      fullUrl loc = let auth = fromJust $ uriAuthority uri 
+      fullUrl loc = let auth = fromJust $ uriAuthority uri
                     in (uriScheme uri) ++ "//" ++
                        (uriRegName auth) ++
                        loc
@@ -92,7 +92,7 @@ getHtmlPage uri proxy = do
 -- comprising the server response which includes the status line,
 -- response headers, and body.
 getURIContents :: URI -> Proxy -> IO [String]
-getURIContents uri proxy = readPage proxy uri request ""
+getURIContents uri proxy = readNBytes 1024 proxy uri request ""
     where
       request  = case proxy of
                    Nothing -> ["GET " ++ abs_path ++ " HTTP/1.0", ""]

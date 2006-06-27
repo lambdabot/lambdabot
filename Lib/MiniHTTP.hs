@@ -8,6 +8,7 @@ module Lib.MiniHTTP (
         Proxy,
         mkPost,
         readPage,
+        readNBytes,
         urlEncode,
         urlDecode,
         module Network.URI
@@ -32,26 +33,24 @@ type Proxy = Maybe (String, Integer)
 -- HTTP specific stuff
 mkPost :: URI -> String -> [String]
 mkPost uri body = ["POST " ++ url ++ " HTTP/1.0",
-		   "Host: " ++ host,
-		   "Accept: */*",
-		   "Content-Type: application/x-www-form-urlencoded",
-		   "Content-Length: " ++ (show $ length body),
-		   ""]
+                   "Host: " ++ host,
+                   "Accept: */*",
+                   "Content-Type: application/x-www-form-urlencoded",
+                   "Content-Length: " ++ (show $ length body),
+                   ""]
     where
     url = show uri
     host = authority uri
 
 hGetLines :: Handle -> IO [String]
 hGetLines h = do
-	      eof <- hIsEOF h
-	      if eof then return []
-		 else
-		 liftM2 (:) (hGetLine h) (hGetLines h)
+  eof <- hIsEOF h
+  if eof then return []
+     else
+     liftM2 (:) (hGetLine h) (hGetLines h)
 
 readPage :: Proxy -> URI -> [String] -> String -> IO [String]
-readPage proxy uri headers body =
-    withSocketsDo
-    $ do
+readPage proxy uri headers body = withSocketsDo $ do
       h <- connectTo host (PortNumber (fromInteger port))
       mapM_ (\s -> hPutStr h (s ++ "\r\n")) headers
       hPutStr h body
@@ -61,6 +60,29 @@ readPage proxy uri headers body =
       return contents
     where
     (host, port) = fromMaybe (authority uri, 80) proxy
+
+--
+-- read lines, up to limit of n bytes. Useful to ensure people don't
+-- abuse the url plugin
+--
+readNBytes :: Int -> Proxy -> URI -> [String] -> String -> IO [String]
+readNBytes n proxy uri headers body = withSocketsDo $ do
+      h <- connectTo host (PortNumber (fromInteger port))
+      mapM_ (\s -> hPutStr h (s ++ "\r\n")) headers
+      hPutStr h body
+      hFlush h
+      contents <- lines `fmap` hGetN n h
+      hClose h
+      return contents
+    where
+    (host, port) = fromMaybe (authority uri, 80) proxy
+
+    hGetN :: Int -> Handle -> IO String
+    hGetN i h | i `seq` h `seq` False = undefined -- strictify
+    hGetN 0 _ = return []
+    hGetN i h = do eof <- hIsEOF h
+                   if eof then return []
+                          else liftM2 (:) (hGetChar h) (hGetN (i-1) h)
 
 -- from HTTP.hs
 urlEncode, urlDecode :: String -> String
