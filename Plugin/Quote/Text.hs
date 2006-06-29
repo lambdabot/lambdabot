@@ -21,6 +21,9 @@ palomer =
     ,"That's a lie"
     ,"Learning vim is pointless"
     ,"I think vim is good for the rubbish bin"
+    ,"xml stands for \"xtremely mild lullaby\""
+    ,"woof"
+    ,"(_|_)"
     ]
 
 -- | Some pirate quotes
