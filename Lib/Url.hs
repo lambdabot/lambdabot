@@ -95,12 +95,15 @@ getURIContents :: URI -> Proxy -> IO [String]
 getURIContents uri proxy = readNBytes 1024 proxy uri request ""
     where
       request  = case proxy of
-                   Nothing -> ["GET " ++ abs_path ++ " HTTP/1.0", ""]
+                   Nothing -> ["GET " ++ abs_path ++ " HTTP/1.1",
+                               "host: " ++ host, ""]
                    _       -> ["GET " ++ show uri ++ " HTTP/1.0", ""]
 
       abs_path = case uriPath uri ++ uriQuery uri ++ uriFragment uri of
                    url@('/':_) -> url
                    url         -> '/':url
+
+      host = uriRegName . fromJust $ uriAuthority uri
 
 -- | Given a server response (list of Strings), return the text in
 -- between the title HTML element, only if it is text/html content.
