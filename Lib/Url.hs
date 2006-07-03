@@ -96,7 +96,8 @@ getURIContents uri proxy = readNBytes 1024 proxy uri request ""
     where
       request  = case proxy of
                    Nothing -> ["GET " ++ abs_path ++ " HTTP/1.1",
-                               "host: " ++ host, ""]
+                               "host: " ++ host,
+                               "Connection: close", ""]
                    _       -> ["GET " ++ show uri ++ " HTTP/1.0", ""]
 
       abs_path = case uriPath uri ++ uriQuery uri ++ uriFragment uri of
