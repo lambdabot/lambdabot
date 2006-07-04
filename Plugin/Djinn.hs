@@ -12,6 +12,9 @@ module Plugin.Djinn (theModule) where
 
 import Plugin
 import System.Directory
+import Char
+import List
+import Maybe
 
 PLUGIN Djinn
 
@@ -28,12 +31,14 @@ instance Module DjinnModule DjinnEnv where
             "djinn-del" -> "djinn-del <ident>.\nRemove a symbol from the environment"
             "djinn-clr" -> "djinn-clr.\nReset the djinn environment"
             "djinn-env" -> "djinn-env.\nShow the current djinn environment"
+            "djinn-names" -> "djinn-names.\nShow the current djinn environment, compactly."
             "djinn-ver" -> "djinn-ver.\nShow current djinn version"
 
         moduleCmds      _ = ["djinn"
                             ,"djinn-add"
                             ,"djinn-del"
                             ,"djinn-env"
+                            ,"djinn-names"
                             ,"djinn-clr" 
                             ,"djinn-ver"]
 
@@ -78,6 +83,13 @@ instance Module DjinnModule DjinnEnv where
         process_ _ "djinn-env"  _ = do
             (prelude,st) <- readMS
             return $ prelude ++ st
+
+        -- Display the environment's names (quarter-baked)
+        process_ _ "djinn-names"  _ = do
+            (prelude,st) <- readMS
+            let names = concat $ intersperse " " $ concatMap extractNames $ prelude ++ st
+            return [names]
+          where extractNames = filter (Char.isUpper . head) . List.unfoldr (\x -> case x of _:_ -> Maybe.listToMaybe (lex x); _ -> Nothing)
 
         -- Reset the env
         process_ _ "djinn-clr" _ = modifyMS (flip (,) [] . fst) >> return []
