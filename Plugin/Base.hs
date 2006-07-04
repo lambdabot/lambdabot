@@ -16,7 +16,7 @@ import GHC.IOBase           (Exception(NoMethodError))
 
 -- valid command prefixes
 commands :: [String]
-commands  = ["@","?"]
+commands  = commandPrefixes config
 
 PLUGIN Base
 

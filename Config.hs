@@ -35,6 +35,9 @@ data Config = Config {
         ghci        :: FilePath,
         outputDir   :: FilePath,
 
+        -- what prefixes to use for commands
+        commandPrefixes :: [String],
+
         -- what prefixes to use for Haskell evalution
         evalPrefixes :: [String]
 }
@@ -70,5 +73,6 @@ config = Config {
         ghci            = "ghci",
         outputDir       = "State/",
 
+        commandPrefixes = ["@","?"],
         evalPrefixes   = [">"]
    }
