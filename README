@@ -19,7 +19,8 @@ Build with cabal (simple)
     $ ./build
     $ ./lambdabot
 
-Or with ghci (fastest turn around)
+Or with ghci (fastest turn around). But first you have to build with
+cabal as above anyway. So this is mostly for development purposes.
     $ vi Config.hs
     $ sh configure
     $ sh ghci Main.hs
