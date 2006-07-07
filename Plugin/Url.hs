@@ -12,6 +12,7 @@ instance Module UrlModule Bool where
     moduleCmds  _                 = ["url-title"]
     modulePrivs _                 = ["url-on", "url-off"]
     moduleDefState _              = return True -- url on
+    moduleSerialize _             = Just stdSerial
 
     process_    _ "url-title" url = fetchTitle url
     process_    _ "url-on"    _   = writeMS True  >> return ["Url enabled"]
