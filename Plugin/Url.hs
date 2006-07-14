@@ -18,7 +18,7 @@ instance Module UrlModule Bool where
     process_    _ "url-on"    _   = writeMS True  >> return ["Url enabled"]
     process_    _ "url-off"   _   = writeMS False >> return ["Url disabled"]
 
-    contextual  _ _ _ text        = do 
+    contextual  _ _ _ text        = do
       alive <- readMS
       if alive && (not $ areSubstringsOf ignoredStrings text)
         then case containsUrl text of

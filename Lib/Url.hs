@@ -20,7 +20,7 @@ import Lib.MiniHTTP
 
 -- | The string that I prepend to the quoted page title.
 urlTitlePrompt :: String
-urlTitlePrompt = "Title: "
+urlTitlePrompt = "that's "
 
 -- | Limit the maximum title length to prevent jokers from spamming
 -- the channel with specially crafted HTML pages.
@@ -52,7 +52,7 @@ urlPageTitle url proxy = do
           | length s > maxTitleLength = (take maxTitleLength s) ++ " ..."
           | otherwise                 = s
 
-      prettyTitle s = urlTitlePrompt ++ "\"" ++ limitLength s ++ "\""
+      prettyTitle s = urlTitlePrompt ++ limitLength s
       unhtml = replace [("&raquo;", "»"),
                         ("&iexcl;", "¡"),
                         ("&cent;", "¢"),
@@ -61,8 +61,6 @@ urlPageTitle url proxy = do
                         ("&deg;", "°"),
                         ("&sup2;", "²"),
                         ("&micro;", "µ")] -- partial list of html entity pairs
-                        
-                       
 
 -- | Fetches a page title for the specified URL.  This function should
 -- only be used by other plugins if and only if the result is not to
