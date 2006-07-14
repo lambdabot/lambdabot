@@ -27,6 +27,16 @@ urlTitlePrompt = "Title: "
 maxTitleLength :: Int
 maxTitleLength = 80
 
+
+-- | Replace occurences in a string.
+-- e.g. replace [("foo", "1"), ("bar", "000")] "foo bar baz" => "1 000 baz"
+replace :: [(String, String)] -> String -> String
+replace [] s = s
+replace (pair:pairs) s = replace pairs (f pair)
+    where 
+      f :: (String, String) -> String
+      f (from, to) = subRegex (mkRegex from) s to
+
 -- | Fetches a page title suitable for display.  Ideally, other
 -- plugins should make use of this function if the result is to be
 -- displayed in an IRC channel because it ensures that a consistent
@@ -36,13 +46,23 @@ maxTitleLength = 80
 urlPageTitle :: String -> Proxy -> IO (Maybe String)
 urlPageTitle url proxy = do
     title <- rawPageTitle url proxy
-    return $ maybe Nothing (return . prettyTitle . urlDecode) title
+    return $ maybe Nothing (return . prettyTitle . unhtml . urlDecode) title 
     where
       limitLength s
           | length s > maxTitleLength = (take maxTitleLength s) ++ " ..."
           | otherwise                 = s
 
       prettyTitle s = urlTitlePrompt ++ "\"" ++ limitLength s ++ "\""
+      unhtml = replace [("&raquo;", "»"),
+                        ("&iexcl;", "¡"),
+                        ("&cent;", "¢"),
+                        ("&copy;", "©"),
+                        ("&laquo;", "«"),
+                        ("&deg;", "°"),
+                        ("&sup2;", "²"),
+                        ("&micro;", "µ")] -- partial list of html entity pairs
+                        
+                       
 
 -- | Fetches a page title for the specified URL.  This function should
 -- only be used by other plugins if and only if the result is not to
