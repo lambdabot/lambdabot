@@ -20,7 +20,7 @@ import Lib.MiniHTTP
 
 -- | The string that I prepend to the quoted page title.
 urlTitlePrompt :: String
-urlTitlePrompt = "that's "
+urlTitlePrompt = "Title: "
 
 -- | Limit the maximum title length to prevent jokers from spamming
 -- the channel with specially crafted HTML pages.
