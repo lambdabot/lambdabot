@@ -70,6 +70,6 @@ main = do
                 (putStrLn v)
                 (\e -> Control.Exception.handle (const $ putStrLn "Exception") $ do
                             e' <- Control.Exception.evaluate e
-                            putStrLn $ "Exception: " ++ show e')
+                            putStrLn $ "Exception: " ++ take 1024 (show e'))
     exitWith ExitSuccess
 
