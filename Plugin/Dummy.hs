@@ -9,6 +9,9 @@ import Plugin
 import Plugin.Dummy.DocAssocs (docAssocs)
 import Plugin.Dummy.Moo (cows)
 
+import Lib.Util (randomElem)
+import System.IO.Unsafe (unsafePerformIO)
+
 import qualified Data.Map as M
 import qualified Data.ByteString.Char8 as P
 
@@ -32,15 +35,15 @@ instance Module DummyModule [String] where
         "libsrc"      -> "libsrc <lib>. Lookup the url of fptools libraries"
         "fptools"     -> "fptools <lib>. Lookup url of ghc base library modules"
 
-        "learn"       -> "learn. The learning page url."
-        "eurohaskell" -> "eurohaskell. Historical."
+        "learn"       -> "learn. The learning page url"
+        "eurohaskell" -> "eurohaskell. Historical"
         "moo"         -> "moo. Vegans rock!"
         "map"         -> "map. #haskell user map"
-        "botsnack"    -> "botsnakc. Feeds the bot a snack."
+        "botsnack"    -> "botsnack. Feeds the bot a snack"
         "get-shapr"   -> "get-shapr. Summon shapr instantly"
         "shootout"    -> "shootout. The debian language shootout"
         "faq"         -> "faq. Answer frequently asked questions about Haskell"
-
+        "choose"      -> "choose. Lambdabot featuring AI power"
 
 {-
   process _ _ src "moo" _ = do
@@ -88,4 +91,7 @@ dummylst =
        Nothing -> x ++ " not available"
        Just m  -> "http://darcs.haskell.org/packages/" <>
                   (P.unpack m) </> map (choice (=='.') (const '/') id) x <.> "hs")
+    ,("choose",      \x -> case x of
+       []      -> "Choose between what?"
+       xs      -> unsafePerformIO (randomElem $ lines xs))
     ]
