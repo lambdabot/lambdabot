@@ -32,4 +32,3 @@ parseSearch x = Search x $
 isHaskellName :: String -> Bool
 isHaskellName (x:xs) | isAlpha x && all (\a -> isAlphaNum a || a `elem` "_'") xs = True
 isHaskellName xs = all (`elem` "!#$%&*+./<>=?@/^|-~") xs
-isHaskellName _ = False
