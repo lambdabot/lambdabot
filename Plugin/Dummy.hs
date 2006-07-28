@@ -62,7 +62,7 @@ instance Module DummyModule [String] where
 dummylst :: [(String, String -> String)]
 dummylst = 
     [("id",         id)
-    ,("unquote",    read)
+    ,("unquote",    (' ' :) . read)
 
     ,("dummy",      const "dummy")
     ,("get-shapr",  const "shapr!!")
