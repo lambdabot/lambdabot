@@ -107,7 +107,8 @@ stdMdls = controls
 -- | Main processing function for \@instances. Takes a class name and 
 --   return a list of lines to output (which will actually only be one).
 fetchInstances :: ClassName -> LB [String]
-fetchInstances cls = ios (fetchInstances' cls stdMdls)
+fetchInstances cls =  do
+    ios (fetchInstances' cls stdMdls)
 
 -- | Main processing function for \@instances-importing. Takes the args, which
 --   are words'd. The all but the last argument are taken to be the modules to
@@ -122,8 +123,9 @@ fetchInstancesImporting args = ios (fetchInstances' cls mdls)
 --   the parser.
 fetchInstances' :: String -> [ModuleName] -> IO String
 fetchInstances' cls mdls = do
-  (out, err, _) <- popen (ghci config) ["-fglasgow-exts"] $
-                   Just (unlines [cxt, command])
+  let s = unlines [cxt, command]
+  (out, err, _) <- popen (ghci config) ["-ignore-dot-ghci","-fglasgow-exts"] $
+                   Just s
   let is = getInstances out cls
   return $ if null is
              then err
