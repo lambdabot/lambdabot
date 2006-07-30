@@ -4,16 +4,13 @@
 -- Currently only builds the static version of the bot, which should be
 -- enough for most people
 --
--- This version doesn't use plugins in any way. So also this means no
--- runplugs, but that's ok if you're using lambdabot in GOA.
---
 Name:                lambdabot
 Version:             4.0
 License:             GPL
 License-file:        LICENSE
 Author:              Don Stewart
 Maintainer:          dons@cse.unsw.edu.au
-Build-Depends:       base, unix, network, parsec, mtl, haskell-src, haskell98, readline, fps>=0.7
+Build-Depends:       base, unix, network, parsec, mtl, haskell-src, haskell98, readline, plugins>=1.0, fps>=0.7
 
 --
 -- first build the preprocessor
@@ -30,10 +27,10 @@ Executable:          lambdabot
 Main-is:             Main.hs
 extensions:          CPP
 other-modules:       Lib.Regex
-ghc-options:         -Wall -Werror -fglasgow-exts -pgmF dist/build/BotPP/BotPP -F -H64m -O -funbox-strict-fields -fasm -fno-warn-incomplete-patterns -fno-warn-missing-methods -fno-warn-orphans -I. -threaded
+ghc-options:         -Wall -Werror -fglasgow-exts -pgmF /usr/obj/cabal/BotPP/BotPP -F -H64m -Onot -fasm -fno-warn-incomplete-patterns -fno-warn-missing-methods -fno-warn-orphans -I. -threaded
 
 -- For a fast lambdabot
--- ghc-options:         -Wall -Werror -fglasgow-exts -pgmF dist/build/BotPP/BotPP -F -funbox-strict-fields -O -fasm -fno-warn-incomplete-patterns -fno-warn-missing-methods -fno-warn-orphans -I. -optl-Wl,-s -threaded
+-- ghc-options:         -Wall -Werror -fglasgow-exts -pgmF /usr/obj/cabal/BotPP/BotPP -F -funbox-strict-fields -O -fasm -fno-warn-incomplete-patterns -fno-warn-missing-methods -fno-warn-orphans -I. -optl-Wl,-s -threaded
 
 --
 -- And a dynamically linked lambdabot
@@ -72,6 +69,6 @@ Main-is:             Unlambda.hs
 --
 -- runplugs
 --
--- Executable:          runplugs
--- hs-source-dirs:      scripts/
--- Main-is:             RunPlugs.hs
+Executable:          runplugs
+hs-source-dirs:      scripts/
+Main-is:             RunPlugs.hs
