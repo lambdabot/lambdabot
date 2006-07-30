@@ -24,6 +24,8 @@ palomer =
     ,"xml stands for \"xtremely mild lullaby\""
     ,"woof"
     ,"(_|_)"
+    ,"I have news for you, it's pointless"
+    ,"You're all nuts"
     ]
 
 -- | Some pirate quotes
