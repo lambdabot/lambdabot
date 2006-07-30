@@ -19,8 +19,8 @@
 
 module LJT(module LJTFormula, provable,
 	prove, Proof) where
-import List(partition)
-import Monad
+import Data.List(partition)
+import Control.Monad
 
 import LJTFormula
 

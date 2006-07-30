@@ -3,7 +3,7 @@
 -- See LICENSE for licensing details.
 --
 module HCheck(htCheckEnv, htCheckType) where
-import List(union)
+import Data.List(union)
 --import Control.Monad.Trans
 import Control.Monad.Error
 import Control.Monad.State

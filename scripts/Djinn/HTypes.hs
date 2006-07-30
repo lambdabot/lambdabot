@@ -6,9 +6,9 @@ module HTypes(HKind(..), HType(..), HSymbol, hTypeToFormula, pHSymbol, pHType, p
 	HClause, HPat, HExpr, hPrClause, termToHExpr, termToHClause, getBinderVars) where
 import Text.PrettyPrint.HughesPJ(Doc, renderStyle, style, text, (<>), parens, ($$), vcat, punctuate,
 	 sep, fsep, nest, comma, (<+>))
-import Char(isAlphaNum, isAlpha, isUpper)
-import List(union, (\\))
-import Monad(zipWithM)
+import Data.Char(isAlphaNum, isAlpha, isUpper)
+import Data.List(union, (\\))
+import Control.Monad(zipWithM)
 import Text.ParserCombinators.ReadP
 import LJTFormula
 

@@ -52,7 +52,7 @@ module CmdLine.GetOpt (
 
 import Prelude -- necessary to get dependencies right
 
-import List ( isPrefixOf )
+import Data.List ( isPrefixOf )
 
 -- |What to do with options following non-options
 data ArgOrder a

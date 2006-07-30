@@ -6,7 +6,7 @@ module LJTFormula(Symbol(..), Formula(..), (<->), (&), (|:), fnot, false, true,
 	ConsDesc(..),
 	Term(..), applys, freeVars
 	) where
-import List(union, (\\))
+import Data.List(union, (\\))
 
 infixr 2 :->
 infix  2 <->

@@ -3,13 +3,14 @@
 -- See LICENSE for licensing details.
 --
 module Main(main) where
-import Char(isAlpha, isSpace)
-import List(sortBy, nub)
-import Ratio
+import Data.Char(isAlpha, isSpace)
+import Data.List(sortBy, nub)
+import Data.Ratio
 import Text.ParserCombinators.ReadP
-import Monad(when)
-import IO
-import System
+import Control.Monad(when)
+import System.IO
+import System.Environment
+import System.Exit
 
 import REPL
 import LJT

@@ -15,11 +15,12 @@
 module CmdLine.Main where
 
 import Hoogle.Hoogle
-import System
-import List
-import Maybe
-import Char
+import System.IO
+import Data.List
+import Data.Maybe
+import Data.Char
 import CmdLine.GetOpt
+import System.Environment
 
 
 -- | The main function
