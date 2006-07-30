@@ -13,7 +13,7 @@ License:             GPL
 License-file:        LICENSE
 Author:              Don Stewart
 Maintainer:          dons@cse.unsw.edu.au
-Build-Depends:       base, unix, network, parsec, mtl, haskell-src, haskell98, readline, fps>=0.7
+Build-Depends:       base, unix, network, parsec, mtl, haskell-src, readline, fps>=0.7
 
 --
 -- first build the preprocessor
