@@ -141,7 +141,7 @@ instance Binary UserStatus where
 
 instance Module SeenModule SeenState where
     moduleHelp _ _      = "seen <user>. Report if a user has been seen by the bot"
-    moduleCmds _        = ["users","nicks"]
+    moduleCmds _        = ["users","seen"]
     moduleDefState _    = return (M.empty,M.empty)
 
     -- first step towards tracking the maximum number of users
