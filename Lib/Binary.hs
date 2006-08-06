@@ -30,7 +30,10 @@ import GHC.IOBase       (IO(..))
 import GHC.Exts
 
 import qualified Data.ByteString as P (hGet,hPut)
+import qualified Data.ByteString.Char8 as P (pack,unpack)
 import qualified Data.ByteString.Base as P (ByteString(..))
+
+import qualified Data.Map as M
 
 ------------------------------------------------------------------------
 
@@ -235,6 +238,11 @@ instance Binary a => Binary (Maybe a) where
                           case h of
                             0 -> return Nothing
                             _ -> do x <- get bh; return (Just x)
+
+instance Binary (M.Map String Int) where
+    put_ bh m = put_ bh (map (\(s,n) -> (P.pack s, n)) $ M.toList m)
+    get  bh   = do ls <- get bh
+                   return (M.fromList $ map (\(s,n) -> (P.unpack s,n)) ls)
 
 -- Instances for FastPackedStrings
 instance Binary P.ByteString where
