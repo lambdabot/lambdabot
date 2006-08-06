@@ -58,9 +58,10 @@ data StopWatch = Stopped TimeDiff
                | Running ClockTime
         deriving (Show,Read)
 
-type SeenState = (Int, SeenMap)
+type SeenState = (MaxMap, SeenMap)
 type SeenMap   = M.Map Nick UserStatus
-type Seen m a = ModuleT SeenState m a
+type MaxMap    = M.Map String Int
+type Seen m a  = ModuleT SeenState m a
 
 ------------------------------------------------------------------------
 
@@ -141,15 +142,16 @@ instance Binary UserStatus where
 instance Module SeenModule SeenState where
     moduleHelp _ _      = "seen <user>. Report if a user has been seen by the bot"
     moduleCmds _        = ["users","nicks"]
-    moduleDefState _    = return (0,M.empty)
+    moduleDefState _    = return (M.empty,M.empty)
 
     -- first step towards tracking the maximum number of users
     process _ _ chan "users" _ = do
          (m, seenFM) <- readMS
          let now = length $ [ () | (_,Present _ chans) <- M.toList seenFM
-                                        , P.pack chan `elem` chans ]
-         return $ [concat ["Maximum users seen in ", chan, ": ", show m
-                                 , ", currently: ", show now] ]
+                                 , P.pack chan `elem` chans ]
+         return $ [concat ["Maximum users seen in ", chan, ": "
+                          , show (case M.lookup chan m of Nothing -> 0; Just n -> n)
+                          , ", currently: ", show now] ]
 
     process _ msg _ _      rest = do
          (_,seenFM) <- readMS
@@ -383,11 +385,17 @@ withSeenFM f msg = do
           Right newstate -> do
 
                 let curUsers = length $ [ () | (_,Present _ chans) <- M.toList state
-                                         , P.pack chan `elem` chans ]
+                                        , P.pack chan `elem` chans ]
 
-                writer (max curUsers maxUsers, newstate)
-    where
-        chan = head . Message.channels $ msg
+                    newMax = case M.lookup chan maxUsers of
+                        Nothing -> M.insert chan curUsers maxUsers
+                        Just  n -> if n < curUsers
+                                        then M.insert chan curUsers maxUsers
+                                        else maxUsers
+
+                writer (newMax, newstate)
+
+    where chan = head . Message.channels $ msg
 
 -- | Update the user status.
 updateJ :: Maybe ClockTime -- ^ If the bot joined the channel, the time that 
