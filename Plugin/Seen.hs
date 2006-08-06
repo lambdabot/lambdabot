@@ -139,10 +139,15 @@ instance Binary UserStatus where
 
 instance Module SeenModule SeenState where
     moduleHelp _ _      = "seen <user>. Report if a user has been seen by the bot"
-    moduleCmds _        = ["seen"]
+    moduleCmds _        = ["users","nicks"]
     moduleDefState _    = return M.empty
 
-    process _ msg _ _ rest = do
+    process _ _ chan "users" _ = do
+         seenFM <- readMS
+         return . (:[]) . show . length $ [ () | (_,Present _ chans) <- M.toList seenFM
+                                          , P.pack chan `elem` chans ]
+
+    process _ msg _ _      rest = do
          seenFM <- readMS
          now    <- io getClockTime
          return [unlines $ getAnswer msg rest seenFM now]
