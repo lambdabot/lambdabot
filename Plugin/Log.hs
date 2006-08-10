@@ -1,3 +1,4 @@
+{-# OPTIONS -w #-}
 --
 -- Copyright (c) 2004 Thomas Jaeger
 -- Copyright (c) 2005 Simon Winwood
