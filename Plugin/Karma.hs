@@ -56,6 +56,7 @@ listKarma = do
 
 changeKarma :: Integer -> String -> String -> Karma LB [String]
 changeKarma km sender nick
+  | map toLower nick == "java" = changeKarma (-km) "lambdabot" sender
   | sender == nick = return ["You can't change your own karma, silly."]
   | otherwise      = withMS $ \fm write -> do
       let fm' = M.insertWith (+) nick km fm
