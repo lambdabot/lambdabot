@@ -59,6 +59,9 @@ numLastLines = 10
 
 -- | Command -> Help lookup
 commands :: [(String,String)]
+commands = []
+
+{-
 commands = [("last",
              "@last <channel> [<count>] [<user>] The last <count> (default 10) "
                ++ "posts to channel <channel>."),
@@ -67,6 +70,7 @@ commands = [("last",
                ++ "address (default to todays)"),
             ("print-logs",
              "print the current internal state")]
+-}
 
 -- | CTCP command -> logger function lookup
 loggers :: Msg.Message m => [(String, m -> ClockTime -> Event)]
@@ -99,8 +103,8 @@ instance Module LogModule LogState where
              logString hdl (show event)
              appendEvent chan event
 
-   process _ _ _ "last" rest = showHistory rest
-   process _ _ _ "print-logs" _ = fmap ((:[]) . show) readMS
+-- process _ _ _ "last" rest = showHistory rest
+-- process _ _ _ "print-logs" _ = fmap ((:[]) . show) readMS
 
 -- * The @last command
 --
