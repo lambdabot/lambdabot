@@ -27,7 +27,8 @@ instance Module DummyModule [String] where
         "eval"        -> "eval. Do nothing (perversely)"
 
         "id"          -> "id <arg>. The identiy plugin"
-        "unquote"     -> "unquote \"<foo>\". Print <foo>."
+        "read"        -> "read \"<foo>\". Print <foo>"
+        "show"        -> "show <foo>. Print \"<foo>\""
         "wiki"        -> "wiki <page>. URLs of Haskell wiki pages"
         "oldwiki"     -> "oldwiki <page>. URLs of the old hawiki pages"
         "paste"       -> "paste. Paste page url"
@@ -62,7 +63,8 @@ instance Module DummyModule [String] where
 dummylst :: [(String, String -> String)]
 dummylst = 
     [("id",         id)
-    ,("unquote",    (' ' :) . read)
+    ,("read",    (' ' :) . read)
+    ,("show",       show)
 
     ,("dummy",      const "dummy")
     ,("get-shapr",  const "shapr!!")
