@@ -48,14 +48,16 @@ function on_load()
 		</td>
 </table>
 
-<div id="logo">
+<div id="logo" style="vertical-align: middle">
 	<a href=".">
 		<img src="res/hoogle_small.png" alt="Hoogle" />
 	</a>
+	<a href="http://www.haskell.org/gtk2hs/">Gtk2Hs:</a> 
 </div>
 
 <form action="?" method="get">
 	<div>
+		<input type="hidden" name="package" value="gtk" />
 		<input name="q" id="txt" type="text" style="width:300px;margin-right:5px;" value="$" />
 		<input style="padding-left:15px;padding-right:15px;" type="submit" value="Search" />
 	</div>

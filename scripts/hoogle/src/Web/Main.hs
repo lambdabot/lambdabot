@@ -20,11 +20,11 @@ import Hoogle.TextUtil
 import Web.CGI
 import Web.Lambdabot
 
-import Char
-import System
-import List
-import Maybe
-import Directory
+import Data.Char
+import System.Environment
+import Data.List
+import Data.Maybe
+import System.Directory
 
 
 -- | Should the output be sent to the console and a file.
@@ -42,7 +42,7 @@ main = do args <- if debugOut then fakeArgs else cgiArgs
           putStr "Content-type: text/html\n\n"
           appendFile "log.txt" (show args ++ "\n")
           let input = lookupDef "" "q" args
-          if null input then hoogleBlank
+          if null input then hoogleBlank args
            else do let p = hoogleParse input
                    case hoogleParseError p of
                         Just x -> showError input x
@@ -63,9 +63,10 @@ lookupDefInt def key list = case lookup key list of
 
 
 -- | Show the search box
-hoogleBlank :: IO ()
-hoogleBlank = do debugInit
-                 outputFile "front"
+hoogleBlank :: [(String,String)] -> IO ()
+hoogleBlank args = do
+    debugInit
+    outputFile (if ("package","gtk") `elem` args then "front_gtk" else "front")
 
 
 -- | Replace all occurances of $ with the parameter
@@ -96,17 +97,19 @@ showError input err =
 showResults :: Search -> [(String, String)] -> IO ()
 showResults input args =
     do
-        res <- hoogleResults "res/hoogle.txt" input
+        let useGtk = ("package","gtk") `elem` args
+        res <- hoogleResults (if useGtk then "res/gtk.txt" else "res/hoogle.txt") input
         let lres = length res
             search = hoogleSearch input
             tSearch = showText search
             useres = take num $ drop start res
 
         debugInit
-        outputFileParam "prefix" tSearch
+        outputFileParam (if useGtk then "prefix_gtk" else "prefix") tSearch
 
         putLine $ 
-            "<table id='heading'><tr><td>Searched for " ++ showTags search ++
+            "<table id='heading'><tr><td>" ++
+            "Searched for " ++ showTags search ++
             "</td><td id='count'>" ++
             (if lres == 0 then "No results found" else f lres) ++
             "</td></tr></table>"

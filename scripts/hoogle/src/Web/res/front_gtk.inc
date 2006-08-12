@@ -49,15 +49,19 @@ function on_load()
 		</td>
 </table>
 
+<img style="float:left;" src="http://gtk.org/images/gtk-logo-rgb.gif" alt="Gtk" />
+
 <div style="width:100%;margin-top:30px;margin-bottom:30px;text-align:center;">
 	<img style="vertical-align:top;" src="res/hoogle_large.png" alt="Hoogle" />
 	<sup style="font-family:serif;font-weight:bold;font-size:16pt;">3
 		<span style="color:#b00;">[&beta;]</span>
-	</sup><br/>
-	<i>The Haskell API Search Engine</i><br/>
+	</sup>
+	<br/>
+	<i>The Haskell API Search Engine</i> - <a href="http://haskell.org/gtk2hs/">Gtk2Hs</a> edition<br/>
 	<form id="input" action="?" method="get"
 		style="text-align:center;padding-top:20px;display:block;">
 		<div>
+			<input type="hidden" name="package" value="gtk" />
 			<input name="q" id="txt" type="text" style="width:300px;margin-right:5px;" />
 			<input style="padding-left:15px;padding-right:15px;" type="submit" value="Search" />
 		</div>
