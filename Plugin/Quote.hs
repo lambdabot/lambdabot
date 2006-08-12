@@ -17,7 +17,7 @@ type Quotes = M.Map P.ByteString [P.ByteString]
 
 instance Module QuoteModule Quotes where
     moduleCmds           _ = ["quote", "remember", "ghc", "fortune"
-                             ,"yow","arr","keal","b52s","brain","palomer"
+                             ,"yow","arr","yarr","keal","b52s","brain","palomer"
                              ,"girl19", "v", "yhjulwwiefzojcbxybbruweejw"]
 
     moduleHelp _ "fortune" = "fortune. Provide a random fortune"
