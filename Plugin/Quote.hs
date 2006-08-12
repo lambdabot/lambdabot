@@ -23,6 +23,7 @@ instance Module QuoteModule Quotes where
     moduleHelp _ "fortune" = "fortune. Provide a random fortune"
     moduleHelp _ "yow"     = "yow. The zippy man."
     moduleHelp _ "arr"     = "arr. Talk to a pirate"
+    moduleHelp _ "yarr"    = "yarr. Talk to a pirate"
     moduleHelp _ "keal"    = "keal. Talk like Keal"
     moduleHelp _ "ghc"     = "ghc. Choice quotes from GHC."
     moduleHelp _ "b52s"    = "b52s. Anyone noticed the b52s sound a lot like zippy?"
@@ -44,7 +45,11 @@ instance Module QuoteModule Quotes where
           "fortune"  -> return `fmap` io (randFortune Nothing)
           "yow"      -> return `fmap` io (randFortune (Just "zippy"))
           "keal"     -> return `fmap` io (randomElem kealList)
+	  -- See, you've got to understand the subtle distinction in pirate
+	  -- talk between arr and yarr! arr is something you say as an
+	  -- afermative where as yarr! is more like a greeting. (Or something)
           "arr"      -> return `fmap` io (randomElem arrList)
+          "yarr"     -> return `fmap` io (randomElem yarrList)
           "b52s"     -> return `fmap` io (randomElem b52s)
           "brain"    -> return `fmap` io (randomElem brain)
           "palomer"  -> return `fmap` io (randomElem palomer)

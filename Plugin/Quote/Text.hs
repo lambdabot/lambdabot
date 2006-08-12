@@ -34,27 +34,41 @@ arrList =
     ["Avast!"
     ,"Shiver me timbers!"
     ,"Yeh scurvy dog..."
-    ,"I heard andersca is a pirate"
     ,"I'll keel haul ya fer that!"
-    ,"I'd like to drop me anchor in her lagoon"
-    ,"Well me 'earties, let's see what crawled out of the bung hole..."
     ,"I want me grog!"
     ,"Drink up, me 'earties"
-    ,"Is that a hornpipe in yer pocket, or arr ya just happy ta see me?"
-    ,"Get out of me way, yeh landlubber"
     ,"Smartly me lass"
     ,"Arrr!"
     ,"Ahoy mateys"
     ,"Aye"
     ,"Aye Aye Cap'n"
-    ,"This is the END for you, you gutter-crawling cur!"
-    ,"May the clap make ye incapable of Cracking Jenny's Tea Cup."
-    ,"Eat maggoty hardtack, ye unkempt, jenny frequentin', son of a gun."
     ,"Swab the deck!"
     ,"Keelhaul the swabs!"
     ,"Yo ho ho, and a bottle of rum!"
     ,"I'll crush ye barnacles!"
     ,"Har de har har!"
+    ]
+
+-- | More pirate quotes
+yarrList :: [String]
+yarrList =
+    arrList ++
+    ["I heard andersca is a pirate"
+    ,"I'd like to drop me anchor in her lagoon"
+    ,"Well me 'earties, let's see what crawled out of the bung hole..."
+    ,"Is that a hornpipe in yer pocket, or arr ya just happy ta see me?"
+    ,"Get out o' me way, yeh landlubber"
+    ,"Yarrr!"
+    ,"This is the END for you, you gutter-crawling cur!"
+    ,"May the clap make ye incapable of Cracking Jenny's Tea Cup."
+    ,"Eat maggoty hardtack, ye unkempt, jenny frequentin', son of a gun."
+    ,"What be a priate's favourite cheese?\n Yarrlsburg!"
+    ,"Where d' all t' pirates come from?\n Great Yarrmouth!"
+    ,"Prepare to be boarded!"
+    ,"Gangway!"
+    ,"Splice the Mainbrace!"
+    ,"Arr! Me ship be the biggest brig in the port!"
+    ,"Well Ahoy! thar."
     ]
 
 --
