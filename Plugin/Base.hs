@@ -248,13 +248,13 @@ doPRIVMSG' myname msg
     -- them bubble back up to the mainloop
     --
     doContextualMsg r = lift $ do
-        withAllModules $ \m -> do
+        withAllModules (\m -> do
             act <- bindModule0 $
                 (do ms <- contextual m msg alltargets r
                     lift $ mapM_ (ircPrivmsg alltargets . Just) ms)
             name' <- getName
             lift . forkLB $ catchIrc act (debugStrLn . (name' ++) .
-                (" module failed in contextual handler: " ++) . show)
+                (" module failed in contextual handler: " ++) . show))
         return ()
 
 ------------------------------------------------------------------------
