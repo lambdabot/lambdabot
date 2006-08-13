@@ -31,8 +31,8 @@ PLUGIN Instances
 instance Module InstancesModule () where
     moduleCmds _ = map fst help
     moduleHelp _ = fromJust . flip lookup help
-    process_ _ "instances"           cls  = fetchInstances cls
-    process_ _ "instances-importing" args = fetchInstancesImporting args
+    process_ _ "instances"           cls  = lift $ fetchInstances cls
+    process_ _ "instances-importing" args = lift $ fetchInstancesImporting args
 
 -- | Lookup table for the help for this module
 help :: [(String, String)]

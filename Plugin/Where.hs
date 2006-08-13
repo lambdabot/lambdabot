@@ -18,7 +18,7 @@ PLUGIN Where
 
 type WhereState         = M.Map P.ByteString P.ByteString
 type WhereWriter        = WhereState -> LB ()
-type Where m a          = ModuleT WhereState m a
+-- type Where m a          = ModuleT WhereState m a
 
 instance Module WhereModule WhereState where
 
@@ -42,7 +42,7 @@ instance Module WhereModule WhereState where
 ------------------------------------------------------------------------
 
 processCommand :: WhereState -> WhereWriter
-               -> String -> String -> String -> Where LB String
+               -> String -> String -> String -> LB String
 
 processCommand factFM writer fact cmd dat = case cmd of
         "where"     -> return $ getWhere factFM fact
@@ -57,7 +57,7 @@ getWhere fm fact =
         Nothing -> "I know nothing about " ++ fact ++ "."
         Just x  -> P.unpack x
 
-updateWhere :: Bool -> WhereState -> WhereWriter -> String -> String -> Where LB String
+updateWhere :: Bool -> WhereState -> WhereWriter -> String -> String -> LB String
 updateWhere _guard factFM writer fact dat = do
         writer $ M.insert (P.pack fact) (P.pack dat) factFM
         return "Done."

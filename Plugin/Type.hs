@@ -27,7 +27,7 @@ instance Module TypeModule () where
      moduleCmds        _  = ["type", "kind"]
      moduleHelp _ "kind"  = "kind <type>. Return the kind of a type"
      moduleHelp _ _       = "type <expr>. Return the type of a value"
-     process_ _ s expr = flip query_ghci expr $ case s of
+     process_ _ s expr = lift $ flip query_ghci expr $ case s of
                                                     "type" -> ":t"
                                                     "kind" -> ":k"
 

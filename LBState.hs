@@ -34,12 +34,14 @@ import Control.Monad.Trans (liftIO)
 -- that came to my mind had even more serious deficiencies such as being prone
 -- to race conditions or semantic obscurities.
 withMS :: (s -> (s -> LB ()) -> LB a) -> ModuleT s LB a
-withMS f = lbIO $ \conv -> withMWriter ?ref $ \x writer ->
-  conv $ f x (liftIO . writer)
+withMS f = do
+    ref <- getRef
+    lift . lbIO $ \conv -> withMWriter ref $ \x writer ->
+        conv $ f x (liftIO . writer)
 
 -- | Read the module's private state.
 readMS :: ModuleT s LB s
-readMS = liftIO $ readMVar ?ref
+readMS = getRef >>= liftIO . readMVar
 
 -- | Produces a with-function. Needs a better name.
 accessorMS :: (s -> (t, t -> s)) ->
@@ -49,7 +51,7 @@ accessorMS decompose f = withMS $ \s writer ->
 
 -- | Modify the module's private state.
 modifyMS :: (s -> s) -> ModuleT s LB ()
-modifyMS f = liftIO $ modifyMVar_ ?ref (return . f)
+modifyMS f = getRef >>= liftIO . flip modifyMVar_ (return . f)
 
 -- | Write the module's private state. Try to use withMS instead.
 writeMS :: s -> ModuleT s LB ()
@@ -83,7 +85,8 @@ withPS :: String  -- ^ The target
   -> ModuleT (GlobalPrivate g p) LB a
 withPS who f = do
   mvar <- accessPS return id who
-  lbIO $ \conv -> withMWriter mvar $ \x writer -> conv $ f x (liftIO . writer)
+  lift . lbIO $ \conv -> withMWriter mvar $ \x writer ->
+      conv $ f x (liftIO . writer)
 
 -- | Reads private state.
 readPS :: String -> ModuleT (GlobalPrivate g p) LB (Maybe p)

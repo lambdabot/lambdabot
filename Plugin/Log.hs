@@ -235,7 +235,7 @@ initChannelMaybe chan ct = do
     modifyMS (M.insert chan $ CS hdl (dateStamp ct) [])
 
 -- | Ensure that the log is correctly initialised etc.
-withValidLog :: (Handle -> ClockTime -> LB a) 
+withValidLog :: (Handle -> ClockTime -> Log a) 
              -> ClockTime -> Channel -> Log a
 withValidLog f ct chan = do 
   initChannelMaybe chan ct
@@ -245,7 +245,7 @@ withValidLog f ct chan = do
   return rv
 
 -- | Log a string. Main logging workhorse.
-logString :: Handle -> String -> LB ()
+logString :: Handle -> String -> Log ()
 logString hdl str = io $ hPutStrLn hdl str >> hFlush hdl
   -- We flush on each operation to ensure logs are up to date.
 

@@ -11,9 +11,9 @@ PLUGIN Help
 instance Module HelpModule () where
     moduleHelp _ _ = "help <command>. Ask for help for <command>. Try 'list' for all commands"
     moduleCmds   _ = ["help"]
-    process_ _ cmd rest = doHelp cmd rest
+    process_ _ cmd rest = lift $ doHelp cmd rest
 
-doHelp :: String -> [Char] -> ModuleLB ()
+doHelp :: String -> [Char] -> LB [String]
 doHelp cmd [] = doHelp cmd "help"
 
 --

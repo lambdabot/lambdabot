@@ -52,27 +52,29 @@ doSystem msg target cmd rest = get >>= \s -> case cmd of
   "list" 
         | null rest -> case target of
               ('#':_) -> return ["list [module|command]. " ++ 
-                                 "Where modules is one of:\n" ++ pprKeys (ircModules s)]
-              _       -> listAll
-        | otherwise -> listModule rest >>= return . (:[])
+                                 "Where modules is one of:\n" ++
+                                 pprKeys (ircModules s)]
+              _       -> lift $ listAll
+        | otherwise -> lift $ listModule rest >>= return . (:[])
 
   ------------------------------------------------------------------------
 
   --TODO error handling
-  "join"  -> send_ (Message.joinChannel rest) >> return []        -- system commands
-  "leave" -> send_ (Message.partChannel rest) >> return []
-  "part"  -> send_ (Message.partChannel rest) >> return []
+   -- system commands
+  "join"  -> lift $ send_ (Message.joinChannel rest) >> return []
+  "leave" -> lift $ send_ (Message.partChannel rest) >> return []
+  "part"  -> lift $ send_ (Message.partChannel rest) >> return []
 
    -- writes to another location:
-  "msg"   -> ircPrivmsg tgt (Just txt') >> return []
+  "msg"   -> lift $ ircPrivmsg tgt (Just txt') >> return []
                   where (tgt, txt) = breakOnGlue " " rest
                         txt'       = dropWhile (== ' ') txt
 
-  "quit" -> do ircQuit $ if null rest then "requested" else rest
-               return []
+  "quit" -> lift $ do ircQuit $ if null rest then "requested" else rest
+                      return []
 
-  "reconnect" -> do ircReconnect $ if null rest then "request" else rest
-                    return []
+  "reconnect" -> lift $ do ircReconnect $ if null rest then "request" else rest
+                           return []
 
   "echo" -> return [concat ["echo; msg:", show msg, " rest:", show rest]]
 
@@ -99,7 +101,8 @@ listModule s = withModule ircModules s fromCommand printProvides
         let cmds = moduleCmds m
         privs <- gets ircPrivCommands
         let cmds' = cmds \\ privs -- don't display privledged commands
+        name' <- getName
         return . concat $ if null cmds'
-                          then [?name, " has no visible commands"]
-                          else [?name, " provides: ", showClean cmds']
+                          then [name', " has no visible commands"]
+                          else [name', " provides: ", showClean cmds']
 

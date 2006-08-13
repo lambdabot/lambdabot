@@ -21,19 +21,20 @@ commands  = commandPrefixes config
 PLUGIN Base
 
 type BaseState = GlobalPrivate () ()
+type Base a = ModuleT BaseState LB a
 
 instance Module BaseModule BaseState where
     moduleDefState  _ = return $ mkGlobalPrivate 20 ()
     moduleInit _ = do
              ircSignalConnect "PING"    doPING
-             ircSignalConnect "NOTICE"  doNOTICE
+             bindModule1 doNOTICE >>= ircSignalConnect "NOTICE"
              ircSignalConnect "PART"    doPART
              ircSignalConnect "JOIN"    doJOIN
              ircSignalConnect "NICK"    doNICK
              ircSignalConnect "MODE"    doMODE
              ircSignalConnect "TOPIC"   doTOPIC
              ircSignalConnect "QUIT"    doQUIT
-             ircSignalConnect "PRIVMSG" doPRIVMSG
+             bindModule1 doPRIVMSG >>= ircSignalConnect "PRIVMSG"
              ircSignalConnect "001"     doRPL_WELCOME
 
           {- ircSignalConnect "002"     doRPL_YOURHOST
@@ -71,7 +72,7 @@ doPING msg
 
 -- If this is a "TIME" then we need to pass it over to the localtime plugin
 -- otherwise, dump it to stdout
-doNOTICE :: ModState BaseState Callback
+doNOTICE :: IrcMessage -> Base ()
 doNOTICE msg =
   if isCTCPTimeReply
      then do
@@ -136,7 +137,7 @@ doRPL_TOPIC msg -- nearly the same as doTOPIC but has our nick on the front of b
          s <- get
          put (s { ircChannels = M.insert (mkCN loc) (tail $ last $ body msg) (ircChannels s) })
 
-doPRIVMSG :: ModState BaseState Callback
+doPRIVMSG :: IrcMessage -> Base ()
 doPRIVMSG msg = do
     debugStrLn (show msg)
     doPRIVMSG' (name config) msg
@@ -144,7 +145,7 @@ doPRIVMSG msg = do
 --
 -- | What does the bot respond to?
 --
-doPRIVMSG' :: String -> IRC.IrcMessage -> ModuleT BaseState LB ()
+doPRIVMSG' :: String -> IRC.IrcMessage -> Base ()
 doPRIVMSG' myname msg
   | myname `elem` targets
     = let (cmd, params) = breakOnGlue " " text
@@ -180,12 +181,12 @@ doPRIVMSG' myname msg
     doPersonalMsg s r
         | commands `arePrefixesOf` s = doMsg (tail s) r who
         | s `elem` (evalPrefixes config)    = doMsg "run"   r who -- TODO
-        | otherwise                  = doIGNORE msg -- contextual?
+        | otherwise                  = lift $ doIGNORE msg -- contextual?
 
     doPublicMsg s r
         | commands `arePrefixesOf` s                = doMsg (tail s)        r alltargets
         | (evalPrefixes config) `arePrefixesWithSpaceOf` s = doMsg "run" r alltargets -- TODO
-        | otherwise                                 = doIGNORE msg -- contextual?
+        | otherwise                                 = lift $ doIGNORE msg -- contextual?
 
     --
     -- normal commands.
@@ -205,21 +206,22 @@ doPRIVMSG' myname msg
             _ | otherwise     -> case closests cmd allcmds of
                   (n,[s]) | n < e ,  ms == [] -> docmd s -- unique edit match
                   (n,ss)  | n < e || ms /= []            -- some possibilities
-                          -> ircmsg . Just $ "Maybe you meant: "++showClean(nub(ms++ss))
+                          -> lift . ircmsg . Just $ "Maybe you meant: "++showClean(nub(ms++ss))
                   _ -> docmd cmd         -- no prefix, edit distance too far
         where
             e = 3   -- edit distance cut off. Seems reasonable for small words
 
-            docmd cmd' =
-              forkLB $ withPS towhere $ \_ _ -> do
+            docmd cmd' = do
+              act <- bindModule0 . withPS towhere $ \_ _ -> do
                 withModule ircCommands cmd'   -- Important. 
                     (ircPrivmsg towhere (Just "Unknown command, try @list"))
                     (\m -> do
+                        name' <- getName
                         privs <- gets ircPrivCommands
                         ok    <- liftM2 (||) (return $ cmd' `notElem` privs)
-                                             (checkPrivs msg)
+                                             (lift $ checkPrivs msg)
                         if not ok
-                          then ircPrivmsg towhere $ Just "Not enough privileges"
+                          then lift $ ircPrivmsg towhere $ Just "Not enough privileges"
                           else catchIrc
                             (do mstrs <- catchError
                                     (process m msg towhere cmd' rest)
@@ -228,11 +230,12 @@ doPRIVMSG' myname msg
                                                     process_ m cmd' rest
                                                 _ -> throwError ex)
                                 case mstrs of
-                                    [] -> ircPrivmsg towhere Nothing
-                                    _  -> mapM_ (ircPrivmsg towhere . Just) mstrs)
+                                    [] -> lift $ ircPrivmsg towhere Nothing
+                                    _  -> lift $ mapM_ (ircPrivmsg towhere . Just) mstrs)
 
-                            (ircPrivmsg towhere . Just .((?name++" module failed: ")++).show))
-
+                            (lift . ircPrivmsg towhere . Just .
+                                ((name' ++ " module failed: ") ++) . show))
+              lift $ forkLB act
     --
     -- contextual messages are all input that isn't an explicit command.
     -- they're passed to all modules (todo, sounds inefficient) for
@@ -244,13 +247,14 @@ doPRIVMSG' myname msg
     -- Note how we catch any plugin errors here, rather than letting
     -- them bubble back up to the mainloop
     --
-    doContextualMsg r = do
-        withAllModules (\m ->
-            forkLB $ catchIrc
+    doContextualMsg r = lift $ do
+        withAllModules $ \m -> do
+            act <- bindModule0 $
                 (do ms <- contextual m msg alltargets r
-                    mapM_ (ircPrivmsg alltargets . Just) ms)
-                (\e -> debugStrLn
-                    (?name++" module failed in contextual handler: "++show e)) )
+                    lift $ mapM_ (ircPrivmsg alltargets . Just) ms)
+            name' <- getName
+            lift . forkLB $ catchIrc act (debugStrLn . (name' ++) .
+                (" module failed in contextual handler: " ++) . show)
         return ()
 
 ------------------------------------------------------------------------

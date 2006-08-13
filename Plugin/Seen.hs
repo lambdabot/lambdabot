@@ -159,12 +159,13 @@ instance Module SeenModule SeenState where
          return [unlines $ getAnswer msg rest seenFM now]
 
     moduleInit _        = do
+      wSFM <- bindModule2 withSeenFM
       zipWithM_ ircSignalConnect
-        ["JOIN", "PART", "QUIT", "NICK", "353",      "PRIVMSG"] $ map withSeenFM
+        ["JOIN", "PART", "QUIT", "NICK", "353",      "PRIVMSG"] $ map wSFM
         [joinCB, partCB, quitCB, nickCB, joinChanCB, msgCB]
 
       -- This magically causes the 353 callback to be invoked :)
-      tryError $ send_ . Message.names =<< ircGetChannels
+      lift $ tryError $ send_ . Message.names =<< ircGetChannels
 
       -- and suck in our state. We read directly from the handle, to avoid copying
       b <- io $ doesFileExist "State/seen"
@@ -177,7 +178,7 @@ instance Module SeenModule SeenState where
           writeMS s
 
     moduleExit _ = do
-      chans <- ircGetChannels
+      chans <- lift $ ircGetChannels
       unless (null chans) $ do
             ct    <- io getClockTime
             modifyMS $ \(n,m) -> (n, botPart ct (map P.pack chans) m)

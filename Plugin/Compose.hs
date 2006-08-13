@@ -23,7 +23,7 @@ instance Module ComposeModule () where
                              ,". [or compose] is the composition of two plugins"
                              ," The following semantics are used: . f g xs == g xs >>= f"]
 
-    process    _ a b _ args = case split " " args of
+    process    _ a b _ args = lift $ case split " " args of
         (f:g:xs) -> do
             f' <- lookupP (a,b) f
             g' <- lookupP (a,b) g
@@ -46,7 +46,7 @@ lookupP (a,b) cmd = withModule ircCommands cmd
     (\m -> do
         privs <- gets ircPrivCommands -- no priv commands can be composed
         when (cmd `elem` privs) $ error "Privledged commands cannot be composed"
-        return $ \str -> catchError 
+        bindModule1 $ \str -> catchError 
                     (process m a b cmd str)
                     (\ex -> case (ex :: IRCError) of 
                                 (IRCRaised (NoMethodError _)) -> process_ m cmd str

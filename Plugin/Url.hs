@@ -14,7 +14,7 @@ instance Module UrlModule Bool where
     moduleDefState _              = return True -- url on
     moduleSerialize _             = Just stdSerial
 
-    process_    _ "url-title" url = fetchTitle url
+    process_    _ "url-title" url = lift $ fetchTitle url
     process_    _ "url-on"    _   = writeMS True  >> return ["Url enabled"]
     process_    _ "url-off"   _   = writeMS False >> return ["Url disabled"]
 
@@ -23,7 +23,7 @@ instance Module UrlModule Bool where
       if alive && (not $ areSubstringsOf ignoredStrings text)
         then case containsUrl text of
                Nothing  -> return []
-               Just url -> fetchTitle url
+               Just url -> lift $ fetchTitle url
         else return []
 
 ------------------------------------------------------------------------

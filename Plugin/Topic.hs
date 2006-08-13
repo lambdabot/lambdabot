@@ -35,16 +35,16 @@ instance Module TopicModule () where
                    "topic-cons", "topic-snoc",
                    "topic-tail", "topic-init", "topic-null"]
 
-  process_ _ "topic-cons" text = alterTopic chan (topic_item :)
+  process_ _ "topic-cons" text = lift $ alterTopic chan (topic_item :)
         where (chan, topic_item) = splitFirstWord text
 
-  process_ _ "topic-snoc" text = alterTopic chan (snoc topic_item)
+  process_ _ "topic-snoc" text = lift $ alterTopic chan (snoc topic_item)
         where (chan, topic_item) = splitFirstWord text
 
-  process_ _ "topic-tail" chan = alterTopic chan tail
-  process_ _ "topic-init" chan = alterTopic chan init
-  process_ _ "topic-null" chan = send (Just (Message.setTopic chan "[]")) >> return []
-  process_ _ "topic-tell" chan = lookupTopic chan $ \maybetopic -> return $
+  process_ _ "topic-tail" chan = lift $ alterTopic chan tail
+  process_ _ "topic-init" chan = lift $ alterTopic chan init
+  process_ _ "topic-null" chan = lift $ send (Just (Message.setTopic chan "[]")) >> return []
+  process_ _ "topic-tell" chan = lift $ lookupTopic chan $ \maybetopic -> return $
         case maybetopic of
             Just x  -> [x]
             Nothing -> ["Do not know that channel"]

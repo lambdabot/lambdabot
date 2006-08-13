@@ -8,7 +8,7 @@
 --
 module Lambdabot (
         MODULE(..), Module(..),
-        ModuleT, ModState, ModuleLB, Mode(..),
+        ModuleT, ModuleLB, Mode(..),
 
         IRCRState(..), IRCRWState(..), IRCError(..),
         module Msg,
@@ -16,6 +16,8 @@ module Lambdabot (
         LB(..), lbIO,
 
         withModule, withAllModules, getDictKeys,
+
+        getRef, getName, bindModule0, bindModule1, bindModule2,
 
         send, send_,
         ircPrivmsg, ircPrivmsg', -- not generally used
@@ -288,7 +290,9 @@ runExitHandlers = withAllModules moduleExit >> return ()
 
 -- | flush state of modules
 flushModuleState :: LB ()
-flushModuleState = withAllModules (\m -> writeGlobalState m ?name) >> return ()
+flushModuleState = do
+    withAllModules (\m -> getName >>= writeGlobalState m)
+    return ()
 
 ------------------------------------------------------------------------
 
@@ -386,18 +390,35 @@ data MODULE = forall m s. (Module m s) => MODULE m
 data ModuleRef = forall m s. (Module m s) => ModuleRef m (MVar s) String
 
 --
--- | This \"transformer\" encodes the additional information a module might 
+-- | This transformer encodes the additional information a module might 
 --   need to access its name or its state.
 --
--- TODO: remove implicit parameters. It won't be valid Haskell'
---
-type ModuleT s m a = (?ref :: MVar s, ?name :: String) => m a
+newtype ModuleT s m a = ModuleT { moduleT :: ReaderT (MVar s, String) m a }
+    deriving (Functor, Monad, MonadTrans, MonadIO, MonadError IRCError,
+              MonadState t)
 
--- Name !!!
-type ModState s a = (?ref :: MVar s, ?name :: String) => a
+getRef :: Monad m => ModuleT s m (MVar s)
+getRef  = ModuleT $ ask >>= return . fst
+
+getName :: Monad m => ModuleT s m String
+getName = ModuleT $ ask >>= return . snd
+
+-- | bind an action to the current module so it can be run from the plain
+--   `LB' monad.
+bindModule0 :: ModuleT s LB a -> ModuleT s LB (LB a)
+bindModule0 act = bindModule1 (const act) >>= return . ($ ())
+
+-- | variant of `bindModule0' for monad actions with one argument
+bindModule1 :: (a -> ModuleT s LB b) -> ModuleT s LB (a -> LB b)
+bindModule1 act = ModuleT $
+    ask >>= \st -> return (\val -> runReaderT (moduleT $ act val) st)
+
+-- | variant of `bindModule0' for monad actions with two arguments
+bindModule2 :: (a -> b -> ModuleT s LB c) -> ModuleT s LB (a -> b -> LB c)
+bindModule2 act = bindModule1 (uncurry act) >>= return . curry
 
 -- | A nicer synonym for some ModuleT stuffs
-type ModuleLB m = ModuleT m LB [String]
+type ModuleLB s = ModuleT s LB [String]
 
 -- ---------------------------------------------------------------------
 --
@@ -409,7 +430,7 @@ writeGlobalState :: Module m s => m -> String -> ModuleT s LB ()
 writeGlobalState mod name = case moduleSerialize mod of
   Nothing  -> return ()
   Just ser -> do
-    state <- io $ readMVar ?ref -- readMS
+    state <- getRef >>= (io . readMVar) -- readMS
     case serialize ser state of
         Nothing  -> return ()   -- do not write any state
         Just out -> io $ P.writeFile (toFilename name) out
@@ -439,21 +460,20 @@ ircInstallModule (MODULE mod) modname = do
 
     let modref = ModuleRef mod ref modname
 
-    -- TODO
-    let ?ref = ref; ?name = modname -- yikes
-    moduleInit mod
-    let cmds  = moduleCmds mod
-        privs = modulePrivs mod
+    flip runReaderT (ref, modname) . moduleT $ do
+        moduleInit mod
+        let cmds  = moduleCmds mod
+            privs = modulePrivs mod
 
-    s <- get
-    let modmap = ircModules s
-        cmdmap = ircCommands s
-    put $ s {
-      ircModules = M.insert modname modref modmap,
-      ircCommands = addList [ (cmd,modref) | cmd <- cmds++privs ] cmdmap,
-      ircPrivCommands = ircPrivCommands s ++ privs
-    }
-    io $ hPutStr stderr "." >> hFlush stderr
+        s <- get
+        let modmap = ircModules s
+            cmdmap = ircCommands s
+        put $ s {
+          ircModules = M.insert modname modref modmap,
+          ircCommands = addList [ (cmd,modref) | cmd <- cmds++privs ] cmdmap,
+          ircPrivCommands = ircPrivCommands s ++ privs
+        }
+        io $ hPutStr stderr "." >> hFlush stderr
 
 --
 -- | Unregister a module's entry in the irc state
@@ -498,14 +518,16 @@ ircSignalConnect :: String -> Callback -> ModuleT s LB ()
 ircSignalConnect str f = do 
     s <- get
     let cbs = ircCallbacks s
+    name <- getName
     case M.lookup str cbs of -- TODO
-        Nothing -> put (s { ircCallbacks = M.insert str [(?name,f)]    cbs})
-        Just fs -> put (s { ircCallbacks = M.insert str ((?name,f):fs) cbs})
+        Nothing -> put (s { ircCallbacks = M.insert str [(name,f)]    cbs})
+        Just fs -> put (s { ircCallbacks = M.insert str ((name,f):fs) cbs})
 
 ircInstallOutputFilter :: OutputFilter -> ModuleT s LB ()
-ircInstallOutputFilter f =
+ircInstallOutputFilter f = do
+    name <- getName
     modify $ \s ->
-        s { ircOutputFilters = (?name, f): ircOutputFilters s }
+        s { ircOutputFilters = (name, f): ircOutputFilters s }
 
 -- | Checks if the given user has admin permissions and excecute the action
 --   only in this case.
@@ -610,7 +632,8 @@ withModule dict modname def f = do
     case maybemod of
       -- TODO stick this ref stuff in a monad instead. more portable in
       -- the long run.
-      Just (ModuleRef m ref name) -> let ?ref = ref; ?name = name in f m
+      Just (ModuleRef m ref name) -> do
+          runReaderT (moduleT $ f m) (ref, name)
       _                           -> def
 
 -- | Interpret a function in the context of all modules
@@ -618,8 +641,7 @@ withAllModules :: (forall mod s. Module mod s => mod -> ModuleT s LB a) -> LB [a
 withAllModules f = do
     mods <- gets $ M.elems . ircModules :: LB [ModuleRef]
     (`mapM` mods) $ \(ModuleRef m ref name) -> do
-        let ?ref = ref; ?name = name
-        f m
+        runReaderT (moduleT $ f m) (ref, name)
 
 getDictKeys :: (MonadState s m) => (s -> Map k a) -> m [k]
 getDictKeys dict = gets (M.keys . dict)

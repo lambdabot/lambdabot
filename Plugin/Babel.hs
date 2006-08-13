@@ -15,7 +15,7 @@ PLUGIN Babel
 
 instance Module BabelModule () where
     moduleCmds _   = ["babel"]
-    process_   _ _ = babel
+    process_   _ _ = lift . babel
     moduleHelp _ _ = unlines ["babel <lang1> <lang2> <phrase>."
                              ,"Translate a phrase in lang1 to lang2."
                              ,"Language is an element of" ++ showClean supportedLangs]

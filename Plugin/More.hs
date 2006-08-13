@@ -14,12 +14,13 @@ instance Module MoreModule MoreState where
     moduleHelp _ _              = "@more. Return more output from the bot buffer."
     moduleCmds   _              = ["more"]
     moduleDefState _            = return $ mkGlobalPrivate 20 ()
-    moduleInit   _              = ircInstallOutputFilter moreFilter
+    moduleInit   _              = bindModule2 moreFilter >>=
+                                      ircInstallOutputFilter
     process      _ _ target _ _ = do
         morestate <- readPS target
         case morestate of
             Nothing -> return []
-            Just ls -> do mapM_ (ircPrivmsg' target . Just) =<< moreFilter target ls
+            Just ls -> do mapM_ (lift . ircPrivmsg' target . Just) =<< moreFilter target ls
                           return []       -- special
 
 moreFilter :: String -> [String] -> ModuleLB MoreState
