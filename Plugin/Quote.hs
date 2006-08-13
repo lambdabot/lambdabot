@@ -18,7 +18,7 @@ type Quotes = M.Map P.ByteString [P.ByteString]
 instance Module QuoteModule Quotes where
     moduleCmds           _ = ["quote", "remember", "ghc", "fortune"
                              ,"yow","arr","yarr","keal","b52s","brain","palomer"
-                             ,"girl19", "v", "yhjulwwiefzojcbxybbruweejw"]
+                             ,"girl19", "v", "yhjulwwiefzojcbxybbruweejw", "protontorpedo"]
 
     moduleHelp _ "fortune" = "fortune. Provide a random fortune"
     moduleHelp _ "yow"     = "yow. The zippy man."
@@ -29,6 +29,7 @@ instance Module QuoteModule Quotes where
     moduleHelp _ "b52s"    = "b52s. Anyone noticed the b52s sound a lot like zippy?"
     moduleHelp _ "brain"   = "brain. Pinky and the Brain"
     moduleHelp _ "palomer" = "palomer. Sound a bit like palomer on a good day."
+    moduleHelp _ "protontorpedo" = "protontorpedo is silly"
     moduleHelp _ "girl19"  = "girl19 wonders what \"discriminating hackers\" are."
     moduleHelp _ "v"       = "let v = show v in v"
     moduleHelp _ "yhjulwwiefzojcbxybbruweejw"
@@ -54,6 +55,7 @@ instance Module QuoteModule Quotes where
           "brain"    -> return `fmap` io (randomElem brain)
           "palomer"  -> return `fmap` io (randomElem palomer)
           "girl19"   -> return `fmap` io (randomElem girl19)
+          "protontorpedo" -> return `fmap` io (randomElem protontorpedo)
           "v"        -> return `fmap` io (randomElem notoriousV)
           "yhjulwwiefzojcbxybbruweejw"
                      -> return `fmap` io (randomElem notoriousV)
