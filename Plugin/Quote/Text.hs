@@ -286,7 +286,25 @@ notoriousV =
     ]
 
 --
--- another asshat
+-- A troll going by the names:
+--
+--  proton-gun tbon shemale_magic HeyObjects parnassus gavino
+--  hypothesys octon ava-its-pssa mel-gibson java-or-no proton-gun
+--  protontorpedo deathsstar gavino99 proton-weapon thumper9 star-trekio
+--  differentActGetD howya-doin linux-fun boobhz booger perlIsBetter
+--
+-- n=bo@pool-71-106-182-86.lsanca.dsl-w.verizon.net
+-- n=root@masqrd.la.teampcs.com
+-- n=gschuett@masqrd.la.teampcs.com
+-- n=gschuett@68.183.75.2
+-- n=gschuett@208.201.11.51
+--
+-- Trolled on and off for 10 months
+--
+-- First appeared:
+--  05.10.05:16:51:41 --- join: howya-doin (n=gschuett@208.201.11.51) joined #haskell
+-- Last appeared:
+--  06.08.14:11:48 -- mode/#haskell [+b *!*n=bo@*.lsanca.dsl-w.verizon.net] by dons
 --
 protontorpedo :: [String]
 protontorpedo =
@@ -309,8 +327,43 @@ protontorpedo =
     "how does j2ee compare to haskell?",
     "can haskell do same stuff as J2EE but nicer?",
     "is haskell able to outdo perl or python for web?",
+    "how is smalltalk different from haskell?",
+    "how does haskell compare to say java?",
+    "can haskell outdo java and jboss n stuff?",
+    "how does haskell compare to c++?",
+    "how is haskell different than java?",
+    "so haskell is different from lisp?",
+    "how abut vs APL",
+    "what is haskell?",
+    "is it nicer than APL?",
+    "is haskell nicer than clisp?",
+    "what does haskell do better than java perl or ruby?",
+    "is it a form of lisp?",
+    "why haskell over lisp?",
+    "why haskell over say clsip or smalltalk?",
+    "why haskell over say smalltalk",
+    "is haskell more powerful than perl? or scheme?",
+    "is haskella lisp?",
+    "so haskells better than smalltalk and clsip?",
 
 -- more questions
+    "why did someone create haskell?",
+    "can u build things fast in haskell?",
+    "is functional progrmaming the same as object oriented?",
+    "I read somewhere that large systms get confusing and haskell ends up a s a bunch of functions",
+    "is haskell more powerful than any jedii?",
+    "lazy makes macro not needed?",
+    "wat is lazy evaluation?",
+    "so this java guy I know says that java is the best when things get really complex and u need your apps do do real work",
+    "how does haskell do with large systems?",
+    "so with 100s of users adn different daabases haskell does fine?",
+    "so if I learn haskell i can make cool interactive websites and get rich right?",
+    "what echniques can be used to scael application in haskell?",
+    "whera re the end user apps?",
+    "why would u write a interpreter for perl in haskell?",
+    "what Is writen in haskell that gets work done?",
+    "so there is no database, monitoring system, web browser, webserver, or scheduling ssytem in haskell?",
+    "is there a decent scheduler in haskell? how about a netwrok monitor?",
     "is functional ebtter than oo?",
     "cant u just have data in arrays and do operations using you prog lang?",
     "troll?",
@@ -336,6 +389,8 @@ protontorpedo =
     "so haskell is free?",
     "how fast is the haskell web serve for dynamic content? siriam from scheme says the scheme one si FAT AS HEK",
     "how can haskell automate ftp?",
+    "how do we automate ftp file transfers with haskell?",
+    "what is a good way to handle the ftp transfer and reading of files to mysql?",
     "some dude called topmind says that oo is bs",
     "are objects kina just subroutines",
     "smalltalk is oo",
@@ -356,8 +411,10 @@ protontorpedo =
     "I dont know any programming yet at 33 dream of learning ti and gettign rich",
     "windows is validating itelf a lot during ownloads altely",
     "why haskell over smalltalk? I thought smalltalked rocked",
+    "can haskell do data transfer from box to box over sockets?",
 
 -- statements
+    "im such an asshole",
     "I hear from an essay by E raymod that perl is shitty for large projects",
     "ok so say I ftp files from some 50 remote servers now, and then read them inot mysql, then ftp back to an ohter 50 servers some info they read into thier informix db",
     "I personally emailed paul graham the lisp guy today after reading about python in E raymonds essay he metions ruby n python is u cant use lisp",
@@ -365,5 +422,7 @@ protontorpedo =
     "check otu squeak seems dope",
     "I have perl bok but saw haskell and am woner hey this is new and improved and seems powerful because MIT guy philip green says haskell adn lisp are only langs where u spend more tie thinking than coding",
     "paul graham said static typing is a problem for macros building",
-    "I dont think tcl cn do that" 
+    "I dont think tcl cn do that",
+    "I am banned from like 6 rooms",
+    "scheme, lisp, php, python, perl, tcl, al banned"
     ]
