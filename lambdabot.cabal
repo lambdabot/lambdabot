@@ -13,7 +13,7 @@ License:             GPL
 License-file:        LICENSE
 Author:              Don Stewart
 Maintainer:          dons@cse.unsw.edu.au
-Build-Depends:       base, unix, network, parsec, mtl, haskell-src, readline, fps>=0.7, haskell98
+Build-Depends:       base, unix, network, parsec, mtl, haskell-src, readline, fps>=0.7
 
 --
 -- first build the preprocessor
@@ -21,7 +21,7 @@ Build-Depends:       base, unix, network, parsec, mtl, haskell-src, readline, fp
 Executable:          BotPP
 hs-source-dirs:      scripts/
 Main-is:             BotPP.hs
-ghc-options:         -funbox-strict-fields -O
+ghc-options:         -fasm -funbox-strict-fields -O
 
 --
 -- Lambdabot
