@@ -79,7 +79,7 @@ import GHC.Err
 -- | Global read-only state.
 data IRCRState
   = IRCRState {
-        ircServer      :: String,
+        ircServer      :: !String,
         ircReadChan    :: Pipe,
         ircReadThread  :: ThreadId,
         ircWriteChan   :: Pipe,
@@ -106,7 +106,7 @@ data IRCRWState = IRCRWState {
 
         ircCommands        :: Map String ModuleRef,
         ircPrivCommands    :: [String],
-        ircStayConnected   :: Bool,
+        ircStayConnected   :: !Bool,
         ircDynLoad         :: S.DynLoad
     }
 
@@ -378,6 +378,7 @@ class Module m s | m -> s where
     moduleDefState  _  = return $ error "state not initalized"
 
 -- work around weird issue in 6.5, where the missing default fails
+-- TODO check this is still the case.
 #if __GLASGOW_HASKELL__ >= 605
     process _ _ _ _ _ = GHC.Err.noMethodBindingError "Lambdabot.process"#
 #endif
@@ -394,8 +395,7 @@ data ModuleRef = forall m s. (Module m s) => ModuleRef m (MVar s) String
 --   need to access its name or its state.
 --
 newtype ModuleT s m a = ModuleT { moduleT :: ReaderT (MVar s, String) m a }
-    deriving (Functor, Monad, MonadTrans, MonadIO, MonadError IRCError,
-              MonadState t)
+    deriving (Functor, Monad, MonadTrans, MonadIO, MonadError IRCError, MonadState t)
 
 getRef :: Monad m => ModuleT s m (MVar s)
 getRef  = ModuleT $ ask >>= return . fst
