@@ -9,6 +9,8 @@ Alanna
 Saying that Java is nice because it works on all OS's is like saying that anal sex is nice because it works on all genders.
 
 Cale
+... if sections were allowed at the type level ...
+They're using continental drift as a means of communication.
 The perfect programming language is mathematics, but that only runs on mathematicians.
 Beware of the function [a] -> a. For it may contain trappes and sprynges of great variety and harm.
 
@@ -21,8 +23,18 @@ Are there little known Haskell idioms for doing math? Is there an undocumented -
 ChristopherHendrie
 Sometimes I wonder if Java will be indirectly responsible for hastening the adoption of functional programming languages
 
+DanPiponi
+Writing introductions to monads seems to have developed into an industry
+
+DennisHeuer
+What is that???? Your strategy shows that you just don't care.
+Are you fully nerd????
+
 DukeDave
 what, if your kids start doing drugs? or worse, business school
+
+Failure02
+in haskell you can have korean smilies as variables! like (^-^)
 
 Gahhh
 monads are usually a personal experience.
@@ -41,24 +53,32 @@ Itkovian
 real programmers don't write docs, if it was hard to write, it should be hard to understand
 
 JaffaCake
+I don't remember a recruitment process where the interviewees all talk to each other before, it's kind of scary :)
 gcc is getting smarter, so we need to hit it with a bigger stick
 not all IOError -> String functions are created equal :)
 I'm afraid I'm completely IA64-ignorant (and hoping to remain that way until IA64 goes away :-)
 
 JohnMeacham
+I liken learning haskell to tipping over a vending machine. you can't just push it, you gotta rock it back and forth a few times building up momentum until bam! suddenly the flash of insight hits and it all makes sense.
 There will also be a karaoke competition to determine the fate of the monomorphism restriction.
 Type theory makes totally awesome material for bar room shit talk.
 Last night I was at this dive bar listening to live music and there was this cute girl I was talking too while this guy was there, we started ribbing each other in the appropriate way when confronted with the situation of two guys talking to the same girl, and our jeers eventually turned technical until we were arguing about haskell, perl, and pugs development. it turning out he was one of the pugs de
 
 Korollary
+I enjoy being satan at times
+my brain is fried. I cant read any more STM papers
 an olegweek is a complex entity with an imaginary part
 an olegweek is a complex entity with an imaginary part
 
 Lemmih
+<shapr> Any idea where we should meet?  *** Lemmih opens Google Earth.
 calling an out-of-scope function isn't as easy as I had hoped
 
 Oleg
 The implementation of RSA on type level is left for future work
+
+Paltas
+i read that the python developer considered to remove nearly all functional programming methods from python.. wondered if he got a stroke or something..
 
 PaulGraham
 An algorithm for lazy evaluation of research papers: Just write whatever you want and don't cite any previous work, and indignant readers will send you references to all the papers you should have cited.
@@ -68,9 +88,13 @@ Philippa
 hey, if the guy wants a monadectomy that's his choice
 
 Pseudonym
+What was considered 100 milli-Olegs of type hackery five years ago is standard operating procedure these days
 I think principal types are overrated
 Lazy evalution is really, really trippy.
 Well, personally, I don't think dumb people should be let near a programming language.
+
+RyanT5000
+i wish i had been programming in haskell for 7 years rather than C++
 
 S.Behrens
 or maybe she is the Queen of Sciences and he is the Mack Daddy.
@@ -92,8 +116,14 @@ Taral
 But I can do DP in C, which has no RT
 How do you add an @quote?
 
+TimToady
+learning Haskell itself is easy--I've done it several times already
+
 TuringTest
 They got it work in Haskell without understanding Haskell.  It is quite an achievement, of some description.
+
+adam
+Lisp is like Ruby with an ugly syntax, impossible stdlib, and some macros that don't compensate for above shortcomings
 
 adept
 Tried to co-read and co-understand comonads, but got co-re dump
@@ -101,6 +131,13 @@ I think I need cobrain to understand coeffects
 
 astrolabe
 I put my thing in inverted commas because it isn't a really stalactite, but it looks like one, and contains nitrates from urea.
+
+audreyt
+assembly would require metaolegs (or megaolegs)
+I think wiki in the original Hawaiian means "I can't find any damned thing"
+
+augustss
+hbc still has some unique features, like views.  that i've never used..
 
 autrijus
 Mechanical and super-natty! Inspect the result and *if* happy; freeze, sell and get some sleep!
@@ -129,7 +166,16 @@ even the #lisp people say go with haskell
 desrt
 man... there's this whole dark side to haskell that dr. kahl didn't teach us in 3e03
 
+dibblego
+I believe that OO is intrinsically defective and digresses from a formal definition of "software"
+
 dons
+ its like you can really see the guy's brain melting
+[In reference to <joelr1> did you guys know that #ocaml has 37 members and #erlang has 34 vs. 202 on #haskell?] I think part of the #haskell success comes from the approach that we all know each other, it's not a homework channel like #java. We created a community of peers, working on the overall goals of the community. That's why people keep coming back
+so i suspect dynamically typed langs, that just work (bugs and all) will always be more popular with the masses since most people don't understand bug theory ;)
+The "I'm swallowing TaPL smiley" :[]
+-fglasgow-exts ~= -fhaskell-prime
+all your questions belong to us
 Haskell: The language that never sells out!
 ihope reaches level 4 hacker
 note to self: grep only works on disks
@@ -138,6 +184,19 @@ who was it who said (shapr?) that they welcome their competitors using languages
 the type system is *great* for coding while sleepy.. you just hack any garbage together, and let the type checker deal with it
 boegel, stop polluting the quote-space please
 I don't mind autoconf, except for the fact that it's stupid and ugly
+
+edwardk
+been playing with type level 2s complement arithmetic
+notes that in haskell, it seems that you asymptotically approach writing no code over time as you learn your way around whats already there
+
+edwinb
+I think I'd panic if I had to write something that wasn't a compiler.
+
+emertens
+screw ruby on rails, I'm using snakes on a plane
+
+fsbot
+English -> English: no matching translation services found.
 
 gFunk
 [the main advantage of functional programs are that they're] incorrect the first 1000 times you try to compile it!
@@ -274,15 +333,24 @@ scavenge_stack: weird activation record found on stack
 Info table already?
 ARGH! Jump uses %esi or %edi with -monly-2-regs
 
+glguy
+that's odd, mine is this big : |-----------------------------|
+
 gzl
 [on why monads are scary] maybe it's because people look up monad on wikipedia, find the category theory page, and crap themselves
 
 hakko
 most programmers have a lot of religious issues about their work, yes.
 
+heatsink
+@pl (\y -> you y off)
+
 ihope
 Laziness is free, but it doesn't always pay off.
 Oops, I forgot that Djinn doesn't do GADT's.
+
+int-e
+C++ does make a reasonably usable high-level assembler
 
 jjuggle
 I was riding around town and this cop on patrol on a bike rode up next to me and said, "There's always a show off." I offered to teach him to ride and help set up a unicycle patrol squad, but he declined.
@@ -290,9 +358,15 @@ I was riding around town and this cop on patrol on a bike rode up next to me and
 jlouis
 Q: When does one know he has programmed too much Haskell? A: When he uses == and /= in everyday IRC chat or when he tries to fix a relationship by passing himself as a continuation
 
+jmob|
+I want the world to stop at that point, go away, and give me it's argument..
+
 joelr
 the learning curve is far steeper with Haskell but it is far more elegant and readable
 Fundeps, existential types, HList take a while to grasp
+
+jrmole
+any program that could read minds would just evolve into a porn downloader
 
 kolmodin
 I would rather lose my left arm than write it in Java
@@ -300,7 +374,15 @@ I would rather lose my left arm than write it in Java
 kzm
 My program contains a bug.  How ungrateful, after all I've done for it.
 
+l33t_h4x0r
+maybe if uve had some professor teach u bullshit in uni yea \n i learned on my own.. k.. i dun give a shit bout terms :p i just code
+
 lambdabot
+Nobody brings small problems into a laundromat.
+tERmIN473d
+lambdabot hasn't said anything memorable
+fOra11 (t :: (* -> *) -> * -> *) (/\/\ :: * -> *) A. (/\/\oNAd+R4nz0rz t, MoN4D /\/\) => 7 ((->) a) (M a)
+ lambdabot hasn't said anything memorable
 Occurs check: cannot construct the infinite type: a
 Couldn't match kind `?? -> ? -> *' against `(* -> *) -> * -> *'
 Of course i'm female
@@ -308,6 +390,9 @@ lambdabot hasn't said anything memorable
 
 lispy
 I just remembered this dream i had the other morning.  I was trying to tell my alarm clock how to snooze by using a list comprehension
+
+liyang
+We can do pair programming on a punt or something.
 
 malcolm
 I don't believe you need to invoke the full awesome majesty of Template Haskell
@@ -333,19 +418,39 @@ I actually got away with running Haskell through a TeX pretty printer and handin
 ndm
 the only language i've seen which is ugly at a deeper level than syntax is perl
 
+newbcoder
+newbcoder is the best of them all
+
+newsham
+haskell's like chess.  easy to learn. hard to master.
+
+ozone
+joelr1: our C++ guru at work is getting a bit sick of me saying "ah, so that's like <x> in haskell, but not quite as elegant..."
+
 pesco
 "Scientists Reveal: Human Consciousness Stems From Two Files in Different Directories!"
+
+protontorpedo
+or is haskell doomed to be a mysql driver
 
 reddi
 and now i know: IT DOES NOT WORK ALWAYS ;-)
 
+roconnor
+ O(n) is slow when n=infinity
+life lesson from today: 1 closure is nice, 500 000 closures sucks
+
 samc
 monads are hard, let's go shopping
+
+scsibug
+i could have sworn it was incorrect until it type-checked
 
 sethk
 it's certainly true that you can clobber the stack in C without even getting out of bed in the morning
 
 shapr
+[Regarding Hudak's so-called 'Gentle' introduction] Yeah, the mental brickbat of doom is a bit closer.
 Programming is the Magic Executable Fridge Poetry, it is machines made of thought, fueled by ideas.
 The legal system is the ultimate denial of service attack.
 I don't know why the GHC team won't accept my spoonIO patch
@@ -358,10 +463,29 @@ I encourage my competitors to use Windows.
 GHC has more flags than the UN
 I've tried to teach people autodidactism, but I've realized they have to learn it for themselves.
 
+sieni
+C provides people with the expressiveness of fortran combined with the portability of assembler
+
+sjanssen
+@djinn Haskell -> Curry
+
 skew
 We don't believe in constant factors.
 Swapping is just a constant factor
 I think blackdog is right
+
+souwh
+<shapr> hm, I have extra spaces there. \n <souwh> oooh, those can be saved and reused later!
+
+spj
+it looks like hopscotch! (referring to a funny notation for lists)
+
+stepcut
+how can you possibly implement business logic without knowing about Schonfinkel!?
+I wrote 1 + 1 in php once, and got 11 -- wasn't quite what I was hoping for
+
+syntaxfree
+Many people think the core ideas behind Haskell came from academic luminaries such as Philip Wadler and Simon Peyton-Jones. What actually happened is that during a functional programming conference, some key academics were teleported to the Deep Complex Universe. In the Deep Complex Universe some Gnomes were having Tangling problems. Wadler & friends solved their problems and as a reward the Tangled Gnomes gave them the S
 
 tennin
 [very #haskell] anyone know of any good books/papers on the application of category theory to databases?
@@ -372,11 +496,21 @@ After all, return is only a fancy name for liftM0 :-)
 twb
 But, I love my job. It's like being in a rock band. i.e. no pay, but fun.
 
+u221e
+I swear, reading Haskell source code is like trying to read a Chinese newspaper
+
 vegai
 Hey Haskell! Give me that File! -Naah, I'm too lazy. *thinks* I'll give you a cookie if you tell me how many letters that file has! -Oh, ok!
 
+vincenz
+Geek is Chique.
+Yeah, haskell's like touching a 25 year old female model compared to the 50 year old, fat hairy male that is c++
+
 vixen
 If you see this, gentle sir, know that you are being trolled by a poorly configured VixenLove program
+
+wadler
+Curried food and curried functions are both aquired tastes
 
 wilx
 I mean, besides the murders, it all looks so nice.
@@ -385,6 +519,7 @@ xahlee
 The Haskell Logo is the perfection of logos
 
 xerox
+I am really interested specifically in bottoms in this very moment.
 > take 10 lol where lol = "ol" : zipWith (:) (intersperse 'o' $ cycle "l") lol
 you know, befunge is probably the only language I've seen where you can run code pasted from IRC with the <nick> tags still in place ;-)
 
