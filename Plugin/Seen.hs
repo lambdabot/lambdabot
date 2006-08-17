@@ -22,6 +22,7 @@ import System.Directory
 import System.Time (normalizeTimeDiff) -- or export from AltTime.hs?
 
 import Control.Monad       (unless, zipWithM_)
+import Text.Printf
 
 PLUGIN Seen
 
@@ -149,9 +150,14 @@ instance Module SeenModule SeenState where
          (m, seenFM) <- readMS
          let now = length $ [ () | (_,Present _ chans) <- M.toList seenFM
                                  , P.pack chan `elem` chans ]
+
+             n = case M.lookup chan m of Nothing -> 1; Just n' -> n'
          return $ [concat ["Maximum users seen in ", chan, ": "
-                          , show (case M.lookup chan m of Nothing -> 0; Just n -> n)
-                          , ", currently: ", show now] ]
+                          ,show n
+                          ,", currently: ", show now
+                          , printf " (%0.1f%%)" ((fromIntegral now / fromIntegral n) :: Double)
+                          ]
+                 ]
 
     process _ msg _ _      rest = do
          (_,seenFM) <- readMS
