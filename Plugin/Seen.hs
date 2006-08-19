@@ -155,7 +155,7 @@ instance Module SeenModule SeenState where
          return $ [concat ["Maximum users seen in ", chan, ": "
                           ,show n
                           ,", currently: ", show now
-                          , printf " (%0.1f%%)" ((fromIntegral now / fromIntegral n) :: Double)
+                          , printf " (%0.1f%%)" (100 * (fromIntegral now / fromIntegral n) :: Double)
                           ]
                  ]
 
