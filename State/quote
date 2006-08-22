@@ -9,6 +9,7 @@ Alanna
 Saying that Java is nice because it works on all OS's is like saying that anal sex is nice because it works on all genders.
 
 Cale
+[more monad clarity] monads as food gathering in post-industrial America
 ... if sections were allowed at the type level ...
 They're using continental drift as a means of communication.
 The perfect programming language is mathematics, but that only runs on mathematicians.
@@ -64,7 +65,14 @@ There will also be a karaoke competition to determine the fate of the monomorphi
 Type theory makes totally awesome material for bar room shit talk.
 Last night I was at this dive bar listening to live music and there was this cute girl I was talking too while this guy was there, we started ribbing each other in the appropriate way when confronted with the situation of two guys talking to the same girl, and our jeers eventually turned technical until we were arguing about haskell, perl, and pugs development. it turning out he was one of the pugs de
 
+Kahdloc
+why's it called filter and not grep? :/
+
+Klauso
+haha, this bot seems to have many features
+
 Korollary
+[On Perelman going AWOL before the Fields Medal award] I can have it if he doesnt want it. Chicks dig Fields Medals
 I enjoy being satan at times
 my brain is fried. I cant read any more STM papers
 an olegweek is a complex entity with an imaginary part
@@ -76,6 +84,9 @@ calling an out-of-scope function isn't as easy as I had hoped
 
 Oleg
 The implementation of RSA on type level is left for future work
+
+OlegFacts
+Oleg solves NP-hard problems in N log N time... in the type system
 
 Paltas
 i read that the python developer considered to remove nearly all functional programming methods from python.. wondered if he got a stroke or something..
@@ -116,11 +127,17 @@ Taral
 But I can do DP in C, which has no RT
 How do you add an @quote?
 
+Tela
+... tutorials which focus on the IO monad go to great lengths to mention how Monads basically save your life every day
+
 TimToady
 learning Haskell itself is easy--I've done it several times already
 
 TuringTest
 They got it work in Haskell without understanding Haskell.  It is quite an achievement, of some description.
+
+VirginiaCurry
+"You know, Haskell actually never liked the name Haskell." -- Virgina Curry (Haskell B. Curry's widow)
 
 adam
 Lisp is like Ruby with an ugly syntax, impossible stdlib, and some macros that don't compensate for above shortcomings
@@ -170,6 +187,8 @@ dibblego
 I believe that OO is intrinsically defective and digresses from a formal definition of "software"
 
 dons
+xerox: what analogy or metaphor did you use? monad-as-garbage-bin? monad-as-refrigerator? monads-as-unicycle?
+lambdabot's finished
  its like you can really see the guy's brain melting
 [In reference to <joelr1> did you guys know that #ocaml has 37 members and #erlang has 34 vs. 202 on #haskell?] I think part of the #haskell success comes from the approach that we all know each other, it's not a homework channel like #java. We created a community of peers, working on the overall goals of the community. That's why people keep coming back
 so i suspect dynamically typed langs, that just work (bugs and all) will always be more popular with the masses since most people don't understand bug theory ;)
@@ -184,6 +203,9 @@ who was it who said (shapr?) that they welcome their competitors using languages
 the type system is *great* for coding while sleepy.. you just hack any garbage together, and let the type checker deal with it
 boegel, stop polluting the quote-space please
 I don't mind autoconf, except for the fact that it's stupid and ugly
+
+dylan
+I run emacs for the games
 
 edwardk
 been playing with type level 2s complement arithmetic
@@ -333,6 +355,9 @@ scavenge_stack: weird activation record found on stack
 Info table already?
 ARGH! Jump uses %esi or %edi with -monly-2-regs
 
+ghci.debugger
+http://haskell.org/haskellwiki/Ghci/Debugger
+
 glguy
 that's odd, mine is this big : |-----------------------------|
 
@@ -388,6 +413,9 @@ Couldn't match kind `?? -> ? -> *' against `(* -> *) -> * -> *'
 Of course i'm female
 lambdabot hasn't said anything memorable
 
+lennart
+Even though I'm largely responsible for making CPP available in a Haskell compiler I think it's an abomination.  It should be avoided
+
 lispy
 I just remembered this dream i had the other morning.  I was trying to tell my alarm clock how to snooze by using a list comprehension
 
@@ -409,6 +437,9 @@ mikaeli
 hmm, one national tv station I was watching while eating breakfast crashed with bsod. I guess that's what you get for running windows in production use
 My friend bought a new laptop; it had MSBLASTER preinstalled. I couldn't believe it either and installed XP and the apps many times, run virus killers and everytime the blaster came back. Everything was packed on a rescue cd. And virus was in m$ works installation files.
 
+monochrom
+Do you know how godawful it is the 21st Century already and 2 out of 3 mainstream languages don't have nested functions, and the remaining 1 has it but only by way of an even more godawful construct?
+
 musasabi
 <musasabi> no reason to reinvent the whole wheel  <musasabi> (usually reinvented wheels end up square)
 
@@ -416,6 +447,9 @@ mwc
 I actually got away with running Haskell through a TeX pretty printer and handing it in as pseudocode
 
 ndm
+it needs a rewrite to support the wacky features i want to add, at amazing speed
+i once had a boss who complained because some code someone had written crashed, and yet "it clearly says in the company coding guidelines not to write code that crashes"
+its just that yacc is a C tool, so not working well is just part of life
 the only language i've seen which is ugly at a deeper level than syntax is perl
 
 newbcoder
@@ -464,6 +498,7 @@ GHC has more flags than the UN
 I've tried to teach people autodidactism, but I've realized they have to learn it for themselves.
 
 sieni
+scheme adheres to the TIMTOBFTTWTDI principle instead of TIMTOWTDI
 C provides people with the expressiveness of fortran combined with the portability of assembler
 
 sjanssen

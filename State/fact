@@ -2,6 +2,8 @@ breakfast
 Meal that usually breaks fasts.
 bzip2
 bzip2 is an open source data compression algorithm and program developed by Julian Seward. Seward made the first public release of bzip2, version 0.15, in July 1996. He's also known as a GHC hacker.
+cool
+is the opposite of heat
 dsl
 Domain specific language
 fact
@@ -22,11 +24,15 @@ libdpf
 an LGPL licensed plain C pdf reading library.
 pizza
 Eat pizza, but don't let it eat you.
+projectlambda
+There is no Project Lambda
 pseudonym
 My initial creator.
 reader-monads
 Reader monads have properties which go beyond those of just commutative monads. For example, m (a -> b) and a -> m b are isomorphic and so are m (a,b) and (m a, m b). When you are using implicit parameters, you are exploiting these properties all the time, and it's really cumbersome to do the same thing explicitely.
 recursion
 recursion
+stg
+spineless tagless g-machine
 tmr
 The Monad.Reader http://www.haskell.org/tmrwiki/FrontPage

@@ -1,9 +1,5 @@
 A way to get multiple results from a google search
 SamB
-@get-shapr summons shapr instantly
-SamB
-stop mangling long urls
-SamB
 improve formatting of @dict
 dons
 write Haskell Manifesto
@@ -44,3 +40,7 @@ beelsebob_
 beelsebob_
 Bug jethr0_ about GHC hacking.
 Lemmih
+TSequence
+edwardk
+Tutorial for hscurses/curses
+dons
