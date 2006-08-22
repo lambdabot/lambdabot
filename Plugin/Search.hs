@@ -23,7 +23,7 @@ engines =
    ,("http://en.wikipedia.org/wiki/Special:Search?search=", "")),
 
     ("gsite"
-   ,("http://www.google.ca/search?hl=en&q=site%3A", "&btnI=I%27m+Feeling+Lucky"))
+   ,("http://www.google.com/search?hl=en&q=site%3A", "&btnI=I%27m+Feeling+Lucky"))
    ]
 
 instance Module SearchModule () where
@@ -33,7 +33,7 @@ instance Module SearchModule () where
          "gsite"     -> "gsite <site> <expr>. Search <site> for <expr> using google"
          "gwiki"     -> "wiki <expr>. Search (new) haskell.org wiki for <expr> using google."
     moduleCmds      _   = "gwiki" : map fst engines
-    process_ _ "gwiki" e = lift $ ((. dropSpace) . searchCmd) "gsite" ("haskell.org/haskellwiki/" ++ e)
+    process_ _ "gwiki" e = lift $ ((. dropSpace) . searchCmd) "gsite" ("haskell.org/haskellwiki" ++ e)
     process_ _ s       e = lift $ ((. dropSpace) . searchCmd) s e
 
 ------------------------------------------------------------------------
