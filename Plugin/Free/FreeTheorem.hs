@@ -105,7 +105,7 @@ freshName = do
 freshFunctionName :: RN Var
 freshFunctionName = do
     s <- get
-    let i     = unique s
+    let i     = uniquefn s
         fresh | i < 6     = ["fghkpq" !! i]
               | otherwise = 'f' : show (i - 5)
     put $ s { uniquefn = i + 1 }
