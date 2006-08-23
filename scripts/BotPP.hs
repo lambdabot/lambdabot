@@ -38,10 +38,10 @@ expand l n xs
     where pref         = B.take n xs    -- accumulating an offset
 
           pLUGIN       = pack "PLUGIN "
-          (name, rest) = B.breakChar '\n' (B.drop (n+B.length pLUGIN) xs)
+          (name, rest) = B.break (=='\n') (B.drop (n+B.length pLUGIN) xs)
 
           mODULES      = pack "MODULES "
-          (name', rest') = B.breakChar '\n' (B.drop (n+B.length mODULES) xs)
+          (name', rest') = B.break (=='\n') (B.drop (n+B.length mODULES) xs)
 
 --
 -- render the plugin boiler plate
