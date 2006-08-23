@@ -12,6 +12,8 @@ import Control.Monad
 import Control.Monad.State
 import Control.Monad.Identity
 
+import Data.Char
+import qualified Data.Map as M
 
 newtype MyState
     = MyState {
@@ -71,11 +73,101 @@ freeTheorem :: String -> Type -> Theorem
 freeTheorem name t
     = runIdentity $ do
         (th,_) <- runStateT (freeTheorem' [] v0 v0 t) initState
-        return (theoremSimplify th)
-        -- return th
+        let th' = theoremSimplify th
+        return . fst $ runState (rename th') renameState
     where
         v0 = EVar name
-        initState = MyState { myVSupply = 1 }
+        initState   = MyState { myVSupply = 1 }
+        renameState = RnSt M.empty 0 0
+
+------------------------------------------------------------------------
+-- Rename monad, and pretty alpha renamer
+
+data RnSt = RnSt { gamma  :: M.Map Var Var
+                 , unique   :: !Int
+                 , uniquefn :: !Int
+                 }
+    deriving Show
+
+type RN a = State RnSt a
+
+-- generate a nice fresh name
+freshName :: RN Var
+freshName = do
+    s <- get
+    let i     = unique s
+        fresh | i < 20    = ["xyzuvabcstdeilmnorw" !! i]
+              | otherwise = 'x' : show i
+    put $ s { unique = i + 1 }
+    return fresh
+
+-- generate a nice function name
+freshFunctionName :: RN Var
+freshFunctionName = do
+    s <- get
+    let i     = unique s
+        fresh | i < 6     = ["fghkpq" !! i]
+              | otherwise = 'f' : show (i - 5)
+    put $ s { uniquefn = i + 1 }
+    return fresh
+
+-- insert a new association into the heap
+insertRn :: Var -> Var -> RN ()
+insertRn old new = modify $ \s@(RnSt gamma u f) ->
+    let gamma' = M.insert old new gamma in RnSt gamma' u f
+
+-- lookup the binding
+lookupRn :: Var -> RN Var
+lookupRn old = do
+    m <- gets gamma
+    return $ case M.lookup old m of
+        Nothing  -> old
+        Just new -> new
+
+-- alpha rename a simplified theory to something nice
+rename :: Theorem -> RN Theorem
+rename (ThImplies th1 th2) = do
+    th1' <- rename th1
+    th2' <- rename th2
+    return $ ThImplies th1' th2'
+
+rename (ThEqual e1 e2) = do
+    e1' <- rnExp e1
+    e2' <- rnExp e2
+    return $ ThEqual e1' e2'
+
+rename (ThAnd th1 th2) = do
+    th1' <- rename th1
+    th2' <- rename th2
+    return $ ThAnd th1' th2'
+
+rename (ThForall v ty th) = do
+    v' <- case ty of
+                TyArr _ _ -> freshFunctionName
+                _         -> freshName
+    insertRn v v'
+    ty' <- rnTy ty
+    th' <- rename th
+    return $ ThForall v' ty' th'
+
+rnExp :: Expr -> RN Expr
+rnExp (EVar v)       = EVar       `fmap` lookupRn v
+rnExp (EVarOp f n v) = EVarOp f n `fmap` lookupRn v
+
+rnExp (EApp e1 e2) = do
+    e1' <- rnExp e1
+    e2' <- rnExp e2
+    return (EApp e1' e2')
+
+rnExp (ETyApp e ty) = do
+    e'  <- rnExp e
+    ty' <- rnTy ty
+    return (ETyApp e' ty')
+
+rnTy :: Type -> RN Type
+rnTy ty = return ty
+
+------------------------------------------------------------------------
 
 freeTheorem' :: TyEnv -> Expr -> Expr -> Type -> MyMon Theorem
 
