@@ -56,11 +56,19 @@ config = Config {
         verbose         = True,
         textwidth       = 350,
         proxy           = Just ("www-proxy",3128),
-        autojoin        = ["#haskell","#haskell-blah","#flippi"
-                          ,"#haskell-overflow","#gentoo-haskell"
-                          ,"#haskell_ru", "#darcs" ,  "#perl6"
-                          ,"#haskell.it","#haskell.se", "#haskell.es","#ScannedInAvian"],
 
+        autojoin        = ["#haskell"
+                          ,"#haskell-blah",
+                          ,"#haskell-overflow"
+                          ,"#haskell.it"
+                          ,"#haskell.se"
+                          ,"#haskell.es"
+                          ,"#haskell_ru"
+                          ,"#gentoo-haskell"
+                          ,"#darcs"
+                          ,"#oasis"
+                          ,"#perl6"
+                          ,"#ScannedInAvian"],
 
         admins          = [
                 "Pseudonym",    "shapr", "vincenz",    "Igloo",
