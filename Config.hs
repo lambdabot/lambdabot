@@ -64,7 +64,7 @@ config = Config {
 
         admins          = [
                 "Pseudonym",    "shapr", "vincenz",    "Igloo",
-                "Cale",         "dons", "TheHunter",    "musasabi"
+                "Cale",         "dons", "TheHunter",    "musasabi", "Lemmih"
         ],
 
         fortunePath     = "/home/dons/fortune/",

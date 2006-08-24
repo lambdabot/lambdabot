@@ -141,18 +141,20 @@ instance Binary UserStatus where
 --
 
 instance Module SeenModule SeenState where
-    moduleHelp _ _      = "seen <user>. Report if a user has been seen by the bot"
-    moduleCmds _        = ["users","seen"]
-    moduleDefState _    = return (M.empty,M.empty)
+    moduleHelp _ "seen"  = "seen <user>. Report if a user has been seen by the bot"
+    moduleHelp _ "users" = "users [chan]. Report the maximum number of users seen in a channel"
+    moduleCmds _         = ["users","seen"]
+    moduleDefState _     = return (M.empty,M.empty)
 
     -- first step towards tracking the maximum number of users
-    process _ _ chan "users" _ = do
+    process _ _ chan "users" rest = do
          (m, seenFM) <- readMS
-         let now = length $ [ () | (_,Present _ chans) <- M.toList seenFM
-                                 , P.pack chan `elem` chans ]
+         let target = if null rest then chan else rest
+             now = length $ [ () | (_,Present _ chans) <- M.toList seenFM
+                                 , P.pack target `elem` chans ]
 
-             n = case M.lookup chan m of Nothing -> 1; Just n' -> n'
-         return $ [concat ["Maximum users seen in ", chan, ": "
+             n = case M.lookup target m of Nothing -> 1; Just n' -> n'
+         return $ [concat ["Maximum users seen in ", target, ": "
                           ,show n
                           ,", currently: ", show now
                           , printf " (%0.1f%%)" (100 * (fromIntegral now / fromIntegral n) :: Double)
