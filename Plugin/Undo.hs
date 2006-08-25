@@ -3,7 +3,7 @@
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
 --
 
-module Plugin.Doless where
+module Plugin.Undo where
 
 import Plugin
 import Lib.Parser
@@ -11,11 +11,11 @@ import Language.Haskell.Syntax hiding (Module)
 import Language.Haskell.Pretty
 import Data.Generics
 
-PLUGIN Doless
+PLUGIN Undo
 
-instance Module DolessModule () where
-    moduleCmds   _ = ["doless"]
-    moduleHelp _ _ = "doless <expr>\nTranslate do notation to basic Monad operators."
+instance Module UndoModule () where
+    moduleCmds   _ = ["undo"]
+    moduleHelp _ _ = "undo <expr>\nTranslate do notation to basic Monad operators."
     process_ _ _ args = ios $
         case parseExpr args of
             ParseOk e -> return $ prettyPrint $ transform e
