@@ -58,7 +58,7 @@ config = Config {
         proxy           = Just ("www-proxy",3128),
 
         autojoin        = ["#haskell"
-                          ,"#haskell-blah",
+                          ,"#haskell-blah"
                           ,"#haskell-overflow"
                           ,"#haskell.it"
                           ,"#haskell.se"
