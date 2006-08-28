@@ -156,10 +156,12 @@ instance Module SeenModule SeenState where
 
              n = case M.lookup target m of Nothing -> 1; Just n' -> n'
 
-             active = length . map fst . filter isActive . M.toList $ seenFM
-             isActive (_nick,state) = case state of
-                   (Present (Just (ct,_td)) _cs) -> recent ct
-                   _ -> False
+             active = length [() | (_,st@(Present _ chans)) <- M.toList seenFM
+                                 , P.pack target `elem` chans && isActive st ]
+
+             isActive (Present (Just (ct,_td)) _cs) = recent ct
+             isActive _                             = False
+
              recent t = normalizeTimeDiff (diffClockTimes s t) < gap_minutes
              gap_minutes = TimeDiff 0 0 0 4 0 0 0 -- 4 hours
 
