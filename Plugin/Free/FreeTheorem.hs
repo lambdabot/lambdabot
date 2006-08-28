@@ -51,18 +51,24 @@ extractTypes env (TyCons c ts)
     = let ts12 = map (extractTypes env) ts
       in (TyCons c (map fst ts12), TyCons c (map snd ts12))
 
-freeTheoremStr :: String -> String
-freeTheoremStr s
+freeTheoremStr :: (Monad m) => (String -> m String) -> String -> m String
+freeTheoremStr tf s
     = case parse (do
                     Just (QVarId v) <- getToken
-                    match OpColonColon
-                    t <- parseType
-                    return (v,t)) (lexer s) of
-        ParseSuccess (v,t) [] -> renderStyle defstyle
-                                        (pretty (freeTheorem v t))
-        ParseSuccess _ _      -> "Extra stuff at end of line"
-        ParseError msg        -> msg
+                    (mplus (do match OpColonColon
+                               t <- parseType
+                               return $ Left (v,t))
+                           (return (Right v)))) (lexer s) of
+        ParseSuccess (Left (v,t)) [] -> return (run' v t)
+        ParseSuccess (Right v)    [] -> do tStr <- tf s
+                                           case parse parseType (lexer tStr) of
+                                             ParseSuccess t [] -> return (run' v t)
+                                             ParseSuccess _ _ -> return $ "Extra stuff at end of line in retrieved type " ++ show tStr
+                                             ParseError msg -> return msg
+        ParseSuccess _ _      -> return "Extra stuff at end of line"
+        ParseError msg        -> return msg
     where
+        run' v t = renderStyle defstyle (pretty (freeTheorem v t))
         defstyle = Style {
                         mode = PageMode,
                         lineLength = 78,
