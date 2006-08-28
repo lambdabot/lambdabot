@@ -55,7 +55,7 @@ config = Config {
         port            = 6667,
         verbose         = True,
         textwidth       = 350,
-        proxy           = Just ("www-proxy",3128),
+        proxy           = Nothing, -- Just ("www-proxy",3128),
 
         autojoin        = ["#haskell"
                           ,"#haskell-blah"
