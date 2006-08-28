@@ -128,7 +128,7 @@ instance Binary UserStatus where
                 z <- get bh
                 a <- get bh
                 return (WasPresent x y z a)
-            3 -> do 
+            3 -> do
                 x <- get bh
                 return (NewNick x)
 
@@ -149,17 +149,30 @@ instance Module SeenModule SeenState where
     -- first step towards tracking the maximum number of users
     process _ _ chan "users" rest = do
          (m, seenFM) <- readMS
+         s <- io getClockTime
          let target = if null rest then chan else rest
              now = length $ [ () | (_,Present _ chans) <- M.toList seenFM
                                  , P.pack target `elem` chans ]
 
              n = case M.lookup target m of Nothing -> 1; Just n' -> n'
-         return $ [concat ["Maximum users seen in ", target, ": "
-                          ,show n
-                          ,", currently: ", show now
-                          , printf " (%0.1f%%)" (100 * (fromIntegral now / fromIntegral n) :: Double)
-                          ]
-                 ]
+
+             active = length . map fst . filter isActive . M.toList $ seenFM
+             isActive (_nick,state) = case state of
+                   (Present (Just (ct,_td)) _cs) -> recent ct
+                   _ -> False
+             recent t = normalizeTimeDiff (diffClockTimes s t) < gap_minutes
+             gap_minutes = TimeDiff 0 0 0 4 0 0 0 -- 4 hours
+
+         return $
+           [concat
+              [ "Maximum users seen in ", target, ": "
+              , show n
+              , ", currently: ", show now
+              , printf " (%0.1f%%)" (100 * (fromIntegral now / fromIntegral n) :: Double)
+              , ", active: ", show active
+              , printf " (%0.1f%%)" (100 * (fromIntegral active / fromIntegral n) :: Double)
+              ]
+            ]
 
     process _ msg _ _      rest = do
          (_,seenFM) <- readMS
