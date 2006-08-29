@@ -12,9 +12,9 @@ module Plugin.Djinn (theModule) where
 
 import Plugin
 import System.Directory
-import Char
-import List
-import Maybe
+import Data.Char
+import Data.List
+import Data.Maybe
 
 PLUGIN Djinn
 
@@ -89,7 +89,7 @@ instance Module DjinnModule DjinnEnv where
             (prelude,st) <- readMS
             let names = concat $ intersperse " " $ concatMap extractNames $ prelude ++ st
             return [names]
-          where extractNames = filter (Char.isUpper . head) . List.unfoldr (\x -> case x of _:_ -> Maybe.listToMaybe (lex x); _ -> Nothing)
+          where extractNames = filter (isUpper . head) . unfoldr (\x -> case x of _:_ -> listToMaybe (lex x); _ -> Nothing)
 
         -- Reset the env
         process_ _ "djinn-clr" _ = modifyMS (flip (,) [] . fst) >> return []
