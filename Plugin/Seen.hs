@@ -142,7 +142,7 @@ instance Binary UserStatus where
 
 instance Module SeenModule SeenState where
     moduleHelp _ "seen"  = "seen <user>. Report if a user has been seen by the bot"
-    moduleHelp _ "users" = "users [chan]. Report the maximum number of users seen in a channel"
+    moduleHelp _ "users" = "users [chan]. Report the maximum number of users seen in a channel, and active users in last 4 hours"
     moduleCmds _         = ["users","seen"]
     moduleDefState _     = return (M.empty,M.empty)
 
