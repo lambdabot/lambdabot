@@ -19,6 +19,11 @@ Build with cabal (simple)
     $ ./build
     $ ./lambdabot
 
+Note: If you want lambdabot to be able to evaluate expressions 
+(e.g., "> 1 + 1" evaluates to 2) then you'll need hs-plugins and also 
+before './Setup.hs configure --bindir=`pwd`' you need to copy
+lambdabot.cabal.plugins to lambdabot.cabal.
+
 Or with ghci (fastest turn around). But first you have to build with
 cabal as above anyway. So this is mostly for development purposes.
     $ vi Config.hs
