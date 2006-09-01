@@ -4,17 +4,19 @@
 module Plugin.Url (theModule) where
 
 import Plugin
+import Network.URI
 
 PLUGIN Url
 
 instance Module UrlModule Bool where
     moduleHelp  _ "url-title"     = "url-title <url>. Fetch the page title."
-    moduleCmds  _                 = ["url-title"]
+    moduleCmds  _                 = ["url-title", "tiny-url"]
     modulePrivs _                 = ["url-on", "url-off"]
     moduleDefState _              = return True -- url on
     moduleSerialize _             = Just stdSerial
 
     process_    _ "url-title" url = lift $ fetchTitle url
+    process_    _ "tiny-url"  url = lift $ fetchTiny  url
     process_    _ "url-on"    _   = writeMS True  >> return ["Url enabled"]
     process_    _ "url-off"   _   = writeMS False >> return ["Url disabled"]
 
@@ -23,8 +25,13 @@ instance Module UrlModule Bool where
       if alive && (not $ areSubstringsOf ignoredStrings text)
         then case containsUrl text of
                Nothing  -> return []
-               Just url -> lift $ fetchTitle url
+               Just url -> if length url > 45 -- is 45 too arbitrary?
+                             then do title <- lift $ fetchTitle url
+                                     tiny  <- lift $ fetchTiny url
+                                     return $ zipWith cat title tiny
+                             else return []
         else return []
+      where cat x y = x ++ ", " ++ y
 
 ------------------------------------------------------------------------
 
@@ -33,6 +40,28 @@ fetchTitle :: String -> LB [String]
 fetchTitle url = do
     title <- io $ urlPageTitle url (proxy config)
     return $ maybe [] return title
+
+-- | base url for fetching tiny urls
+tinyurl :: String
+tinyurl = "http://tinyurl.com/api-create.php?url="
+
+-- | Fetch the title of the specified URL.
+fetchTiny :: String -> LB [String]
+fetchTiny url 
+    | Just uri <- parseURI (tinyurl ++ url) = do
+        tiny <- io $ getHtmlPage uri (proxy config)
+        return $ maybe [] return $ isTiny $ foldl' cat "" tiny
+    | otherwise = return $ maybe [] return $ Just url
+    where cat x y = x ++ " " ++ y
+
+-- | Tries to find the start of a tinyurl
+isTiny :: String -> Maybe String
+isTiny text = do 
+  (_,kind,rest,_) <- matchRegexAll begreg text
+  let url = takeWhile (/=' ') rest
+  return $ stripSuffixes ignoredUrlSuffixes $ kind ++ url
+  where
+  begreg = mkRegexWithOpts "http://tinyurl.com/" True False
 
 -- | List of strings that, if present in a contextual message, will
 -- prevent the looking up of titles.  This list can be used to stop 
