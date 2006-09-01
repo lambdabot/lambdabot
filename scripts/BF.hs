@@ -23,6 +23,7 @@ import Data.Array hiding (array, bounds)
 import Data.Array.Base (unsafeRead, unsafeWrite, array)
 import Data.Word ( Word8(..) )
 import Data.Char ( ord, chr )
+import Data.List ( find, findIndex, groupBy )
 import Foreign ( unsafePerformIO )
 import Monad ( when )
 import System.Posix.Resource
@@ -35,6 +36,7 @@ run = do
   prog <- getContents
   c <- core
   let cmds = loadProgram prog
+  when debug $ print cmds
   execute cmds (snd (bounds cmds)) (BF c 0 0)
 
 {- | The complete BF language:
@@ -51,13 +53,16 @@ run = do
 -}
 
 data Command = IncPtr
+             | IncPtrBy !Int  -- ^ Increment pointer by set amount
              | DecPtr
              | IncByte
+             | IncByteBy !Int -- ^ Increment by a set amount
              | DecByte
              | OutputByte
              | InputByte
              | JmpForward
              | JmpBackward 
+             | SetIpTo !Int   -- ^ Sets the instruction ptr to a specific value
              | Halt
              | Ignored
              deriving (Show, Eq)
@@ -88,7 +93,7 @@ decode ']' = JmpBackward
 decode '@' = Halt
 decode _   = Ignored
 
-debug = False
+debug = False 
 
 incIP :: InstPtr -> InstPtr
 incIP ip = ip + 1
@@ -113,12 +118,18 @@ doCommand cmds bf@(BF _ _ ip) = doCommand' (cmds ! ip) cmds bf
   doCommand' DecPtr _ bf@(BF c cp ip) = {-# SCC "DecPtr" #-} do
     when debug $ putStrLn $ "DecPtr " ++ show bf
     return (BF c (decCP cp) (incIP ip))
+  doCommand' (IncPtrBy n) _ bf@(BF c cp ip) = {-# SCC "IncPtrBy" #-} do
+    when debug $ putStrLn $ "IncPtrBy " ++ show n ++ " " ++ show bf
+    return (BF c ((cp + n) `mod` coreSize) (incIP ip))
   doCommand' IncByte _ bf = {-# SCC "IncByte" #-} do
     when debug $ putStrLn $ "IncByte " ++ show bf
     updateByte bf (+1)
   doCommand' DecByte _ bf = {-# SCC "DecByte" #-} do
     when debug $ putStrLn $ "DecByte " ++ show bf
     updateByte bf (subtract 1)
+  doCommand' (IncByteBy n) _ bf = {-# SCC "IncByteBy" #-} do
+    when debug $ putStrLn $ "IncByteBy " ++ show n ++ " " ++ show bf
+    updateByte bf (+ fromIntegral n)
   doCommand' OutputByte _ bf@(BF c cp ip) = {-# SCC "OutputByte" #-} do 
     when debug $ putStrLn $ "OutputByte " ++ show bf
     c' <- unsafeRead c cp
@@ -153,6 +164,17 @@ doCommand cmds bf@(BF _ _ ip) = doCommand' (cmds ! ip) cmds bf
               return (BF c cp (incIP ip))
     where
     newInstPtr = nextJmp cmds ip (subtract 1) JmpForward
+  doCommand' (SetIpTo i) _ bf@(BF c cp ip) = {-# SCC "SetIPTo" #-} do
+    c' <- unsafeRead c cp
+    when debug $ putStrLn $ "SetIpTo " ++ show i ++ " " 
+                          ++ show bf ++ " @" ++ show c'
+    if i > 0
+      then if (c' == 0)
+             then return $ BF c cp i
+             else return $ BF c cp (incIP ip)
+      else if (c' /= 0)
+             then return $ BF c cp (-i)
+             else return $ BF c cp (incIP ip)
 
 nextJmp :: Array Int Command 
         -> InstPtr 
@@ -175,11 +197,74 @@ updateByte (BF c cp ip) f = do
 loadProgram :: String -> Array Int Command
 loadProgram []   = array (0, 0) [(0, Halt)]
 -- adding a halt on to the end fixes a bug when called from an irc session
-loadProgram prog = array (0, n) $ zip [0..n] (cs++[Halt]) 
+loadProgram prog = optimize (cs++[Halt])
   where
   cs = map decode prog
   n  = length cs
 
+optimize :: [Command] -> Array Int Command
+optimize cmds = listArray (0, (length reduced)-1) reduced
+  where
+  reduced = phase3 . phase2 . phase1 $ cmds
+  -- phase1 removes ignored things
+  phase1 :: [Command] -> [Command]
+  phase1 = filter (/=Ignored) 
+  -- in phase2 group inc/dec into special instructions
+  phase2 :: [Command] -> [Command]
+  phase2 cs = concat $ map reduce $ groupBy (==) cs
+    where 
+    reduce :: [Command] -> [Command]
+    reduce cs
+      | all (==IncPtr)  cs = [IncPtrBy  (length cs)]
+      | all (==DecPtr)  cs = [IncPtrBy  (-(length cs))]
+      | all (==IncByte) cs = [IncByteBy (length cs)]
+      | all (==DecByte) cs = [IncByteBy (-(length cs))]
+      | otherwise          = cs
+  -- now we can turn jumps into changes of the ip
+  phase3 :: [Command] -> [Command]
+  phase3 = map fst . fixJmpBs . fixJmpFs . flip zip [0..]
+    where
+    rfind :: (a -> Bool) -> [a] -> Maybe a
+    rfind p xs = find p (reverse xs)
+
+    rfindIndex :: (a -> Bool) -> [a] -> Maybe Int
+    rfindIndex p xs = case findIndex p (reverse xs) of
+      Nothing -> Nothing
+      Just n  -> Just $ length xs - n
+
+    fixJmpFs :: [(Command, Int)] -> [(Command, Int)]
+    fixJmpFs cs = case findIndex isJmpF cs of
+      Just n -> 
+        case find isJmpB (drop (n+1) cs) of
+          Just (_, i) -> (take n cs)
+                         ++[(SetIpTo (i + 1), snd (cs !! n))]
+                         ++fixJmpFs (drop (n+1) cs)
+          Nothing -> cs
+      Nothing -> cs
+
+    fixJmpBs :: [(Command, Int)] -> [(Command, Int)]
+    fixJmpBs cs = case rfindIndex isJmpB cs of
+      Just n -> 
+        case rfind isJmpF (take (n-1) cs) of
+          Just (_, i) -> (fixJmpBs (take (n-1) cs))
+                         ++[(SetIpTo (-i), snd (cs !! n))]
+                         ++(drop n cs)
+          Nothing -> cs
+      Nothing -> cs
+
+    isJmpF :: (Command, Int) -> Bool
+    isJmpF (JmpForward, _) = True
+    isJmpF (SetIpTo n, i) | n > i = True
+                          | otherwise = False
+    isJmpF _ = False
+
+    isJmpB :: (Command, Int) -> Bool
+    isJmpB (JmpBackward, _) = True
+    isJmpB (SetIpTo n, i) | n < i = True
+                          | otherwise = False
+    isJmpB _ = False
+
+  
 execute :: Array Int Command -> Int -> BF -> IO ()
 -- execute [] _ _ = halt -- FIXME: is this still needed?
 execute cmds n bf@(BF c cp ip) = do
@@ -278,6 +363,12 @@ toupper =
 
 {-
 ++++[>++++++++<-]>[.+]
+
+[(0, IncByte 4), (1, SetIpTo 7), (2,IncPtrBy 1),
+ (3, IncByte 8), (4, IncPtrBy (-1)), (5, IncByteBy (-1)),
+ (6, SetIpTo 1), (7, IncPtrBy 1), (8, SetIpTo 12), (9, Out),
+ (10, IncByteBy 1), (11, SetIpTo 8), (12, Halt)
+]
 
 0 32
 
