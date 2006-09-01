@@ -22,6 +22,8 @@ buddha
 http://www.cs.mu.oz.au/~bjpop/buddha/
 bytestring
 http://www.cse.unsw.edu.au/~dons/fps.html
+bytestringparser
+http://hackage.haskell.org/~paolo/darcs/ByteStringParser
 c--
 www.cminusminus.org
 c2hs
@@ -64,12 +66,16 @@ darcsdeps
 http://wiki.darcs.net/index.html/DarcsDeps
 darcsweb
 http://users.auriga.wearlab.de/~alb/darcsweb/
+debian-haskell
+http://urchin.earth.li/mailman/listinfo/debian-haskell
 diet
 http://web.engr.oregonstate.edu/~erwig/diet/
 djinn
 darcs get http://darcs.augustsson.net/Darcs/Djinn
 dons
 http://www.cse.unsw.edu.au/~dons
+dph
+http://www.cse.unsw.edu.au/~chak/project/dph
 drhaskell
 http://www.cs.york.ac.uk/fp/darcs/drhaskell/
 drift
@@ -98,6 +104,8 @@ fptools
 http://www.haskell.org/ghc/docs/latest/html/building/sec-cvs.html
 frag
 http://www.haskell.org/haskellwiki/Frag
+free
+http://andrew.bromage.org/darcs/freetheorems
 gadt
 http://www.haskell.org/ghc/docs/latest/html/users_guide/gadt.html
 gf
@@ -308,6 +316,8 @@ monads
 http://www.nomaware.com/monads/html/index.html
 morrow
 http://www.cs.uu.nl/~daan/morrow/
+ndp
+http://www.cse.unsw.edu.au/~chak/project/dph
 network-alt
 http://www.cs.helsinki.fi/u/ekarttun/network-alt/
 newbinary
@@ -330,10 +340,14 @@ paste
 http://paste.lisp.org/new/haskell
 pastebin
 http://rafb.net/paste
+pfpl
+http://www.cs.cmu.edu/~rwh/plbook/book.pdf
 phrac
 http://www.cse.unsw.edu.au/~pls/repos/phrac/
 pivotal
 http://www.cs.kent.ac.uk/projects/pivotal
+plai
+http://www.cs.brown.edu/~sk/Publications/Books/ProgLangs/
 planet-haskell
 http://antti-juhani.kaijanaho.fi/planet-haskell/
 planethaskell
@@ -368,12 +382,14 @@ shaskell
 http://davidmercer.nfshost.com/projects/shaskell/shaskell.html
 shellac
 darcs get http://www.eecs.tufts.edu/~rdocki01/shell/
+shootout
+http://shootout.alioth.debian.org/
 soc
 http://hackage.haskell.org/trac/summer-of-code/
 soe
 http://haskell.org/soe/
 soegtk
-http://haskell.org/~duncan/soe/
+http://haskell.org/~duncan/soegtk/
 stats
 http://www.cse.unsw.edu.au/~dons/irc/
 stdlib
@@ -384,6 +400,8 @@ stm
 http://research.microsoft.com/Users/simonpj/papers/stm/
 style
 http://haskell.org/haskellwiki/Programming_guidelines
+system.filepath
+http://www.cs.york.ac.uk/fp/darcs/filepath
 textregexlazy
 http://sourceforge.net/projects/lazy-regex
 tmr

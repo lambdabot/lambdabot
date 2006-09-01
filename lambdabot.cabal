@@ -13,7 +13,7 @@ License:             GPL
 License-file:        LICENSE
 Author:              Don Stewart
 Maintainer:          dons@cse.unsw.edu.au
-Build-Depends:       base, unix, network, parsec, mtl, haskell-src, readline, fps>=0.7
+Build-Depends:       base, unix, network, parsec, mtl, haskell-src, readline, fps>=0.7, haskell98
 
 --
 -- first build the preprocessor
@@ -30,7 +30,7 @@ Executable:          lambdabot
 Main-is:             Main.hs
 extensions:          CPP
 other-modules:       Lib.Regex
-ghc-options:         -Wall -Werror -fglasgow-exts -pgmF dist/build/BotPP/BotPP -F -H64m -O -funbox-strict-fields -fasm -fno-warn-incomplete-patterns -fno-warn-missing-methods -fno-warn-orphans -I. -threaded
+ghc-options:         -Wall -fglasgow-exts -pgmF dist/build/BotPP/BotPP -F -H64m -O -funbox-strict-fields -fasm -fno-warn-incomplete-patterns -fno-warn-missing-methods -fno-warn-orphans -I. -threaded
 
 -- For a fast lambdabot
 -- ghc-options:         -Wall -Werror -fglasgow-exts -pgmF dist/build/BotPP/BotPP -F -funbox-strict-fields -O -fasm -fno-warn-incomplete-patterns -fno-warn-missing-methods -fno-warn-orphans -I. -optl-Wl,-s -threaded

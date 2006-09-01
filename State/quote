@@ -27,6 +27,9 @@ Sometimes I wonder if Java will be indirectly responsible for hastening the adop
 DanPiponi
 Writing introductions to monads seems to have developed into an industry
 
+DanaXu
+Program errors are common in software systems, including those that are constructed from advanced programming languages, such as Haskell
+
 DennisHeuer
 What is that???? Your strategy shows that you just don't care.
 Are you fully nerd????
@@ -72,6 +75,8 @@ Klauso
 haha, this bot seems to have many features
 
 Korollary
+Isn't wikipedia the ultimate human knowledge trashcan?
+Google employees suck. [some time later] I bet my search history has been made public right now
 [On Perelman going AWOL before the Fields Medal award] I can have it if he doesnt want it. Chicks dig Fields Medals
 I enjoy being satan at times
 my brain is fried. I cant read any more STM papers
@@ -81,6 +86,9 @@ an olegweek is a complex entity with an imaginary part
 Lemmih
 <shapr> Any idea where we should meet?  *** Lemmih opens Google Earth.
 calling an out-of-scope function isn't as easy as I had hoped
+
+Miod
+[On the vax] How many processors come with a built-in instruction which computes polynomials of degrees up to 31?
 
 Oleg
 The implementation of RSA on type level is left for future work
@@ -99,6 +107,7 @@ Philippa
 hey, if the guy wants a monadectomy that's his choice
 
 Pseudonym
+If Hofstadter had said this, it would have been much funnier.
 What was considered 100 milli-Olegs of type hackery five years ago is standard operating procedure these days
 I think principal types are overrated
 Lazy evalution is really, really trippy.
@@ -112,6 +121,7 @@ or maybe she is the Queen of Sciences and he is the Mack Daddy.
 Computer science is the womanizer, and math is the pure-hearted girl he won't call the next day.
 
 SamB
+GHC is smart
 Because sliced bread gives horribly uninformative error messages?
 C is a good language. If what you want is an assembly language where you can't be sure what anything does
 fworp: next time, load your shirt up in to GHCi *before* having it printed
@@ -162,6 +172,9 @@ Woot. I got larry wall started learning Haskell ;)
 Parrot is fine except every time I build it, it fails
 Well, ever since the monadic revolution of '98 Haskell people have started to do real world apps
 
+beelsebob
+> filter isJuggler #haskell
+
 blackdog
 My variables aren't varying.
 I'm not encouraged by the comment "i don't know haskell, but CL is much better", though. it doesn't suggest careful thought and objectivity...
@@ -187,6 +200,8 @@ dibblego
 I believe that OO is intrinsically defective and digresses from a formal definition of "software"
 
 dons
+I think Pseudonym should submit some more @free patches, instead of breaking poor lambdabot. Why do we always hurt the ones we love?
+I think Pseudonym should submit some more @free patches,
 xerox: what analogy or metaphor did you use? monad-as-garbage-bin? monad-as-refrigerator? monads-as-unicycle?
 lambdabot's finished
  its like you can really see the guy's brain melting
@@ -224,6 +239,8 @@ gFunk
 [the main advantage of functional programs are that they're] incorrect the first 1000 times you try to compile it!
 
 ghc
+You can get a PhD for explaining the True Meaning of this last construct
+Urk! Inventing strangely-kinded void TyCon: [..] (* -> *) -> * -> *
 ld64: INFO    171: Multigot invoked. Gp relative region broken up into 2 separate regions.
 ld64: WARNING 47 : This module contains branch instruction(s) that might degrade performance on an R4000 processor.
 Unable to mmap( MAP_FIXED ) for Jump Islands
@@ -403,6 +420,8 @@ l33t_h4x0r
 maybe if uve had some professor teach u bullshit in uni yea \n i learned on my own.. k.. i dun give a shit bout terms :p i just code
 
 lambdabot
+Done.
+why on the earth whould I slap dons with a wet trout
 Nobody brings small problems into a laundromat.
 tERmIN473d
 lambdabot hasn't said anything memorable
@@ -414,6 +433,7 @@ Of course i'm female
 lambdabot hasn't said anything memorable
 
 lennart
+alonzo is our church
 Even though I'm largely responsible for making CPP available in a Haskell compiler I think it's an abomination.  It should be avoided
 
 lispy
@@ -421,6 +441,9 @@ I just remembered this dream i had the other morning.  I was trying to tell my a
 
 liyang
 We can do pair programming on a punt or something.
+
+madpickle
+Stuff costs more than it used to.
 
 malcolm
 I don't believe you need to invoke the full awesome majesty of Template Haskell
@@ -447,6 +470,7 @@ mwc
 I actually got away with running Haskell through a TeX pretty printer and handing it in as pseudocode
 
 ndm
+outside of haskell i know roughly as many satan worshipers as christians.
 it needs a rewrite to support the wacky features i want to add, at amazing speed
 i once had a boss who complained because some code someone had written crashed, and yet "it clearly says in the company coding guidelines not to write code that crashes"
 its just that yacc is a C tool, so not working well is just part of life
@@ -456,6 +480,7 @@ newbcoder
 newbcoder is the best of them all
 
 newsham
+it would be neat having correct programs
 haskell's like chess.  easy to learn. hard to master.
 
 ozone
@@ -498,6 +523,7 @@ GHC has more flags than the UN
 I've tried to teach people autodidactism, but I've realized they have to learn it for themselves.
 
 sieni
+python, like php, is just training wheels without the bike
 scheme adheres to the TIMTOBFTTWTDI principle instead of TIMTOWTDI
 C provides people with the expressiveness of fortran combined with the portability of assembler
 
@@ -515,11 +541,15 @@ souwh
 spj
 it looks like hopscotch! (referring to a funny notation for lists)
 
+state
+ ?. ++ . read . show . state ?. ++ . read . show . state
+
 stepcut
 how can you possibly implement business logic without knowing about Schonfinkel!?
 I wrote 1 + 1 in php once, and got 11 -- wasn't quite what I was hoping for
 
 syntaxfree
+one could use the euro symbol for left-associative $.
 Many people think the core ideas behind Haskell came from academic luminaries such as Philip Wadler and Simon Peyton-Jones. What actually happened is that during a functional programming conference, some key academics were teleported to the Deep Complex Universe. In the Deep Complex Universe some Gnomes were having Tangling problems. Wadler & friends solved their problems and as a reward the Tangled Gnomes gave them the S
 
 tennin
