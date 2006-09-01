@@ -72,3 +72,10 @@ Main-is:             Unlambda.hs
 Executable:          runplugs
 hs-source-dirs:      scripts/
 Main-is:             RunPlugs.hs
+
+--
+-- BF
+--
+Executable:          bf
+hs-source-dirs:      scripts/
+Main-is:             BF.hs
