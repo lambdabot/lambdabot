@@ -25,20 +25,23 @@ binary = "./bf"
 bf :: String -> IO String
 bf src = do
     (out,err,_) <- popen binary [] (Just src)
-    let o = unlines . take 6 . map (' ':) . lines . cleanit $ out
-        e = unlines . take 6 . map (' ':) . lines . cleanit $ err
+    let o = scrub out
+        e = scrub err
     return $ case () of {_
         | null o && null e -> "Done."
         | null o           -> e
         | otherwise        -> o
     }
+    where 
+    scrub = unlines . take 6 . map (' ':) . filter (not.null) 
+          . map cleanit . lines
 
 --
 -- Clean up output
 --
 cleanit :: String -> String
 cleanit s | Just _         <- terminated `matchRegex`    s = "Terminated\n"
---        | Just _         <- hget       `matchRegex`    s = "Terminated\n"
+          | Just _         <- halted     `matchRegex`    s = ""
           | otherwise      = s
     where terminated = mkRegex "waitForProc"
-
+          halted     = mkRegex "Machine Halted"
