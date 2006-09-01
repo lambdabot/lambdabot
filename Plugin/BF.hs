@@ -41,7 +41,5 @@ bf src = do
 --
 cleanit :: String -> String
 cleanit s | Just _         <- terminated `matchRegex`    s = "Terminated\n"
-          | Just _         <- halted     `matchRegex`    s = ""
-          | otherwise      = s
+          | otherwise      = filter isAscii s
     where terminated = mkRegex "waitForProc"
-          halted     = mkRegex "Machine Halted"
