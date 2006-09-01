@@ -79,3 +79,4 @@ Main-is:             RunPlugs.hs
 Executable:          bf
 hs-source-dirs:      scripts/
 Main-is:             BF.hs
+ghc-options:         -O2
