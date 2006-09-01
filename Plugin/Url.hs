@@ -25,11 +25,12 @@ instance Module UrlModule Bool where
       if alive && (not $ areSubstringsOf ignoredStrings text)
         then case containsUrl text of
                Nothing  -> return []
-               Just url -> if length url > 45 -- is 45 too arbitrary?
-                             then do title <- lift $ fetchTitle url
-                                     tiny  <- lift $ fetchTiny url
-                                     return $ zipWith cat title tiny
-                             else return []
+               Just url 
+                 | length url > 45 -> do
+                     title <- lift $ fetchTitle url
+                     tiny  <- lift $ fetchTiny url
+                     return $ zipWith cat title tiny
+                 | otherwise -> lift $ fetchTitle url
         else return []
       where cat x y = x ++ ", " ++ y
 
@@ -50,13 +51,13 @@ fetchTiny :: String -> LB [String]
 fetchTiny url 
     | Just uri <- parseURI (tinyurl ++ url) = do
         tiny <- io $ getHtmlPage uri (proxy config)
-        return $ maybe [] return $ isTiny $ foldl' cat "" tiny
+        return $ maybe [] return $ findTiny $ foldl' cat "" tiny
     | otherwise = return $ maybe [] return $ Just url
     where cat x y = x ++ " " ++ y
 
 -- | Tries to find the start of a tinyurl
-isTiny :: String -> Maybe String
-isTiny text = do 
+findTiny :: String -> Maybe String
+findTiny text = do 
   (_,kind,rest,_) <- matchRegexAll begreg text
   let url = takeWhile (/=' ') rest
   return $ stripSuffixes ignoredUrlSuffixes $ kind ++ url
