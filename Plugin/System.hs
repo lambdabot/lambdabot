@@ -12,12 +12,23 @@ import Control.Monad.State      (MonadState(get), gets)
 
 PLUGIN System
 
-instance Module SystemModule ClockTime where
+instance Module SystemModule (ClockTime, TimeDiff) where
     moduleCmds   _   = M.keys syscmds
     modulePrivs  _   = M.keys privcmds
     moduleHelp _ s   = fromMaybe defaultHelp (M.lookup s $ syscmds `M.union` privcmds)
-    moduleDefState _ = io getClockTime
     process      _   = doSystem
+    moduleDefState _ = do
+                        t <- io getClockTime
+                        return (t, noTimeDiff)
+    moduleSerialize  = const $ Just stdSerial
+    moduleInit _     = do
+                        (_, d) <- readMS
+                        t      <- liftIO getClockTime
+                        writeMS (t, d)
+    moduleExit _     = do
+                        (initial, d) <- readMS
+                        now          <- liftIO getClockTime
+                        writeMS (initial, max d (diffClockTimes now initial))
 
 ------------------------------------------------------------------------
 
@@ -44,7 +55,7 @@ privcmds = M.fromList [
 defaultHelp :: String
 defaultHelp = "system : irc management"
 
-doSystem :: Message.Message a => a -> String -> [Char] -> [Char] -> ModuleLB ClockTime
+doSystem :: Message.Message a => a -> String -> [Char] -> [Char] -> ModuleLB (ClockTime, TimeDiff)
 doSystem msg target cmd rest = get >>= \s -> case cmd of
 
   "listchans"   -> return [pprKeys (ircChannels s)]
@@ -79,10 +90,11 @@ doSystem msg target cmd rest = get >>= \s -> case cmd of
   "echo" -> return [concat ["echo; msg:", show msg, " rest:", show rest]]
 
   "uptime" -> do
-          loaded <- readMS
-          now    <- io getClockTime
-          let diff = timeDiffPretty $ now `diffClockTimes` loaded
-          return ["uptime: " ++ diff]
+          (loaded, m) <- readMS
+          now         <- io getClockTime
+          let diff = now `diffClockTimes` loaded
+          return ["uptime: " ++ timeDiffPretty diff ++ 
+                  ", longest uptime: " ++ timeDiffPretty (max diff m)]
 
 ------------------------------------------------------------------------
 
