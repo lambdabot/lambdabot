@@ -65,6 +65,7 @@ config = Config {
                           ,"#haskell.es"
                           ,"#haskell_ru"
                           ,"#gentoo-haskell"
+                          ,"#ghc"
                           ,"#darcs"
                           ,"#oasis"
                           ,"#perl6"
