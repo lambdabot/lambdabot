@@ -93,7 +93,7 @@ doSystem msg target cmd rest = get >>= \s -> case cmd of
           (loaded, m) <- readMS
           now         <- io getClockTime
           let diff = now `diffClockTimes` loaded
-          return ["uptime: " ++ timeDiffPretty diff ++ 
+          return ["uptime: "           ++ timeDiffPretty diff ++
                   ", longest uptime: " ++ timeDiffPretty (max diff m)]
 
 ------------------------------------------------------------------------

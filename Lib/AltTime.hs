@@ -51,26 +51,29 @@ addToClockTime td (ClockTime ct) = ClockTime $ T.addToClockTime td ct
 
 -- | Pretty-print a TimeDiff. Both positive and negative Timediffs produce
 --   the same output.
+--
+-- 14d 17h 8m 53s
+--
 timeDiffPretty :: TimeDiff -> String
-timeDiffPretty td = listToStr "and" $ filter (not . null) [
-    prettyP years "year",
-    prettyP (months `mod` 12) "month",
-    prettyP (days `mod` 28) "day",
-    prettyP (hours `mod` 24) "hour",
-    prettyP (mins `mod` 60) "minute",
-    prettyP (secs `mod` 60) "second"]
+timeDiffPretty td = listToStr "" $ filter (not . null) [
+    prettyP years             "y",
+    prettyP (months `mod` 12) "m",
+    prettyP (days   `mod` 28) "d",
+    prettyP (hours  `mod` 24) "h",
+    prettyP (mins   `mod` 60) "m",
+    prettyP (secs   `mod` 60) "s"]
   where
     prettyP i str | i == 0    = ""
-                  | i == 1    = "1 " ++ str
-                  | otherwise = show i ++ " " ++ str ++ "s"
+                  | i == 1    = "1 "   ++ str
+                  | otherwise = show i ++ str
 
     secs = abs $ tdSec td -- This is a hack, but there wasn't an sane output
                           -- for negative TimeDiffs anyway.
-    mins = secs `div` 60
-    hours = mins `div` 60
-    days = hours `div` 24
-    months = days `div` 28
-    years = months `div` 12
+    mins   = secs   `div` 60
+    hours  = mins   `div` 60
+    days   = hours  `div` 24
+    months = days   `div` 28
+    years  = months `div` 12
 
 ------------------------------------------------------------------------
 
