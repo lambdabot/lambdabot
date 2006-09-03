@@ -7,11 +7,11 @@ module Lib.AltTime (
     module System.Time
   ) where
 
-import Lib.Util (listToStr)
 import Lib.Binary
 
 import Control.Arrow (first)
 
+import Data.List
 import System.Time (TimeDiff(..), noTimeDiff)
 import qualified System.Time as T
   (ClockTime(..), getClockTime, diffClockTimes, addToClockTime)
@@ -55,7 +55,7 @@ addToClockTime td (ClockTime ct) = ClockTime $ T.addToClockTime td ct
 -- 14d 17h 8m 53s
 --
 timeDiffPretty :: TimeDiff -> String
-timeDiffPretty td = listToStr "" $ filter (not . null) [
+timeDiffPretty td = concat . intersperse " " $ filter (not . null) [
     prettyP years             "y",
     prettyP (months `mod` 12) "m",
     prettyP (days   `mod` 28) "d",
@@ -63,9 +63,8 @@ timeDiffPretty td = listToStr "" $ filter (not . null) [
     prettyP (mins   `mod` 60) "m",
     prettyP (secs   `mod` 60) "s"]
   where
-    prettyP i str | i == 0    = ""
-                  | i == 1    = "1 "   ++ str
-                  | otherwise = show i ++ str
+    prettyP 0 _ = []
+    prettyP i s = show i ++ s
 
     secs = abs $ tdSec td -- This is a hack, but there wasn't an sane output
                           -- for negative TimeDiffs anyway.
