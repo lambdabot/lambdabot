@@ -80,20 +80,30 @@ freeTheorem name t
     = runIdentity $ do
         (th,_) <- runStateT (freeTheorem' [] v0 v0 t) initState
         let th' = theoremSimplify th
-        return . fst $ runState (rename th') renameState
+        return . fst $ runState (insertRn name name >> rename th') initRnSt
     where
         v0 = EVar name
         initState   = MyState { myVSupply = 1 }
-        renameState = RnSt M.empty 0 0
 
 ------------------------------------------------------------------------
 -- Rename monad, and pretty alpha renamer
 
 data RnSt = RnSt { gamma  :: M.Map Var Var
-                 , unique   :: !Int
-                 , uniquefn :: !Int
+                 , unique   :: [Var]
+                 , uniquelist :: [Var]
+                 , uniquefn :: [Var]
                  }
     deriving Show
+
+initRnSt
+    = RnSt M.empty suggestionsVal suggestionsList suggestionsFun
+    where
+        suggestionsVal = map (:[]) "xyzuvabcstdeilmnorw"
+                            ++ [ 'x' : show i | i <- [1..] ]
+        suggestionsList = map (:"s") "xyzuvabcstdeilmnorw"
+                            ++ [ "xs" ++ show i | i <- [1..] ]
+        suggestionsFun = map (:[]) "fghkpq"
+                            ++ [ 'f' : show i | i <- [1..] ]
 
 type RN a = State RnSt a
 
@@ -101,26 +111,39 @@ type RN a = State RnSt a
 freshName :: RN Var
 freshName = do
     s <- get
-    let i     = unique s
-        fresh | i < 20    = ["xyzuvabcstdeilmnorw" !! i]
-              | otherwise = 'x' : show i
-    put $ s { unique = i + 1 }
-    return fresh
+    let ns    = unique s
+        fresh = head ns
+    put $ s { unique = tail ns }
+    case M.lookup fresh (gamma s) of
+        Nothing -> return fresh
+        _       -> freshName
 
 -- generate a nice function name
 freshFunctionName :: RN Var
 freshFunctionName = do
     s <- get
-    let i     = uniquefn s
-        fresh | i < 6     = ["fghkpq" !! i]
-              | otherwise = 'f' : show (i - 5)
-    put $ s { uniquefn = i + 1 }
-    return fresh
+    let ns    = uniquefn s
+        fresh = head ns
+    put $ s { uniquefn = tail ns }
+    case M.lookup fresh (gamma s) of
+        Nothing -> return fresh
+        _       -> freshFunctionName
+
+-- generate a nice list name
+freshListName :: RN Var
+freshListName = do
+    s <- get
+    let ns    = uniquelist s
+        fresh = head ns
+    put $ s { uniquelist = tail ns }
+    case M.lookup fresh (gamma s) of
+        Nothing -> return fresh
+        _       -> freshListName
 
 -- insert a new association into the heap
 insertRn :: Var -> Var -> RN ()
-insertRn old new = modify $ \s@(RnSt gamma u f) ->
-    let gamma' = M.insert old new gamma in RnSt gamma' u f
+insertRn old new = modify $ \s ->
+    let gamma' = M.insert old new (gamma s) in s { gamma = gamma' }
 
 -- lookup the binding
 lookupRn :: Var -> RN Var
@@ -149,8 +172,9 @@ rename (ThAnd th1 th2) = do
 
 rename (ThForall v ty th) = do
     v' <- case ty of
-                TyArr _ _ -> freshFunctionName
-                _         -> freshName
+                TyArr _ _     -> freshFunctionName
+                TyCons "[]" _ -> freshListName
+                _             -> freshName
     insertRn v v'
     ty' <- rnTy ty
     th' <- rename th
