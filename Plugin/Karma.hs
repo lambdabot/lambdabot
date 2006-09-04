@@ -36,6 +36,24 @@ instance Module KarmaModule KarmaState where
                  _        -> error "KarmaModule: can't happen"
         where sender = Message.nick msg
 
+    contextual   _ msg _ text = do
+        let sender = Message.nick msg
+            candidates = words text >>= match
+        -- XXX trim list to only existing nicks... yes, this is a ploy to give
+        -- xs more karma!
+        fmap concat (mapM (\(delta,nick)
+                           -> changeKarma delta sender nick)
+                          candidates)
+
+      where match s = case reverse s of
+                      "++" -> []
+                      "--" -> []
+                      '+':'+':rest -> [( 1, reverse rest)]
+                      '-':'-':rest -> [(-1, reverse rest)]
+                      _ -> []
+
+
+
 ------------------------------------------------------------------------
 
 getKarma :: String -> KarmaState -> Integer
