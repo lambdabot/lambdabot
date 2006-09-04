@@ -19,6 +19,14 @@ Build with cabal (simple)
     $ ./build
     $ ./lambdabot
 
+If the ./Setup.hs step doesn't seem to like the cabal file, you likely
+need to install an updated version of Cabal:
+    $ cd $place_you_want_to_put_cabal
+    $ darcs get http://darcs.haskell.org/packages/Cabal
+    $ cd Cabal
+    $ runghc -cpp Setup.lhs configure && runghc -cpp Setup.lhs build
+    # runghc -cpp Setup.lhs install
+
 Note: If you want lambdabot to be able to evaluate expressions 
 (e.g., "> 1 + 1" evaluates to 2) then you'll need hs-plugins and also 
 before './Setup.hs configure --bindir=`pwd`' you need to copy
