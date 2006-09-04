@@ -41,6 +41,7 @@ instance Module KarmaModule KarmaState where
             candidates = words text >>= match
         -- XXX trim list to only existing nicks... yes, this is a ploy to give
         -- xs more karma!
+        -- HELP! I can't figure out how to get stuff from the Seen module...
         fmap concat (mapM (\(delta,nick)
                            -> changeKarma delta sender nick)
                           candidates)
