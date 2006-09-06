@@ -13,7 +13,6 @@ type TyName = String
 data Type
     = TyForall TyVar Type
     | TyArr Type Type
-    | TyList Type
     | TyTuple [Type]
     | TyCons TyName [Type]
     | TyVar TyVar
@@ -32,12 +31,12 @@ instance Pretty Type where
         = prettyParen (p > precARROW) (
             prettyP (precARROW+1) t1 <+> text "->" <+> prettyP precARROW t2
         )
-    prettyP _ (TyList t)
-        = lbrack <> prettyP 0 t <> rbrack
     prettyP _ (TyTuple [])
         = parens empty
     prettyP _ (TyTuple (t:ts))
         = parens (prettyP 0 t <> prettyTs 0 (text ",") ts)
+    prettyP _ (TyCons "[]" [t])
+        = lbrack <> prettyP 0 t <> rbrack
     prettyP p (TyCons cons ts)
         = prettyParen (p > precTYAPP) (
             text cons <> prettyTs (precTYAPP+1) empty ts
@@ -142,7 +141,7 @@ parseType'
                             parseTuple [t]
                     Just OpenBracket
                         -> parseType' >>= \t -> match CloseBracket
-                                        >> return (TyList t)
+                                        >> return (TyCons "[]" [t])
                     Just (QVarId v)
                         -> return (TyVar v)
                     _   -> fail "Badly formed type"
@@ -176,10 +175,6 @@ normaliseType t
                 (fvs2,t2') = normaliseType' t2
               in
                 (fvs1++fvs2, TyArr t1' t2')
-        normaliseType' (TyList t)
-            = let
-                (fvs,t') = normaliseType' t
-              in (fvs, TyList t')
         normaliseType' (TyTuple ts)
             = let
                 fvsts = map normaliseType' ts
@@ -192,9 +187,6 @@ normaliseType t
                 fvs = concat (map fst fvsts)
                 ts' = map snd fvsts
               in case c of
-                    "[]"  -> case ts' of
-                        [t] -> (fvs, TyList t)
-                        _ -> error "List type should have one argument"
                     "->" -> case ts' of
                         [t1,t2] -> (fvs, TyArr t1 t2)
                         _ -> error "Arrow type should have 2 arguments"

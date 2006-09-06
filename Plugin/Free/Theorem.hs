@@ -18,20 +18,35 @@ precIMPLIES = 5
 precAND = 3
 
 instance Pretty Theorem where
-    prettyP p (ThForall f t p1)
-        = prettyP p p1
-    prettyP p (ThImplies p1 p2)
-        = prettyParenIndent (p > precIMPLIES) (
-            prettyP (precIMPLIES+1) p1
-            $$ nest (-1) (text "=>")
-            $$ prettyP precIMPLIES p2
-        )
-    prettyP _ (ThEqual e1 e2)
-        = prettyP 0 e1 <+> text "=" <+> prettyP 0 e2
-    prettyP p (ThAnd e1 e2)
-        = prettyParenIndent (p > precAND) (
-            prettyP (precAND+1) e1 $$ text "&&" $$ prettyP precAND e2
-        )
+    prettyP p t = prettyTheorem p False t
+
+
+prettyTheorem :: Int -> Bool -> Theorem -> Doc
+prettyTheorem p fa th@(ThForall v t p1)
+    | fa        = prettyForall p [v] p1
+    | otherwise = prettyP p p1
+prettyTheorem p fa (ThImplies p1 p2)
+    = prettyParenIndent (p > precIMPLIES) (
+        prettyTheorem (precIMPLIES+1) True p1
+        $$ nest (-1) (text "=>")
+        $$ prettyTheorem precIMPLIES fa p2
+    )
+prettyTheorem _ _ (ThEqual e1 e2)
+    = prettyP 0 e1 <+> text "=" <+> prettyP 0 e2
+prettyTheorem p fa (ThAnd e1 e2)
+    = prettyParenIndent (p > precAND) (
+        prettyTheorem (precAND+1) fa e1 $$ text "&&"
+        $$ prettyTheorem precAND fa e2
+    )
+
+prettyForall :: Int -> [Var] -> Theorem -> Doc
+prettyForall p vs (ThForall v t p1)
+    = prettyForall p (v:vs) p1
+prettyForall p vs th
+    = parens (
+        text "forall" <+> hsep [ text v | v <- reverse vs ] <> text "."
+        <+> prettyTheorem 0 True th
+    )
 
 varInTheorem :: Var -> Theorem -> Bool
 varInTheorem v (ThForall v' t p)
@@ -65,8 +80,8 @@ peepholeSimplifyTheorem (ThImplies p1 p2)
 --            -> ThImplies p1' (ThImplies p2' p3')
         (p1',p2')
             -> ThImplies p1' p2'
-peepholeSimplifyTheorem p@(ThEqual _ _)
-    = p
+peepholeSimplifyTheorem (ThEqual e1 e2)
+    = ThEqual (peepholeSimplifyExpr e1) (peepholeSimplifyExpr e2)
 peepholeSimplifyTheorem p@(ThAnd e1 e2)
     = let e1' = peepholeSimplifyTheorem e1
           e2' = peepholeSimplifyTheorem e2
@@ -74,6 +89,14 @@ peepholeSimplifyTheorem p@(ThAnd e1 e2)
     where
         flattenAnd (ThAnd e1 e2) = flattenAnd e1 . flattenAnd e2
         flattenAnd e = (e:)
+
+peepholeSimplifyExpr :: Expr -> Expr
+peepholeSimplifyExpr (EApp (EBuiltin BId) e2)
+    = e2
+peepholeSimplifyExpr (EApp (EBuiltin (BMap _)) (EBuiltin BId))
+    = EBuiltin BId
+peepholeSimplifyExpr e
+    = applySimplifierExpr peepholeSimplifyExpr e
 
 foldEquality :: Theorem -> Theorem
 foldEquality p@(ThForall _ _ _)
@@ -108,20 +131,27 @@ tryCurrying p@(ThForall _ _ _)
     where
         tryCurrying' (ThForall v t p) vts
             = tryCurrying' p ((v,t):vts)
-        tryCurrying' (ThEqual (EApp f1 (EVar v1))
-                              (EApp f2 (EVar v2))) vts
-            | v1 == v2 && v1 `elem` map fst vts
-                && not (varInExpr v1 f1) && not (varInExpr v2 f2)
-                = tryCurrying'' vts (ThEqual f1 f2)
-        tryCurrying' (ThEqual (EApp f1 (EApp g1 (EVar v1)))
-                              (EApp f2 (EApp g2 (EVar v2)))) vts
-            | v1 == v2 && v1 `elem` map fst vts
-                && not (varInExpr v1 f1) && not (varInExpr v1 g1)
-                && not (varInExpr v2 f2) && not (varInExpr v2 g2)
-                = tryCurrying'' vts
-                    (ThEqual (EApp (EApp (EVarOp FR 9 ".") f1) g1)
-                             (EApp (EApp (EVarOp FR 9 ".") f2) g2))
-        tryCurrying' _ _ = Nothing
+        tryCurrying' (ThEqual e1 e2) vts
+            = case (traverseRight ECDot e1, traverseRight ECDot e2) of
+                ((ctx1, EVar v1), (ctx2, EVar v2))
+                    | v1 == v2 && v1 `elem` map fst vts
+                        && not (varInCtx v1 ctx1) && not (varInCtx v2 ctx2)
+                        -> tryCurrying'' vts (ThEqual (untraverse ctx1)
+                                                      (untraverse ctx2))
+                _       -> Nothing
+        tryCurrying' _ _
+            = Nothing
+
+        traverseRight ctx (EApp e1 e2)
+            = traverseRight (ECAppR e1 ctx) e2
+        traverseRight ctx e
+            = (ctx, e)
+
+        untraverse ECDot = EBuiltin BId
+        untraverse (ECAppR e1 ECDot)
+            = e1
+        untraverse (ECAppR e1 ctx)
+            = EApp (EApp (EVarOp FR 9 ".") e1) (untraverse ctx)
 
         tryCurrying'' [] e
             = Just e

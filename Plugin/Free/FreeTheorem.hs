@@ -41,9 +41,6 @@ extractTypes env (TyArr t1 t2)
     = let (t1a,t1b) = extractTypes env t1
           (t2a,t2b) = extractTypes env t2
       in (TyArr t1a t2a, TyArr t1b t2b)
-extractTypes env (TyList t)
-    = let (t1,t2) = extractTypes env t
-      in (TyList t1, TyList t2)
 extractTypes env (TyTuple ts)
     = let ts12 = map (extractTypes env) ts
       in (TyTuple (map fst ts12), TyTuple (map snd ts12))
@@ -181,6 +178,7 @@ rename (ThForall v ty th) = do
     return $ ThForall v' ty' th'
 
 rnExp :: Expr -> RN Expr
+rnExp e@(EBuiltin _) = return e
 rnExp (EVar v)       = EVar       `fmap` lookupRn v
 rnExp (EVarOp f n v) = EVarOp f n `fmap` lookupRn v
 
@@ -220,19 +218,6 @@ freeTheorem' env e1 e2 t'@(TyArr t1 t2)
         p2 <- freeTheorem' env (EApp e1 (EVar mv1)) (EApp e2 (EVar mv2)) t2
         return (ThForall mv1 tmv1 (ThForall mv2 tmv2 (ThImplies p1 p2)))
 
-freeTheorem' env e1 e2 t'@(TyList t)
-    = do
-        f <- makeVar "f"
-        x <- makeVar "x"
-        y <- makeVar "y"
-        let (t1,t2) = extractTypes env t
-        p1 <- freeTheorem' env (EVar x) (EVar y) t
-        let p2 = ThEqual (EApp (EVar f) (EVar x)) (EVar y)
-        let p3 = ThEqual (EApp (EApp (EVar "$map") (EVar f)) e1) e2
-        return (ThForall f (TyArr t1 t2) (
-                ThImplies (ThForall x t1 (ThForall y t2 (ThImplies p1 p2)))
-                            p3))
-
 freeTheorem' env e1 e2 t'@(TyTuple [])
     = do
         return (ThEqual e1 e2)
@@ -241,8 +226,7 @@ freeTheorem' env e1 e2 t'@(TyTuple ts)
     = do
         let len = length ts
         let vcomponents
-                = [ EApp (EVar ("$proj_" ++ show len ++ "_" ++ show i))
-                                | i <- [1..len] ]
+                = [ EApp (EBuiltin (BProj len i)) | i <- [1..len] ]
         ps <- mapM (\(vc,t) -> freeTheorem' env (vc e1) (vc e2) t)
                     (zip vcomponents ts)
         return (foldr1 ThAnd ps)
@@ -264,7 +248,7 @@ freeTheorem' env e1 e2 t'@(TyCons c [t])
         let (t1,t2) = extractTypes env t
         p1 <- freeTheorem' env (EVar x) (EVar y) t
         let p2 = ThEqual (EApp (EVar f) (EVar x)) (EVar y)
-        let p3 = ThEqual (EApp (EApp (EVar ("$map_" ++ c)) (EVar f)) e1) e2
+        let p3 = ThEqual (EApp (EApp (EBuiltin (BMap c)) (EVar f)) e1) e2
         return (ThForall f (TyArr t1 t2) (
                 ThImplies (ThForall x t1 (ThForall y t2 (ThImplies p1 p2)))
                             p3))
