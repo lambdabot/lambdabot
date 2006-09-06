@@ -29,7 +29,8 @@ exprSubst v e e'@(EVar v')
     | v == v'   = e
     | otherwise = e'
 exprSubst v e e'@(EVarOp _ _ v')
-    = e'
+    | v == v'   = e
+    | otherwise = e'
 exprSubst v e (EApp e1 e2)
     = EApp (exprSubst v e e1) (exprSubst v e e2)
 exprSubst v e (ETyApp e1 t)

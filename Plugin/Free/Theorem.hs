@@ -69,34 +69,33 @@ applySimplifierTheorem s p@(ThAnd p1 p2)
     = ThAnd (s p1) (s p2)
 
 peepholeSimplifyTheorem :: Theorem -> Theorem
-peepholeSimplifyTheorem (ThForall v t p)
-    = let p' = peepholeSimplifyTheorem p
-      in case varInTheorem v p' of
-            True  -> ThForall v t p'
-            False -> p'
-peepholeSimplifyTheorem (ThImplies p1 p2)
-    = case (peepholeSimplifyTheorem p1,peepholeSimplifyTheorem p2) of
---        (ThAnd p1' p2',p3')
---            -> ThImplies p1' (ThImplies p2' p3')
-        (p1',p2')
-            -> ThImplies p1' p2'
-peepholeSimplifyTheorem (ThEqual e1 e2)
-    = ThEqual (peepholeSimplifyExpr e1) (peepholeSimplifyExpr e2)
-peepholeSimplifyTheorem p@(ThAnd e1 e2)
-    = let e1' = peepholeSimplifyTheorem e1
-          e2' = peepholeSimplifyTheorem e2
-      in foldr1 ThAnd (flattenAnd e1' . flattenAnd e2' $ [])
+peepholeSimplifyTheorem
+    = peepholeSimplifyTheorem' . applySimplifierTheorem peepholeSimplifyTheorem
+
+peepholeSimplifyTheorem' :: Theorem -> Theorem
+peepholeSimplifyTheorem' (ThForall v t p)
+    = case varInTheorem v p of
+            True  -> ThForall v t p
+            False -> p
+peepholeSimplifyTheorem' p@(ThAnd e1 e2)
+    = foldr1 ThAnd (flattenAnd e1 . flattenAnd e2 $ [])
     where
         flattenAnd (ThAnd e1 e2) = flattenAnd e1 . flattenAnd e2
         flattenAnd e = (e:)
+peepholeSimplifyTheorem' p
+    = p
 
 peepholeSimplifyExpr :: Expr -> Expr
-peepholeSimplifyExpr (EApp (EBuiltin BId) e2)
+peepholeSimplifyExpr
+    = peepholeSimplifyExpr' . applySimplifierExpr peepholeSimplifyExpr
+
+peepholeSimplifyExpr' :: Expr -> Expr
+peepholeSimplifyExpr' (EApp (EBuiltin BId) e2)
     = e2
-peepholeSimplifyExpr (EApp (EBuiltin (BMap _)) (EBuiltin BId))
+peepholeSimplifyExpr' (EApp (EBuiltin (BMap _)) (EBuiltin BId))
     = EBuiltin BId
-peepholeSimplifyExpr e
-    = applySimplifierExpr peepholeSimplifyExpr e
+peepholeSimplifyExpr' e
+    = e
 
 foldEquality :: Theorem -> Theorem
 foldEquality p@(ThForall _ _ _)
@@ -151,8 +150,7 @@ tryCurrying p@(ThForall _ _ _)
         untraverse (ECAppR e1 ECDot)
             = e1
         untraverse (ECAppR e1 ctx)
-            = EApp (EApp (EVarOp FR 9 ".") e1) (untraverse ctx)
-
+            = EApp (EApp (EVarOp FR 9 ".") (untraverse ctx)) e1
         tryCurrying'' [] e
             = Just e
         tryCurrying'' ((v,t):vts) e
