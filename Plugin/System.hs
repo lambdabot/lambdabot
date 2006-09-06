@@ -17,18 +17,14 @@ instance Module SystemModule (ClockTime, TimeDiff) where
     modulePrivs  _   = M.keys privcmds
     moduleHelp _ s   = fromMaybe defaultHelp (M.lookup s $ syscmds `M.union` privcmds)
     process      _   = doSystem
-    moduleDefState _ = do
-                        t <- io getClockTime
-                        return (t, noTimeDiff)
+    moduleDefState _ = flip (,) noTimeDiff `fmap` io getClockTime
     moduleSerialize  = const $ Just stdSerial
-    moduleInit _     = do
-                        (_, d) <- readMS
-                        t      <- liftIO getClockTime
-                        writeMS (t, d)
-    moduleExit _     = do
-                        (initial, d) <- readMS
-                        now          <- liftIO getClockTime
-                        writeMS (initial, max d (diffClockTimes now initial))
+    moduleInit _     = do (_, d) <- readMS
+                          t      <- liftIO getClockTime
+                          writeMS (t, d)
+    moduleExit _     = do (initial, d) <- readMS
+                          now          <- liftIO getClockTime
+                          writeMS (initial, max d (diffClockTimes now initial))
 
 ------------------------------------------------------------------------
 
@@ -48,6 +44,7 @@ privcmds = M.fromList [
        ,("part",        "part <channel>")
        ,("msg",         "msg <nick or channel> <msg>")
        ,("quit",        "quit [msg], have the bot exit with msg")
+       ,("listall",     "list all commands")
        ,("reconnect",   "reconnect to server")]
 
 ------------------------------------------------------------------------
@@ -56,16 +53,13 @@ defaultHelp :: String
 defaultHelp = "system : irc management"
 
 doSystem :: Message.Message a => a -> String -> [Char] -> [Char] -> ModuleLB (ClockTime, TimeDiff)
-doSystem msg target cmd rest = get >>= \s -> case cmd of
-
+doSystem msg _ cmd rest = get >>= \s -> case cmd of
   "listchans"   -> return [pprKeys (ircChannels s)]
   "listmodules" -> return [pprKeys (ircModules s) ]
-  "list" 
-        | null rest -> case target of
-              ('#':_) -> return ["list [module|command]. " ++ 
-                                 "Where modules is one of:\n" ++
-                                 pprKeys (ircModules s)]
-              _       -> lift $ listAll
+  "listall"     -> lift listAll
+  "list"| null rest -> return ["list [module|command]. " ++
+                               "Where modules is one of:\n" ++
+                                pprKeys (ircModules s)]
         | otherwise -> lift $ listModule rest >>= return . (:[])
 
   ------------------------------------------------------------------------
