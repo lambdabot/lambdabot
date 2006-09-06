@@ -36,8 +36,9 @@ instance Module KarmaModule KarmaState where
                  _        -> error "KarmaModule: can't happen"
         where sender = Message.nick msg
 
+    -- ^nick++($| .*)
     contextual   _ msg _ text = do
-        let sender = Message.nick msg
+        let sender     = Message.nick msg
             candidates = words text >>= match
         -- XXX trim list to only existing nicks... yes, this is a ploy to give
         -- xs more karma!
