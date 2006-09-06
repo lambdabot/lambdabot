@@ -39,20 +39,15 @@ instance Module KarmaModule KarmaState where
     -- ^nick++($| .*)
     contextual   _ msg _ text = do
         let sender     = Message.nick msg
-            candidates = words text >>= match
-        -- XXX trim list to only existing nicks... yes, this is a ploy to give
-        -- xs more karma!
-        -- HELP! I can't figure out how to get stuff from the Seen module...
-        fmap concat (mapM (\(delta,nick)
-                           -> changeKarma delta sender nick)
-                          candidates)
+        case match text of
+         Nothing -> return []
+         Just (nick, op) -> do
+             -- XXX ensure that this is actually a nick
+             changeKarma (if op == "++" then 1 else -1) sender nick
 
-      where match s = case reverse s of
-                      "++" -> []
-                      "--" -> []
-                      '+':'+':rest -> [( 1, reverse rest)]
-                      '-':'-':rest -> [(-1, reverse rest)]
-                      _ -> []
+      where regex = mkRegex "^(\\w+)(\\+\\+|--)($| )"
+            match s = do (_, _, _, [nick, op, _]) <- matchRegexAll regex s
+                         return (nick, op)
 
 
 
