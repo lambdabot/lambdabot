@@ -278,10 +278,11 @@ mainLoop mode loop = do
                        (case e of
                             IRCRaised ex   -> "Exception: " ++ show ex
                             SignalCaught s -> "Signal: " ++ ircSignalMessage s)
-            withDebug "Running exit handlers"    runExitHandlers
-            withDebug "Writing persistent state" flushModuleState
-            io $ do hPutStrLn stderr "Exiting ... "
-                    exitImmediately (ExitFailure 1))
+        --  withDebug "Running exit handlers"    runExitHandlers
+        --  withDebug "Writing persistent state" flushModuleState
+            runExitHandlers >> flushModuleState
+            io $ -- do hPutStrLn stderr "Exiting ... "
+                 do exitImmediately (ExitFailure 1))
       --    throwError e)
 
 -- | run 'exit' handler on modules
