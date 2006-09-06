@@ -33,7 +33,7 @@ syscmds = M.fromList
        [("listchans",   "Show channels bot has joined")
        ,("listmodules", "listmodules. Show available plugins")
        ,("list",        "list [module|command]\n"++
-                        "show all commands or command for [module]")
+                        "show all commands or command for [module]. http://www.cse.unsw.edu.au/~dons/lambdabot/COMMANDS")
        ,("echo",        "echo <msg>. echo irc protocol string")
        ,("uptime",      "uptime. Show uptime")]
 
