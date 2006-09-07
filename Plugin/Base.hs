@@ -250,14 +250,15 @@ doPRIVMSG' myname msg
     --
     doContextualMsg r = lift $ do
         x <- io $ newIORef []       -- track if any output was made, for offline mode
-        withAllModules $ \m -> do
-            act <- bindModule0 $ do
+        withAllModules ( \m -> do
+            act <- bindModule0 ( do
                             ms <- contextual m msg alltargets r
                             io $ modifyIORef x (null ms :)
-                            lift $ mapM_ (ircPrivmsg alltargets . Just) ms
+                            lift $ mapM_ (ircPrivmsg alltargets . Just) ms )
             name' <- getName
             lift $ catchIrc act (debugStrLn . (name' ++) .
                 (" module failed in contextual handler: " ++) . show)
+            )
         rs <- io $ readIORef x
         when (all id rs) $ ircPrivmsg alltargets Nothing
 
