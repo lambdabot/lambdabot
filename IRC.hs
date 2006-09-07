@@ -273,6 +273,7 @@ offlineReaderLoop th chanr _chanw _h syncR syncW = handleIO th readerLoop'
                 let mmsg = case s' of
                             "quit" -> Nothing
                             '>':xs -> Just $ "@run " ++ xs
+                            '!':xs -> Just $ xs     -- trigger contextual stuff
                             _      -> Just $ "@"     ++ dropWhile (== ' ') s'
 
                 msg <- case mmsg of

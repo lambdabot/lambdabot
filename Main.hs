@@ -47,7 +47,7 @@ onlineMain :: LB ()
 onlineMain = serverSignOn (protocol config) (name config) (userinfo config) >> mainloop
 
 offlineMain :: LB ()
-offlineMain = do 
+offlineMain = do
   modify (\st -> let privUsers  = ircPrivilegedUsers st
                      privUsers' = M.insert "null" True privUsers
                  in st { ircPrivilegedUsers = privUsers' })
