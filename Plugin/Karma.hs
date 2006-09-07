@@ -36,20 +36,20 @@ instance Module KarmaModule KarmaState where
                  _        -> error "KarmaModule: can't happen"
         where sender = Message.nick msg
 
-    -- ^nick++($| .*)
+    -- ^nick++($| )
     contextual   _ msg _ text = do
         let sender     = Message.nick msg
         case match text of
-         Nothing -> return []
-         Just (nick, op) -> do
-             -- XXX ensure that this is actually a nick
-             changeKarma (if op == "++" then 1 else -1) sender nick
+            Nothing -> return []
+            Just (nick, op) -> changeKarma (fn op) sender nick
 
-      where regex = mkRegex "^(\\w+)(\\+\\+|--)($| )"
+      where regex = mkRegex "^([a-zA-Z0-9_']+)(\\+\\+|--)($| )"
             match s = do (_, _, _, [nick, op, _]) <- matchRegexAll regex s
                          return (nick, op)
 
-
+            fn "++" =  1
+            fn "--" = -1
+            fn _    =  0
 
 ------------------------------------------------------------------------
 
