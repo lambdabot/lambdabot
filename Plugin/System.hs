@@ -57,9 +57,7 @@ doSystem msg _ cmd rest = get >>= \s -> case cmd of
   "listchans"   -> return [pprKeys (ircChannels s)]
   "listmodules" -> return [pprKeys (ircModules s) ]
   "listall"     -> lift listAll
-  "list"| null rest -> return ["list [module|command]. " ++
-                               "Where modules is one of:\n" ++
-                                pprKeys (ircModules s)]
+  "list"| null rest -> return ["http://www.cse.unsw.edu.au/~dons/lambdabot/COMMANDS"]
         | otherwise -> lift $ listModule rest >>= return . (:[])
 
   ------------------------------------------------------------------------
