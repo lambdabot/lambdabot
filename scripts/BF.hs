@@ -19,13 +19,13 @@
 --
 
 import Data.Array.IO
-import Data.Array hiding (array, bounds)
-import Data.Array.Base (unsafeRead, unsafeWrite, array)
-import Data.Word ( Word8(..) )
-import Data.Char ( ord, chr )
-import Data.List ( find, findIndex, groupBy )
-import Foreign ( unsafePerformIO )
-import Monad ( when )
+import Data.Array hiding (array)
+import Data.Array.Base   (unsafeRead, unsafeWrite, array)
+import Data.Word         ( Word8(..) )
+import Data.Char         ( ord, chr )
+import Data.List         ( find, findIndex, groupBy )
+import Foreign           ( unsafePerformIO )
+import Monad             ( when )
 import System.Posix.Resource
 
 rlimit = ResourceLimit 3
@@ -34,21 +34,21 @@ main = setResourceLimit ResourceCPUTime (ResourceLimits rlimit rlimit) >> run
 
 run = do
   prog <- getContents
-  c <- core
+  c    <- core
   let cmds = loadProgram prog
   when debug $ print cmds
   execute cmds (snd (bounds cmds)) (BF c 0 0)
 
 {- | The complete BF language:
 
-* \> 	Increment the pointer.
-* \< 	Decrement the pointer.
-* + 	Increment the byte at the pointer.
-* \- 	Decrement the byte at the pointer.
-* . 	Output the byte at the pointer.
-* , 	Input a byte and store it in the byte at the pointer.
-* [ 	Jump forward past the matching ] if the byte at the pointer is zero.
-* ] 	Jump backward to the matching [ unless the byte at the pointer is zero.
+* \>    Increment the pointer.
+* \<    Decrement the pointer.
+* +     Increment the byte at the pointer.
+* \-    Decrement the byte at the pointer.
+* .     Output the byte at the pointer.
+* ,     Input a byte and store it in the byte at the pointer.
+* [     Jump forward past the matching ] if the byte at the pointer is zero.
+* ]     Jump backward to the matching [ unless the byte at the pointer is zero.
 
 -}
 
@@ -61,7 +61,7 @@ data Command = IncPtr
              | OutputByte
              | InputByte
              | JmpForward
-             | JmpBackward 
+             | JmpBackward
              | SetIpTo !Int   -- ^ Sets the instruction ptr to a specific value
              | Halt
              | Ignored
@@ -71,7 +71,7 @@ type Core = IOUArray Int Word8
 
 type InstPtr = Int
 type CorePtr = Int
-data BF = BF Core CorePtr InstPtr
+data BF = BF !Core !CorePtr !InstPtr
 
 instance Show BF where
     show (BF c cp ip) = "BF <core> CorePtr = " ++ show cp ++ " InstPtr = " ++ show ip
@@ -93,16 +93,19 @@ decode ']' = JmpBackward
 decode '@' = Halt
 decode _   = Ignored
 
-debug = False 
+debug = False
 
 incIP :: InstPtr -> InstPtr
-incIP ip = ip + 1
+incIP = (+ 1)
+{-# INLINE incIP #-}
 
 incCP :: CorePtr -> CorePtr
-incCP cp = (cp + 1) `mod` coreSize
+incCP = (`mod` coreSize) . (1 +)
+{-# inlinE incCP #-}
 
 decCP :: CorePtr -> CorePtr
-decCP cp = (cp - 1) `mod` coreSize
+decCP = (`mod` coreSize) . subtract 1
+{-# INLINE decCP #-}
  
 doCommand :: Array Int Command -> BF -> IO BF
 doCommand cmds bf@(BF _ _ ip) = doCommand' (cmds ! ip) cmds bf
@@ -193,9 +196,11 @@ updateByte (BF c cp ip) f = do
   e  <- unsafeRead c cp
   unsafeWrite c cp (f e)
   return (BF c cp (incIP ip))
+{-# INLINE updateByte #-}
 
 loadProgram :: String -> Array Int Command
-loadProgram []   = array (0, 0) [(0, Halt)]
+loadProgram [] = array (0, 0) [(0, Halt)]
+
 -- adding a halt on to the end fixes a bug when called from an irc session
 loadProgram prog = optimize (cs++[Halt])
   where
