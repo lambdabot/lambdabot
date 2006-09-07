@@ -40,8 +40,10 @@ instance Module KarmaModule KarmaState where
     contextual   _ msg _ text = do
         let sender     = Message.nick msg
         case match text of
-            Nothing -> return []
-            Just (nick, op) -> changeKarma (fn op) sender nick
+            Nothing         -> return []
+            Just ("C",_)    -> return [] -- special case exception
+            Just (nick, op) -> do changeKarma (fn op) sender nick -- silently
+                                  return []
 
       where regex = mkRegex "^([a-zA-Z0-9_']+)(\\+\\+|--)($| )"
             match s = do (_, _, _, [nick, op, _]) <- matchRegexAll regex s
