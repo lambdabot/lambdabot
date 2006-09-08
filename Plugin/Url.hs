@@ -31,10 +31,13 @@ instance Module UrlModule Bool where
                  | length url > 45 -> do
                      title <- lift $ fetchTitle url
                      tiny  <- lift $ fetchTiny url
-                     return $ zipWith cat title tiny
+                     return $ zipWith' cat title tiny
                  | otherwise -> lift $ fetchTitle url
         else return []
       where cat x y = x ++ ", " ++ y
+            zipWith' _ [] ys = ys
+            zipWith' _ xs [] = xs
+            zipWith' f (x:xs) (y:ys) = f x y : zipWith' f xs ys
 
 ------------------------------------------------------------------------
 
