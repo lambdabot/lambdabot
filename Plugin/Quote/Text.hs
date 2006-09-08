@@ -435,7 +435,7 @@ protontorpedo =
     "paul graham said static typing is a problem for macros building",
     "I dont think tcl cn do that",
     "I am banned from like 6 rooms",
-    "scheme, lisp, php, python, perl, tcl, al banned"
+    "scheme, lisp, php, python, perl, tcl, al banned",
     "Im really only a bash person and even then Im tin",
-    "i have a win xp box'
+    "i have a win xp box"
     ]
