@@ -140,7 +140,8 @@ doRPL_TOPIC msg -- nearly the same as doTOPIC but has our nick on the front of b
 
 doPRIVMSG :: IrcMessage -> Base ()
 doPRIVMSG msg = do
-    debugStrLn (show msg)
+    -- work out if we're in offline mode or not.
+--  debugStrLn (show msg)
     doPRIVMSG' (name config) msg
 
 --
