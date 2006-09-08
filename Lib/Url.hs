@@ -76,11 +76,15 @@ rawPageTitle url proxy
 -- a list of strings comprising the server response which includes the
 -- status line, response headers, and body.
 getHtmlPage :: URI -> Proxy -> IO [String]
-getHtmlPage uri proxy = do
+getHtmlPage u p = getHtmlPage' u p 5
+  where
+  getHtmlPage' :: URI -> Proxy -> Int -> IO [String]
+  getHtmlPage' _   _     0 = return []
+  getHtmlPage' uri proxy n = do 
     contents <- getURIContents uri proxy
     case responseStatus contents of
-      301       -> getHtmlPage (redirectedUrl contents) proxy
-      302       -> getHtmlPage (redirectedUrl contents) proxy
+      301       -> getHtmlPage' (redirectedUrl contents) proxy (n-1)
+      302       -> getHtmlPage' (redirectedUrl contents) proxy (n-1)
       200       -> return contents
       _         -> return []
     where
