@@ -292,12 +292,14 @@ notoriousV =
 --  hypothesys octon ava-its-pssa mel-gibson java-or-no proton-gun
 --  protontorpedo deathsstar gavino99 proton-weapon thumper9 star-trekio
 --  differentActGetD howya-doin linux-fun boobhz booger perlIsBetter
+--  ramserver newlambder
 --
 -- n=bo@pool-71-106-182-86.lsanca.dsl-w.verizon.net
 -- n=root@masqrd.la.teampcs.com
 -- n=gschuett@masqrd.la.teampcs.com
 -- n=gschuett@68.183.75.2
 -- n=gschuett@208.201.11.51
+-- n=gschuett@4.38.41.141
 --
 -- Trolled on and off for 10 months
 --
@@ -305,6 +307,8 @@ notoriousV =
 --  05.10.05:16:51:41 --- join: howya-doin (n=gschuett@208.201.11.51) joined #haskell
 -- Last appeared:
 --  06.08.14:11:48 -- mode/#haskell [+b *!*n=bo@*.lsanca.dsl-w.verizon.net] by dons
+--
+-- Reappeared a few weeks later from a new ip address.
 --
 protontorpedo :: [String]
 protontorpedo =
@@ -341,12 +345,16 @@ protontorpedo =
     "is it a form of lisp?",
     "why haskell over lisp?",
     "why haskell over say clsip or smalltalk?",
+    "so why would one prefer haskell to say clisp or smalltalk?",
     "why haskell over say smalltalk",
     "is haskell more powerful than perl? or scheme?",
     "is haskella lisp?",
     "so haskells better than smalltalk and clsip?",
 
 -- more questions
+    "what is so good about continuations/",
+    "is it fun to program in haskell?",
+    "paul graham said static typing and ML types fo lisp hurt exploratory progrmaming",
     "why did someone create haskell?",
     "can u build things fast in haskell?",
     "is functional progrmaming the same as object oriented?",
@@ -412,6 +420,9 @@ protontorpedo =
     "windows is validating itelf a lot during ownloads altely",
     "why haskell over smalltalk? I thought smalltalked rocked",
     "can haskell do data transfer from box to box over sockets?",
+    "is ghc bad for learning?",
+    "does huge or ghc have more stuff?",
+    "is it hard to set up n ready my pc for programming?",
 
 -- statements
     "im such an asshole",
@@ -425,4 +436,6 @@ protontorpedo =
     "I dont think tcl cn do that",
     "I am banned from like 6 rooms",
     "scheme, lisp, php, python, perl, tcl, al banned"
+    "Im really only a bash person and even then Im tin",
+    "i have a win xp box'
     ]
