@@ -15,8 +15,10 @@ instance Module UrlModule Bool where
     moduleDefState _              = return True -- url on
     moduleSerialize _             = Just stdSerial
 
-    process_    _ "url-title" url = lift $ fetchTitle url
-    process_    _ "tiny-url"  url = lift $ fetchTiny  url
+    process_    _ "url-title" txt = lift $ maybe (return ["Url not valid."])
+                                      fetchTitle (containsUrl txt)
+    process_    _ "tiny-url"  txt = lift $ maybe (return ["Url not valid."])
+                                      fetchTiny  (containsUrl txt)
     process_    _ "url-on"    _   = writeMS True  >> return ["Url enabled"]
     process_    _ "url-off"   _   = writeMS False >> return ["Url disabled"]
 
