@@ -88,13 +88,13 @@ ignoredStrings =
 -- current sentence vs part of a URL.  Included here is the NUL
 -- character as well.
 ignoredUrlSuffixes :: [String]
-ignoredUrlSuffixes = [".", ",", ";", ")", "\"", "\1"]
+ignoredUrlSuffixes = [".", ",", ";", ")", "\"", "\1", "\n"]
 
 -- | Searches a string for an embeddded URL and returns it.
 containsUrl :: String -> Maybe String
 containsUrl text = do
     (_,kind,rest,_) <- matchRegexAll begreg text
-    let url = takeWhile (/=' ') rest
+    let url = takeWhile (`notElem` " \n\t\v") rest
     return $ stripSuffixes ignoredUrlSuffixes $ kind ++ url
     where
       begreg = mkRegexWithOpts "https?://"  True False
