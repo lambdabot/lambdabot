@@ -1,4 +1,4 @@
-babel provides: babel
+lambdabot> babel provides: babel
 base has no visible commands
 bf provides: bf
 compose provides: . compose
@@ -12,6 +12,7 @@ eval provides: run
 fact provides: fact fact-set fact-delete fact-cons fact-snoc fact-update
 free provides: free
 fresh provides: freshname
+ft provides: ft
 haddock provides: index
 help provides: help
 hoogle provides: hoogle hoogle+
@@ -41,3 +42,4 @@ url provides: url-title tiny-url
 version provides: version source
 vixen provides: vixen
 where provides: where url what where+
+lambdabot> 
