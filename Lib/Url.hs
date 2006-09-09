@@ -55,12 +55,17 @@ urlPageTitle url proxy = do
       prettyTitle s = urlTitlePrompt ++ limitLength s
       unhtml = replace [("&raquo;", "»"),
                         ("&iexcl;", "¡"),
-                        ("&cent;", "¢"),
-                        ("&copy;", "©"),
+                        ("&cent;",  "¢"),
+                        ("&copy;",  "©"),
                         ("&laquo;", "«"),
-                        ("&deg;", "°"),
-                        ("&sup2;", "²"),
-                        ("&micro;", "µ")] -- partial list of html entity pairs
+                        ("&deg;",   "°"),
+                        ("&sup2;",  "²"),
+                        ("&micro;", "µ"),
+                        ("&quot;",  "\""),
+                        ("&lt;",    "<"),
+                        ("&gt;",    ">"),
+                        ("&amp;",   "&")
+                       ] -- partial list of html entity pairs
 
 -- | Fetches a page title for the specified URL.  This function should
 -- only be used by other plugins if and only if the result is not to
