@@ -2,6 +2,7 @@
 
 set -e
 
+chmod +x Setup.hs
 ./Setup.hs build
 ./Setup.hs install
 ghc -v0 -c -odir . -hidir . scripts/ShowQ.hs
