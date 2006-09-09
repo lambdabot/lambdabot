@@ -28,7 +28,7 @@ ft src = do
         | otherwise        -> o
     }
     where
-    scrub = unlines . take 6 . map (' ':) . filter (not.null)
+    scrub = unlines . map (' ':) . filter (not.null)
           . map cleanit . lines
 
 --
