@@ -13,7 +13,7 @@ License:             GPL
 License-file:        LICENSE
 Author:              Don Stewart
 Maintainer:          dons@cse.unsw.edu.au
-Build-Depends:       base, unix, network, parsec, mtl, haskell-src, readline, fps>=0.7, haskell98
+Build-Depends:       base, unix, network, parsec, mtl, haskell-src, readline, haskell98, regex-compat
 
 --
 -- first build the preprocessor
@@ -30,7 +30,7 @@ Executable:          lambdabot
 Main-is:             Main.hs
 extensions:          CPP
 other-modules:       Lib.Regex
-ghc-options:         -Wall -Werror -fglasgow-exts -pgmF dist/build/BotPP/BotPP -F -H64m -O -funbox-strict-fields -fasm -fno-warn-incomplete-patterns -fno-warn-missing-methods -fno-warn-orphans -I. -threaded 
+ghc-options:         -Wall -Werror -fglasgow-exts -pgmF /usr/obj/cabal/BotPP/BotPP -F -H64m -O -funbox-strict-fields -fasm -fno-warn-incomplete-patterns -fno-warn-missing-methods -fno-warn-orphans -I. -threaded 
 
 -- For a fast lambdabot
 -- ghc-options:         -Wall -Werror -fglasgow-exts -pgmF dist/build/BotPP/BotPP -F -funbox-strict-fields -O -fasm -fno-warn-incomplete-patterns -fno-warn-missing-methods -fno-warn-orphans -I. -optl-Wl,-s -threaded
@@ -53,6 +53,7 @@ ghc-options:         -Wall -Werror -fglasgow-exts -pgmF dist/build/BotPP/BotPP -
 --
 Executable:          hoogle
 hs-source-dirs:      scripts/hoogle/src
+ghc-options:         -O
 Main-is:             CmdLine.hs
 
 --
@@ -60,6 +61,7 @@ Main-is:             CmdLine.hs
 --
 Executable:          djinn
 hs-source-dirs:      scripts/Djinn
+ghc-options:         -O
 Main-is:             Djinn.hs
 
 --
@@ -67,6 +69,7 @@ Main-is:             Djinn.hs
 --
 Executable:          unlambda
 hs-source-dirs:      scripts/
+ghc-options:         -O
 Main-is:             Unlambda.hs
 
 --
@@ -83,3 +86,11 @@ Executable:          bf
 hs-source-dirs:      scripts/
 Main-is:             BF.hs
 ghc-options:         -O2
+
+--
+-- FT
+--
+Executable:          ft
+hs-source-dirs:      scripts/FT
+Main-is:             FTbase.hs
+ghc-options:         -O
