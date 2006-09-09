@@ -25,7 +25,7 @@ import Data.Word         ( Word8(..) )
 import Data.Char         ( ord, chr )
 import Data.List         ( find, findIndex, groupBy )
 import Foreign           ( unsafePerformIO )
-import Monad             ( when )
+import Control.Monad     ( when )
 import System.Posix.Resource
 
 rlimit = ResourceLimit 3
