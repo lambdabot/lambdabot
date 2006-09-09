@@ -1,5 +1,6 @@
 Andrew J. Bromage <ajb@spamcop.net> aka Pseudonym on #haskell
     * the 'bot itself
+    * @free
 
 Shae M. Erisson <shae@ScannedInAvian.com> aka shapr on #haskell
     * FactModule
@@ -30,7 +31,7 @@ Don Stewart <dons@cse.unsw.edu.au> aka dons on #haskell
     * New build system, 6.4 port
     * dynamic module loading with hs-plugins
     * Simplfied module interface
-    * @babel, @plugs, @version, @code, @spell, @djinn, @unlambda, @hylo, @freshname
+    * @babel, @plugs, @version, @code, @spell, @djinn, @unlambda, @hylo, @freshname, @ft
     * Offline mode
     * General hacking
     * Cabalised build system
