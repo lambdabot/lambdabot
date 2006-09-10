@@ -18,6 +18,8 @@ import Data.Word
 import Data.Int
 import System.Random
 
+type T = [Int]
+
 instance (Typeable a, Typeable b) => Show (a -> b) where
     show e = '<' : (show . typeOf) e ++ ">"
 
