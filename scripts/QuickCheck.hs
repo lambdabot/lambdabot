@@ -47,7 +47,7 @@ datas   = map ("Data." ++) [
 
 controls = map ("Control." ++) ["Monad", "Monad.Cont", "Monad.State", "Monad.ST", "Monad.Writer", "Monad.Reader", "Monad.Fix", "Arrow"]
 
-extras   = ["ShowQ"] -- a show instance for (Q a)
+extras   = ["ShowQ","Test.QuickCheck"] -- a show instance for (Q a)
 
 main = do
     setResourceLimit ResourceCPUTime (ResourceLimits rlimit rlimit)

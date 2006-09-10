@@ -35,7 +35,7 @@ check src = do
                 | otherwise        -> " " ++ o
             }
             where munge = unlines
-                        . take 1
+                        . take 2
                         . lines
                         . expandTab
                         . dropWhile (=='\n')
