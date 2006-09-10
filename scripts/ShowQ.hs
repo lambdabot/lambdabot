@@ -19,6 +19,7 @@ import Data.Int
 import System.Random
 
 type T = [Int]
+type I = Int
 
 instance (Typeable a, Typeable b) => Show (a -> b) where
     show e = '<' : (show . typeOf) e ++ ">"
