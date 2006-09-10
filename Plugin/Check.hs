@@ -35,12 +35,15 @@ check src = do
                 | otherwise        -> " " ++ o
             }
             where munge = unlines
-                        . take 2
+                        . f
                         . lines
                         . expandTab
                         . dropWhile (=='\n')
                         . dropNL
                         . clean_
+                  f []   = []
+                  f [x]  = [x]
+                  f (x:y)= [x ++ " " ++ (concat . intersperse ", ") y]
 
 --
 -- Clean up runplugs' output
