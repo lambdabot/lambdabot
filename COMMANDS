@@ -1,6 +1,7 @@
 lambdabot> babel provides: babel
 base has no visible commands
 bf provides: bf
+check provides: check
 compose provides: . compose
 dice provides: dice
 dict provides: dict dict-help all-dicts devils easton elements foldoc gazetteer hitchcock jargon lojban vera web1913 wn world02
