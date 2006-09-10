@@ -15,22 +15,14 @@ PLUGIN Check
 
 instance Module CheckModule () where
     moduleCmds   _     = ["check"]
-    moduleHelp _ _     = "check <expr>\nYou have QuickCheck and 3 seconds. Prove something"
+    moduleHelp _ _     = "check <expr>\nYou have QuickCheck and 3 seconds. Prove something."
     process _ _ to _ s = ios80 to (check s)
 
 binary :: String
 binary = "./quickcheck"
 
-isEval :: String -> Bool
-isEval = ((evalPrefixes config) `arePrefixesWithSpaceOf`)
-
-dropPrefix :: String -> String
-dropPrefix = dropWhile (' ' ==) . drop 2
-
 check :: String -> IO String
 check src = do
-    -- first, verify the source is actually a Haskell 98 expression, to
-    -- avoid code injection bugs.
     case parseExpr (src ++ "\n") of
         ParseFailed _ e -> return $ " " ++ e
         ParseOk     _   -> do
@@ -42,13 +34,19 @@ check src = do
                 | null o           -> " " ++ e
                 | otherwise        -> " " ++ o
             }
-            where munge = expandTab . dropWhile (=='\n') . dropNL . clean_ . take 2048
+            where munge = unlines
+                        . take 1
+                        . lines
+                        . expandTab
+                        . dropWhile (=='\n')
+                        . dropNL
+                        . clean_
 
 --
 -- Clean up runplugs' output
 --
 clean_ :: String -> String
-clean_ s| Just _        <- no_io      `matchRegex`    s = "No IO allowed\n"
+clean_ s | Just _         <- no_io      `matchRegex`    s = "No IO allowed\n"
         | Just _         <- terminated `matchRegex`    s = "Terminated\n"
         | Just _         <- hput       `matchRegex`    s = "Terminated\n"
         | Just _         <- stack_o_f  `matchRegex`    s = "Stack overflow\n"

@@ -26,7 +26,7 @@ import qualified Control.Exception
 
 rlimit = ResourceLimit 3
 
-context = prelude ++ prehier ++ datas ++ qualifieds ++ controls ++ other ++ template ++ extras
+context = prelude ++ prehier ++ datas ++ qualifieds ++ controls ++ other ++ extras
 
 prelude = ["qualified Prelude as P", "Prelude"]
 
@@ -47,6 +47,8 @@ datas   = map ("Data." ++) [
 
 controls = map ("Control." ++) ["Monad", "Monad.Cont", "Monad.State", "Monad.ST", "Monad.Writer", "Monad.Reader", "Monad.Fix", "Arrow"]
 
+extras   = ["ShowQ"] -- a show instance for (Q a)
+
 main = do
     setResourceLimit ResourceCPUTime (ResourceLimits rlimit rlimit)
     s <- getLine
@@ -54,14 +56,14 @@ main = do
         x <- sequence (take 3 (repeat $ getStdRandom (randomR (97,122)) >>= return . chr))
         s <- unsafeEval_ ("let { "++x++
                          " = \n# 1 \"<irc>\"\n"++s++
-                         "\n} in (quickCheck "++x++
-                         ")") context [] [] []
+                         "\n} in (myquickcheck "++x++
+                         ")") (context) [] [] []
         case s of
-            Left  e -> e
-            Right v -> Control.Exception.catch
-                (putStrLn v)
+            Left  e -> mapM_ putStrLn e
+            Right a -> Control.Exception.catch
+                (a >>= putStr . take 512)
                 (\e -> Control.Exception.handle (const $ putStrLn "Exception") $ do
                             e' <- Control.Exception.evaluate e
-                            putStrLn $ "Exception: " ++ take 1024 (show e'))
+                            putStrLn $ "Exception: " ++ take 128 (show e'))
     exitWith ExitSuccess
 
