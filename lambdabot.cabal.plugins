@@ -10,7 +10,7 @@ License:             GPL
 License-file:        LICENSE
 Author:              Don Stewart
 Maintainer:          dons@cse.unsw.edu.au
-Build-Depends:       base, unix, network, parsec, mtl, haskell-src, haskell98, readline, plugins>=1.0, fps>=0.7
+Build-Depends:       base, unix, network, parsec, mtl, haskell-src, haskell98, readline, plugins>=1.0, fps>=0.7, QuickCheck
 
 --
 -- first build the preprocessor
@@ -74,9 +74,9 @@ hs-source-dirs:      scripts/
 Main-is:             RunPlugs.hs
 
 --
--- BF
+-- check
 --
-Executable:          bf
+Executable:          quickcheck
 hs-source-dirs:      scripts/
-Main-is:             BF.hs
-ghc-options:         -O2
+Main-is:             QuickCheck.hs
+
