@@ -32,6 +32,12 @@ instance Arbitrary Word8 where
     arbitrary = choose (minBound, maxBound)
     coarbitrary c = variant (fromIntegral ((fromIntegral c) `rem` 4))
 
+instance Arbitrary Ordering where
+    arbitrary     = elements [LT,EQ,GT]
+    coarbitrary LT = variant 1
+    coarbitrary EQ = variant 2
+    coarbitrary GT = variant 0
+
 instance Arbitrary Int64 where
   arbitrary     = sized $ \n -> choose (-fromIntegral n,fromIntegral n)
   coarbitrary n = variant (fromIntegral (if n >= 0 then 2*n else 2*(-n) + 1))
