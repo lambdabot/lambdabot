@@ -24,7 +24,7 @@ import Test.QuickCheck
 
 import qualified Control.Exception
 
-rlimit = ResourceLimit 3
+rlimit = ResourceLimit 5
 
 context = prelude ++ prehier ++ datas ++ qualifieds ++ controls ++ other ++ extras
 
