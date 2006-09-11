@@ -86,15 +86,7 @@ compile src = do
     -- and compile Local.hs
     -- careful with timeouts here. need a wrapper.
     (o',e',c) <- popen "ghc" ["-O","-v0","-c"
-                             ,"-Wall","-Werror"
-                             ,"-fno-warn-incomplete-patterns"
-                             ,"-fno-warn-missing-signatures"
-                             ,"-fno-warn-overlapping-patterns"
-                             ,"-fno-warn-simple-patterns"
-                             ,"-fno-warn-type-defaults"
-                             ,"-fno-warn-unused-binds"
-                             ,"-fno-warn-unused-imports"
-                             ,"-fno-warn-unused-matches"
+                             ,"-Werror"
                              ,"-odir", "State/"
                              ,"-hidir","State/"
                              ,"L.hs"] Nothing
