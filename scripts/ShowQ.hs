@@ -70,7 +70,7 @@ myquickcheck a = do
 
 tests :: Gen Result -> StdGen -> Int -> Int -> [[String]] -> IO String
 tests gen rnd0 ntest nfail stamps
-  | ntest == 100  = done "OK, passed" ntest stamps
+  | ntest == 500  = done "OK, passed" ntest stamps
   | nfail == 1000 = done "Arguments exhausted after" ntest stamps
   | otherwise = case ok result of
        Nothing    -> tests gen rnd1 ntest (nfail+1) stamps
