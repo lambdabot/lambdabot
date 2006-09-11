@@ -53,7 +53,7 @@ controls = map ("Control." ++) ["Monad", "Monad.Cont", "Monad.State", "Monad.ST"
 -- bit blurry. It depends on what GHC allows.
 --
 template = ["Language.Haskell.TH hiding (runIO,reify)"]
-extras   = ["ShowQ"] -- a show instance for (Q a)
+extras   = ["ShowQ","qualified L"]
 
 main = do
     setResourceLimit ResourceCPUTime (ResourceLimits rlimit rlimit)
