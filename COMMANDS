@@ -9,7 +9,7 @@ djinn provides: djinn djinn-add djinn-del djinn-env djinn-names djinn-clr djinn-
 drhylo provides: hylo
 dummy provides: eval id read show dummy get-shapr faq paste learn map shootout botsnack wiki oldwiki docs libsrc fptools choose
 elite provides: elite
-eval provides: run
+eval provides: run let undefine
 fact provides: fact fact-set fact-delete fact-cons fact-snoc fact-update
 free provides: free
 fresh provides: freshname
