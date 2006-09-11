@@ -34,6 +34,7 @@ import Control.Monad.Reader
 import Control.Monad.Fix
 import Control.Arrow
 import Text.Printf
+import Test.QuickCheck
 import ShowQ
 
 {-# LINE 1 "<local>" #-}
