@@ -68,7 +68,7 @@ define src
    | Nothing           <- isDecl `matchRegex` src  = return "Invalid declaration"
    | (ParseFailed _ e) <- parseExpr (src' ++ "\n") = return $ " " ++ e
    | otherwise                                     = compile (Just src)
-   where isDecl = mkRegex "^[a-z][a-zA-Z_'0-9]* = "
+   where isDecl = mkRegex "^([a-z][a-zA-Z_'0-9]* *)+= *"
          src'   = drop 1 . dropWhile (/= '=') $ src
 
 -- It parses. then add it to a temporary L.hs and typecheck
@@ -81,7 +81,16 @@ compile src = do
 
     -- and compile Local.hs
     -- careful with timeouts here. need a wrapper.
-    (o',e',c) <- popen "ghc" ["-Werror","-O","-v0","-c"
+    (o',e',c) <- popen "ghc" ["-O","-v0","-c"
+                             ,"-Wall","-Werror"
+                             ,"-fno-warn-incomplete-patterns"
+                             ,"-fno-warn-missing-signatures"
+                             ,"-fno-warn-overlapping-patterns"
+                             ,"-fno-warn-simple-patterns"
+                             ,"-fno-warn-type-defaults"
+                             ,"-fno-warn-unused-binds"
+                             ,"-fno-warn-unused-imports"
+                             ,"-fno-warn-unused-matches"
                              ,"-odir", "State/"
                              ,"-hidir","State/"
                              ,"L.hs"] Nothing
