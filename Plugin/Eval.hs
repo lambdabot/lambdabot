@@ -10,7 +10,8 @@ module Plugin.Eval where
 
 import Plugin
 import Lib.Parser
-import qualified Language.Haskell.Parser as L
+import Language.Haskell.Parser
+import Language.Haskell.Syntax hiding (Module)
 import System.Directory
 import System.Exit
 
@@ -61,15 +62,18 @@ plugs src = do
 ------------------------------------------------------------------------
 -- define a new binding
 
--- restrict to value declarations for now
 define :: String -> IO String
-define src
-   | (ParseFailed _ e) <- L.parseModule src        = return $ " " ++ e
-   | Nothing           <- isDecl `matchRegex` src  = return "Invalid declaration"
-   | (ParseFailed _ e) <- parseExpr (src' ++ "\n") = return $ " " ++ e
-   | otherwise                                     = compile (Just src)
-   where isDecl = mkRegex "^([a-z][a-zA-Z_'0-9]* *)+= *"
-         src'   = drop 1 . dropWhile (/= '=') $ src
+define src = case parseModule (src ++ "\n") of -- extra \n so comments are parsed correctly
+    (ParseOk (HsModule _ _ (Just [HsEVar (UnQual (HsIdent "main"))]) [] ds)) 
+        | all okay ds -> compile (Just src)
+    (ParseFailed _ e) -> return $ " " ++ e
+    _                 -> return "Invalid declaration"
+ where
+    okay (HsTypeSig _ _ _)     = True
+    okay (HsFunBind _)         = True
+    okay (HsPatBind _ _ _ _)   = True
+    okay (HsInfixDecl _ _ _ _) = True
+    okay _                     = False
 
 -- It parses. then add it to a temporary L.hs and typecheck
 compile :: Maybe String -> IO String
