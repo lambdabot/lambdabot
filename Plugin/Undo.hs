@@ -83,7 +83,7 @@ redo app@(HsInfixApp l (HsQVarOp (UnQual (HsSymbol op))) r) =
             case r of
                 (HsLambda loc [p] (HsDo stms)) -> HsDo (HsGenerator loc p l : stms)
                 (HsLambda loc [p] s)           -> HsDo [HsGenerator loc p l, HsQualifier s]
-                _                              -> r
+                _                              -> HsDo [HsGenerator undefined HsPWildCard l, HsQualifier r]
         ">>" ->
             case r of
                 (HsDo stms) -> HsDo (HsQualifier l : stms)
