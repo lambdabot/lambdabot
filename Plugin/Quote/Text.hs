@@ -106,6 +106,7 @@ kealList =
     ,"all i know is i have experienced my own death unhappening..."
     ," what have you been smoking? you narrow minded Haskell user?"
     ,"i use an 8088"
+    ,"are there full body recognition files for sorting art?"
     ,"my very first computer was an 80-0840"
     ,"it is very easy to go off topic"
     ,"someone needs to write a boids for haskell that emulates humans going on and off topic"

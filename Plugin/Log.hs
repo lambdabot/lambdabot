@@ -92,13 +92,13 @@ instance Module LogModule LogState where
          now <- io getClockTime
          -- map over the channels this message was directed to, adding to each
          -- of their log files.
-         when (notMe msg) $
-           mapM_ (\c -> withValidLog (doLog c f msg) now c) (Msg.channels msg)
+         mapM_ (\c -> withValidLog (doLog c f msg) now c) (Msg.channels msg)
        Nothing -> return ()
      return []
-     where notMe m = (lowerCaseString $ name config)
-                       /= (lowerCaseString . head $ Msg.channels m)
-                       -- We don't log /msgs to the lambdabot
+     where -- notMe m = (lowerCaseString $ name config)
+           --             /= (lowerCaseString . head $ Msg.channels m)
+           --             -- We don't log /msgs to the lambdabot
+
            doLog chan f m hdl ct = do
              let event = f m ct
              logString hdl (show event)
