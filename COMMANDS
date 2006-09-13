@@ -30,6 +30,7 @@ quote provides: quote remember ghc fortune yow arr yarr keal b52s brain palomer 
 search provides: gwiki google wikipedia gsite
 seen provides: users seen
 slap provides: slap
+small provides: scheck
 spell provides: spell
 state provides: state ++
 system provides: echo list listchans listmodules uptime
