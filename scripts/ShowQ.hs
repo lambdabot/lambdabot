@@ -54,9 +54,12 @@ instance Arbitrary a => Arbitrary (Maybe a) where
 instance (Integral a, Arbitrary a) => Arbitrary (Ratio a) where
   arbitrary    = do a <- arbitrary
                     b <- arbitrary
-                    if b == 0
-                        then arbitrary
-                        else return (a % b)
+                    return $ if b == 0
+                         then if a == 0
+                            then (1 % 1)
+                            else (b % a)
+                         else (a % b)
+
   coarbitrary m = variant (fromIntegral $ if n >= 0 then 2*n else 2*(-n) + 1)
     where n = numerator m
 
