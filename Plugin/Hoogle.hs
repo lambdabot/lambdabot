@@ -39,7 +39,7 @@ hoogleBinary :: FilePath
 hoogleBinary = "./hoogle"
 
 hoogleText :: FilePath
-hoogleText = "./scripts/hoogle/src/hoogle.txt"
+hoogleText = "State/hoogle.txt"
 
 -- arbitrary cutoff point
 cutoff :: Int
