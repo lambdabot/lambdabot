@@ -91,3 +91,12 @@ Executable:          ft
 hs-source-dirs:      scripts/FT
 Main-is:             FTbase.hs
 ghc-options:         -O
+
+--
+-- check
+--
+Executable:          smallcheck
+hs-source-dirs:      scripts/
+ghc-options:         -funbox-strict-fields -O
+Main-is:             RunSmallCheck.hs
+
