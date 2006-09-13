@@ -9,6 +9,7 @@ module ShowQ where
 import Language.Haskell.TH
 import System.IO.Unsafe
 import Data.Dynamic
+import Data.Ratio
 
 import Test.QuickCheck.Batch
 import Test.QuickCheck
@@ -49,6 +50,15 @@ instance Arbitrary a => Arbitrary (Maybe a) where
   arbitrary           = do a <- arbitrary ; elements [Nothing, Just a]
   coarbitrary Nothing = variant 0
   coarbitrary _       = variant 1 -- ok?
+
+instance (Integral a, Arbitrary a) => Arbitrary (Ratio a) where
+  arbitrary    = do a <- arbitrary
+                    b <- arbitrary
+                    if b == 0
+                        then arbitrary
+                        else return (a % b)
+  coarbitrary m = variant (fromIntegral $ if n >= 0 then 2*n else 2*(-n) + 1)
+    where n = numerator m
 
 instance Random Word8 where
   randomR = integralRandomR
