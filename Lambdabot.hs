@@ -446,7 +446,7 @@ readGlobalState mod name
                                         ++ name ++ ": " ++ show e
                         hPutStrLn stderr $ "Try removing: "++show (toFilename name)
                         return Nothing) -- proceed irregardless
-    | otherwise = Nothing
+    | otherwise = return Nothing
 
 -- | helper
 toFilename :: String -> String
