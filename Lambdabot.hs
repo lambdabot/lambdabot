@@ -438,12 +438,15 @@ writeGlobalState mod name = case moduleSerialize mod of
 
 -- | Read it in
 readGlobalState :: Module m s => m -> String -> IO (Maybe s)
-readGlobalState mod name = case moduleSerialize mod of
-    Nothing  -> return Nothing
-    Just ser -> do
+readGlobalState mod name
+    | Just ser <- moduleSerialize mod  = do
         state <- Just `fmap` P.readFile (toFilename name) `catch` \_ -> return Nothing
-        let state' = deserialize ser =<< state -- Monad Maybe
-        return $ maybe Nothing (Just $) state'
+        catch (evaluate $ maybe Nothing (Just $!) (deserialize ser =<< state)) -- Monad Maybe)
+              (\e -> do hPutStrLn stderr $ "Error parsing state file for: "
+                                        ++ name ++ ": " ++ show e
+                        hPutStrLn stderr $ "Try removing: "++show (toFilename name)
+                        return Nothing) -- proceed irregardless
+    | otherwise = Nothing
 
 -- | helper
 toFilename :: String -> String
