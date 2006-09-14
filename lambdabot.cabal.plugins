@@ -50,6 +50,7 @@ ghc-options:         -Wall -Werror -fglasgow-exts -pgmF dist/build/BotPP/BotPP -
 --
 Executable:          hoogle
 hs-source-dirs:      scripts/hoogle/src
+ghc-options:         -funbox-strict-fields -O
 Main-is:             CmdLine.hs
 
 --
@@ -71,6 +72,7 @@ Main-is:             Unlambda.hs
 --
 Executable:          runplugs
 hs-source-dirs:      scripts/
+ghc-options:         -funbox-strict-fields -O
 Main-is:             RunPlugs.hs
 
 --
@@ -78,5 +80,14 @@ Main-is:             RunPlugs.hs
 --
 Executable:          quickcheck
 hs-source-dirs:      scripts/
+ghc-options:         -funbox-strict-fields -O
 Main-is:             QuickCheck.hs
+
+--
+-- check
+--
+Executable:          smallcheck
+hs-source-dirs:      scripts/
+ghc-options:         -funbox-strict-fields -O
+Main-is:             RunSmallCheck.hs
 
