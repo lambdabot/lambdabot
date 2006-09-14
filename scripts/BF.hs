@@ -19,7 +19,7 @@
 --
 
 import Data.Array.IO
-import Data.Array hiding (array)
+import Data.Array hiding (array,bounds)
 import Data.Array.Base   (unsafeRead, unsafeWrite, array)
 import Data.Word         ( Word8(..) )
 import Data.Char         ( ord, chr )
