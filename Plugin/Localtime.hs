@@ -27,9 +27,12 @@ instance Module LocaltimeModule TimeMap where
   -- record this person as a callback, for when we (asynchronously) get a result
   process _ _ whoAsked "localtime" rawWho = do
         let (whoToPing,_) = break (== ' ') rawWho
-        modifyMS $ \st -> M.insertWith (++) whoToPing [whoAsked] st
-        -- this is a CTCP time call, which returns a NOTICE
-        lift $ ircPrivmsg' whoToPing (Just "\^ATIME\^A")     -- has to be raw
+	if whoToPing /= (name config) then
+        	modifyMS $ \st -> M.insertWith (++) whoToPing [whoAsked] st
+	        -- this is a CTCP time call, which returns a NOTICE
+	        lift $ ircPrivmsg' whoToPing (Just "\^ATIME\^A")     -- has to be raw
+	  else
+		ircPivmsg' whoAsked (Just "I live on the internet, do you expect me to have a local time?")
         return []
 
   -- the Base module caught the NOTICE TIME, mapped it to a PRIVMGS, and here it is :)
