@@ -232,7 +232,7 @@ doPRIVMSG' myname msg
                                                 (IRCRaised (NoMethodError _)) ->
                                                     process_ m cmd' rest
                                                 _ -> throwError ex)
-                                case mstrs of
+                                case filter (not. null) mstrs of
                                     [] -> lift $ ircPrivmsg towhere Nothing
                                     _  -> lift $ mapM_ (ircPrivmsg towhere . Just) mstrs)
 
