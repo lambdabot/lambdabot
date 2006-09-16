@@ -14,7 +14,6 @@ import Control.Arrow (first)
 import Data.List
 import System.Time (TimeDiff(..), noTimeDiff)
 import qualified System.Time as T
-  (ClockTime(..), getClockTime, diffClockTimes, addToClockTime)
 
 -- | Wrapping ClockTime (which doesn't provide a Read instance!) seems
 -- easier than talking care of the serialization of UserStatus
@@ -103,4 +102,5 @@ instance Binary TimeDiff where
                 se <- get bh 
                 ps <- get bh 
                 return (TimeDiff ye mo da ho mi se ps)
+
 

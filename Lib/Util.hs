@@ -20,8 +20,8 @@ module Lib.Util (
         debugStrLn,
         lowerCaseString, upperCaseString,
         upperize, lowerize,
-        quote,
-        listToStr,
+        quote, timeStamp,
+        listToStr, showWidth,
         listToMaybeWith, listToMaybeAll,
         getRandItem, stdGetRandItem, randomElem,
         showClean,
@@ -58,6 +58,7 @@ import Control.Exception        (bracket)
 import System.Random hiding (split)
 
 import System.IO
+import qualified System.Time as T
 
 ------------------------------------------------------------------------
 
@@ -463,3 +464,17 @@ arePrefixesWithSpaceOf els str = any (flip isPrefixOf str) $ map (++" ") els
 
 arePrefixesOf :: [String] -> String -> Bool
 arePrefixesOf = flip (any . flip isPrefixOf)
+
+-- | Show a number, padded to the left with zeroes up to the specified width
+showWidth :: Int    -- ^ Width to fill to
+          -> Int    -- ^ Number to show
+          -> String -- ^ Padded string
+showWidth width n = zeroes ++ num
+    where num    = show n
+          zeroes = replicate (width - length num) '0'
+
+timeStamp :: T.ClockTime -> String
+timeStamp ct = let cal = T.toUTCTime ct
+               in (showWidth 2 $ T.ctHour cal) ++ ":" ++
+                  (showWidth 2 $ T.ctMin cal)  ++ ":" ++
+                  (showWidth 2 $ T.ctSec cal)

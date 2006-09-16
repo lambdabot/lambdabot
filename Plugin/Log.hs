@@ -15,6 +15,7 @@ import qualified Message as Msg
 import Control.Monad (when)
 import qualified Data.Map as M
 import System.Time  
+import Lib.Util ( timeStamp )
 import System.Directory (createDirectoryIfMissing) 
 
 -- ------------------------------------------------------------------------
@@ -137,21 +138,6 @@ showHistory args = do
 
 -- * Event -> String helpers
 --
-
--- | Show a number, padded to the left with zeroes up to the specified width
-showWidth :: Int    -- ^ Width to fill to
-          -> Int    -- ^ Number to show
-          -> String -- ^ Padded string
-showWidth width n = zeroes ++ num
-    where num    = show n
-          zeroes = replicate (width - length num) '0'
-
--- | Show a TimeStamp.
-timeStamp :: ClockTime -> String
-timeStamp ct = let cal = toUTCTime ct
-               in (showWidth 2 $ ctHour cal) ++ ":" ++
-                  (showWidth 2 $ ctMin cal)  ++ ":" ++
-                  (showWidth 2 $ ctSec cal)
 
 -- * Logging helpers
 --
