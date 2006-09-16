@@ -9,7 +9,7 @@ import Plugin
 PLUGIN State
 
 instance Module StateModule String where
-    moduleCmds      _ = ["state","++"]
+    moduleCmds      _ = [] -- ["state","++"]
     moduleHelp    _ _ = "state [expr]. Get or set a state variable."
     moduleDefState  _ = return "This page intentionally left blank."
     moduleSerialize _ = Just stdSerial
