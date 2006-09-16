@@ -30,7 +30,7 @@ import Control.Monad (when)
 import System.IO (Handle, hGetLine)
 import System.Console.Readline  (readline, addHistory)
 
-import qualified Data.ByteString.Char8 as P (pack, hPut, hPutStrLn)
+import qualified Data.ByteString.Char8 as P
 
 
 -- | An IRC message is a prefix, a command and a list of parameters.
@@ -300,7 +300,7 @@ offlineWriterLoop th chanw h syncR syncW = handleIO th writerLoop'
         let loop = do
             mmsg <- readChan chanw
             case mmsg of
-                Nothing  -> return ()
+                Nothing  -> P.hPutStrLn h P.empty
                 Just msg -> do
                     let str = case (tail . IRC.msgParams) msg of
                                 []    -> []
