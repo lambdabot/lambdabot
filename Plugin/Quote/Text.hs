@@ -72,6 +72,19 @@ yarrList =
     ]
 
 --
+-- Stewie Griffin is great
+--
+stewieList :: [String]
+stewieList =
+    ["You. Fetch me my copy of the Wall Street Journal. You two, fight to the death."
+    ,"Yes, I rather like this God fellow. He's very theatrical, you know, a pestilence here, a plague there. Omnipotence. Gotta get me some of that"
+    ,"I've got a better idea. Let's go play \"swallow the stuff under the sink.\""
+    ,"I've got an army to raise and I must get to Nicaragua. I require a window seat and an in-flight Happy Meal AND NO PICKLES. OH, GOD HELP YOU IF I FIND PICKLES"
+    ,"Damn you, vile woman! Blast! What the deuce!"
+    ,"Forecast for tomorrow; A few sprinkles of genius with a chance of doom."
+    ]
+
+--
 -- Actual quotes from an asshat called Keal over Jan 12-14 2006.
 --
 kealList :: [String]
