@@ -3,7 +3,7 @@
 set -e
 
 chmod +x Setup.hs
-./Setup.hs build
+nice ./Setup.hs build
 ./Setup.hs install
 ghc -v0 -c -O2 -odir . -hidir . scripts/ShowQ.hs
 ghc -v0 -c -O2 -funbox-strict-fields -odir . -hidir . scripts/SmallCheck.hs
