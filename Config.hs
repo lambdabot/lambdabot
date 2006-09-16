@@ -39,7 +39,11 @@ data Config = Config {
         commandPrefixes :: [String],
 
         -- what prefixes to use for Haskell evalution
-        evalPrefixes :: [String]
+        evalPrefixes :: [String],
+
+        -- particular commands we'd like to disable
+        -- (to disable whole plugins, remove them from Modules.hs)
+        disabledCommands :: [String]
 }
 
 --
@@ -83,5 +87,8 @@ config = Config {
         outputDir       = "State/",
 
         commandPrefixes = ["@","?"],
-        evalPrefixes   = [">"]
+        evalPrefixes    = [">"],
+
+        disabledCommands = ["remember", "state"]
+
    }

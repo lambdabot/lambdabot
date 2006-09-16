@@ -218,10 +218,11 @@ doPRIVMSG' myname msg
                 withModule ircCommands cmd'   -- Important. 
                     (ircPrivmsg towhere (Just "Unknown command, try @list"))
                     (\m -> do
-                        name' <- getName
-                        privs <- gets ircPrivCommands
-                        ok    <- liftM2 (||) (return $ cmd' `notElem` privs)
-                                             (lift $ checkPrivs msg)
+                        name'   <- getName
+                        privs   <- gets ircPrivCommands
+                        let illegal = disabledCommands config
+                        ok      <- liftM2 (||) (return $ cmd' `notElem` (privs ++ illegal))
+                                               (lift $ checkPrivs msg)
                         if not ok
                           then lift $ ircPrivmsg towhere $ Just "Not enough privileges"
                           else catchIrc

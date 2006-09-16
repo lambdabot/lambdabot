@@ -30,7 +30,8 @@ main' dyn = do
     x    <- getArgs
     case x of
         ["--online"] -> runIrc Online  loadStaticModules onlineMain  load
-        []           -> runIrc Offline loadStaticModules offlineMain load
+        ["--web"]    -> runIrc Offline loadStaticModules (offlineMain False) load
+        []           -> runIrc Offline loadStaticModules (offlineMain True)  load
         _            -> putStrLn "Usage: lambdabot [--online]"
 
     where load = fromMaybe (error "no dynamic loading") dyn
@@ -46,10 +47,11 @@ online = runIrc Online loadStaticModules onlineMain $
 onlineMain :: LB ()
 onlineMain = serverSignOn (protocol config) (name config) (userinfo config) >> mainloop
 
-offlineMain :: LB ()
-offlineMain = do
+offlineMain :: Bool -> LB ()
+offlineMain cmdline = do
   modify (\st -> let privUsers  = ircPrivilegedUsers st
-                     privUsers' = M.insert "null" True privUsers
+                     privUsers'| cmdline   = M.insert "null" True privUsers
+                               | otherwise = privUsers
                  in st { ircPrivilegedUsers = privUsers' })
   mainloop
 

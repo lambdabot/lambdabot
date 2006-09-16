@@ -22,7 +22,7 @@ instance Module DictModule () where
         results <- mapM doLookup s
         return $ case results of
             [] -> []
-            xs -> [concat results]
+            _  -> [concat results]
       where
         doLookup w = io $ do
             result <- lookupFn w
