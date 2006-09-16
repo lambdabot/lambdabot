@@ -148,26 +148,26 @@ doPRIVMSG msg = do
 -- | What does the bot respond to?
 --
 doPRIVMSG' :: String -> IRC.IrcMessage -> Base ()
-doPRIVMSG' myname msg = f >> doContextualMsg text -- everything goes to contextual too
+doPRIVMSG' myname msg
+  | myname `elem` targets
+    = let (cmd, params) = breakOnGlue " " text
+      in doPersonalMsg cmd (dropWhile (== ' ') params)
+
+  | flip any ":," $ \c -> (myname ++ [c]) `isPrefixOf` text
+    = let Just wholeCmd = maybeCommand myname text
+          (cmd, params) = breakOnGlue " " wholeCmd
+      in doPublicMsg cmd (dropWhile (==' ') params)
+
+  | (commands `arePrefixesOf` text)
+  && length text > 1
+  && (text !! 1 /= ' ') -- elem of prefixes
+  && (not (commands `arePrefixesOf` [text !! 1]))
+    = let (cmd, params) = breakOnGlue " " (dropWhile (==' ') text)
+      in doPublicMsg cmd (dropWhile (==' ') params)
+
+  | otherwise =  doContextualMsg text
+
   where
-    f | myname `elem` targets
-        = let (cmd, params) = breakOnGlue " " text
-          in doPersonalMsg cmd (dropWhile (== ' ') params)
-
-      | flip any ":," $ \c -> (myname ++ [c]) `isPrefixOf` text
-        = let Just wholeCmd = maybeCommand myname text
-              (cmd, params) = breakOnGlue " " wholeCmd
-          in doPublicMsg cmd (dropWhile (==' ') params)
-
-      | (commands `arePrefixesOf` text)
-      && length text > 1
-      && (text !! 1 /= ' ') -- elem of prefixes
-      && (not (commands `arePrefixesOf` [text !! 1]))
-        = let (cmd, params) = breakOnGlue " " (dropWhile (==' ') text)
-          in doPublicMsg cmd (dropWhile (==' ') params)
-
-      | otherwise = return ()
-
     alltargets = head (body msg)
     targets = split "," alltargets
     text = tail (head (tail (body msg)))
