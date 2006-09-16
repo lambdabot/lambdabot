@@ -58,6 +58,7 @@ Main-is:             CmdLine.hs
 --
 Executable:          djinn
 hs-source-dirs:      scripts/Djinn
+ghc-options:         -O
 Main-is:             Djinn.hs
 
 --
@@ -65,7 +66,27 @@ Main-is:             Djinn.hs
 --
 Executable:          unlambda
 hs-source-dirs:      scripts/
+ghc-options:         -O
 Main-is:             Unlambda.hs
+
+--
+-- BF
+--
+Executable:          bf
+hs-source-dirs:      scripts/
+Main-is:             BF.hs
+ghc-options:         -O2
+
+--
+-- FT
+--
+Executable:          ft
+hs-source-dirs:      scripts/FT
+Main-is:             FTbase.hs
+ghc-options:         -O
+
+------------------------------------------------------------------------
+-- The following only work if plugins are enabled
 
 --
 -- runplugs
