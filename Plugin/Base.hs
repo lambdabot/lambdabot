@@ -174,14 +174,14 @@ doPRIVMSG' myname msg
     who = nick msg
 
     doPersonalMsg s r
-        | commands `arePrefixesOf` s = doMsg (tail s) r who
-        | s `elem` (evalPrefixes config)    = doMsg "run"   r who -- TODO
-        | otherwise                  = lift $ doIGNORE msg -- contextual?
+        | commands `arePrefixesOf` s        = doMsg (tail s) r who
+        | s `elem` (evalPrefixes config)    = doMsg "run"    r who
+        | otherwise                         = (lift $ doIGNORE msg)
 
     doPublicMsg s r
-        | commands `arePrefixesOf` s                = doMsg (tail s)        r alltargets
+        | commands `arePrefixesOf` s        = doMsg (tail s) r alltargets
         | (evalPrefixes config) `arePrefixesWithSpaceOf` s = doMsg "run" r alltargets -- TODO
-        | otherwise                                 = lift $ doIGNORE msg -- contextual?
+        | otherwise                         = (lift $ doIGNORE msg)
 
     --
     -- normal commands.
