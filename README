@@ -14,8 +14,6 @@ version 0.7 and later are ok.
 
 Build with cabal (simple)
     $ vi Config.hs
-    $ chmod +x configure Setup.hs build
-    $ ./Setup.hs configure --bindir=`pwd`
     $ ./build
     $ ./lambdabot
 
