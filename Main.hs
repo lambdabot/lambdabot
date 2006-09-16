@@ -29,10 +29,10 @@ main' :: Maybe DynLoad -> IO ()
 main' dyn = do
     x    <- getArgs
     case x of
-        ["--online"] -> runIrc Online  loadStaticModules onlineMain  load
-        ["--web"]    -> runIrc Offline loadStaticModules (offlineMain False) load
-        []           -> runIrc Offline loadStaticModules (offlineMain True)  load
-        _            -> putStrLn "Usage: lambdabot [--online]"
+        ["--online"]     -> runIrc Online  loadStaticModules onlineMain  load
+        ["--restricted"] -> runIrc Offline loadStaticModules (offlineMain False) load
+        []               -> runIrc Offline loadStaticModules (offlineMain True)  load
+        _                -> putStrLn "Usage: lambdabot [--online|--restricted]"
 
     where load = fromMaybe (error "no dynamic loading") dyn
 
