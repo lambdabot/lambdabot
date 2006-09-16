@@ -22,6 +22,7 @@ instance Module VersionModule () where
                      "and darcs repo of this bot"
     process_ _ _ _ = ios . return $ concat
                 ["lambdabot 4p", PATCH_COUNT, ", ",
-                 "GHC ", GHC_VERSION, " (", PLATFORM, " ", CPU, ")",
+                 "GHC ", GHC_VERSION, " (", PLATFORM,
+                 if null CPU then [] else " " ++ CPU , ")",
                  "\n", "darcs get ", REPO_PATH ]
 
