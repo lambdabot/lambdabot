@@ -95,6 +95,7 @@ instance Module LogModule LogState where
          mapM_ (\c -> withValidLog (doLog c f msg) now c) (Msg.channels msg)
        Nothing -> return ()
      return []
+
      where -- notMe m = (lowerCaseString $ name config)
            --             /= (lowerCaseString . head $ Msg.channels m)
            --             -- We don't log /msgs to the lambdabot
@@ -229,15 +230,13 @@ reopenChannelMaybe chan ct = do
 initChannelMaybe :: String -> ClockTime -> Log ()
 initChannelMaybe chan ct = do
   chanp <- liftM (M.member chan) readMS
-  --io (putStr "chanp: " >> print chanp)
   unless chanp $ do
     hdl <- openChannelFile chan ct
     modifyMS (M.insert chan $ CS hdl (dateStamp ct) [])
 
 -- | Ensure that the log is correctly initialised etc.
-withValidLog :: (Handle -> ClockTime -> Log a) 
-             -> ClockTime -> Channel -> Log a
-withValidLog f ct chan = do 
+withValidLog :: (Handle -> ClockTime -> Log a) -> ClockTime -> Channel -> Log a
+withValidLog f ct chan = do
   initChannelMaybe chan ct
   reopenChannelMaybe chan ct
   hdl <- getHandle chan

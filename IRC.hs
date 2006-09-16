@@ -282,7 +282,7 @@ offlineReaderLoop th chanr _chanw _h syncR syncW = handleIO th readerLoop'
 
                 let m  = IRC.IrcMessage { IRC.msgPrefix  = "null!n=user@null"
                                         , IRC.msgCommand = "PRIVMSG"
-                                        , IRC.msgParams  = ["#haskell",":" ++ msg ] }
+                                        , IRC.msgParams  = ["offline",":" ++ msg ] }
                 writeChan chanr (Just m)
                 putMVar syncW () -- let writer go 
                 readerLoop'
