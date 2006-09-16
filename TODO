@@ -35,3 +35,19 @@ Wishlist:
     * Some support for bot clients to be able to do their own request/response stuff
 
 * add your wishes here ...
+
+on the web:
+	* bf ++++++++++[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++.>++.<<+++++++++++++++.>.+++.------.--------.>+.>.@
+	prints 'Done.' but on the commandline prints 'Hello World!"
+	* bf filter is dropping spaces
+	* help dict lists command prefixes and shouldn't
+	* hylo doesn't seem to be working
+	* how is ft different from free and why is it broken?
+	* index is broken
+	* pretty is broken
+	* disable slap
+	* disable echo
+	* disable listchans
+	* disable uptime
+	* url doesn't mention tiny-url or url-title
+
