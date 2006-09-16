@@ -2,7 +2,8 @@
 
 set -e
 
-chmod +x Setup.hs
+chmod +x Setup.hs configure
+nice ./Setup.hs configure --bindir=`pwd`
 nice ./Setup.hs build
 ./Setup.hs install
 ghc -v0 -c -O2 -odir . -hidir . scripts/ShowQ.hs
