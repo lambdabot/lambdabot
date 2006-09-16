@@ -22,7 +22,6 @@ module SmallCheck (
 import List (intersperse)
 import Monad (when)
 import IO (stdout, hFlush)
-import Foreign (unsafePerformIO)  -- used only for Testable (IO a)
 
 ------------------ <Series of depth-bounded values> -----------------
 
@@ -249,8 +248,8 @@ instance Testable Property where
   property (Property f) d = f d
 
 -- For testing properties involving IO.  Unsafe, so use with care!
-instance Testable a => Testable (IO a) where
-  property = property . unsafePerformIO
+-- instance Testable a => Testable (IO a) where
+--   property = property . unsafePerformIO
 
 evaluate :: Testable a => a -> Series Result
 evaluate x d = rs where Prop rs = property x d
