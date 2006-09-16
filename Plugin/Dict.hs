@@ -18,12 +18,16 @@ instance Module DictModule () where
     process_ _ "dict"      _    = return [quickHelp]
     process_ _ "dict-help" rest = return [getHelp (words rest)]
     process_ _ cmd         rest = do
-        results <- mapM doLookup (parseTerms rest)
-        return [concat results]
+        let s = parseTerms rest
+        results <- mapM doLookup s
+        return $ case results of
+            [] -> []
+            xs -> [concat results]
       where
         doLookup w = io $ do
             result <- lookupFn w
             return $ either ("Error: " ++) id result
+
         lookupFn = uncurry Dict.simpleDictLookup . fst $
                    fromJust (lookup cmd dictTable)
 
