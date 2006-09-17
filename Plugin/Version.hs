@@ -17,7 +17,7 @@ import Plugin
 PLUGIN Version
 
 instance Module VersionModule () where
-    moduleCmds   _ = ["version", "source"]
+    moduleCmds   _ = ["version"]
     moduleHelp _ _ = "version/source. Report the build date, ghc version " ++ 
                      "and darcs repo of this bot"
     process_ _ _ _ = ios . return $ concat

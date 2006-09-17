@@ -34,7 +34,7 @@ instance Module DummyModule [String] where
         "paste"       -> "paste. Paste page url"
 
         "docs"        -> "docs <lib>. Lookup the url for this library's documentation"
-        "libsrc"      -> "libsrc <lib>. Lookup the url of fptools libraries"
+        "source"      -> "source <lib>. Lookup the url of fptools libraries"
         "fptools"     -> "fptools <lib>. Lookup url of ghc base library modules"
 
         "learn"       -> "learn. The learning page url"
@@ -85,16 +85,16 @@ dummylst =
              Just m  -> "http://haskell.org/ghc/docs/latest/html/libraries/" <>
                         (P.unpack m) </> map (choice (=='.') (const '-') id) x <.> "html")
 
-    -- broken:
-    ,("libsrc",      \x -> case M.lookup (P.pack x) docAssocs of
+    ,("source",     \x -> case M.lookup (P.pack x) docAssocs of
        Nothing -> x ++ " not available"
-       Just m  -> "http://darcs.complete.org/fptools/libraries/" <>
+       Just m  -> "http://darcs.haskell.org/packages/" <>
                   (P.unpack m) </> map (choice (=='.') (const '/') id) x <.> "hs")
 
     ,("fptools",     \x -> case M.lookup (P.pack x) docAssocs of
        Nothing -> x ++ " not available"
        Just m  -> "http://darcs.haskell.org/packages/" <>
                   (P.unpack m) </> map (choice (=='.') (const '/') id) x <.> "hs")
+
     ,("choose",      \x -> case x of
        []      -> "Choose between what?"
        xs      -> unsafePerformIO (randomElem $ lines xs))
