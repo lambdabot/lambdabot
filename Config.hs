@@ -89,6 +89,6 @@ config = Config {
         commandPrefixes = ["@","?"],
         evalPrefixes    = [">"],
 
-        disabledCommands = ["remember", "state"]
+        disabledCommands = ["listchans", "slap", "echo", "remember", "state"]
 
    }
