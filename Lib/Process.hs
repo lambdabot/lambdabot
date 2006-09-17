@@ -9,7 +9,7 @@ module Lib.Process (popen) where
 import System.Exit
 import System.IO
 import System.Process
-import Control.Concurrent       (forkIO)
+import Control.Concurrent       (forkIO, newEmptyMVar, putMVar, takeMVar)
 
 import qualified Control.Exception
 
@@ -44,8 +44,19 @@ popen file args minput =
     -- data gets pulled as it becomes available. you have to force the
     -- output strings before waiting for the process to terminate.
     --
-    forkIO (Control.Exception.evaluate (length output) >> return ())
-    forkIO (Control.Exception.evaluate (length errput) >> return ())
+
+    -- Samb says:
+    -- Might as well try to avoid hanging my system...
+    -- make sure it happens FIRST.
+
+    outMVar <- newEmptyMVar
+    errMVar <- newEmptyMVar
+
+    forkIO (Control.Exception.evaluate (length output) >> putMVar outMVar ())
+    forkIO (Control.Exception.evaluate (length errput) >> putMVar errMVar ())
+
+    takeMVar outMVar
+    takeMVar errMVar
 
     -- And now we wait. We must wait after we read, unsurprisingly.
     -- blocks without -threaded, you're warned.
