@@ -34,7 +34,7 @@ instance Module DictModule () where
 -- | Configuration.
 
 dictTable :: [(String, ((Dict.QueryConfig, String), String))]
-dictTable = 
+dictTable =
     -- @command   ((server  , database),    description)
     [ ("all-dicts",((dict_org, "*")       , "Query all databases on dict.org"))
     , ("elements", ((dict_org, "elements"), "Elements database"))
@@ -68,8 +68,8 @@ dictNames = sort (map fst dictTable)
 
 quickHelp :: String
 quickHelp = unlines [ "Supported dictionary-lookup commands:"
-                    , "  " ++ concatWith " " (map ('@':) dictNames)
-                    , "Use \"@dict-help [cmd...]\" for more."
+                    , "  " ++ concatWith " " dictNames
+                    , "Use \"dict-help [cmd...]\" for more."
                     ]
 
 getHelp :: [String] -> String
@@ -79,11 +79,12 @@ getHelp []    = "I perform dictionary lookups via the following "
 
 getHelp dicts = unlines . map gH $ dicts
     where
-    gH dict = case lookup dict' dictTable of
-              Just (_, descr) -> pad ('@':dict') ++ " " ++ descr
-              Nothing         -> "There is no dictionary database '"
-                                 ++ dict' ++ "'."
-              where dict' = filter (/='@') dict
+    gH dict | Just (_, descr) <- lookup dict dictTable
+            = pad dict ++ " " ++ descr
+
+            | otherwise
+            = "There is no dictionary database '" ++ dict ++ "'."
+
     pad xs = take padWidth (xs ++ " " ++ repeat '.')
     padWidth = maximum (map length dictNames) + 4
 
