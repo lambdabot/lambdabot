@@ -7,7 +7,7 @@ dice provides: dice
 dict provides: dict dict-help all-dicts devils easton elements foldoc gazetteer hitchcock jargon lojban vera web1913 wn world02
 djinn provides: djinn djinn-add djinn-del djinn-env djinn-names djinn-clr djinn-ver
 drhylo provides: hylo
-dummy provides: eval id read show dummy get-shapr faq paste learn map shootout botsnack wiki oldwiki docs libsrc fptools choose
+dummy provides: eval id read show dummy get-shapr faq paste learn map shootout botsnack wiki oldwiki docs source fptools choose
 elite provides: elite
 eval provides: run let undefine
 fact provides: fact fact-set fact-delete fact-cons fact-snoc fact-update
@@ -32,7 +32,7 @@ seen provides: users seen
 slap provides: slap
 small provides: scheck
 spell provides: spell
-state provides: state ++
+state has no visible commands
 system provides: echo list listchans listmodules uptime
 tell provides: tell ask messages messages? clear-messages
 todo provides: todo todo-add
@@ -41,7 +41,7 @@ type provides: type kind
 undo provides: undo redo
 unlambda provides: unlambda
 url provides: url-title tiny-url
-version provides: version source
+version provides: version
 vixen provides: vixen
 where provides: where url what where+
 lambdabot> 
