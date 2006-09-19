@@ -36,14 +36,3 @@ Wishlist:
 
 * add your wishes here ...
 
-on the web:
-	* bf ++++++++++[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++.>++.<<+++++++++++++++.>.+++.------.--------.>+.>.@
-	prints 'Done.' but on the commandline prints 'Hello World!"
-	* bf filter is dropping spaces
-	* hylo doesn't seem to be working
-	* how is ft different from free and why is it broken?
-	* index is broken
-	* pretty is broken
-	* disable uptime
-	* url doesn't mention tiny-url or url-title
-
