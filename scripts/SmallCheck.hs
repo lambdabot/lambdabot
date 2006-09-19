@@ -149,6 +149,14 @@ instance Serial Bool where
   coseries d = [ \x -> if x then b1 else b2
                | (b1,b2) <- series d ]
 
+instance Serial Ordering where
+  series     = cons0 LT \/ cons0 EQ \/ cons0 GT
+  coseries d = [ \x -> case x of
+                 LT -> b1
+                 EQ -> b2
+                 GT -> b3
+               | (b1,b2,b3) <- series d ]
+
 instance Serial a => Serial (Maybe a) where
   series     = cons0 Nothing \/ cons1 Just
   coseries d = [ \m -> case m of
