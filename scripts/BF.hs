@@ -24,8 +24,10 @@ import Data.Array.Base   (unsafeRead, unsafeWrite, array)
 import Data.Word         ( Word8(..) )
 import Data.Char         ( ord, chr )
 import Data.List         ( find, findIndex, groupBy )
+import Data.Maybe        ( catMaybes )
 import Foreign           ( unsafePerformIO )
 import Control.Monad     ( when )
+import Control.Monad.State
 import System.Posix.Resource
 
 rlimit = ResourceLimit 3
@@ -60,8 +62,8 @@ data Command = IncPtr
              | DecByte
              | OutputByte
          --  | InputByte
-             | JmpForward
-             | JmpBackward
+             | JmpForward  !Int -- ^ nesting level
+             | JmpBackward !Int -- ^ nesting level
              | SetIpTo !Int   -- ^ Sets the instruction ptr to a specific value
              | Halt
              | Ignored
@@ -81,17 +83,21 @@ coreSize = 30000
 core :: IO Core
 core = newArray (0, coreSize - 1) (0::Word8)
 
-decode :: Char -> Command
-decode '>' = IncPtr
-decode '<' = DecPtr
-decode '+' = IncByte
-decode '-' = DecByte
-decode '.' = OutputByte
--- decode ',' = InputByte
-decode '[' = JmpForward
-decode ']' = JmpBackward
-decode '@' = Halt
-decode _   = Ignored
+decode :: Char -> State Int Command 
+decode '>' = return IncPtr
+decode '<' = return DecPtr
+decode '+' = return IncByte
+decode '-' = return DecByte
+decode '.' = return OutputByte
+-- decode ',' = return InputByte
+decode '[' = do n <- get
+                put (n+1)
+                return $ JmpForward n
+decode ']' = do n <- get
+                put (n-1)
+                return $ JmpBackward (n-1)
+decode '@' = return Halt
+decode _   = return Ignored
 
 debug = False
 
@@ -148,7 +154,7 @@ doCommand cmds bf@(BF _ _ ip) = doCommand' (cmds ! ip) cmds bf
     return (BF c cp (incIP ip))
 -}
 
-  doCommand' JmpForward cmds bf@(BF c cp ip) = {-# SCC "JmpForward" #-} do
+  doCommand' (JmpForward n) cmds bf@(BF c cp ip) = {-# SCC "JmpForw" #-} do
     c' <- unsafeRead c cp
     case c' of 
       0 -> {-# SCC "JmpForward1" #-} do 
@@ -161,8 +167,8 @@ doCommand cmds bf@(BF _ _ ip) = doCommand' (cmds ! ip) cmds bf
         return newBF
     where
     -- we add one to go one past the next back jump
-    newInstPtr = (nextJmp cmds ip (+1) JmpBackward) + 1 
-  doCommand' JmpBackward cmds bf@(BF c cp ip) = {-# SCC "JmpBackward" #-} do
+    newInstPtr = (nextJmp cmds ip (+1) (JmpBackward n)) + 1 
+  doCommand' (JmpBackward n) cmds bf@(BF c cp ip) = {-# SCC "JmpBack" #-} do
     c' <- unsafeRead c cp
     if (c' /= 0) 
       then do when debug $ putStrLn $ "JmpBackward1 " ++ show bf
@@ -170,16 +176,20 @@ doCommand cmds bf@(BF _ _ ip) = doCommand' (cmds ! ip) cmds bf
       else do when debug $ putStrLn $ "JmpBackward2 " ++ show bf
               return (BF c cp (incIP ip))
     where
-    newInstPtr = nextJmp cmds ip (subtract 1) JmpForward
+    newInstPtr = nextJmp cmds ip (subtract 1) (JmpForward n)
   doCommand' (SetIpTo i) _ bf@(BF c cp ip) = {-# SCC "SetIPTo" #-} do
     c' <- unsafeRead c cp
     when debug $ putStrLn $ "SetIpTo " ++ show i ++ " " 
                           ++ show bf ++ " @" ++ show c'
+    -- jmping behaves differently depending on jmp forward vs. backward
+    -- we handle that with pos. vs. neg addresses
+    -- Note: SetIpTo 0 is always a JmpBackward 
+    -- Because the first instruction cannot be SetIpTo 0
     if i > 0
       then if (c' == 0)
              then return $ BF c cp i
              else return $ BF c cp (incIP ip)
-      else if (c' /= 0)
+      else if (c' /= 0) 
              then return $ BF c cp (-i)
              else return $ BF c cp (incIP ip)
 
@@ -208,7 +218,7 @@ loadProgram [] = array (0, 0) [(0, Halt)]
 -- adding a halt on to the end fixes a bug when called from an irc session
 loadProgram prog = optimize (cs++[Halt])
   where
-  cs = map decode prog
+  cs = fst $ runState (mapM decode prog) 0
   n  = length cs
 
 optimize :: [Command] -> Array Int Command
@@ -231,51 +241,57 @@ optimize cmds = listArray (0, (length reduced)-1) reduced
       | otherwise          = cs
   -- now we can turn jumps into changes of the ip
   phase3 :: [Command] -> [Command]
-  phase3 = map fst . fixJmpBs . fixJmpFs . flip zip [0..]
+  phase3 cmds = updates (updates cmds jmpBs) jmpFs
     where
-    rfind :: (a -> Bool) -> [a] -> Maybe a
-    rfind p xs = find p (reverse xs)
+    jmpBs = calcJmpBs (zip [0..] cmds)
+    jmpFs = calcJmpFs (zip [0..] cmds)
+    update :: [a] -> (Int, a) -> [a]
+    update xs (i, a) = take i xs ++ [a] ++ drop (i+1) xs
+    updates :: [a] -> [(Int, a)] -> [a]
+    updates xs []     = xs
+    updates xs (u:us) = updates (update xs u) us
+    nested :: Command -> Int
+    nested (JmpForward  n) = n
+    nested (JmpBackward n) = n
+    nested _               = undefined
+    isJmp (JmpForward  _) = True
+    isJmp (JmpBackward _) = False
+    isJmpB (JmpBackward _) = True
+    isJmpB _               = False
+    isJmpF (JmpForward  _) = True
+    isJmpF _               = False
+    calcJmpBs :: [(Int, Command)] -> [(Int, Command)]
+    calcJmpBs cmds = catMaybes $ map newCmd (filter (isJmpB . snd) cmds)
+      where
+      newCmd (i, c) = absJmpB (i, findPrevJmpF (map snd cmds) i (nested c))
+    calcJmpFs :: [(Int, Command)] -> [(Int, Command)]
+    calcJmpFs cmds = catMaybes $ map newCmd (filter (isJmpF . snd) cmds)
+      where
+      newCmd (i, c) = absJmpF (i, findNextJmpB (map snd cmds) i (nested c))
+    absJmpB :: (Int, Maybe Int) -> Maybe (Int, Command)
+    absJmpB (_, Nothing) = Nothing
+    absJmpB (i, Just n)  = Just $ (i, SetIpTo (-n))
+    absJmpF (_, Nothing) = Nothing
+    absJmpF (i, Just n)  = Just $ (i, SetIpTo (n+1))
+    findPrevJmpF :: [Command] 
+                 -> Int -- ^ index to start at
+                 -> Int -- ^ nesting level to match
+                 -> Maybe Int -- ^ index of next JmpF
+    findPrevJmpF _    i _ | i < 0 = Nothing
+    findPrevJmpF cmds i n = case (cmds !! i) of
+                              (JmpForward l) | l == n -> Just i
+                              _ -> findPrevJmpF cmds (i-1) n
 
-    rfindIndex :: (a -> Bool) -> [a] -> Maybe Int
-    rfindIndex p xs = case findIndex p (reverse xs) of
-      Nothing -> Nothing
-      Just n  -> Just $ length xs - n
+    findNextJmpB :: [Command] 
+                 -> Int -- ^ index to start at
+                 -> Int -- ^ nesting level to match
+                 -> Maybe Int -- ^ index of next JmpF
+    findNextJmpB cmds i _ | i >= length cmds = Nothing
+    findNextJmpB cmds i    n = case (cmds !! i) of
+                                 (JmpBackward l) | l == n -> Just i
+                                 _ -> findNextJmpB cmds (i+1) n
 
-    fixJmpFs :: [(Command, Int)] -> [(Command, Int)]
-    fixJmpFs cs = case findIndex isJmpF cs of
-      Just n -> 
-        case find isJmpB (drop (n+1) cs) of
-          Just (_, i) -> (take n cs)
-                         ++[(SetIpTo (i + 1), snd (cs !! n))]
-                         ++fixJmpFs (drop (n+1) cs)
-          Nothing -> cs
-      Nothing -> cs
-
-    fixJmpBs :: [(Command, Int)] -> [(Command, Int)]
-    fixJmpBs cs = case rfindIndex isJmpB cs of
-      Just n -> 
-        case rfind isJmpF (take (n-1) cs) of
-          Just (_, i) -> (fixJmpBs (take (n-1) cs))
-                         ++[(SetIpTo (-i), snd (cs !! n))]
-                         ++(drop n cs)
-          Nothing -> cs
-      Nothing -> cs
-
-    isJmpF :: (Command, Int) -> Bool
-    isJmpF (JmpForward, _) = True
-    isJmpF (SetIpTo n, i) | n > i = True
-                          | otherwise = False
-    isJmpF _ = False
-
-    isJmpB :: (Command, Int) -> Bool
-    isJmpB (JmpBackward, _) = True
-    isJmpB (SetIpTo n, i) | n < i = True
-                          | otherwise = False
-    isJmpB _ = False
-
-  
 execute :: Array Int Command -> Int -> BF -> IO ()
--- execute [] _ _ = halt -- FIXME: is this still needed?
 execute cmds n bf@(BF c cp ip) = do
   if ip >= n || cmds ! ip == Halt
     then halt
@@ -293,7 +309,7 @@ helloWorld =
   "<++++>-]<+.[-]++++++++++."
 
 
--- this one is not working at the moment...
+-- works now, thanks to int-e for explaining the BF spec to me
 bottles = 
   "99 Bottles of Beer in Urban Mueller's BrainF*** (The actual"++
   "name is impolite)"++
@@ -371,15 +387,24 @@ toupper =
   ",----------[----------------------.,----------]"
 
 {-
+Example optimized programs:
+
 ++++[>++++++++<-]>[.+]
 
-[(0, IncByte 4), (1, SetIpTo 7), (2,IncPtrBy 1),
- (3, IncByte 8), (4, IncPtrBy (-1)), (5, IncByteBy (-1)),
- (6, SetIpTo 1), (7, IncPtrBy 1), (8, SetIpTo 12), (9, Out),
- (10, IncByteBy 1), (11, SetIpTo 8), (12, Halt)
+[(0,IncByteBy 4),  (1,SetIpTo 7),     (2,IncPtrBy 1),
+ (3,IncByteBy 8),  (4,IncPtrBy (-1)), (5,IncByteBy (-1)),
+ (6,SetIpTo (-1)), (7,IncPtrBy 1),    (8,SetIpTo 12),
+ (9,OutputByte),   (10,IncByteBy 1),  (11,SetIpTo (-8)),
+ (12,Halt)
 ]
 
-0 32
+[[]]
 
+[(0,SetIpTo 4), 
+ (1,SetIpTo 3),
+ (2,SetIpTo (-1)),
+ (3,SetIpTo 0),
+ (4,Halt)
+]
 
 -}
