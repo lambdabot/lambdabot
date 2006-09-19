@@ -43,8 +43,8 @@ cleanit :: String -> String
 cleanit s | Just _         <- terminated `matchRegex`    s = "Terminated\n"
           | otherwise      = filter printable s
     where terminated = mkRegex "waitForProc"
-          -- the printable ascii chars are in the range [33 .. 126]
+          -- the printable ascii chars are in the range [32 .. 126]
           -- according to wikipedia:
           -- http://en.wikipedia.org/wiki/ASCII#ASCII_printable_characters
-          printable x = 32 < ord x && ord x < 127
+          printable x = 31 < ord x && ord x < 127
 
