@@ -22,9 +22,6 @@ import System.Random
 type T = [Int]
 type I = Int
 
-instance (Typeable a, Typeable b) => Show (a -> b) where
-    show e = '<' : (show . typeOf) e ++ ">"
-
 instance Ppr a => Show (Q a) where
     show e = unsafePerformIO $ runQ e >>= return . pprint
 
