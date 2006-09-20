@@ -44,7 +44,7 @@ datas   = map ("Data." ++) [
                 "Maybe", "Ratio", "Tree", "Tuple", "Typeable", "Word" 
               ]
 
-controls = map ("Control." ++) ["Monad", "Monad.Cont", "Monad.State", "Monad.ST", "Monad.Writer", "Monad.Reader", "Monad.Fix", "Arrow"]
+controls = map ("Control." ++) ["Monad", "Monad.Cont", "Monad.State", "Monad.ST", "Monad.Writer", "Monad.Reader", "Monad.Fix", "Arrow", "Monad.Error"]
 
 --
 -- See if TH is safe with runIO and friends hidden.
