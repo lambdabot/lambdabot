@@ -151,13 +151,14 @@ instance Module SeenModule SeenState where
          (m, seenFM) <- readMS
          s <- io getClockTime
          let target = if null rest then chan else rest
-             now = length $ [ () | (_,Present _ chans) <- M.toList seenFM
-                                 , P.pack target `elem` chans ]
+             who = P.pack target
+             now = length [ () | (_,Present _ chans) <- M.toList seenFM
+                               , who `elem` chans ]
 
              n = case M.lookup target m of Nothing -> 1; Just n' -> n'
 
              active = length [() | (_,st@(Present _ chans)) <- M.toList seenFM
-                                 , P.pack target `elem` chans && isActive st ]
+                                 , who `elem` chans && isActive st ]
 
              isActive (Present (Just (ct,_td)) _cs) = recent ct
              isActive _                             = False
@@ -178,7 +179,7 @@ instance Module SeenModule SeenState where
 
     process _ msg _ _      rest = do
          (_,seenFM) <- readMS
-         now    <- io getClockTime
+         now        <- io getClockTime
          return [unlines $ getAnswer msg rest seenFM now]
 
     moduleInit _        = do
@@ -315,9 +316,9 @@ getAnswer msg rest seenFM now
 joinCB :: Message.Message a => a -> SeenMap -> ClockTime -> Nick -> Either String SeenMap
 joinCB msg fm _ct nick
   | nick == (P.pack myname) = Right fm
-  | otherwise               = Right $ insertUpd (updateJ Nothing (map P.pack $ Message.channels msg)) 
-                                         nick newInfo fm
-  where newInfo = Present Nothing (map P.pack $ Message.channels msg)
+  | otherwise = Right $! insertUpd
+                    $! updateJ Nothing (map P.pack $! Message.channels msg)) nick newInfo fm
+  where newInfo = Present Nothing (map P.pack $! Message.channels msg)
 
 
 botPart :: ClockTime -> [Channel] -> SeenMap -> SeenMap
@@ -380,7 +381,7 @@ joinChanCB msg fm now _nick
 msgCB :: Message.Message a => a -> SeenMap -> ClockTime -> Nick -> Either String SeenMap
 msgCB _ fm ct nick =
   case M.lookup nick fm of
-    Just (Present _ xs) -> Right $ 
+    Just (Present _ xs) -> Right $1
       M.insert nick (Present (Just (ct, noTimeDiff)) xs) fm
     _ -> Left "someone who isn't here msg us"
 
