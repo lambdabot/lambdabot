@@ -40,23 +40,23 @@ type LastSpoke = Maybe (ClockTime, TimeDiff)
 
 -- | 'UserStatus' keeps track of the status of a given Nick name.
 data UserStatus
-        = Present LastSpoke [Channel]
+        = Present    !LastSpoke [Channel]
           -- ^ Records when the nick last spoke and that the nick is currently 
           --   in [Channel].
-        | NotPresent ClockTime StopWatch [Channel]
+        | NotPresent !ClockTime !StopWatch [Channel]
           -- ^ The nick is not present and was last seen at ClockTime in Channel.
           --   The second argument records how much we've missed.
-        | WasPresent ClockTime StopWatch LastSpoke [Channel]
+        | WasPresent !ClockTime !StopWatch !LastSpoke [Channel]
           -- ^ The bot parted a channel where the user was. The Clocktime
           --   records the time and Channel the channel this happened in.
           --   We also save the reliablility of our information and the
           --   time we last heard the user speak.
-        | NewNick Nick
+        | NewNick !Nick
           -- ^ The user changed nick to something new.
     deriving (Show, Read)
 
-data StopWatch = Stopped TimeDiff
-               | Running ClockTime
+data StopWatch = Stopped !TimeDiff
+               | Running !ClockTime
         deriving (Show,Read)
 
 type SeenState = (MaxMap, SeenMap)
