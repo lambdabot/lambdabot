@@ -63,7 +63,7 @@ main = do
         s <- unsafeEval_ ("let { "++x++
                          " = \n# 1 \"<irc>\"\n"++s++
                          "\n} in P.take 2048 (P.show "++x++
-                         ")") context ["-fth"] [] []
+                         ")") context ["-O"] [] []
         case s of
             Left  e -> mapM_ putStrLn e
             Right v -> Control.Exception.catch
