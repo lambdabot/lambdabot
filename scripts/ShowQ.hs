@@ -26,7 +26,7 @@ instance Ppr a => Show (Q a) where
     show e = unsafePerformIO $ runQ e >>= return . pprint
 
 instance Arbitrary Char where
-    arbitrary     = choose ('a', 'z')
+    arbitrary     = choose (minBound, maxBound)
     coarbitrary c = variant (ord c `rem` 4)
 
 instance Arbitrary Word8 where
