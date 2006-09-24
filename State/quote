@@ -8,6 +8,12 @@ Snow doeth lay upon the lands. Even with cunning newtype; deriving the newtype i
 Alanna
 Saying that Java is nice because it works on all OS's is like saying that anal sex is nice because it works on all genders.
 
+Baughn
+I think I'm beginning to understand this language. I just defined 1+1=3.
+
+Bulat
+there is new Time library, which is supposed to replace old System.Time. we hope that it will happen before 2038
+
 Cale
 [more monad clarity] monads as food gathering in post-industrial America
 ... if sections were allowed at the type level ...
@@ -29,6 +35,9 @@ Writing introductions to monads seems to have developed into an industry
 
 DanaXu
 Program errors are common in software systems, including those that are constructed from advanced programming languages, such as Haskell
+
+DavidAmos
+the real reason for using Haskell is that the code comes out shorter, and is quicker to write, than in imperative languages .. What that means is, I can get much more done when I use Haskell
 
 DennisHeuer
 What is that???? Your strategy shows that you just don't care.
@@ -68,6 +77,9 @@ There will also be a karaoke competition to determine the fate of the monomorphi
 Type theory makes totally awesome material for bar room shit talk.
 Last night I was at this dive bar listening to live music and there was this cute girl I was talking too while this guy was there, we started ribbing each other in the appropriate way when confronted with the situation of two guys talking to the same girl, and our jeers eventually turned technical until we were arguing about haskell, perl, and pugs development. it turning out he was one of the pugs de
 
+JohnPeterson
+[1991] `Miranda' is a trademark of Research Software Ltd. `Haskell' is not a trademark of anyone.
+
 Kahdloc
 why's it called filter and not grep? :/
 
@@ -75,6 +87,7 @@ Klauso
 haha, this bot seems to have many features
 
 Korollary
+I don't subscribe to smalltalk's "+" is a message you send to a number object argument
 Isn't wikipedia the ultimate human knowledge trashcan?
 Google employees suck. [some time later] I bet my search history has been made public right now
 [On Perelman going AWOL before the Fields Medal award] I can have it if he doesnt want it. Chicks dig Fields Medals
@@ -84,6 +97,7 @@ an olegweek is a complex entity with an imaginary part
 an olegweek is a complex entity with an imaginary part
 
 Lemmih
+inv2004: Haskell isn't like all the other mainstream languages. You really need to read a tutorial.
 <shapr> Any idea where we should meet?  *** Lemmih opens Google Earth.
 calling an out-of-scope function isn't as easy as I had hoped
 
@@ -107,11 +121,15 @@ Philippa
 hey, if the guy wants a monadectomy that's his choice
 
 Pseudonym
+A meeting will kill almost any good idea.
 If Hofstadter had said this, it would have been much funnier.
 What was considered 100 milli-Olegs of type hackery five years ago is standard operating procedure these days
 I think principal types are overrated
 Lazy evalution is really, really trippy.
 Well, personally, I don't think dumb people should be let near a programming language.
+
+Pupeno
+lambdabot is indeed the most impresive bot I've ever seen
 
 RyanT5000
 i wish i had been programming in haskell for 7 years rather than C++
@@ -121,16 +139,25 @@ or maybe she is the Queen of Sciences and he is the Mack Daddy.
 Computer science is the womanizer, and math is the pure-hearted girl he won't call the next day.
 
 SamB
+Haskell is the only language I know with first-class support for imperative programming
+<SamB> @. bf . id . pl . v . wn yow  <lambdabot> Done.
+I was just saying that encasing poeple in concrete is not the best solution to that problem
+heh, my ~/.gtkrc.mine is recursive...
 GHC is smart
 Because sliced bread gives horribly uninformative error messages?
 C is a good language. If what you want is an assembly language where you can't be sure what anything does
 fworp: next time, load your shirt up in to GHCi *before* having it printed
 Boy, point-free Arrows are worse than Forth...
 
+SeanRussell
+[On the wmii (window manager) mailing list] Hah!  That's a laugh.  Since when does "it compiles" equate to "it will run (correctly)"?  We're talking about C, after all... not Haskell.
+
 SebastianHanowski
 I tried to formalise a proof of rev (rev l)  = l i found in W. Kluges book "Abstract Computing Machines - A Lambda Calculus Perspective" which is pretty much a 'Pimp My Ride' for SECD-machines.
 
 SyntaxNinja
+I recommend seeing if people have a major problem, then pouring concrete on them, and implementing what you want anyway ;)
+You'd be surprised how hard is to hire haskellers :( They're all like, "Yeah, I'll come work for you, and by 'come' I mean stay here and work remotely and by 'work for you' I mean I'll keep doing what I'm doing." ;)
 I think that the compiler authors will fly here from England just to kill me if I did that
 
 Taral
@@ -152,6 +179,9 @@ VirginiaCurry
 adam
 Lisp is like Ruby with an ugly syntax, impossible stdlib, and some macros that don't compensate for above shortcomings
 
+adaptec
+[in documentation for their raid chipsets] We have a disclaimer because there may be corner cases
+
 adept
 Tried to co-read and co-understand comonads, but got co-re dump
 I think I need cobrain to understand coeffects
@@ -160,6 +190,7 @@ astrolabe
 I put my thing in inverted commas because it isn't a really stalactite, but it looks like one, and contains nitrates from urea.
 
 audreyt
+yes, I'm aware that I'm abusing GHC beyond its designed purpose
 assembly would require metaolegs (or megaolegs)
 I think wiki in the original Hawaiian means "I can't find any damned thing"
 
@@ -183,6 +214,9 @@ i think coding in your sleep should trigger an exception
 chromatic
 My productivity increased when Autrijus told me about Haskell's trace function. He called it a refreshing desert in the oasis of referential transparency.
 
+cjeris
+i have a little perl script that aliases gcc -freduced-suckage to ghc
+
 cjs
 I have to explain this shit to people. I mean, I start out right, "Hey, you know how you always have these bugs because what you thought was in the variable is not there?" And I get all of these nods of agreement. "Well, I've found a new language that solves that problem." Audience: "Ooooh! How?" Me: "There's no variables!" And then they all start moving away from me slowly....
 
@@ -193,13 +227,23 @@ I imagine XSLT programmers say "It's a one pager" the way most other programmers
 dcnstrct
 even the #lisp people say go with haskell
 
+delicious-mailicious-test@quote
+dmt
+
+delicious-malicious-test
+@quote dmt
+
 desrt
 man... there's this whole dark side to haskell that dr. kahl didn't teach us in 3e03
 
 dibblego
+using logic in imperative programming language channels is generally considered trolling
 I believe that OO is intrinsically defective and digresses from a formal definition of "software"
 
 dons
+note down this date, people, 13-09-2006. today lambdabot == skynet
+global state is just another pure value :)
+dons has quit ("improve @check")
 I think Pseudonym should submit some more @free patches, instead of breaking poor lambdabot. Why do we always hurt the ones we love?
 I think Pseudonym should submit some more @free patches,
 xerox: what analogy or metaphor did you use? monad-as-garbage-bin? monad-as-refrigerator? monads-as-unicycle?
@@ -223,6 +267,9 @@ dylan
 I run emacs for the games
 
 edwardk
+lambdabot is the first irc bot i ever added to my buddy list
+heh i should probably just type up the problem specification in haskell and click compile. funny how that seems to yield the answer ;)
+well, dependent types fuck with compilers ability to get anything done
 been playing with type level 2s complement arithmetic
 notes that in haskell, it seems that you asymptotically approach writing no code over time as you learn your way around whats already there
 
@@ -232,13 +279,20 @@ I think I'd panic if I had to write something that wasn't a compiler.
 emertens
 screw ruby on rails, I'm using snakes on a plane
 
+emu
+ people have gotten so used to the sloppy languages like python and perl which are specified by 1 implementation that they forget there is a difference
+
 fsbot
 English -> English: no matching translation services found.
 
 gFunk
 [the main advantage of functional programs are that they're] incorrect the first 1000 times you try to compile it!
 
+gaal
+(ghc predicted a cpu death on my computer once.)
+
 ghc
+mkProtoBCO: stack use won't fit in 16 bits 150813
 You can get a PhD for explaining the True Meaning of this last construct
 Urk! Inventing strangely-kinded void TyCon: [..] (* -> *) -> * -> *
 ld64: INFO    171: Multigot invoked. Gp relative region broken up into 2 separate regions.
@@ -376,7 +430,11 @@ ghci.debugger
 http://haskell.org/haskellwiki/Ghci/Debugger
 
 glguy
+11th commandment, don't use cygwin because it is crap
 that's odd, mine is this big : |-----------------------------|
+
+gmh33
+Haskell makes so much more sense now and all I did was figure out the typing thing
 
 gzl
 [on why monads are scary] maybe it's because people look up monad on wikipedia, find the category theory page, and crap themselves
@@ -392,7 +450,11 @@ Laziness is free, but it doesn't always pay off.
 Oops, I forgot that Djinn doesn't do GADT's.
 
 int-e
+PHP is a programming language like penguins are birds. And people try to make it fly.
 C++ does make a reasonably usable high-level assembler
+
+inv2004
+lambdabot: monads ?
 
 jjuggle
 I was riding around town and this cop on patrol on a bike rode up next to me and said, "There's always a show off." I offered to teach him to ride and help set up a unicycle patrol squad, but he declined.
@@ -420,6 +482,9 @@ l33t_h4x0r
 maybe if uve had some professor teach u bullshit in uni yea \n i learned on my own.. k.. i dun give a shit bout terms :p i just code
 
 lambdabot
+[in #haskell] there are a lot of weirdos on here
+ghc-6.5: panic! (the `impossible' happened, GHC version 6.5):        checkPr...
+Beer, it's so much more than just a breakfast drink!
 Done.
 why on the earth whould I slap dons with a wet trout
 Nobody brings small problems into a laundromat.
@@ -433,10 +498,17 @@ Of course i'm female
 lambdabot hasn't said anything memorable
 
 lennart
+the best way of debugging is to understand your code
+ I think people who come from imperative programming come with a mind set that you understand your code by stepping through it in the debugger.  But I find this paradigm much less useful for functional code
+[August 1990] DON'T BLAME HASKELL WHEN THINGS GO WRONG
+L M L  version 0.99. FTP a copy now and a free Haskell compiler is included.
 alonzo is our church
 Even though I'm largely responsible for making CPP available in a Haskell compiler I think it's an abomination.  It should be avoided
 
 lispy
+one thing that's funny about programming in haskell is, it's the only language i know where i sometimes rewrite code so it will work on 'inifinite' datastructures
+a := new Maybe(); a.envalue(1);
+lambdabot, changing the way Haskllers think since 2003
 I just remembered this dream i had the other morning.  I was trying to tell my alarm clock how to snooze by using a list comprehension
 
 liyang
@@ -456,20 +528,26 @@ I have to admit I'm still stunned when "tying the knot" actually works. it's lik
 mattam
 [Monads are] much more elegant [than soccer] in general.
 
+matthew-_
+wow, haskelldb is amazing. the type system tells me when I've forgotten to select certain columns!
+
 mikaeli
 hmm, one national tv station I was watching while eating breakfast crashed with bsod. I guess that's what you get for running windows in production use
 My friend bought a new laptop; it had MSBLASTER preinstalled. I couldn't believe it either and installed XP and the apps many times, run virus killers and everytime the blaster came back. Everything was packed on a rescue cd. And virus was in m$ works installation files.
 
 monochrom
+[monochrom] I prove my programs correct. [sjanssen] my programs are more correct than you deserve
 Do you know how godawful it is the 21st Century already and 2 out of 3 mainstream languages don't have nested functions, and the remaining 1 has it but only by way of an even more godawful construct?
 
 musasabi
+reallyUnsafePointerEq# seems unsafe.
 <musasabi> no reason to reinvent the whole wheel  <musasabi> (usually reinvented wheels end up square)
 
 mwc
 I actually got away with running Haskell through a TeX pretty printer and handing it in as pseudocode
 
 ndm
+This was not said by me
 outside of haskell i know roughly as many satan worshipers as christians.
 it needs a rewrite to support the wacky features i want to add, at amazing speed
 i once had a boss who complained because some code someone had written crashed, and yet "it clearly says in the company coding guidelines not to write code that crashes"
@@ -480,6 +558,7 @@ newbcoder
 newbcoder is the best of them all
 
 newsham
+irc bots executing external programs..  always a good idea! what could possibly go wrong?
 it would be neat having correct programs
 haskell's like chess.  easy to learn. hard to master.
 
@@ -488,6 +567,9 @@ joelr1: our C++ guru at work is getting a bit sick of me saying "ah, so that's l
 
 pesco
 "Scientists Reveal: Human Consciousness Stems From Two Files in Different Directories!"
+
+ralflammel
+I am confident about my admiration for Haskell
 
 reddi
 and now i know: IT DOES NOT WORK ALWAYS ;-)
@@ -520,6 +602,7 @@ GHC has more flags than the UN
 I've tried to teach people autodidactism, but I've realized they have to learn it for themselves.
 
 sieni
+the advantage of haskell is that it doesn't suck
 python, like php, is just training wheels without the bike
 scheme adheres to the TIMTOBFTTWTDI principle instead of TIMTOWTDI
 C provides people with the expressiveness of fortran combined with the portability of assembler
@@ -552,6 +635,9 @@ Many people think the core ideas behind Haskell came from academic luminaries su
 tennin
 [very #haskell] anyone know of any good books/papers on the application of category theory to databases?
 
+therp
+good morning. I think I have been dreaming of shift/reset continuations...
+
 tomasz
 After all, return is only a fancy name for liftM0 :-)
 
@@ -565,6 +651,8 @@ vegai
 Hey Haskell! Give me that File! -Naah, I'm too lazy. *thinks* I'll give you a cookie if you tell me how many letters that file has! -Oh, ok!
 
 vincenz
+[Ocaml] used to be pretty, Haskell made it ugly
+[talking about lambdabot] cause it really is a grand development tool
 Geek is Chique.
 
 vixen
@@ -572,6 +660,9 @@ If you see this, gentle sir, know that you are being trolled by a poorly configu
 
 wadler
 Curried food and curried functions are both aquired tastes
+
+weitzman
+Sometimes it's ok to polish diningware with a hammer, as long as it gets the job done
 
 wilx
 I mean, besides the murders, it all looks so nice.
@@ -583,4 +674,7 @@ xerox
 I am really interested specifically in bottoms in this very moment.
 > take 10 lol where lol = "ol" : zipWith (:) (intersperse 'o' $ cycle "l") lol
 you know, befunge is probably the only language I've seen where you can run code pasted from IRC with the <nick> tags still in place ;-)
+
+your_mom
+Oh, that felt good.  Can you do it again?
 

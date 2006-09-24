@@ -1,3 +1,7 @@
+"fold
+diagrams" http://cale.yi.org/index.php/Fold_Diagrams
+aam
+http://www.nomaware.com/monads/
 agda
 http://www.cs.chalmers.se/~catarina/agda/
 alar
@@ -6,14 +10,20 @@ alex
 http://www.haskell.org/alex/
 anglohaskell
 http://haskell.org/haskellwiki/AngloHaskell
+aprove
+http://aprove.informatik.rwth-aachen.de/
 arrows
 http://www.haskell.org/arrows/
 astrolabe
 http://www.mhs.ox.ac.uk/epact/picturel.asp?record=95&enumber=40428&level=overview&sort=InstrumentTypeWithoutMarkup&searchtext=
+ats
+http://hackage.haskell.org/trac/haskell-prime/wiki/AssociatedTypes
 autrijus
 http://use.perl.org/~autrijus/journal/
 bark
 http://urchin.earth.li/darcs/ian/bts/
+base
+http://darcs.haskell.org/packages/base/
 blobs
 http://haskell.org/Blobs
 bnfc
@@ -31,7 +41,7 @@ http://www.cse.unsw.edu.au/~chak/haskell/c2hs/
 cabal
 http://www.haskell.org/cabal
 cabal-get
-http://hackage.haskell.org/darcs/cabal-get-bootstrap/
+cabal-get is now cabal-install, and is in Cabal's source tree
 cairo
 http://haskell.org/gtk2hs/
 catch
@@ -40,12 +50,16 @@ cayenne
 http://www.cs.chalmers.se/~augustss/cayenne/index.html
 commentary
 http://www.cse.unsw.edu.au/~chak/haskell/ghc/comm/
+comp.lang.functional
+http://groups.google.com/group/comp.lang.functional/about?hl=e
 conjure
 http://darcs.haskell.org/~lemmih/conjure/
 conjure-alt
 http://darcs.haskell.org/~lemmih/conjure
 cpphs
 http://www.cs.york.ac.uk/fp/cpphs/
+crypto
+http://www.haskell.org/crypto
 ctk
 http://www.cse.unsw.edu.auc/~chak/haskell/ctk/index.html
 curry
@@ -89,7 +103,9 @@ http://www.e-pig.org/
 f#
 http://research.microsoft.com/fsharp/fsharp.aspx
 fastcgi
-http://www.cs.chalmers.se/~bringert/darcs/haskell-fastcgi/
+http://www.cs.chalmers.se/~bringert/darcs/haskell-fastcgi/doc/
+fc
+http://www.cse.unsw.edu.au/~chak/project/fc/
 ffi
 http://www.cse.unsw.edu.au/~chak/haskell/ffi/
 fgl
@@ -98,6 +114,8 @@ filepath
 http://darcs.haskell.org/~lemmih/FilePath
 flippi
 http://www.flippac.org/projects/flippi/
+folds
+http://cale.yi.org/index.php/Fold_Diagrams
 fps
 http://www.cse.unsw.edu.au/~dons/fps.html
 fptools
@@ -106,6 +124,8 @@ frag
 http://www.haskell.org/haskellwiki/Frag
 free
 http://andrew.bromage.org/darcs/freetheorems
+fruit
+http://haskell.org/fruit/
 gadt
 http://www.haskell.org/ghc/docs/latest/html/users_guide/gadt.html
 gf
@@ -133,7 +153,7 @@ http://www.cs.chalmers.se/~boquist/ifl96-abstract.html
 gtk2hs
 http://haskell.org/gtk2hs/
 guihaskell
-http://www.cs.york.ac.uk/fp/darcs/guihaskell
+http://www-users.cs.york.ac.uk/~ndm/projects/guihaskell.php
 h4sh
 http://www.cse.unsw.edu.au/~dons/h4sh.html
 h98
@@ -166,6 +186,10 @@ haskell
 http://haskell.org/
 haskell'
 http://hackage.haskell.org/trac/haskell-prime
+haskell-cgi
+http://www.cs.chalmers.se/~bringert/darcs/haskell-cgi/
+haskell-exts
+http://hackage.haskell.org/trac/haskell-prime/wiki/HaskellExtensions
 haskell-for-mathematicians
 http://sigfpe.blogspot.com/2006/01/eleven-reasons-to-use-haskell-as.html
 haskell-mode
@@ -191,9 +215,15 @@ http://scannedinavian.com/~lemmih/hasp
 haste
 http://haste.dyndns.org:8080/
 hat
-http://haskell.org/hat
+www.haskell.org/hat/
+hat-anim
+http://www.haskell.org/hat
+hat-detect
+http://www.haskell.org/hat
 hat-gui
 http://www-users.cs.york.ac.uk/~ndm/projects/hat.php
+hat-observe
+http://www.haskell.org/hat
 hawiki
 http://haskell.org/hawiki/
 haxml
@@ -220,6 +250,8 @@ hmp3
 http://www.cse.unsw.edu.au/~dons/hmp3.html
 hnop
 http://semantic.org/hnop/
+hood
+www.haskell.org/hood/
 hoogle
 http://www.haskell.org/hoogle
 hop
@@ -294,6 +326,8 @@ lambdashell
 darcs get http://www.eecs.tufts.edu/~rdocki01/lambda/
 lambdatex
 http://www.cse.unsw.edu.au/~patrykz/lambdaTeX/
+lambdaweb
+http://lambdabot.codersbase.com
 lazy-regex
 http://sourceforge.net/projects/lazy-regex
 lhs2tex
@@ -352,6 +386,10 @@ planet-haskell
 http://antti-juhani.kaijanaho.fi/planet-haskell/
 planethaskell
 http://antti-juhani.kaijanaho.fi/planet-haskell/
+plbook
+http://www-2.cs.cmu.edu/~rwh/plbook/
+pretty-hat
+http://www.haskell.org/hat
 pronunciation
 http://www.haskell.org/tmrwiki/IssueSix
 proplang
@@ -384,6 +422,8 @@ shellac
 darcs get http://www.eecs.tufts.edu/~rdocki01/shell/
 shootout
 http://shootout.alioth.debian.org/
+smallcheck
+http://www.cs.york.ac.uk/fp/smallcheck0.1.tar
 soc
 http://hackage.haskell.org/trac/summer-of-code/
 soe
@@ -400,10 +440,14 @@ stm
 http://research.microsoft.com/Users/simonpj/papers/stm/
 style
 http://haskell.org/haskellwiki/Programming_guidelines
+syntax
+http://cs.anu.edu.au/Student/comp1100/haskell/tourofsyntax.html
 system.filepath
 http://www.cs.york.ac.uk/fp/darcs/filepath
 textregexlazy
 http://sourceforge.net/projects/lazy-regex
+timeline
+http://www.cs.mu.oz.au/~bjpop/timeline/timeline.5.png
 tmr
 http://www.haskell.org/tmrwiki/FrontPage
 tutorial
@@ -434,10 +478,12 @@ winhaskell
 http://www-users.cs.york.ac.uk/~ndm/projects/winhaskell.php
 winhugs
 http://www.cs.york.ac.uk/~ndm/projects/winhugs.php
+wxfruit
+http://zoo.cs.yale.edu/classes/cs490/03-04b/bartholomew.robinson/
 wxhaskell
 http://wxhaskell.sourceforge.net/
 yaht
-http://www.cs.utah.edu/~hal/htut/
+http://www.cs.utah.edu/~hal/docs/daume02yaht.pdf
 yampa
 http://www.haskell.org/yampa/
 yhc
