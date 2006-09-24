@@ -316,8 +316,7 @@ getAnswer msg rest seenFM now
 joinCB :: Message.Message a => a -> SeenMap -> ClockTime -> Nick -> Either String SeenMap
 joinCB msg fm _ct nick
   | nick == (P.pack myname) = Right fm
-  | otherwise = Right $! insertUpd
-                    $! updateJ Nothing (map P.pack $! Message.channels msg)) nick newInfo fm
+  | otherwise = Right $! insertUpd (updateJ Nothing (map P.pack $! Message.channels msg)) nick newInfo fm
   where newInfo = Present Nothing (map P.pack $! Message.channels msg)
 
 
@@ -381,7 +380,7 @@ joinChanCB msg fm now _nick
 msgCB :: Message.Message a => a -> SeenMap -> ClockTime -> Nick -> Either String SeenMap
 msgCB _ fm ct nick =
   case M.lookup nick fm of
-    Just (Present _ xs) -> Right $1
+    Just (Present _ xs) -> Right $ 
       M.insert nick (Present (Just (ct, noTimeDiff)) xs) fm
     _ -> Left "someone who isn't here msg us"
 

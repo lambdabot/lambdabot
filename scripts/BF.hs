@@ -1,3 +1,4 @@
+{-# OPTIONS -cpp #-}
 -- This is an interpreter of the braif*ck language, written in
 -- the pure, lazy, functional language Haskell.
 -- 
@@ -19,7 +20,11 @@
 --
 
 import Data.Array.IO
+#if __GLASGOW_HASKELL__ >= 606
+import Data.Array hiding (array)
+#else
 import Data.Array hiding (array,bounds)
+#endif
 import Data.Array.Base   (unsafeRead, unsafeWrite, array)
 import Data.Word         ( Word8(..) )
 import Data.Char         ( ord, chr )
