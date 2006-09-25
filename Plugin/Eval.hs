@@ -133,7 +133,7 @@ munge = expandTab . dropWhile (=='\n') . dropNL . clean_
 -- Clean up runplugs' output
 --
 clean_ :: String -> String
-clean_ s| Just _         <- no_io      `matchRegex`    s = "Pervert!\n"
+clean_ s| Just _         <- no_io      `matchRegex`    s = "No IO allowed\n"
         | Just _         <- terminated `matchRegex`    s = "Terminated\n"
         | Just _         <- hput       `matchRegex`    s = "Terminated\n"
         | Just _         <- stack_o_f  `matchRegex`    s = "Stack overflow\n"
