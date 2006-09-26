@@ -45,7 +45,7 @@ datas   = map ("Data." ++) [
                 "Maybe", "Ratio", "Tree", "Tuple", "Typeable", "Word" 
               ]
 
-controls = map ("Control." ++) ["Monad", "Monad.Cont", "Monad.State", "Monad.ST", "Monad.Writer", "Monad.Reader", "Monad.Fix", "Arrow"]
+controls = map ("Control." ++) ["Monad", "Monad.Cont", "Monad.State", "Monad.Writer", "Monad.Reader", "Monad.Fix", "Arrow"]
 
 extras   = ["ShowQ","ShowFun","Test.QuickCheck","qualified L"] -- a show instance for (Q a)
 
