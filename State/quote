@@ -118,6 +118,7 @@ An algorithm for lazy evaluation of research papers: Just write whatever you wan
 I get the impression that using [Haskell] would feel like reading a novel written by a literary critic.
 
 Philippa
+<vincenz> Philippa: forget theory, it's about pragmatics <Philippa> we're talking FP, they tend to be the same thing
 hey, if the guy wants a monadectomy that's his choice
 
 Pseudonym
@@ -156,6 +157,7 @@ SebastianHanowski
 I tried to formalise a proof of rev (rev l)  = l i found in W. Kluges book "Abstract Computing Machines - A Lambda Calculus Perspective" which is pretty much a 'Pimp My Ride' for SECD-machines.
 
 SyntaxNinja
+* SyntaxNinja does the type-checking dance ;)
 I recommend seeing if people have a major problem, then pouring concrete on them, and implementing what you want anyway ;)
 You'd be surprised how hard is to hire haskellers :( They're all like, "Yeah, I'll come work for you, and by 'come' I mean stay here and work remotely and by 'work for you' I mean I'll keep doing what I'm doing." ;)
 I think that the compiler authors will fly here from England just to kill me if I did that
