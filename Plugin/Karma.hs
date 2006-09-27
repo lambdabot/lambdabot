@@ -45,7 +45,7 @@ instance Module KarmaModule KarmaState where
             Just (nick, op) -> do changeKarma (fn op) sender nick -- silently
                                   return []
 
-      where regex = mkRegex "^([a-zA-Z0-9_']+)(\\+\\+|--)($| )"
+      where regex = mkRegex "^([a-zA-Z0-9_'+-]*[a-zA-Z0-9_'])(\\+\\+|--)($| )"
             match s = do (_, _, _, [nick, op, _]) <- matchRegexAll regex s
                          return (nick, op)
 
