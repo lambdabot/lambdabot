@@ -69,11 +69,11 @@ define src = case parseModule (src ++ "\n") of -- extra \n so comments are parse
     (ParseFailed _ e) -> return $ " " ++ e
     _                 -> return "Invalid declaration"
  where
-    okay (HsTypeSig _ _ _)     = True
-    okay (HsFunBind _)         = True
-    okay (HsPatBind _ _ _ _)   = True
-    okay (HsInfixDecl _ _ _ _) = True
-    okay _                     = False
+    okay (HsTypeSig   {}) = True
+    okay (HsFunBind   {}) = True
+    okay (HsPatBind   {}) = True
+    okay (HsInfixDecl {}) = True
+    okay _                = False
 
 -- It parses. then add it to a temporary L.hs and typecheck
 compile :: Maybe String -> IO String
