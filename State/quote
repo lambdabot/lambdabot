@@ -11,6 +11,12 @@ Saying that Java is nice because it works on all OS's is like saying that anal s
 Baughn
 I think I'm beginning to understand this language. I just defined 1+1=3.
 
+BillWood
+it became obvious that when a Prolog program is tuned by removing non-determinism it moves towards a functional program.
+
+BjarneStroustrup
+any verbose and tedious solution is error-prone because programmers get bored. [S 9.4 of C++, 2nd edition]
+
 Bulat
 there is new Time library, which is supposed to replace old System.Time. we hope that it will happen before 2038
 
@@ -51,6 +57,9 @@ in haskell you can have korean smilies as variables! like (^-^)
 
 Gahhh
 monads are usually a personal experience.
+
+HamiltonRichards
+It's fair to say that functional programming requires a very different mind-set, but once you've made the "jump", programming in conventional languages feels like doing arithmetic in Roman numerals.
 
 HavocPennington
 Haskell is the least-broken programming language available today.
@@ -96,6 +105,9 @@ my brain is fried. I cant read any more STM papers
 an olegweek is a complex entity with an imaginary part
 an olegweek is a complex entity with an imaginary part
 
+LarryWall
+..take Lisp. You know it's the most beautiful language in the world. At least up until Haskell came along.
+
 Lemmih
 inv2004: Haskell isn't like all the other mainstream languages. You really need to read a tutorial.
 <shapr> Any idea where we should meet?  *** Lemmih opens Google Earth.
@@ -118,6 +130,7 @@ An algorithm for lazy evaluation of research papers: Just write whatever you wan
 I get the impression that using [Haskell] would feel like reading a novel written by a literary critic.
 
 Philippa
+because emacs wasn't a good enough OS after all
 <vincenz> Philippa: forget theory, it's about pragmatics <Philippa> we're talking FP, they tend to be the same thing
 hey, if the guy wants a monadectomy that's his choice
 
@@ -243,6 +256,11 @@ using logic in imperative programming language channels is generally considered 
 I believe that OO is intrinsically defective and digresses from a formal definition of "software"
 
 dons
+that's 3 things i've never seen in the one sentence before: my assembler .. a bunch of type classes .. a natural syntax
+yeah, good idea. use C++ as the prototyping language
+sometimes this channel is weird
+note that you're using all the advanced features of haskell in 1 line here...
+Welcome to computer science, we count from 0.
 note down this date, people, 13-09-2006. today lambdabot == skynet
 global state is just another pure value :)
 dons has quit ("improve @check")
@@ -432,11 +450,15 @@ ghci.debugger
 http://haskell.org/haskellwiki/Ghci/Debugger
 
 glguy
+this is like Web 5GL. I like it
 11th commandment, don't use cygwin because it is crap
 that's odd, mine is this big : |-----------------------------|
 
 gmh33
 Haskell makes so much more sense now and all I did was figure out the typing thing
+
+goltrpoat
+Lemma: three cats chasing a deranged cricket all over the living room at 4am does not provide for a good reading environment
 
 gzl
 [on why monads are scary] maybe it's because people look up monad on wikipedia, find the category theory page, and crap themselves
@@ -484,6 +506,7 @@ l33t_h4x0r
 maybe if uve had some professor teach u bullshit in uni yea \n i learned on my own.. k.. i dun give a shit bout terms :p i just code
 
 lambdabot
+<chessguy> sorry, this is the bird book: http://www.amazon.com/Introduction-Functional-Programming-2nd-Bird/dp/0134843460/sr=8-6/qid=1159309594/ref=pd_bbs_6/104-1423720-3100708?ie=UTF8&s=books  <lambdabot> http://tinyurl.com/root7
 [in #haskell] there are a lot of weirdos on here
 ghc-6.5: panic! (the `impossible' happened, GHC version 6.5):        checkPr...
 Beer, it's so much more than just a breakfast drink!
@@ -538,6 +561,7 @@ hmm, one national tv station I was watching while eating breakfast crashed with 
 My friend bought a new laptop; it had MSBLASTER preinstalled. I couldn't believe it either and installed XP and the apps many times, run virus killers and everytime the blaster came back. Everything was packed on a rescue cd. And virus was in m$ works installation files.
 
 monochrom
+All numbers just sit there doing nothing.
 [monochrom] I prove my programs correct. [sjanssen] my programs are more correct than you deserve
 Do you know how godawful it is the 21st Century already and 2 out of 3 mainstream languages don't have nested functions, and the remaining 1 has it but only by way of an even more godawful construct?
 
@@ -610,6 +634,7 @@ scheme adheres to the TIMTOBFTTWTDI principle instead of TIMTOWTDI
 C provides people with the expressiveness of fortran combined with the portability of assembler
 
 sjanssen
+Quoth the Prelude, Chapter 6, verse 4:  Yeah verily shall repeat floweth cons cells over.
 @djinn Haskell -> Curry
 
 skew
@@ -631,6 +656,7 @@ how can you possibly implement business logic without knowing about Schonfinkel!
 I wrote 1 + 1 in php once, and got 11 -- wasn't quite what I was hoping for
 
 syntaxfree
+<Bourbaki> the best thing i have ever read in economy is a statement of some guy "i have never met the homo oeconomicus" <syntaxfree> I have never met a catamorphism, either.
 one could use the euro symbol for left-associative $.
 Many people think the core ideas behind Haskell came from academic luminaries such as Philip Wadler and Simon Peyton-Jones. What actually happened is that during a functional programming conference, some key academics were teleported to the Deep Complex Universe. In the Deep Complex Universe some Gnomes were having Tangling problems. Wadler & friends solved their problems and as a reward the Tangled Gnomes gave them the S
 
@@ -664,6 +690,7 @@ wadler
 Curried food and curried functions are both aquired tastes
 
 weitzman
+The Prelude needs verse numbers to use when quoting it.
 Sometimes it's ok to polish diningware with a hammer, as long as it gets the job done
 
 wilx
@@ -673,6 +700,7 @@ xahlee
 The Haskell Logo is the perfection of logos
 
 xerox
+dcoutts: why don't you fly?
 I am really interested specifically in bottoms in this very moment.
 > take 10 lol where lol = "ol" : zipWith (:) (intersperse 'o' $ cycle "l") lol
 you know, befunge is probably the only language I've seen where you can run code pasted from IRC with the <nick> tags still in place ;-)

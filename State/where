@@ -24,6 +24,8 @@ bark
 http://urchin.earth.li/darcs/ian/bts/
 base
 http://darcs.haskell.org/packages/base/
+bitsyntax
+http://www.imperialviolet.org/binary/bitsyntax/
 blobs
 http://haskell.org/Blobs
 bnfc
@@ -94,6 +96,8 @@ drhaskell
 http://www.cs.york.ac.uk/fp/darcs/drhaskell/
 drift
 http://repetae.net/john/computer/haskell/DrIFT/
+dwm
+http://www.shortest.de/view/dynamic+window+manager
 edison
 http://www.eecs.tufts.edu/~rdocki01/edison.html
 edwardk
@@ -342,10 +346,14 @@ logs
 http://tunes.org/~nef/logs/haskell/ http://meme.b9.com/cdates.html?channel=haskell
 ltu
 http://lambda-the-ultimate.org/
+map
+http://www.haskell.org/hawiki/HaskellUserLocations
 minho
 http://wiki.di.uminho.pt/wiki/bin/view/PURe/PUReSoftware
 missingh
 http://quux.org/devel/missingh
+monadlib
+http://www.cse.ogi.edu/~diatchki/monadLib/
 monads
 http://www.nomaware.com/monads/html/index.html
 morrow
@@ -374,6 +382,8 @@ paste
 http://paste.lisp.org/new/haskell
 pastebin
 http://rafb.net/paste
+performance
+http://haskell.org/haskellwiki/Performance
 pfpl
 http://www.cs.cmu.edu/~rwh/plbook/book.pdf
 phrac
