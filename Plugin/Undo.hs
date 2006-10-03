@@ -39,7 +39,7 @@ findVar e = head $ do
 
 transform :: (HsExp -> HsExp -> HsExp) -> String -> String
 transform f s =
-    case parseExpr s of
+    case parseExpr (s ++ "\n") of -- newline to make comments work
         ParseOk e -> prettyPrintWithMode ppMode $ everywhere (mkT $ f e) e
         err       -> show err
 
