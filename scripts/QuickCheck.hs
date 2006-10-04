@@ -39,7 +39,7 @@ qualifieds = ["qualified Data.Map as M"
              ,"qualified Data.IntSet as I"]
 
 datas   = map ("Data." ++) [
-                "Array", "Complex",
+                "Array", "Complex", "Generics",
                 "Bits", "Bool", "Char", "Dynamic", "Either", 
                 "Graph", "Int", "Ix", "List",
                 "Maybe", "Ratio", "Tree", "Tuple", "Typeable", "Word" 

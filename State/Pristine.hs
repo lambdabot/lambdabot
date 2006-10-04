@@ -8,6 +8,7 @@ import Numeric
 import Random
 import Data.Array
 import Data.Complex
+import Data.Generics
 import Data.Bits
 import Data.Bool
 import Data.Char
