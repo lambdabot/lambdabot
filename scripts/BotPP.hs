@@ -69,10 +69,13 @@ modules s =
     [pack "plugins :: [String]\n"
     ,pack "plugins = []\n"]
 
-    where ms  = sort $ B.split ' ' s
+    where ms  = filter nonWhitespace . sort $ B.split ' ' s
           importify x = [pack "import qualified Plugin.", x, B.singleton '\n']
           instalify x = [pack "  ircInstallModule Plugin.",x
                         ,pack ".theModule \""
                         ,B.map toLower x
                         , pack "\"\n"]
-
+          nonWhitespace s 
+              | s == pack ""   = False
+              | s == pack "\n" = False
+              | otherwise      = True
