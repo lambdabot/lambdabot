@@ -8,6 +8,7 @@ import Numeric
 import Random
 import Data.Array
 import Data.Complex
+import Data.Generics
 import Data.Bits
 import Data.Bool
 import Data.Char
@@ -38,3 +39,9 @@ import Test.QuickCheck
 import ShowQ
 
 {-# LINE 1 "<local>" #-}
+epsilon = last $ takeWhile (\x -> 1 + x /= 1) $ iterate (/2) 1
+wrap [a,b,c] = (a,b,c)
+f x = r where r = x + 1
+fib' 0 = (0,1)
+fib' n = if n `mod` 2 == 0 then (let { (a,b) = fib' (n `div` 2 - 1) ; c = a + b ; c2 = c*c } in (c2 - a*a, c2 + b*b)) else (let { (a,b) = fib' ((n-1) `div` 2) ; c = a + b; a2 = a*a } in (b*b + a2, c*c - a2))
+fib n = fst (fib' n)

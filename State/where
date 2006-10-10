@@ -246,6 +246,8 @@ hier
 http://haskell.org/ghc/docs/latest/html/libraries/index.html
 himerge
 http://www.haskell.org/~luisfaraujo/himerge/
+hinotify
+http://haskell.org/~kolmodin/code/hinotify/
 hlist
 http://homepages.cwi.nl/~ralf/hlist/
 hmake
@@ -254,6 +256,8 @@ hmp3
 http://www.cse.unsw.edu.au/~dons/hmp3.html
 hnop
 http://semantic.org/hnop/
+hogg
+http://snapper.kfish.org/~conrad/software/hogg/
 hood
 www.haskell.org/hood/
 hoogle
