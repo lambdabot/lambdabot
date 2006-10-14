@@ -36,10 +36,11 @@ prehier = ["Char", "List", "Maybe", "Numeric", "Random" ]
 
 qualifieds = ["qualified Data.Map as M"
              ,"qualified Data.Set as S"
+             ,"qualified Data.Generics as G"
              ,"qualified Data.IntSet as I"]
 
 datas   = map ("Data." ++) [
-                "Array", "Complex", "Generics",
+                "Array", "Complex", 
                 "Bits", "Bool", "Char", "Dynamic", "Either", 
                 "Graph", "Int", "Ix", "List",
                 "Maybe", "Ratio", "Tree", "Tuple", "Typeable", "Word" 
