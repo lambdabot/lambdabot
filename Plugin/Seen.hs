@@ -166,7 +166,7 @@ instance Module SeenModule SeenState where
              recent t = normalizeTimeDiff (diffClockTimes s t) < gap_minutes
              gap_minutes = TimeDiff 0 0 0 4 0 0 0 -- 4 hours
 
-         return $
+         return $!
            [concat
               [ "Maximum users seen in ", target, ": "
               , show n
@@ -408,8 +408,8 @@ withSeenFM f msg = do
           Left _         -> return () -- debugStrLn $ "SeenModule> " ++ err
           Right newstate -> do
 
-                let curUsers = length $ [ () | (_,Present _ chans) <- M.toList state
-                                        , P.pack chan `elem` chans ]
+                let curUsers = length $! [ () | (_,Present _ chans) <- M.toList state
+                                         , P.pack chan `elem` chans ]
 
                     newMax = case M.lookup chan maxUsers of
                         Nothing -> M.insert chan curUsers maxUsers
@@ -417,9 +417,9 @@ withSeenFM f msg = do
                                         then M.insert chan curUsers maxUsers
                                         else maxUsers
 
-                writer (newMax, newstate)
+                newMax `seq` newstate `seq` writer (newMax, newstate)
 
-    where chan = head . Message.channels $ msg
+    where chan = head . Message.channels $! msg
 
 -- | Update the user status.
 updateJ :: Maybe ClockTime -- ^ If the bot joined the channel, the time that 
@@ -459,10 +459,10 @@ zeroWatch :: StopWatch
 zeroWatch = Stopped noTimeDiff
 
 startWatch :: ClockTime -> StopWatch -> StopWatch
-startWatch now (Stopped td) = Running $ td `addToClockTime` now
+startWatch now (Stopped td) = Running $! td `addToClockTime` now
 startWatch _ alreadyStarted = alreadyStarted
 
 stopWatch :: ClockTime -> StopWatch -> StopWatch
-stopWatch now (Running t)  = Stopped $ t `diffClockTimes` now
+stopWatch now (Running t)  = Stopped $! t `diffClockTimes` now
 stopWatch _ alreadyStopped = alreadyStopped
 
