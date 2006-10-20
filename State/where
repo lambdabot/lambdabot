@@ -64,6 +64,8 @@ crypto
 http://www.haskell.org/crypto
 ctk
 http://www.cse.unsw.edu.auc/~chak/haskell/ctk/index.html
+cufp
+www.galois.com/cufp
 curry
 http://www.informatik.uni-kiel.de/~mh/curry/
 cvs-ghc
@@ -115,7 +117,7 @@ http://www.cse.unsw.edu.au/~chak/haskell/ffi/
 fgl
 http://www.cs.orst.edu/~erwig/fgl/
 filepath
-http://darcs.haskell.org/~lemmih/FilePath
+http://www-users.cs.york.ac.uk/~ndm/projects/libraries.php
 flippi
 http://www.flippac.org/projects/flippi/
 folds

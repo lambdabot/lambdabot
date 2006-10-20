@@ -39,9 +39,16 @@ import Test.QuickCheck
 import ShowQ
 
 {-# LINE 1 "<local>" #-}
-epsilon = last $ takeWhile (\x -> 1 + x /= 1) $ iterate (/2) 1
-wrap [a,b,c] = (a,b,c)
-f x = r where r = x + 1
-fib' 0 = (0,1)
-fib' n = if n `mod` 2 == 0 then (let { (a,b) = fib' (n `div` 2 - 1) ; c = a + b ; c2 = c*c } in (c2 - a*a, c2 + b*b)) else (let { (a,b) = fib' ((n-1) `div` 2) ; c = a + b; a2 = a*a } in (b*b + a2, c*c - a2))
-fib n = fst (fib' n)
+fac n = product [1..n]
+fib3' a b c d = if a `div` c == b `div` d then a `div` c else fib3' (a+b) a (c+d) c
+fib3 0 = 0
+fib3 1 = 1
+fib3 2 = 1
+fib3 3 = 2
+fib3 k = let { (q,r) = k `divMod` 2; a = fib3 q; b = fib3' (4*a+1) (2*a+1) 2 2 } in if r == 0 then 2*a*b - a*a else a*a + b*b
+test = 4
+snd3 (_,x,_) = x
+seqZip = ((tail >>=) . zipWith)
+sieve (p:ns) = p : sieve (filter (\n -> n `mod` p /= 0) ns)
+posRandom = let f x = (do (r, g') <- gets (randomR (0,3)); put g'; case r of 0 -> return x; 1 -> f (x * 2); _ -> f (x * 2 + 1)) in f 0 :: State StdGen Integer
+x = "x"

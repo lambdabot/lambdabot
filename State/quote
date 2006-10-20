@@ -88,6 +88,7 @@ not all IOError -> String functions are created equal :)
 I'm afraid I'm completely IA64-ignorant (and hoping to remain that way until IA64 goes away :-)
 
 JohnMeacham
+her name is lambda and she dances on the sand
 I liken learning haskell to tipping over a vending machine. you can't just push it, you gotta rock it back and forth a few times building up momentum until bam! suddenly the flash of insight hits and it all makes sense.
 There will also be a karaoke competition to determine the fate of the monomorphism restriction.
 Type theory makes totally awesome material for bar room shit talk.
@@ -162,6 +163,7 @@ or maybe she is the Queen of Sciences and he is the Mack Daddy.
 Computer science is the womanizer, and math is the pure-hearted girl he won't call the next day.
 
 SamB
+O(n^2) is better than O(hair-gone)
 Haskell is the only language I know with first-class support for imperative programming
 <SamB> @. bf . id . pl . v . wn yow  <lambdabot> Done.
 I was just saying that encasing poeple in concrete is not the best solution to that problem
@@ -244,6 +246,9 @@ i think coding in your sleep should trigger an exception
 
 boegel
 goes to inflate Itkovians balls
+
+chessguy
+i didn't think pennsylvania had anybody cool enough to know haskell in it
 
 chromatic
 My productivity increased when Autrijus told me about Haskell's trace function. He called it a refreshing desert in the oasis of referential transparency.
@@ -341,6 +346,7 @@ gaal
 (ghc predicted a cpu death on my computer once.)
 
 ghc
+Urk! Inventing strangely-kinded void TyCon: :t{tc a5gUj} (* -> *) -> * -> *
 mkProtoBCO: stack use won't fit in 16 bits 150813
 You can get a PhD for explaining the True Meaning of this last construct
 Urk! Inventing strangely-kinded void TyCon: [..] (* -> *) -> * -> *
@@ -503,6 +509,7 @@ Laziness is free, but it doesn't always pay off.
 Oops, I forgot that Djinn doesn't do GADT's.
 
 int-e
+What, unsafeCoerce# is kind-preserving? how boring :/
 PHP is a programming language like penguins are birds. And people try to make it fly.
 C++ does make a reasonably usable high-level assembler
 
@@ -556,6 +563,7 @@ largos
 [on programming languages] "...and I'd rather not own as much rope as c/c++ gives you."
 
 lennart
+floating point numbers are terrible.  I maintain that before using them people should have an floating point drivers license
 Excel is very much alive.
 the best way of debugging is to understand your code
  I think people who come from imperative programming come with a mind set that you understand your code by stepping through it in the debugger.  But I find this paradigm much less useful for functional code
@@ -603,6 +611,7 @@ All numbers just sit there doing nothing.
 Do you know how godawful it is the 21st Century already and 2 out of 3 mainstream languages don't have nested functions, and the remaining 1 has it but only by way of an even more godawful construct?
 
 musasabi
+combining Cabal and autoconf is an evil and complex art.
 reallyUnsafePointerEq# seems unsafe.
 <musasabi> no reason to reinvent the whole wheel  <musasabi> (usually reinvented wheels end up square)
 
@@ -645,6 +654,8 @@ reddi
 and now i know: IT DOES NOT WORK ALWAYS ;-)
 
 roconnor
+<roconnor> xerox: I'm dumber than a turning machine.
+error "there is no spoon" :: not Spoon
  O(n) is slow when n=infinity
 life lesson from today: 1 closure is nice, 500 000 closures sucks
 
@@ -678,6 +689,9 @@ the advantage of haskell is that it doesn't suck
 python, like php, is just training wheels without the bike
 scheme adheres to the TIMTOBFTTWTDI principle instead of TIMTOWTDI
 C provides people with the expressiveness of fortran combined with the portability of assembler
+
+sigfpe
+Haskell is so strict about type safety that randomly generated snippets of code that successfully typecheck are likely to do something useful, even if you've no idea what that useful thing is.
 
 simonpj
 You may not like this but this should work..
@@ -750,6 +764,8 @@ xahlee
 The Haskell Logo is the perfection of logos
 
 xerox
+#haskell is a good code optimizer.
+#haskell is a good code optimizer.
 The more [language] extensions, the bigger the fun
 dcoutts: why don't you fly?
 I am really interested specifically in bottoms in this very moment.
