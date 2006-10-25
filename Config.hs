@@ -67,6 +67,7 @@ config = Config {
                           ,"#haskell.it"
                           ,"#haskell.se"
                           ,"#haskell.es"
+                          ,"#haskell.jp"
                           ,"#haskell_ru"
                           ,"#gentoo-haskell"
                           ,"#ghc"
