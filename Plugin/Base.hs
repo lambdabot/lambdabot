@@ -6,7 +6,8 @@ module Plugin.Base (theModule) where
 import Plugin
 
 import IRC (IrcMessage, timeReply, errShowMsg)
-import Message (getTopic, nick, joinChannel, body, fullName, channels)
+-- import Message (getTopic, nick, joinChannel, body, fullName, channels)
+import Message (getTopic, nick, joinChannel, body)
 
 import qualified Data.Map as M   (insert, delete)
 
@@ -14,7 +15,7 @@ import Control.Monad.State  (MonadState(..), when, gets)
 
 import GHC.IOBase           (Exception(NoMethodError))
 import Data.IORef
-import System.Time  
+-- import System.Time  
 
 -- valid command prefixes
 commands :: [String]
@@ -141,13 +142,13 @@ doRPL_TOPIC msg -- nearly the same as doTOPIC but has our nick on the front of b
 
 doPRIVMSG :: IrcMessage -> Base ()
 doPRIVMSG msg = do
-    now <- io getClockTime
-    io $ appendFile "State/log" $ ppr now
+--  now <- io getClockTime
+--  io $ appendFile "State/log" $ ppr now
     doPRIVMSG' (name config) msg
-    where
-      ppr now = concat [ timeStamp now, " ", "<", (nick msg), " ", (fullName msg), " #"
-                       , (concat . intersperse ","  $ channels msg) ,  "> "
-                       , (tail . concat . intersperse " " . tail) (body msg), "\n"]
+--  where
+--    ppr now = concat [ timeStamp now, " ", "<", (nick msg), " ", (fullName msg), " #"
+--                     , (concat . intersperse ","  $ channels msg) ,  "> "
+--                     , (tail . concat . intersperse " " . tail) (body msg), "\n"]
 
 --
 -- | What does the bot respond to?
