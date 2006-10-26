@@ -87,6 +87,9 @@ stewieList =
 --
 -- Actual quotes from an asshat called Keal over Jan 12-14 2006.
 --
+-- Reappared as OrangeKid, 
+-- 06.10.18:19:44:00 --- join: OrangeKid -- (n=TRK@unaffiliated/Keal) joined #haskell
+--
 kealList :: [String]
 kealList =
     ["endian mirrors the decimal"
@@ -179,6 +182,7 @@ kealList =
     ,"pork steaks taste like dick"
     ,"i dont really eat vegetables unless cheese is a vegetable"
     ,"the [nsa] even make light green both ways once"
+    ,"i still dont understand how gci is supposed to do anything other than mathematics"
     ]
 
 --
