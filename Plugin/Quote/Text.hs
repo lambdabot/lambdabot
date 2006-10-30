@@ -311,6 +311,7 @@ notoriousV =
 --  protontorpedo deathsstar gavino99 proton-weapon thumper9 star-trekio
 --  differentActGetD howya-doin linux-fun boobhz booger perlIsBetter
 --  ramserver newlambder
+--  bublle-war ion-cannon 
 --
 -- n=bo@pool-71-106-182-86.lsanca.dsl-w.verizon.net
 -- n=root@masqrd.la.teampcs.com
@@ -327,7 +328,13 @@ notoriousV =
 --  06.08.14:11:48 -- mode/#haskell [+b *!*n=bo@*.lsanca.dsl-w.verizon.net] by dons
 --
 -- Reappeared a few weeks later from a new ip address.
+-- 
+-- Reappeared:
+-- 15:52 [freenode] -- ion-cannon [n=tits@pool-71-106-175-237.lsanca.dsl-w.verizon.net]
+-- 15:52 [freenode] --  ircname  : wilt chamberlain
 --
+-- 19:55 -- mode/#haskell [+b *!*n=tits@*.lsanca.dsl-w.verizon.net] by -- dons
+-- 
 protontorpedo :: [String]
 protontorpedo =
     [
