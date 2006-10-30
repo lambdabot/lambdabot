@@ -70,6 +70,7 @@ config = Config {
                           ,"#haskell.jp"
                           ,"#haskell_ru"
                           ,"#gentoo-haskell"
+                          ,"#gentoo-uy"
                           ,"#ghc"
                           ,"#darcs"
                           ,"#oasis"
