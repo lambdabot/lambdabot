@@ -202,6 +202,8 @@ haskell-mode
 http://www.iro.umontreal.ca/~monnier/elisp/
 haskell-prime
 http://hackage.haskell.org/trac/haskell-prime
+haskell-search
+http://tinyurl.com/y5kvdq
 haskell.vim
 http://urchin.earth.li/~ian/vim/haskell.vim
 haskell98
@@ -240,8 +242,12 @@ hdbc
 http://quux.org/devel/hdbc
 hdirect
 http://haskell.org/hdirect/
+helisp
+http://www.codersbase.com/index.php/helisp
 helium
 http://www.cs.uu.nl/research/projects/helium/
+hgl
+http://haskell.org/graphics/index.html
 hide
 http://haskell.org/haskellwiki/HIDE
 hier
@@ -273,7 +279,7 @@ http://haskell.org/HOpenGL/
 house
 http://www.cse.ogi.edu/~hallgren/House/
 hpc
-http://www.galois.com/~andy/hpc-intro.html
+http://www.haskell.org/haskellwiki/Haskell_Program_Coverage
 hs-fltk
 http://www.cs.helsinki.fi/u/ekarttun/hs-fltk/
 hs-plugins
@@ -312,6 +318,8 @@ hwn
 http://sequence.complete.org/
 hxt
 http://www.fh-wedel.de/~si/HXmlToolbox/
+hxweb
+http://darcs.haskell.org/~lemmih/hxweb
 icfp2006
 http://icfpcontest.org/
 idoc
