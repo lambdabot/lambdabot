@@ -27,6 +27,8 @@ Bulat
 there is new Time library, which is supposed to replace old System.Time. we hope that it will happen before 2038
 
 Cale
+Woo! Lambda Calculus and lots of pretty colours!
+[discussing names for Haskell, after suggesting Sapphire] Diamond: The Hardest Programming Language on Earth
 [more monad clarity] monads as food gathering in post-industrial America
 ... if sections were allowed at the type level ...
 They're using continental drift as a means of communication.
@@ -41,6 +43,9 @@ Are there little known Haskell idioms for doing math? Is there an undocumented -
 
 ChristopherHendrie
 Sometimes I wonder if Java will be indirectly responsible for hastening the adoption of functional programming languages
+
+ConorMcBride
+So, taking Void to be the colour of the empty bikeshed ...
 
 DanPiponi
 Writing introductions to monads seems to have developed into an industry
@@ -237,6 +242,7 @@ Parrot is fine except every time I build it, it fails
 Well, ever since the monadic revolution of '98 Haskell people have started to do real world apps
 
 beelsebob
+dons: no - just use neil's back end. mmm... neil's arse [don] yes, ndm's back end is the source of all good things
 > filter isJuggler #haskell
 
 blackdog
@@ -254,6 +260,7 @@ chromatic
 My productivity increased when Autrijus told me about Haskell's trace function. He called it a refreshing desert in the oasis of referential transparency.
 
 cjeris
+Cale: I like how you conveniently gloss over the part where your head explodes.
 i have a little perl script that aliases gcc -freduced-suckage to ghc
 
 cjs
@@ -283,6 +290,7 @@ using logic in imperative programming language channels is generally considered 
 I believe that OO is intrinsically defective and digresses from a formal definition of "software"
 
 dons
+C++: creating blub programmers since 1985
 "academic" is such an amusing insult.
 too many papers, not enough code
 that's 3 things i've never seen in the one sentence before: my assembler .. a bunch of type classes .. a natural syntax
@@ -346,6 +354,7 @@ gaal
 (ghc predicted a cpu death on my computer once.)
 
 ghc
+Exception: kevind stub
 Urk! Inventing strangely-kinded void TyCon: :t{tc a5gUj} (* -> *) -> * -> *
 mkProtoBCO: stack use won't fit in 16 bits 150813
 You can get a PhD for explaining the True Meaning of this last construct
@@ -595,6 +604,9 @@ I have to admit I'm still stunned when "tying the knot" actually works. it's lik
 math
 2^20 ~= 10^6
 
+mathewm
+I am playing with (.)
+
 mattam
 [Monads are] much more elegant [than soccer] in general.
 
@@ -606,6 +618,8 @@ hmm, one national tv station I was watching while eating breakfast crashed with 
 My friend bought a new laptop; it had MSBLASTER preinstalled. I couldn't believe it either and installed XP and the apps many times, run virus killers and everytime the blaster came back. Everything was packed on a rescue cd. And virus was in m$ works installation files.
 
 monochrom
+Power doesn't corrupt you. No no no. Power makes you INSANE! Absolute power makes you absolutely insane! BWAHAHAHAHAHA...
+people ∩ haskellers = ∅
 All numbers just sit there doing nothing.
 [monochrom] I prove my programs correct. [sjanssen] my programs are more correct than you deserve
 Do you know how godawful it is the 21st Century already and 2 out of 3 mainstream languages don't have nested functions, and the remaining 1 has it but only by way of an even more godawful construct?
@@ -616,6 +630,7 @@ reallyUnsafePointerEq# seems unsafe.
 <musasabi> no reason to reinvent the whole wheel  <musasabi> (usually reinvented wheels end up square)
 
 mwc
+I can only believe that Java is a conspiracy perpetrated by keyboard manufacturers
 I actually got away with running Haskell through a TeX pretty printer and handing it in as pseudocode
 
 ndm
@@ -661,6 +676,9 @@ life lesson from today: 1 closure is nice, 500 000 closures sucks
 
 samc
 monads are hard, let's go shopping
+
+sarahbot
+sarahbot: later tell lambdabot @quote sarahbot
 
 scsibug
 i could have sworn it was incorrect until it type-checked
