@@ -30,7 +30,6 @@ import Data.Word         ( Word8(..) )
 import Data.Char         ( ord, chr )
 import Data.List         ( find, findIndex, groupBy )
 import Data.Maybe        ( catMaybes )
-import Foreign           ( unsafePerformIO )
 import Control.Monad     ( when )
 import Control.Monad.State
 import System.Posix.Resource
