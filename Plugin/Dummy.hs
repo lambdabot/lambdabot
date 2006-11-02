@@ -10,7 +10,6 @@ import Plugin.Dummy.DocAssocs (docAssocs)
 import Plugin.Dummy.Moo (cows)
 
 import Lib.Util (randomElem)
-import System.IO.Unsafe (unsafePerformIO)
 
 import qualified Data.Map as M
 import qualified Data.ByteString.Char8 as P
@@ -20,7 +19,7 @@ PLUGIN Dummy
 instance Module DummyModule [String] where
   moduleDefState = const . return . cycle $ cows
 
-  moduleCmds   _ = "eval" : {-"moo" : -} map fst dummylst
+  moduleCmds   _ = "eval" : "choose" : {-"moo" : -} map fst dummylst
 
   moduleHelp _ s = case s of
         "dummy"       -> "dummy. Print a string constant"
@@ -54,8 +53,10 @@ instance Module DummyModule [String] where
           return cow
         mapM_ (ircPrivmsg' src) (lines cow')
 -}
-  process_ _ "eval" _ = return []
-  process_ _ cmd rest = case lookup cmd dummylst of
+  process_ _ "eval"   _    = return []
+  process_ _ "choose" []   = return ["Choose between what?"]
+  process_ _ "choose" xs   = fmap return . io . randomElem . lines $ xs
+  process_ _ cmd      rest = case lookup cmd dummylst of
     Nothing -> error "Dummy: invalid command"
     Just f  -> return $ lines $ f rest
 
@@ -85,10 +86,6 @@ dummylst =
     ,("source",     lookupPackage "http://darcs.haskell.org/packages" '/' "hs")
 
     ,("fptools",    lookupPackage "http://darcs.haskell.org/packages" '/' "hs")
-
-    ,("choose",      \x -> case x of
-       []      -> "Choose between what?"
-       xs      -> unsafePerformIO (randomElem $ lines xs))
     ]
 
 docPrefix :: String
