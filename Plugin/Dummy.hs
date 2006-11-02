@@ -78,24 +78,27 @@ dummylst =
     ,("wiki",        ("http://www.haskell.org/haskellwiki/" ++))
     ,("oldwiki",     ("http://www.haskell.org/hawiki/" ++))
 
-    ,("docs",        \x -> case x of
-       [] -> "http://haskell.org/ghc/docs/latest/html/libraries/index.html"
-       _  -> case M.lookup (P.pack x) docAssocs of
-             Nothing -> x ++ " not available"
-             Just m  -> "http://haskell.org/ghc/docs/latest/html/libraries/" <>
-                        (P.unpack m) </> map (choice (=='.') (const '-') id) x <.> "html")
+    ,("docs",        \x -> if null x
+                            then docPrefix <> "index.html"
+                            else lookupPackage docPrefix '-' "html" x)
 
-    ,("source",     \x -> case M.lookup (P.pack x) docAssocs of
-       Nothing -> x ++ " not available"
-       Just m  -> "http://darcs.haskell.org/packages/" <>
-                  (P.unpack m) </> map (choice (=='.') (const '/') id) x <.> "hs")
+    ,("source",     lookupPackage "http://darcs.haskell.org/packages" '/' "hs")
 
-    ,("fptools",     \x -> case M.lookup (P.pack x) docAssocs of
-       Nothing -> x ++ " not available"
-       Just m  -> "http://darcs.haskell.org/packages/" <>
-                  (P.unpack m) </> map (choice (=='.') (const '/') id) x <.> "hs")
+    ,("fptools",    lookupPackage "http://darcs.haskell.org/packages" '/' "hs")
 
     ,("choose",      \x -> case x of
        []      -> "Choose between what?"
        xs      -> unsafePerformIO (randomElem $ lines xs))
     ]
+
+docPrefix :: String
+docPrefix = "http://haskell.org/ghc/docs/latest/html/libraries/"
+
+lookupPackage :: String -> Char -> String -> String -> String
+lookupPackage begin sep end x
+ = case M.lookup (P.pack x) docAssocs of
+        Nothing -> x ++ " not available"
+        Just m  -> begin
+                    <> P.unpack m
+                    </> map (choice (=='.') (const sep) id) x
+                    <.> end
