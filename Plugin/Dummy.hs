@@ -95,10 +95,12 @@ docPrefix :: String
 docPrefix = "http://haskell.org/ghc/docs/latest/html/libraries/"
 
 lookupPackage :: String -> Char -> String -> String -> String
-lookupPackage begin sep end x
+lookupPackage begin sep end x'
  = case M.lookup (P.pack x) docAssocs of
         Nothing -> x ++ " not available"
         Just m  -> begin
                     <> P.unpack m
                     </> map (choice (=='.') (const sep) id) x
                     <.> end
+ where
+    x = reverse . dropWhile isSpace . reverse . dropWhile isSpace $ x'
