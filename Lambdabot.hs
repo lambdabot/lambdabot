@@ -107,7 +107,8 @@ data IRCRWState = IRCRWState {
         ircCommands        :: Map String ModuleRef,
         ircPrivCommands    :: [String],
         ircStayConnected   :: !Bool,
-        ircDynLoad         :: S.DynLoad
+        ircDynLoad         :: S.DynLoad,
+        ircPlugins         :: [String]
     }
 
 newtype ChanName = ChanName { getCN :: String } -- should be abstract, always lowercase
@@ -206,11 +207,11 @@ data Mode = Online | Offline deriving Eq
 -- (i.e. print a message and exit). Non-fatal exceptions should be dealt
 -- with in the mainLoop or further down.
 --
-runIrc :: Mode -> LB a -> LB () -> S.DynLoad -> IO ()
-runIrc mode initialise loop ld = withSocketsDo $ do
+runIrc :: Mode -> LB a -> LB () -> S.DynLoad -> [String] -> IO ()
+runIrc mode initialise loop ld plugins = withSocketsDo $ do
     r <- try $ evalLB (do withDebug "Initialising plugins" initialise
                           withIrcSignalCatch (mainLoop mode loop))
-                       (initState (Config.admins Config.config) ld)
+                       (initState (Config.admins Config.config) ld plugins)
 
     -- clean up and go home
     case r of
@@ -220,8 +221,8 @@ runIrc mode initialise loop ld = withSocketsDo $ do
 --
 -- | Default rw state
 --
-initState :: [String] -> S.DynLoad -> IRCRWState
-initState as ld = IRCRWState {
+initState :: [String] -> S.DynLoad -> [String] -> IRCRWState
+initState as ld plugins = IRCRWState {
         ircPrivilegedUsers = M.fromList $ zip as (repeat True),
         ircChannels        = M.empty,
         ircModules         = M.empty,
@@ -235,7 +236,8 @@ initState as ld = IRCRWState {
         ircCommands        = M.empty,
         ircPrivCommands    = [],
         ircStayConnected   = True,
-        ircDynLoad         = ld
+        ircDynLoad         = ld,
+        ircPlugins         = plugins
     }
 
 --

@@ -6,8 +6,6 @@
 --
 module Plugin.Dynamic (theModule) where
 
-import {-# SOURCE #-} Modules   (plugins)
-
 import Plugin
 import Control.Monad.State
 
@@ -19,13 +17,14 @@ instance Module DynamicModule () where
     moduleHelp _ _ = "An interface to dynamic linker"
     modulePrivs  _ = ["dynamic-load","dynamic-unload","dynamic-reload"]
 
-    moduleInit   _ = do
+    moduleInit   _ = lift $ do
+        plugins <- gets ircPlugins
         mapM_ (\p -> load p >> liftIO (putChar '!' >> hFlush stdout)) plugins
 
     process_ _ s rest = case s of
-        "dynamic-load"      -> load rest                >> return ["module loaded"]
-        "dynamic-unload"    -> unload rest              >> return ["module unloaded"]
-        "dynamic-reload"    -> unload rest >> load rest >> return ["module reloaded"]
+        "dynamic-load"      -> lift (load rest)                >> return ["module loaded"]
+        "dynamic-unload"    -> lift (unload rest)              >> return ["module unloaded"]
+        "dynamic-reload"    -> lift (unload rest >> load rest) >> return ["module reloaded"]
 
 --
 -- | Load value "theModule" from each plugin, given simple name of a
@@ -48,6 +47,7 @@ load nm = do
 --
 unload :: String -> LB ()
 unload nm = do
+        plugins <- gets ircPlugins
         unless (nm `elem` plugins) $ error "unknown or static module"
         ircUnloadModule nm
         ircUnload (getModuleFile nm)

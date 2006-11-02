@@ -2,10 +2,11 @@
 
 set -e
 
+ghc -O2 --make scripts/BotPP.hs -o BotPP
 chmod +x Setup.hs configure
-nice ./Setup.hs configure --bindir=`pwd`
+nice ./Setup.hs configure --bindir=`pwd` --libdir=`pwd`/lib
 nice ./Setup.hs build
-./Setup.hs install
+./Setup.hs copy
 ghc -v0 -c -O2 -odir . -hidir . scripts/ShowQ.hs
 ghc -v0 -c -O2 -odir . -hidir . scripts/ShowFun.hs
 ghc -v0 -c -O2 -funbox-strict-fields -odir . -hidir . scripts/SmallCheck.hs

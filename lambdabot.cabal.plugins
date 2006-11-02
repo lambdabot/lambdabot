@@ -11,6 +11,8 @@ License-file:        LICENSE
 Author:              Don Stewart
 Maintainer:          dons@cse.unsw.edu.au
 Build-Depends:       base, unix, network, parsec, mtl, haskell-src, haskell98, readline, plugins>=1.0, fps>=0.7, QuickCheck
+Exposed-modules:     DMain, Modules
+ghc-options:         -Wall -Werror -fglasgow-exts -pgmF ./BotPP -F -H64m -Onot -fasm -fno-warn-incomplete-patterns -fno-warn-missing-methods -fno-warn-orphans -I. -threaded -no-link
 
 --
 -- first build the preprocessor
@@ -23,11 +25,12 @@ ghc-options:         -funbox-strict-fields -O
 --
 -- Lambdabot
 --
-Executable:          lambdabot
-Main-is:             Main.hs
-extensions:          CPP
-other-modules:       Lib.Regex
-ghc-options:         -Wall -Werror -fglasgow-exts -pgmF dist/build/BotPP/BotPP -F -H64m -Onot -fasm -fno-warn-incomplete-patterns -fno-warn-missing-methods -fno-warn-orphans -I. -threaded
+
+--Executable:          lambdabot
+--Main-is:             Main.hs
+--extensions:          CPP
+--other-modules:       Lib.Regex
+--ghc-options:         -Wall -Werror -fglasgow-exts -pgmF dist/build/BotPP/BotPP -F -H64m -Onot -fasm -fno-warn-incomplete-patterns -fno-warn-missing-methods -fno-warn-orphans -I. -threaded
 
 -- For a fast lambdabot
 -- ghc-options:         -Wall -Werror -fglasgow-exts -pgmF dist/build/BotPP/BotPP -F -funbox-strict-fields -O -fasm -fno-warn-incomplete-patterns -fno-warn-missing-methods -fno-warn-orphans -I. -optl-Wl,-s -threaded
@@ -39,10 +42,10 @@ ghc-options:         -Wall -Werror -fglasgow-exts -pgmF dist/build/BotPP/BotPP -
 -- a list of statics and plugins, and then to recompile the rest of
 -- lambdabot's core
 --
---Executable:         lambdabot-dynamic
---main-is:            Boot.hs
---extensions:         CPP
---ghc-options:        -main-is Boot.main -Wall -Werror -fglasgow-exts -H64m -Onot -fasm -I. -threaded
+Executable:         lambdabot-dynamic
+main-is:            Boot.hs
+extensions:         CPP
+ghc-options:        -main-is Boot.main -Wall -Werror -fglasgow-exts -H64m -Onot -fasm -I. -threaded
 -- ghc-options:         -Wall -Werror -fglasgow-exts -funbox-strict-fields -O -fasm -I. -optl-Wl,-s -threaded
 
 --

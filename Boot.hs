@@ -30,11 +30,11 @@ import System.IO.Unsafe       ( unsafePerformIO )
 import System.Exit            ( exitFailure )
 
 lambdabotMain :: [Char]
-lambdabotMain = lambdaPath ++ "Main.o" -- entry point into yi lib
+lambdabotMain = lambdaPath ++ "DMain.o" -- entry point into lambdabot lib
 
 -- path to plugins
 lambdaPath :: String
-lambdaPath = "./dist/build/lambdabot/lambdabot-tmp/"
+lambdaPath = "./dist/build/"
 
 mainSym :: Symbol
 mainSym  = "dynmain"        -- main entry point

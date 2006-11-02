@@ -22,18 +22,25 @@ import qualified Data.ByteString.Char8 as B -- crank it up, yeah!
 
 main = do
     [_,i,o] <- getArgs
-    B.readFile i >>= \l -> B.writeFile o $ expand (B.length l) 0 l
+    let basename = baseName i
+    B.readFile i >>= \l -> B.writeFile o $ expand (B.length l) 0 basename l
+
+baseName :: FilePath -> FilePath
+baseName s = base 
+    where
+    rfile = takeWhile (not . (`elem` "/\\")) (reverse s)
+    base  = takeWhile (/='.') (reverse rfile)
 
 --
 -- tricksy non-copying implementation.
 --
-expand :: Int -> Int -> ByteString -> ByteString
-expand l n xs
+expand :: Int -> Int -> String -> ByteString -> ByteString
+expand l n basename xs
     | n `seq` xs `seq` False               = undefined -- strict
     | l == n                               = xs        -- not found
     | pLUGIN  `B.isPrefixOf` (B.drop n xs) = B.concat $ pref : render  name  ++ [B.tail rest]
-    | mODULES `B.isPrefixOf` (B.drop n xs) = B.concat $ pref : modules name' ++ [B.tail rest']
-    | otherwise                            = expand l (n+1) xs
+    | mODULES `B.isPrefixOf` (B.drop n xs) = B.concat $ pref : modules basename name' ++ [B.tail rest']
+    | otherwise                            = expand l (n+1) basename xs
 
     where pref         = B.take n xs    -- accumulating an offset
 
@@ -57,24 +64,40 @@ render name =
 --
 -- Collect all the plugin names, and generate the Modules.hs file
 --
-modules :: ByteString -> [ByteString]
-modules s =
-    [pack "module Modules where\n"
+modules :: String -> ByteString -> [ByteString]
+modules basename s =
+    [pack "module ", pack basename, pack " (modulesInfo) where\n"
     ,pack "import Lambdabot\n"
     ,pack "\n"]
-    ++ (concatMap importify ms) ++
-    [pack "loadStaticModules :: LB ()\n"
+    ++ (concatMap importify statics) ++
+    [pack "modulesInfo :: (LB (), [String])\n"
+    ,pack "modulesInfo = (loadStaticModules, plugins)\n"
+    ,pack "loadStaticModules :: LB ()\n"
     ,pack "loadStaticModules = do\n"]
-    ++ (concatMap instalify ms) ++
+    ++ (concatMap instalify statics) ++
     [pack "plugins :: [String]\n"
-    ,pack "plugins = []\n"]
+    ,pack "plugins = ["]
+    ++ ((concat . (intersperse [pack ","]) . map pluginify) plugins) ++
+    [pack "]\n"]
 
-    where ms  = filter nonWhitespace . sort $ B.split ' ' s
+    where ms  = filter nonWhitespace $ B.split ' ' s
+
+          statics = sort statics'
+          plugins = sort plugins'
+
+          (statics', rest) = break ((==)(pack ":")) ms
+          plugins' = drop 1 rest
+
           importify x = [pack "import qualified Plugin.", x, B.singleton '\n']
           instalify x = [pack "  ircInstallModule Plugin.",x
                         ,pack ".theModule \""
                         ,B.map toLower x
                         , pack "\"\n"]
+          pluginify x = [pack "\""
+                        ,B.map toLower x
+                        ,pack "\""]
+                               
+
           nonWhitespace s 
               | s == pack ""   = False
               | s == pack "\n" = False
