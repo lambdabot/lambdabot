@@ -21,8 +21,10 @@ import Data.ByteString.Char8 (pack, ByteString)
 import qualified Data.ByteString.Char8 as B -- crank it up, yeah!
 
 main = do
-    [_,i,o] <- getArgs
-    let basename = baseName i
+    -- putStr "BotPP called with args: ";  print =<< getArgs
+    [orig,i,o] <- getArgs
+    let basename = baseName orig
+    -- putStr "basename = "; print basename
     B.readFile i >>= \l -> B.writeFile o $ expand (B.length l) 0 basename l
 
 baseName :: FilePath -> FilePath

@@ -5,11 +5,13 @@ module Main where
 
 import LMain
 import Modules
+import Lambdabot
 
 import Data.Maybe
 
 ------------------------------------------------------------------------
 
+loadStaticModules :: LB ()
 (loadStaticModules, _) = modulesInfo
 
 -- do argument handling
