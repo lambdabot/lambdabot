@@ -75,6 +75,7 @@ config = Config {
                           ,"#darcs"
                           ,"#oasis"
                           ,"#perl6"
+                          ,"##logic"
                           ,"#ScannedInAvian"],
 
         admins          = [
