@@ -5,6 +5,9 @@
 <basti_>
 Snow doeth lay upon the lands. Even with cunning newtype; deriving the newtype is recursive. Great leaders brings less pain.
 
+<skew>
+also, if you use ST you know the code is just using mutable variables, rather than formatting your hard drive
+
 AI_coder
 the
 
@@ -15,6 +18,7 @@ Alanna
 Saying that Java is nice because it works on all OS's is like saying that anal sex is nice because it works on all genders.
 
 Baughn
+[I] once explained monads to a non-programmer. "And? What's so hard about that?"
 I think I'm beginning to understand this language. I just defined 1+1=3.
 
 BillWood
@@ -27,6 +31,7 @@ Bulat
 there is new Time library, which is supposed to replace old System.Time. we hope that it will happen before 2038
 
 Cale
+desrt: Did you hear about the trivial religion that I came up with? Its tenets consist of a single statement: "Believing in this statement will make you happier". It's like a terminal object in the category of religions and theomorphisms.
 Woo! Lambda Calculus and lots of pretty colours!
 [discussing names for Haskell, after suggesting Sapphire] Diamond: The Hardest Programming Language on Earth
 [more monad clarity] monads as food gathering in post-industrial America
@@ -143,6 +148,8 @@ An algorithm for lazy evaluation of research papers: Just write whatever you wan
 I get the impression that using [Haskell] would feel like reading a novel written by a literary critic.
 
 Philippa
+"in this case using the FFI sounds rather like masturbating with a running chainsaw"
+ in this case using the FFI sounds rather like masturbating with a running chainsaw
 because emacs wasn't a good enough OS after all
 <vincenz> Philippa: forget theory, it's about pragmatics <Philippa> we're talking FP, they tend to be the same thing
 hey, if the guy wants a monadectomy that's his choice
@@ -168,6 +175,7 @@ or maybe she is the Queen of Sciences and he is the Mack Daddy.
 Computer science is the womanizer, and math is the pure-hearted girl he won't call the next day.
 
 SamB
+any list of application domains is either incomplete or depressing
 O(n^2) is better than O(hair-gone)
 Haskell is the only language I know with first-class support for imperative programming
 <SamB> @. bf . id . pl . v . wn yow  <lambdabot> Done.
@@ -290,6 +298,10 @@ using logic in imperative programming language channels is generally considered 
 I believe that OO is intrinsically defective and digresses from a formal definition of "software"
 
 dons
+[When asked what qualifications Guido van Rossum has...] a chip on his shoulder?
+devils are angry, noisy mini-Russel Crowes. Who wouldn't want those roamin the bush?
+keroppi: i was thinking of a similar thing recently, on a bus travelling between the hotel and the google summer of code summit, sitting next to guys from apache, python, freebsd, netbsd, perl, gentoo... the end of open source was a drunk driver away, with only php goons left to run the show
+keroppi: i was thinking of a similar thing recently, on a bus travelling between the hotel and the google summer of code summit, sitting next to guys from apache, python, freebsd, netbsd, perl, gentoo... the end of open source was a drunk driver away, with only php goons left to run the show
 C++: creating blub programmers since 1985
 "academic" is such an amusing insult.
 too many papers, not enough code
@@ -339,6 +351,9 @@ screw ruby on rails, I'm using snakes on a plane
 
 emu
  people have gotten so used to the sloppy languages like python and perl which are specified by 1 implementation that they forget there is a difference
+
+ex0r
+if map was a woman she could probably handle infinite arguments
 
 foot
 You shoot yourself in the foot very elegantly, and wonder why the whole world isn't shooting itself this way.
@@ -582,6 +597,8 @@ alonzo is our church
 Even though I'm largely responsible for making CPP available in a Haskell compiler I think it's an abomination.  It should be avoided
 
 lispy
+if you generate 1 billion patches per second, what maintainer will review them?
+distribute your cognition
 one thing that's funny about programming in haskell is, it's the only language i know where i sometimes rewrite code so it will work on 'inifinite' datastructures
 a := new Maybe(); a.envalue(1);
 lambdabot, changing the way Haskllers think since 2003
@@ -618,6 +635,8 @@ hmm, one national tv station I was watching while eating breakfast crashed with 
 My friend bought a new laptop; it had MSBLASTER preinstalled. I couldn't believe it either and installed XP and the apps many times, run virus killers and everytime the blaster came back. Everything was packed on a rescue cd. And virus was in m$ works installation files.
 
 monochrom
+recursive directory search is an alpha-beta with boring values of alpha and beta.
+The problem is that bad programmers will assess tutorials for good programmers as "ivory tower", and moreover bad programmers are the vocal majority.  It gets you bad press.
 Power doesn't corrupt you. No no no. Power makes you INSANE! Absolute power makes you absolutely insane! BWAHAHAHAHAHA...
 people ∩ haskellers = ∅
 All numbers just sit there doing nothing.
@@ -649,6 +668,9 @@ irc bots executing external programs..  always a good idea! what could possibly 
 it would be neat having correct programs
 haskell's like chess.  easy to learn. hard to master.
 
+nocotigo
+if you can't tell what encoding the code is in, i'd say you've gone too far
+
 norpan
 your sentence missing a verb
 
@@ -658,6 +680,9 @@ joelr1: our C++ guru at work is getting a bit sick of me saying "ah, so that's l
 
 pesco
 "Scientists Reveal: Human Consciousness Stems From Two Files in Different Directories!"
+
+psykotic
+[monads aren't hard] they're just monoids on the category of endofunctors over some category, what's the big deal?
 
 qwe1234
 it's 2006 already, and the world doesn't need 'dynamic languages'. otherwise, we'd be all programming in perl.
@@ -679,6 +704,9 @@ monads are hard, let's go shopping
 
 sarahbot
 sarahbot: later tell lambdabot @quote sarahbot
+
+scodil
+you say sledgehammer like its a bad thing
 
 scsibug
 i could have sworn it was incorrect until it type-checked
@@ -715,6 +743,7 @@ simonpj
 You may not like this but this should work..
 
 sjanssen
+I suspect that planet.haskell.org has more content on catamorphisms than cats
 Quoth the Prelude, Chapter 6, verse 4:  Yeah verily shall repeat floweth cons cells over.
 @djinn Haskell -> Curry
 
@@ -738,6 +767,7 @@ how can you possibly implement business logic without knowing about Schonfinkel!
 I wrote 1 + 1 in php once, and got 11 -- wasn't quite what I was hoping for
 
 syntaxfree
+Functional programming has finally arrived to the masses. Its name is not Lisp, ML or Haskell: it's Visual Basic
 <Bourbaki> the best thing i have ever read in economy is a statement of some guy "i have never met the homo oeconomicus" <syntaxfree> I have never met a catamorphism, either.
 one could use the euro symbol for left-associative $.
 Many people think the core ideas behind Haskell came from academic luminaries such as Philip Wadler and Simon Peyton-Jones. What actually happened is that during a functional programming conference, some key academics were teleported to the Deep Complex Universe. In the Deep Complex Universe some Gnomes were having Tangling problems. Wadler & friends solved their problems and as a reward the Tangled Gnomes gave them the S

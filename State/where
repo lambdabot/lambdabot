@@ -202,6 +202,8 @@ haskell-mode
 http://www.iro.umontreal.ca/~monnier/elisp/
 haskell-prime
 http://hackage.haskell.org/trac/haskell-prime
+haskell-quiz
+http://haskell.org/haskellwiki/Haskell_Quiz
 haskell-search
 http://tinyurl.com/y5kvdq
 haskell.vim
@@ -352,6 +354,8 @@ lhs2tex
 http://www.cs.uu.nl/~andres/lhs2tex
 libs
 http://haskell.org/ghc/docs/latest/html/libraries/index.html
+links
+http://groups.inf.ed.ac.uk/links/
 lispq3
 http://www.codersbase.com/Quake3
 lispyprojects
@@ -372,6 +376,8 @@ monads
 http://www.nomaware.com/monads/html/index.html
 morrow
 http://www.cs.uu.nl/~daan/morrow/
+mtl
+www.cs.brown.edu/~jwicks/mtl_reference/
 ndp
 http://www.cse.unsw.edu.au/~chak/project/dph
 network-alt
@@ -447,7 +453,7 @@ darcs get http://www.eecs.tufts.edu/~rdocki01/shell/
 shootout
 http://shootout.alioth.debian.org/
 smallcheck
-http://www.cs.york.ac.uk/fp/smallcheck0.1.tar
+http://www.cs.york.ac.uk/fp/smallcheck0.2.tar
 soc
 http://hackage.haskell.org/trac/summer-of-code/
 soe
@@ -488,6 +494,8 @@ unlambda
 http://www.madore.org/~david/programs/unlambda/
 uuag
 http://www.cs.uu.nl/wiki/HUT/AttributeGrammarSystem
+uy
+http://es.wikipedia.org/wiki/Uruguay
 vincenz
 http://www.esat.kuleuven.ac.be/~cpoucet/
 vmware
@@ -515,6 +523,6 @@ http://www.cs.york.ac.uk/~ndm/yhc
 yi
 http://www.cse.unsw.edu.au/~dons/yi.html
 yi+gtk
-darcs get http://www.scannedinavian.org/repos/yi/
+http://www.cse.unsw.edu.au/~dons/code/yi+gtk
 zmachine
 http://naesten.dyndns.org:8080/repos/ZMachine
