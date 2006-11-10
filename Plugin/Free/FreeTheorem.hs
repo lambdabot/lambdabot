@@ -225,11 +225,26 @@ freeTheorem' env e1 e2 t'@(TyTuple [])
 freeTheorem' env e1 e2 t'@(TyTuple ts)
     = do
         let len = length ts
-        let vcomponents
-                = [ EApp (EBuiltin (BProj len i)) | i <- [1..len] ]
-        ps <- mapM (\(vc,t) -> freeTheorem' env (vc e1) (vc e2) t)
-                    (zip vcomponents ts)
-        return (foldr1 ThAnd ps)
+
+        fts <- mapM (\t -> do
+                let (t1,t2) = extractTypes env t
+                f <- makeVar "f"
+                x <- makeVar "x"
+                y <- makeVar "y"
+                th <- freeTheorem' env (EVar x) (EVar y) t
+                let eq = ThEqual (EApp (EVar f) (EVar x)) (EVar y)
+                return ((f,TyArr t1 t2),
+                        ThForall x t1 (
+                            ThForall y t2 (
+                                ThImplies th eq
+                            )
+                        )
+                    )
+            ) ts
+        let thf = ThEqual (EApp (foldl (\e ((f,_),_) -> EApp e (EVar f))
+                            (EBuiltin $ BMapTuple len) fts) e1) e2
+        return (foldr (\((f,t),e1) e2 -> ThForall f t (ThImplies e1 e2))
+                thf fts)
 
 freeTheorem' env e1 e2 t'@(TyVar v)
     = do
@@ -252,5 +267,27 @@ freeTheorem' env e1 e2 t'@(TyCons c [t])
         return (ThForall f (TyArr t1 t2) (
                 ThImplies (ThForall x t1 (ThForall y t2 (ThImplies p1 p2)))
                             p3))
+
+freeTheorem' env e1 e2 t'@(TyCons c@"Either" ts@[_,_])
+    = do
+        fts <- mapM (\t -> do
+                let (t1,t2) = extractTypes env t
+                f <- makeVar "f"
+                x <- makeVar "x"
+                y <- makeVar "y"
+                th <- freeTheorem' env (EVar x) (EVar y) t
+                let eq = ThEqual (EApp (EVar f) (EVar x)) (EVar y)
+                return ((f,TyArr t1 t2),
+                        ThForall x t1 (
+                            ThForall y t2 (
+                                ThImplies th eq
+                            )
+                        )
+                    )
+            ) ts
+        let thf = ThEqual (EApp (foldl (\e ((f,_),_) -> EApp e (EVar f))
+                            (EBuiltin $ BMap c) fts) e1) e2
+        return (foldr (\((f,t),e1) e2 -> ThForall f t (ThImplies e1 e2))
+                thf fts)
 
 -- vim: ts=4:sts=4:expandtab:ai

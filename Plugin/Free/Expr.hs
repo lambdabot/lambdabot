@@ -55,6 +55,7 @@ data Builtin
     = BMap TyName
     | BId
     | BProj Int Int
+    | BMapTuple Int
     | BArr
         deriving (Eq, Show)
 
@@ -114,15 +115,18 @@ instance Pretty Expr where
         = prettyP precAPP e
 
 instance Pretty Builtin where
-    prettyP p (BMap "[]") = text "$map"
-    prettyP p (BMap c)    = text ("$map_" ++ c)
-    prettyP p BId         = text "$id"
-    prettyP p (BProj 2 1) = text "$fst"
-    prettyP p (BProj 2 2) = text "$snd"
-    prettyP p (BProj 3 1) = text "$fst3"
-    prettyP p (BProj 3 2) = text "$snd3"
-    prettyP p (BProj 3 3) = text "$thd3"
-    prettyP p (BProj l i) = text ("$proj_" ++ show l ++ "_" ++ show i)
-    prettyP p BArr        = text "$arr"
+    prettyP p (BMap "[]")   = text "$map"
+    prettyP p (BMap c)      = text ("$map_" ++ c)
+    prettyP p BId           = text "$id"
+    prettyP p (BProj 2 1)   = text "$fst"
+    prettyP p (BProj 2 2)   = text "$snd"
+    prettyP p (BProj 3 1)   = text "$fst3"
+    prettyP p (BProj 3 2)   = text "$snd3"
+    prettyP p (BProj 3 3)   = text "$thd3"
+    prettyP p (BProj l i)   = text ("$proj_" ++ show l ++ "_" ++ show i)
+    prettyP p (BMapTuple 2) = text "$map_Pair"
+    prettyP p (BMapTuple 3) = text "$map_Triple"
+    prettyP p (BMapTuple n) = text $ "$map_Tuple" ++ show n
+    prettyP p BArr          = text "$arr"
 
 -- vim: ts=4:sts=4:expandtab:ai
