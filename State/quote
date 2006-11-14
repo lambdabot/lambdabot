@@ -2,8 +2,14 @@
  haskell == plain english ??
 [asking about C++ rules] vincenz: how should we know what those rules mean ?
 
+#perl
+<tech> who needs saneness
+
 <basti_>
 Snow doeth lay upon the lands. Even with cunning newtype; deriving the newtype is recursive. Great leaders brings less pain.
+
+<erg0t>
+@bf  ++++++++++[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++.>++.<<+++++++++++++++.>.+++.------.--------.>+.>.   <lambdabot>  Hello World!
 
 <skew>
 also, if you use ST you know the code is just using mutable variables, rather than formatting your hard drive
@@ -23,6 +29,10 @@ I think I'm beginning to understand this language. I just defined 1+1=3.
 
 BillWood
 it became obvious that when a Prolog program is tuned by removing non-determinism it moves towards a functional program.
+
+Binkley
+It's more fun than kicking puppies, even, since puppies don't tend to say nonsensical things about lambda calculus.
+can you represent "more moronic than Slashdot" with a 32-bit integer?
 
 BjarneStroustrup
 any verbose and tedious solution is error-prone because programmers get bored. [S 9.4 of C++, 2nd edition]
@@ -67,6 +77,10 @@ Are you fully nerd????
 
 DukeDave
 what, if your kids start doing drugs? or worse, business school
+
+EvilRanter
+I went off scheme, because the fundemental keywords of the language had stupid names
+I find "your a moron! unban me, or i shall TAUNT YOU A SECOND TIME!!" to be a particularly poor attempt
 
 Failure02
 in haskell you can have korean smilies as variables! like (^-^)
@@ -167,6 +181,9 @@ Well, personally, I don't think dumb people should be let near a programming lan
 Pupeno
 lambdabot is indeed the most impresive bot I've ever seen
 
+Robert_Dockins
+A Turing-complete type-checker isn't enough!  Our work is not complete until the parser is a universal machine as well!
+
 RyanT5000
 i wish i had been programming in haskell for 7 years rather than C++
 
@@ -175,6 +192,7 @@ or maybe she is the Queen of Sciences and he is the Mack Daddy.
 Computer science is the womanizer, and math is the pure-hearted girl he won't call the next day.
 
 SamB
+and then I'd like to see your Os
 any list of application domains is either incomplete or depressing
 O(n^2) is better than O(hair-gone)
 Haskell is the only language I know with first-class support for imperative programming
@@ -192,6 +210,9 @@ SeanRussell
 
 SebastianHanowski
 I tried to formalise a proof of rev (rev l)  = l i found in W. Kluges book "Abstract Computing Machines - A Lambda Calculus Perspective" which is pretty much a 'Pimp My Ride' for SECD-machines.
+
+SimonRC
+10 01if performance was that important, people would be using perl, python, or the JVM
 
 SyntaxNinja
 Let's imagine something that would be awesome.
@@ -261,6 +282,9 @@ i think coding in your sleep should trigger an exception
 boegel
 goes to inflate Itkovians balls
 
+bringert
+psicho: so you are saying that your teacher gave you two days to do an assignment in a language you didn't know?
+
 chessguy
 i didn't think pennsylvania had anybody cool enough to know haskell in it
 
@@ -282,6 +306,8 @@ dcnstrct
 even the #lisp people say go with haskell
 
 dcoutts
+jcreigh, you mentioned Haskell, so dons found you. He can smell that kind of thing.
+monad transformers are not known for their blistering speed
 (:[]) looks like a monster
 
 delicious-mailicious-test@quote
@@ -294,10 +320,13 @@ desrt
 man... there's this whole dark side to haskell that dr. kahl didn't teach us in 3e03
 
 dibblego
+I'm glad I googled it before going to see the doctor
 using logic in imperative programming language channels is generally considered trolling
 I believe that OO is intrinsically defective and digresses from a formal definition of "software"
 
 dons
+hugs should spot the blackhole, or fail gracefully
+disable the type checker in ghc for 6 months and we'd have 5 debuggers at the end of it :)
 [When asked what qualifications Guido van Rossum has...] a chip on his shoulder?
 devils are angry, noisy mini-Russel Crowes. Who wouldn't want those roamin the bush?
 keroppi: i was thinking of a similar thing recently, on a bus travelling between the hotel and the google summer of code summit, sitting next to guys from apache, python, freebsd, netbsd, perl, gentoo... the end of open source was a drunk driver away, with only php goons left to run the show
@@ -352,6 +381,12 @@ screw ruby on rails, I'm using snakes on a plane
 emu
  people have gotten so used to the sloppy languages like python and perl which are specified by 1 implementation that they forget there is a difference
 
+erg0t
+<erg0t> k el loko k hizo el fasm | <erg0t> se re paso |  <tizoc> erg0t: y si le chupás la pija? | <erg0t> ni ke fuese J Masci
+<tizoc> erg0t: y si le chupás la pija?
+<erg0t> @bf  ++++++++++[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++.>++.<<+++++++++++++++.>.+++.------.--------.>+.>.   <lambdabot>  Hello World!
+lambdabot, tu nick seria el nombre ideal para un postre
+
 ex0r
 if map was a woman she could probably handle infinite arguments
 
@@ -369,6 +404,9 @@ gaal
 (ghc predicted a cpu death on my computer once.)
 
 ghc
+NEVER use commas within those string literals, cpp will ruin your day
+Warning: you can make GHC diverge by using SPECIALISE INLINE on an ordinarily-recursive function.
+ This is very gruesome indeed
 Exception: kevind stub
 Urk! Inventing strangely-kinded void TyCon: :t{tc a5gUj} (* -> *) -> * -> *
 mkProtoBCO: stack use won't fit in 16 bits 150813
@@ -509,6 +547,7 @@ ghci.debugger
 http://haskell.org/haskellwiki/Ghci/Debugger
 
 glguy
+aparently Tor sends all packets with a 512 byte minimum, so if everyone could please write their thoughts on a few lines as possible, it would be appreciated q-:
 this is like Web 5GL. I like it
 11th commandment, don't use cygwin because it is crap
 that's odd, mine is this big : |-----------------------------|
@@ -540,11 +579,17 @@ C++ does make a reasonably usable high-level assembler
 inv2004
 lambdabot: monads ?
 
+jcreigh
+usability is so web 1.0
+
 jjuggle
 I was riding around town and this cop on patrol on a bike rode up next to me and said, "There's always a show off." I offered to teach him to ride and help set up a unicycle patrol squad, but he declined.
 
 jlouis
 Q: When does one know he has programmed too much Haskell? A: When he uses == and /= in everyday IRC chat or when he tries to fix a relationship by passing himself as a continuation
+
+jmelesky
+I've figured out the problem. qwe1234 has different definitions of "functional programming", "compiler", "complexity theory", "math", and "optimization" than everybody else who deals with computers or computer science.
 
 jmob|
 I want the world to stop at that point, go away, and give me it's argument..
@@ -587,6 +632,7 @@ largos
 [on programming languages] "...and I'd rather not own as much rope as c/c++ gives you."
 
 lennart
+system verilog is one of the worst "designs" i've ever seen. so i bet it will be popular
 floating point numbers are terrible.  I maintain that before using them people should have an floating point drivers license
 Excel is very much alive.
 the best way of debugging is to understand your code
@@ -597,6 +643,7 @@ alonzo is our church
 Even though I'm largely responsible for making CPP available in a Haskell compiler I think it's an abomination.  It should be avoided
 
 lispy
+the biggest reason most developers i know don't fix a bug is because they don't know it exists yet
 if you generate 1 billion patches per second, what maintainer will review them?
 distribute your cognition
 one thing that's funny about programming in haskell is, it's the only language i know where i sometimes rewrite code so it will work on 'inifinite' datastructures
@@ -630,11 +677,15 @@ mattam
 matthew-_
 wow, haskelldb is amazing. the type system tells me when I've forgotten to select certain columns!
 
+merus
+10 01Mathematics is totally full of women.
+
 mikaeli
 hmm, one national tv station I was watching while eating breakfast crashed with bsod. I guess that's what you get for running windows in production use
 My friend bought a new laptop; it had MSBLASTER preinstalled. I couldn't believe it either and installed XP and the apps many times, run virus killers and everytime the blaster came back. Everything was packed on a rescue cd. And virus was in m$ works installation files.
 
 monochrom
+10 01Time flies like an arrow.  Fruit flies like a banana.  Syntax rules like a macro.
 recursive directory search is an alpha-beta with boring values of alpha and beta.
 The problem is that bad programmers will assess tutorials for good programmers as "ivory tower", and moreover bad programmers are the vocal majority.  It gets you bad press.
 Power doesn't corrupt you. No no no. Power makes you INSANE! Absolute power makes you absolutely insane! BWAHAHAHAHAHA...
@@ -653,6 +704,8 @@ I can only believe that Java is a conspiracy perpetrated by keyboard manufacture
 I actually got away with running Haskell through a TeX pretty printer and handing it in as pseudocode
 
 ndm
+performance is such an old concern
+ i think @0 is a great name for the 0th argument to a function
 This was not said by me
 outside of haskell i know roughly as many satan worshipers as christians.
 it needs a rewrite to support the wacky features i want to add, at amazing speed
@@ -681,10 +734,40 @@ joelr1: our C++ guru at work is getting a bit sick of me saying "ah, so that's l
 pesco
 "Scientists Reveal: Human Consciousness Stems From Two Files in Different Directories!"
 
+pjdelport
+[on qwe1234:] It must be a drag, being the sole beacon of sanity in a field where all the established researchers are unanimously insane.
+
 psykotic
+monochrom, i'm reminded me of that alan kay quote. "i invented the term 'object-oriented' and i can tell you c++ wasn't what i had in mind"
 [monads aren't hard] they're just monoids on the category of endofunctors over some category, what's the big deal?
 
+pzpz
+ i can't see how anyone can use a laptop without the nipple
+
 qwe1234
+i know and program in more languages than can fit in your short-term memory, ok?
+good developers will write good code in absolutely any language, while bad developers will develop crap no matter the tools they use.
+you might pass for somebody intelligent when you keep your mouth shut.
+a language with type inference isn't more expressive -- because type declarations are redundant, much like 'sigils' in perl.
+the lisp folks have purposefully made lisp so that static analysis is impossible.
+'static' and 'dynamic' are disjoint sets. no matter if you're talking about typing or anything else.
+good lord, help me. i feel like i'm trapped in a website full of elizabots.
+are you really this dense, or just trolling me?
+you cannot write a lisp compiler that is as good as a C compiler
+go read a book or something
+you forgot the fact that ocaml is used for writing real software that solves real problems, unlike haskell.
+i can program in assembly as well as i can program in c++
+the statement that c++ is 'simpler' than assembly is so patently stupid i have doubts that you can program at all.
+i don't know about you, but i only use c++ because it gives static compile-time guarantees that assembly could never give.
+laziness is TEH SUCK, by the way. there's a reason we got rid of it after writing the first fortran compiler.
+so, to summarize: laziness per your definition is a form of syntactic sugar that saves one or two lines of code while making programs slower.  whoop de doo
+never heard of malbolge before, but i'd think that writing a simple source-to-source translator from some sort of minimal vm assembly to malbolge shouldn't be too difficult.
+check out 'complexity theory', it's all there.
+oh come on, what do 'functional languages' have to do with lambda calculus?
+lisp is a wannabe python from the seventies.
+i can write clean and 'expressive' code (quickly) in any language and paradigm, thank you very much.
+what you linked to is neither formal nor a notion.
+all you happened to have demonstrated is that you suck at writing assembly code.
 it's 2006 already, and the world doesn't need 'dynamic languages'. otherwise, we'd be all programming in perl.
 
 ralflammel
@@ -692,6 +775,9 @@ I am confident about my admiration for Haskell
 
 reddi
 and now i know: IT DOES NOT WORK ALWAYS ;-)
+
+robreim
+Great, now we've got to start an IRC channel for lojban-speaking, haskell-coding anarchists
 
 roconnor
 <roconnor> xerox: I'm dumber than a turning machine.
@@ -767,6 +853,7 @@ how can you possibly implement business logic without knowing about Schonfinkel!
 I wrote 1 + 1 in php once, and got 11 -- wasn't quite what I was hoping for
 
 syntaxfree
+yes, The Wadlerman. the Prince of Funktions.
 Functional programming has finally arrived to the masses. Its name is not Lisp, ML or Haskell: it's Visual Basic
 <Bourbaki> the best thing i have ever read in economy is a statement of some guy "i have never met the homo oeconomicus" <syntaxfree> I have never met a catamorphism, either.
 one could use the euro symbol for left-associative $.
@@ -776,6 +863,7 @@ tennin
 [very #haskell] anyone know of any good books/papers on the application of category theory to databases?
 
 therp
+and minion pro comes with acrobat reader. I never thought that I would find this proprietary thing useful for anything than blocking my cpu
 good morning. I think I have been dreaming of shift/reset continuations...
 
 tomasz
@@ -791,6 +879,7 @@ vegai
 Hey Haskell! Give me that File! -Naah, I'm too lazy. *thinks* I'll give you a cookie if you tell me how many letters that file has! -Oh, ok!
 
 vincenz
+then you call 1-800-GET_DONS
 [Ocaml] used to be pretty, Haskell made it ugly
 [talking about lambdabot] cause it really is a grand development tool
 Geek is Chique.
@@ -812,6 +901,8 @@ xahlee
 The Haskell Logo is the perfection of logos
 
 xerox
+we can't leave all the mathematics to the women!
+06* xerox gets sucked in a vortex of -fdisallow-overlapping-explanations01
 #haskell is a good code optimizer.
 #haskell is a good code optimizer.
 The more [language] extensions, the bigger the fun
@@ -823,4 +914,7 @@ you know, befunge is probably the only language I've seen where you can run code
 your_mom
 Will you stop telling dumb jokes about me please?
 Oh, that felt good.  Can you do it again?
+
+zeeeeeee
+so aside from the refactoring, there's no other (major) improvements i can make to my program?
 
