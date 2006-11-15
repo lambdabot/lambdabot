@@ -83,9 +83,9 @@ dummylst =
                             then docPrefix <> "index.html"
                             else lookupPackage docPrefix '-' "html" x)
 
-    ,("source",     lookupPackage "http://darcs.haskell.org/packages" '/' "hs")
+    ,("source",     lookupPackage "http://darcs.haskell.org/packages/" '/' "hs")
 
-    ,("fptools",    lookupPackage "http://darcs.haskell.org/packages" '/' "hs")
+    ,("fptools",    lookupPackage "http://darcs.haskell.org/packages/" '/' "hs")
     ]
 
 docPrefix :: String
