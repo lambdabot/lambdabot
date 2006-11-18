@@ -1,13 +1,13 @@
 ---------------------------------------------------------------------
 -- SmallCheck: another lightweight testing library.
 -- Colin Runciman, August 2006
--- Version 0.1 (September 2006)
+-- Version 0.2 (November 2006)
 --
 -- After QuickCheck, by Koen Claessen and John Hughes (2000-2004).
 ---------------------------------------------------------------------
 
 module SmallCheck (
-  smallCheck, depthCheck, test,
+  smallCheck, smallCheckI, depthCheck, test,
   Property, Testable,
   forAll, forAllElem,
   exists, existsDeeperBy, thereExists, thereExistsElem,
@@ -16,6 +16,7 @@ module SmallCheck (
   (\/), (><), two, three, four,
   cons0, cons1, cons2, cons3, cons4,
   alts0, alts1, alts2, alts3, alts4,
+  N(..), Nat, Natural,
   depth, inc, dec
   ) where
 
@@ -60,15 +61,54 @@ instance Serial () where
                | b <- series d ]
 
 instance Serial Int where
-  series   d = [(-1)..d]
-  coseries d = chain d
+  series   d = [(-d)..d]
+  coseries d = [ \i -> if i > 0 then f (N (i - 1))
+                       else if i < 0 then g (N (abs i - 1))
+                       else z
+               | z <- alts0 d, f <- alts1 d, g <- alts1 d ]
+
+instance Serial Integer where
+  series   d = [ toInteger (i :: Int)
+               | i <- series d ]
+  coseries d = [ f . (fromInteger :: Integer->Int)
+               | f <- series d ]
+
+newtype N a = N a
+
+instance Show a => Show (N a) where
+  show (N i) = show i
+
+instance (Integral a, Serial a) => Serial (N a) where
+  series   d = map N [0..d']
                where
-               chain 0 =
-                 [ \x -> if x >= 0 then y else z
-                 | (y,z) <- series d ]
-               chain n =
-                 [ \x -> if x >= n then y else f x
-                 | (y,f) <- (series . (d-) >< chain . dec) n ]
+               d' = fromInteger (toInteger d)
+  coseries d = [ \(N i) -> if i > 0 then f (N (i - 1))
+                           else z
+               | z <- alts0 d, f <- alts1 d ]
+
+type Nat = N Int
+type Natural = N Integer
+
+instance Serial Float where
+  series d   = [ encodeFloat sig exp
+               | (sig,exp) <- series d,
+                 odd sig || sig==0 && exp==0 ]
+  coseries d = [ f . decodeFloat
+               | f <- series d ]
+             
+instance Serial Double where
+  series   d = [ frac (x :: Float)
+               | x <- series d ]
+  coseries d = [ f . (frac :: Double->Float)
+               | f <- series d ]
+
+frac :: (Real a, Fractional a, Real b, Fractional b) => a -> b
+frac = fromRational . toRational
+
+instance Serial Char where
+  series d   = take (d+1) ['a'..'z']
+  coseries d = [ \c -> f (N (fromEnum c - fromEnum 'a'))
+               | f <- series d ]
 
 instance (Serial a, Serial b) =>
          Serial (a,b) where
@@ -148,14 +188,6 @@ instance Serial Bool where
   series     = cons0 True \/ cons0 False
   coseries d = [ \x -> if x then b1 else b2
                | (b1,b2) <- series d ]
-
-instance Serial Ordering where
-  series     = cons0 LT \/ cons0 EQ \/ cons0 GT
-  coseries d = [ \x -> case x of
-                 LT -> b1
-                 EQ -> b2
-                 GT -> b3
-               | (b1,b2,b3) <- series d ]
 
 instance Serial a => Serial (Maybe a) where
   series     = cons0 Nothing \/ cons1 Just
@@ -255,10 +287,6 @@ instance (Serial a, Show a, Testable b) => Testable (a->b) where
 instance Testable Property where
   property (Property f) d = f d
 
--- For testing properties involving IO.  Unsafe, so use with care!
--- instance Testable a => Testable (IO a) where
---   property = property . unsafePerformIO
-
 evaluate :: Testable a => a -> Series Result
 evaluate x d = rs where Prop rs = property x d
 
@@ -299,62 +327,67 @@ False ==> x = Property (const (result nothing))
 
 --------------------- <top-level test drivers> ----------------------
 
--- similar in spirit to QuickCheck but with simple interaction
--- when deciding whether to do deeper tests and whether to 
--- continue after a failure
+-- similar in spirit to QuickCheck but with iterative deepening
 
 test :: Testable a => a -> IO ()
-test = smallCheck
+test = smallCheckI
 
-smallCheck :: Testable a => a -> IO ()
-smallCheck t = smallCheck' 0
+-- test for values of depths 0..d stopping when a property
+-- fails or when it has been checked for all these values
+smallCheck :: Testable a => Int -> a -> IO ()
+smallCheck d = iterCheck 0 (Just d)
+
+-- interactive variant, asking the user whether testing should
+-- continue/go deeper after a failure/completed iteration
+smallCheckI :: Testable a => a -> IO ()
+smallCheckI = iterCheck 0 Nothing
+
+depthCheck :: Testable a => Int -> a -> IO ()
+depthCheck d = iterCheck d (Just d)
+
+iterCheck :: Testable a => Int -> Maybe Int -> a -> IO ()
+iterCheck dFrom mdTo t = iter dFrom
   where
-  smallCheck' d = do
-    depthCheck d t
-    whenUserWishes "  Deeper" $ smallCheck' (d+1)
+  iter d = do
+    putStrLn ("Depth "++show d++":")
+    let Prop results = property t d
+    ok <- check (mdTo==Nothing) 0 0 True results
+    maybe (whenUserWishes "  Deeper" () $ iter (d+1))
+          (\dTo -> when (ok && d < dTo) $ iter (d+1))
+          mdTo
 
-depthCheck :: Testable a => Int -> a -> IO String
-depthCheck d t = do
---  putStr ("Depth "++show d++":")
---  hFlush stdout
-  let Prop results = property t d
-  check 0 0 False results
+check :: Bool -> Int -> Int -> Bool -> [Result] -> IO Bool
+check i n x ok rs | null rs = do
+  putStr ("  Completed "++show n++" test(s)")
+  putStrLn (if ok then " without failure." else ".")
+  when (x > 0) $
+    putStrLn ("  But "++show x++" did not meet ==> condition.")
+  return ok
+check i n x ok (Result Nothing _ : rs) = do
+  progressReport i n x
+  check i (n+1) (x+1) ok rs
+check i n x f (Result (Just True) _ : rs) = do
+  progressReport i n x
+  check i (n+1) x f rs
+check i n x f (Result (Just False) args : rs) = do
+  putStrLn ("  Failed test no. "++show (n+1)++". Test values follow.")
+  mapM_ (putStrLn . ("  "++)) args
+  ( if i then
+      whenUserWishes "  Continue" False $ check i (n+1) x False rs
+    else
+      return False )
 
-check :: Int -> Int -> Bool -> [Result] -> IO String
-check n x f rs | null rs = do
-  let s = "Completed "++show n++" test(s)"
-      y = if f then "." else " without failure."
-      z | x > 0     = "  But "++show x++" did not meet ==> condition."
-        | otherwise = ""
-  return $ s ++ y ++ z
-
-check n x f (Result Nothing _ : rs) = do
-  progressReport n x
-  check (n+1) (x+1) f rs
-
-check n x f (Result (Just True) _ : rs) = do
-  progressReport n x
-  check (n+1) x f rs
-
-check n x f (Result (Just False) args : rs) = do
-  let s = "  Failed test no. "++show (n+1)++". Test values follow."
-  return $ s ++ ": " ++ concat (intersperse ", " args)
-  -- mapM_ (putStrLn . ("  "++)) args
-  -- whenUserWishes "  Continue" $ check (n+1) x True rs
-
-whenUserWishes :: String -> IO () -> IO ()
-whenUserWishes wish action = do
+whenUserWishes :: String -> a -> IO a -> IO a
+whenUserWishes wish x action = do
   putStr (wish++"? ")
   hFlush stdout
   reply <- getLine
-  when (null reply || reply=="y") action
+  ( if (null reply || reply=="y") then action
+    else return x )
 
-progressReport :: Int -> Int -> IO ()
-progressReport _ _ = return ()
-{-
-progressReport n x | x >= 0 = do
-  putStr (n' ++ replicate (length n') '\b')
-  hFlush stdout
+progressReport :: Bool -> Int -> Int -> IO ()
+progressReport i n x | n >= x = do
+  when i $ ( putStr (n' ++ replicate (length n') '\b') >>
+             hFlush stdout )
   where
   n' = show n
--}
