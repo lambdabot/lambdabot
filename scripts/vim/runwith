@@ -1,0 +1,32 @@
+#!/bin/sh
+
+# Copyright (c) 2006 Don Stewart - http://www.cse.unsw.edu.au/~dons
+# adapted by Gareth Smith
+# GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
+
+#
+# A shell script to be called from vim, to use the awsesome power of haskell
+# string processing in everyday editing.
+#
+# Select the line you want to edit, and in vim, type:
+#       !!runwith f
+#
+# where f :: (Show a) => String -> a
+#
+# (Assuming your lambdabot is installed in $HOME/lambdabot) it will
+# replace the line with (f line)
+#
+# Hint: If you find yourself using a particular function a lot, use:
+#       !!bot let
+# to define it in lambdabot's local namespace.
+#
+# Isn't perfect yet - I'd like it if for functions f :: String -> String, that
+# the returned String didn't have to pass through the show function, so we
+# didn't get extraneous quote marks. For now, you can s/"//g them away though
+# :)
+#
+
+DECL=`cat`
+cd $HOME/lambdabot
+echo "run $* \"$DECL\"" | ./lambdabot 2> /dev/null | sed '$d;/Irc/d;s/lambdabot> //'
+

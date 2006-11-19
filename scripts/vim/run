@@ -1,0 +1,21 @@
+#!/bin/sh
+
+# Copyright (c) 2006 Don Stewart - http://www.cse.unsw.edu.au/~dons
+# adapted by Gareth Smith
+# GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
+
+#
+# A shell script to be called from vim, to use the awsesome power of haskell
+# string processing in everyday editing.
+#
+# Select the line you want to edit, and in vim, type:
+#       !!run
+#
+# (Assuming your lambdabot is installed in $HOME/lambdabot) it will
+# run the line as a haskell expression.
+#
+
+DECL=`cat`
+cd $HOME/lambdabot
+echo "run $DECL" | ./lambdabot 2> /dev/null | sed '$d;/Irc/d;s/lambdabot> //'
+
