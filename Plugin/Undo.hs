@@ -21,8 +21,8 @@ instance Module UndoModule () where
     moduleHelp _ "redo" = "redo <expr>\nTranslate Monad operators to do notation."
     process_ _ cmd args = ios $ return $ transform f args
      where f = case cmd of
-                "undo" -> undo . findVar
-                "redo" -> const $ redo
+                "undo" -> undo
+                "redo" -> redo
                 _      -> error "unknown command"
 
 ppMode :: PPHsMode
@@ -37,10 +37,11 @@ findVar e = head $ do
                     return xi
  where s = Set.fromList $ listify (const True :: String -> Bool) e
 
-transform :: (HsExp -> HsExp -> HsExp) -> String -> String
+transform :: (String -> HsExp -> HsExp) -> String -> String
 transform f s =
     case parseExpr (s ++ "\n") of -- newline to make comments work
-        ParseOk e -> prettyPrintWithMode ppMode $ everywhere (mkT $ f e) e
+        ParseOk e -> prettyPrintWithMode ppMode 
+                        $ everywhere (mkT . f . findVar $ e) e
         err       -> show err
 
 undo :: String -> HsExp -> HsExp
@@ -52,12 +53,12 @@ undo v (HsDo stms) = f stms
     f (HsGenerator s p e : xs) 
         | irrefutable p = infixed e ">>=" $ HsLambda s [p] $ f xs
         | otherwise     = infixed e ">>=" $ 
-                            HsLambda s [HsPVar $ HsIdent v] $ 
-                                HsCase (HsVar $ UnQual $ HsIdent v) 
+                            HsLambda s [pvar v] $ 
+                                HsCase (var v) 
                                     [ alt p (f xs)
                                     , alt HsPWildCard $
                                         HsApp
-                                            (HsVar $ UnQual $ HsIdent "fail")
+                                            (var "fail")
                                             (HsLit $ HsString "")
                                     ]
         where alt pat x = HsAlt s pat (HsUnGuardedAlt x) []
@@ -75,18 +76,25 @@ irrefutable _              = False
 infixed :: HsExp -> String -> HsExp -> HsExp
 infixed l o r = HsInfixApp l (HsQVarOp $ UnQual $ HsSymbol o) r
 
-redo :: HsExp -> HsExp
-redo (HsLet ds (HsDo s)) = HsDo (HsLetStmt ds : s)
-redo app@(HsInfixApp l (HsQVarOp (UnQual (HsSymbol op))) r) = 
+var :: String -> HsExp
+var = HsVar . UnQual . HsIdent
+
+pvar :: String -> HsPat
+pvar = HsPVar . HsIdent
+
+redo :: String -> HsExp -> HsExp
+redo _ (HsLet ds (HsDo s)) = HsDo (HsLetStmt ds : s)
+redo v app@(HsInfixApp l (HsQVarOp (UnQual (HsSymbol op))) r) = 
     case op of
         ">>=" ->
             case r of
                 (HsLambda loc [p] (HsDo stms)) -> HsDo (HsGenerator loc p l : stms)
                 (HsLambda loc [p] s)           -> HsDo [HsGenerator loc p l, HsQualifier s]
-                _                              -> HsDo [HsGenerator undefined HsPWildCard l, HsQualifier r]
+                _ -> HsDo [ HsGenerator undefined (pvar v) l
+                          , HsQualifier . HsApp r $ var v]
         ">>" ->
             case r of
                 (HsDo stms) -> HsDo (HsQualifier l : stms)
                 _           -> HsDo [HsQualifier l, HsQualifier r]
         _    -> app
-redo x = x
+redo _ x = x
