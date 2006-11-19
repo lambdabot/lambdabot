@@ -7,7 +7,7 @@
 ---------------------------------------------------------------------
 
 module SmallCheck (
-  smallCheck, smallCheckI, depthCheck, test,
+  smallCheck, depthCheck,
   Property, Testable,
   forAll, forAllElem,
   exists, existsDeeperBy, thereExists, thereExistsElem,
@@ -329,65 +329,50 @@ False ==> x = Property (const (result nothing))
 
 -- similar in spirit to QuickCheck but with iterative deepening
 
-test :: Testable a => a -> IO ()
-test = smallCheckI
-
 -- test for values of depths 0..d stopping when a property
 -- fails or when it has been checked for all these values
-smallCheck :: Testable a => Int -> a -> IO ()
+smallCheck :: Testable a => Int -> a -> IO String
 smallCheck d = iterCheck 0 (Just d)
 
--- interactive variant, asking the user whether testing should
--- continue/go deeper after a failure/completed iteration
-smallCheckI :: Testable a => a -> IO ()
-smallCheckI = iterCheck 0 Nothing
-
-depthCheck :: Testable a => Int -> a -> IO ()
+depthCheck :: Testable a => Int -> a -> IO String
 depthCheck d = iterCheck d (Just d)
 
-iterCheck :: Testable a => Int -> Maybe Int -> a -> IO ()
+iterCheck :: Testable a => Int -> Maybe Int -> a -> IO String
 iterCheck dFrom mdTo t = iter dFrom
   where
+  iter :: Int -> IO String
   iter d = do
-    putStrLn ("Depth "++show d++":")
     let Prop results = property t d
-    ok <- check (mdTo==Nothing) 0 0 True results
-    maybe (whenUserWishes "  Deeper" () $ iter (d+1))
-          (\dTo -> when (ok && d < dTo) $ iter (d+1))
+    (ok,s) <- check (mdTo==Nothing) 0 0 True results
+    maybe (iter (d+1))
+          (\dTo -> if ok && d < dTo
+                        then iter (d+1)
+                        else return s)
           mdTo
 
-check :: Bool -> Int -> Int -> Bool -> [Result] -> IO Bool
+check :: Bool -> Int -> Int -> Bool -> [Result] -> IO (Bool, String)
 check i n x ok rs | null rs = do
-  putStr ("  Completed "++show n++" test(s)")
-  putStrLn (if ok then " without failure." else ".")
-  when (x > 0) $
-    putStrLn ("  But "++show x++" did not meet ==> condition.")
-  return ok
+  let s = "  Completed "++show n++" test(s)"
+      y = if i then "." else " without failure."
+      z | x > 0     = "  But "++show x++" did not meet ==> condition."
+        | otherwise = ""
+  return (ok, s ++ y ++ z)
+
 check i n x ok (Result Nothing _ : rs) = do
   progressReport i n x
   check i (n+1) (x+1) ok rs
+
 check i n x f (Result (Just True) _ : rs) = do
   progressReport i n x
   check i (n+1) x f rs
-check i n x f (Result (Just False) args : rs) = do
-  putStrLn ("  Failed test no. "++show (n+1)++". Test values follow.")
-  mapM_ (putStrLn . ("  "++)) args
-  ( if i then
-      whenUserWishes "  Continue" False $ check i (n+1) x False rs
-    else
-      return False )
 
-whenUserWishes :: String -> a -> IO a -> IO a
-whenUserWishes wish x action = do
-  putStr (wish++"? ")
-  hFlush stdout
-  reply <- getLine
-  ( if (null reply || reply=="y") then action
-    else return x )
+check i n x f (Result (Just False) args : rs) = do
+  let s = "  Failed test no. "++show (n+1)++". Test values follow."
+      s' = s ++ ": " ++ concat (intersperse ", " args)
+  if i then
+      check i (n+1) x False rs
+    else
+      return (False, s')
 
 progressReport :: Bool -> Int -> Int -> IO ()
-progressReport i n x | n >= x = do
-  when i $ ( putStr (n' ++ replicate (length n') '\b') >>
-             hFlush stdout )
-  where
-  n' = show n
+progressReport _ _ _ = return ()

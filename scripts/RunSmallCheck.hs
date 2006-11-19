@@ -57,7 +57,7 @@ main = do
         x <- sequence (take 3 (repeat $ getStdRandom (randomR (97,122)) >>= return . chr))
         s <- unsafeEval_ ("let { "++x++
                          " = \n# 1 \"<irc>\"\n"++s++
-                         "\n} in (depthCheck 8 "++x++
+                         "\n} in (smallCheck 6 "++x++
                          ")") (context) [] [] []
         case s of
             Left  e -> mapM_ putStrLn e
