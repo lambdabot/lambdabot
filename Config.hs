@@ -80,6 +80,7 @@ config = Config {
                           ,"#darcs"
                           ,"#oasis"
                           ,"#perl6"
+                          ,"#jtiger"
                           ,"#ScannedInAvian"],
 
         admins          = [
