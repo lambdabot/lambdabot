@@ -150,7 +150,8 @@ instance Module SeenModule SeenState where
     process _ _ chan "users" rest = do
          (m, seenFM) <- readMS
          s <- io getClockTime
-         let target = if null rest then chan else rest
+         let target' = if null rest then chan else rest
+             target = lowerCaseString target'
              who = P.pack target
              now = length [ () | (_,Present _ chans) <- M.toList seenFM
                                , who `elem` chans ]
@@ -238,8 +239,8 @@ getAnswer msg rest seenFM now
                 ["Yes, I'm here. I'm in " ++ listToStr "and" (map P.unpack cs)]
             _ -> error "I'm here, but not here. And very confused!"
 
-  | length lcnick > 0 && head lcnick == '#' =
-       let channel = lcnick
+  | not (null lcnick) && head lcnick == '#' =
+       let channel = lowerCaseString lcnick
            people  = map fst $ filter inChan $ M.toList seenFM
            inChan (_nick,state) = case state of
                (Present (Just _) cs)
@@ -309,6 +310,9 @@ getAnswer msg rest seenFM now
     prettyMissed _ _ ifNotMissed = ifNotMissed ++ "."
 -}
 
+-- | extract channels from message as packed, lower cased, strings.
+msgChans :: Message.Message a => a -> [Channel]
+msgChans msg = map (P.pack . lowerCaseString) $ Message.channels msg
 
 -- | Callback for when somebody joins. If it is not the bot that joins, record
 --   that we have a new user in our state tree and that we have never seen the
@@ -316,9 +320,9 @@ getAnswer msg rest seenFM now
 joinCB :: Message.Message a => a -> SeenMap -> ClockTime -> Nick -> Either String SeenMap
 joinCB msg fm _ct nick
   | nick == (P.pack myname) = Right fm
-  | otherwise = Right $! insertUpd (updateJ Nothing (map P.pack $! Message.channels msg)) nick newInfo fm
-  where newInfo = Present Nothing (map P.pack $! Message.channels msg)
-
+  | otherwise = Right $! insertUpd (updateJ Nothing chans) nick newInfo fm
+  where newInfo = Present Nothing chans
+        chans = msgChans msg
 
 botPart :: ClockTime -> [Channel] -> SeenMap -> SeenMap
 botPart ct cs fm = fmap botPart' fm where
@@ -334,10 +338,10 @@ botPart ct cs fm = fmap botPart' fm where
 -- | when somebody parts
 partCB :: Message.Message a => a -> SeenMap -> ClockTime -> Nick -> Either String SeenMap
 partCB msg fm ct nick
-  | nick == (P.pack myname) = Right $ botPart ct (map P.pack $ Message.channels msg) fm
+  | nick == (P.pack myname) = Right $ botPart ct (msgChans msg) fm
   | otherwise      = case M.lookup nick fm of
       Just (Present mct xs) ->
-        case xs \\ (map P.pack $ Message.channels msg) of
+        case xs \\ (msgChans msg) of
           [] -> Right $ M.insert nick
                  (NotPresent ct zeroWatch xs)
                  fm
@@ -369,7 +373,7 @@ joinChanCB msg fm now _nick
     = Right $ fmap (updateNP now chan) $ foldl insertNick fm chanUsers
   where
     l = Message.body msg
-    chan = P.pack $ l !! 2
+    chan = P.pack $ lowerCaseString $ l !! 2
     chanUsers = map P.pack $ words (drop 1 (l !! 3)) -- remove ':'
     insertNick fm' u = insertUpd (updateJ (Just now) [chan])
                                     (P.pack . lowerCaseString . P.unpack .  unUserMode $ u)
