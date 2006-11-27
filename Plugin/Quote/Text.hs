@@ -312,6 +312,7 @@ notoriousV =
 --  differentActGetD howya-doin linux-fun boobhz booger perlIsBetter
 --  ramserver newlambder
 --  bublle-war ion-cannon 
+--  thailand-fan
 --
 -- n=bo@pool-71-106-182-86.lsanca.dsl-w.verizon.net
 -- n=root@masqrd.la.teampcs.com
@@ -334,6 +335,14 @@ notoriousV =
 -- 15:52 [freenode] --  ircname  : wilt chamberlain
 --
 -- 19:55 -- mode/#haskell [+b *!*n=tits@*.lsanca.dsl-w.verizon.net] by -- dons
+--
+-- Reappeared: 06.11.28
+--  10:34 [freenode] -- thailand-fan [n=bill@4.38.41.141]
+--  10:34 [freenode] --  ircname  : bill gates
+--  10:34 [freenode] --  channels : ##linux #archlinux 
+--
+-- (same ip address).
+--
 -- 
 protontorpedo :: [String]
 protontorpedo =
@@ -377,6 +386,8 @@ protontorpedo =
     "so haskells better than smalltalk and clsip?",
 
 -- more questions
+    "can haskell be used to develop databases?",
+    "evaluation seems ideal for banks who want to know global balances etc.",
     "what is so good about continuations/",
     "is it fun to program in haskell?",
     "paul graham said static typing and ML types fo lisp hurt exploratory progrmaming",
@@ -462,5 +473,7 @@ protontorpedo =
     "I am banned from like 6 rooms",
     "scheme, lisp, php, python, perl, tcl, al banned",
     "Im really only a bash person and even then Im tin",
-    "i have a win xp box"
+    "i have a win xp box",
+
+
     ]
