@@ -28,6 +28,7 @@ AshleyYakeley
 Expect a whole new batch of type shenanigans from Oleg
 
 Baughn
+I once explained monads to a non-programmer: 'And? What's so hard about that?'
 [I] once explained monads to a non-programmer. "And? What's so hard about that?"
 I think I'm beginning to understand this language. I just defined 1+1=3.
 
@@ -35,6 +36,8 @@ BillWood
 it became obvious that when a Prolog program is tuned by removing non-determinism it moves towards a functional program.
 
 Binkley
+vincenz: lots of practice
+is it because of your mother that you added an integer to a pointer without a cast?
 are there any Haskell users who haven't implemented a compiler?
 in response to [Philippa] plus who wants to get unsafeHead? [Binkley] Philippa: not if you're doing it in literate Haskell. because, you know, the LaTeX makes it safe
 most people's gender inference is broken
@@ -44,10 +47,17 @@ can you represent "more moronic than Slashdot" with a 32-bit integer?
 BjarneStroustrup
 any verbose and tedious solution is error-prone because programmers get bored. [S 9.4 of C++, 2nd edition]
 
+Botty
+holy crap, knew smerdy sounded familiar - about 2 years ago he was trying to convince me to throw out my mouse
+
 Bulat
+Base lib includes everything, from 'const' to starship control
 there is new Time library, which is supposed to replace old System.Time. we hope that it will happen before 2038
 
 Cale
+I should actually think before coding, but the type system is so good :)
+GADT pattern match in non-rigid context. There are prescriptions available for that sort of thing.
+Does X have the monad-nature?
 I know I always have trouble explaining what the weather is like without involving foldr somehow.
 interact is the one true way to write unix programs in Haskell :)
 [dmead] yo yo yo yo what it is mother fuckers [Cale] dmead: this isn't #scheme
@@ -89,6 +99,9 @@ Are you fully nerd????
 DukeDave
 what, if your kids start doing drugs? or worse, business school
 
+Entropy
+I agree; we need to remove Emacs' ridiculous dependency on a kernel being present
+
 EvilRanter
 I went off scheme, because the fundemental keywords of the language had stupid names
 I find "your a moron! unban me, or i shall TAUNT YOU A SECOND TIME!!" to be a particularly poor attempt
@@ -98,6 +111,9 @@ in haskell you can have korean smilies as variables! like (^-^)
 
 Gahhh
 monads are usually a personal experience.
+
+GentleIntro
+If k1 and k2 are kinds, then k1->k2 is the kind of types that take a type of kind k1 and return a type of kind k2.
 
 HamiltonRichards
 It's fair to say that functional programming requires a very different mind-set, but once you've made the "jump", programming in conventional languages feels like doing arithmetic in Roman numerals.
@@ -110,6 +126,7 @@ docs aren't all that useful, generally
 CPP leads to suffering
 
 Igloo
+ Did hugs' ./configure always end with "config.status: executing ultra-evil commands"?
 i 4m teh lambda
 [dons: anyone know what happened to [the] Haskell wishlist?]  Igloo: Did it have "Crush Java" listed?
 
@@ -118,6 +135,7 @@ my balls are large enough, thank you very much
 real programmers don't write docs, if it was hard to write, it should be hard to understand
 
 JaffaCake
+Casting boxed types to unboxed types or vice versa is pretty much guaranteed to end in tears
 I don't remember a recruitment process where the interviewees all talk to each other before, it's kind of scary :)
 gcc is getting smarter, so we need to hit it with a bigger stick
 not all IOError -> String functions are created equal :)
@@ -197,6 +215,9 @@ Well, personally, I don't think dumb people should be let near a programming lan
 Pupeno
 lambdabot is indeed the most impresive bot I've ever seen
 
+Renkin
+Is lambdabot omnipotent or something?
+
 Robert_Dockins
 A Turing-complete type-checker isn't enough!  Our work is not complete until the parser is a universal machine as well!
 
@@ -208,6 +229,7 @@ or maybe she is the Queen of Sciences and he is the Mack Daddy.
 Computer science is the womanizer, and math is the pure-hearted girl he won't call the next day.
 
 SamB
+[on the subject of fromJust] SamB_XP thinks that unJust would be a more fun name for that
 and then I'd like to see your Os
 any list of application domains is either incomplete or depressing
 O(n^2) is better than O(hair-gone)
@@ -236,6 +258,9 @@ Let's imagine something that would be awesome.
 I recommend seeing if people have a major problem, then pouring concrete on them, and implementing what you want anyway ;)
 You'd be surprised how hard is to hire haskellers :( They're all like, "Yeah, I'll come work for you, and by 'come' I mean stay here and work remotely and by 'work for you' I mean I'll keep doing what I'm doing." ;)
 I think that the compiler authors will fly here from England just to kill me if I did that
+
+Syzygy-
+Why do I get the feeling that the arrow code was written during "Speak like a pirate day"?
 
 Taral
 But I can do DP in C, which has no RT
@@ -270,7 +295,11 @@ adept
 Tried to co-read and co-understand comonads, but got co-re dump
 I think I need cobrain to understand coeffects
 
+apfelmus
+Ah, yet another UndeadArray necromancer exhausting his stack of bones. May the forces of light suggest to structure the incantation of darkness?
+
 araujo
+[Ontolog]10 01araujo: if you like Haskell so much why don't you marry it?! [araujo] Ontolog, I am .... internally .... i am
  Feel free to stop by and drop in some words if you like :-)
 
 astrolabe
@@ -323,6 +352,9 @@ i have a little perl script that aliases gcc -freduced-suckage to ghc
 cjs
 I have to explain this shit to people. I mean, I start out right, "Hey, you know how you always have these bugs because what you thought was in the variable is not there?" And I get all of these nods of agreement. "Well, I've found a new language that solves that problem." Audience: "Ooooh! How?" Me: "There's no variables!" And then they all start moving away from me slowly....
 
+cypherx
+Oh god, C++ is like a lamprey in my urethra.
+
 darius
 Well profiling does add a bit of reflection, but it should have the good sense not too go near the barbed wire fences and armed guards.
 I imagine XSLT programmers say "It's a one pager" the way most other programmers say "It's a one liner".
@@ -342,9 +374,11 @@ delicious-malicious-test
 @quote dmt
 
 desrt
+psi is lame. psi is what you use when phi is already taken
 man... there's this whole dark side to haskell that dr. kahl didn't teach us in 3e03
 
 dibblego
+[in ##c] <dibblego> ?type map <SamB> no lambdabot in ##c, silly! <dibblego> I'm so used to lambdabot following me around
 I'm glad I googled it before going to see the doctor
 using logic in imperative programming language channels is generally considered trolling
 I believe that OO is intrinsically defective and digresses from a formal definition of "software"
@@ -354,6 +388,9 @@ Perhaps he's an epigram guy and frowns on Turing completeness.
 [psnl] its been made worse by uni doing a sexual awareness week [dolio] Some people at your university weren't aware of sex?
 
 dons
+corn goes pop now?
+ ah, it *is* like haskell, I see: Jiffy Pop is the family fun treat. No other brand of popcorn offers a self-contained popping pan. It can even be used outdoors.
+screw 'em. we have the technology.
 Java's type system is unsuitable for young children, the elderly or infirm of constitution
 hugs should spot the blackhole, or fail gracefully
 disable the type checker in ghc for 6 months and we'd have 5 debuggers at the end of it :)
@@ -392,6 +429,8 @@ boegel, stop polluting the quote-space please
 I don't mind autoconf, except for the fact that it's stupid and ugly
 
 dylan
+pugs, darcs, and lambdabot: gateway drugs to haskell.
+I'm an IT department.
 I avoid buzz-buzz whenever possible. I prefer math-based or completely insane terminology
 everything's a hack. the world's a hack.
 I run emacs for the games
@@ -585,6 +624,8 @@ ghci.debugger
 http://haskell.org/haskellwiki/Ghci/Debugger
 
 glguy
+Hmm, for next Halloween, he could dress up as someone who recognizes 2^1024 on sight!
+lol, making lambdabot fight your battles
 aparently Tor sends all packets with a 512 byte minimum, so if everyone could please write their thoughts on a few lines as possible, it would be appreciated q-:
 this is like Web 5GL. I like it
 11th commandment, don't use cygwin because it is crap
@@ -729,6 +770,7 @@ hmm, one national tv station I was watching while eating breakfast crashed with 
 My friend bought a new laptop; it had MSBLASTER preinstalled. I couldn't believe it either and installed XP and the apps many times, run virus killers and everytime the blaster came back. Everything was packed on a rescue cd. And virus was in m$ works installation files.
 
 monochrom
+data DeCarte = forall a. Think a => Exist a
 Well I was writing Windows apps in C since the days of Windows 3.0 and I tell you it's very OO.
 "Software Faults for Free!"
 10 01Time flies like an arrow.  Fruit flies like a banana.  Syntax rules like a macro.
@@ -746,6 +788,7 @@ reallyUnsafePointerEq# seems unsafe.
 <musasabi> no reason to reinvent the whole wheel  <musasabi> (usually reinvented wheels end up square)
 
 mwc
+XML is like violence. If it doesn't work, use more.
 I can only believe that Java is a conspiracy perpetrated by keyboard manufacturers
 I actually got away with running Haskell through a TeX pretty printer and handing it in as pseudocode
 
@@ -785,7 +828,12 @@ pjdelport
 qwe1234, boldly defining where no man has defined before!
 [on qwe1234:] It must be a drag, being the sole beacon of sanity in a field where all the established researchers are unanimously insane.
 
+psnl
+ndm: you should have stayed around for the part where Conor denied he was Conor.
+
 psykotic
+Let me get this straight: in your tireless Lisp-bashing efforts you have now dragged out Prolog as an exemplar of practicality? *Prolog*? My goodness, you must be desperate!
+ (:[]) is the happy monkey operator
 monochrom, i'm reminded me of that alan kay quote. "i invented the term 'object-oriented' and i can tell you c++ wasn't what i had in mind"
 [monads aren't hard] they're just monoids on the category of endofunctors over some category, what's the big deal?
 
@@ -793,6 +841,19 @@ pzpz
  i can't see how anyone can use a laptop without the nipple
 
 qwe1234
+lol, thanks for the pointless offtopic post
+i'm still waiting for the list of differences between lisp and php that matter.
+sometimes i think lisp is as deadly to programmer competence as java or basic.
+all scripting languages are the same.
+just because it's inflammatory doesn't mean it's wrong
+in my very firm opinion, it's never your business to be figuring out pointer type at runtime.
+lisp is yet another half-assed run-of-the-mill scripting language. absolutely *no different* from something like php in any significant way worth mentioning.
+common lisp reminds me of fortran and cobol, all three are about as much fun to program in.
+c++ is the way it is for a very, very good reason.
+the problem is that ocaml has mandatory garbage collection.
+every half-assed dynamically-typed, ass-slow scripting language is Lisp but a bit different
+if programming languages were gods, something like smalltalk would be Cloacina, the goddess of the sewers
+dynamic typing is *always* a compiler bug.
 the only reason for 'dispatching, polymorphism and parametrization' to exist at all is for enforcing safety.
 i know and program in more languages than can fit in your short-term memory, ok?
 good developers will write good code in absolutely any language, while bad developers will develop crap no matter the tools they use.
@@ -856,6 +917,8 @@ sethk
 it's certainly true that you can clobber the stack in C without even getting out of bed in the morning
 
 shapr
+vincenz: Right. Santa Claus can have a bowl full of jelly, but it's not appealing on programmers.
+Hey, don't talk bad about my holy war!
 I've never had nightmares about functional programmers before.
 [on causing trouble in #java] I told a java newbie to use a parser monad...
 I was chatting with someone who writes Haskell and at some point they said they're not an academic, and I said that too. And then there was what I perceived to be a small disbelieving silence...
@@ -890,6 +953,7 @@ Maybe if I had an Oleg implant I could express all this in the type system
 You may not like this but this should work..
 
 sjanssen
+your mom has a thunk for a tail
 I suspect that planet.haskell.org has more content on catamorphisms than cats
 Quoth the Prelude, Chapter 6, verse 4:  Yeah verily shall repeat floweth cons cells over.
 @djinn Haskell -> Curry
@@ -921,7 +985,11 @@ stepcut
 how can you possibly implement business logic without knowing about Schonfinkel!?
 I wrote 1 + 1 in php once, and got 11 -- wasn't quite what I was hoping for
 
+swiert
+Of course! Who can live without covariant homfunctors?
+
 syntaxfree
+I love lists of functions. They give me this warm mathematical feeling.
 yes, The Wadlerman. the Prince of Funktions.
 Functional programming has finally arrived to the masses. Its name is not Lisp, ML or Haskell: it's Visual Basic
 <Bourbaki> the best thing i have ever read in economy is a statement of some guy "i have never met the homo oeconomicus" <syntaxfree> I have never met a catamorphism, either.
@@ -936,6 +1004,9 @@ it's also invalid to say shoes are useless, just because you can't brush your te
 and minion pro comes with acrobat reader. I never thought that I would find this proprietary thing useful for anything than blocking my cpu
 good morning. I think I have been dreaming of shift/reset continuations...
 
+thetallguy
+Using and advocating Haskell is like being Calvin (and Hobbes). To you, it's alive, real, a true delight. To those who know better, it's a stuffed tiger.
+
 tomasz
 After all, return is only a fancy name for liftM0 :-)
 
@@ -949,6 +1020,9 @@ vegai
 Hey Haskell! Give me that File! -Naah, I'm too lazy. *thinks* I'll give you a cookie if you tell me how many letters that file has! -Oh, ok!
 
 vincenz
+shapr: lambdas are curved like bananas, they return
+Binkley: the sex is all in the operational semantics, denotational semantics only deals with love
+Does a cow have least-fixed-point-nature?
 sure, give us your homework and we'll email it straight to your teacher :)
 english is my 4th language
 [Philippa] you can catch stuff off someone who's asymptomatic [vincenz] Philippa: only if you allow your body to become assymptotic with his [Binkley] nice typo [vincenz] it's a typo?
@@ -978,6 +1052,7 @@ xahlee
 The Haskell Logo is the perfection of logos
 
 xerox
+<dons> then again, bots themselves are simple  <xerox> "...they are just a morphism in the category of IRC channels together with an endomapping ..."
 we can't leave all the mathematics to the women!
 06* xerox gets sucked in a vortex of -fdisallow-overlapping-explanations01
 #haskell is a good code optimizer.
