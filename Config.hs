@@ -53,7 +53,7 @@ config :: Config
 config = Config {
         name            = "lambdabot",
         userinfo        = "Lambda_Robots:_100%_Loyal",
-        host            = "chat.freenode.net",
+        host            = "irc.freenode.net",
         protocol        = Irc,
 
         port            = 6667,
@@ -64,7 +64,7 @@ config = Config {
         autojoin        = ["#haskell"
                           ,"#haskell-blah"
                           ,"#haskell-overflow"
-                          ,"#haskell.de"
+                     {-   ,"#haskell.de"
                           ,"#haskell.es"
                           ,"#haskell.fi"
                           ,"#haskell.fr"
@@ -72,8 +72,7 @@ config = Config {
                           ,"#haskell.it"
                           ,"#haskell.jp"
                           ,"#haskell.no"
-                          ,"#haskell.se"
-                          ,"#haskell_ru"
+                          ,"#haskell.se" -}
                           ,"#gentoo-haskell"
                           ,"#gentoo-uy"
                           ,"#ghc"
@@ -81,6 +80,7 @@ config = Config {
                           ,"#oasis"
                           ,"#perl6"
                           ,"#jtiger"
+                          ,"#unicycling"
                           ,"#ScannedInAvian"],
 
         admins          = [
