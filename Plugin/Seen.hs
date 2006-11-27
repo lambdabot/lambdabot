@@ -41,7 +41,7 @@ type LastSpoke = Maybe (ClockTime, TimeDiff)
 -- | 'UserStatus' keeps track of the status of a given Nick name.
 data UserStatus
         = Present    !LastSpoke [Channel]
-          -- ^ Records when the nick last spoke and that the nick is currently 
+          -- ^ Records when the nick last spoke and that the nick is currently
           --   in [Channel].
         | NotPresent !ClockTime !StopWatch [Channel]
           -- ^ The nick is not present and was last seen at ClockTime in Channel.
@@ -222,27 +222,27 @@ myname = lowerCaseString (name config)
 
 getAnswer :: Message.Message a => a -> String -> SeenMap -> ClockTime -> [String]
 getAnswer msg rest seenFM now
-  | null lcnick = 
+  | null lcnick =
        let people  = map fst $ filter isActive $ M.toList seenFM
-           isActive (_nick,state) = case state of 
+           isActive (_nick,state) = case state of
                (Present (Just (ct,_td)) _cs) -> recent ct
                _ -> False
            recent t = normalizeTimeDiff (diffClockTimes now t) < gap_minutes
            gap_minutes = TimeDiff 0 0 0 0 15 0 0
-       in ["Lately, I have seen " ++ (if null people then "nobody" 
+       in ["Lately, I have seen " ++ (if null people then "nobody"
                else listToStr "and" (map P.unpack people)) ++ "."]
 
-  | lcnick == myname = 
+  | lcnick == myname =
         case M.lookup (P.pack lcnick) seenFM of
-            Just (Present _ cs) -> 
+            Just (Present _ cs) ->
                 ["Yes, I'm here. I'm in " ++ listToStr "and" (map P.unpack cs)]
             _ -> error "I'm here, but not here. And very confused!"
 
   | length lcnick > 0 && head lcnick == '#' =
        let channel = lcnick
            people  = map fst $ filter inChan $ M.toList seenFM
-           inChan (_nick,state) = case state of 
-               (Present (Just _) cs) 
+           inChan (_nick,state) = case state of
+               (Present (Just _) cs)
                   -> P.pack channel `elem` cs
                _ -> False
        in ["In "++channel++" I can see "
@@ -263,21 +263,21 @@ getAnswer msg rest seenFM now
       case mct of
         Nothing          -> concat [" I don't know when ", nick, " last spoke."]
         Just (ct,missed) -> prettyMissed (Stopped missed)
-               (concat [" I last heard ", nick, " speak ", 
+               (concat [" I last heard ", nick, " speak ",
                         lastSpoke {-, ", but "-}])
                (" Last spoke " ++ lastSpoke)
           where lastSpoke = clockDifference ct
      ]
     nickNotPresent ct missed chans = ircMessage [
-       "I saw ", nick, " leaving ", listToStr "and" chans, " ", 
+       "I saw ", nick, " leaving ", listToStr "and" chans, " ",
        clockDifference ct, prettyMissed missed ", and " ""
      ]
     nickWasPresent ct sw chans = ircMessage [
        "Last time I saw ", nick, " was when I left ",
        listToStr "and" chans , " ", clockDifference ct,
        prettyMissed sw ", and " ""]
-    nickIsNew newnick = ircMessage [if you then "You have" else nick++" has", 
-        " changed nick to ", us, "."] ++ getAnswer msg us seenFM now 
+    nickIsNew newnick = ircMessage [if you then "You have" else nick++" has",
+        " changed nick to ", us, "."] ++ getAnswer msg us seenFM now
       where
 
         findFunc pstr = case M.lookup pstr seenFM of
@@ -292,9 +292,9 @@ getAnswer msg rest seenFM now
     you   = nick' == Message.nick msg
     nick  = if you then "you" else nick'
     lcnick = lowerCaseString nick'
-    clockDifference past 
+    clockDifference past
       | all (==' ') diff = "just now"
-      | otherwise        = diff ++ " ago" 
+      | otherwise        = diff ++ " ago"
       where diff = timeDiffPretty . diffClockTimes now $ past
 
     prettyMissed (Stopped _) ifMissed _     = ifMissed ++ "."
@@ -302,7 +302,7 @@ getAnswer msg rest seenFM now
 
 {-
     prettyMissed (Stopped missed) ifMissed _
-      | missedPretty <- timeDiffPretty missed, 
+      | missedPretty <- timeDiffPretty missed,
         any (/=' ') missedPretty
       = concat [ifMissed, "I have missed ", missedPretty, " since then."]
 
@@ -365,7 +365,7 @@ nickCB msg fm _ nick = case M.lookup nick fm of
 -- use IRC.IRC.channels?
 -- | when the bot join a channel
 joinChanCB :: Message.Message a => a -> SeenMap -> ClockTime -> Nick -> Either String SeenMap
-joinChanCB msg fm now _nick 
+joinChanCB msg fm now _nick
     = Right $ fmap (updateNP now chan) $ foldl insertNick fm chanUsers
   where
     l = Message.body msg
@@ -380,7 +380,7 @@ joinChanCB msg fm now _nick
 msgCB :: Message.Message a => a -> SeenMap -> ClockTime -> Nick -> Either String SeenMap
 msgCB _ fm ct nick =
   case M.lookup nick fm of
-    Just (Present _ xs) -> Right $ 
+    Just (Present _ xs) -> Right $
       M.insert nick (Present (Just (ct, noTimeDiff)) xs) fm
     _ -> Left "someone who isn't here msg us"
 
@@ -388,8 +388,8 @@ msgCB _ fm ct nick =
 unUserMode :: Nick -> Nick
 unUserMode nick = P.dropWhile (`elem` "@+") nick
 
--- | Callbacks are only allowed to use a limited knowledge of the world. 
--- 'withSeenFM' is (up to trivial isomorphism) a monad morphism from the 
+-- | Callbacks are only allowed to use a limited knowledge of the world.
+-- 'withSeenFM' is (up to trivial isomorphism) a monad morphism from the
 -- restricted
 --   'ReaderT (IRC.Message, ClockTime, Nick) (StateT SeenState (Error String))'
 -- to the
@@ -422,7 +422,7 @@ withSeenFM f msg = do
     where chan = head . Message.channels $! msg
 
 -- | Update the user status.
-updateJ :: Maybe ClockTime -- ^ If the bot joined the channel, the time that 
+updateJ :: Maybe ClockTime -- ^ If the bot joined the channel, the time that
                            --   happened, i.e. now.
   -> [Channel]             -- ^ The channels the user joined.
   -> UserStatus            -- ^ The old status
@@ -465,4 +465,3 @@ startWatch _ alreadyStarted = alreadyStarted
 stopWatch :: ClockTime -> StopWatch -> StopWatch
 stopWatch now (Running t)  = Stopped $! t `diffClockTimes` now
 stopWatch _ alreadyStopped = alreadyStopped
-
