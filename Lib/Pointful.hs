@@ -173,18 +173,21 @@ optimize :: (Eq a, Data a) => a -> a
 optimize = stabilize optimizeOnce
 
 pointfulParsed :: (Eq a, Pretty a, Data a) => ParseResult a -> ParseResult String
-pointfulParsed = modifyOk (prettyPrint . optimize . uncomb)
+pointfulParsed = modifyOk (prettyPrintInLine  . optimize . uncomb)
 
 pointfulExpr = pointfulParsed . parseExpr
 pointfulDecl = pointfulParsed . parseDecl
 pointful = pointfulExpr `orParse` pointfulDecl
 
+prettyPrintInLine :: Pretty a => a -> String
+prettyPrintInLine = prettyPrintWithMode $ defaultMode { layout = PPInLine }
+
 test s = case parseModule s of
   f@(ParseFailed _ _) -> fail (show f)
   ParseOk (HsModule _ _ _ _ defs) -> 
     flip mapM_ defs $ \def -> do
-      putStrLn . prettyPrint $ def
-      putStrLn . prettyPrint . uncomb $ def
-      putStrLn . prettyPrint . optimize . uncomb $ def
+      putStrLn . prettyPrintInLine  $ def
+      putStrLn . prettyPrintInLine  . uncomb $ def
+      putStrLn . prettyPrintInLine  . optimize . uncomb $ def
 
 main = test "f = tail . head; g = head . tail; h = tail + tail; three = g . h . i; dontSub = (\\x -> x + x) 1; ofHead f = f . head; fm = flip mapM_ xs (\\x -> g x); po = (+1); op = (1+); g = (. f); stabilize = fix (ap . flip (ap . (flip =<< (if' .) . (==))) =<<)"
