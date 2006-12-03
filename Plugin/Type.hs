@@ -31,6 +31,12 @@ instance Module TypeModule () where
                                                     "type" -> ":t"
                                                     "kind" -> ":k"
 
+     contextual  _ _ _ text = case () of
+        _| ":t " `isPrefixOf` text -> lift $ query_ghci ":t" expr
+         | ":k " `isPrefixOf` text -> lift $ query_ghci ":k" expr
+         | otherwise               -> return []
+         where expr = drop 3 text
+
 --     In accordance with the KISS principle, the plan is to delegate all
 --     the hard work! To get the type of foo, pipe
 
