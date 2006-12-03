@@ -64,6 +64,7 @@ config = Config {
         autojoin        = ["#haskell"
                           ,"#haskell-blah"
                           ,"#haskell-overflow"
+                          ,"#haskell.hac07"
                      {-   ,"#haskell.de"
                           ,"#haskell.es"
                           ,"#haskell.fi"
