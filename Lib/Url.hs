@@ -119,7 +119,7 @@ getHtmlPage u p = getHtmlPage' u p 5
 -- comprising the server response which includes the status line,
 -- response headers, and body.
 getURIContents :: URI -> Proxy -> IO [String]
-getURIContents uri proxy = readNBytes 1024 proxy uri request ""
+getURIContents uri proxy = readNBytes 2048 proxy uri request ""
     where
       request  = case proxy of
                    Nothing -> ["GET " ++ abs_path ++ " HTTP/1.1",
