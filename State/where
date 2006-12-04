@@ -44,6 +44,8 @@ cabal
 http://www.haskell.org/cabal
 cabal-get
 cabal-get is now cabal-install, and is in Cabal's source tree
+cabal-test
+http://darcs.haskell.org/~lemmih/cabal-test
 cairo
 http://haskell.org/gtk2hs/
 catch
@@ -78,14 +80,22 @@ darcs-graph
 http://www.cse.unsw.edu.au/~dons/code/darcs-graph/
 darcs-libs
 darcs get http://cvs.haskell.org/darcs/libraries
+darcs-logs
+http://www.cse.unsw.edu.au/~dons/irc/darcs/
+darcs-paste
+http://paste.lisp.org/new/darcs
 darcs-server
 http://www.equational.org/darcs-server
 darcsdeps
 http://wiki.darcs.net/index.html/DarcsDeps
+darcssim
+http://codersbase.com/index.php/DarcsSim
 darcsweb
 http://users.auriga.wearlab.de/~alb/darcsweb/
 debian-haskell
 http://urchin.earth.li/mailman/listinfo/debian-haskell
+devtodo
+http://swapoff.org/wiki/DevTodo
 diet
 http://web.engr.oregonstate.edu/~erwig/diet/
 djinn
@@ -93,7 +103,7 @@ darcs get http://darcs.augustsson.net/Darcs/Djinn
 dons
 http://www.cse.unsw.edu.au/~dons
 dph
-http://www.cse.unsw.edu.au/~chak/project/dph
+http://haskell.org/haskellwiki/GHC/Data_Parallel_Haskell
 drhaskell
 http://www.cs.york.ac.uk/fp/darcs/drhaskell/
 drift
@@ -117,7 +127,7 @@ http://www.cse.unsw.edu.au/~chak/haskell/ffi/
 fgl
 http://www.cs.orst.edu/~erwig/fgl/
 filepath
-http://www-users.cs.york.ac.uk/~ndm/projects/libraries.php
+http://www-users.cs.york.ac.uk/~ndm/projects/libraries.php#filepath
 flippi
 http://www.flippac.org/projects/flippi/
 folds
@@ -166,6 +176,8 @@ h98
 http://haskell.org/onlinereport/
 hac
 http://haskell.org/haskellwiki/HAC
+hac07
+http://haskell.org/haskellwiki/Hac_2007
 hackage
 http://hackage.haskell.org/trac/hackage
 hackagedb
@@ -180,6 +192,8 @@ happs
 http://happs.org
 happy
 http://www.haskell.org/happy/
+happy-darcs
+darcs get http://darcs.haskell.org/happy/
 hare
 http://www.cs.kent.ac.uk/projects/refactor-fp/
 harp
@@ -214,6 +228,8 @@ haskelldb
 http://haskelldb.sourceforge.net/
 haskellexts
 http://hackage.haskell.org/trac/haskell-prime/wiki/HaskellExtensions
+haskellsearch
+http://www.google.com/coop/cse?cx=015832023690232952875%3Acunmubfghzq
 haskls
 http://scannedinavian.com/~boegel/HaskLS/
 haskore
@@ -225,7 +241,7 @@ http://scannedinavian.com/~lemmih/hasp
 haste
 http://haste.dyndns.org:8080/
 hat
-www.haskell.org/hat/
+http://www.haskell.org/hat/
 hat-anim
 http://www.haskell.org/hat
 hat-detect
@@ -259,7 +275,7 @@ http://www.haskell.org/~luisfaraujo/himerge/
 hinotify
 http://haskell.org/~kolmodin/code/hinotify/
 hlist
-http://homepages.cwi.nl/~ralf/hlist/
+http://homepages.cwi.nl/~ralf/HList
 hmake
 http://haskell.org/hmake
 hmp3
@@ -267,7 +283,7 @@ http://www.cse.unsw.edu.au/~dons/hmp3.html
 hnop
 http://semantic.org/hnop/
 hogg
-http://snapper.kfish.org/~conrad/software/hogg/
+http://www.annodex.net/~conrad/software/hogg.html
 hood
 www.haskell.org/hood/
 hoogle
@@ -318,10 +334,14 @@ hunit
 http://hunit.sourceforge.net/
 hwn
 http://sequence.complete.org/
+hwn-archives
+http://www.cse.unsw.edu.au/~dons/code/hwn/archives/
 hxt
 http://www.fh-wedel.de/~si/HXmlToolbox/
 hxweb
 http://darcs.haskell.org/~lemmih/hxweb
+ibid
+http://antti-juhani.kaijanaho.fi/newblog
 icfp2006
 http://icfpcontest.org/
 idoc
@@ -345,7 +365,7 @@ http://www.cse.unsw.edu.au/~chak/haskell/lambdaFeed/
 lambdashell
 darcs get http://www.eecs.tufts.edu/~rdocki01/lambda/
 lambdatex
-http://www.cse.unsw.edu.au/~patrykz/lambdaTeX/
+http://www.jantar.org/lambdaTeX/
 lambdaweb
 http://lambdabot.codersbase.com
 lazy-regex
@@ -366,10 +386,20 @@ ltu
 http://lambda-the-ultimate.org/
 map
 http://www.haskell.org/hawiki/HaskellUserLocations
+mathbin
+http://www.mathbin.net/
+mathpaste
+http://www.mathbin.net/
+meep
+http://ab-initio.mit.edu/~meep/meep/
 minho
 http://wiki.di.uminho.pt/wiki/bin/view/PURe/PUReSoftware
 missingh
 http://quux.org/devel/missingh
+missingpy
+http://quux.org:70/devel/missingpy
+mkcabal
+darcs get http://www.cse.unsw.edu.au/~dons/code/mkcabal
 monadlib
 http://www.cse.ogi.edu/~diatchki/monadLib/
 monads
@@ -379,7 +409,9 @@ http://www.cs.uu.nl/~daan/morrow/
 mtl
 www.cs.brown.edu/~jwicks/mtl_reference/
 ndp
-http://www.cse.unsw.edu.au/~chak/project/dph
+http://darcs.haskell.org/packages/ndp/Data/Array/Parallel/ http://www.cse.unsw.edu.au/~chak/project/dph
+nehe-tuts
+darcs get http://projects.codersbase.com/repos/nehe-tuts/
 network-alt
 http://www.cs.helsinki.fi/u/ekarttun/network-alt/
 newbinary
@@ -396,10 +428,20 @@ oohaskell
 http://homepages.cwi.nl/~ralf/OOHaskell/
 openbsd
 http://openbsd.org/
+orphans
+http://www.haskell.org/ghc/docs/latest/html/users_guide/separate-compilation.html#orphan-modules
+pappy
+http://pdos.csail.mit.edu/~baford/packrat/thesis/
 parsec
 http://www.cs.ruu.nl/~daan/parsec.html
 paste
 http://paste.lisp.org/new/haskell
+paste-hr
+http://paste.lisp.org/new/haskell.hr
+paste-rafb
+http://rafb.net/paste
+paste.hr
+http://paste.lisp.org/new/haskell.hr
 pastebin
 http://rafb.net/paste
 performance
@@ -418,6 +460,8 @@ planethaskell
 http://antti-juhani.kaijanaho.fi/planet-haskell/
 plbook
 http://www-2.cs.cmu.edu/~rwh/plbook/
+pqc
+http://www.cse.unsw.edu.au/~dons/pqc.html
 pretty-hat
 http://www.haskell.org/hat
 pronunciation
@@ -426,6 +470,8 @@ proplang
 http://www.cs.york.ac.uk/fp/darcs/proplang
 pugs
 http://www.pugscode.org/
+qc2
+darcs get http://www.cs.chalmers.se/~bringert/darcs/QuickCheck/
 qdbm
 http://www.city5.org/haskellprog/qdbm/
 qforeign
@@ -454,10 +500,14 @@ shootout
 http://shootout.alioth.debian.org/
 smallcheck
 http://www.cs.york.ac.uk/fp/smallcheck0.2.tar
+smp
+http://www.haskell.org/ghc/dist/current/docs/users_guide/sec-using-smp.html
 soc
 http://hackage.haskell.org/trac/summer-of-code/
 soe
 http://haskell.org/soe/
+soe-gtk
+http://haskell.org/~duncan/soegtk/
 soegtk
 http://haskell.org/~duncan/soegtk/
 stats
@@ -467,7 +517,7 @@ http://www.haskell.org/ghc/docs/latest/html/libraries/index.html
 stg
 http://citeseer.ist.psu.edu/peytonjones92implementing.html
 stm
-http://research.microsoft.com/Users/simonpj/papers/stm/
+http://haskell.org/haskellwiki/Software_transactional_memory
 style
 http://haskell.org/haskellwiki/Programming_guidelines
 syntax
@@ -480,6 +530,8 @@ timeline
 http://www.cs.mu.oz.au/~bjpop/timeline/timeline.5.png
 tmr
 http://www.haskell.org/tmrwiki/FrontPage
+trac
+http://hackage.haskell.org/trac/ghc/newticket?type=bug
 tutorial
 http://www.haskell.org/tutorial/
 twelf
@@ -515,7 +567,7 @@ http://zoo.cs.yale.edu/classes/cs490/03-04b/bartholomew.robinson/
 wxhaskell
 http://wxhaskell.sourceforge.net/
 yaht
-http://www.cs.utah.edu/~hal/docs/daume02yaht.pdf
+http://darcs.haskell.org/yaht/yaht.pdf
 yampa
 http://www.haskell.org/yampa/
 yhc

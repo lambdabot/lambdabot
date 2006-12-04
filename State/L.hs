@@ -39,6 +39,3 @@ import Test.QuickCheck
 import ShowQ
 
 {-# LINE 1 "<local>" #-}
-splitBy p = unfoldr (\xs -> case (break p xs) of ([],_) -> Nothing; (xs,[]) -> Just (xs, []); (xs,ys) -> Just (xs, tail ys))
-on f g a b = (f a) `g` (f b)
-state = flip execState

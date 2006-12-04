@@ -55,6 +55,7 @@ Base lib includes everything, from 'const' to starship control
 there is new Time library, which is supposed to replace old System.Time. we hope that it will happen before 2038
 
 Cale
+I should write a program which automatically mods down any article containing the word "Agile"
 I should actually think before coding, but the type system is so good :)
 GADT pattern match in non-rigid context. There are prescriptions available for that sort of thing.
 Does X have the monad-nature?
@@ -80,8 +81,14 @@ Are there little known Haskell idioms for doing math? Is there an undocumented -
 ChristopherHendrie
 Sometimes I wonder if Java will be indirectly responsible for hastening the adoption of functional programming languages
 
+Conor
+We could all sit in a long line with laptops, and talk to each other on #haskell
+
 ConorMcBride
 So, taking Void to be the colour of the empty bikeshed ...
+
+DAP
+DAP - Download Accelerator Pro
 
 DanPiponi
 Writing introductions to monads seems to have developed into an industry
@@ -180,6 +187,9 @@ calling an out-of-scope function isn't as easy as I had hoped
 Miod
 [On the vax] How many processors come with a built-in instruction which computes polynomials of degrees up to 31?
 
+NO
+HABIA PARCIALES
+
 Oleg
 The implementation of RSA on type level is left for future work
 
@@ -193,6 +203,9 @@ PaulGraham
 An algorithm for lazy evaluation of research papers: Just write whatever you want and don't cite any previous work, and indignant readers will send you references to all the papers you should have cited.
 I get the impression that using [Haskell] would feel like reading a novel written by a literary critic.
 
+PaulPotts
+Haskell is an even "redder" pill than Lisp or Scheme
+
 Philippa
 plus who wants to get unsafeHead?
 "in this case using the FFI sounds rather like masturbating with a running chainsaw"
@@ -202,6 +215,7 @@ because emacs wasn't a good enough OS after all
 hey, if the guy wants a monadectomy that's his choice
 
 Pseudonym
+"Assuming an advanced compiler, your code will be sent to Oleg who will implement it in the type system."
 A "newbie", in Haskell, is someone who hasn't yet implemented a compiler.  They've only written a monad tutorial.
 If the Romans had a zero, their programs would have been able to signal successful termination.
 The Scheme programming language is optimised for writing small brain-dead tutorial compilers for.
@@ -228,6 +242,9 @@ S.Behrens
 or maybe she is the Queen of Sciences and he is the Mack Daddy.
 Computer science is the womanizer, and math is the pure-hearted girl he won't call the next day.
 
+Saizan
+the problem is that we still have a silicon chip under us
+
 SamB
 [on the subject of fromJust] SamB_XP thinks that unJust would be a more fun name for that
 and then I'd like to see your Os
@@ -253,6 +270,7 @@ SimonRC
 10 01if performance was that important, people would be using perl, python, or the JVM
 
 SyntaxNinja
+That's what we, in the computer industry, call teh suck.
 Let's imagine something that would be awesome.
 * SyntaxNinja does the type-checking dance ;)
 I recommend seeing if people have a major problem, then pouring concrete on them, and implementing what you want anyway ;)
@@ -302,6 +320,9 @@ araujo
 [Ontolog]10 01araujo: if you like Haskell so much why don't you marry it?! [araujo] Ontolog, I am .... internally .... i am
  Feel free to stop by and drop in some words if you like :-)
 
+arirabkin
+[on the Visual Studio plugin for Haskell:] that's like having a rosary bead set for satan.
+
 astrolabe
 I guess missile launching would have to be in IO
 calling variables things like ll,kk,tt and dd is a bit cryptic
@@ -345,6 +366,7 @@ chromatic
 My productivity increased when Autrijus told me about Haskell's trace function. He called it a refreshing desert in the oasis of referential transparency.
 
 cjeris
+wants ghc for wii. "Build and deploy an army of functional dependencies and multi-parameter type classes to defend Hyrule from the menacing MUTATRON and his legion of Java programmers!"
 instance (TicTacToe a) => (GlobalThermonuclearWar a) where ...
 Cale: I like how you conveniently gloss over the part where your head explodes.
 i have a little perl script that aliases gcc -freduced-suckage to ghc
@@ -388,6 +410,7 @@ Perhaps he's an epigram guy and frowns on Turing completeness.
 [psnl] its been made worse by uni doing a sexual awareness week [dolio] Some people at your university weren't aware of sex?
 
 dons
+my feeling is that the Java programmers will welcome us as liberators
 corn goes pop now?
  ah, it *is* like haskell, I see: Jiffy Pop is the family fun treat. No other brand of popcorn offers a self-contained popping pan. It can even be used outdoors.
 screw 'em. we have the technology.
@@ -637,6 +660,10 @@ Haskell makes so much more sense now and all I did was figure out the typing thi
 goltrpoat
 Lemma: three cats chasing a deranged cricket all over the living room at 4am does not provide for a good reading environment
 
+greentea
+To learn Monads, one must /become/ a Monad.
+it's actually been proved that there a situations in which we can't know whether a person's stupidity will ever terminate.
+
 gzl
 [on why monads are scary] maybe it's because people look up monad on wikipedia, find the category theory page, and crap themselves
 
@@ -645,6 +672,9 @@ most programmers have a lot of religious issues about their work, yes.
 
 heatsink
 @pl (\y -> you y off)
+
+hongos_malos
+Esta ingestión provoca una enfermedad mortal llamada ergotismo, que en la Edad Media era conocida como fuego de San Antonio.
 
 ihope
 Laziness is free, but it doesn't always pay off.
@@ -728,6 +758,7 @@ alonzo is our church
 Even though I'm largely responsible for making CPP available in a Haskell compiler I think it's an abomination.  It should be avoided
 
 lispy
+it's like java, it gets cross on any platform :)
 the biggest reason most developers i know don't fix a bug is because they don't know it exists yet
 if you generate 1 billion patches per second, what maintainer will review them?
 distribute your cognition
@@ -765,11 +796,19 @@ wow, haskelldb is amazing. the type system tells me when I've forgotten to selec
 merus
 10 01Mathematics is totally full of women.
 
+metaperl
+I never thought anyone could be on IRC as much as you and look that good
+
 mikaeli
 hmm, one national tv station I was watching while eating breakfast crashed with bsod. I guess that's what you get for running windows in production use
 My friend bought a new laptop; it had MSBLASTER preinstalled. I couldn't believe it either and installed XP and the apps many times, run virus killers and everytime the blaster came back. Everything was packed on a rescue cd. And virus was in m$ works installation files.
 
 monochrom
+If you come across "monads are fun!" it's probably Wadler.  If you come across "continuations are fun!" it's probably Appel.
+krad!  I'm reading Bird's haskell book now.  It has fusion, parser monad, and monad transformers!  If I read this book instead of Paulson's ML book ten years ago, the history of the entire human race would have to be rewritten!
+10 01(<3) is the Haskell love operator :)
+These 113 blogging accounts of course don't cost me.  But I still get the feeling of lying around with 113 prostitutes... XD
+Dilbert's substitutability principle.  A subclass's programmer should work as a drop-in replacement of his/her predecessor.
 data DeCarte = forall a. Think a => Exist a
 Well I was writing Windows apps in C since the days of Windows 3.0 and I tell you it's very OO.
 "Software Faults for Free!"
@@ -788,6 +827,7 @@ reallyUnsafePointerEq# seems unsafe.
 <musasabi> no reason to reinvent the whole wheel  <musasabi> (usually reinvented wheels end up square)
 
 mwc
+I'm thinking we should file a bug report and require ghc to produce executables that sound like famous classical pieces
 XML is like violence. If it doesn't work, use more.
 I can only believe that Java is a conspiracy perpetrated by keyboard manufacturers
 I actually got away with running Haskell through a TeX pretty printer and handing it in as pseudocode
@@ -806,6 +846,7 @@ newbcoder
 newbcoder is the best of them all
 
 newsham
+there are Just 1 types of people, Nothing and those who understand monads
 irc bots executing external programs..  always a good idea! what could possibly go wrong?
 it would be neat having correct programs
 haskell's like chess.  easy to learn. hard to master.
@@ -832,6 +873,7 @@ psnl
 ndm: you should have stayed around for the part where Conor denied he was Conor.
 
 psykotic
+the reader monad is your friend. trust the reader monad. be happy!
 Let me get this straight: in your tireless Lisp-bashing efforts you have now dragged out Prolog as an exemplar of practicality? *Prolog*? My goodness, you must be desperate!
  (:[]) is the happy monkey operator
 monochrom, i'm reminded me of that alan kay quote. "i invented the term 'object-oriented' and i can tell you c++ wasn't what i had in mind"
@@ -969,6 +1011,9 @@ ski
 please talk to your son or daughter about parametric polymorphism
 10 01"please talk to your son or daughter about parametric polymorphism"
 
+slava
+Because top enterprise industry analysts recommend that managers need to focus on Agile methodologies, SOA, B2B and Yoneda's lemma in today's rich internet application-driven environment. Don't get left behind by the AJAX craze by missing out on call center outsourcing and Yoneda's lemma!
+
 souwh
 <shapr> hm, I have extra spaces there. \n <souwh> oooh, those can be saved and reused later!
 
@@ -1017,6 +1062,7 @@ u221e
 I swear, reading Haskell source code is like trying to read a Chinese newspaper
 
 vegai
+in soviet russia, YOU blow up GHC's brain!
 Hey Haskell! Give me that File! -Naah, I'm too lazy. *thinks* I'll give you a cookie if you tell me how many letters that file has! -Oh, ok!
 
 vincenz

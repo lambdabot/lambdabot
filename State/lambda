@@ -115,6 +115,7 @@
 ("genCase"," \\n l d.if null l then d n else if fst (head l) == n then snd (head l) n else genCase n (tail l) d")
 ("get"," nth 2")
 ("getConstructor"," termCase error_getConstructor (\\a _.a)")
+("gly"," 1")
 ("group"," groupBy (\\x y.x==y)")
 ("group'"," \\l k.if null l then k [] else group' (tail (tail l)) (k . (\\x.Pair (head l) (head (tail l)) : x))")
 ("groupBy"," \\eq l.if null l then [] else pair (\\ys zs.(head l : ys) : groupBy eq zs) (span (eq (head l)) (tail l))")
