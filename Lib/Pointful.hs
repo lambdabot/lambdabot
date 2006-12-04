@@ -150,7 +150,6 @@ combinatorModule = unlines [
   "flip   = \\f x y -> f y x                                            ",
   "const  = \\x _ -> x                                                  ",
   "id     = \\x -> x                                                    ",
-  "fix    = \\f -> (\\x -> f (x x)) (\\ x -> f (x x))                   ",
   "(=<<)  = flip (>>=)                                                  ",
   "liftM2 = \\f m1 m2 -> m1 >>= \\x1 -> m2 >>= \\x2 -> return (f x1 x2) ",
   "join   = (>>= id)                                                    ",
