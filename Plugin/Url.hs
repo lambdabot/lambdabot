@@ -27,8 +27,8 @@ instance Module UrlModule Bool where
       if alive && (not $ areSubstringsOf ignoredStrings text)
         then case containsUrl text of
                Nothing  -> return []
-               Just url 
-                 | length url > 45 -> do
+               Just url
+                 | length url > 65 -> do
                      title <- lift $ fetchTitle url
                      tiny  <- lift $ fetchTiny url
                      return $ zipWith' cat title tiny
