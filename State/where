@@ -283,7 +283,7 @@ http://www.cse.unsw.edu.au/~dons/hmp3.html
 hnop
 http://semantic.org/hnop/
 hogg
-http://www.annodex.net/~conrad/software/hogg.html
+http://www.annodex.net/~conrad/software/hogg/
 hood
 www.haskell.org/hood/
 hoogle
@@ -478,6 +478,8 @@ qforeign
 http://www.sourceforge.net/projects/qforeign/
 quickcheck
 http://www.cs.chalmers.se/~rjmh/QuickCheck/
+rafb
+http://rafb.net/paste
 ranged-sets
 http://sourceforge.net/projects/ranged-sets/
 report

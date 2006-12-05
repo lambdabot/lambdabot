@@ -1027,6 +1027,7 @@ state
  ?. ++ . read . show . state ?. ++ . read . show . state
 
 stepcut
+endo-hylo-cata-ana-expi-ali-docious
 how can you possibly implement business logic without knowing about Schonfinkel!?
 I wrote 1 + 1 in php once, and got 11 -- wasn't quite what I was hoping for
 
