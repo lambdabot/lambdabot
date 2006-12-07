@@ -46,6 +46,19 @@ OFFLINE MODE:
 CONNECTING:
     ./lambdabot --online
 
+SSL MODE (with stunnel):
+
+append the following to your stunnel.conf
+    client = yes
+    [irc]
+    accept = 6667
+    connect = ssl-irc-server.org:6667
+
+and edit Config.hs to use localhost as server, then restart the stunnel
+server, rebuild lambdabot and start it with:
+
+    ./lambdabot --online
+
 SCRIPTS:
     The scripts directory contains some shell scripts for Vim editor support
     They are self-explanatory
