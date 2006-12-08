@@ -310,9 +310,7 @@ notoriousV =
 --  hypothesys octon ava-its-pssa mel-gibson java-or-no proton-gun
 --  protontorpedo deathsstar gavino99 proton-weapon thumper9 star-trekio
 --  differentActGetD howya-doin linux-fun boobhz booger perlIsBetter
---  ramserver newlambder
---  bublle-war ion-cannon 
---  thailand-fan
+--  ramserver newlambder bublle-war ion-cannon thailand-fan blaastaar
 --
 -- n=bo@pool-71-106-182-86.lsanca.dsl-w.verizon.net
 -- n=root@masqrd.la.teampcs.com
@@ -341,7 +339,8 @@ notoriousV =
 --  10:34 [freenode] --  ircname  : bill gates
 --  10:34 [freenode] --  channels : ##linux #archlinux 
 --
--- (same ip address).
+-- Reappeared: 06.12.08
+--  blaastaar (n=gschuett@4.38.41.141) joined #haskell
 --
 -- 
 protontorpedo :: [String]
@@ -386,6 +385,11 @@ protontorpedo =
     "so haskells better than smalltalk and clsip?",
 
 -- more questions
+    "what is the best absolute beginner utorial for haskell?",
+    "Im wondering if there are uncharted business waters that haskell can enable, even if it is simply by not accepting norms",
+    "so is haskell going to redo x windows and make it better?",
+    "is haskell going to rewite linux and make it better?",
+    "is there going to be a better dns server in haskell?",
     "can haskell be used to develop databases?",
     "evaluation seems ideal for banks who want to know global balances etc.",
     "what is so good about continuations/",
