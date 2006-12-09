@@ -23,6 +23,7 @@ instance Module DummyModule [String] where
 
   moduleHelp _ s = case s of
         "dummy"       -> "dummy. Print a string constant"
+        "bug"         -> "bug. Submit a bug to GHC's trac"
         "eval"        -> "eval. Do nothing (perversely)"
 
         "id"          -> "id <arg>. The identiy plugin"
@@ -68,6 +69,7 @@ dummylst =
     ,("show",       show)
 
     ,("dummy",      const "dummy")
+    ,("dummy",      const "http://hackage.haskell.org/trac/ghc/newticket?type=bug")
     ,("get-shapr",  const "shapr!!")
     ,("faq",        const "The answer is: Yes! Haskell can do that.")
     ,("paste",      const "http://paste.lisp.org/new/haskell")
