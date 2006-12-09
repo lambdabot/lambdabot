@@ -1,0 +1,11 @@
+set border 3
+set xtics nomirror rotate ( "Don Stewart" 0, "Thomas Jaeger" 1, "J Louis" 2, "Samuel Bronson" 3, "Jason Dagit" 4, "Spencer Janssen" 5, "Bertram Felgenhauer" 6, "Pete Kazmier" 7, "Paolo Martini" 8, "Stefan Wehr" 9, "Dmitry Astapov" 10, "David House" 11, "Derek Elkins" 12, "David" 13, "Kevin Reid" 14, "smith" 15, "Simon Winwood" 16, "Shapr" 17, "Mark Wotton" 18, "Ketil Malde" 19, "tatd2" 20, "softpro" 21, "Ganesh" 22, "Duncan Coutts" 23, "Davidf" 24, "Andres" 25, "rizzix" 26, "mux" 27, "l.mai" 28, "Vesa Kaihlavirta" 29, "Vaclav Haisman" 30, "Peter Davis" 31, "Lemmih" 32, "Kenneth hoste" 33, "Josef Svenningsson" 34, "Joel Koerwer" 35, "Joachim breitner" 36, "Echo Nolan" 37 )
+set border 3
+set boxwidth 0.7 relative
+set xrange [-1:*]
+set yrange [1:*]
+set logscale y
+set ticscale 0
+set terminal png font Vera 9
+set output "lambdabot-commiters.png"
+plot "authors" ti "Commiters" with boxes 
