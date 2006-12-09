@@ -69,7 +69,7 @@ dummylst =
     ,("show",       show)
 
     ,("dummy",      const "dummy")
-    ,("dummy",      const "http://hackage.haskell.org/trac/ghc/newticket?type=bug")
+    ,("bug",        const "http://hackage.haskell.org/trac/ghc/newticket?type=bug")
     ,("get-shapr",  const "shapr!!")
     ,("faq",        const "The answer is: Yes! Haskell can do that.")
     ,("paste",      const "http://paste.lisp.org/new/haskell")
