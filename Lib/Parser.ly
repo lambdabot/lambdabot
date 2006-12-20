@@ -814,4 +814,14 @@ Miscellaneous (mostly renamings)
 > parseExpr :: String -> ParseResult HsExp
 > parseExpr = runParser parse
 
+Compatibility aliases.
+
+> #if __GLASGOW_HASKELL__ > 606
+> as_name = HsIdent "as"
+> hiding_name = HsIdent "hiding"
+> qualified_name = HsIdent "qualified"
+> minus_name = HsSymbol "-"
+> pling_name = HsSymbol "!"
+> #endif
+
 > }

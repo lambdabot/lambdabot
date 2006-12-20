@@ -8231,12 +8231,21 @@ happyError = fail "Parse error"
 -- | Parse of a string, which should contain a complete Haskell 98 expression
 parseExpr :: String -> ParseResult HsExp
 parseExpr = runParser parse
+
+
+
+#if __GLASGOW_HASKELL__ > 606
+as_name = HsIdent "as"
+hiding_name = HsIdent "hiding"
+qualified_name = HsIdent "qualified"
+minus_name = HsSymbol "-"
+pling_name = HsSymbol "!"
+#endif
 {-# LINE 1 "GenericTemplate.hs" #-}
 {-# LINE 1 "<built-in>" #-}
 {-# LINE 1 "<command line>" #-}
 {-# LINE 1 "GenericTemplate.hs" #-}
--- Id: GenericTemplate.hs,v 1.26 2005/01/14 14:47:22 simonmar Exp 
-
+-- $Id$
 
 {-# LINE 28 "GenericTemplate.hs" #-}
 
@@ -8247,31 +8256,11 @@ parseExpr = runParser parse
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+{-# LINE 49 "GenericTemplate.hs" #-}
 
 {-# LINE 59 "GenericTemplate.hs" #-}
 
-
-
-
-
-
-
-
-
+{-# LINE 68 "GenericTemplate.hs" #-}
 
 infixr 9 `HappyStk`
 data HappyStk a = HappyStk a (HappyStk a)
