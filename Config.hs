@@ -85,8 +85,10 @@ config = Config {
                           ,"#ScannedInAvian"],
 
         admins          = [
-                "Pseudonym",    "shapr", "vincenz",    "Igloo",
-                "Cale",         "dons", "TheHunter",    "musasabi", "Lemmih"
+                "Pseudonym",    "shapr",    "vincenz",    "Igloo",
+                "Cale",         "dons",     "TheHunter",    "musasabi",
+                "Lemmih",       "sjanssen", "sorear", "int-e"
+
         ],
 
         fortunePath     = "/home/dons/fortune/",
