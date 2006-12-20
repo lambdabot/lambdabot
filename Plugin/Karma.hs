@@ -42,6 +42,7 @@ instance Module KarmaModule KarmaState where
         case match text of
             Nothing         -> return []
             Just ("C",_)    -> return [] -- special case exception
+            Just ("c",_)    -> return [] -- special case exception, for lazy irc-ers
             Just (nick, op) -> do changeKarma (fn op) sender nick -- silently
                                   return []
 
