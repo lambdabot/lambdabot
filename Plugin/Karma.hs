@@ -39,20 +39,21 @@ instance Module KarmaModule KarmaState where
     -- ^nick++($| )
     contextual   _ msg _ text = do
         let sender     = Message.nick msg
-        case match text of
-            Nothing         -> return []
-            Just ("C",_)    -> return [] -- special case exception
-            Just ("c",_)    -> return [] -- special case exception, for lazy irc-ers
-            Just (nick, op) -> do changeKarma (fn op) sender nick -- silently
-                                  return []
-
-      where regex = mkRegex "^([a-zA-Z0-9_'+-]*[a-zA-Z0-9_'+-])(\\+\\+|--)($| )"
-            match s = do (_, _, _, [nick, op, _]) <- matchRegexAll regex s
-                         return (nick, op)
-
-            fn "++" =  1
-            fn "--" = -1
-            fn _    =  0
+        mapM_ (changeKarma (-1) sender) decs
+        mapM_ (changeKarma   1  sender) incs
+        return []
+      where
+        ws          = words text
+        decs        = match "--"
+        incs        = match "++"
+        match m     = filter okay . map (reverse . drop 2)
+                    . filter (isPrefixOf m) . map reverse $ ws
+        okay x      = not (elem x badNicks || any (`isPrefixOf` x) badPrefixes)
+        -- Special cases.  Ignore the null nick.  C must also be ignored
+        -- because C++ and C-- are languages.
+        badNicks    = ["", "C", "c"]
+        -- More special cases, to ignore Perl code.
+        badPrefixes = ["$", "@", "%"]
 
 ------------------------------------------------------------------------
 
