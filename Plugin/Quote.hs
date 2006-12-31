@@ -113,7 +113,7 @@ search key pat db
 
     | P.null pat         = match key allquotes
 
-    | Just qs <- mquotes = match pat qs
+    | Just qs <- mquotes = match pat (zip (repeat key) qs)
 
     | otherwise          = do
         r <- random insult
@@ -122,16 +122,17 @@ search key pat db
   where
     box       = return . (:[])
     mquotes   = M.lookup key db
-    allquotes = concat (M.elems  db)
+    allquotes = concat [ zip (repeat who) qs | (who, qs) <- M.assocs db ]
     random    = randomElem
 
     match p ss = do
         re <- R.regcomp p $ regExtended + regIgnoreCase
-        let rs = filter (R.matchRegex' re) ss
+        let rs = filter (R.matchRegex' re . snd) ss
         if null rs
             then do r <- random insult
                     box $ "No quotes match. " ++ r
-            else box . P.unpack =<< random rs
+            else do (who, saying) <- random rs
+                    box $ P.unpack who ++ " says: " ++ P.unpack saying
 
     display k msg = (if P.null k then "  " else who ++ " says: ") ++ saying
           where saying = P.unpack msg
