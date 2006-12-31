@@ -34,7 +34,8 @@ module Lib.Regex (
     -- * Matching a regular expression
     regexec,        -- :: Regex -> Ptr CChar -> Int
                     -- -> IO (Maybe ((Int,Int), [(Int,Int)]))
-    matchRegex
+    matchRegex,
+    matchRegex'
 
   ) where
 
@@ -49,6 +50,7 @@ import Foreign
 import System.IO.Unsafe     (unsafePerformIO)
 
 import qualified Data.ByteString as P
+import qualified Data.ByteString.Char8 as C
 import qualified Data.ByteString.Base as P (unsafeUseAsCString)
 
 type CRegex = ()
@@ -65,7 +67,7 @@ regcomp :: P.ByteString    -- ^ The regular expression to compile
 
 regcomp ps flags = do
     regex_fptr <- mallocForeignPtrBytes (#const sizeof(regex_t))
-    r <- P.unsafeUseAsCString ps $ \cstr ->
+    r <- P.useAsCString ps $ \cstr ->
             withForeignPtr regex_fptr $ \p ->
                 c_regcomp p cstr (fromIntegral flags)
     if (r == 0)
@@ -143,7 +145,14 @@ matchRegex
    :: Regex     -- ^ The regular expression
    -> String    -- ^ The string to match against
    -> Bool
-matchRegex p str = unsafePerformIO $ withCString str $ \cstr -> do
+matchRegex p str = matchRegex' p (C.pack str)
+
+-- | Match a regex against a bytestring
+matchRegex'
+    :: Regex
+    -> P.ByteString
+    -> Bool
+matchRegex' p str = unsafePerformIO $ P.useAsCString str $ \cstr -> do
     m <- regexec p cstr 0
     return $ case m of
         Nothing -> False
