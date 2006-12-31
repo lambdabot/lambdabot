@@ -14,8 +14,9 @@ import qualified Data.Map as M   (insert, delete)
 import Control.Monad.State  (MonadState(..), when, gets)
 
 import GHC.IOBase           (Exception(NoMethodError))
-import Data.IORef
--- import System.Time  
+
+import Control.Concurrent.MVar
+import System.IO.Unsafe (unsafePerformIO)
 
 -- valid command prefixes
 commands :: [String]
@@ -250,18 +251,30 @@ doPRIVMSG' myname msg
     -- them bubble back up to the mainloop
     --
     doContextualMsg r = lift $ do
-        x <- io $ newIORef []       -- track if any output was made, for offline mode
+        io (tryTakeMVar output)    -- empty the output tracker
+
         withAllModules ( \m -> do
             act <- bindModule0 ( do
                             ms <- contextual m msg alltargets r
-                            io $ modifyIORef x (null ms :)
-                            lift $ mapM_ (ircPrivmsg alltargets . Just) ms )
+                            lift $ mapM_ (ircPrivmsg alltargets . Just) ms
+                            when (not (null ms)) (io $! putMVar output ()) -- we wrote something
+                   )
             name' <- getName
             lift $ catchIrc act (debugStrLn . (name' ++) .
                 (" module failed in contextual handler: " ++) . show)
             )
-        rs <- io $ readIORef x
-        when (all id rs) $ ircPrivmsg alltargets Nothing -- always returns something
+
+        -- if there was no output, send a single Nothing
+        notDone <- io (isEmptyMVar output)
+        when notDone (ircPrivmsg alltargets Nothing)
+
+--
+-- track in each contextual handler whether any output was made
+-- allocate this once, (could be a bad idea)
+--
+output :: MVar ()
+output = unsafePerformIO newEmptyMVar
+{-# NOINlINE output #-}
 
 ------------------------------------------------------------------------
 
