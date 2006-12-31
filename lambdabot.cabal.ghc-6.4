@@ -14,8 +14,8 @@ License-file:        LICENSE
 Author:              Don Stewart
 Maintainer:          dons@cse.unsw.edu.au
 Build-Depends:       base, unix, network, parsec, mtl, 
-                     haskell-src, readline, regex-compat, 
-                     QuickCheck, template-haskell
+                     haskell-src, readline, QuickCheck, template-haskell
+                     haskell98, fps>=0.7
 
 --
 -- first build the preprocessor
@@ -52,7 +52,7 @@ ghc-options:         -Wall -Werror -fglasgow-exts -pgmF dist/build/BotPP/BotPP -
 --
 Executable:          hoogle
 hs-source-dirs:      scripts/hoogle/src
-ghc-options:         -O
+ghc-options:         -funbox-strict-fields -O
 Main-is:             CmdLine.hs
 
 --
@@ -70,13 +70,6 @@ Executable:          unlambda
 hs-source-dirs:      scripts/
 ghc-options:         -O
 Main-is:             Unlambda.hs
-
---
--- runplugs
---
--- Executable:          runplugs
--- hs-source-dirs:      scripts/
--- Main-is:             RunPlugs.hs
 
 --
 -- BF

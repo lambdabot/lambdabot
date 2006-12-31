@@ -13,7 +13,9 @@ License:             GPL
 License-file:        LICENSE
 Author:              Don Stewart
 Maintainer:          dons@cse.unsw.edu.au
-Build-Depends:       base, unix, network, parsec, mtl, haskell-src, readline, haskell98, fps>=0.7
+Build-Depends:       base, unix, network, parsec, mtl, haskell-src,
+                     readline, QuickCheck, template-haskell, 
+                     regex-compat
 
 --
 -- first build the preprocessor
@@ -68,6 +70,13 @@ Executable:          unlambda
 hs-source-dirs:      scripts/
 ghc-options:         -O
 Main-is:             Unlambda.hs
+
+--
+-- runplugs
+--
+-- Executable:          runplugs
+-- hs-source-dirs:      scripts/
+-- Main-is:             RunPlugs.hs
 
 --
 -- BF
