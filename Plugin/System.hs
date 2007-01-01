@@ -5,7 +5,7 @@ module Plugin.System (theModule) where
 
 import Plugin
 import Lib.AltTime
-import qualified Message (Message, joinChannel, partChannel)
+import qualified Message (Message, Nick, joinChannel, partChannel, server, readNick)
 import qualified Data.Map as M       (Map,keys,fromList,lookup,union)
 
 import Control.Monad.State      (MonadState(get), gets)
@@ -53,7 +53,7 @@ privcmds = M.fromList [
 defaultHelp :: String
 defaultHelp = "system : irc management"
 
-doSystem :: Message.Message a => a -> String -> [Char] -> [Char] -> ModuleLB (ClockTime, TimeDiff)
+doSystem :: Message.Message a => a -> Message.Nick -> [Char] -> [Char] -> ModuleLB (ClockTime, TimeDiff)
 doSystem msg _ cmd rest = get >>= \s -> case cmd of
   "listchans"   -> return [pprKeys (ircChannels s)]
   "listmodules" -> return [pprKeys (ircModules s) ]
@@ -65,19 +65,19 @@ doSystem msg _ cmd rest = get >>= \s -> case cmd of
 
   --TODO error handling
    -- system commands
-  "join"  -> lift $ send_ (Message.joinChannel rest) >> return []
-  "leave" -> lift $ send_ (Message.partChannel rest) >> return []
-  "part"  -> lift $ send_ (Message.partChannel rest) >> return []
+  "join"  -> lift $ send_ (Message.joinChannel (Message.readNick msg rest)) >> return []
+  "leave" -> lift $ send_ (Message.partChannel (Message.readNick msg rest)) >> return []
+  "part"  -> lift $ send_ (Message.partChannel (Message.readNick msg rest)) >> return []
 
    -- writes to another location:
-  "msg"   -> lift $ ircPrivmsg tgt (Just txt') >> return []
+  "msg"   -> lift $ ircPrivmsg (Message.readNick msg tgt) (Just txt') >> return []
                   where (tgt, txt) = breakOnGlue " " rest
                         txt'       = dropWhile (== ' ') txt
 
-  "quit" -> lift $ do ircQuit $ if null rest then "requested" else rest
+  "quit" -> lift $ do ircQuit (Message.server msg) $ if null rest then "requested" else rest
                       return []
 
-  "reconnect" -> lift $ do ircReconnect $ if null rest then "request" else rest
+  "reconnect" -> lift $ do ircReconnect (Message.server msg) $ if null rest then "request" else rest
                            return []
 
   "echo" -> return [concat ["echo; msg:", show msg, " rest:", show rest]]

@@ -4,7 +4,7 @@
 module Plugin.Slap (theModule) where
 
 import Plugin
-import qualified Message (nick)
+import qualified Message (nick, showNick)
 
 PLUGIN Quote
 
@@ -12,7 +12,7 @@ instance Module QuoteModule () where
     moduleCmds _           = ["slap"]
     moduleHelp _ _         = "slap <nick>. Slap someone amusingly."
     process _ msg _ _ rest = ios $ slapRandom (if rest == "me" then sender else rest)
-       where sender = Message.nick msg
+       where sender = Message.showNick msg $ Message.nick msg
 
 ------------------------------------------------------------------------
 
