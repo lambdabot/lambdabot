@@ -54,8 +54,8 @@ data Nick
 -- |Format a nickname for display.  This will automatically omit the server
 -- field if it is the same as the server of the provided message.
 showNick :: Message a => a -> Nick -> String
-showNick msg nick | nTag nick == server msg = nName nick
-                  | otherwise               = nTag nick ++ ':' : nName nick
+showNick msg nick_ | nTag nick_ == server msg = nName nick_
+                   | otherwise                = nTag nick_ ++ ':' : nName nick_
 
 -- |Parse a nickname received in a message.  If the server field is not
 -- provided, it defaults to the same as that of the message.
@@ -65,11 +65,12 @@ readNick msg str | null ac   = Nick (server msg) str
     where (bc, ac) = break (==':') str
 
 instance Show Nick where
-    show nick = show (nTag nick ++ ':' : nName nick)
+    show nick_ = show (nTag nick_ ++ ':' : nName nick_)
 
 instance Read Nick where
-    read str | null ac   = Nick "fn" bc
-             | otherwise = Nick bc (tail ac)
-        where (bc, ac) = break (==':') (read str)
+    readsPrec prec str = map parse' (readsPrec prec str)
+        where parse' (str',aft) | null ac   = (Nick "fn" bc, aft)
+                                | otherwise = (Nick bc (tail ac), aft)
+                  where (bc, ac) = break (==':') str'
 
 type Pipe a = Chan (Maybe a)
