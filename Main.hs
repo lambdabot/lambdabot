@@ -4,24 +4,18 @@
 module Main where
 
 import LMain
-import Modules
+import Modules      (modulesInfo)
 import Lambdabot
 
 import Data.Maybe
-
-------------------------------------------------------------------------
-
-loadStaticModules :: LB ()
-(loadStaticModules, _) = modulesInfo
 
 -- do argument handling
 main :: IO ()
 main = main' Nothing modulesInfo
 
---
 -- special online target for ghci use
 online :: IO ()
-online = runIrc Online loadStaticModules onlineMain ld pl
+online = runIrc Online (fst modulesInfo) onlineMain ld pl
     where
     ld = fromMaybe (error "no dynamic loading") Nothing
     pl = []
