@@ -7,19 +7,15 @@ module Plugin.Dummy (theModule) where
 import Plugin
 
 import Plugin.Dummy.DocAssocs (docAssocs)
-import Plugin.Dummy.Moo (cows)
-
-import Lib.Util (randomElem)
 
 import qualified Data.Map as M
 import qualified Data.ByteString.Char8 as P
 
 PLUGIN Dummy
 
-instance Module DummyModule [String] where
-  moduleDefState = const . return . cycle $ cows
+instance Module DummyModule () where
 
-  moduleCmds   _ = "eval" : "choose" : {-"moo" : -} map fst dummylst
+  moduleCmds   _ = "eval" : "choose" : map fst dummylst
 
   moduleHelp _ s = case s of
         "dummy"       -> "dummy. Print a string constant"
@@ -39,7 +35,6 @@ instance Module DummyModule [String] where
 
         "learn"       -> "learn. The learning page url"
         "eurohaskell" -> "eurohaskell. Historical"
-        "moo"         -> "moo. Vegans rock!"
         "map"         -> "map. #haskell user map"
         "botsnack"    -> "botsnack. Feeds the bot a snack"
         "get-shapr"   -> "get-shapr. Summon shapr instantly"
@@ -47,13 +42,6 @@ instance Module DummyModule [String] where
         "faq"         -> "faq. Answer frequently asked questions about Haskell"
         "choose"      -> "choose. Lambdabot featuring AI power"
 
-{-
-  process _ _ src "moo" _ = do
-        cow' <- withMS $ \(cow:farm) writer -> do
-          writer farm
-          return cow
-        mapM_ (ircPrivmsg' src) (lines cow')
--}
   process_ _ "eval"   _    = return []
   process_ _ "choose" []   = return ["Choose between what?"]
   process_ _ "choose" xs   = fmap return . io . randomElem . lines $ xs
@@ -101,5 +89,4 @@ lookupPackage begin sep end x'
                     <> P.unpack m
                     </> map (choice (=='.') (const sep) id) x
                     <.> end
- where
-    x = reverse . dropWhile isSpace . reverse . dropWhile isSpace $ x'
+ where x = dropSpace x'
