@@ -55,11 +55,10 @@ import Lib.AltTime
 import Message
 import Plugin
 
-type Nick        = String
 -- | Was it @tell or @ask that was the original command?
 data NoteType    = Tell | Ask deriving (Show, Eq, Read)
 -- | The Note datatype. Fields self-explanatory.
-data Note        = Note { noteSender   :: String, 
+data Note        = Note { noteSender   :: Nick,
                           noteContents :: String, 
                           noteTime     :: ClockTime,
                           noteType     :: NoteType }
@@ -83,10 +82,10 @@ instance Module TellModule NoticeBoard where
     process _ _ _ "print-notices" _ = liftM ((:[]) . show) readMS
 
     -- | Clear notes.
-    process _ _ _ "purge-notices" args = do
+    process _ msg _ "purge-notices" args = do
         case words args of
           [] -> writeMS M.empty
-          ns -> mapM_ clearMessages ns
+          ns -> mapM_ (clearMessages . readNick msg) ns
         return ["Messages purged."]
 
     -- | Clear a user's notes
@@ -96,9 +95,9 @@ instance Module TellModule NoticeBoard where
     -- | Check whether a user has any messages
     process _ msg _ "messages?" _  = do
       let sender = nick msg
-      ms <- getMessages sender
+      ms <- getMessages msg sender
       case ms of
-        Just _ -> doRemind sender
+        Just _ -> doRemind msg sender
         Nothing   -> return ["Sorry, no messages today."]
 
     -- | Write down a note
@@ -109,7 +108,7 @@ instance Module TellModule NoticeBoard where
 
     -- | Give a user their messages
     process _ msg _ "messages" _ =
-      do msgs <- getMessages $ nick msg
+      do msgs <- getMessages msg $ nick msg
          let res = fromMaybe ["You don't have any new messages."] msgs
          clearMessages (nick msg)
          return res
@@ -120,7 +119,7 @@ instance Module TellModule NoticeBoard where
       let sender = nick msg
       remp <- needToRemind sender
       if remp
-         then doRemind sender
+         then doRemind msg sender
          else return []
 
 -- | Lookup table for documentation
@@ -143,15 +142,15 @@ help = [("tell",
           ++ "specify a nick.")]
 
 -- | Take a note and the current time, then display it
-showNote :: ClockTime -> Note -> String
-showNote time note = res
+showNote :: Message m => m -> ClockTime -> Note -> String
+showNote msg time note = res
     where diff         = time `diffClockTimes` noteTime note
           ago          = case timeDiffPretty diff of
                            [] -> "less than a minute"
                            pr -> pr
           action       = case noteType note of Tell -> "said"; Ask -> "asked"
           res          = printf "%s %s %s ago: %s"
-                           (noteSender note) action ago (noteContents note)
+                           (showNick msg $ noteSender note) action ago (noteContents note)
 
 -- | Is it less than a day since we last reminded this nick they've got messages?
 needToRemind :: Nick -> Telling Bool
@@ -177,15 +176,15 @@ writeDown to from what ntype = do
                          to (Nothing, [note]))
 
 -- | Return a user's notes, or Nothing if they don't have any
-getMessages :: Nick -> Telling (Maybe [String])
-getMessages n = do 
+getMessages :: Message m => m -> Nick -> Telling (Maybe [String])
+getMessages msg n = do 
   st   <- readMS
   time <- io getClockTime
   case M.lookup n st of
     Just (_, msgs) -> do
       -- update the last time we told this person they had messages
       writeMS $ M.insert n (Just time, msgs) st
-      return . Just $ map (showNote time) msgs
+      return . Just $ map (showNote msg time) msgs
     Nothing -> return Nothing
 
 -- | Clear a user's messages.
@@ -199,19 +198,19 @@ clearMessages n = modifyMS (M.delete n)
 doTell :: Message m => String -> m -> NoteType -> Telling [String]
 doTell args msg ntype = do 
   let args'     = words args
-      recipient = head args'
+      recipient = readNick msg (head args')
       sender    = nick msg
       rest      = unwords $ tail args'
       res | sender    == recipient   = Left "You can tell yourself!"
-          | recipient == name config = Left "Nice try ;)"
+          | recipient == lambdabotName msg = Left "Nice try ;)"
           | otherwise                = Right "Consider it noted."
   when (isRight res) (writeDown recipient sender rest ntype)
   return [unEither res]
 
 -- | Remind a user that they have messages.
-doRemind :: Nick -> Telling [String]
-doRemind sender = do 
-  ms  <- getMessages sender
+doRemind :: Message m => m -> Nick -> Telling [String]
+doRemind msg sender = do 
+  ms  <- getMessages msg sender
   now <- io getClockTime
   modifyMS (M.update (Just . first (const $ Just now)) sender)
   return $ case ms of
@@ -220,6 +219,6 @@ doRemind sender = do
                      if length msgs > 1
                        then ("messages", "them") else ("message", "it")
                in [printf "%s: You have %d new %s. '/msg %s @messages' to read %s."
-                          sender (length msgs) messages (name config) pronoun
+                          (showNick msg sender) (length msgs) messages (showNick msg $ name config) pronoun
                    :: String]
              Nothing -> []
