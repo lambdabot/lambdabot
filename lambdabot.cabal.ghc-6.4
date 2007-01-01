@@ -31,7 +31,6 @@ ghc-options:         -fasm -funbox-strict-fields -O
 Executable:          lambdabot
 Main-is:             Main.hs
 extensions:          CPP
-other-modules:       Lib.Regex
 ghc-options:         -Wall -Werror -fglasgow-exts -pgmF dist/build/BotPP/BotPP -F -H64m -O -funbox-strict-fields -fasm -fno-warn-incomplete-patterns -fno-warn-missing-methods -fno-warn-orphans -I. -threaded -optl-Wl,-s
 
 --
