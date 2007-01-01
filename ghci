@@ -3,6 +3,8 @@
 # Copyright (c) 2006 Don Stewart - http://www.cse.unsw.edu.au/~dons
 # GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
 
+echo "Make sure you've done a full compiled build recently"
+
 # build the preprocessor
 if [ -e "BotPP" ] ; then
 	BotPP=BotPP
