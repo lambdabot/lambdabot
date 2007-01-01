@@ -45,6 +45,7 @@ privcmds = M.fromList [
        ,("msg",         "msg <nick or channel> <msg>")
        ,("quit",        "quit [msg], have the bot exit with msg")
        ,("listall",     "list all commands")
+       ,("flush",       "flush. flush state to disk")
        ,("reconnect",   "reconnect to server")]
 
 ------------------------------------------------------------------------
@@ -80,6 +81,9 @@ doSystem msg _ cmd rest = get >>= \s -> case cmd of
                            return []
 
   "echo" -> return [concat ["echo; msg:", show msg, " rest:", show rest]]
+
+  "flush" -> lift $ do flushModuleState
+                       return []
 
   "uptime" -> do
           (loaded, m) <- readMS

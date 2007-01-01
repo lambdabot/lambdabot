@@ -27,6 +27,7 @@ module Lambdabot (
         ircInstallModule, ircUnloadModule,
         serverSignOn,
         ircRead,
+        flushModuleState,
 
         ircLoad, ircUnload,
 
