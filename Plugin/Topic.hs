@@ -8,7 +8,7 @@
 module Plugin.Topic (theModule) where
 
 import Plugin
-import qualified Message (setTopic)
+import Message (Message, setTopic, Nick, readNick)
 import qualified Data.Map as M
 
 import Control.Monad.State (gets)
@@ -35,16 +35,16 @@ instance Module TopicModule () where
                    "topic-cons", "topic-snoc",
                    "topic-tail", "topic-init", "topic-null"]
 
-  process_ _ "topic-cons" text = lift $ alterTopic chan (topic_item :)
+  process _ msg _ "topic-cons" text = lift $ alterTopic msg chan (topic_item :)
         where (chan, topic_item) = splitFirstWord text
 
-  process_ _ "topic-snoc" text = lift $ alterTopic chan (snoc topic_item)
+  process _ msg _ "topic-snoc" text = lift $ alterTopic msg chan (snoc topic_item)
         where (chan, topic_item) = splitFirstWord text
 
-  process_ _ "topic-tail" chan = lift $ alterTopic chan tail
-  process_ _ "topic-init" chan = lift $ alterTopic chan init
-  process_ _ "topic-null" chan = lift $ send (Just (Message.setTopic chan "[]")) >> return []
-  process_ _ "topic-tell" chan = lift $ lookupTopic chan $ \maybetopic -> return $
+  process _ msg _ "topic-tail" chan = lift $ alterTopic msg chan tail
+  process _ msg _ "topic-init" chan = lift $ alterTopic msg chan init
+  process _ msg _ "topic-null" chan = lift $ send (Just (Message.setTopic (readNick msg chan) "[]")) >> return []
+  process _ msg _ "topic-tell" chan = lift $ lookupTopic (readNick msg chan) $ \maybetopic -> return $
         case maybetopic of
             Just x  -> [x]
             Nothing -> ["Do not know that channel"]
@@ -55,27 +55,30 @@ instance Module TopicModule () where
 --   proceeds to look up the channel topic for the channel given, returning
 --   Just t or Nothing to the modifier function which can then decide what
 --   to do with the topic
-lookupTopic :: String                        -- ^ Channel
+lookupTopic :: Nick                          -- ^ Channel
             -> (Maybe String -> LB [String]) -- ^ Modifier function
             -> LB [String]
 lookupTopic chan f = gets (\s -> M.lookup (mkCN chan) (ircChannels s)) >>= f
 
--- | 'alterTopic' takes a sender, a channel and an altering function.
+-- | 'alterTopic' takes a message, a channel and an altering function.
 --   Then it alters the topic in the channel by the altering function,
 --   returning eventual problems back to the sender.
-alterTopic :: String                 -- ^ Channel
+alterTopic :: Message a
+           => a                      -- ^ Original messesg
+           -> String                 -- ^ Channel name
            -> ([String] -> [String]) -- ^ Modifying function
            -> LB [String]
-alterTopic chan f =
-  let p maybetopic =
+alterTopic msg chan f =
+  let chan' = readNick msg chan
+      p maybetopic =
         case maybetopic of
           Just x -> case reads x of
-                [(xs, "")] -> do send . Just $ Message.setTopic chan (show $ f $ xs)
+                [(xs, "")] -> do send . Just $ Message.setTopic chan' (show $ f $ xs)
                                  return []
                 [(xs, r)] | length r <= 2
-                  -> do send . Just $ Message.setTopic chan (show $ f $ xs)
+                  -> do send . Just $ Message.setTopic chan' (show $ f $ xs)
                         return ["ignoring bogus characters: " ++ r]
 
                 _ -> return ["Topic does not parse. Should be of the form [\"...\",...,\"...\"]"]
           Nothing -> return ["I do not know the channel " ++ chan]
-   in lookupTopic chan p
+   in lookupTopic chan' p
