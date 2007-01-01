@@ -40,6 +40,8 @@ import Lib.MiniHTTP
 import Lib.Url
 import Lib.Regex
 
+import Message
+
 import Data.List
 import Data.Char
 import Data.Maybe
@@ -62,9 +64,9 @@ box = return . return
 
 -- | convenience, similar to ios but also cut output to channel to 80 characters
 -- usage:  @process _ _ to _ s = ios80 to (plugs s)@
-ios80 :: (Functor m, MonadIO m) => String -> IO String -> m [String]
+ios80 :: (Functor m, MonadIO m) => Nick -> IO String -> m [String]
 ios80 to what = list . io $ what >>= return . lim
-    where lim = case to of
+    where lim = case nName to of
                     ('#':_) -> abbr 80 -- message to channel: be nice
                     _       -> id      -- private message: get everything
           abbr n s = let (b, t) = splitAt n s in
