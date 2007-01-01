@@ -17,7 +17,7 @@ class Show a => Message a where
     fullName    :: a -> String
 
     -- | 'names' builds a NAMES message from a list of channels.
-    names       :: [Nick] -> a
+    names       :: String -> [String] -> a
 
     -- | 'channels' extracts the channels a Message operate on.
     channels    :: a -> [Nick]

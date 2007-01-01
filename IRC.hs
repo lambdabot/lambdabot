@@ -19,13 +19,15 @@ import Message
 import Lib.Util (split, breakOnGlue, clean)
 import qualified Lib.Util as Util (concatWith) 
 
+import qualified Config (config, name)
+
 import Data.List (isPrefixOf)
 import Data.Char (chr,isSpace)
 
 import Control.Concurrent
 import Control.Exception
 import Control.Monad.Trans ( MonadIO, liftIO )
-import Control.Monad (when)
+import Control.Monad (when, liftM2)
 
 import System.IO (Handle, hGetLine)
 import System.Console.Readline  (readline, addHistory)
@@ -33,9 +35,10 @@ import System.Console.Readline  (readline, addHistory)
 import qualified Data.ByteString.Char8 as P
 
 
--- | An IRC message is a prefix, a command and a list of parameters.
+-- | An IRC message is a server, a prefix, a command and a list of parameters.
 data IrcMessage
   = IrcMessage {
+        msgServer   :: !String,
         msgPrefix   :: !String,
         msgCommand  :: !String,
         msgParams   :: ![String]
@@ -43,46 +46,52 @@ data IrcMessage
   deriving (Show)
 
 instance Message IrcMessage where
-    nick        = IRC.nick
-    fullName    = IRC.fullName
-    names       = IRC.names
-    channels    = IRC.channels
-    joinChannel = IRC.join
-    partChannel = IRC.part
-    getTopic    = IRC.getTopic
-    setTopic    = IRC.setTopic
-    body        = IRC.msgParams
-    command     = IRC.msgCommand
+    nick          = IRC.nick
+    server        = IRC.msgServer
+    fullName      = IRC.fullName
+    names         = IRC.names
+    channels      = IRC.channels
+    joinChannel   = IRC.join
+    partChannel   = IRC.part
+    getTopic      = IRC.getTopic
+    setTopic      = IRC.setTopic
+    body          = IRC.msgParams
+    command       = IRC.msgCommand
+    lambdabotName = IRC.lambdabotName
 
--- | 'mkMessage' creates a new message from a cmd and a list of parameters.
-mkMessage :: String -- ^ Command
+-- | 'mkMessage' creates a new message from a server, a cmd, and a list of parameters.
+mkMessage :: String -- ^ Server
+          -> String -- ^ Command
           -> [String] -- ^ Parameters
           -> IrcMessage -- ^ Returns: The created message
 
-mkMessage cmd params = IrcMessage { msgPrefix = "", msgCommand = cmd, msgParams = params }
+mkMessage svr cmd params = IrcMessage { msgServer = svr, msgPrefix = "",
+                                        msgCommand = cmd, msgParams = params }
 
 -- | 'nick' extracts the nickname involved in a given message.
-nick :: IrcMessage -> String
-nick = fst . breakOnGlue "!" . msgPrefix
+nick :: IrcMessage -> Nick
+nick = liftM2 Nick msgServer (fst . breakOnGlue "!" . msgPrefix)
 
 -- | 'fullName' extracts the full user name involved in a given message.
 fullName :: IrcMessage -> String
 fullName = snd . breakOnGlue "!" . msgPrefix
 
 -- | 'channels' extracts the channels a IrcMessage operate on.
-channels :: IrcMessage -> [String]
+channels :: IrcMessage -> [Nick]
 channels msg
   = let cstr = head $ msgParams msg
-    in map (\(x:xs) -> if x == ':' then xs else x:xs) (split "," cstr)
+    in map (Nick (msgServer msg)) $
+       map (\(x:xs) -> if x == ':' then xs else x:xs) (split "," cstr)
            -- solves what seems to be an inconsistency in the parser
 
 -- | 'privmsg' creates a private message to the person designated.
-privmsg :: String -- ^ Who should recieve the message (nick)
+privmsg :: Nick -- ^ Who should recieve the message (nick)
         -> String -- ^ What is the message?
         -> IrcMessage -- ^ Constructed message
-privmsg who msg = if action then mkMessage "PRIVMSG" [who, ':':(chr 0x1):("ACTION " ++ clean_msg ++ ((chr 0x1):[]))]
-                            else mkMessage "PRIVMSG" [who, ':' : clean_msg]
-    where cleaned_msg = case concatMap clean msg of
+privmsg who msg = if action then mk [nName who, ':':(chr 0x1):("ACTION " ++ clean_msg ++ ((chr 0x1):[]))]
+                            else mk [nName who, ':' : clean_msg]
+    where mk = mkMessage (nTag who) "PRIVMSG"
+          cleaned_msg = case concatMap clean msg of
               str@('@':_) -> ' ':str
               str         -> str
           (clean_msg,action) = case cleaned_msg of
@@ -91,32 +100,32 @@ privmsg who msg = if action then mkMessage "PRIVMSG" [who, ':':(chr 0x1):("ACTIO
 
 -- | 'setTopic' takes a channel and a topic. It then returns the message
 --   which sets the channels topic.
-setTopic :: String -- ^ Channel
+setTopic :: Nick -- ^ Channel
          -> String -- ^ Topic
          -> IrcMessage
-setTopic chan topic = mkMessage "TOPIC" [chan, ':' : topic]
+setTopic chan topic = mkMessage (nTag chan) "TOPIC" [nName chan, ':' : topic]
 
 -- | 'getTopic' Returns the topic for a channel, given as a String
-getTopic :: String -> IrcMessage
-getTopic chan = mkMessage "TOPIC" [chan]
+getTopic :: Nick -> IrcMessage
+getTopic chan = mkMessage (nTag chan) "TOPIC" [nName chan]
 
 -- | 'quit' creates a server QUIT message. The input string given is the
 --   quit message, given to other parties when leaving the network.
-quit :: String -> IrcMessage
-quit msg = mkMessage "QUIT" [':' : msg]
+quit :: String -> String -> IrcMessage
+quit svr msg = mkMessage svr "QUIT" [':' : msg]
 
 -- | 'join' creates a join message. String given is the location (channel)
 --   to join.
-join :: String -> IrcMessage
-join loc = mkMessage "JOIN" [loc]
+join :: Nick -> IrcMessage
+join loc = mkMessage (nTag loc) "JOIN" [nName loc]
 
 -- | 'part' parts the channel given.
-part :: String -> IrcMessage
-part loc = mkMessage "PART" [loc]
+part :: Nick -> IrcMessage
+part loc = mkMessage (nTag loc) "PART" [nName loc]
 
 -- | 'names' builds a NAMES message from a list of channels.
-names :: [String] -> IrcMessage
-names chans = mkMessage "NAMES" [Util.concatWith "," chans]
+names :: String -> [String] -> IrcMessage
+names svr chans = mkMessage svr "NAMES" [Util.concatWith "," chans]
 
 -- | Construct a privmsg from the CTCP TIME notice, to feed up to
 -- the @localtime-reply plugin, which then passes the output to
@@ -124,22 +133,26 @@ names chans = mkMessage "NAMES" [Util.concatWith "," chans]
 timeReply :: IrcMessage -> IrcMessage
 timeReply msg    = 
    IrcMessage { msgPrefix  = msgPrefix (msg)
+              , msgServer  = msgServer (msg)
               , msgCommand = "PRIVMSG"
               , msgParams  = [head (msgParams msg)
-                             ,":@localtime-reply " ++ (IRC.nick msg) ++ ":" ++
+                             ,":@localtime-reply " ++ (nName $ IRC.nick msg) ++ ":" ++
                                 (init $ drop 7 (last (msgParams msg))) ]
               }
 
 -- Only needed for Base.hs
 errShowMsg :: IrcMessage -> String
-errShowMsg msg = "ERROR> <" ++ msgPrefix msg ++
+errShowMsg msg = "ERROR> <" ++ msgServer msg ++ (':' : msgPrefix msg) ++
       "> [" ++ msgCommand msg ++ "] " ++ show (msgParams msg)
 
-user :: String -> String -> String -> IrcMessage
-user nick_ server ircname = IRC.mkMessage "USER" [nick_, "localhost", server, ircname]
+user :: String -> String -> String -> String -> IrcMessage
+user svr nick_ server_ ircname = IRC.mkMessage svr "USER" [nick_, "localhost", server_, ircname]
 
-setNick :: String -> IrcMessage
-setNick nick_ = IRC.mkMessage "NICK" [nick_]
+setNick :: Nick -> IrcMessage
+setNick nick_ = IRC.mkMessage (nTag nick_) "NICK" [nName nick_]
+
+lambdabotName :: IrcMessage -> Nick
+lambdabotName msg = Nick (msgServer msg) (Config.name Config.config)
 ----------------------------------------------------------------------
 -- Encoding and decoding of messages
 
@@ -162,12 +175,12 @@ encodeMessage msg
 
 -- | 'decodeMessage' Takes an input line from the IRC protocol stream
 --   and decodes it into a message.
-decodeMessage :: String -> IrcMessage
-decodeMessage line =
+decodeMessage :: String -> String -> IrcMessage
+decodeMessage svr line =
     let (prefix, rest1) = decodePrefix (,) line
         (cmd, rest2)    = decodeCmd (,) rest1
         params          = decodeParams rest2
-    in IrcMessage { msgPrefix = prefix, msgCommand = cmd, msgParams = params }
+    in IrcMessage { msgServer = svr, msgPrefix = prefix, msgCommand = cmd, msgParams = params }
   where
     decodePrefix k (':':cs) = decodePrefix' k cs
       where decodePrefix' j ""       = j "" ""
@@ -204,8 +217,8 @@ decodeMessage line =
 --
 -- Online reader loop, the mvars are unused
 
-readerLoop :: ThreadId -> Pipe IrcMessage -> Pipe IrcMessage -> Handle -> MVar () -> MVar () -> IO ()
-readerLoop th chanr chanw h _ _ = handleIO th $ do
+readerLoop :: ThreadId -> String -> Pipe IrcMessage -> Pipe IrcMessage -> Handle -> MVar () -> MVar () -> IO ()
+readerLoop th name_ chanr chanw h _ _ = handleIO th $ do
     io (putStrLn "Forking threads ...")
     readerLoop'
   where
@@ -213,8 +226,8 @@ readerLoop th chanr chanw h _ _ = handleIO th $ do
         line <- hGetLine h
         let line' = filter (\c -> c /= '\n' && c /= '\r') line
         if pING `isPrefixOf` line'
-            then writeChan chanw (Just $ IRC.mkMessage "PONG" [drop 5 line'])
-            else writeChan chanr (Just $ IRC.decodeMessage line')
+            then writeChan chanw (Just $ IRC.mkMessage name_ "PONG" [drop 5 line'])
+            else writeChan chanr (Just $ IRC.decodeMessage name_ line')
         readerLoop'
 
     pING = "PING "
@@ -257,9 +270,9 @@ writerLoop th chanw h _ _ = handleIO th $ do
 -- 
 -- the mvars are used to keep the normally async threads in step.
 --
-offlineReaderLoop :: ThreadId -> Pipe IrcMessage -> Pipe IrcMessage -> Handle
+offlineReaderLoop :: ThreadId -> String -> Pipe IrcMessage -> Pipe IrcMessage -> Handle
                   -> MVar () -> MVar () -> IO ()
-offlineReaderLoop th chanr _chanw _h syncR syncW = handleIO th readerLoop'
+offlineReaderLoop th name_ chanr _chanw _h syncR syncW = handleIO th readerLoop'
   where
     readerLoop' = do
         takeMVar syncR  -- wait till writer lets us proceed
@@ -281,6 +294,7 @@ offlineReaderLoop th chanr _chanw _h syncR syncW = handleIO th readerLoop'
                     Just msg' -> return msg'
 
                 let m  = IRC.IrcMessage { IRC.msgPrefix  = "null!n=user@null"
+                                        , IRC.msgServer  = name_
                                         , IRC.msgCommand = "PRIVMSG"
                                         , IRC.msgParams  = ["offline",":" ++ msg ] }
                 writeChan chanr (Just m)
