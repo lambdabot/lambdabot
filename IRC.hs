@@ -152,7 +152,7 @@ setNick :: Nick -> IrcMessage
 setNick nick_ = IRC.mkMessage (nTag nick_) "NICK" [nName nick_]
 
 lambdabotName :: IrcMessage -> Nick
-lambdabotName msg = Nick (msgServer msg) (Config.name Config.config)
+lambdabotName _ = Config.name Config.config
 ----------------------------------------------------------------------
 -- Encoding and decoding of messages
 

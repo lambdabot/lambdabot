@@ -1,7 +1,7 @@
 --
 -- Provides interface to messages, message pipes
 --
-module Message where
+module Message(Message(..), Nick(..), showNick, readNick, Pipe) where
 
 import Control.Concurrent
 

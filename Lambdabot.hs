@@ -97,11 +97,11 @@ type Pipe = Chan (Maybe IRC.IrcMessage)
 
 type Callback = IRC.IrcMessage -> LB ()
 
-type OutputFilter = String -> [String] -> LB [String]
+type OutputFilter = Msg.Nick -> [String] -> LB [String]
 
 -- | Global read\/write state.
 data IRCRWState = IRCRWState {
-        ircPrivilegedUsers :: Map String Bool,
+        ircPrivilegedUsers :: Map Msg.Nick Bool,
 
         ircChannels        :: Map ChanName String,
             -- ^ maps channel names to topics
@@ -118,14 +118,14 @@ data IRCRWState = IRCRWState {
         ircPlugins         :: [String]
     }
 
-newtype ChanName = ChanName { getCN :: String } -- should be abstract, always lowercase
+newtype ChanName = ChanName { getCN :: Msg.Nick } -- should be abstract, always lowercase
   deriving (Eq, Ord)
 
 instance Show ChanName where show (ChanName x) = show x
 
 -- | only use the "smart constructor":
-mkCN :: String -> ChanName
-mkCN = ChanName . map toLower
+mkCN :: Msg.Nick -> ChanName
+mkCN = ChanName . liftM2 Msg.Nick Msg.nTag (map toLower . Msg.nName)
 
 -- ---------------------------------------------------------------------
 --
@@ -228,7 +228,7 @@ runIrc mode initialise loop ld plugins = withSocketsDo $ do
 --
 -- | Default rw state
 --
-initState :: [String] -> S.DynLoad -> [String] -> IRCRWState
+initState :: [Msg.Nick] -> S.DynLoad -> [String] -> IRCRWState
 initState as ld plugins = IRCRWState {
         ircPrivilegedUsers = M.fromList $ zip as (repeat True),
         ircChannels        = M.empty,
@@ -269,7 +269,7 @@ mainLoop mode loop = do
     chanw      <- io newChan
     syncR      <- io $ newMVar () -- used in offline to make threads synchronous
     syncW      <- io newEmptyMVar
-    threadr    <- io $ forkIO $ rloop threadmain chanr chanw hin syncR syncW
+    threadr    <- io $ forkIO $ rloop threadmain "fn" chanr chanw hin syncR syncW
     threadw    <- io $ forkIO $ wloop threadmain chanw hout syncR syncW
 
     let chans = IRCRState {
@@ -353,7 +353,7 @@ class Module m s | m -> s where
     process :: Msg.Message a
         => m                                -- ^ phantom     (required)
         -> a                                -- ^ the message (uneeded by most?)
-        -> String                           -- ^ target
+        -> Msg.Nick                         -- ^ target
         -> String                           -- ^ command
         -> String                           -- ^ the arguments to the command
         -> ModuleLB s                       -- ^ maybe output
@@ -363,7 +363,7 @@ class Module m s | m -> s where
     contextual :: Msg.Message a
         => m                                -- ^ phantom     (required)
         -> a                                -- ^ the message
-        -> String                           -- ^ target
+        -> Msg.Nick                         -- ^ target
         -> String                           -- ^ the text
         -> ModuleLB s                       -- ^ maybe output
 
@@ -555,44 +555,44 @@ checkPrivs msg = gets (isJust . M.lookup (Msg.nick msg) . ircPrivilegedUsers)
 ------------------------------------------------------------------------
 -- Some generic server operations
 
-serverSignOn :: Config.Protocol -> String -> String -> LB ()
+serverSignOn :: Config.Protocol -> Msg.Nick -> String -> LB ()
 serverSignOn Config.Irc  nick userinfo = ircSignOn nick userinfo
 serverSignOn Config.Xmpp nick _        = jabberSignOn nick
 
-jabberSignOn :: String -> LB ()
+jabberSignOn :: Msg.Nick -> LB ()
 jabberSignOn _ = undefined
 
-ircSignOn :: String -> String -> LB ()
+ircSignOn :: Msg.Nick -> String -> LB ()
 ircSignOn nick ircname = do
     server <- asks ircServer
 
     -- password support. TODO: Move this to IRC?
     -- If plugin initialising was delayed till after we connected, we'd
     -- be able to write a Passwd plugin.
-    send . Just $ IRC.user nick server ircname
+    send . Just $ IRC.user (Msg.nTag nick) (Msg.nName nick) server ircname
     send . Just $ IRC.setNick nick
     mpasswd <- liftIO (handleJust ioErrors (const (return "")) $
                        readFile "State/passwd")
     case readM mpasswd of
       Nothing     -> return ()
-      Just passwd -> ircPrivmsg "nickserv" $ Just $ "identify " ++ passwd
+      Just passwd -> ircPrivmsg (Msg.Nick (Msg.nName nick) "nickserv") $ Just $ "identify " ++ passwd
 
-ircGetChannels :: LB [String]
+ircGetChannels :: LB [Msg.Nick]
 ircGetChannels = (map getCN . M.keys) `fmap` gets ircChannels
 
 -- Send a quit message, settle and wait for the server to drop our
 -- handle. At which point the main thread gets a closed handle eof
 -- exceptoin, we clean up and go home
-ircQuit :: String -> LB ()
-ircQuit msg = do
+ircQuit :: String -> String -> LB ()
+ircQuit svr msg = do
     modify $ \state -> state { ircStayConnected = False }
-    send  . Just $ IRC.quit msg
+    send  . Just $ IRC.quit svr msg
     liftIO $ threadDelay 1000
     io $ hPutStrLn stderr "Quit"
 
-ircReconnect :: String -> LB ()
-ircReconnect msg = do
-    send . Just $ IRC.quit msg
+ircReconnect :: String -> String -> LB ()
+ircReconnect svr msg = do
+    send . Just $ IRC.quit svr msg
     liftIO $ threadDelay 1000
 
 ircRead :: LB (Maybe IRC.IrcMessage)
@@ -613,7 +613,7 @@ send line = do
 
 -- | Send a message to a channel\/user. If the message is too long, the rest
 --   of it is saved in the (global) more-state.
-ircPrivmsg :: String        -- ^ The channel\/user.
+ircPrivmsg :: Msg.Nick      -- ^ The channel\/user.
            -> Maybe String  -- ^ The message.
            -> LB ()
 
@@ -624,7 +624,7 @@ ircPrivmsg who (Just msg) = do
     mapM_ (\s -> ircPrivmsg' who (Just $ take textwidth s)) (take 10 sendlines)
 
 -- A raw send version
-ircPrivmsg' :: String -> Maybe String -> LB ()
+ircPrivmsg' :: Msg.Nick -> Maybe String -> LB ()
 ircPrivmsg' who (Just "")  = ircPrivmsg' who (Just " ")
 ircPrivmsg' who (Just msg) = send . Just $ IRC.privmsg who msg
 ircPrivmsg' _   Nothing    = send Nothing
@@ -725,9 +725,9 @@ mlines = (mbreak =<<) . lines
 -- | Don't send any output to alleged bots.
 checkRecip :: OutputFilter
 checkRecip who msg
-    | who == Config.name Config.config       = return []
-    | "bot" `isSuffixOf` lowerCaseString who = return []
-    | otherwise                              = return msg
+    | who == Config.name Config.config                   = return []
+    | "bot" `isSuffixOf` lowerCaseString (Msg.nName who) = return []
+    | otherwise                                          = return msg
 
 -- | Divide the lines' indent by two
 {-

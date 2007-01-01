@@ -3,6 +3,8 @@
 --
 module Config where
 
+import Message(Nick(Nick))
+
 data Protocol = Irc | Xmpp
 
 -- | The 'Config' type provides configurations for lambdabot. It is used
@@ -11,15 +13,15 @@ data Protocol = Irc | Xmpp
 --   join upon successful connection, etc.
 --
 data Config = Config {
-        name      :: String,        -- ^ The nickname of lambdabot
+        name      :: Nick,          -- ^ The nickname of lambdabot
         userinfo  :: String,        -- ^ The userinfo string for lambdabot
         host      :: String,        -- ^ Host to join
         port      :: Int,           -- ^ The port number to use on the host
         protocol  :: Protocol,      -- ^ either irc or xmpp/jabber
         verbose   :: Bool,          -- ^ Should lambdabot be verbose?
         textwidth :: Int,           -- ^ How many columns should we use
-        autojoin  :: [String],      -- ^ List of channels to autojoin
-        admins    :: [String],      -- ^ List of nicknames that are admins
+        autojoin  :: [Nick],        -- ^ List of channels to autojoin
+        admins    :: [Nick],        -- ^ List of nicknames that are admins
         proxy     :: Maybe ([Char], Integer), -- ^ A proxy given as
                                               --   a pair of host and port.
 
@@ -51,7 +53,7 @@ data Config = Config {
 --
 config :: Config
 config = Config {
-        name            = "lambdabot",
+        name            = Nick "fn" "lambdabot",
         userinfo        = "Lambda_Robots:_100%_Loyal",
         host            = "irc.freenode.net",
         protocol        = Irc,
@@ -61,33 +63,33 @@ config = Config {
         textwidth       = 350,
         proxy           = Nothing, -- Just ("www-proxy",3128),
 
-        autojoin        = ["#haskell"
-                          ,"#haskell-blah"
-                          ,"#haskell-overflow"
-                          ,"#haskell.hac07"
-                     {-   ,"#haskell.de"
-                          ,"#haskell.es"
-                          ,"#haskell.fi"
-                          ,"#haskell.fr"
-                          ,"#haskell.hr"
-                          ,"#haskell.it"
-                          ,"#haskell.jp"
-                          ,"#haskell.no"
-                          ,"#haskell.se" -}
-                          ,"#gentoo-haskell"
-                          ,"#gentoo-uy"
-                          ,"#ghc"
-                          ,"#darcs"
-                          ,"#oasis"
-                          ,"#perl6"
-                          ,"#jtiger"
-                          ,"#unicycling"
-                          ,"#ScannedInAvian"],
+        autojoin        = [Nick "fn" "#haskell"
+                          ,Nick "fn" "#haskell-blah"
+                          ,Nick "fn" "#haskell-overflow"
+                          ,Nick "fn" "#haskell.hac07"
+                     {-   ,Nick "fn" "#haskell.de"
+                          ,Nick "fn" "#haskell.es"
+                          ,Nick "fn" "#haskell.fi"
+                          ,Nick "fn" "#haskell.fr"
+                          ,Nick "fn" "#haskell.hr"
+                          ,Nick "fn" "#haskell.it"
+                          ,Nick "fn" "#haskell.jp"
+                          ,Nick "fn" "#haskell.no"
+                          ,Nick "fn" "#haskell.se" -}
+                          ,Nick "fn" "#gentoo-haskell"
+                          ,Nick "fn" "#gentoo-uy"
+                          ,Nick "fn" "#ghc"
+                          ,Nick "fn" "#darcs"
+                          ,Nick "fn" "#oasis"
+                          ,Nick "fn" "#perl6"
+                          ,Nick "fn" "#jtiger"
+                          ,Nick "fn" "#unicycling"
+                          ,Nick "fn" "#ScannedInAvian"],
 
         admins          = [
-                "Pseudonym",    "shapr",    "vincenz",    "Igloo",
-                "Cale",         "dons",     "TheHunter",    "musasabi",
-                "Lemmih",       "sjanssen", "sorear", "int-e"
+                Nick "fn" "Pseudonym",    Nick "fn" "shapr",    Nick "fn" "vincenz",   Nick "fn" "Igloo",
+                Nick "fn" "Cale",         Nick "fn" "dons",     Nick "fn" "TheHunter", Nick "fn" "musasabi",
+                Nick "fn" "Lemmih",       Nick "fn" "sjanssen", Nick "fn" "sorear",    Nick "fn" "int-e"
 
         ],
 
