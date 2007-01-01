@@ -10,6 +10,7 @@ module Plugin.Check where
 
 import Plugin
 import Lib.Parser
+import qualified Text.Regex as R
 
 PLUGIN Check
 
@@ -49,44 +50,45 @@ check src = do
 -- Clean up runplugs' output
 --
 clean_ :: String -> String
-clean_ s | Just _         <- no_io      `matchRegex`    s = "No IO allowed\n"
-        | Just _         <- terminated `matchRegex`    s = "Terminated\n"
-        | Just _         <- hput       `matchRegex`    s = "Terminated\n"
-        | Just _         <- stack_o_f  `matchRegex`    s = "Stack overflow\n"
-        | Just _         <- loop       `matchRegex`    s = "Loop\n"
-        | Just _         <- undef      `matchRegex`    s = "Undefined\n"
-        | Just _         <- type_sig   `matchRegex`    s = "Add a type signature\n"
-        | Just (_,m,_,_) <- ambiguous  `matchRegexAll` s = m
-        | Just (_,_,b,_) <- inaninst   `matchRegexAll` s = clean_ b
-        | Just (_,_,b,_) <- irc        `matchRegexAll` s = clean_ b
-        | Just (_,m,_,_) <- nomatch    `matchRegexAll` s = m
-        | Just (_,m,_,_) <- notinscope `matchRegexAll` s = m
-        | Just (_,m,_,_) <- hsplugins `matchRegexAll`  s = m
-        | Just (a,_,_,_) <- columnnum `matchRegexAll`  s = a
-        | Just (a,_,_,_) <- extraargs `matchRegexAll`  s = a
-        | Just (_,_,b,_) <- filename' `matchRegexAll`  s = clean_ b
-        | Just (a,_,b,_) <- filename  `matchRegexAll`  s = a ++ clean_ b
-        | Just (a,_,b,_) <- filepath `matchRegexAll`   s = a ++ clean_ b
-        | Just (a,_,b,_) <- runplugs  `matchRegexAll`  s = a ++ clean_ b
+clean_ s|  no_io      `matches'`    s = "No IO allowed\n"
+        |  terminated `matches'`    s = "Terminated\n"
+        |  hput       `matches'`    s = "Terminated\n"
+        |  stack_o_f  `matches'`    s = "Stack overflow\n"
+        |  loop       `matches'`    s = "Loop\n"
+        |  undef      `matches'`    s = "Undefined\n"
+        |  type_sig   `matches'`    s = "Add a type signature\n"
+
+        | Just (_,m,_,_) <- ambiguous  `R.matchRegexAll` s = m
+        | Just (_,_,b,_) <- inaninst   `R.matchRegexAll` s = clean_ b
+        | Just (_,_,b,_) <- irc        `R.matchRegexAll` s = clean_ b
+        | Just (_,m,_,_) <- nomatch    `R.matchRegexAll` s = m
+        | Just (_,m,_,_) <- notinscope `R.matchRegexAll` s = m
+        | Just (_,m,_,_) <- hsplugins  `R.matchRegexAll`  s = m
+        | Just (a,_,_,_) <- columnnum  `R.matchRegexAll`  s = a
+        | Just (a,_,_,_) <- extraargs  `R.matchRegexAll`  s = a
+        | Just (_,_,b,_) <- filename'  `R.matchRegexAll`  s = clean_ b
+        | Just (a,_,b,_) <- filename   `R.matchRegexAll`  s = a ++ clean_ b
+        | Just (a,_,b,_) <- filepath   `R.matchRegexAll`   s = a ++ clean_ b
+        | Just (a,_,b,_) <- runplugs   `R.matchRegexAll`  s = a ++ clean_ b
         | otherwise      = s
     where
         -- s/<[^>]*>:[^:]: //
-        type_sig   = mkRegex "add a type signature that fixes these type"
-        no_io      = mkRegex "No instance for \\(Show \\(IO"
-        terminated = mkRegex "waitForProc"
-        stack_o_f  = mkRegex "Stack space overflow"
-        loop       = mkRegex "runplugs: <<loop>>"
-        irc        = mkRegex "\n*<irc>:[^:]*:[^:]*:\n*"
-        filename   = mkRegex "\n*<[^>]*>:[^:]*:\\?[^:]*:\\?\n* *"
-        filename'  = mkRegex "/tmp/.*\\.hs[^\n]*\n"
-        filepath   = mkRegex "\n*/[^\\.]*.hs:[^:]*:\n* *"
-        undef      = mkRegex "Prelude.undefined"
-        ambiguous  = mkRegex "Ambiguous type variable `a\' in the constraints"
-        runplugs   = mkRegex "runplugs: "
-        notinscope = mkRegex "Variable not in scope:[^\n]*"
-        hsplugins  = mkRegex "Compiled, but didn't create object"
-        extraargs  = mkRegex "[ \t\n]*In the [^ ]* argument"
-        columnnum  = mkRegex " at <[^\\.]*\\.[^\\.]*>:[^ ]*"
-        nomatch    = mkRegex "Couldn't match[^\n]*\n"
-        inaninst   = mkRegex "^[ \t]*In a.*$"
-        hput       = mkRegex "<stdout>: hPutStr"
+        type_sig   = regex' "add a type signature that fixes these type"
+        no_io      = regex' "No instance for \\(Show \\(IO"
+        terminated = regex' "waitForProc"
+        stack_o_f  = regex' "Stack space overflow"
+        loop       = regex' "runplugs: <<loop>>"
+        irc        = regex' "\n*<irc>:[^:]*:[^:]*:\n*"
+        filename   = regex' "\n*<[^>]*>:[^:]*:\\?[^:]*:\\?\n* *"
+        filename'  = regex' "/tmp/.*\\.hs[^\n]*\n"
+        filepath   = regex' "\n*/[^\\.]*.hs:[^:]*:\n* *"
+        undef      = regex' "Prelude.undefined"
+        ambiguous  = regex' "Ambiguous type variable `a\' in the constraints"
+        runplugs   = regex' "runplugs: "
+        notinscope = regex' "Variable not in scope:[^\n]*"
+        hsplugins  = regex' "Compiled, but didn't create object"
+        extraargs  = regex' "[ \t\n]*In the [^ ]* argument"
+        columnnum  = regex' " at <[^\\.]*\\.[^\\.]*>:[^ ]*"
+        nomatch    = regex' "Couldn't match[^\n]*\n"
+        inaninst   = regex' "^[ \t]*In a.*$"
+        hput       = regex' "<stdout>: hPutStr"

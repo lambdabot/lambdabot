@@ -37,8 +37,7 @@ unlambda src = do
 -- Clean up output
 --
 cleanit :: String -> String
-cleanit s | Just _         <- terminated `matchRegex`    s = "Terminated\n"
---        | Just _         <- hget       `matchRegex`    s = "Terminated\n"
-          | otherwise      = s
-    where terminated = mkRegex "waitForProc"
+cleanit s | terminated `matches'` s = "Terminated\n"
+          | otherwise               = s
+    where terminated = regex' "waitForProc"
 

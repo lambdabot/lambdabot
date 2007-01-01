@@ -17,12 +17,12 @@ module Plugin (
         module Lib.Process,
         module Lib.MiniHTTP,
         module Lib.Url,
+        module Lib.Regex,
 
         module Data.List,
         module Data.Char,
         module Data.Maybe,
         module Data.Either,
-        module Text.Regex,
         module System.IO,
 
         module Control.Monad.Error
@@ -38,12 +38,12 @@ import Lib.Serial
 import Lib.Process
 import Lib.MiniHTTP
 import Lib.Url
+import Lib.Regex
 
 import Data.List
 import Data.Char
 import Data.Maybe
 import Data.Either
-import Text.Regex
 
 import System.IO
 

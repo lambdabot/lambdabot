@@ -48,7 +48,7 @@ prettyCmd rest =
 doPretty :: HsModule -> [String]
 doPretty (HsModule _ _ _ _ decls) =
     let defaultLen = 4
-        declLen (HsFunBind matches)   = maximum $ map matchLen matches
+        declLen (HsFunBind mtches)   = maximum $ map matchLen mtches
         declLen (HsPatBind _ pat _ _) = patLen pat
         declLen _  = defaultLen
         patLen (HsPVar nm) = nameLen nm

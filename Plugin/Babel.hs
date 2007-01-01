@@ -10,6 +10,7 @@
 module Plugin.Babel where
 
 import Plugin
+import qualified Text.Regex as R
 
 PLUGIN Babel
 
@@ -104,14 +105,14 @@ getBabel :: [String] -> String
 getBabel lins =  cleanLine (concat (intersperse " " region))
     where
     region = hd ++ [(head tl)]
-    (hd, tl) = span (\x -> (matchRegex reEnd x) == Nothing)
-                    (dropWhile (\x -> (matchRegex reStart x) == Nothing) lins)
+    (hd, tl) = span (\x -> (not (matches' reEnd x)))
+                    (dropWhile (\x -> (not (matches' reStart x))) lins)
 
-    cleanLine x = maybe "can't parse this language" head $ matchRegex reLine x
+    cleanLine x = maybe "can't parse this language" head $ R.matchRegex reLine x
 
-    reLine =  mkRegex ".*padding:10px[^>]*>(.*)</div>.*"
-    reStart = mkRegex ".*padding:10px[^>]*>"
-    reEnd = mkRegex "</div>"
+    reLine  = regex' ".*padding:10px[^>]*>(.*)</div>.*"
+    reStart = regex' ".*padding:10px[^>]*>"
+    reEnd   = regex' "</div>"
 
 babelFish :: String -> String -> String -> IO String
 babelFish inLang outLang string = do

@@ -20,6 +20,7 @@
 module Plugin.Type where
 
 import Plugin
+import qualified Text.Regex as R
 
 PLUGIN Type
 
@@ -47,7 +48,7 @@ command cmd foo = cmd ++ " " ++ foo
 
 signature_regex :: Regex
 signature_regex
-    = mkRegexWithOpts
+    = R.mkRegexWithOpts
       "^(\\*?[A-Z][_a-zA-Z0-9]*(\\*?[A-Z][_a-zA-Z0-9]*)*>)? *(.*[       -=:].*)"
       True True
 
@@ -91,7 +92,7 @@ go _ _      = []   -- unterminated
 extract_signatures :: String -> String
 extract_signatures output
         = removeExp . concat . intersperse " " . map (dropWhile isSpace . expandTab) .
-          mapMaybe ((>>= last') . matchRegex signature_regex) .
+          mapMaybe ((>>= last') . R.matchRegex signature_regex) .
           reverse . drop 1 . reverse . drop 7 . lines $ output
         where
         last' [] = Nothing
@@ -144,11 +145,11 @@ query_ghci' cmd expr = do
 
      cleanRE :: String -> String
      cleanRE s
-        | Just _         <- notfound `matchRegex` s = "Couldn\'t find qualified module."
-        | Just (_,_,b,_) <- ghci_msg `matchRegexAll`  s = b
+        | Just _         <- notfound `R.matchRegex` s = "Couldn\'t find qualified module."
+        | Just (_,_,b,_) <- ghci_msg `R.matchRegexAll`  s = b
         | otherwise      = s
-     ghci_msg = mkRegex "<interactive>:[^:]*:[^:]*: ?"
-     notfound = mkRegex "Failed to load interface"
+     ghci_msg = R.mkRegex "<interactive>:[^:]*:[^:]*: ?"
+     notfound = R.mkRegex "Failed to load interface"
 
 query_ghci :: String -> String -> LB [String]
 query_ghci y z = ios (query_ghci' y z)

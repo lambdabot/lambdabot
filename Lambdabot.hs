@@ -49,8 +49,11 @@ import Network                  (withSocketsDo, connectTo, PortID(PortNumber))
 
 import System.Exit
 import System.IO
-import System.Posix.Process
+
 import System.Posix.Signals
+
+-- n.b comment this out for prof
+import System.Posix.Process     ( exitImmediately )
 
 import Data.Char
 import Data.IORef               (newIORef, IORef, readIORef, writeIORef)
@@ -283,8 +286,10 @@ mainLoop mode loop = do
         --  withDebug "Running exit handlers"    runExitHandlers
         --  withDebug "Writing persistent state" flushModuleState
             runExitHandlers >> flushModuleState
-            io $ -- do hPutStrLn stderr "Exiting ... "
-                 do exitImmediately (ExitFailure 1))
+
+      -- this kills profiling output:
+            io $ exitImmediately (ExitFailure 1))
+
       --    throwError e)
 
 -- | run 'exit' handler on modules

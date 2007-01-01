@@ -8,6 +8,7 @@
 module Plugin.Elite (theModule) where
 
 import Plugin
+import qualified Text.Regex as R
 
 import Control.Arrow
 import Control.Monad.State
@@ -34,19 +35,18 @@ translate str = case alts of
                           return (subst ++ translatedRest)
   where alts = (map (\ (Just (_,_,rest,_),subst) -> (subst,rest)) $
                 filter isJustEmpty $
-                map (\ (regex, subst) -> (matchRegexAll regex str,subst)) $
+                map (\ (re, subst) -> (R.matchRegexAll re str,subst)) $
                 ruleList)
                ++ [([toUpper $ head str],tail str)
                   ,([head str],tail str)
                   ]
-               
 
 isJustEmpty :: (Maybe([a],b,c,d),e) -> Bool
 isJustEmpty (Just ([],_,_,_),_) = True
 isJustEmpty (_,_)                = False
 
 ruleList :: [(Regex,String)]
-ruleList = map (first mkRegex)
+ruleList = map (first regex')
            [("a","4")
            ,("b","8")
            ,("c","(")

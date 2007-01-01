@@ -15,8 +15,9 @@ module Lib.Url (
 
 import Data.List
 import Data.Maybe
-import Text.Regex
 import Lib.MiniHTTP
+
+import Text.Regex
 
 -- | The string that I prepend to the quoted page title.
 urlTitlePrompt :: String

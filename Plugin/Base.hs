@@ -14,6 +14,7 @@ import qualified Data.Map as M   (insert, delete)
 import Control.Monad.State  (MonadState(..), when, gets)
 
 import GHC.IOBase           (Exception(NoMethodError))
+import qualified Text.Regex as R
 
 import Control.Concurrent.MVar
 import System.IO.Unsafe (unsafePerformIO)
@@ -279,10 +280,10 @@ output = unsafePerformIO newEmptyMVar
 ------------------------------------------------------------------------
 
 maybeCommand :: String -> String -> Maybe String
-maybeCommand nm text = case matchRegexAll re text of
+maybeCommand nm text = case R.matchRegexAll re text of
       Nothing -> Nothing
       Just (_, _, cmd, _) -> Just cmd
-    where re = mkRegex (nm ++ "[.:,]*[[:space:]]*")
+    where re = regex' (nm ++ "[.:,]*[[:space:]]*")
 
 --
 -- And stuff we don't care about

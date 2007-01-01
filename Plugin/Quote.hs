@@ -3,8 +3,6 @@
 --
 module Plugin.Quote (theModule) where
 
-import Lib.Regex as R
-
 import Plugin
 import Plugin.Quote.Fortune      (randFortune)
 import Plugin.Quote.Text
@@ -126,8 +124,12 @@ search key pat db
     random    = randomElem
 
     match p ss = do
-        re <- R.regcomp p $ regExtended + regIgnoreCase
-        let rs = filter (R.matchRegex' re . snd) ss
+        re <- do res <- compile (compExtended + compIgnoreCase + compNoSub) 0 p
+                 case res of
+                    Left  err -> error $ "regex failed: " ++ show err
+                    Right r   -> return r
+
+        let rs = filter (matches re . snd) ss
         if null rs
             then do r <- random insult
                     box $ "No quotes match. " ++ r

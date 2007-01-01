@@ -8,6 +8,7 @@
 module Plugin.Spell where
 
 import Plugin
+import qualified Text.Regex as R
 
 PLUGIN Spell
 
@@ -69,10 +70,9 @@ clean' _              = Just []                          -- not sure
 
 clean'' :: String -> String
 clean'' s
-    | Just (_,_,m,_) <- pat `matchRegexAll` s = m
+    | Just (_,_,m,_) <- pat `R.matchRegexAll` s = m
     | otherwise = s
-    where
-        pat  = mkRegex "[^:]*: "    -- drop header
+    where pat  = regex' "[^:]*: "    -- drop header
 
 --
 -- Alternate dictionaries, currently just lambdabot's. The idea was to

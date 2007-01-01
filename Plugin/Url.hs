@@ -6,6 +6,8 @@ module Plugin.Url (theModule) where
 import Plugin
 import Network.URI
 
+import qualified Text.Regex as R -- legacy
+
 PLUGIN Url
 
 instance Module UrlModule Bool where
@@ -63,11 +65,11 @@ fetchTiny url
 -- | Tries to find the start of a tinyurl
 findTiny :: String -> Maybe String
 findTiny text = do 
-  (_,kind,rest,_) <- matchRegexAll begreg text
+  (_,kind,rest,_) <- R.matchRegexAll begreg text
   let url = takeWhile (/=' ') rest
   return $ stripSuffixes ignoredUrlSuffixes $ kind ++ url
   where
-  begreg = mkRegexWithOpts "http://tinyurl.com/" True False
+  begreg = R.mkRegexWithOpts "http://tinyurl.com/" True False
 
 -- | List of strings that, if present in a contextual message, will
 -- prevent the looking up of titles.  This list can be used to stop 
@@ -93,11 +95,11 @@ ignoredUrlSuffixes = [".", ",", ";", ")", "\"", "\1", "\n"]
 -- | Searches a string for an embeddded URL and returns it.
 containsUrl :: String -> Maybe String
 containsUrl text = do
-    (_,kind,rest,_) <- matchRegexAll begreg text
+    (_,kind,rest,_) <- R.matchRegexAll begreg text
     let url = takeWhile (`notElem` " \n\t\v") rest
     return $ stripSuffixes ignoredUrlSuffixes $ kind ++ url
     where
-      begreg = mkRegexWithOpts "https?://"  True False
+      begreg = R.mkRegexWithOpts "https?://"  True False
 
 -- | Utility function to remove potential suffixes from a string.
 -- Note, once a suffix is found, it is stripped and returned, no other

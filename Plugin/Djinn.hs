@@ -16,6 +16,8 @@ import Data.Char
 import Data.List
 import Data.Maybe
 
+import qualified Text.Regex as R
+
 PLUGIN Djinn
 
 -- | We can accumulate an interesting environment
@@ -56,9 +58,9 @@ instance Module DjinnModule DjinnEnv where
 
         -- rule out attempts to do IO, if these get into the env,
         -- they'll be executed by djinn
-        process_ _ _ s | Just _ <- cmd  `matchRegex` s = end
+        process_ _ _ s | cmd  `matches'` s = end
           where end  = return ["Invalid command"]
-                cmd  = mkRegex "^ *:"
+                cmd  = regex' "^ *:"
 
         -- Normal commands
         process_ _ "djinn" s = do
@@ -67,9 +69,9 @@ instance Module DjinnModule DjinnEnv where
                 return $ either id (tail . lines) e
             where
             dropForall t
-            	| Just (_, _, x, _) <- matchRegexAll re t = x
-            	| otherwise = t
-            re = mkRegex "^forall [[:alnum:][:space:]]+\\."
+                | Just (_, _, x, _) <- R.matchRegexAll re t = x
+                | otherwise = t
+            re = regex' "^forall [[:alnum:][:space:]]+\\."
 
         -- Augment environment. Have it checked by djinn.
         process_ _ "djinn-add"  s = do
@@ -135,20 +137,20 @@ djinn env' src = do
     (out,_,_) <- popen binary [] (Just (env <$> src <$> ":q"))
     let o = dropNL . clean_ . unlines . init . drop 2 . lines $ out
     return $ case () of {_
-        | Just _ <- failed `matchRegexAll` o -> Left (lines o)
-        | Just _ <- unify  `matchRegexAll` o -> Left (lines o)
+        | failed `matches'` o -> Left (lines o)
+        | unify  `matches'` o -> Left (lines o)
         | otherwise                          -> Right o
     }
     where
-        failed = mkRegex "Cannot parse command"
-        unify  = mkRegex "cannot be realized"
+        failed = regex' "Cannot parse command"
+        unify  = regex' "cannot be realized"
 
 --
 -- Clean up djinn output
 --
 clean_ :: String -> String
-clean_ s | Just (a,_,b,_) <- prompt `matchRegexAll` s = a ++ clean_ b
+clean_ s | Just (a,_,b,_) <- prompt `R.matchRegexAll` s = a ++ clean_ b
         | otherwise      = s
     where
-        prompt = mkRegex "Djinn>[^\n]*\n"
+        prompt = regex' "Djinn>[^\n]*\n"
 

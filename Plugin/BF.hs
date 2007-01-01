@@ -40,9 +40,9 @@ bf src = do
 -- Clean up output
 --
 cleanit :: String -> String
-cleanit s | Just _         <- terminated `matchRegex`    s = "Terminated\n"
-          | otherwise      = filter printable s
-    where terminated = mkRegex "waitForProc"
+cleanit s | terminated `matches'`    s = "Terminated\n"
+          | otherwise                  = filter printable s
+    where terminated = regex' "waitForProc"
           -- the printable ascii chars are in the range [32 .. 126]
           -- according to wikipedia:
           -- http://en.wikipedia.org/wiki/ASCII#ASCII_printable_characters

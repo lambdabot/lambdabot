@@ -11,6 +11,7 @@ module Plugin.Search (theModule) where
 
 import Plugin
 import Control.Monad            (mplus)
+import qualified Text.Regex as R
 
 PLUGIN Search
 
@@ -68,15 +69,15 @@ extractConversion :: [String] -> Maybe String
 extractConversion [] = error "conv: No response, something weird is up."
 extractConversion ls = (getConv $ last ls) >>= return . pipeline replaceFuncs
     where
-        regex1 = mkRegex "<font size=\\+1><b>"
-        regex2 = mkRegex "</b>"
+        regex1 = regex' "<font size=\\+1><b>"
+        regex2 = regex' "</b>"
 
         getConv a = do
-            (_,_,s,_) <- matchRegexAll regex1 a
-            (s',_,_,_) <- matchRegexAll regex2 s
+            (_,_,s,_)  <- R.matchRegexAll regex1 a
+            (s',_,_,_) <- R.matchRegexAll regex2 s
             return s'
 
-        searchAndReplace new regex = \s -> subRegex (mkRegex regex) s new
+        searchAndReplace new re = \s -> R.subRegex (regex' re) s new
         replaceFuncs = zipWith searchAndReplace
                             [    "^",       "",      "x",                      ","]
                             ["<sup>", "</sup>", "&#215;", "<font size=-2> </font>"]

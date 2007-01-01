@@ -6,8 +6,7 @@
 --
 module Plugin.Vixen where
 
-import Plugin hiding (Regex, matchRegex)
-import Lib.Regex
+import Plugin
 import Lib.Binary
 
 import Control.Arrow ((***))
@@ -64,7 +63,7 @@ random (Node ls) = randomElem ls >>= random
 
 mkResponses :: RChoice -> String -> WTree
 mkResponses choices them = (\((_,wtree):_) -> wtree) $
-    filter (\(reg,_) -> matchRegex reg them) choices
+    filter (\(reg,_) -> matches' reg them) choices
 
 ------------------------------------------------------------------------
 --

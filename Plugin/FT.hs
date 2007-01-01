@@ -35,6 +35,6 @@ ft src = do
 -- Clean up output
 --
 cleanit :: String -> String
-cleanit s | Just _         <- terminated `matchRegex`    s = "Terminated\n"
-          | otherwise      = filter isAscii s
-    where terminated = mkRegex "waitForProc"
+cleanit s | terminated `matches'`    s = "Terminated\n"
+          | otherwise                  = filter isAscii s
+    where terminated = regex' "waitForProc"
