@@ -24,6 +24,7 @@ module Lib.Regex (
 
     -- * Compiling a regular expression
     regcomp,    -- :: ByteString -> Int -> IO Regex
+    regex,      -- :: ByteString -> Regex
 
     -- ** Flags for regcomp
     regExtended,    -- (flag to regcomp) use extended regex syntax
@@ -48,6 +49,7 @@ import Foreign.ForeignPtr
 import qualified Foreign.Concurrent as FC
 import Foreign
 import System.IO.Unsafe     (unsafePerformIO)
+import Control.Exception as E
 
 import qualified Data.ByteString as P
 import qualified Data.ByteString.Char8 as C
@@ -76,10 +78,15 @@ regcomp ps flags = do
              return (Regex regex_fptr)
         else ioError $ userError $ "Error in pattern: " ++ (show ps)
 
+regex :: P.ByteString -> Regex
+regex x = unsafePerformIO $ E.catch (regcomp x regExtended) $ \e ->
+        error $ "mkRegex failed on input " ++ (show x) ++ "\n" ++ show e
+
 -- ---------------------------------------------------------------------
 -- | Matches a regular expression against a buffer, returning the buffer
 -- indicies of the match, and any submatches
 --
+
 regexec :: Regex                -- ^ Compiled regular expression
         -> Ptr CChar            -- ^ The buffer to match against
         -> Int                  -- ^ Offset in buffer to start searching from
