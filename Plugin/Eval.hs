@@ -8,7 +8,7 @@
 --
 module Plugin.Eval where
 
-import Plugin       hiding (compile)
+import Plugin
 import Lib.Parser
 import Language.Haskell.Parser
 import Language.Haskell.Syntax hiding (Module)
@@ -28,7 +28,7 @@ instance Module PlugsModule () where
     process _ _ to "run" s     = ios80 to (plugs s)
     process _ _ to "let" s     = ios80 to (define s)
     process _ _ _ "undefine" _ = do io $ copyFile "State/Pristine.hs" "State/L.hs"
-                                    x <- io $ compile Nothing
+                                    x <- io $ comp Nothing
                                     return [x]
 
     contextual _ _ to txt
@@ -66,7 +66,7 @@ plugs src = do
 define :: String -> IO String
 define src = case parseModule (src ++ "\n") of -- extra \n so comments are parsed correctly
     (ParseOk (HsModule _ _ (Just [HsEVar (UnQual (HsIdent "main"))]) [] ds)) 
-        | all okay ds -> compile (Just src)
+        | all okay ds -> comp (Just src)
     (ParseFailed _ e) -> return $ " " ++ e
     _                 -> return "Invalid declaration"
  where
@@ -77,8 +77,8 @@ define src = case parseModule (src ++ "\n") of -- extra \n so comments are parse
     okay _                = False
 
 -- It parses. then add it to a temporary L.hs and typecheck
-compile :: Maybe String -> IO String
-compile src = do
+comp :: Maybe String -> IO String
+comp src = do
     copyFile "State/L.hs" "L.hs"
     case src of
         Nothing -> return () -- just reset from Pristine

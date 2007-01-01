@@ -18,15 +18,19 @@ module Lib.Regex (
         matches',   -- :: Regex -> String -> Bool
 
         -- and the underlying module
+#if __GLASGOW_HASKELL__ >= 606
         module Text.Regex.Posix.ByteString
+#else
+        module Text.Regex
+#endif
 
     ) where
 
-import System.IO.Unsafe (unsafePerformIO)
 import Data.ByteString.Char8
 
 #if __GLASGOW_HASKELL__ >= 606
 import Text.Regex.Posix.ByteString
+import System.IO.Unsafe (unsafePerformIO)
 #else
 import Text.Regex
 #endif

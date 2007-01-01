@@ -124,10 +124,14 @@ search key pat db
     random    = randomElem
 
     match p ss = do
+#if __GLASGOW_HASKELL__ >= 606
         re <- do res <- compile (compExtended + compIgnoreCase + compNoSub) 0 p
                  case res of
                     Left  err -> error $ "regex failed: " ++ show err
                     Right r   -> return r
+#else
+        let re = mkRegexWithOpts (P.unpack p) True True
+#endif
 
         let rs = filter (matches re . snd) ss
         if null rs
