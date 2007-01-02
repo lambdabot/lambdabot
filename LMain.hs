@@ -33,7 +33,7 @@ onlineMain = serverSignOn (protocol config) (name config) (userinfo config) >> m
 offlineMain :: Bool -> LB ()
 offlineMain cmdline = do
   modify (\st -> let privUsers  = ircPrivilegedUsers st
-                     privUsers'| cmdline   = M.insert "null" True privUsers
+                     privUsers'| cmdline   = M.insert (Nick "fn" "null") True privUsers
                                | otherwise = privUsers
                  in st { ircPrivilegedUsers = privUsers' })
   mainloop
