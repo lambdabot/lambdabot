@@ -9,11 +9,12 @@ module Plugin.Localtime (theModule) where
 
 import Plugin
 import qualified Data.Map as M
+import qualified Message as Msg
 
 PLUGIN Localtime
 
-type TimeMap = M.Map String  -- the person who's time we requested
-                    [String] -- a list of targets waiting on this time
+type TimeMap = M.Map Msg.Nick  -- the person who's time we requested
+                    [Msg.Nick] -- a list of targets waiting on this time
 
 instance Module LocaltimeModule TimeMap where
 
@@ -25,9 +26,9 @@ instance Module LocaltimeModule TimeMap where
   process x y z "time" a = process x y z "localtime" a
 
   -- record this person as a callback, for when we (asynchronously) get a result
-  process _ _ whoAsked "localtime" rawWho = do
-        let (whoToPing,_) = break (== ' ') rawWho
-        if whoToPing /= name config
+  process _ msg whoAsked "localtime" rawWho = do
+        let whoToPing = Msg.readNick msg $ fst $ break (== ' ') rawWho
+        if whoToPing /= Msg.lambdabotName msg
             then do modifyMS $ \st -> M.insertWith (++) whoToPing [whoAsked] st
                 -- this is a CTCP time call, which returns a NOTICE
                     lift $ ircPrivmsg' whoToPing (Just "\^ATIME\^A")     -- has to be raw
@@ -35,8 +36,9 @@ instance Module LocaltimeModule TimeMap where
             else return ["I live on the internet, do you expect me to have a local time?"]
 
   -- the Base module caught the NOTICE TIME, mapped it to a PRIVMGS, and here it is :)
-  process _ _ _ "localtime-reply" text = do
-    let (whoGotPinged, time') = break (== ':') text
+  process _ msg _ "localtime-reply" text = do
+    let (whoGotPinged', time') = break (== ':') text
+        whoGotPinged = Msg.readNick msg whoGotPinged'
         time = drop 1 time'
 
     targets <- withMS $ \st set -> do
@@ -44,6 +46,6 @@ instance Module LocaltimeModule TimeMap where
             Nothing -> return []
             Just xs -> do set (M.insert whoGotPinged [] st) -- clear the callback state
                           return xs
-    let msg = "Local time for " ++ whoGotPinged ++ " is " ++ time
-    lift $ flip mapM_ targets $ flip ircPrivmsg' (Just msg)
+    let txt = "Local time for " ++ Msg.showNick msg whoGotPinged ++ " is " ++ time
+    lift $ flip mapM_ targets $ flip ircPrivmsg' (Just txt)
     return []
