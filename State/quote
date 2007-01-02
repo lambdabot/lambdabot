@@ -36,6 +36,7 @@ BillWood
 it became obvious that when a Prolog program is tuned by removing non-determinism it moves towards a functional program.
 
 Binkley
+[Monads as clothes] <Binkley> using unsafePerformIO is kind of like going naked in public, might be safe in some contexts, but you really don't want to know what happensif you do it in a really bad one
 I never metasuperhuman I didn't like
 vincenz: lots of practice
 is it because of your mother that you added an integer to a pointer without a cast?
@@ -203,6 +204,7 @@ inv2004: Haskell isn't like all the other mainstream languages. You really need 
 calling an out-of-scope function isn't as easy as I had hoped
 
 LoganCapaldo
+I like constructing things with type errors. It lets me read the error and try and figure out what I'm really trying to do
 [caller id is] the unique identifier attached to every stack frame of course! (Isn't it?)
 
 Masklinn
@@ -273,6 +275,7 @@ or maybe she is the Queen of Sciences and he is the Mack Daddy.
 Computer science is the womanizer, and math is the pure-hearted girl he won't call the next day.
 
 Saizan
+yesterday i was so drunk i was trying to typecheck the people at the party.. "what's your monad!?"
 the problem is that we still have a silicon chip under us
 
 SamB
@@ -355,6 +358,7 @@ Tried to co-read and co-understand comonads, but got co-re dump
 I think I need cobrain to understand coeffects
 
 apfelmus
+Haskell is the first programming language that really offers the possibility to specify data dependencies exactly as they are because Haskell is pure, higher order and has a powerful type system.
 Ah, yet another UndeadArray necromancer exhausting his stack of bones. May the forces of light suggest to structure the incantation of darkness?
 
 araujo
@@ -377,6 +381,7 @@ assembly would require metaolegs (or megaolegs)
 I think wiki in the original Hawaiian means "I can't find any damned thing"
 
 augustss
+Given that strength of the Haskell type system it wouldn't be that hard to write a compiler from some language into a Haskell type.
 <wy> augustss: Wow. You win the IOCCC three times! <augustss> wy: i'm bad at C programming ;)
 hbc still has some unique features, like views.  that i've never used..
 
@@ -732,6 +737,7 @@ ghci.debugger
 http://haskell.org/haskellwiki/Ghci/Debugger
 
 glguy
+in true Haskell form, after I realized what I was actually doing... all my functions melted down to about 2 lines each
 I don't remember saying that
 Hmm, for next Halloween, he could dress up as someone who recognizes 2^1024 on sight!
 lol, making lambdabot fight your battles
@@ -775,6 +781,7 @@ inv2004
 lambdabot: monads ?
 
 jcreigh
+I've found learning Haskell makes me feel vastly inferior to Haskell coders. ("Oh,", they say, "That's just a fold over the hyper-monad fluxbox list. Here's the one-line replacement for your entire program.")
 <chessguy> i mean if someone says factorial should be of type String -> [(Float, Bool)], you should just tell them they're nuts  <jcreigh> > let fac n = map (\x -> (x, True)) $ scanl (*) 1 [1..(read n)] in fac "5" :: [(Float, Bool)]
 usability is so web 1.0
 
@@ -796,6 +803,9 @@ Fundeps, existential types, HList take a while to grasp
 
 jrmole
 any program that could read minds would just evolve into a porn downloader
+
+kilimanjaro
+ the bad kind of laziness is "so they just invent an equivalance class of monotonic continuous functions that `represent' that partial order. but they haven't taken a shower in like 10 days!"
 
 knuth
 We will perhaps eventually be writing only small modules which are identified by name as they are used to build larger ones, so that devices like indentation, rather than delimiters, might become feasible for expressing local structure in the source language. ["Structured Programming with goto Statements", Computing Surveys, Vol 6 No 4, Dec. 1974]
@@ -1056,6 +1066,7 @@ sarahbot
 sarahbot: later tell lambdabot @quote sarahbot
 
 scodil
+dcoutts: rad. i'm actually using gtk2hs quite a bit now. its one of those deals where I'm writing prototype software for people who aren't really paying for it, so it will end up being the production software, so you'll probably be getting emails in 5 years asking "what is haskell and how do I install it?"
 you say sledgehammer like its a bad thing
 
 scsibug
@@ -1069,6 +1080,7 @@ sethk
 it's certainly true that you can clobber the stack in C without even getting out of bed in the morning
 
 shapr
+Hey man, want to toke on a lambda? The first redex is free man!
 I'm not stubborn, I'm just right.
 there's an important niche market for OSes that don't crash.
 I think the Haskell approach works fine. That is, stick with research and do the best you can. Then after fifteen years of gestation, take over the world.
@@ -1245,6 +1257,9 @@ dcoutts: why don't you fly?
 I am really interested specifically in bottoms in this very moment.
 > take 10 lol where lol = "ol" : zipWith (:) (intersperse 'o' $ cycle "l") lol
 you know, befunge is probably the only language I've seen where you can run code pasted from IRC with the <nick> tags still in place ;-)
+
+xxd
+but 90% of programming is semantics
 
 you'll
 probably still want unsafeEquality or whatever, though
