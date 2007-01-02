@@ -1,0 +1,290 @@
+(=<<)
+f =<< x = x >>= f
+
+sequence
+sequence ms = foldr k (return []) ms
+    where
+      k m m' = do { x <- m; xs <- m'; return (x:xs) }
+
+sequence_
+sequence_ ms = foldr (>>) (return ()) ms
+
+mapM
+mapM f as = sequence (map f as)
+
+mapM_
+mapM_ f as = sequence_ (map f as)
+
+guard
+guard True  =  return ()
+guard False =  mzero
+
+forM
+forM = flip mapM
+
+forM_
+forM_ = flip mapM_
+
+msum
+msum =  foldr mplus mzero
+
+join
+join x =  x >>= id
+
+mapAndUnzipM
+mapAndUnzipM f xs = sequence (map f xs) >>= return . unzip
+
+zipWithM
+zipWithM f xs ys = sequence (zipWith f xs ys)
+
+zipWithM_
+zipWithM_ f xs ys = sequence_ (zipWith f xs ys)
+
+foldM
+foldM _ a []     = return a
+foldM f a (x:xs) = f a x >>= \fax -> foldM f fax xs
+
+foldM_
+foldM_ f a xs = foldM f a xs >> return ()
+
+replicateM
+replicateM n x = sequence (replicate n x)
+
+replicateM_
+replicateM_ n x = sequence_ (replicate n x)
+
+when
+when p s = if p then s else return ()
+
+unless
+unless p s = if p then return () else s
+
+liftM
+liftM f m1 = do { x1 <- m1; return (f x1) }
+
+liftM2
+liftM2 f m1 m2 = do { x1 <- m1; x2 <- m2; return (f x1 x2) }
+
+liftM3
+liftM3 f m1 m2 m3 = do { x1 <- m1; x2 <- m2; x3 <- m3; return (f x1 x2 x3) }
+
+liftM4
+liftM4 f m1 m2 m3 m4 = do { x1 <- m1; x2 <- m2; x3 <- m3; x4 <- m4; return (f x1 x2 x3 x4) }
+
+ap
+ap = liftM2 id
+
+(/=)
+x /= y = not (x == y)
+
+(==)
+x == y = not (x /= y)
+
+max
+max x y = if x <= y then y else x
+
+min
+min x y = if x <= y then x else y
+
+[]
+data [] a = [] | a : [a]
+
+foldr
+foldr k z xs = go xs
+    where go []     = z
+          go (y:ys) = y `k` go ys
+
+build
+build g = g (:) []
+
+augment
+augment g xs = g (:) xs
+
+map
+map _ []     = []
+map f (x:xs) = f x : map f xs
+
+(++)
+(++) []     ys = ys
+(++) (x:xs) ys = x : xs ++ ys
+
+Bool
+data Bool = False | True
+
+(&&)
+True  && x = x
+False && _ = False
+
+(||)
+True  || _ =  True
+False || x =  x
+
+not
+not True   =  False
+not False  =  True
+
+otherwise
+otherwise = True
+
+()
+data () = ()
+
+Ordering
+data Ordering = LT | EQ | GT
+
+String
+type String = [Char]
+
+Char
+data Char = C# Char#
+
+Int
+data Int = I# Int#
+
+id
+id x = x
+
+const
+const x _ = x
+
+(.)
+(.) f g x = f (g x)
+
+flip
+flip f x y = f y x
+
+($)
+f $ x = f x
+
+until
+until p f x | p x       = x
+            | otherwise = until p f (f x)
+
+asTypeOf
+asTypeOf = const
+
+head
+head (x:_) = x
+head []    = undefined
+
+tail
+tail (_:xs) = xs
+tail []     = undefined
+
+last
+last [x]    = x
+last (_:xs) = last xs
+last []     = undefined
+
+init
+init [x]    = []
+init (x:xs) = x : init xs
+init []     = undefined
+
+null
+null []     = True
+null (_:_)  = False
+
+filter
+filter _ []     = []
+filter p (x:xs)
+    | p x       = x : filter p xs
+    | otherwise = filter p xs
+
+foldl
+foldl f z xs = lgo z xs
+    where lgo z []     =  z
+          lgo z (x:xs) = lgo (f z x) xs
+
+scanr
+scanr _ q0 []     =  [q0]
+scanr f q0 (x:xs) =  f x q : qs
+    where qs@(q:_) = scanr f q0 xs 
+
+iterate
+iterate f x =  x : iterate f (f x)
+
+repeat
+repeat x = xs where xs = x : xs
+
+replicate
+replicate n x = take n (repeat x)
+
+cycle
+cycle [] = undefined
+cycle xs = xs' where xs' = xs ++ xs'
+
+takeWhile
+takeWhile _ []                 =  []
+takeWhile p (x:xs) | p x       =  x : takeWhile p xs
+                   | otherwise =  []
+
+take
+take n _      | n <= 0 =  []
+take _ []              =  []
+take n (x:xs)          =  x : take (n-1) xs
+
+drop
+drop n xs     | n <= 0 =  xs
+drop _ []              =  []
+drop n (_:xs)          =  drop (n-1) xs
+
+splitAt
+splitAt n xs           =  (take n xs, drop n xs)
+
+break
+break p =  span (not . p)
+
+reverse
+reverse = foldl (flip (:)) []
+
+and
+and   =  foldr (&&) True
+
+or
+or    =  foldr (||) False
+
+any
+any p =  or . map p
+
+all
+all p =  and . map p
+
+elem
+elem x    =  any (== x)
+
+notElem
+notElem x =  all (/= x)
+
+lookup
+lookup _key []          =  Nothing
+lookup  key ((x,y):xys) | key == x  = Just y
+                        | otherwise = lookup key xys
+
+concatMap
+concatMap f = foldr ((++) . f) []
+
+concat
+concat = foldr (++) []
+
+(!!)
+xs     !! n | n < 0 = undefined
+[]     !! _         = undefined
+(x:_)  !! 0         = x
+(_:xs) !! n         = xs !! (n-1)
+
+zip
+zip (a:as) (b:bs) = (a,b) : zip as bs
+zip _      _      = []
+
+zip3
+zip3 (a:as) (b:bs) (c:cs) = (a,b,c) : zip3 as bs cs
+zip3 _      _      _      = []
+
+zipWith
+zipWith f (a:as) (b:bs) = f a b : zipWith f as bs
+zipWith _ _      _      = []
+
+unzip
+unzip = foldr (\(a,b) ~(as,bs) -> (a:as,b:bs)) ([],[])
+
