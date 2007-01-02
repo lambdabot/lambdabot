@@ -130,18 +130,20 @@ query_ghci' cmd expr = do
                 else ls
   where
      context = concatMap (\m -> ":m + "++m++"\n") $
-                    prehier ++ datas ++ qualifieds ++ controls ++ other
+                    prehier ++ datas ++ qualifieds ++ controls ++ other ++ extras
 
      other      = ["Text.Printf"]
      prehier    = ["Char", "List", "Maybe", "Numeric", "Random" ]
      qualifieds = []
      datas   = map ("Data." ++) [
-                    "Array",
+                    "Array", "Complex",
                     "Bits", "Bool", "Char", "Dynamic", "Either",
                     "Graph", "Int", "Ix", "List",
                     "Maybe", "Ratio", "Tree", "Tuple", "Typeable", "Word"
                   ]
-     controls = map ("Control." ++) ["Monad", "Monad.State", "Monad.Reader", "Monad.Fix", "Arrow"]
+     controls = map ("Control." ++) ["Monad", "Monad.Cont", "Monad.State", "Monad.Writer", "Monad.Reader", "Monad.Fix", "Monad.Identity", "Monad.Cont", "Monad.List", "Arrow", "Monad.Error"]
+
+     extras   = [] -- ["L"] -- TODO
 
      cleanRE :: String -> String
      cleanRE s
