@@ -199,7 +199,7 @@ foldl f z xs = lgo z xs
 scanr
 scanr _ q0 []     =  [q0]
 scanr f q0 (x:xs) =  f x q : qs
-    where qs@(q:_) = scanr f q0 xs 
+    where qs@(q:_) = scanr f q0 xs
 
 iterate
 iterate f x =  x : iterate f (f x)
@@ -406,7 +406,7 @@ sort = sortBy compare
 sortBy
 sortBy cmp = foldr (insertBy cmp) []
 
-unfoldr 
+unfoldr
 unfoldr f b  = case f b of
    Just (a,new_b) -> a : unfoldr f new_b
    Nothing        -> []
@@ -420,7 +420,7 @@ foldl1 f (x:xs) = foldl f x xs
 foldl1 _ []     = undefined
 
 sum
-sum = foldl (+) 0  
+sum = foldl (+) 0
 
 product
 product = foldl (*) 1
@@ -433,7 +433,7 @@ unwords [] = ""
 unwords ws = foldr1 (\w s -> w ++ ' ':s) ws
 
 Maybe
-data Maybe a = Nothing | Just a 
+data Maybe a = Nothing | Just a
 
 maybe
 maybe n _ Nothing  = n
@@ -523,7 +523,7 @@ fromDyn (Dynamic t v) def
   | otherwise       = def
 
 fromDynamic
-fromDynamic (Dynamic t v) = case unsafeCoerce v of 
+fromDynamic (Dynamic t v) = case unsafeCoerce v of
     r | t == typeOf r -> Just r
       | otherwise     -> Nothing
 
@@ -632,7 +632,7 @@ try a = catch (a >>= \ v -> return (Right v)) (\e -> return (Left e))
 
 bracket
 bracket before after thing = block $ do
-    a <- before 
+    a <- before
     r <- catch (unblock (thing a))
                (\e -> do { after a; throw e })
     after a
@@ -707,13 +707,13 @@ failIO s = ioError (userError s)
 
 bindIO
 bindIO (IO m) k = IO ( \ s ->
-  case m s of 
+  case m s of
     (# new_s, a #) -> unIO (k a) new_s
   )
 
 thenIO
 thenIO (IO m) k = IO ( \ s ->
-  case m s of 
+  case m s of
     (# new_s, a #) -> unIO k new_s
   )
 
