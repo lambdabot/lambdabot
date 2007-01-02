@@ -726,8 +726,8 @@ unsafePerformIO (IO m) = lazy (case m realWorld# of (# _, r #) -> r)
 unsafeInterleaveIO
 unsafeInterleaveIO (IO m)
   = IO ( \ s -> let
-		   r = case m s of (# _, res #) -> res
-		in (# s, r #))
+           r = case m s of (# _, res #) -> res
+        in (# s, r #))
 
 FilePath
 type FilePath = String
