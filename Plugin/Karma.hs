@@ -4,13 +4,13 @@
 module Plugin.Karma (theModule) where
 
 import Plugin
-import qualified Message (nick)
+import qualified Message as Msg (nick, Nick, Message, showNick, readNick, lambdabotName, nName)
 import qualified Data.Map as M
 import Text.Printf
 
 PLUGIN Karma
 
-type KarmaState = M.Map String Integer
+type KarmaState = M.Map Msg.Nick Integer
 type Karma m a = ModuleT KarmaState m a
 
 instance Module KarmaModule KarmaState where
@@ -27,26 +27,27 @@ instance Module KarmaModule KarmaState where
     process      _ _ _ "karma-all" _ = listKarma
     process      _ msg _ cmd rest =
         case words rest of
-          []       -> tellKarma sender sender
+          []       -> tellKarma msg sender sender
           (nick:_) -> do
+              let nick' = Msg.readNick msg nick
               case cmd of
-                 "karma"     -> tellKarma        sender nick
-                 "karma+"    -> changeKarma 1    sender nick
-                 "karma-"    -> changeKarma (-1) sender nick
+                 "karma"     -> tellKarma   msg      sender nick'
+                 "karma+"    -> changeKarma msg 1    sender nick'
+                 "karma-"    -> changeKarma msg (-1) sender nick'
                  _        -> error "KarmaModule: can't happen"
-        where sender = Message.nick msg
+        where sender = Msg.nick msg
 
     -- ^nick++($| )
     contextual   _ msg _ text = do
-        let sender     = Message.nick msg
-        mapM_ (changeKarma (-1) sender) decs
-        mapM_ (changeKarma   1  sender) incs
+        let sender     = Msg.nick msg
+        mapM_ (changeKarma msg (-1) sender) decs
+        mapM_ (changeKarma msg   1  sender) incs
         return []
       where
         ws          = words text
         decs        = match "--"
         incs        = match "++"
-        match m     = filter okay . map (reverse . drop 2)
+        match m     = map (Msg.readNick msg) . filter okay . map (reverse . drop 2)
                     . filter (isPrefixOf m) . map reverse $ ws
         okay x      = not (elem x badNicks || any (`isPrefixOf` x) badPrefixes)
         -- Special cases.  Ignore the null nick.  C must also be ignored
@@ -57,13 +58,13 @@ instance Module KarmaModule KarmaState where
 
 ------------------------------------------------------------------------
 
-getKarma :: String -> KarmaState -> Integer
+getKarma :: Msg.Nick -> KarmaState -> Integer
 getKarma nick karmaFM = fromMaybe 0 (M.lookup nick karmaFM)
 
-tellKarma :: String -> String -> Karma LB [String]
-tellKarma sender nick = do
+tellKarma :: Msg.Message m => m -> Msg.Nick -> Msg.Nick -> Karma LB [String]
+tellKarma msg sender nick = do
     karma <- getKarma nick `fmap` readMS
-    return [concat [if sender == nick then "You have" else nick ++ " has"
+    return [concat [if sender == nick then "You have" else Msg.showNick msg nick ++ " has"
                    ," a karma of "
                    ,show karma]]
 
@@ -71,16 +72,16 @@ listKarma :: Karma LB [String]
 listKarma = do
     ks <- M.toList `fmap` readMS
     let ks' = sortBy (\(_,e) (_,e') -> e' `compare` e) ks
-    return $ (:[]) . unlines $ map (\(k,e) -> printf " %-20s %4d" k e :: String) ks'
+    return $ (:[]) . unlines $ map (\(k,e) -> printf " %-20s %4d" (show k) e :: String) ks'
 
-changeKarma :: Integer -> String -> String -> Karma LB [String]
-changeKarma km sender nick
-  | map toLower nick == "java" && km == 1 = changeKarma (-km) "lambdabot" sender
+changeKarma :: Msg.Message m => m -> Integer -> Msg.Nick -> Msg.Nick -> Karma LB [String]
+changeKarma msg km sender nick
+  | map toLower (Msg.nName nick) == "java" && km == 1 = changeKarma msg (-km) (Msg.lambdabotName msg) sender
   | sender == nick = return ["You can't change your own karma, silly."]
   | otherwise      = withMS $ \fm write -> do
       let fm' = M.insertWith (+) nick km fm
       let karma = getKarma nick fm'
       write fm'
-      return [fmt nick km (show karma)]
+      return [fmt (Msg.showNick msg nick) km (show karma)]
           where fmt n v k | v < 0     = n ++ "'s karma lowered to " ++ k ++ "."
                           | otherwise = n ++ "'s karma raised to " ++ k ++ "."
