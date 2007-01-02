@@ -8,7 +8,6 @@ import Plugin
 import qualified Data.Map as M
 import qualified Data.ByteString.Char8 as P
 import Data.ByteString.Char8 (ByteString)
-import System.IO
 import System.Directory
 
 PLUGIN Source
@@ -26,10 +25,8 @@ instance Module SourceModule Env where
     moduleInit _     = do
       b <- io $ doesFileExist file
       when b $ do
-          s <- io $ do h <- openFile file ReadMode
-                       s <- P.hGetContents h -- strict
+          s <- io $ do s <- P.readFile file
                        let m = M.fromList . map pair . splat . P.lines $ s
-                       hClose h
                        return m
           writeMS s
 
