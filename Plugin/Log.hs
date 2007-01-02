@@ -20,7 +20,7 @@ import System.Directory (createDirectoryIfMissing)
 
 -- ------------------------------------------------------------------------
 
-type Channel = String
+type Channel = Msg.Nick
 
 newtype LogModule = LogModule ()
 
@@ -34,23 +34,23 @@ type LogState = M.Map Channel ChanState
 type Log a = ModuleT LogState LB a
 
 data Event =
-    Said String ClockTime String
-    | Joined String String ClockTime
-    | Parted String String ClockTime -- covers quitting as well
-    | Renick String String ClockTime String
+    Said Msg.Nick ClockTime String
+    | Joined Msg.Nick String ClockTime
+    | Parted Msg.Nick String ClockTime -- covers quitting as well
+    | Renick Msg.Nick String ClockTime Msg.Nick
     deriving (Eq)
 
 theModule :: MODULE
 theModule = MODULE $ LogModule ()
 
 instance Show Event where
-    show (Said nick ct what)       = timeStamp ct ++ " <" ++ nick ++ "> " ++ what
-    show (Joined nick user ct)     = timeStamp ct ++ " " ++ nick
+    show (Said nick ct what)       = timeStamp ct ++ " <" ++ show nick ++ "> " ++ what
+    show (Joined nick user ct)     = timeStamp ct ++ " " ++ show nick
                                      ++ " (" ++ user ++ ") joined."
-    show (Parted nick user ct)     = timeStamp ct ++ " " ++ nick
+    show (Parted nick user ct)     = timeStamp ct ++ " " ++ show nick
                                      ++ " (" ++ user ++ ") left."
-    show (Renick nick user ct new) = timeStamp ct ++ " " ++ nick
-                                     ++ " (" ++ user ++ ") is now " ++ new ++ "."
+    show (Renick nick user ct new) = timeStamp ct ++ " " ++ show  nick
+                                     ++ " (" ++ user ++ ") is now " ++ show new ++ "."
 
 -- * Dispatchers and Module instance declaration
 --
@@ -114,7 +114,7 @@ instance Module LogModule LogState where
 
 -- | Filter all the nicks by one person
 -- FIXME --- maybe we should take into consideration nick changes?
-filterNick :: String -> [Event] -> [Event]
+filterNick :: Msg.Nick -> [Event] -> [Event]
 filterNick who = filter filterOneNick
     where
     filterOneNick (Said who' _ _)      = who == who'
@@ -123,8 +123,8 @@ filterNick who = filter filterOneNick
     filterOneNick (Renick old _ _ new) = who == old || who == new
 
 -- | Show the last 10 (or whatever) lines from the channel, in reverse order.
-showHistory :: String -> Log [String]
-showHistory args = do
+showHistory :: Msg.Message m => m -> String -> Log [String]
+showHistory msg args = do
   st <- readMS
   case M.lookup chan' st of
     Just cs -> let his = chanHistory cs
@@ -132,9 +132,9 @@ showHistory args = do
                           . take nLines'.  reverse $ lines' his]
     Nothing -> return ["I haven't got any logs for that channel."]
   where chan:nLines:nick:_ = map listToMaybeAll (words args ++ repeat "")
-        chan'     = fromMaybe (error "The channel name is required") chan
+        chan'     = Msg.readNick msg $ fromMaybe (error "The channel name is required") chan
         nLines'   = maybe numLastLines read nLines
-        lines' fm = maybe fm (\n -> filterNick n fm) nick
+        lines' fm = maybe fm (\n -> filterNick (Msg.readNick msg n) fm) nick
 
 -- * Event -> String helpers
 --
@@ -198,7 +198,7 @@ appendEvent c e =
 openChannelFile :: Channel -> ClockTime -> Log Handle
 openChannelFile chan ct = 
     io $ createDirectoryIfMissing True dir >> openFile file AppendMode
-    where dir  = outputDir config </> "Log" </> host config </> chan
+    where dir  = outputDir config </> "Log" </> host config </> show chan
           date = dateStamp ct
           file = dir </> (dateToString date) <.> "txt"
 
@@ -213,7 +213,7 @@ reopenChannelMaybe chan ct = do
     putHdlAndDS chan hdl' (dateStamp ct)
 
 -- | Initialise the channel state (if it not already inited)
-initChannelMaybe :: String -> ClockTime -> Log ()
+initChannelMaybe :: Msg.Nick -> ClockTime -> Log ()
 initChannelMaybe chan ct = do
   chanp <- liftM (M.member chan) readMS
   unless chanp $ do
@@ -249,7 +249,7 @@ partCB msg ct = Parted (Msg.nick msg) (Msg.fullName msg) ct
 -- FIXME:  We should only do this for channels that the user is currently on.
 nickCB :: Msg.Message a => a -> ClockTime -> Event
 nickCB msg ct = Renick (Msg.nick msg) (Msg.fullName msg) ct
-                       (drop 1 $ head $ Msg.body msg)
+                       (Msg.readNick msg $ drop 1 $ head $ Msg.body msg)
 
 -- | When somebody speaks.
 msgCB :: Msg.Message a => a -> ClockTime -> Event

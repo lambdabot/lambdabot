@@ -5,6 +5,8 @@ module Plugin.More (theModule) where
 
 import Plugin
 
+import Message( Nick )
+
 PLUGIN More
 
 type MoreState = GlobalPrivate () [String]
@@ -23,7 +25,7 @@ instance Module MoreModule MoreState where
             Just ls -> do mapM_ (lift . ircPrivmsg' target . Just) =<< moreFilter target ls
                           return []       -- special
 
-moreFilter :: String -> [String] -> ModuleLB MoreState
+moreFilter :: Nick -> [String] -> ModuleLB MoreState
 moreFilter target msglines = do
     let (morelines, thislines) = case drop (maxLines+2) msglines of
           [] -> ([],msglines)
