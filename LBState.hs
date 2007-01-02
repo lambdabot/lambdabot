@@ -21,6 +21,8 @@ import Control.Concurrent
 import Control.Monad.Reader
 import Control.Monad.Trans (liftIO)
 
+import Message(Nick)
+
 -- withMWriter :: MVar a -> (a -> (a -> IO ()) -> IO b) -> IO b
 -- | Update the module's private state.
 -- This is the preferred way of changing the state. The state will be locked
@@ -64,7 +66,7 @@ writeMS (x :: s) = modifyMS . const $ x     -- need to help out 6.5
 -- This simple implementation is linear in the number of private states used.
 data GlobalPrivate g p = GP {
   global :: !g,
-  private :: ![(String,MVar (Maybe p))],
+  private :: ![(Nick,MVar (Maybe p))],
   maxSize :: Int
 }
 
@@ -79,7 +81,7 @@ mkGlobalPrivate ms g = GP {
 
 -- Needs a better interface. The with-functions are hardly useful.
 -- | Writes private state. For now, it locks everything.
-withPS :: String  -- ^ The target
+withPS :: Nick  -- ^ The target
   -> (Maybe p -> (Maybe p -> LB ()) -> LB a)
     -- ^ @Just x@ writes x in the user's private state, @Nothing@ removes it.
   -> ModuleT (GlobalPrivate g p) LB a
@@ -89,12 +91,12 @@ withPS who f = do
       conv $ f x (liftIO . writer)
 
 -- | Reads private state.
-readPS :: String -> ModuleT (GlobalPrivate g p) LB (Maybe p)
+readPS :: Nick -> ModuleT (GlobalPrivate g p) LB (Maybe p)
 readPS = accessPS (liftIO . readMVar) (\_ -> return Nothing)
 
 -- | Reads private state, executes one of the actions success and failure
 -- which take an MVar and an action producing a @Nothing@ MVar, respectively.
-accessPS :: (MVar (Maybe p) -> LB a) -> (LB (MVar (Maybe p)) -> LB a) -> String
+accessPS :: (MVar (Maybe p) -> LB a) -> (LB (MVar (Maybe p)) -> LB a) -> Nick
   -> ModuleT (GlobalPrivate g p) LB a
 accessPS success failure who = withMS $ \state writer -> 
   case lookup who $ private state of
@@ -120,7 +122,7 @@ readGS = global `fmap` readMS
 
 
 -- The old interface, as we don't wanna be too fancy right now.
-writePS :: String -> Maybe p -> ModuleT (GlobalPrivate g p) LB ()
+writePS :: Nick -> Maybe p -> ModuleT (GlobalPrivate g p) LB ()
 writePS who x = withPS who (\_ writer -> writer x)
 
 writeGS :: g -> ModuleT (GlobalPrivate g p) LB ()

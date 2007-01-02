@@ -20,6 +20,8 @@ import Plugin.Pl.Parser          (parsePF)
 import Plugin.Pl.PrettyPrinter   (Expr)
 import Plugin.Pl.Transform       (transform, optimize)
 
+import Message( Nick )
+
 import Control.Concurrent.Chan    (Chan, newChan, isEmptyChan, readChan, writeList2Chan)
 
 -- firstTimeout is the timeout when the expression is simplified for the first
@@ -50,19 +52,19 @@ instance Module PlModule PlState where
 
 ------------------------------------------------------------------------
 
-res :: String -> Pl
+res :: Nick -> Pl
 res target = do
   d <- readPS target
   case d of
     Nothing -> return ["pointless: sorry, nothing to resume."]
     Just d' -> optimizeTopLevel target d'
 
-pf :: String -> String -> Pl
+pf :: Nick -> String -> Pl
 pf target inp = case parsePF inp of
   Right d  -> optimizeTopLevel target (firstTimeout, mapTopLevel transform d)
   Left err -> return [err]
 
-optimizeTopLevel :: String -> (Int, TopLevel) -> Pl
+optimizeTopLevel :: Nick -> (Int, TopLevel) -> Pl
 optimizeTopLevel target (to, d) = do
   let (e,decl) = getExpr d
   (e', finished) <- io $ optimizeIO to e
