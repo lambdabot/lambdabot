@@ -5,7 +5,12 @@ module Plugin.Base (theModule) where
 
 import Plugin
 
-import Control.Concurrent.MVar
+import IRC (IrcMessage, timeReply, errShowMsg)
+-- import Message (getTopic, nick, joinChannel, body, fullName, channels)
+import Message (getTopic, nick, joinChannel, body)
+
+import qualified Data.Map as M   (insert, delete)
+
 import Control.Monad.State  (MonadState(..), when, gets)
 
 import GHC.IOBase           (Exception(NoMethodError))
@@ -102,13 +107,13 @@ doJOIN msg
        send_ $ getTopic loc -- initialize topic
    where (_, aloc) = breakOnGlue ":" (head (body msg))
          loc       = case aloc of 
-                        [] -> [] 
-                        _  -> tail aloc
+                        [] -> Nick "fn" "weird#" 
+                        _  -> Nick (server msg) (tail aloc)
 
 doPART :: Callback
 doPART msg
   = when (name config == nick msg) $ do  
-        let loc = head (body msg)
+        let loc = Nick (server msg) (head (body msg))
         s <- get
         put (s { ircChannels = M.delete (mkCN loc) (ircChannels s) })
 
@@ -123,7 +128,7 @@ doMODE msg
 
 doTOPIC :: Callback
 doTOPIC msg
-    = do let loc = (head (body msg))
+    = do let loc = Nick (server msg) ((head (body msg)))
          s <- get
          put (s { ircChannels = M.insert (mkCN loc) (tail $ head $ tail $ body msg) (ircChannels s)})
 
@@ -138,7 +143,7 @@ doRPL_BOUNCE _msg = debugStrLn "BOUNCE!"
 
 doRPL_TOPIC :: Callback
 doRPL_TOPIC msg -- nearly the same as doTOPIC but has our nick on the front of body
-    = do let loc = (body msg) !! 1
+    = do let loc = Nick (server msg) ((body msg) !! 1)
          s <- get
          put (s { ircChannels = M.insert (mkCN loc) (tail $ last $ body msg) (ircChannels s) })
 
@@ -146,7 +151,10 @@ doPRIVMSG :: IrcMessage -> Base ()
 doPRIVMSG msg = do
 --  now <- io getClockTime
 --  io $ appendFile "State/log" $ ppr now
-    doPRIVMSG' (name config) msg
+    mapM_ (doPRIVMSG' (lambdabotName msg) msg) targets
+  where
+    alltargets = head (body msg)
+    targets = map (readNick msg) $ split "," alltargets
 --  where
 --    ppr now = concat [ timeStamp now, " ", "<", (nick msg), " ", (fullName msg), " #"
 --                     , (concat . intersperse ","  $ channels msg) ,  "> "
@@ -155,14 +163,14 @@ doPRIVMSG msg = do
 --
 -- | What does the bot respond to?
 --
-doPRIVMSG' :: String -> IRC.IrcMessage -> Base ()
-doPRIVMSG' myname msg
-  | myname `elem` targets
+doPRIVMSG' :: Nick -> IRC.IrcMessage -> Nick -> Base ()
+doPRIVMSG' myname msg target
+  | myname == target
     = let (cmd, params) = breakOnGlue " " text
       in doPersonalMsg cmd (dropWhile (== ' ') params)
 
-  | flip any ":," $ \c -> (myname ++ [c]) `isPrefixOf` text
-    = let Just wholeCmd = maybeCommand myname text
+  | flip any ":," $ \c -> (showNick msg myname ++ [c]) `isPrefixOf` text
+    = let Just wholeCmd = maybeCommand (showNick msg myname) text
           (cmd, params) = breakOnGlue " " wholeCmd
       in doPublicMsg cmd (dropWhile (==' ') params)
 
@@ -176,8 +184,6 @@ doPRIVMSG' myname msg
   | otherwise =  doContextualMsg text
 
   where
-    alltargets = head (body msg)
-    targets = split "," alltargets
     text = tail (head (tail (body msg)))
     who = nick msg
 
@@ -187,8 +193,8 @@ doPRIVMSG' myname msg
         | otherwise                         = (lift $ doIGNORE msg)
 
     doPublicMsg s r
-        | commands `arePrefixesOf` s        = doMsg (tail s) r alltargets
-        | (evalPrefixes config) `arePrefixesWithSpaceOf` s = doMsg "run" r alltargets -- TODO
+        | commands `arePrefixesOf` s        = doMsg (tail s) r target
+        | (evalPrefixes config) `arePrefixesWithSpaceOf` s = doMsg "run" r target -- TODO
         | otherwise                         = (lift $ doIGNORE msg)
 
     --
@@ -271,8 +277,8 @@ doPRIVMSG' myname msg
 
         withAllModules ( \m -> do
             act <- bindModule0 ( do
-                            ms <- contextual m msg alltargets r
-                            lift $ mapM_ (ircPrivmsg alltargets . Just) ms
+                            ms <- contextual m msg target r
+                            lift $ mapM_ (ircPrivmsg target . Just) ms
                             when (not (null ms)) (io $! putMVar output ()) -- we wrote something
                    )
             name' <- getName
@@ -282,7 +288,7 @@ doPRIVMSG' myname msg
 
         -- if there was no output, send a single Nothing
         notDone <- io (isEmptyMVar output)
-        when notDone (ircPrivmsg alltargets Nothing)
+        when notDone (ircPrivmsg target Nothing)
 
 --
 -- track in each contextual handler whether any output was made
