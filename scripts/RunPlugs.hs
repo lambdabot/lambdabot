@@ -39,10 +39,10 @@ qualifieds = ["qualified Data.Map as M"
              ,"qualified Data.IntSet as I"]
 
 datas   = map ("Data." ++) [
-                "Array", "Complex", 
-                "Bits", "Bool", "Char", "Dynamic", "Either", 
+                "Array", "Complex",
+                "Bits", "Bool", "Char", "Dynamic", "Either",
                 "Graph", "Int", "Ix", "List",
-                "Maybe", "Ratio", "Tree", "Tuple", "Typeable", "Word" 
+                "Maybe", "Ratio", "Tree", "Tuple", "Typeable", "Word"
               ]
 
 controls = map ("Control." ++) ["Monad", "Monad.Cont", "Monad.State", "Monad.Writer", "Monad.Reader", "Monad.Fix", "Monad.Identity", "Monad.Cont", "Monad.List", "Arrow", "Monad.Error"]
@@ -54,7 +54,7 @@ controls = map ("Control." ++) ["Monad", "Monad.Cont", "Monad.State", "Monad.Wri
 -- bit blurry. It depends on what GHC allows.
 --
 template = ["Language.Haskell.TH hiding (runIO,reify)"]
-extras   = ["ShowQ","ShowFun","qualified L"]
+extras   = ["ShowQ","ShowFun","L"]
 
 main = do
     setResourceLimit ResourceCPUTime (ResourceLimits rlimit rlimit)
