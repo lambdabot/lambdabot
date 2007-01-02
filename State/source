@@ -637,7 +637,7 @@ bracket before after thing = block $ do
                (\e -> do { after a; throw e })
     after a
     return r
-   
+
 finally
 a `finally` sequel = block $ do
     r <- catch (unblock a)
@@ -698,4 +698,68 @@ withFile name mode = bracket (openFile name mode) hClose
 
 exitFailure
 exitFailure = exitWith (ExitFailure 1)
+
+IO
+newtype IO a = IO (State# RealWorld -> (# State# RealWorld, a #))
+
+failIO
+failIO s = ioError (userError s)
+
+bindIO
+bindIO (IO m) k = IO ( \ s ->
+  case m s of 
+    (# new_s, a #) -> unIO (k a) new_s
+  )
+
+thenIO
+thenIO (IO m) k = IO ( \ s ->
+  case m s of 
+    (# new_s, a #) -> unIO k new_s
+  )
+
+returnIO :: a -> IO a
+returnIO x = IO (\ s -> (# s, x #))
+
+unsafePerformIO
+unsafePerformIO (IO m) = lazy (case m realWorld# of (# _, r #) -> r)
+
+unsafeInterleaveIO
+unsafeInterleaveIO (IO m)
+  = IO ( \ s -> let
+		   r = case m s of (# _, res #) -> res
+		in (# s, r #))
+
+FilePath
+type FilePath = String
+
+IORef
+newtype IORef a = IORef (STRef RealWorld a)
+
+newIORef
+newIORef v = stToIO (newSTRef v) >>= \ var -> return (IORef var)
+
+readIORef
+readIORef (IORef var) = stToIO (readSTRef var)
+
+writeIORef
+writeIORef (IORef var) v = stToIO (writeSTRef var v)
+
+IOArray
+newtype IOArray i e = IOArray (STArray RealWorld i e)
+
+ExitCode
+data ExitCode = ExitSuccess | ExitFailure Int
+
+throw
+throw exception = raise# exception
+
+IOMode
+data IOMode = ReadMode | WriteMode | AppendMode | ReadWriteMode
+
+forkIO
+forkIO action = IO $ \ s -> case (fork# action_plus s) of (# s1, id #) -> (# s1, ThreadId id #)
+    where action_plus = catchException action childHandler
+
+killThread
+killThread tid = throwTo tid (AsyncException ThreadKilled)
 
