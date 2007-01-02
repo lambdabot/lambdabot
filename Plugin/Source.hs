@@ -36,8 +36,7 @@ instance Module SourceModule Env where
       where file = "State/source"
 
             splat [] = []
-            splat s  = a : splat (tail b)
-                where (a,b) = break P.null s
+            splat s  = a : splat (tail b) where (a,b) = break P.null s
 
             pair (a:b) = (a, P.unlines b)
 
