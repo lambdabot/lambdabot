@@ -288,3 +288,414 @@ zipWith _ _      _      = []
 unzip
 unzip = foldr (\(a,b) ~(as,bs) -> (a:as,b:bs)) ([],[])
 
+elemIndex
+elemIndex x     = findIndex (x==)
+
+elemIndices
+elemIndices x   = findIndices (x==)
+
+find
+find p          = listToMaybe . filter p
+
+findIndex
+findIndex p     = listToMaybe . findIndices p
+
+findIndices
+findIndices p xs = [ i | (x,i) <- zip xs [0..], p x]
+
+isPrefixOf
+isPrefixOf [] _          = True
+isPrefixOf _  []         = False
+isPrefixOf (x:xs) (y:ys) = x == y && isPrefixOf xs ys
+
+isSuffixOf
+isSuffixOf x y = reverse x `isPrefixOf` reverse y
+
+isInfixOf
+isInfixOf needle haystack = any (isPrefixOf needle) (tails haystack)
+
+nub
+nub = nubBy (==)
+
+nubBy
+nubBy eq []             =  []
+nubBy eq (x:xs)         =  x : nubBy eq (filter (\ y -> not (eq x y)) xs)
+
+delete
+delete = deleteBy (==)
+
+(\\)
+(\\) = foldl (flip delete)
+
+union
+union = unionBy (==)
+
+unionBy
+unionBy eq xs ys = xs ++ foldl (flip (deleteBy eq)) (nubBy eq ys) xs
+
+intersect
+intersect = intersectBy (==)
+
+intersectBy
+intersectBy eq xs ys = [x | x <- xs, any (eq x) ys]
+
+intersperse
+intersperse _   []     = []
+intersperse _   [x]    = [x]
+intersperse sep (x:xs) = x : sep : intersperse sep xs
+
+intercalate
+intercalate xs xss = concat (intersperse xs xss)
+
+transpose
+transpose []             = []
+transpose ([]   : xss)   = transpose xss
+transpose ((x:xs) : xss) = (x : [h | (h:t) <- xss]) : transpose (xs : [ t | (h:t) <- xss])
+
+partition
+partition p xs = foldr (select p) ([],[]) xs
+    where select p x ~(ts,fs) | p x       = (x:ts,fs)
+                              | otherwise = (ts, x:fs)
+
+mapAccumL
+mapAccumL _ s []        =  (s, [])
+mapAccumL f s (x:xs)    =  (s'',y:ys)
+   where (s', y ) = f s x
+         (s'',ys) = mapAccumL f s' xs
+
+insert
+insert e ls = insertBy (compare) e ls
+
+insertBy
+insertBy _   x [] = [x]
+insertBy cmp x ys@(y:ys') = case cmp x y of
+                                 GT -> y : insertBy cmp x ys'
+                                 _  -> x : ys
+
+maximum
+maximum [] = undefined
+maximum xs = foldl1 max xs
+
+minimum
+minimum [] = undefined
+minimum xs = foldl1 min xs
+
+genericLength
+genericLength []    = 0
+genericLength (_:l) = 1 + genericLength l
+
+group
+group = groupBy (==)
+
+groupBy
+groupBy _  []       =  []
+groupBy eq (x:xs)   =  (x:ys) : groupBy eq zs
+    where (ys,zs) = span (eq x) xs
+
+inits
+inits []     =  [[]]
+inits (x:xs) =  [[]] ++ map (x:) (inits xs)
+
+tails
+tails []         = [[]]
+tails xxs@(_:xs) = xxs : tails xs
+
+sort
+sort = sortBy compare
+
+sortBy
+sortBy cmp = foldr (insertBy cmp) []
+
+unfoldr 
+unfoldr f b  = case f b of
+   Just (a,new_b) -> a : unfoldr f new_b
+   Nothing        -> []
+
+foldl'
+foldl' f a []     = a
+foldl' f a (x:xs) = let a' = f a x in a' `seq` foldl' f a' xs
+
+foldl1
+foldl1 f (x:xs) = foldl f x xs
+foldl1 _ []     = undefined
+
+sum
+sum = foldl (+) 0  
+
+product
+product = foldl (*) 1
+
+unlines
+unlines = concatMap (++ "\n")
+
+unwords
+unwords [] = ""
+unwords ws = foldr1 (\w s -> w ++ ' ':s) ws
+
+Maybe
+data Maybe a = Nothing | Just a 
+
+maybe
+maybe n _ Nothing  = n
+maybe _ f (Just x) = f x
+
+isJust
+isJust Nothing = False
+isJust _       = True
+
+isNothing
+isNothing Nothing = True
+isNothing _       = False
+
+fromJust
+fromJust Nothing  = undefined
+fromJust (Just x) = x
+
+fromMaybe
+fromMaybe d x = case x of {Nothing -> d;Just v  -> v}
+
+maybeToList
+maybeToList  Nothing   = []
+maybeToList  (Just x)  = [x]
+
+listToMaybe
+listToMaybe []        =  Nothing
+listToMaybe (a:_)     =  Just a
+
+catMaybes
+catMaybes ls = [x | Just x <- ls]
+
+data  Either a b  =  Left a | Right b
+
+either
+either f _ (Left x)     =  f x
+either _ g (Right y)    =  g y
+
+fst
+fst (x,_) =  x
+
+snd
+snd (_,y) =  y
+
+curry
+curry f x y = f (x, y)
+
+uncurry
+uncurry f p = f (fst p) (snd p)
+
+fix
+fix f = let x = f x in x
+
+on
+(*) `on` f = \x y -> f x * f y
+
+Complex
+data (RealFloat a) => Complex a = !a :+ !a
+
+realPart
+realPart (x :+ _) =  x
+
+imagPart
+imagPart (_ :+ y) =  y
+
+conjugate
+conjugate (x:+y) =  x :+ (-y)
+
+mkPolar
+mkPolar r theta  =  r * cos theta :+ r * sin theta
+
+cis
+cis theta    =  cos theta :+ sin theta
+
+polar
+polar z      =  (magnitude z, phase z)
+
+phase
+phase (0 :+ 0)   = 0
+phase (x:+y)     = atan2 y x
+
+toDyn
+toDyn v = Dynamic (typeOf v) (unsafeCoerce v)
+
+fromDyn
+fromDyn (Dynamic t v) def
+  | typeOf def == t = unsafeCoerce v
+  | otherwise       = def
+
+fromDynamic
+fromDynamic (Dynamic t v) = case unsafeCoerce v of 
+    r | t == typeOf r -> Just r
+      | otherwise     -> Nothing
+
+second f = arr swap >>> first f >>> arr swap
+    where swap ~(x,y) = (y,x)
+
+(***)
+f *** g = first f >>> second g
+
+(&&&)
+f &&& g = arr (\b -> (b,b)) >>> f *** g
+
+returnA
+returnA = arr id
+
+(^>>)
+f ^>> a = arr f >>> a
+
+(>>^)
+a >>^ f = a >>> arr f
+
+(<<<)
+f <<< g = g >>> f
+
+(<<^)
+a <<^ f = a <<< arr f
+
+(^<<)
+f ^<< a = arr f <<< a
+
+modifyIORef
+modifyIORef ref f = writeIORef ref . f =<< readIORef ref
+
+(<$>)
+f <$> a = fmap f a
+
+(<$)
+(<$) = (<$>) . const
+
+(*>)
+(*>) = liftA2 (const id)
+
+(<*)
+(<*) = liftA2 const
+
+(<**>)
+(<**>) = liftA2 (flip ($))
+
+liftA
+liftA f a = pure f <*> a
+
+liftA2
+liftA2 f a b = f <$> a <*> b
+
+optional
+optional v = Just <$> v <|> pure Nothing
+
+some
+some v = some_v
+  where many_v = some_v <|> pure []
+        some_v = (:) <$> v <*> many_v
+
+readMVar
+readMVar m = block $ do
+    a <- takeMVar m
+    putMVar m a
+    return a
+
+swapMVar
+swapMVar mvar new = block $ do
+    old <- takeMVar mvar
+    putMVar mvar new
+    return old
+
+withMVar m io = block $ do
+    a <- takeMVar m
+    b <- Exception.catch (unblock (io a)) (\e -> do putMVar m a; throw e)
+    putMVar m a
+    return b
+
+modifyMVar_
+modifyMVar_ m io = block $ do
+    a  <- takeMVar m
+    a' <- Exception.catch (unblock (io a)) (\e -> do putMVar m a; throw e)
+    putMVar m a'
+
+modifyMVar
+modifyMVar m io = block $ do
+    a      <- takeMVar m
+    (a',b) <- Exception.catch (unblock (io a)) (\e -> do putMVar m a; throw e)
+    putMVar m a'
+    return b
+
+handle
+handle = flip catch
+
+handleJust
+handleJust p = flip (catchJust p)
+
+mapException
+mapException f v = unsafePerformIO (catch (evaluate v)
+                                          (\x -> throw (f x)))
+
+try
+try a = catch (a >>= \ v -> return (Right v)) (\e -> return (Left e))
+
+bracket
+bracket before after thing = block $ do
+    a <- before 
+    r <- catch (unblock (thing a))
+               (\e -> do { after a; throw e })
+    after a
+    return r
+   
+finally
+a `finally` sequel = block $ do
+    r <- catch (unblock a)
+               (\e -> do { sequel; throw e })
+    sequel
+    return r
+
+bracket_
+bracket_ before after thing = bracket before (const after) (const thing)
+
+putChar
+putChar c = hPutChar stdout c
+
+putStr
+putStr s  = hPutStr stdout s
+
+putStrLn
+putStrLn s =  do putStr s
+                 putChar '\n'
+
+print
+print x = putStrLn (show x)
+
+getChar
+getChar = hGetChar stdin
+
+getLine
+getLine = hGetLine stdin
+
+getContents
+getContents = hGetContents stdin
+
+interact
+interact f = do s <- getContents
+                putStr (f s)
+
+readFile
+readFile name = openFile name ReadMode >>= hGetContents
+
+writeFile
+writeFile f txt = withFile f WriteMode (\ hdl -> hPutStr hdl txt)
+
+appendFile
+appendFile f txt = withFile f AppendMode (\ hdl -> hPutStr hdl txt)
+
+readLn
+readLn =  do l <- getLine
+             r <- readIO l
+             return r
+
+hPutStrLn
+hPutStrLn hndl str = do
+    hPutStr  hndl str
+    hPutChar hndl '\n'
+
+withFile
+withFile name mode = bracket (openFile name mode) hClose
+
+exitFailure
+exitFailure = exitWith (ExitFailure 1)
+
