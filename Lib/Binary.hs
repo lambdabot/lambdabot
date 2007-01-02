@@ -1,4 +1,4 @@
-{-# OPTIONS -cpp -fasm #-}
+{-# OPTIONS -cpp -fasm -fallow-overlapping-instances #-}
 --
 -- (c) The University of Glasgow 2002
 -- (c) Don Stewart 2005-6
@@ -243,6 +243,10 @@ instance Binary (M.Map String Int) where
     put_ bh m = put_ bh (map (\(s,n) -> (P.pack s, n)) $ M.toList m)
     get  bh   = do ls <- get bh
                    return (M.fromList $ map (\(s,n) -> (P.unpack s,n)) ls)
+
+instance (Ord a , Binary a, Binary b) => Binary (M.Map a b) where
+    put_ bh m = put_ bh (M.toList m)
+    get  bh   = M.fromList `fmap` get bh
 
 -- Instances for FastPackedStrings
 instance Binary P.ByteString where

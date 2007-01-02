@@ -235,7 +235,7 @@ initState as ld plugins = IRCRWState {
             ([],cleanOutput),
             ([],lineify),
             ([],cleanOutput),
-            ([],reduceIndent),
+        --  ([],reduceIndent),
             ([],checkRecip) ],
         ircCommands        = M.empty,
         ircPrivCommands    = [],
@@ -711,8 +711,10 @@ checkRecip who msg
     | otherwise                              = return msg
 
 -- | Divide the lines' indent by two
+{-
 reduceIndent :: OutputFilter
 reduceIndent _ msg = return $ map redLine msg
     where
         redLine (' ':' ':xs)        = ' ':redLine xs
         redLine xs                  = xs
+-}
