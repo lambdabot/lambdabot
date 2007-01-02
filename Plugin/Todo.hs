@@ -6,7 +6,7 @@
 module Plugin.Todo (theModule) where
 
 import Plugin
-import qualified Message (nick, nName)
+import Message (Message, nick, packNick, unpackNick, showNick)
 import qualified Data.ByteString.Char8 as P
 
 PLUGIN Todo
@@ -29,29 +29,29 @@ instance Module TodoModule TodoState where
     process _ msg _ cmd rest = do
        todoList <- readMS
        case cmd of
-           "todo"        -> getTodo todoList rest
+           "todo"        -> getTodo msg todoList rest
            "todo-add"    -> addTodo sender rest
            "todo-delete" -> delTodo rest
 
-        where sender = Message.nName $ Message.nick msg
+        where sender = Message.packNick $ Message.nick msg
 
 -- | Print todo list
-getTodo :: TodoState -> String -> ModuleLB TodoState
-getTodo todoList [] = return [formatTodo todoList]
-getTodo _ _         = error "@todo has no args, try @todo-add or @list todo"
+getTodo :: Message.Message m => m -> TodoState -> String -> ModuleLB TodoState
+getTodo msg todoList [] = return [formatTodo msg todoList]
+getTodo _ _ _           = error "@todo has no args, try @todo-add or @list todo"
  
 -- | Pretty print todo list
-formatTodo :: [(P.ByteString, P.ByteString)] -> String
-formatTodo [] = "Nothing to do!"
-formatTodo todoList =
-    unlines $ map (\(n::Int, (idea, nick)) -> concat $ 
-            [ show n,". ",P.unpack nick,": ",P.unpack idea ]) $
+formatTodo :: Message.Message m => m -> [(P.ByteString, P.ByteString)] -> String
+formatTodo _ [] = "Nothing to do!"
+formatTodo msg todoList =
+    unlines $ map (\(n::Int, (idea, nick_)) -> concat $ 
+            [ show n,". ",showNick msg $ unpackNick nick_,": ",P.unpack idea ]) $
                 zip [0..] todoList 
 
 -- | Add new entry to list
-addTodo :: String -> String -> ModuleLB TodoState
+addTodo :: P.ByteString -> String -> ModuleLB TodoState
 addTodo sender rest = do 
-    modifyMS (++[(P.pack rest, P.pack sender)])
+    modifyMS (++[(P.pack rest, sender)])
     return ["Entry added to the todo list"]
 
 -- | Delete an entry from the list
