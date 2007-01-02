@@ -514,8 +514,14 @@ rafb
 http://rafb.net/paste
 ranged-sets
 http://sourceforge.net/projects/ranged-sets/
+regex-dfa
+http://darcs.haskell.org/packages/regex-dfa/
+regex-parsec
+http://darcs.haskell.org/packages/regex-parsec/
 regex-pcre
 http://darcs.haskell.org/packages/regex-pcre/
+regex-tre
+http://darcs.haskell.org/packages/regex-tre/
 report
 http://www.haskell.org/onlinereport/
 riot
