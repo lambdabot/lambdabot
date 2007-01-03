@@ -6,7 +6,7 @@
 -- Simplifies import lists, and abstracts over common patterns
 --
 module Plugin (
-        ios, list, ios80,
+        ios, box, list, ios80,
 
         module Lambdabot,
         module LBState,
@@ -56,6 +56,9 @@ ios  = list . io
 
 list :: (Functor m, Monad m) => m a -> m [a]
 list = (return `fmap`)
+
+box :: (Functor m, Monad m) => a -> m [a]
+box = return . return
 
 -- | convenience, similar to ios but also cut output to channel to 80 characters
 -- usage:  @process _ _ to _ s = ios80 to (plugs s)@

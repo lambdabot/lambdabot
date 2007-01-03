@@ -118,7 +118,6 @@ search key pat db
         box $ "No quotes for this person. " ++ r
 
   where
-    box       = return . (:[])
     mquotes   = M.lookup key db
     allquotes = concat [ zip (repeat who) qs | (who, qs) <- M.assocs db ]
     random    = randomElem

@@ -25,6 +25,7 @@ module Lib.Serial (
         mapPackedSerial, assocListPackedSerial, mapListPackedSerial,
         readM, Packable(..), {- instances of Packable -}
         packedListSerial,
+        readOnly
     ) where
 
 import Data.Maybe               (mapMaybe)
@@ -44,6 +45,12 @@ data Serial s = Serial {
         serialize   :: s -> Maybe ByteString,
         deserialize :: ByteString -> Maybe s
      }
+
+--
+-- read-only serialisation
+--
+readOnly :: (ByteString -> b) -> Serial b
+readOnly f = Serial (const Nothing) (Just . f)
 
 -- | Default `instance' for a Serial
 stdSerial :: (Show s, Read s) => Serial s
@@ -102,6 +109,7 @@ instance Packable (Map ByteString [ByteString]) where
 
         showPacked m = P.unlines . concatMap (\(k,vs) -> k : vs ++ [P.empty]) $ M.toList m
 
+-- assumes single line second strings
 instance Packable (Map ByteString ByteString) where
         readPacked ps = M.fromList (readKV (P.lines ps))
                 where
