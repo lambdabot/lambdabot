@@ -150,9 +150,8 @@ instance Module SeenModule SeenState where
     process _ msg chan "users" rest = do
          (m, seenFM) <- readMS
          s <- io getClockTime
-         let target' = if null rest then G.showNick msg chan else rest
-             target = lowerCaseString target'
-             who = P.pack target
+         let target' = if null rest then chan else G.readNick msg rest
+             who = G.packNick target
              now = length [ () | (_,Present _ chans) <- M.toList seenFM
                                , who `elem` chans ]
 
