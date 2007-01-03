@@ -23,4 +23,4 @@ else
 fi
 
 # run ghci with the right command line flags to launch lambdabot
-ghci -Wall -fglasgow-exts -I. -pgmF $BotPP -F -fno-warn-incomplete-patterns -fno-warn-missing-methods -fno-warn-orphans -DGHCi -hidir $Odir -odir $Odir $*
+ghci -cpp -Wall -fglasgow-exts -I. -pgmF $BotPP -F -fno-warn-incomplete-patterns -fno-warn-missing-methods -fno-warn-orphans -DGHCi -hidir $Odir -odir $Odir $*
