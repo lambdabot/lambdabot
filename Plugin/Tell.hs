@@ -219,6 +219,6 @@ doRemind msg sender = do
                      if length msgs > 1
                        then ("messages", "them") else ("message", "it")
                in [printf "%s: You have %d new %s. '/msg %s @messages' to read %s."
-                          (showNick msg sender) (length msgs) messages (showNick msg $ name config) pronoun
+                          (showNick msg sender) (length msgs) messages (showNick msg $ lambdabotName msg) pronoun
                    :: String]
              Nothing -> []

@@ -112,7 +112,7 @@ doJOIN msg
 
 doPART :: Callback
 doPART msg
-  = when (name config == nick msg) $ do  
+  = when (lambdabotName msg == nick msg) $ do  
         let loc = Nick (server msg) (head (body msg))
         s <- get
         put (s { ircChannels = M.delete (mkCN loc) (ircChannels s) })
