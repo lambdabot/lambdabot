@@ -19,15 +19,15 @@ instance Module FigletModule () where
 
     process_ _ "figlet" s = do
         let usage = ["usage: figlet <text>."]
-       	case words s of
-	  [] -> return usage
+        case words s of
+          [] -> return usage
           t -> io (figlet (unwords t) Nothing)
 
     process_ _ "figlet'" s = do
         let usage = ["usage: figlet' <font> <text>."]
-	case words s of
+        case words s of
           (f:t@(_:_)) -> io (figlet (unwords t) (Just f))
-	  _ -> return usage
+          _ -> return usage
 
 -- | Lookup table for documentation
 help :: [(String, String)]
@@ -41,7 +41,7 @@ figletBinary = "/usr/local/bin/figlet"
 -- | Run the actual figlet command and clean output
 figlet :: String -> Maybe String -> IO [String]
 figlet s f = do
-        let args = ["-w", "70"		-- Limit width to 70 characters
+        let args = ["-w", "70"          -- Limit width to 70 characters
                    ,"-f", fromMaybe "standard" f
                    ,s]
         (out,_,_) <- popen figletBinary args Nothing
