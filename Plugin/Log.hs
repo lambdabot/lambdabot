@@ -44,7 +44,7 @@ theModule :: MODULE
 theModule = MODULE $ LogModule ()
 
 instance Show Event where
-    show (Said nick ct what)       = timeStamp ct ++ " <" ++ show nick ++ "> " ++ what
+    show (Said nick ct what)       = timeStamp ct ++ " <" ++ Msg.nName nick ++ "> " ++ what
     show (Joined nick user ct)     = timeStamp ct ++ " " ++ show nick
                                      ++ " (" ++ user ++ ") joined."
     show (Parted nick user ct)     = timeStamp ct ++ " " ++ show nick

@@ -575,7 +575,7 @@ ircSignOn nick ircname = do
                        readFile "State/passwd")
     case readM mpasswd of
       Nothing     -> return ()
-      Just passwd -> ircPrivmsg (Msg.Nick (Msg.nName nick) "nickserv") $ Just $ "identify " ++ passwd
+      Just passwd -> ircPrivmsg (Msg.Nick (Msg.nTag nick) "nickserv") $ Just $ "identify " ++ passwd
 
 ircGetChannels :: LB [Msg.Nick]
 ircGetChannels = (map getCN . M.keys) `fmap` gets ircChannels
