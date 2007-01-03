@@ -7,7 +7,7 @@ import Plugin
 
 import qualified Data.Map as M
 import qualified Data.ByteString.Char8 as P
-import Data.ByteString (ByteString)
+import Data.ByteString.Char8 (ByteString,pack)
 
 PLUGIN Haddock
 
@@ -18,13 +18,13 @@ instance Module HaddockModule HaddockState where
     moduleHelp    _ _ = "index <ident>. Returns the Haskell modules in which <ident> is defined"
     moduleDefState  _ = return M.empty
     moduleSerialize _ = Just (readOnly readPacked)
+    fprocess_ _ _ k = readMS >>= \m -> box $ maybe
+        (pack "bzzt")
+        (P.join (pack ", "))
+        (M.lookup (stripPs k) m)
 
-    process_ _ _ rest = do
-        assocs <- readMS
-        box $ maybe "bzzt" (concatWith ", " . (map P.unpack))
-                           (M.lookup (P.pack (stripParens rest)) assocs)
-
--- | make \@index ($) work.
-stripParens :: String -> String
-stripParens = reverse . dropWhile (==')') . reverse . dropWhile (=='(')
+        where
+          -- make \@index ($) work.
+          stripPs :: ByteString -> ByteString
+          stripPs = fst . P.spanEnd (==')') . snd . P.span (=='(')
 

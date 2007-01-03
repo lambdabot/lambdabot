@@ -21,6 +21,8 @@ module Lambdabot (
 
         send, send_,
         ircPrivmsg, ircPrivmsg', -- not generally used
+        ircPrivmsgF,
+
         ircQuit, ircReconnect,
         ircGetChannels,
         ircSignalConnect, Callback, ircInstallOutputFilter, OutputFilter,
@@ -63,6 +65,7 @@ import Data.Maybe               (isJust)
 import Data.Map (Map)
 import qualified Data.Map as M hiding (Map)
 import qualified Data.ByteString.Char8 as P
+import Data.ByteString (ByteString)
 
 import Control.Concurrent
 import Control.Exception
@@ -372,6 +375,12 @@ class Module m s | m -> s where
              -> String -> String            -- ^ command, args
              -> ModuleLB s                  -- ^ maybe output
 
+    -- A bytestring version
+    --
+    fprocess_ :: m                        -- ^ phantom
+              -> ByteString -> ByteString -- ^ command, args
+              -> ModuleF s                -- ^ maybe output
+
 ------------------------------------------------------------------------
 
     contextual _ _ _ _ = return []
@@ -385,12 +394,6 @@ class Module m s | m -> s where
     moduleSticky _     = False
     moduleSerialize _  = Nothing
     moduleDefState  _  = return $ error "state not initalized"
-
--- work around weird issue in 6.5, where the missing default fails
--- TODO check this is still the case.
-#if __GLASGOW_HASKELL__ >= 605
-    process _ _ _ _ _ = GHC.Err.noMethodBindingError "Lambdabot.process"#
-#endif
 
 -- | An existential type holding a module, used to represent modules on
 -- the value level, for manipluation at runtime by the dynamic linker.
@@ -428,6 +431,9 @@ bindModule2 act = bindModule1 (uncurry act) >>= return . curry
 
 -- | A nicer synonym for some ModuleT stuffs
 type ModuleLB s = ModuleT s LB [String]
+
+-- | And for packed output
+type ModuleF  s = ModuleT s LB [ByteString]
 
 -- ---------------------------------------------------------------------
 --
@@ -622,6 +628,19 @@ ircPrivmsg' :: String -> Maybe String -> LB ()
 ircPrivmsg' who (Just "")  = ircPrivmsg' who (Just " ")
 ircPrivmsg' who (Just msg) = send . Just $ IRC.privmsg who msg
 ircPrivmsg' _   Nothing    = send Nothing
+
+----------------------------------------------------------------------------------
+
+ircPrivmsgF :: String -> Maybe ByteString -> LB ()
+ircPrivmsgF who Nothing = ircPrivmsg' who Nothing
+ircPrivmsgF who (Just s)= ircPrivmsg' who (Just $ P.unpack s) -- TODO
+
+{-
+rawPrivmsgF :: String -> Maybe ByteString -> LB ()
+rawPrivmsgF _   Nothing  = send Nothing
+rawPrivmsgF who (Just s) | P.null s  = ircPrivmsg' who (Just " ")
+                         | otherwise = send . Just $ IRC.privmsgF who msg
+-}
 
 ------------------------------------------------------------------------
 -- Module handling

@@ -23,7 +23,7 @@ binary :: String
 binary = "./smallcheck"
 
 check :: String -> IO String
-check src = do case parseExpr (src ++ "\n") of
+check src = case parseExpr (src ++ "\n") of
     ParseFailed _ e -> return $ " " ++ e
     ParseOk     _   -> run binary src $ expandTab . dropWhile (=='\n') . dropNL . clean_
 

@@ -5,19 +5,19 @@ module Plugin.Base (theModule) where
 
 import Plugin
 
-import IRC (IrcMessage, timeReply, errShowMsg)
--- import Message (getTopic, nick, joinChannel, body, fullName, channels)
-import Message (getTopic, nick, joinChannel, body)
-
-import qualified Data.Map as M   (insert, delete)
-
+import Control.Concurrent.MVar
 import Control.Monad.State  (MonadState(..), when, gets)
 
 import GHC.IOBase           (Exception(NoMethodError))
-import qualified Text.Regex as R
 
-import Control.Concurrent.MVar
+import IRC (IrcMessage, timeReply, errShowMsg)
+import Message (getTopic, nick, joinChannel, body)
+
 import System.IO.Unsafe (unsafePerformIO)
+
+import qualified Data.Map as M   (insert, delete)
+import qualified Data.ByteString.Char8 as P
+import qualified Text.Regex as R
 
 -- valid command prefixes
 commands :: [String]
@@ -214,6 +214,9 @@ doPRIVMSG' myname msg
         where
             e = 3   -- edit distance cut off. Seems reasonable for small words
 
+            fcmd  = P.pack cmd      -- TODO
+            frest = P.pack rest
+
             docmd cmd' = do
               act <- bindModule0 . withPS towhere $ \_ _ -> do
                 withModule ircCommands cmd'   -- Important. 
@@ -227,18 +230,30 @@ doPRIVMSG' myname msg
                         if not ok
                           then lift $ ircPrivmsg towhere $ Just "Not enough privileges"
                           else catchIrc
+
                             (do mstrs <- catchError
-                                    (process m msg towhere cmd' rest)
-                                    (\ex -> case (ex :: IRCError) of -- dispatch
-                                                (IRCRaised (NoMethodError _)) ->
-                                                    process_ m cmd' rest
-                                                _ -> throwError ex)
-                                case filter (not. null) mstrs of
-                                    [] -> lift $ ircPrivmsg towhere Nothing
-                                    _  -> lift $ mapM_ (ircPrivmsg towhere . Just) mstrs)
+                                 (Right `fmap` fprocess_ m fcmd frest)
+                                 (\ex -> case (ex :: IRCError) of -- dispatch
+                                   (IRCRaised (NoMethodError _)) -> catchError
+                                        (Left `fmap` process m msg towhere cmd' rest)
+                                        (\ey -> case (ey :: IRCError) of -- dispatch
+                                            (IRCRaised (NoMethodError _)) ->
+                                                Left `fmap` process_ m cmd' rest
+                                            _ -> throwError ey)
+                                   _ -> throwError ex)
+
+                                -- send off our strings/bytestrings
+                                case mstrs of
+                                    Right ps -> case filter (not . P.null) ps of
+                                        [] -> lift $ ircPrivmsg towhere Nothing
+                                        _  -> lift $ mapM_ (ircPrivmsgF towhere . Just) ps
+
+                                    Left  ms -> case filter (not. null) ms of
+                                        [] -> lift $ ircPrivmsg towhere Nothing
+                                        _  -> lift $ mapM_ (ircPrivmsg towhere . Just) ms)
 
                             (lift . ircPrivmsg towhere . Just .
-                                ((name' ++ " module failed: ") ++) . show))
+                                (("Plugin `" ++ name' ++ "' failed with: ") ++) . show))
               lift $ forkLB act
     --
     -- contextual messages are all input that isn't an explicit command.

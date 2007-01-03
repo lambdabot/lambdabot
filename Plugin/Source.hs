@@ -7,7 +7,7 @@ module Plugin.Source (theModule) where
 import Plugin
 import qualified Data.Map as M
 import qualified Data.ByteString.Char8 as P
-import Data.ByteString.Char8 (ByteString)
+import Data.ByteString.Char8 (pack,ByteString)
 
 PLUGIN Source
 
@@ -25,10 +25,8 @@ instance Module SourceModule Env where
             splat []   = []
             splat s    = a : splat (tail b) where (a,b) = break P.null s
 
-    process_ _ _ t = do
-        env <- readMS
-        return $ case M.lookup key env of
-            _ | M.null env -> ["No source in the environment yet"]
-            Nothing        -> ["Source for this function is not available."]
-            Just s         -> [P.unpack s]
-        where key = P.pack t
+    fprocess_ _ _ key = readMS >>= \env -> box $ case M.lookup key env of
+        _ | M.null env -> pack "No source in the environment yet"
+        Nothing        -> pack "Source for this function is not available."
+        Just s         -> s
+
