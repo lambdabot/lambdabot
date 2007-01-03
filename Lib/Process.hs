@@ -4,7 +4,7 @@
 --
 -- | A Posix.popen compatibility mapping.
 --
-module Lib.Process (popen) where
+module Lib.Process (popen, run) where
 
 import System.Exit
 import System.IO
@@ -12,6 +12,17 @@ import System.Process
 import Control.Concurrent       (forkIO, newEmptyMVar, putMVar, takeMVar)
 
 import qualified Control.Exception
+
+run :: FilePath -> String -> (String -> String) -> IO String
+run binary src scrub = do
+    (out,err,_) <- popen binary [] (Just src)
+    let o = scrub out
+        e = scrub err
+    return $ case () of {_
+        | null o && null e -> "Done."
+        | null o           -> e
+        | otherwise        -> o
+    }
 
 --
 -- Ignoring exit status for now.

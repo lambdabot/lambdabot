@@ -15,26 +15,16 @@ import Plugin
 PLUGIN BF
 
 instance Module BFModule () where
-    moduleCmds   _ = ["bf"]
-    moduleHelp _ _ = "bf <expr>. Evaluate a bainf*ck expression"
+    moduleCmds   _     = ["bf"]
+    moduleHelp _ _     = "bf <expr>. Evaluate a bainf*ck expression"
     process _ _ to _ s = ios80 to (bf s)
 
 binary :: String
 binary = "./bf"
 
 bf :: String -> IO String
-bf src = do
-    (out,err,_) <- popen binary [] (Just src)
-    let o = scrub out
-        e = scrub err
-    return $ case () of {_
-        | null o && null e -> "Done."
-        | null o           -> e
-        | otherwise        -> o
-    }
-    where 
-    scrub = unlines . take 6 . map (' ':) . filter (not.null) 
-          . map cleanit . lines
+bf src = run binary src scrub
+  where scrub = unlines . take 6 . map (' ':) . filter (not.null) . map cleanit . lines
 
 --
 -- Clean up output

@@ -150,7 +150,6 @@ djinn env' src = do
 --
 clean_ :: String -> String
 clean_ s | Just (a,_,b,_) <- prompt `R.matchRegexAll` s = a ++ clean_ b
-        | otherwise      = s
-    where
-        prompt = regex' "Djinn>[^\n]*\n"
+         | otherwise      = s
+    where prompt = regex' "Djinn>[^\n]*\n"
 

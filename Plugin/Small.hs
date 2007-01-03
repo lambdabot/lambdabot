@@ -23,26 +23,10 @@ binary :: String
 binary = "./smallcheck"
 
 check :: String -> IO String
-check src = do
-    case parseExpr (src ++ "\n") of
-        ParseFailed _ e -> return $ " " ++ e
-        ParseOk     _   -> do
-            (out,err,_) <- popen binary [] (Just src)
-            let o = munge out
-                e = munge err
-            return $ case () of {_
-                | null o && null e -> "Terminated\n"
-                | null o           -> " " ++ e
-                | otherwise        -> " " ++ o
-            }
-            where munge = expandTab
-                        . dropWhile (=='\n')
-                        . dropNL
-                        . clean_
+check src = do case parseExpr (src ++ "\n") of
+    ParseFailed _ e -> return $ " " ++ e
+    ParseOk     _   -> run binary src $ expandTab . dropWhile (=='\n') . dropNL . clean_
 
---
--- Clean up runplugs' output
---
 clean_ :: String -> String
 clean_ s
     |  no_io      `matches'`    s = "No IO allowed\n"

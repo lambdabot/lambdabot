@@ -18,23 +18,10 @@ binary :: String
 binary = "./ft"
 
 ft :: String -> IO String
-ft src = do
-    (out,err,_) <- popen binary [] (Just src)
-    let o = scrub out
-        e = scrub err
-    return $ case () of {_
-        | null o && null e -> "Done."
-        | null o           -> e
-        | otherwise        -> o
-    }
-    where
-    scrub = unlines . map (' ':) . filter (not.null)
-          . map cleanit . lines
+ft src = run binary src $
+    unlines . map (' ':) . filter (not.null) . map cleanit . lines
 
---
--- Clean up output
---
 cleanit :: String -> String
-cleanit s | terminated `matches'`    s = "Terminated\n"
-          | otherwise                  = filter isAscii s
+cleanit s | terminated `matches'` s = "Terminated\n"
+          | otherwise               = filter isAscii s
     where terminated = regex' "waitForProc"

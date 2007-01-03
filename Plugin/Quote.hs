@@ -43,8 +43,8 @@ instance Module QuoteModule Quotes where
           "remember"      -> runRemember (dropSpace s)
           "quote"         -> runQuote    (dropSpace s)
           "ghc"           -> runQuote    ("ghc " ++ dropSpace s)
-          "fortune"       -> run (randFortune Nothing)
-          "yow"           -> run (randFortune (Just "zippy"))
+          "fortune"       -> runit (randFortune Nothing)
+          "yow"           -> runit (randFortune (Just "zippy"))
 
           "keal"          -> random kealList
           "b52s"          -> random b52s
@@ -63,8 +63,8 @@ instance Module QuoteModule Quotes where
           "yarr"          -> random yarrList
 
         where
-           run k = return `fmap` io k
-           random = run . randomElem
+           runit k = return `fmap` io k
+           random = runit . randomElem
 
 help :: String
 help = "quote <nick>\nremember <nick> <quote>\n" ++
