@@ -914,3 +914,15 @@ showsPrec _ x s = show x ++ s
 show
 show x = shows x ""
 
+stToIO
+stToIO (ST m) = IO m
+
+ioToST
+ioToST (IO m) = (ST m)
+
+unsafeIOToST
+unsafeIOToST (IO io) = ST $ \ s -> (unsafeCoerce# io) s
+
+unsafeSTToIO
+unsafeSTToIO (ST m) = IO (unsafeCoerce# m)
+
