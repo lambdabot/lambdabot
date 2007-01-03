@@ -25,7 +25,7 @@ module Lib.Serial (
         mapPackedSerial, assocListPackedSerial, mapListPackedSerial,
         readM, Packable(..), {- instances of Packable -}
         packedListSerial,
-        readOnly
+        readOnly, gzip, gunzip
     ) where
 
 import Data.Maybe               (mapMaybe)
@@ -48,6 +48,12 @@ data Serial s = Serial {
         serialize   :: s -> Maybe ByteString,
         deserialize :: ByteString -> Maybe s
      }
+
+gzip   :: ByteString -> ByteString
+gzip   = P.concat . toChunks . compress . fromChunks . (:[])
+
+gunzip :: ByteString -> ByteString
+gunzip = P.concat . toChunks . decompress .fromChunks . (:[])
 
 --
 -- read-only serialisation
@@ -102,11 +108,7 @@ class Packable t where
 -- | An instance for Map Packed [Packed]
 -- uses gzip compression
 instance Packable (Map ByteString [ByteString]) where
-        readPacked ps = M.fromList (readKV ( P.lines
-                                           . P.concat
-                                           . toChunks
-                                           . decompress
-                                           . fromChunks $ [ps]))
+        readPacked ps = M.fromList (readKV ( P.lines . gunzip $ ps))
              where
                 readKV :: [ByteString] -> [(ByteString,[ByteString])]
                 readKV []       =  []
@@ -114,34 +116,30 @@ instance Packable (Map ByteString [ByteString]) where
                                   in  (k,vs) : readKV (drop 1 rest')
 
 
-        showPacked m = P.concat
-                     . toChunks
-                     . compress
-                     . fromChunks
-                     . (:[])
+        showPacked m = gzip
                      . P.unlines
                      . concatMap (\(k,vs) -> k : vs ++ [P.empty]) $ M.toList m
 
 -- assumes single line second strings
 instance Packable (Map ByteString ByteString) where
-        readPacked ps = M.fromList (readKV (P.lines ps))
+        readPacked ps = M.fromList (readKV (P.lines . gunzip $ ps))
                 where
                   readKV :: [ByteString] -> [(ByteString,ByteString)]
                   readKV []         = []
                   readKV (k:v:rest) = (k,v) : readKV rest
                   readKV _      = error "Serial.readPacked: parse failed"
 
-        showPacked m  = P.unlines . concatMap (\(k,v) -> [k,v]) $ M.toList m
+        showPacked m  = gzip. P.unlines . concatMap (\(k,v) -> [k,v]) $ M.toList m
 
 instance Packable ([(ByteString,ByteString)]) where
-        readPacked ps = readKV (P.lines ps)
+        readPacked ps = readKV (P.lines . gunzip $ ps)
                 where
                   readKV :: [ByteString] -> [(ByteString,ByteString)]
                   readKV []         = []
                   readKV (k:v:rest) = (k,v) : readKV rest
                   readKV _          = error "Serial.readPacked: parse failed"
 
-        showPacked = P.unlines . concatMap (\(k,v) -> [k,v])
+        showPacked = gzip . P.unlines . concatMap (\(k,v) -> [k,v])
 
 instance Packable (M.Map P.ByteString (Bool, [(String, Int)])) where
     readPacked = M.fromList . readKV . P.lines
