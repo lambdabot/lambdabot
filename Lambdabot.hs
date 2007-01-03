@@ -631,7 +631,7 @@ ircPrivmsg' _   Nothing    = send Nothing
 
 ----------------------------------------------------------------------------------
 
-ircPrivmsgF :: String -> Maybe ByteString -> LB ()
+ircPrivmsgF :: Msg.Nick -> Maybe ByteString -> LB ()
 ircPrivmsgF who Nothing = ircPrivmsg' who Nothing
 ircPrivmsgF who (Just s)= ircPrivmsg' who (Just $ P.unpack s) -- TODO
 

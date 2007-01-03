@@ -5,9 +5,11 @@ module Plugin.Base (theModule) where
 
 import Plugin
 
+import Control.Concurrent.MVar
+
 import IRC (IrcMessage, timeReply, errShowMsg)
 -- import Message (getTopic, nick, joinChannel, body, fullName, channels)
-import Message (getTopic, nick, joinChannel, body)
+import Message (getTopic, nick, joinChannel, server, body, Nick(..), lambdabotName, showNick, readNick)
 
 import qualified Data.Map as M   (insert, delete)
 
@@ -15,12 +17,8 @@ import Control.Monad.State  (MonadState(..), when, gets)
 
 import GHC.IOBase           (Exception(NoMethodError))
 
-import IRC (IrcMessage, timeReply, errShowMsg)
-import Message (getTopic, nick, joinChannel, body)
-
 import System.IO.Unsafe (unsafePerformIO)
 
-import qualified Data.Map as M   (insert, delete)
 import qualified Data.ByteString.Char8 as P
 import qualified Text.Regex as R
 
