@@ -763,3 +763,154 @@ forkIO action = IO $ \ s -> case (fork# action_plus s) of (# s1, id #) -> (# s1,
 killThread
 killThread tid = throwTo tid (AsyncException ThreadKilled)
 
+STArray
+data STArray s i e = STArray !i !i (MutableArray# s e)
+
+(!)
+arr@(Array l u _) ! i = unsafeAt arr (index (l,u) i)
+
+bounds
+bounds (Array l u _) = (l,u)
+
+indices
+indices (Array l u _) = range (l,u)
+
+elems
+elems arr@(Array l u _) = [unsafeAt arr i | i <- [0 .. rangeSize (l,u) - 1]]
+
+assocs
+assocs arr@(Array l u _) = [(i, unsafeAt arr (unsafeIndex (l,u) i)) | i <- range (l,u)]
+
+(//)
+arr@(Array l u _) // ies = unsafeReplace arr [(index (l,u) i, e) | (i, e) <- ies]
+
+undefined
+undefined =  error "Prelude.undefined"
+
+error
+error s = throw (ErrorCall s)
+
+catch
+catch m k = catchException m handler
+    where handler (IOException err) = k err
+
+evaluate
+evaluate a = IO $ \s -> case a `seq` () of () -> (# s, a #)
+
+Float
+data Float = F# Float#
+
+Double
+data Double = D# Double#
+
+ForeignPtr
+data ForeignPtr a = ForeignPtr Addr# ForeignPtrContents
+
+data ForeignPtrContents = PlainForeignPtr !(IORef [IO ()])
+                        | MallocPtr (MutableByteArray# RealWorld) !(IORef [IO ()])
+                        | PlainPtr  (MutableByteArray# RealWorld)
+
+Int16
+data Int16 = I16# Int#
+
+Int32
+data Int32 = I32# Int32#
+
+Int64
+data Int64 = I64# Int64#
+
+Integer
+data Integer = S# Int#
+             | J# Int# ByteArray#
+
+(-)
+x - y = x + negate y
+
+negate
+negate x = 0 - x
+
+subtract
+subtract x y = y - x
+
+Ptr
+data Ptr a = Ptr Addr#
+
+nullPtr
+nullPtr = Ptr nullAddr#
+
+castPtr
+castPtr (Ptr addr) = Ptr addr
+
+plusPtr
+plusPtr (Ptr addr) (I# d) = Ptr (plusAddr# addr d)
+
+minusPtr
+minusPtr (Ptr a1) (Ptr a2) = I# (minusAddr# a1 a2)
+
+Ratio
+data (Integral a) => Ratio a = !a :% !a
+
+Rational
+type Rational = Ratio Integer
+
+reduce
+reduce _ 0 = undefined
+reduce x y = (x `quot` d) :% (y `quot` d)
+    where d = gcd x y
+
+(%)
+x % y = reduce (x * signum y) (abs y)
+
+numerator
+numerator   (x :% _)    =  x
+
+denominator
+denominator (_ :% y)    =  y
+
+fromIntegral
+fromIntegral = fromInteger . toInteger
+
+realToFrac
+realToFrac = fromRational . toRational
+
+even
+even n = n `rem` 2 == 0
+
+odd
+odd = not . even
+
+(^^)
+x ^^ n      =  if n >= 0 then x^n else recip (x^(negate n))
+
+gcd
+gcd 0 0 = error "Prelude.gcd: gcd 0 0 is undefined"
+gcd x y = gcd' (abs x) (abs y)
+   where gcd' a 0  =  a
+         gcd' a b  =  gcd' b (a `rem` b)
+
+lcm
+lcm _ 0     =  0
+lcm 0 _     =  0
+lcm x y     =  abs ((x `quot` (gcd x y)) * y)
+
+ST
+newtype ST s a = ST (STRep s a)
+
+STRep
+type STRep s a = State# s -> (# State# s, a #)
+
+runST
+runST st = runSTRep (case st of { ST st_rep -> st_rep })
+
+runSTRep
+runSTRep st_rep = case st_rep realWorld# of (# _, r #) -> r
+
+ShowS
+type ShowS = String -> String
+
+showsPrec
+showsPrec _ x s = show x ++ s
+
+show
+show x = shows x ""
+
