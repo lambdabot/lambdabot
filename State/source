@@ -926,3 +926,22 @@ unsafeIOToST (IO io) = ST $ \ s -> (unsafeCoerce# io) s
 unsafeSTToIO
 unsafeSTToIO (ST m) = IO (unsafeCoerce# m)
 
+scanl
+scanl f q ls = q : case ls of
+    []   -> []
+    x:xs -> scanl f (f q x) xs
+
+scanl1
+scanl1 f (x:xs) =  scanl f x xs
+scanl1 _ []     =  []
+
+foldr1
+foldr1 _ [x]    = x
+foldr1 f (x:xs) = f x (foldr1 f xs)
+foldr1 _ []     = undefined
+
+scanr1
+scanr1 f []     = []
+scanr1 f [x]    = [x]
+scanr1 f (x:xs) = f x q : qs where qs@(q:_) = scanr1 f xs 
+
