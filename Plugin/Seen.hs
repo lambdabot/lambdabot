@@ -226,12 +226,12 @@ getAnswer msg rest seenFM now
            recent t = normalizeTimeDiff (diffClockTimes now t) < gap_minutes
            gap_minutes = TimeDiff 0 0 0 0 15 0 0
        in ["Lately, I have seen " ++ (if null people then "nobody"
-               else listToStr "and" (map P.unpack people)) ++ "."]
+               else listToStr "and" (map upAndShow people)) ++ "."]
 
   | pnick == G.lambdabotName msg =
         case M.lookup (G.packNick pnick) seenFM of
             Just (Present _ cs) ->
-                ["Yes, I'm here. I'm in " ++ listToStr "and" (map P.unpack cs)]
+                ["Yes, I'm here. I'm in " ++ listToStr "and" (map upAndShow cs)]
             _ -> error "I'm here, but not here. And very confused!"
 
   | head (G.nName pnick) == '#' =
@@ -242,13 +242,13 @@ getAnswer msg rest seenFM now
                _ -> False
        in ["In "++nick'++" I can see "
             ++ (if null people then "nobody"    -- todo, how far back does this go?
-               else listToStr "and" (map (G.showNick msg . G.unpackNick) people)) ++ "."]
+               else listToStr "and" (map upAndShow people)) ++ "."]
 
   | otherwise        = case M.lookup (G.packNick pnick) seenFM of
       Just (Present mct cs)            -> nickPresent mct (map upAndShow cs)
       Just (NotPresent ct td chans)    -> nickNotPresent ct td (map upAndShow chans)
       Just (WasPresent ct sw _ chans)  -> nickWasPresent ct sw (map upAndShow chans)
-      Just (NewNick newnick)           -> nickIsNew (upAndShow newnick)
+      Just (NewNick newnick)           -> nickIsNew newnick
       _ -> ircMessage ["I haven't seen ", nick, "."]
   where
     -- I guess the only way out of this spagetty hell are printf-style responses.
@@ -281,7 +281,7 @@ getAnswer msg rest seenFM now
             Just _               -> pstr
             Nothing              -> error "SeenModule.nickIsNew: Nothing"
 
-        us = P.unpack $ findFunc (P.pack $ lowerCaseString newnick)
+        us = upAndShow $ findFunc newnick
 
     ircMessage = return . concat
     nick' = firstWord rest
@@ -354,12 +354,12 @@ quitCB _ fm ct nick = case M.lookup nick fm of
 -- | when somebody changes his\/her name
 nickCB :: G.Message a => a -> SeenMap -> ClockTime -> Nick -> Either String SeenMap
 nickCB msg fm _ nick = case M.lookup nick fm of
-   Just status -> let fm' = M.insert nick (NewNick $ P.pack newnick) fm
+   Just status -> let fm' = M.insert nick (NewNick lcnewnick) fm
                   in  Right $ M.insert lcnewnick status fm'
    _           -> Left "someone who isn't here changed nick"
    where
    newnick = drop 1 $ head (G.body msg)
-   lcnewnick = P.pack $ lowerCaseString newnick
+   lcnewnick = G.packNick $ G.readNick msg newnick
 
 -- use IRC.IRC.channels?
 -- | when the bot join a channel
@@ -368,8 +368,8 @@ joinChanCB msg fm now _nick
     = Right $ fmap (updateNP now chan) $ foldl insertNick fm chanUsers
   where
     l = G.body msg
-    chan = P.pack $ lowerCaseString $ l !! 2
-    chanUsers = map P.pack $ words (drop 1 (l !! 3)) -- remove ':'
+    chan = G.packNick $ G.readNick msg $ lowerCaseString $ l !! 2
+    chanUsers = map (G.packNick . G.readNick msg) $ words (drop 1 (l !! 3)) -- remove ':'
     insertNick fm' u = insertUpd (updateJ (Just now) [chan])
                                     (P.pack . lowerCaseString . P.unpack . G.packNick . unUserMode . G.unpackNick $ u)
                                     (Present Nothing [chan])
