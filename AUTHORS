@@ -31,7 +31,7 @@ Don Stewart <dons@cse.unsw.edu.au> aka dons on #haskell
     * New build system, 6.4 port
     * dynamic module loading with hs-plugins
     * Simplfied module interface
-    * @babel, @plugs, @version, @code, @spell, @djinn, @unlambda, @hylo, @freshname, @ft
+    * @babel, @plugs, @version, @code, @spell, @djinn, @unlambda, @hylo, @freshname, @ft, @src
     * Offline mode
     * General hacking
     * Cabalised build system
