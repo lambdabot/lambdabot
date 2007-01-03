@@ -75,7 +75,8 @@ readNick :: Message a => a -> String -> Nick
 readNick msg str = upckStr (server msg) str
 
 instance Show Nick where
-    show = show . pckStr
+    show x | nTag x == "fn" = show $ nName x
+           | otherwise      = show $ pckStr x
 
 instance Read Nick where
     readsPrec prec str = map (first (upckStr "fn")) (readsPrec prec str)
