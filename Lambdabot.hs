@@ -725,7 +725,7 @@ mlines = (mbreak =<<) . lines
 -- | Don't send any output to alleged bots.
 checkRecip :: OutputFilter
 checkRecip who msg
-    | who == Msg.lambdabotName msg                       = return []
+    | who == Config.name Config.config                   = return []
     | "bot" `isSuffixOf` lowerCaseString (Msg.nName who) = return []
     | otherwise                                          = return msg
 

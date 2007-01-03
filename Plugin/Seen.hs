@@ -150,12 +150,11 @@ instance Module SeenModule SeenState where
     process _ msg chan "users" rest = do
          (m, seenFM) <- readMS
          s <- io getClockTime
-         let target' = if null rest then chan else G.readNick msg rest
-             who = G.packNick target
+         let who = G.packNick $ if null rest then chan else G.readNick msg rest
              now = length [ () | (_,Present _ chans) <- M.toList seenFM
                                , who `elem` chans ]
 
-             n = case M.lookup target m of Nothing -> 1; Just n' -> n'
+             n = case M.lookup (P.unpack who) m of Nothing -> 1; Just n' -> n'
 
              active = length [() | (_,st@(Present _ chans)) <- M.toList seenFM
                                  , who `elem` chans && isActive st ]
@@ -168,7 +167,7 @@ instance Module SeenModule SeenState where
 
          return $!
            [concat
-              [ "Maximum users seen in ", target, ": "
+              [ "Maximum users seen in ", G.showNick msg $ G.unpackNick who, ": "
               , show n
               , ", currently: ", show now
               , printf " (%0.1f%%)" (100 * (fromIntegral now    / fromIntegral n) :: Double)
