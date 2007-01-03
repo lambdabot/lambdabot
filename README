@@ -9,8 +9,11 @@ BUILDING:
 
 You'll need GHC >= 6.4
 
-Build the Data.ByteString library at http://www.cse.unsw.edu.au/~dons,
-version 0.7 and later are ok.
+If you're *not* using ghc 6.6, build the Data.ByteString library at
+http://www.cse.unsw.edu.au/~dons, version 0.7 and later are ok.
+
+You need the zlib library:
+    darcs get http://haskell.org/~duncan/zlib
 
 Build with cabal (simple)
     $ vi Config.hs

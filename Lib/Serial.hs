@@ -35,6 +35,9 @@ import qualified Data.Map as M
 
 import qualified Data.ByteString.Char8 as P
 import Data.ByteString.Char8 (ByteString)
+import Data.ByteString.Lazy (fromChunks,toChunks)
+
+import Codec.Compression.GZip
 
 ------------------------------------------------------------------------
 
@@ -97,17 +100,27 @@ class Packable t where
         showPacked :: t -> ByteString
 
 -- | An instance for Map Packed [Packed]
+-- uses gzip compression
 instance Packable (Map ByteString [ByteString]) where
-        readPacked ps = M.fromList (readKV (P.lines ps))
-                where
+        readPacked ps = M.fromList (readKV ( P.lines
+                                           . P.concat
+                                           . toChunks
+                                           . decompress
+                                           . fromChunks $ [ps]))
+             where
                 readKV :: [ByteString] -> [(ByteString,[ByteString])]
                 readKV []       =  []
-                readKV (k:rest) = 
-                        let (vs, rest') = break (== P.empty) rest
-                        in  (k,vs) : readKV (drop 1 rest')
+                readKV (k:rest) = let (vs, rest') = break (== P.empty) rest
+                                  in  (k,vs) : readKV (drop 1 rest')
 
 
-        showPacked m = P.unlines . concatMap (\(k,vs) -> k : vs ++ [P.empty]) $ M.toList m
+        showPacked m = P.concat
+                     . toChunks
+                     . compress
+                     . fromChunks
+                     . (:[])
+                     . P.unlines
+                     . concatMap (\(k,vs) -> k : vs ++ [P.empty]) $ M.toList m
 
 -- assumes single line second strings
 instance Packable (Map ByteString ByteString) where
