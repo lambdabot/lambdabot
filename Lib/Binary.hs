@@ -23,7 +23,7 @@ module Lib.Binary ( Binary(..), openBinIO_, putByte, getWord8 ) where
 
 import Data.Char        (ord, chr)
 import Foreign          (Int32, Int64, Word8, Word32, Word64
-	                    ,Bits(shiftR, shiftL, (.|.), (.&.)))
+                            ,Bits(shiftR, shiftL, (.|.), (.&.)))
 import System.IO as IO  (Handle, hPutChar, hGetChar)
 
 import GHC.IOBase       (IO(..))
@@ -58,7 +58,7 @@ openBinIO h _mod = do
 putWord8 :: BinHandle -> Word8 -> IO ()
 putWord8 (BinIO ix_r h) w = do
     ix <- readFastMutInt ix_r
-    hPutChar h (chr (fromIntegral w))	-- XXX not really correct
+    hPutChar h (chr (fromIntegral w))   -- XXX not really correct
     writeFastMutInt ix_r (ix+1)
     return ()
 
@@ -67,7 +67,7 @@ getWord8 (BinIO ix_r h) = do
     ix <- readFastMutInt ix_r
     c <- hGetChar h
     writeFastMutInt ix_r (ix+1)
-    return $! (fromIntegral (ord c))	-- XXX not really correct
+    return $! (fromIntegral (ord c))    -- XXX not really correct
 
 getByte :: BinHandle -> IO Word8
 getByte = getWord8
@@ -95,9 +95,9 @@ instance Binary Word32 where
     w3 <- getWord8 h
     w4 <- getWord8 h
     return $! ((fromIntegral w1 `shiftL` 24) .|. 
-	       (fromIntegral w2 `shiftL` 16) .|. 
-	       (fromIntegral w3 `shiftL`  8) .|. 
-	       (fromIntegral w4))
+               (fromIntegral w2 `shiftL` 16) .|. 
+               (fromIntegral w3 `shiftL`  8) .|. 
+               (fromIntegral w4))
 
 instance Binary Word64 where
   put_ h w = do
@@ -119,13 +119,13 @@ instance Binary Word64 where
     w7 <- getWord8 h
     w8 <- getWord8 h
     return $! ((fromIntegral w1 `shiftL` 56) .|. 
-	       (fromIntegral w2 `shiftL` 48) .|. 
-	       (fromIntegral w3 `shiftL` 40) .|. 
-	       (fromIntegral w4 `shiftL` 32) .|. 
-	       (fromIntegral w5 `shiftL` 24) .|. 
-	       (fromIntegral w6 `shiftL` 16) .|. 
-	       (fromIntegral w7 `shiftL`  8) .|. 
-	       (fromIntegral w8))
+               (fromIntegral w2 `shiftL` 48) .|. 
+               (fromIntegral w3 `shiftL` 40) .|. 
+               (fromIntegral w4 `shiftL` 32) .|. 
+               (fromIntegral w5 `shiftL` 24) .|. 
+               (fromIntegral w6 `shiftL` 16) .|. 
+               (fromIntegral w7 `shiftL`  8) .|. 
+               (fromIntegral w8))
 
 instance Binary Int32 where
   put_ h w = put_ h (fromIntegral w :: Word32)
@@ -142,13 +142,13 @@ instance Binary Int where
 #if SIZEOF_HSINT == 4
     put_ bh i = put_ bh (fromIntegral i :: Int32)
     get  bh = do
-	x <- get bh
-	return $! (fromIntegral (x :: Int32))
+        x <- get bh
+        return $! (fromIntegral (x :: Int32))
 #elif SIZEOF_HSINT == 8
     put_ bh i = put_ bh (fromIntegral i :: Int64)
     get  bh = do
-	x <- get bh
-	return $! (fromIntegral (x :: Int64))
+        x <- get bh
+        return $! (fromIntegral (x :: Int64))
 #else
 #error "unsupported sizeof(HsInt)"
 #endif
@@ -157,39 +157,39 @@ instance Binary Int where
 instance Binary Integer where
     put_ bh (S# i#) = do putByte bh 0; put_ bh (I# i#)
     put_ bh (J# s# a#) = do
- 	putByte bh 1;
-	put_ bh (I# s#)
-	let sz# = sizeofByteArray# a#  -- in *bytes*
-	put_ bh (I# sz#)  -- in *bytes*
-	putByteArray bh a# sz#
+        putByte bh 1;
+        put_ bh (I# s#)
+        let sz# = sizeofByteArray# a#  -- in *bytes*
+        put_ bh (I# sz#)  -- in *bytes*
+        putByteArray bh a# sz#
    
     get bh = do 
-	b <- getByte bh
-	case b of
-	  0 -> do (I# i#) <- get bh
-		  return (S# i#)
-	  _ -> do (I# s#) <- get bh
-		  sz <- get bh
-		  (BA a#) <- getByteArray bh sz
-		  return (J# s# a#)
+        b <- getByte bh
+        case b of
+          0 -> do (I# i#) <- get bh
+                  return (S# i#)
+          _ -> do (I# s#) <- get bh
+                  sz <- get bh
+                  (BA a#) <- getByteArray bh sz
+                  return (J# s# a#)
 
 putByteArray :: BinHandle -> ByteArray# -> Int# -> IO ()
 putByteArray bh a s# = loop 0#
   where loop n# 
-	   | n# ==# s# = return ()
-	   | otherwise = do
-	   	putByte bh (indexByteArray a n#)
-		loop (n# +# 1#)
+           | n# ==# s# = return ()
+           | otherwise = do
+                putByte bh (indexByteArray a n#)
+                loop (n# +# 1#)
 
 getByteArray :: BinHandle -> Int -> IO ByteArray
 getByteArray bh (I# sz) = do
   (MBA arr) <- newByteArray sz 
   let loop n
-	   | n ==# sz = return ()
-	   | otherwise = do
-		w <- getByte bh 
-		writeByteArray arr n w
-		loop (n +# 1#)
+           | n ==# sz = return ()
+           | otherwise = do
+                w <- getByte bh 
+                writeByteArray arr n w
+                loop (n +# 1#)
   loop 0#
   freezeByteArray arr
 
@@ -224,12 +224,12 @@ instance (Binary a, Binary b) => Binary (a,b) where
 
 instance Binary a => Binary [a] where
     put_ bh l =
-	do put_ bh (length l)
-	   mapM (put_ bh) l
-	   return ()
+        do put_ bh (length l)
+           mapM (put_ bh) l
+           return ()
     get bh =
-	do len <- get bh
-	   mapM (\_ -> get bh) [1..(len::Int)]
+        do len <- get bh
+           mapM (\_ -> get bh) [1..(len::Int)]
 
 instance Binary a => Binary (Maybe a) where
     put_ bh Nothing  = putByte bh 0
