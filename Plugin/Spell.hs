@@ -12,11 +12,24 @@ import qualified Text.Regex as R
 
 PLUGIN Spell
 
-instance Module SpellModule () where
+instance Module SpellModule Bool where
     moduleCmds   _  = ["spell"]
+    modulePrivs  _  = ["nazi-on", "nazi-off"]
     moduleHelp _ _  = "spell <word>. Show spelling of word"
-    process_ _ _ [] = return ["No word to spell."]
-    process_ _ _ s  = (return . showClean . take 5) `fmap` liftIO (spell s)
+    process_ _ "spell" [] = return ["No word to spell."]
+    process_ _ "spell" s  = (return . showClean . take 5) `fmap` liftIO (spell s)
+    process_ _ "nazi-on"  _ = writeMS True >>
+                              return ["Spelling nazi engaged."]
+    process_ _ "nazi-off" _ = writeMS False >>
+                              return ["Spelling nazi disengaged."]
+
+    moduleDefState _ = return False
+
+    contextual _ _ _ txt      = do
+        alive <- readMS
+        if alive then liftIO $ spellingNazi txt
+                 else return []
+
 
 binary :: String
 binary = "aspell"
@@ -24,6 +37,18 @@ binary = "aspell"
 args :: [String]
 args = ["pipe"]
 
+--
+-- | Find the first misspelled word in the input line, and return plausible
+-- output.
+--
+spellingNazi :: String -> IO [String]
+spellingNazi lin = fmap (take 1 . concat) (mapM correct (words lin))
+    where correct word = do
+            var <- take 5 `fmap` spell word
+            return $ case (null var || any (equating' lowerCaseString word) var) of
+                       True  -> []
+                       False -> ["Did you mean " ++ listToStr "or" var ++ "?"]
+          equating' f x y = f x == f y
 --
 -- | Return a list of possible spellings for a word
 -- 'String' is a word to check the spelling of.
