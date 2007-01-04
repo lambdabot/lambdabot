@@ -198,7 +198,7 @@ appendEvent c e =
 openChannelFile :: Channel -> ClockTime -> Log Handle
 openChannelFile chan ct = 
     io $ createDirectoryIfMissing True dir >> openFile file AppendMode
-    where dir  = outputDir config </> "Log" </> host config </> show chan
+    where dir  = outputDir config </> "Log" </> Msg.nTag chan </> Msg.nName chan
           date = dateStamp ct
           file = dir </> (dateToString date) <.> "txt"
 
