@@ -8,7 +8,7 @@
 --
 module Lambdabot (
         MODULE(..), Module(..),
-        ModuleT, ModuleLB, Mode(..),
+        ModuleT, ModuleLB, ModuleUnit, Mode(..),
 
         IRCRState(..), IRCRWState(..), IRCError(..),
         module Msg,
@@ -434,6 +434,8 @@ type ModuleLB s = ModuleT s LB [String]
 
 -- | And for packed output
 type ModuleF  s = ModuleT s LB [ByteString]
+
+type ModuleUnit s = ModuleT s LB ()
 
 -- ---------------------------------------------------------------------
 --

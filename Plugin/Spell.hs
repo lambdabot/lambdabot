@@ -13,23 +13,30 @@ import qualified Text.Regex as R
 PLUGIN Spell
 
 instance Module SpellModule Bool where
-    moduleCmds   _  = ["spell"]
-    modulePrivs  _  = ["nazi-on", "nazi-off"]
-    moduleHelp _ _  = "spell <word>. Show spelling of word"
-    process_ _ "spell" [] = return ["No word to spell."]
-    process_ _ "spell" s  = (return . showClean . take 5) `fmap` liftIO (spell s)
-    process_ _ "nazi-on"  _ = writeMS True >>
-                              return ["Spelling nazi engaged."]
-    process_ _ "nazi-off" _ = writeMS False >>
-                              return ["Spelling nazi disengaged."]
-
+    moduleCmds   _   = ["spell", "spell-all"]
+    modulePrivs  _   = ["nazi-on", "nazi-off"]
+    moduleHelp _ _   = "spell <word>. Show spelling of word"
     moduleDefState _ = return False
+
+    process_ _ "spell" [] = box "No word to spell."
+    process_ _ "spell" s  = (return . showClean . take 5) `fmap` liftIO (spell s)
+
+    process_ _ "spell-all" [] = box "No phrase to spell."
+    process_ _ "spell-all" s  = liftIO (spellingNazi s)
+
+    process_ _ "nazi-on"  _ = on  >> box "Spelling nazi engaged."
+    process_ _ "nazi-off" _ = off >> box "Spelling nazi disengaged."
 
     contextual _ _ _ txt      = do
         alive <- readMS
         if alive then liftIO $ spellingNazi txt
                  else return []
 
+on :: ModuleUnit Bool
+on  = writeMS True
+
+off :: ModuleUnit Bool
+off = writeMS False
 
 binary :: String
 binary = "aspell"
@@ -45,9 +52,9 @@ spellingNazi :: String -> IO [String]
 spellingNazi lin = fmap (take 1 . concat) (mapM correct (words lin))
     where correct word = do
             var <- take 5 `fmap` spell word
-            return $ case (null var || any (equating' lowerCaseString word) var) of
-                       True  -> []
-                       False -> ["Did you mean " ++ listToStr "or" var ++ "?"]
+            return $ if null var || any (equating' lowerCaseString word) var
+                then []
+                else ["Did you mean " ++ listToStr "or" var ++ "?"]
           equating' f x y = f x == f y
 --
 -- | Return a list of possible spellings for a word
