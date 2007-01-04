@@ -105,7 +105,7 @@ doJOIN msg
        send_ $ getTopic loc -- initialize topic
    where (_, aloc) = breakOnGlue ":" (head (body msg))
          loc       = case aloc of 
-                        [] -> Nick "fn" "weird#" 
+                        [] -> Nick "freenode" "weird#" 
                         _  -> Nick (server msg) (tail aloc)
 
 doPART :: Callback

@@ -269,7 +269,7 @@ mainLoop mode loop = do
     chanw      <- io newChan
     syncR      <- io $ newMVar () -- used in offline to make threads synchronous
     syncW      <- io newEmptyMVar
-    threadr    <- io $ forkIO $ rloop threadmain "fn" chanr chanw hin syncR syncW
+    threadr    <- io $ forkIO $ rloop threadmain "freenode" chanr chanw hin syncR syncW
     threadw    <- io $ forkIO $ wloop threadmain chanw hout syncR syncW
 
     let chans = IRCRState {

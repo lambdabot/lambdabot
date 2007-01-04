@@ -53,7 +53,7 @@ data Config = Config {
 --
 config :: Config
 config = Config {
-        name            = Nick "fn" "lambdabot",
+        name            = nck "lambdabot",
         userinfo        = "Lambda_Robots:_100%_Loyal",
         host            = "irc.freenode.net",
         protocol        = Irc,
@@ -63,33 +63,33 @@ config = Config {
         textwidth       = 350,
         proxy           = Nothing, -- Just ("www-proxy",3128),
 
-        autojoin        = [Nick "fn" "#haskell"
-                          ,Nick "fn" "#haskell-blah"
-                          ,Nick "fn" "#haskell-overflow"
-                          ,Nick "fn" "#haskell.hac07"
-                     {-   ,Nick "fn" "#haskell.de"
-                          ,Nick "fn" "#haskell.es"
-                          ,Nick "fn" "#haskell.fi"
-                          ,Nick "fn" "#haskell.fr"
-                          ,Nick "fn" "#haskell.hr"
-                          ,Nick "fn" "#haskell.it"
-                          ,Nick "fn" "#haskell.jp"
-                          ,Nick "fn" "#haskell.no"
-                          ,Nick "fn" "#haskell.se" -}
-                          ,Nick "fn" "#gentoo-haskell"
-                          ,Nick "fn" "#gentoo-uy"
-                          ,Nick "fn" "#ghc"
-                          ,Nick "fn" "#darcs"
-                          ,Nick "fn" "#oasis"
-                          ,Nick "fn" "#perl6"
-                          ,Nick "fn" "#jtiger"
-                          ,Nick "fn" "#unicycling"
-                          ,Nick "fn" "#ScannedInAvian"],
+        autojoin        = [nck "#haskell"
+                          ,nck "#haskell-blah"
+                          ,nck "#haskell-overflow"
+                          ,nck "#haskell.hac07"
+                     {-   ,nck "#haskell.de"
+                          ,nck "#haskell.es"
+                          ,nck "#haskell.fi"
+                          ,nck "#haskell.fr"
+                          ,nck "#haskell.hr"
+                          ,nck "#haskell.it"
+                          ,nck "#haskell.jp"
+                          ,nck "#haskell.no"
+                          ,nck "#haskell.se" -}
+                          ,nck "#gentoo-haskell"
+                          ,nck "#gentoo-uy"
+                          ,nck "#ghc"
+                          ,nck "#darcs"
+                          ,nck "#oasis"
+                          ,nck "#perl6"
+                          ,nck "#jtiger"
+                          ,nck "#unicycling"
+                          ,nck "#ScannedInAvian"],
 
-        admins          = [
-                Nick "fn" "Pseudonym",    Nick "fn" "shapr",    Nick "fn" "vincenz",   Nick "fn" "Igloo",
-                Nick "fn" "Cale",         Nick "fn" "dons",     Nick "fn" "TheHunter", Nick "fn" "musasabi",
-                Nick "fn" "Lemmih",       Nick "fn" "sjanssen", Nick "fn" "sorear",    Nick "fn" "int-e"
+        admins          = map nck [
+                "Pseudonym",    "shapr",    "vincenz",   "Igloo",
+                "Cale",         "dons",     "TheHunter", "musasabi",
+                "Lemmih",       "sjanssen", "sorear",    "int-e"
 
         ],
 
@@ -105,3 +105,5 @@ config = Config {
         disabledCommands = ["listchans", "slap", "echo", "remember", "state"]
 
    }
+ where nck = Nick "freenode"
+

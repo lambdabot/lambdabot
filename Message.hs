@@ -75,11 +75,11 @@ readNick :: Message a => a -> String -> Nick
 readNick msg str = upckStr (server msg) str
 
 instance Show Nick where
-    show x | nTag x == "fn" = show $ nName x
-           | otherwise      = show $ pckStr x
+    show x | nTag x == "freenode" = show $ nName x
+           | otherwise            = show $ pckStr x
 
 instance Read Nick where
-    readsPrec prec str = map (first (upckStr "fn")) (readsPrec prec str)
+    readsPrec prec str = map (first (upckStr "freenode")) (readsPrec prec str)
 
 -- |Pack a nickname into a ByteString.  Note that the resulting strings are
 -- not optimally formatted for human consumtion.
@@ -88,6 +88,6 @@ packNick = P.pack . pckStr
 
 -- |Unpack a nickname packed by 'packNick'.
 unpackNick :: P.ByteString -> Nick
-unpackNick = upckStr "fn" . P.unpack
+unpackNick = upckStr "freenode" . P.unpack
 
 type Pipe a = Chan (Maybe a)

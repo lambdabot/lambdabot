@@ -190,7 +190,7 @@ instance Module SeenModule SeenState where
 
       -- This magically causes the 353 callback to be invoked :)
       -- FIXME when multiple servers exist
-      lift $ tryError $ send_ . G.names "fn" . map G.nName =<< ircGetChannels
+      lift $ tryError $ send_ . G.names "freenode" . map G.nName =<< ircGetChannels
 
       -- and suck in our state. We read directly from the handle, to avoid copying
       b <- io $ doesFileExist "State/seen"
