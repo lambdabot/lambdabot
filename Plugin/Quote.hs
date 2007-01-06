@@ -83,7 +83,7 @@ runRemember str
         let ss  = fromMaybe [] (M.lookup (P.pack nm) fm)
             fm' = M.insert (P.pack nm) (P.pack q : ss) fm
         writer fm'
-        return []
+        return ["Done memoising quote for `" ++ nm ++ "', if that is their real name..."]
     where
         (nm,rest) = break isSpace str
         q         = tail rest
