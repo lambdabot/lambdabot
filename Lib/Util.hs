@@ -40,7 +40,9 @@ module Lib.Util (
 
         isLeft, isRight, unEither,
 
-        io
+        io,
+
+        random, insult
     ) where
 
 import Data.List                (intersperse, isPrefixOf)
@@ -55,7 +57,7 @@ import Control.Concurrent       (MVar, newEmptyMVar, takeMVar, tryPutMVar, putMV
                                  forkIO, killThread, threadDelay)
 import Control.Exception        (bracket)
 
-import System.Random hiding (split)
+import System.Random hiding (split,random)
 
 import System.IO
 import qualified System.Time as T
@@ -238,6 +240,9 @@ stdGetRandItem = getStdRandom . getRandItem
 
 randomElem :: [a] -> IO a
 randomElem = stdGetRandItem
+
+random :: [a] -> IO a
+random = randomElem
 
 ------------------------------------------------------------------------
 
@@ -478,3 +483,39 @@ timeStamp ct = let cal = T.toUTCTime ct
                in (showWidth 2 $ T.ctHour cal) ++ ":" ++
                   (showWidth 2 $ T.ctMin cal)  ++ ":" ++
                   (showWidth 2 $ T.ctSec cal)
+
+
+
+--
+-- Amusing insults from OpenBSD sudo
+--
+insult :: [String]
+insult =
+   ["Just what do you think you're doing Dave?",
+    "It can only be attributed to human error.",
+    "That's something I cannot allow to happen.",
+    "My mind is going. I can feel it.",
+    "Sorry about this, I know it's a bit silly.",
+    "Take a stress pill and think things over.",
+    "This mission is too important for me to allow you to jeopardize it.",
+    "I feel much better now.",
+
+    "Wrong!  You cheating scum!",
+    "And you call yourself a Rocket Scientist!",
+    "Where did you learn to type?",
+    "Are you on drugs?",
+    "My pet ferret can type better than you!",
+    "You type like i drive.",
+    "Do you think like you type?",
+    "Your mind just hasn't been the same since the electro-shock, has it?",
+
+    "Maybe if you used more than just two fingers...",
+    "BOB says:  You seem to have forgotten your passwd, enter another!",
+    "stty: unknown mode: doofus",
+    "I can't hear you -- I'm using the scrambler.",
+    "The more you drive -- the dumber you get.",
+    "Listen, broccoli brains, I don't have time to listen to this trash.",
+    "I've seen penguins that can type better than that.",
+    "Have you considered trying to match wits with a rutabaga?",
+    "You speak an infinite deal of nothing"
+    ]

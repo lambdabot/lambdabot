@@ -55,11 +55,11 @@ instance Module VixenModule (Bool, String -> IO String) where
 ------------------------------------------------------------------------
 
 vixen :: (String -> WTree) -> String -> IO String
-vixen k key = P.unpack `fmap` random (k key)
+vixen k key = P.unpack `fmap` randomW (k key)
 
-random :: WTree -> IO P.ByteString
-random (Leaf a)  = return a
-random (Node ls) = randomElem ls >>= random
+randomW :: WTree -> IO P.ByteString
+randomW (Leaf a)  = return a
+randomW (Node ls) = randomElem ls >>= randomW
 
 mkResponses :: RChoice -> String -> WTree
 mkResponses choices them = (\((_,wtree):_) -> wtree) $

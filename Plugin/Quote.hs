@@ -46,25 +46,25 @@ instance Module QuoteModule Quotes where
           "fortune"       -> runit (randFortune Nothing)
           "yow"           -> runit (randFortune (Just "zippy"))
 
-          "keal"          -> random kealList
-          "b52s"          -> random b52s
-          "brain"         -> random brain
-          "palomer"       -> random palomer
-          "girl19"        -> random girl19
-          "protontorpedo" -> random protontorpedo
-          "v"             -> random notoriousV
+          "keal"          -> rand kealList
+          "b52s"          -> rand b52s
+          "brain"         -> rand brain
+          "palomer"       -> rand palomer
+          "girl19"        -> rand girl19
+          "protontorpedo" -> rand protontorpedo
+          "v"             -> rand notoriousV
           "yhjulwwiefzojcbxybbruweejw"
-                          -> random notoriousV
+                          -> rand notoriousV
 
           -- See, you've got to understand the subtle distinction in pirate
           -- talk between arr and yarr! arr is something you say as an
           -- afermative where as yarr! is more like a greeting. (Or something)
-          "arr"           -> random arrList
-          "yarr"          -> random yarrList
+          "arr"           -> rand arrList
+          "yarr"          -> rand yarrList
 
         where
            runit k = return `fmap` io k
-           random = runit . randomElem
+           rand = runit . randomElem
 
 help :: String
 help = "quote <nick>\nremember <nick> <quote>\n" ++
@@ -120,7 +120,6 @@ search key pat db
   where
     mquotes   = M.lookup key db
     allquotes = concat [ zip (repeat who) qs | (who, qs) <- M.assocs db ]
-    random    = randomElem
 
     match p ss = do
 #if __GLASGOW_HASKELL__ >= 606
@@ -142,37 +141,3 @@ search key pat db
     display k msg = (if P.null k then "  " else who ++ " says: ") ++ saying
           where saying = P.unpack msg
                 who    = P.unpack k
-
---
--- Amusing insults from OpenBSD sudo
---
-insult :: [String]
-insult =
-   ["Just what do you think you're doing Dave?",
-    "It can only be attributed to human error.",
-    "That's something I cannot allow to happen.",
-    "My mind is going. I can feel it.",
-    "Sorry about this, I know it's a bit silly.",
-    "Take a stress pill and think things over.",
-    "This mission is too important for me to allow you to jeopardize it.",
-    "I feel much better now.",
-
-    "Wrong!  You cheating scum!",
-    "And you call yourself a Rocket Scientist!",
-    "Where did you learn to type?",
-    "Are you on drugs?",
-    "My pet ferret can type better than you!",
-    "You type like i drive.",
-    "Do you think like you type?",
-    "Your mind just hasn't been the same since the electro-shock, has it?",
-
-    "Maybe if you used more than just two fingers...",
-    "BOB says:  You seem to have forgotten your passwd, enter another!",
-    "stty: unknown mode: doofus",
-    "I can't hear you -- I'm using the scrambler.",
-    "The more you drive -- the dumber you get.",
-    "Listen, broccoli brains, I don't have time to listen to this trash.",
-    "I've seen penguins that can type better than that.",
-    "Have you considered trying to match wits with a rutabaga?",
-    "You speak an infinite deal of nothing"
-    ]

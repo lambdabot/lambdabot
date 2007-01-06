@@ -5,6 +5,7 @@
 module Plugin.Source (theModule) where
 
 import Plugin
+import Lib.Util
 import qualified Data.Map as M
 import qualified Data.ByteString.Char8 as P
 import Data.ByteString.Char8 (pack,ByteString)
@@ -25,11 +26,11 @@ instance Module SourceModule Env where
             splat []   = []
             splat s    = a : splat (tail b) where (a,b) = break P.null s
 
-    fprocess_ _ _ key = readMS >>= \env -> box $ case M.lookup key env of
-        _ | M.null env -> pack "No source in the environment yet"
-        _ | P.null key -> pack help
-        Nothing        -> pack "Source for this function is not available."
-        Just s         -> s
+    fprocess_ _ _ key = readMS >>= \env -> case M.lookup key env of
+        _ | M.null env -> box $ pack "No source in the environment yet"
+        _ | P.null key -> box $ pack help
+        Nothing        -> box . P.pack . ("Source not found. " ++) =<< io (random insult)
+        Just s         -> box s
 
 help :: String
 help = "src <id>. Display the implementation of a standard function"
