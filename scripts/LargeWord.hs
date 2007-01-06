@@ -14,7 +14,7 @@
 --
 -----------------------------------------------------------------------------
 
-module LargeWord (Word128,Word192,Word256) where
+module LargeWord (Word128,Word192,Word256,Word1024,Word512,Word2048) where
 
 import Data.Word
 import Data.Bits
@@ -135,3 +135,4 @@ type Word224  = LargeKey Word32 Word192
 type Word256  = LargeKey Word64 Word192
 type Word512  = LargeKey Word256 Word256
 type Word1024 = LargeKey Word512 Word512
+type Word2048 = LargeKey Word1024 Word1024
