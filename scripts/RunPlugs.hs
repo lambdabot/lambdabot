@@ -53,7 +53,7 @@ controls = map ("Control." ++) ["Monad", "Monad.Cont", "Monad.State", "Monad.Wri
 -- Be very careful here. The semantics of what is safe and unsafe is a
 -- bit blurry. It depends on what GHC allows.
 --
-template = ["Language.Haskell.TH hiding (runIO,reify)"]
+template = [] -- ["Language.Haskell.TH hiding (runIO,reify)"]
 extras   = ["ShowQ","ShowFun","L","LargeWord"]
 
 main = do
