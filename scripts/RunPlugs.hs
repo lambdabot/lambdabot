@@ -54,7 +54,7 @@ controls = map ("Control." ++) ["Monad", "Monad.Cont", "Monad.State", "Monad.Wri
 -- bit blurry. It depends on what GHC allows.
 --
 template = ["Language.Haskell.TH hiding (runIO,reify)"]
-extras   = ["ShowQ","ShowFun","L"]
+extras   = ["ShowQ","ShowFun","L","LargeWord"]
 
 main = do
     setResourceLimit ResourceCPUTime (ResourceLimits rlimit rlimit)
