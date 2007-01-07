@@ -1,4 +1,4 @@
-lambdabot> babel provides: babel
+babel provides: babel
 base has no visible commands
 bf provides: bf
 check provides: check
@@ -6,11 +6,11 @@ compose provides: . compose
 dice provides: dice
 dict provides: dict dict-help all-dicts devils easton elements foldoc gazetteer hitchcock jargon lojban vera web1913 wn world02
 djinn provides: djinn djinn-add djinn-del djinn-env djinn-names djinn-clr djinn-ver
-drhylo provides: hylo
-dummy provides: eval id read show dummy get-shapr faq paste learn map shootout botsnack wiki oldwiki docs source fptools choose
+dummy provides: eval choose id read show dummy bug get-shapr faq paste learn map shootout botsnack wiki oldwiki docs source fptools
 elite provides: elite
 eval provides: run let undefine
 fact provides: fact fact-set fact-delete fact-cons fact-snoc fact-update
+figlet provides: figlet figlet'
 free provides: free
 fresh provides: freshname
 ft provides: ft
@@ -19,11 +19,11 @@ help provides: help
 hoogle provides: hoogle hoogle+
 instances provides: instances instances-importing
 karma provides: karma karma+ karma- karma-all
-lambda provides: lambda define get-definition definitions resume
 localtime provides: time localtime localtime-reply
 log has no visible commands
 more provides: more
 pl provides: pointless pl-resume pl
+pointful provides: pointful pointy repoint unpointless unpl unpf
 poll provides: poll-list poll-show poll-add choice-add vote poll-result poll-close poll-remove
 pretty provides: pretty
 quote provides: quote remember ghc fortune yow arr yarr keal b52s brain palomer girl19 v yhjulwwiefzojcbxybbruweejw protontorpedo
@@ -31,7 +31,8 @@ search provides: gwiki google wikipedia gsite
 seen provides: users seen
 slap provides: slap
 small provides: scheck
-spell provides: spell
+source provides: src
+spell provides: spell spell-all
 state has no visible commands
 system provides: echo list listchans listmodules uptime
 tell provides: tell ask messages messages? clear-messages
@@ -44,4 +45,3 @@ url provides: url-title tiny-url
 version provides: version
 vixen provides: vixen
 where provides: where url what where+
-lambdabot> 
