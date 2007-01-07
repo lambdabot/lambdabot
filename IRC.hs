@@ -8,17 +8,19 @@ module IRC ( online
 
 import IRCBase
 
-import Config (config, name, port, host, protocol, userinfo )
-import Lib.Util (timeout)
+import Lib.Util (timeout, io)
+import Lib.Serial (readM)
+
+import Message
 
 import Data.List (isPrefixOf)
 import Data.Char (isSpace)
 
 import Control.Concurrent
 import Control.Exception
-import Control.Monad.Trans ( MonadIO, liftIO )
+import Control.Monad.Error
 
-import System.IO (hGetLine, hFlush, hPutStr, hSetBuffering, BufferMode(NoBuffering), stdout)
+import System.IO (hGetLine, hFlush, hPutStr, hPutStrLn, hSetBuffering, BufferMode(NoBuffering), stdout, stderr, hClose)
 import System.Console.Readline  (readline, addHistory)
 
 import qualified Data.ByteString.Char8 as P
@@ -82,6 +84,19 @@ decodeMessage svr line =
           | otherwise  = decodeParams' (c:param) params cs
         decodeParams' param params (c:cs) = decodeParams' (c:param) params cs
 
+ircSignOn :: String -> Nick -> String -> LB ()
+ircSignOn svr nickn ircname = do
+    -- password support.
+    -- If plugin initialising was delayed till after we connected, we'd
+    -- be able to write a Passwd plugin.
+    send $ user (nTag nickn) (nName nickn) svr ircname
+    send $ setNick nickn
+    mpasswd <- liftIO (handleJust ioErrors (const (return "")) $
+                       readFile "State/passwd")
+    case readM mpasswd of
+      Nothing     -> return ()
+      Just passwd -> ircPrivmsg (Nick (nTag nickn) "nickserv") $ "identify " ++ passwd
+
 ------------------------------------------------------------------------
 --
 -- Lambdabot is mostly synchronous.  We have a main loop, which reads
@@ -90,22 +105,24 @@ decodeMessage svr line =
 -- We have a main loop which reads offline commands, and synchronously
 -- interprets them.
 
-online :: String -> (IrcMessage -> LB ()) -> IO (LB (), IrcMessage -> LB ())
-online tag recv = do
-  th <- myThreadId
-  let portnum  = PortNumber $ fromIntegral (Config.port Config.config)
-  sock <- connectTo (Config.host Config.config) portnum
-  hSetBuffering sock NoBuffering
+online :: String -> String -> PortID -> String -> String -> (IrcMessage -> LB ()) -> LB ()
+online tag host portnum nickn ui recv = do
+  sock <- io $ connectTo host portnum
+  io $ hSetBuffering sock NoBuffering
   -- Implements flood control: RFC 2813, section 5.8
-  sem1 <- newQSem 0
-  sem2 <- newQSem 5
-  forkIO $ sequence_ . repeat $ do
-                    waitQSem sem1
-                    threadDelay 2000000
-                    signalQSem sem2
-  let h = liftLB (handleIO th)
-  return (serverSignOn (protocol config) (name config) (userinfo config) >> readerLoop sock,
-          \m -> h (sendMsg sock sem1 sem2 m))
+  sem1 <- io $ newQSem 0
+  sem2 <- io $ newQSem 5
+  io $ forkIO $ sequence_ $ repeat $ do
+    waitQSem sem1
+    threadDelay 2000000
+    signalQSem sem2
+  catchError (addServer' tag $ sendMsg sock sem1 sem2)
+             (\err -> io (hClose sock) >> throwError err)
+  liftLB forkIO $ catchError (do ircSignOn host (Nick tag nickn) ui
+                                 readerLoop sock)
+                             (\e -> do io $ hPutStrLn stderr $ "irc[" ++ tag ++ "] error: " ++ show e
+                                       remServer tag)
+  return ()
     where
       readerLoop sock = do
          line <- liftIO $ hGetLine sock
@@ -116,21 +133,27 @@ online tag recv = do
                    return ()
          readerLoop sock
       pING = "PING "
-      sendMsg sock sem1 sem2 msg = liftIO $ do
-          waitQSem sem2
-          P.hPut sock $ P.pack $ IRC.encodeMessage msg "\r"
-          signalQSem sem1
+      sendMsg sock sem1 sem2 msg =
+          catchError (liftIO $ do waitQSem sem2
+                                  P.hPut sock $ P.pack $ IRC.encodeMessage msg "\r"
+                                  signalQSem sem1)
+                     (\err -> do io $ hPutStrLn stderr $ "irc[" ++ tag ++ "] error: " ++ show err
+                                 io $ hClose sock)
+                 
+                               
  
 -- 
 -- Offline reader and writer loops. A prompt with line editing
 -- Takes a string from stdin, wraps it as an irc message, and _blocks_
 -- waiting for the writer thread (to keep things in sync).
 --
-offline :: String -> (IrcMessage -> LB ()) -> IO (LB (), IrcMessage -> LB ())
+offline :: String -> (IrcMessage -> LB ()) -> LB ()
 offline tag recv = do
-  th <- myThreadId
-  let h = liftLB (handleIO th)
-  return (readerLoop, \m -> h (sendMsg m))
+  addServer' tag sendMsg
+  liftLB forkIO $ catchError readerLoop
+                             (\e -> do io $ hPutStrLn stderr $ "rl[" ++ tag ++ "] error: " ++ show e
+                                       remServer tag)
+  return ()
     where
       readerLoop = do
          line <- liftIO $ readline "lambdabot> "
@@ -166,15 +189,3 @@ offline tag recv = do
                                   (x:_) -> tail x
                       P.hPutStrLn stdout (P.pack str)
                       hFlush stdout
- 
--- Thread handler, just catch particular things we want to throw out to
--- the main thread, to force an exit. errorCalls are used by the
--- reader/writer loops to exit. ioErrors are probably sockets closing.
-handleIO :: ThreadId -> IO () -> IO ()
-handleIO th = handleJust
-    (\e -> case () of { _
-                | Just _ <- errorCalls e -> Just e
-                | Just _ <- ioErrors   e -> Just e
-                | otherwise              -> Nothing
-    }) (\e -> throwTo th (error (show e)))
-

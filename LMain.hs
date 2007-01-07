@@ -5,6 +5,9 @@ import Lambdabot
 import Message
 import IRC
 import IRCBase
+import Config
+import Control.Monad(when)
+import Network(PortID(PortNumber))
 
 import qualified Data.Map as M
 
@@ -28,16 +31,17 @@ main' dyn (loadStaticModules, pl) = do
 
 ------------------------------------------------------------------------
 
-onlineMain :: IO (LB (), IrcMessage -> LB ())
-onlineMain = online "freenode" received
+onlineMain :: LB ()
+onlineMain = online "freenode" (Config.host Config.config) (PortNumber $ fromIntegral $ Config.port Config.config)
+             (nName $ Config.name Config.config) (Config.userinfo Config.config) received
 
-offlineMain :: Bool -> IO (LB (), IrcMessage -> LB ())
-offlineMain cmdline = do (loop, sendf) <- offline "freenode" received
-                         return (modst >> loop, sendf)
-    where modst = modify (\st -> let privUsers  = ircPrivilegedUsers st
-                                     privUsers'| cmdline   = M.insert (Nick "freenode" "null") True privUsers
-                                               | otherwise = privUsers
-                                 in st { ircPrivilegedUsers = privUsers' })
+offlineMain :: Bool -> LB ()
+offlineMain cmdline = do 
+  when cmdline $ modify (\st -> let privUsers  = ircPrivilegedUsers st
+                                    privUsers'| cmdline   = M.insert (Nick "freenode" "null") True privUsers
+                                              | otherwise = privUsers
+                                in st { ircPrivilegedUsers = privUsers' })
+  offline "freenode" received
 
 ------------------------------------------------------------------------
 

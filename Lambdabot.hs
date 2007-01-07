@@ -19,7 +19,7 @@ module Lambdabot (
 
         getRef, getName, bindModule0, bindModule1, bindModule2,
 
-        send,
+        send, addServer, remServer, addServer',
         ircPrivmsg, ircPrivmsg', -- not generally used
         ircPrivmsgF,
 
@@ -27,7 +27,6 @@ module Lambdabot (
         ircGetChannels,
         ircSignalConnect, Callback, ircInstallOutputFilter, OutputFilter,
         ircInstallModule, ircUnloadModule,
-        serverSignOn,
         flushModuleState,
 
         ircLoad, ircUnload,
@@ -37,8 +36,8 @@ module Lambdabot (
 
 import qualified Message as Msg
 import qualified Shared  as S
-import qualified Config (config, name, admins, host, Protocol(..))
-import qualified IRCBase as IRC (IrcMessage, quit, privmsg, user, setNick)
+import qualified Config (config, name, admins)
+import qualified IRCBase as IRC (IrcMessage, quit, privmsg)
 
 import Lib.Signals
 import Lib.Util
@@ -84,9 +83,15 @@ import GHC.Err
 -- | Global read-only state.
 data IRCRState
   = IRCRState {
-        ircServer      :: !String,
-        ircSendFunc    :: IRC.IrcMessage -> LB (),
-        ircMainThread  :: ThreadId
+        ircMainThread  :: ThreadId,
+        ircQuitMVar    :: MVar ()
+        -- ^This is a mildly annoying hack.  In order to prevent the program
+        -- from closing immediately, we have to keep the main thread alive, but
+        -- the obvious infinite-MVar-wait technique doesn't work - the garbage
+        -- collector helpfully notices that the MVar is dead, kills the main
+        -- thread (which will never wake up, so why keep it around), thus
+        -- terminating the program.  Behold the infinite wisdom that is the
+        -- Glasgow FP group.
   }
 
 type Callback = IRC.IrcMessage -> LB ()
@@ -95,6 +100,7 @@ type OutputFilter = Msg.Nick -> [String] -> LB [String]
 
 -- | Global read\/write state.
 data IRCRWState = IRCRWState {
+        ircServerMap       :: Map String (String, IRC.IrcMessage -> LB ()),
         ircPrivilegedUsers :: Map Msg.Nick Bool,
 
         ircChannels        :: Map ChanName String,
@@ -111,6 +117,51 @@ data IRCRWState = IRCRWState {
         ircDynLoad         :: S.DynLoad,
         ircPlugins         :: [String]
     }
+
+-- The virtual chat system.
+--
+-- The virtual chat system sits between the chat drivers and the rest of
+-- Lambdabot.  It provides a mapping between the String server "tags" and
+-- functions which are able to handle sending messages.
+-- 
+-- When a message is recieved, the chat module is expected to call
+-- `LMain.received'.  This is not ideal.
+
+addServer :: String -> (IRC.IrcMessage -> LB ()) -> ModuleT s LB ()
+addServer tag sendf = do
+    s <- get
+    let svrs = ircServerMap s
+    name <- getName
+    case M.lookup tag svrs of
+        Nothing -> put (s { ircServerMap = M.insert tag (name,sendf) svrs})
+        Just _ -> fail $ "attempted to create two servers named " ++ tag
+
+-- This is a crutch until all the servers are pluginized.
+addServer' :: String -> (IRC.IrcMessage -> LB ()) -> LB ()
+addServer' tag sendf = do
+    s <- get
+    let svrs = ircServerMap s
+    case M.lookup tag svrs of
+        Nothing -> put (s { ircServerMap = M.insert tag ("<core>",sendf) svrs})
+        Just _ -> fail $ "attempted to create two servers named " ++ tag
+
+remServer :: String -> LB ()
+remServer tag = do
+    s <- get
+    let svrs = ircServerMap s
+    case M.lookup tag svrs of
+        Just _ -> do let svrs' = M.delete tag svrs
+                     main <- asks ircMainThread
+                     when (M.null svrs') $ io $ throwTo main (ErrorCall "all servers detached")
+                     put (s { ircServerMap = svrs' })
+        Nothing -> fail $ "attempted to delete nonexistent servers named " ++ tag
+
+send :: IRC.IrcMessage -> LB ()
+send msg = do
+    s <- gets ircServerMap
+    case M.lookup (Msg.server msg) s of
+        Just (_, sendf) -> sendf msg
+        Nothing -> io $ hPutStrLn stderr $ "sending message to bogus server: " ++ show msg
 
 newtype ChanName = ChanName { getCN :: Msg.Nick } -- should be abstract, always lowercase
   deriving (Eq, Ord)
@@ -208,11 +259,10 @@ data Mode = Online | Offline deriving Eq
 -- (i.e. print a message and exit). Non-fatal exceptions should be dealt
 -- with in the mainLoop or further down.
 --
-runIrc :: LB a -> IO (LB (), IRC.IrcMessage -> LB ()) -> S.DynLoad -> [String] -> IO ()
-runIrc initialise loops ld plugins = withSocketsDo $ do
-    (loop, sendf) <- loops
+runIrc :: LB a -> LB () -> S.DynLoad -> [String] -> IO ()
+runIrc initialise aftinit ld plugins = withSocketsDo $ do
     r <- try $ evalLB (do withDebug "Initialising plugins" initialise
-                          withIrcSignalCatch (mainLoop sendf loop))
+                          withIrcSignalCatch (mainLoop aftinit))
                        (initState (Config.admins Config.config) ld plugins)
 
     -- clean up and go home
@@ -230,6 +280,7 @@ initState as ld plugins = IRCRWState {
         ircPrivilegedUsers = M.fromList $ zip as (repeat True),
         ircChannels        = M.empty,
         ircModules         = M.empty,
+        ircServerMap       = M.empty,
         ircCallbacks       = M.empty,
         ircOutputFilters   = [
             ([],cleanOutput),
@@ -245,20 +296,20 @@ initState as ld plugins = IRCRWState {
     }
 
 --
--- Actually connect to the irc server
+-- Actually, this isn't a loop anymore.  FIXME: better name.
 --
-mainLoop :: (IRC.IrcMessage -> LB ()) -> LB a -> LB ()
-mainLoop sendf loop = do
+mainLoop :: LB a -> LB ()
+mainLoop loop = do
     threadmain <- io myThreadId
+    quitMVar <- io newEmptyMVar
 
     let chans = IRCRState {
-                    ircServer      = Config.host Config.config,
-                    ircSendFunc    = sendf,
+                    ircQuitMVar    = quitMVar,
                     ircMainThread  = threadmain
                 }
 
     catchIrc
-       (localLB (Just chans) loop >> return ())
+       (localLB (Just chans) (loop >> io (takeMVar quitMVar) >> error "don't write to the quitMVar!"))
        (\e -> do -- catch anything, print informative message, and clean up
             io $ hPutStrLn stderr $
                        (case e of
@@ -484,10 +535,12 @@ ircUnloadModule modname = withModule ircModules modname (error "module not loade
     let modmap = ircModules s
         cmdmap = ircCommands s
         cbs    = ircCallbacks s
+        svrs   = ircServerMap s
         ofs    = ircOutputFilters s
     put $ s { ircCommands      = M.filter (\(ModuleRef _ _ name) -> name /= modname) cmdmap }
             { ircModules       = M.delete modname modmap }
             { ircCallbacks     = filter ((/=modname) . fst) `fmap` cbs }
+            { ircServerMap     = M.filter ((/=modname) . fst) svrs }
             { ircOutputFilters = filter ((/=modname) . fst) ofs }
   )
 
@@ -534,28 +587,6 @@ checkPrivs msg = gets (isJust . M.lookup (Msg.nick msg) . ircPrivilegedUsers)
 ------------------------------------------------------------------------
 -- Some generic server operations
 
-serverSignOn :: Config.Protocol -> Msg.Nick -> String -> LB ()
-serverSignOn Config.Irc  nick userinfo = ircSignOn nick userinfo
-serverSignOn Config.Xmpp nick _        = jabberSignOn nick
-
-jabberSignOn :: Msg.Nick -> LB ()
-jabberSignOn _ = undefined
-
-ircSignOn :: Msg.Nick -> String -> LB ()
-ircSignOn nick ircname = do
-    server <- asks ircServer
-
-    -- password support. TODO: Move this to IRC?
-    -- If plugin initialising was delayed till after we connected, we'd
-    -- be able to write a Passwd plugin.
-    send $ IRC.user (Msg.nTag nick) (Msg.nName nick) server ircname
-    send $ IRC.setNick nick
-    mpasswd <- liftIO (handleJust ioErrors (const (return "")) $
-                       readFile "State/passwd")
-    case readM mpasswd of
-      Nothing     -> return ()
-      Just passwd -> ircPrivmsg (Msg.Nick (Msg.nTag nick) "nickserv") $ "identify " ++ passwd
-
 ircGetChannels :: LB [Msg.Nick]
 ircGetChannels = (map getCN . M.keys) `fmap` gets ircChannels
 
@@ -573,9 +604,6 @@ ircReconnect :: String -> String -> LB ()
 ircReconnect svr msg = do
     send $ IRC.quit svr msg
     liftIO $ threadDelay 1000
-
-send :: IRC.IrcMessage -> LB ()
-send line = asks ircSendFunc >>= ($ line)
 
 -- | Send a message to a channel\/user. If the message is too long, the rest
 --   of it is saved in the (global) more-state.
