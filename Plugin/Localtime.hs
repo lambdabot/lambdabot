@@ -31,7 +31,7 @@ instance Module LocaltimeModule TimeMap where
         if whoToPing /= Msg.lambdabotName msg
             then do modifyMS $ \st -> M.insertWith (++) whoToPing [whoAsked] st
                 -- this is a CTCP time call, which returns a NOTICE
-                    lift $ ircPrivmsg' whoToPing (Just "\^ATIME\^A")     -- has to be raw
+                    lift $ ircPrivmsg' whoToPing ("\^ATIME\^A")     -- has to be raw
                     return []
             else return ["I live on the internet, do you expect me to have a local time?"]
 
@@ -47,5 +47,5 @@ instance Module LocaltimeModule TimeMap where
             Just xs -> do set (M.insert whoGotPinged [] st) -- clear the callback state
                           return xs
     let txt = "Local time for " ++ Msg.showNick msg whoGotPinged ++ " is " ++ time
-    lift $ flip mapM_ targets $ flip ircPrivmsg' (Just txt)
+    lift $ flip mapM_ targets $ flip ircPrivmsg' txt
     return []

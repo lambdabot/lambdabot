@@ -43,7 +43,7 @@ instance Module TopicModule () where
 
   process _ msg _ "topic-tail" chan = lift $ alterTopic msg chan tail
   process _ msg _ "topic-init" chan = lift $ alterTopic msg chan init
-  process _ msg _ "topic-null" chan = lift $ send (Just (Message.setTopic (readNick msg chan) "[]")) >> return []
+  process _ msg _ "topic-null" chan = lift $ send (Message.setTopic (readNick msg chan) "[]") >> return []
   process _ msg _ "topic-tell" chan = lift $ lookupTopic (readNick msg chan) $ \maybetopic -> return $
         case maybetopic of
             Just x  -> [x]
@@ -73,10 +73,10 @@ alterTopic msg chan f =
       p maybetopic =
         case maybetopic of
           Just x -> case reads x of
-                [(xs, "")] -> do send . Just $ Message.setTopic chan' (show $ f $ xs)
+                [(xs, "")] -> do send $ Message.setTopic chan' (show $ f $ xs)
                                  return []
                 [(xs, r)] | length r <= 2
-                  -> do send . Just $ Message.setTopic chan' (show $ f $ xs)
+                  -> do send $ Message.setTopic chan' (show $ f $ xs)
                         return ["ignoring bogus characters: " ++ r]
 
                 _ -> return ["Topic does not parse. Should be of the form [\"...\",...,\"...\"]"]

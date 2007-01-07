@@ -65,12 +65,12 @@ doSystem msg _ cmd rest = get >>= \s -> case cmd of
 
   --TODO error handling
    -- system commands
-  "join"  -> lift $ send_ (Message.joinChannel (Message.readNick msg rest)) >> return []
-  "leave" -> lift $ send_ (Message.partChannel (Message.readNick msg rest)) >> return []
-  "part"  -> lift $ send_ (Message.partChannel (Message.readNick msg rest)) >> return []
+  "join"  -> lift $ send (Message.joinChannel (Message.readNick msg rest)) >> return []
+  "leave" -> lift $ send (Message.partChannel (Message.readNick msg rest)) >> return []
+  "part"  -> lift $ send (Message.partChannel (Message.readNick msg rest)) >> return []
 
    -- writes to another location:
-  "msg"   -> lift $ ircPrivmsg (Message.readNick msg tgt) (Just txt') >> return []
+  "msg"   -> lift $ ircPrivmsg (Message.readNick msg tgt) txt' >> return []
                   where (tgt, txt) = breakOnGlue " " rest
                         txt'       = dropWhile (== ' ') txt
 

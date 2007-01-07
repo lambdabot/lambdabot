@@ -19,7 +19,7 @@ module Lambdabot (
 
         getRef, getName, bindModule0, bindModule1, bindModule2,
 
-        send, send_,
+        send,
         ircPrivmsg, ircPrivmsg', -- not generally used
         ircPrivmsgF,
 
@@ -548,13 +548,13 @@ ircSignOn nick ircname = do
     -- password support. TODO: Move this to IRC?
     -- If plugin initialising was delayed till after we connected, we'd
     -- be able to write a Passwd plugin.
-    send . Just $ IRC.user (Msg.nTag nick) (Msg.nName nick) server ircname
-    send . Just $ IRC.setNick nick
+    send $ IRC.user (Msg.nTag nick) (Msg.nName nick) server ircname
+    send $ IRC.setNick nick
     mpasswd <- liftIO (handleJust ioErrors (const (return "")) $
                        readFile "State/passwd")
     case readM mpasswd of
       Nothing     -> return ()
-      Just passwd -> ircPrivmsg (Msg.Nick (Msg.nTag nick) "nickserv") $ Just $ "identify " ++ passwd
+      Just passwd -> ircPrivmsg (Msg.Nick (Msg.nTag nick) "nickserv") $ "identify " ++ passwd
 
 ircGetChannels :: LB [Msg.Nick]
 ircGetChannels = (map getCN . M.keys) `fmap` gets ircChannels
@@ -565,50 +565,38 @@ ircGetChannels = (map getCN . M.keys) `fmap` gets ircChannels
 ircQuit :: String -> String -> LB ()
 ircQuit svr msg = do
     modify $ \state -> state { ircStayConnected = False }
-    send  . Just $ IRC.quit svr msg
+    send  $ IRC.quit svr msg
     liftIO $ threadDelay 1000
     io $ hPutStrLn stderr "Quit"
 
 ircReconnect :: String -> String -> LB ()
 ircReconnect svr msg = do
-    send . Just $ IRC.quit svr msg
+    send $ IRC.quit svr msg
     liftIO $ threadDelay 1000
 
--- 
--- convenient wrapper
---
-send_ :: IRC.IrcMessage -> LB ()
-send_ = send . Just
-
-send :: Maybe IRC.IrcMessage -> LB ()
-send Nothing = return ()
-send (Just line) = do
-    chanw <- asks ircSendFunc
-    chanw line
+send :: IRC.IrcMessage -> LB ()
+send line = asks ircSendFunc >>= ($ line)
 
 -- | Send a message to a channel\/user. If the message is too long, the rest
 --   of it is saved in the (global) more-state.
 ircPrivmsg :: Msg.Nick      -- ^ The channel\/user.
-           -> Maybe String  -- ^ The message.
+           -> String        -- ^ The message.
            -> LB ()
 
-ircPrivmsg who Nothing = ircPrivmsg' who Nothing
-ircPrivmsg who (Just msg) = do
+ircPrivmsg who msg = do
     filters   <- gets ircOutputFilters
     sendlines <- foldr (\f -> (=<<) (f who)) ((return . lines) msg) $ map snd filters
-    mapM_ (\s -> ircPrivmsg' who (Just $ take textwidth s)) (take 10 sendlines)
+    mapM_ (\s -> ircPrivmsg' who (take textwidth s)) (take 10 sendlines)
 
 -- A raw send version
-ircPrivmsg' :: Msg.Nick -> Maybe String -> LB ()
-ircPrivmsg' who (Just "")  = ircPrivmsg' who (Just " ")
-ircPrivmsg' who (Just msg) = send . Just $ IRC.privmsg who msg
-ircPrivmsg' _   Nothing    = send Nothing
+ircPrivmsg' :: Msg.Nick -> String -> LB ()
+ircPrivmsg' who ""  = ircPrivmsg' who " "
+ircPrivmsg' who msg = send $ IRC.privmsg who msg
 
 ----------------------------------------------------------------------------------
 
-ircPrivmsgF :: Msg.Nick -> Maybe ByteString -> LB ()
-ircPrivmsgF who Nothing = ircPrivmsg' who Nothing
-ircPrivmsgF who (Just s)= ircPrivmsg who (Just $ P.unpack s) -- TODO
+ircPrivmsgF :: Msg.Nick -> ByteString -> LB ()
+ircPrivmsgF who s= ircPrivmsg who (P.unpack s) -- TODO
 
 {-
 rawPrivmsgF :: String -> Maybe ByteString -> LB ()

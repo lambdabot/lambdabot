@@ -5,8 +5,6 @@ module Plugin.Base (theModule) where
 
 import Plugin
 
-import Control.Concurrent.MVar
-
 import IRCBase (IrcMessage, timeReply, errShowMsg)
 -- import Message (getTopic, nick, joinChannel, body, fullName, channels)
 import Message (getTopic, nick, joinChannel, server, body, Nick(..), lambdabotName, showNick, readNick)
@@ -16,8 +14,6 @@ import qualified Data.Map as M   (insert, delete)
 import Control.Monad.State  (MonadState(..), when, gets)
 
 import GHC.IOBase           (Exception(NoMethodError))
-
-import System.IO.Unsafe (unsafePerformIO)
 
 import qualified Data.ByteString.Char8 as P
 import qualified Text.Regex as R
@@ -102,7 +98,7 @@ doJOIN :: Callback
 doJOIN msg
   = do s <- get
        put (s { ircChannels = M.insert  (mkCN loc) "[currently unknown]" (ircChannels s)}) -- the empty topic causes problems
-       send_ $ getTopic loc -- initialize topic
+       send $ getTopic loc -- initialize topic
    where (_, aloc) = breakOnGlue ":" (head (body msg))
          loc       = case aloc of 
                         [] -> Nick "freenode" "weird#" 
@@ -131,7 +127,7 @@ doTOPIC msg
          put (s { ircChannels = M.insert (mkCN loc) (tail $ head $ tail $ body msg) (ircChannels s)})
 
 doRPL_WELCOME :: Callback
-doRPL_WELCOME _msg = mapM_ (send_ . joinChannel) (autojoin config)
+doRPL_WELCOME _msg = mapM_ (send . joinChannel) (autojoin config)
 
 doQUIT :: Callback
 doQUIT msg = doIGNORE msg
@@ -213,7 +209,7 @@ doPRIVMSG' myname msg target
             _ | otherwise     -> case closests cmd allcmds of
                   (n,[s]) | n < e ,  ms == [] -> docmd s -- unique edit match
                   (n,ss)  | n < e || ms /= []            -- some possibilities
-                          -> lift . ircmsg . Just $ "Maybe you meant: "++showClean(nub(ms++ss))
+                          -> lift . ircmsg $ "Maybe you meant: "++showClean(nub(ms++ss))
                   _ -> docmd cmd         -- no prefix, edit distance too far
         where
             e = 3   -- edit distance cut off. Seems reasonable for small words
@@ -224,7 +220,7 @@ doPRIVMSG' myname msg target
             docmd cmd' = do
               act <- bindModule0 . withPS towhere $ \_ _ -> do
                 withModule ircCommands cmd'   -- Important. 
-                    (ircPrivmsg towhere (Just "Unknown command, try @list"))
+                    (ircPrivmsg towhere "Unknown command, try @list")
                     (\m -> do
                         name'   <- getName
                         privs   <- gets ircPrivCommands
@@ -232,7 +228,7 @@ doPRIVMSG' myname msg target
                         ok      <- liftM2 (||) (return $ cmd' `notElem` (privs ++ illegal))
                                                (lift $ checkPrivs msg)
                         if not ok
-                          then lift $ ircPrivmsg towhere $ Just "Not enough privileges"
+                          then lift $ ircPrivmsg towhere "Not enough privileges"
                           else catchIrc
 
                             (do mstrs <- catchError
@@ -248,15 +244,11 @@ doPRIVMSG' myname msg target
 
                                 -- send off our strings/bytestrings
                                 case mstrs of
-                                    Right ps -> case filter (not . P.null) ps of
-                                        [] -> lift $ ircPrivmsg towhere Nothing
-                                        _  -> lift $ mapM_ (ircPrivmsgF towhere . Just) ps
+                                    Right ps -> lift $ mapM_ (ircPrivmsgF towhere) ps
 
-                                    Left  ms -> case filter (not. null) ms of
-                                        [] -> lift $ ircPrivmsg towhere Nothing
-                                        _  -> lift $ mapM_ (ircPrivmsg towhere . Just) ms)
+                                    Left  ms -> lift $ mapM_ (ircPrivmsg towhere) ms)
 
-                            (lift . ircPrivmsg towhere . Just .
+                            (lift . ircPrivmsg towhere .
                                 (("Plugin `" ++ name' ++ "' failed with: ") ++) . show))
               lift $ act
     --
@@ -271,30 +263,16 @@ doPRIVMSG' myname msg target
     -- them bubble back up to the mainloop
     --
     doContextualMsg r = lift $ do
-        io (tryTakeMVar output)    -- empty the output tracker
-
         withAllModules ( \m -> do
             act <- bindModule0 ( do
                             ms <- contextual m msg target r
-                            lift $ mapM_ (ircPrivmsg target . Just) ms
-                            when (not (null ms)) (io $! putMVar output ()) -- we wrote something
+                            lift $ mapM_ (ircPrivmsg target) ms
                    )
             name' <- getName
             lift $ catchIrc act (debugStrLn . (name' ++) .
                 (" module failed in contextual handler: " ++) . show)
             )
-
-        -- if there was no output, send a single Nothing
-        notDone <- io (isEmptyMVar output)
-        when notDone (ircPrivmsg target Nothing)
-
---
--- track in each contextual handler whether any output was made
--- allocate this once, (could be a bad idea)
---
-output :: MVar ()
-output = unsafePerformIO newEmptyMVar
-{-# NOINlINE output #-}
+        return ()
 
 ------------------------------------------------------------------------
 
