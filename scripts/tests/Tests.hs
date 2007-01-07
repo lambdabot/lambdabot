@@ -29,6 +29,7 @@ $(tests "dummyPlugin" [d|
 --
 -- Test the Where plugin
 --
+
 $(tests "wherePlugin" [d|
     testWhere   = lb "where ghc" "http://haskell.org/ghc"
     testWhat    = lb "where ghc" "http://haskell.org/ghc"
@@ -37,5 +38,13 @@ $(tests "wherePlugin" [d|
 
 ------------------------------------------------------------------------
 --
--- Test the Where plugin
+-- Test the Source plugin
 --
+
+$(tests "sourcePlugin" [d|
+    testSource  = lb "source foldr" $ unlines
+        [ "foldr k z xs = go xs"
+        ,"    where go []     = z"
+        ,"          go (y:ys) = y `k` go ys"]
+
+ |] )
