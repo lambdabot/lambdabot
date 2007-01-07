@@ -15,7 +15,7 @@ main = main' Nothing modulesInfo
 
 -- special online target for ghci use
 online :: IO ()
-online = runIrc Online (fst modulesInfo) onlineMain ld pl
+online = runIrc (fst modulesInfo) onlineMain ld pl
     where
     ld = fromMaybe (error "no dynamic loading") Nothing
     pl = []

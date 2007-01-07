@@ -7,7 +7,7 @@ import Plugin
 
 import Control.Concurrent.MVar
 
-import IRC (IrcMessage, timeReply, errShowMsg)
+import IRCBase (IrcMessage, timeReply, errShowMsg)
 -- import Message (getTopic, nick, joinChannel, body, fullName, channels)
 import Message (getTopic, nick, joinChannel, server, body, Nick(..), lambdabotName, showNick, readNick)
 
@@ -161,7 +161,7 @@ doPRIVMSG msg = do
 --
 -- | What does the bot respond to?
 --
-doPRIVMSG' :: Nick -> IRC.IrcMessage -> Nick -> Base ()
+doPRIVMSG' :: Nick -> IrcMessage -> Nick -> Base ()
 doPRIVMSG' myname msg target
   | myname == target
     = let (cmd, params) = breakOnGlue " " text
@@ -258,7 +258,7 @@ doPRIVMSG' myname msg target
 
                             (lift . ircPrivmsg towhere . Just .
                                 (("Plugin `" ++ name' ++ "' failed with: ") ++) . show))
-              lift $ forkLB act
+              lift $ act
     --
     -- contextual messages are all input that isn't an explicit command.
     -- they're passed to all modules (todo, sounds inefficient) for

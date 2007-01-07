@@ -2,8 +2,9 @@ module LMain where
 
 import Shared
 import Lambdabot
-import Config
 import Message
+import IRC
+import IRCBase
 
 import qualified Data.Map as M
 
@@ -17,9 +18,9 @@ main' :: Maybe DynLoad -> (LB (), [String]) -> IO ()
 main' dyn (loadStaticModules, pl) = do
     x    <- getArgs
     case x of
-        ["--online"]     -> runIrc Online  loadStaticModules onlineMain  ld pl 
-        ["--restricted"] -> runIrc Offline loadStaticModules (offlineMain False) ld pl
-        []               -> runIrc Offline loadStaticModules (offlineMain True)  ld pl
+        ["--online"]     -> runIrc loadStaticModules onlineMain  ld pl 
+        ["--restricted"] -> runIrc loadStaticModules (offlineMain False) ld pl
+        []               -> runIrc loadStaticModules (offlineMain True)  ld pl
         _                -> putStrLn "Usage: lambdabot [--online|--restricted]"
 
     where ld = fromMaybe (error "no dynamic loading") dyn
@@ -27,32 +28,24 @@ main' dyn (loadStaticModules, pl) = do
 
 ------------------------------------------------------------------------
 
-onlineMain :: LB ()
-onlineMain = serverSignOn (protocol config) (name config) (userinfo config) >> mainloop
+onlineMain :: IO (LB (), IrcMessage -> LB ())
+onlineMain = online "freenode" received
 
-offlineMain :: Bool -> LB ()
-offlineMain cmdline = do
-  modify (\st -> let privUsers  = ircPrivilegedUsers st
-                     privUsers'| cmdline   = M.insert (Nick "freenode" "null") True privUsers
-                               | otherwise = privUsers
-                 in st { ircPrivilegedUsers = privUsers' })
-  mainloop
+offlineMain :: Bool -> IO (LB (), IrcMessage -> LB ())
+offlineMain cmdline = do (loop, sendf) <- offline "freenode" received
+                         return (modst >> loop, sendf)
+    where modst = modify (\st -> let privUsers  = ircPrivilegedUsers st
+                                     privUsers'| cmdline   = M.insert (Nick "freenode" "null") True privUsers
+                                               | otherwise = privUsers
+                                 in st { ircPrivilegedUsers = privUsers' })
 
 ------------------------------------------------------------------------
 
--- it's all asynchronous, remember, the reader and writer threads
--- communicating over chans in the LB state. maybe its too much?
-mainloop :: LB ()
-mainloop = do
-    mmsg <- ircRead
-    case mmsg of
-        Nothing -> return ()
-        Just msg -> do
-            s   <- get
-            case M.lookup (command msg) (ircCallbacks s) of
-                 Just cbs -> allCallbacks (map snd cbs) msg
-                 _        -> return ()
-    mainloop
+received :: IrcMessage -> LB ()
+received msg = do s   <- get
+                  case M.lookup (command msg) (ircCallbacks s) of
+                    Just cbs -> allCallbacks (map snd cbs) msg
+                    _        -> return ()
 
 -- If an error reaches allCallbacks, then all we can sensibly do is
 -- write it on standard out. Hopefully BaseModule will have caught it already

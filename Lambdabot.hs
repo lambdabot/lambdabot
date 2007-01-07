@@ -28,7 +28,6 @@ module Lambdabot (
         ircSignalConnect, Callback, ircInstallOutputFilter, OutputFilter,
         ircInstallModule, ircUnloadModule,
         serverSignOn,
-        ircRead,
         flushModuleState,
 
         ircLoad, ircUnload,
@@ -38,9 +37,8 @@ module Lambdabot (
 
 import qualified Message as Msg
 import qualified Shared  as S
-import qualified Config (config, name, admins, host, port, Protocol(..))
-import qualified IRC    (IrcMessage, quit, privmsg, readerLoop
-                        ,writerLoop, offlineReaderLoop, offlineWriterLoop, user, setNick)
+import qualified Config (config, name, admins, host, Protocol(..))
+import qualified IRCBase as IRC (IrcMessage, quit, privmsg, user, setNick)
 
 import Lib.Signals
 import Lib.Util
@@ -48,7 +46,7 @@ import Lib.Serial
 
 import Prelude hiding           (mod, catch)
 
-import Network                  (withSocketsDo, connectTo, PortID(PortNumber))
+import Network                  (withSocketsDo)
 
 import System.Exit
 import System.IO
@@ -87,13 +85,9 @@ import GHC.Err
 data IRCRState
   = IRCRState {
         ircServer      :: !String,
-        ircReadChan    :: Pipe,
-        ircReadThread  :: ThreadId,
-        ircWriteChan   :: Pipe,
-        ircWriteThread :: ThreadId
+        ircSendFunc    :: IRC.IrcMessage -> LB (),
+        ircMainThread  :: ThreadId
   }
-
-type Pipe = Chan (Maybe IRC.IrcMessage)
 
 type Callback = IRC.IrcMessage -> LB ()
 
@@ -214,10 +208,11 @@ data Mode = Online | Offline deriving Eq
 -- (i.e. print a message and exit). Non-fatal exceptions should be dealt
 -- with in the mainLoop or further down.
 --
-runIrc :: Mode -> LB a -> LB () -> S.DynLoad -> [String] -> IO ()
-runIrc mode initialise loop ld plugins = withSocketsDo $ do
+runIrc :: LB a -> IO (LB (), IRC.IrcMessage -> LB ()) -> S.DynLoad -> [String] -> IO ()
+runIrc initialise loops ld plugins = withSocketsDo $ do
+    (loop, sendf) <- loops
     r <- try $ evalLB (do withDebug "Initialising plugins" initialise
-                          withIrcSignalCatch (mainLoop mode loop))
+                          withIrcSignalCatch (mainLoop sendf loop))
                        (initState (Config.admins Config.config) ld plugins)
 
     -- clean up and go home
@@ -250,34 +245,14 @@ initState as ld plugins = IRCRWState {
 --
 -- Actually connect to the irc server
 --
-mainLoop :: Mode -> LB a -> LB ()
-mainLoop mode loop = do
-
-    -- in offline mode we connect to stdin/stdout. in online mode our
-    -- handles are network pipes
-    (hin,hout,rloop,wloop) <- case mode of
-        Online  -> do
-            let portnum  = PortNumber $ fromIntegral (Config.port Config.config)
-            s <- io $ connectTo (Config.host Config.config) portnum
-            return (s,s,IRC.readerLoop,IRC.writerLoop)
-        Offline -> return (stdin, stdout, IRC.offlineReaderLoop, IRC.offlineWriterLoop)
-
-    io $ hSetBuffering hout NoBuffering
-    io $ hSetBuffering hin  NoBuffering
+mainLoop :: (IRC.IrcMessage -> LB ()) -> LB a -> LB ()
+mainLoop sendf loop = do
     threadmain <- io myThreadId
-    chanr      <- io newChan
-    chanw      <- io newChan
-    syncR      <- io $ newMVar () -- used in offline to make threads synchronous
-    syncW      <- io newEmptyMVar
-    threadr    <- io $ forkIO $ rloop threadmain "freenode" chanr chanw hin syncR syncW
-    threadw    <- io $ forkIO $ wloop threadmain chanw hout syncR syncW
 
     let chans = IRCRState {
                     ircServer      = Config.host Config.config,
-                    ircReadChan    = chanr,
-                    ircReadThread  = threadr,
-                    ircWriteChan   = chanw,
-                    ircWriteThread = threadw
+                    ircSendFunc    = sendf,
+                    ircMainThread  = threadmain
                 }
 
     catchIrc
@@ -597,11 +572,6 @@ ircReconnect svr msg = do
     send . Just $ IRC.quit svr msg
     liftIO $ threadDelay 1000
 
-ircRead :: LB (Maybe IRC.IrcMessage)
-ircRead = do
-    chanr <- asks ircReadChan
-    liftIO (readChan chanr)
-
 -- 
 -- convenient wrapper
 --
@@ -609,9 +579,10 @@ send_ :: IRC.IrcMessage -> LB ()
 send_ = send . Just
 
 send :: Maybe IRC.IrcMessage -> LB ()
-send line = do
-    chanw <- asks ircWriteChan
-    io (writeChan chanw line)
+send Nothing = return ()
+send (Just line) = do
+    chanw <- asks ircSendFunc
+    chanw line
 
 -- | Send a message to a channel\/user. If the message is too long, the rest
 --   of it is saved in the (global) more-state.

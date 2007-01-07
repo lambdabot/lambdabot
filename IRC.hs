@@ -2,157 +2,31 @@
 -- | The IRC module processes the IRC protocol and provides a nice API for sending
 --   and recieving IRC messages with an IRC server.
 --
-module IRC ( IrcMessage
-           , readerLoop
-           , writerLoop
-           , offlineReaderLoop
-           , offlineWriterLoop
-           , privmsg
-           , quit
-           , timeReply
-           , errShowMsg -- TODO: remove
-           , user
-           , setNick
+module IRC ( online
+           , offline
            ) where
 
-import Message
-import Lib.Util (split, breakOnGlue, clean)
-import qualified Lib.Util as Util (concatWith) 
+import IRCBase
 
-import qualified Config (config, name)
+import Config (config, name, port, host, protocol, userinfo )
 
 import Data.List (isPrefixOf)
-import Data.Char (chr,isSpace)
+import Data.Char (isSpace)
 
 import Control.Concurrent
 import Control.Exception
 import Control.Monad.Trans ( MonadIO, liftIO )
-import Control.Monad (when, liftM2)
 
-import System.IO (Handle, hGetLine)
+import System.IO (hGetLine, hFlush, hPutStr, hSetBuffering, BufferMode(NoBuffering), stdout)
 import System.Console.Readline  (readline, addHistory)
 
 import qualified Data.ByteString.Char8 as P
 
+import Lambdabot
+import LBState
 
--- | An IRC message is a server, a prefix, a command and a list of parameters.
-data IrcMessage
-  = IrcMessage {
-        msgServer   :: !String,
-        msgPrefix   :: !String,
-        msgCommand  :: !String,
-        msgParams   :: ![String]
-  }
-  deriving (Show)
+import Network( connectTo, PortID(..) )
 
-instance Message IrcMessage where
-    nick          = IRC.nick
-    server        = IRC.msgServer
-    fullName      = IRC.fullName
-    names         = IRC.names
-    channels      = IRC.channels
-    joinChannel   = IRC.join
-    partChannel   = IRC.part
-    getTopic      = IRC.getTopic
-    setTopic      = IRC.setTopic
-    body          = IRC.msgParams
-    command       = IRC.msgCommand
-    lambdabotName = IRC.lambdabotName
-
--- | 'mkMessage' creates a new message from a server, a cmd, and a list of parameters.
-mkMessage :: String -- ^ Server
-          -> String -- ^ Command
-          -> [String] -- ^ Parameters
-          -> IrcMessage -- ^ Returns: The created message
-
-mkMessage svr cmd params = IrcMessage { msgServer = svr, msgPrefix = "",
-                                        msgCommand = cmd, msgParams = params }
-
--- | 'nick' extracts the nickname involved in a given message.
-nick :: IrcMessage -> Nick
-nick = liftM2 Nick msgServer (fst . breakOnGlue "!" . msgPrefix)
-
--- | 'fullName' extracts the full user name involved in a given message.
-fullName :: IrcMessage -> String
-fullName = snd . breakOnGlue "!" . msgPrefix
-
--- | 'channels' extracts the channels a IrcMessage operate on.
-channels :: IrcMessage -> [Nick]
-channels msg
-  = let cstr = head $ msgParams msg
-    in map (Nick (msgServer msg)) $
-       map (\(x:xs) -> if x == ':' then xs else x:xs) (split "," cstr)
-           -- solves what seems to be an inconsistency in the parser
-
--- | 'privmsg' creates a private message to the person designated.
-privmsg :: Nick -- ^ Who should recieve the message (nick)
-        -> String -- ^ What is the message?
-        -> IrcMessage -- ^ Constructed message
-privmsg who msg = if action then mk [nName who, ':':(chr 0x1):("ACTION " ++ clean_msg ++ ((chr 0x1):[]))]
-                            else mk [nName who, ':' : clean_msg]
-    where mk = mkMessage (nTag who) "PRIVMSG"
-          cleaned_msg = case concatMap clean msg of
-              str@('@':_) -> ' ':str
-              str         -> str
-          (clean_msg,action) = case cleaned_msg of
-              ('/':'m':'e':r) -> (dropWhile isSpace r,True)
-              str             -> (str,False)
-
--- | 'setTopic' takes a channel and a topic. It then returns the message
---   which sets the channels topic.
-setTopic :: Nick -- ^ Channel
-         -> String -- ^ Topic
-         -> IrcMessage
-setTopic chan topic = mkMessage (nTag chan) "TOPIC" [nName chan, ':' : topic]
-
--- | 'getTopic' Returns the topic for a channel, given as a String
-getTopic :: Nick -> IrcMessage
-getTopic chan = mkMessage (nTag chan) "TOPIC" [nName chan]
-
--- | 'quit' creates a server QUIT message. The input string given is the
---   quit message, given to other parties when leaving the network.
-quit :: String -> String -> IrcMessage
-quit svr msg = mkMessage svr "QUIT" [':' : msg]
-
--- | 'join' creates a join message. String given is the location (channel)
---   to join.
-join :: Nick -> IrcMessage
-join loc = mkMessage (nTag loc) "JOIN" [nName loc]
-
--- | 'part' parts the channel given.
-part :: Nick -> IrcMessage
-part loc = mkMessage (nTag loc) "PART" [nName loc]
-
--- | 'names' builds a NAMES message from a list of channels.
-names :: String -> [String] -> IrcMessage
-names svr chans = mkMessage svr "NAMES" [Util.concatWith "," chans]
-
--- | Construct a privmsg from the CTCP TIME notice, to feed up to
--- the @localtime-reply plugin, which then passes the output to
--- the appropriate client.
-timeReply :: IrcMessage -> IrcMessage
-timeReply msg    = 
-   IrcMessage { msgPrefix  = msgPrefix (msg)
-              , msgServer  = msgServer (msg)
-              , msgCommand = "PRIVMSG"
-              , msgParams  = [head (msgParams msg)
-                             ,":@localtime-reply " ++ (nName $ IRC.nick msg) ++ ":" ++
-                                (init $ drop 7 (last (msgParams msg))) ]
-              }
-
--- Only needed for Base.hs
-errShowMsg :: IrcMessage -> String
-errShowMsg msg = "ERROR> <" ++ msgServer msg ++ (':' : msgPrefix msg) ++
-      "> [" ++ msgCommand msg ++ "] " ++ show (msgParams msg)
-
-user :: String -> String -> String -> String -> IrcMessage
-user svr nick_ server_ ircname = IRC.mkMessage svr "USER" [nick_, "localhost", server_, ircname]
-
-setNick :: Nick -> IrcMessage
-setNick nick_ = IRC.mkMessage (nTag nick_) "NICK" [nName nick_]
-
-lambdabotName :: IrcMessage -> Nick
-lambdabotName _ = Config.name Config.config
 ----------------------------------------------------------------------
 -- Encoding and decoding of messages
 
@@ -209,79 +83,61 @@ decodeMessage svr line =
 
 ------------------------------------------------------------------------
 --
--- Lambdabot is asynchronous. We has reader and writer threads, and they
--- don't know about each other.
---
--- However, in Offline mode, we need to keep them in lock step. this
--- complicates things.
---
--- Online reader loop, the mvars are unused
+-- Lambdabot is mostly synchronous.  We have a main loop, which reads
+-- messages and forks threads to execute commands (which write responces).
+-- OR
+-- We have a main loop which reads offline commands, and synchronously
+-- interprets them.
 
-readerLoop :: ThreadId -> String -> Pipe IrcMessage -> Pipe IrcMessage -> Handle -> MVar () -> MVar () -> IO ()
-readerLoop th name_ chanr chanw h _ _ = handleIO th $ do
-    io (putStrLn "Forking threads ...")
-    readerLoop'
-  where
-    readerLoop' = do
-        line <- hGetLine h
-        let line' = filter (\c -> c /= '\n' && c /= '\r') line
-        if pING `isPrefixOf` line'
-            then writeChan chanw (Just $ IRC.mkMessage name_ "PONG" [drop 5 line'])
-            else writeChan chanr (Just $ IRC.decodeMessage name_ line')
-        readerLoop'
-
-    pING = "PING "
-{-# INLINE readerLoop #-}
-
---
--- online writer loop
---
--- Implements flood control: RFC 2813, section 5.8
---
-writerLoop :: ThreadId -> Pipe IrcMessage -> Handle -> MVar () -> MVar () -> IO ()
-writerLoop th chanw h _ _ = handleIO th $ do
-    sem1 <- newQSem 0
-    sem2 <- newQSem 5
-    forkIO $ sequence_ . repeat $ do
-           waitQSem sem1
-           threadDelay 2000000
-           signalQSem sem2
-    writerLoop' (sem1,sem2)
-  where
-    writerLoop' sems@(sem1,sem2) = do
-           mmsg <- readChan chanw
-           waitQSem sem2
-           case mmsg of
-            Nothing  -> return ()
-            Just msg -> P.hPut h $ P.pack $ IRC.encodeMessage msg "\r"
-           signalQSem sem1
-           writerLoop' sems
-{-# INLINE writerLoop #-}
-
-
+online :: String -> (IrcMessage -> LB ()) -> IO (LB (), IrcMessage -> LB ())
+online tag recv = do
+  th <- myThreadId
+  let portnum  = PortNumber $ fromIntegral (Config.port Config.config)
+  sock <- connectTo (Config.host Config.config) portnum
+  hSetBuffering sock NoBuffering
+  -- Implements flood control: RFC 2813, section 5.8
+  sem1 <- newQSem 0
+  sem2 <- newQSem 5
+  forkIO $ sequence_ . repeat $ do
+                    waitQSem sem1
+                    threadDelay 2000000
+                    signalQSem sem2
+  let h = liftLB (handleIO th)
+  return (serverSignOn (protocol config) (name config) (userinfo config) >> readerLoop sock,
+          \m -> h (sendMsg sock sem1 sem2 m))
+    where
+      readerLoop sock = do
+         line <- liftIO $ hGetLine sock
+         let line' = filter (\c -> c /= '\n' && c /= '\r') line
+         if pING `isPrefixOf` line'
+           then liftIO $ hPutStr sock ("PONG " ++ drop 5 line')
+           else do forkLB $ recv (IRC.decodeMessage tag line')
+                   return ()
+         readerLoop sock
+      pING = "PING "
+      sendMsg sock sem1 sem2 msg = liftIO $ do
+          waitQSem sem2
+          P.hPut sock $ P.pack $ IRC.encodeMessage msg "\r"
+          signalQSem sem1
+ 
 -- 
 -- Offline reader and writer loops. A prompt with line editing
 -- Takes a string from stdin, wraps it as an irc message, and _blocks_
 -- waiting for the writer thread (to keep things in sync).
 --
--- We (incorrectly) assume there's at least one write for every read.
--- If a command returns no output (i.e. @more on an empty buffer) then
--- we block in offline mode :(
--- 
--- the mvars are used to keep the normally async threads in step.
---
-offlineReaderLoop :: ThreadId -> String -> Pipe IrcMessage -> Pipe IrcMessage -> Handle
-                  -> MVar () -> MVar () -> IO ()
-offlineReaderLoop th name_ chanr _chanw _h syncR syncW = handleIO th readerLoop'
-  where
-    readerLoop' = do
-        takeMVar syncR  -- wait till writer lets us proceed
-        s <- readline "lambdabot> " -- read stdin
-        case s of
-            Nothing -> error "<eof>"
-            Just x -> let s' = dropWhile isSpace x
-                      in if null s' then putMVar syncR () >> readerLoop' else do
-                addHistory s'
+offline :: String -> (IrcMessage -> LB ()) -> IO (LB (), IrcMessage -> LB ())
+offline tag recv = do
+  th <- myThreadId
+  let h = liftLB (handleIO th)
+  return (readerLoop, \m -> h (sendMsg m))
+    where
+      readerLoop = do
+         line <- liftIO $ readline "lambdabot> "
+         case line of
+           Nothing -> error "<eof>"
+           Just x -> let s' = dropWhile isSpace x
+                     in if null s' then readerLoop else do
+                liftIO $ addHistory s'
 
                 let mmsg = case s' of
                             "quit" -> Nothing
@@ -290,49 +146,26 @@ offlineReaderLoop th name_ chanr _chanw _h syncR syncW = handleIO th readerLoop'
                             _      -> Just $ "@"     ++ dropWhile (== ' ') s'
 
                 msg <- case mmsg of
-                    Nothing   -> error "<quit>"
+                    Nothing   -> fail "<quit>"
                     Just msg' -> return msg'
 
-                let m  = IRC.IrcMessage { IRC.msgPrefix  = "null!n=user@null"
-                                        , IRC.msgServer  = name_
-                                        , IRC.msgCommand = "PRIVMSG"
-                                        , IRC.msgParams  = ["offline",":" ++ msg ] }
-                writeChan chanr (Just m)
-                putMVar syncW () -- let writer go 
-                readerLoop'
+                let m  = IrcMessage { msgPrefix  = "null!n=user@null"
+                                    , msgServer  = tag
+                                    , msgCommand = "PRIVMSG"
+                                    , msgParams  = ["offline",":" ++ msg ] }
+                recv m
+                readerLoop
 
 --
 -- Offline writer. Print to stdout
 --
-offlineWriterLoop :: ThreadId -> Pipe IrcMessage -> Handle -> MVar () -> MVar () -> IO ()
-offlineWriterLoop th chanw h syncR syncW = handleIO th writerLoop'
-  where
-    writerLoop' = do
-
-        takeMVar syncW -- wait for reader to let us go
-
-        let loop = do
-            mmsg <- readChan chanw
-            case mmsg of
-                Nothing  -> P.hPutStrLn h P.empty
-                Just msg -> do
-                    let str = case (tail . IRC.msgParams) msg of
-                                []    -> []
-                                (x:_) -> tail x
-                    P.hPutStrLn h (P.pack str)
-            threadDelay 25 -- just for fun.
-            b <- isEmptyChan chanw
-            when (not b) loop
-        loop
-
-        putMVar syncR () -- now allow writer to go
-        writerLoop'
-
--- | convenience:
-io :: forall a (m :: * -> *). (MonadIO m) => IO a -> m a
-io = liftIO
-{-# INLINE io #-}
-
+      sendMsg msg = liftIO $ do
+                      let str = case (tail . msgParams) msg of
+                                  []    -> []
+                                  (x:_) -> tail x
+                      P.hPutStrLn stdout (P.pack str)
+                      hFlush stdout
+ 
 -- Thread handler, just catch particular things we want to throw out to
 -- the main thread, to force an exit. errorCalls are used by the
 -- reader/writer loops to exit. ioErrors are probably sockets closing.
