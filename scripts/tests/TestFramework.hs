@@ -4,16 +4,19 @@ module TestFramework (
   assertSeqEqual_,
   assertLambdabot_,
 
-  tests,
+  tests, random, io80,
 
   HU.Test(..), runTestTT
 
 ) where
 
+import Data.Char
 import IO ( stderr )
 import List ( (\\) )
 import Language.Haskell.TH
 import qualified Test.HUnit as HU
+import System.Random hiding (random)
+import Test.QuickCheck
 
 import Lib.Process
 import System.Directory
@@ -28,6 +31,7 @@ assert_ :: Location -> Bool -> HU.Assertion
 assert_ loc False = HU.assertFailure ("assert failed at " ++ showLoc loc)
 assert_ loc True = return ()
 
+-- lb
 assertLambdabot_ :: Location -> String -> String -> HU.Assertion
 assertLambdabot_ loc expected src = do
     actual <- echo src
@@ -180,3 +184,17 @@ echo cmd = E.handle (\e -> return (show e)) $ do
     return v
  where
     clean = let f = drop 11 . reverse in init . f . f
+
+random :: Arbitrary a => IO a
+random = do
+    g <- getStdGen
+    return $ generate 1000 g (arbitrary :: Arbitrary a => Gen a)
+
+io80 :: IO String -> IO String
+io80 f = take 80 `fmap` f
+
+instance Arbitrary Char where
+    -- filters ctrl chars, and chops lines too remember!
+    arbitrary     = elements $ ['a'..'z'] ++ ['A' .. 'Z'] ++ ['0' .. '9']
+    coarbitrary c = variant (ord c `rem` 4)
+
