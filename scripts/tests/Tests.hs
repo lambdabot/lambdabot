@@ -34,3 +34,8 @@ $(tests "wherePlugin" [d|
     testWhat    = lb "where ghc" "http://haskell.org/ghc"
     testUrl     = lb "where ghc" "http://haskell.org/ghc"
  |] )
+
+------------------------------------------------------------------------
+--
+-- Test the Where plugin
+--
