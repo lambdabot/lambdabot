@@ -217,7 +217,9 @@ runIrc initialise loops ld plugins = withSocketsDo $ do
 
     -- clean up and go home
     case r of
-        Left _  -> exitWith (ExitFailure 1) -- won't happen.  exitImmediately cleans it all up
+        Left er -> do putStrLn "exception:"
+                      print er
+                      exitWith (ExitFailure 1) -- won't happen.  exitImmediately cleans it all up
         Right _ -> exitWith ExitSuccess
 
 --
