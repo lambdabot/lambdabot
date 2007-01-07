@@ -8,7 +8,11 @@ n    = 10
 
 run f = mapM_ (const f) [1..n]
 
-$(tests "dummy" [d|
+------------------------------------------------------------------------
+--
+-- Test the dummy plugin
+--
+$(tests "dummyPlugin" [d|
 
  testDummy = lb "dummy" "dummy"
  testEval  = lb "eval"  ""
@@ -20,3 +24,13 @@ $(tests "dummy" [d|
  testBug = lb "bug" "http://hackage.haskell.org/trac/ghc/newticket?type=bug"
 
  |])
+
+------------------------------------------------------------------------
+--
+-- Test the Where plugin
+--
+$(tests "wherePlugin" [d|
+    testWhere   = lb "where ghc" "http://haskell.org/ghc"
+    testWhat    = lb "where ghc" "http://haskell.org/ghc"
+    testUrl     = lb "where ghc" "http://haskell.org/ghc"
+ |] )

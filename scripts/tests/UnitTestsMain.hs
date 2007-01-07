@@ -4,7 +4,8 @@ import TestFramework
 import Tests
 
 allTests = TestList
-    [ dummy
+    [ dummyPlugin
+    , wherePlugin
     ]
 
 main = runTestTT allTests
