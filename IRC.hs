@@ -9,6 +9,7 @@ module IRC ( online
 import IRCBase
 
 import Config (config, name, port, host, protocol, userinfo )
+import Lib.Util (timeout)
 
 import Data.List (isPrefixOf)
 import Data.Char (isSpace)
@@ -153,7 +154,7 @@ offline tag recv = do
                                     , msgServer  = tag
                                     , msgCommand = "PRIVMSG"
                                     , msgParams  = ["offline",":" ++ msg ] }
-                recv m
+                liftLB (timeout (15 * 1000 * 1000)) $ recv m
                 readerLoop
 
 --
