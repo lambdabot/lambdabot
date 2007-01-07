@@ -156,8 +156,10 @@ isTextHtml :: [String] -> Bool
 isTextHtml []       = False
 isTextHtml contents = val == "text/html"
     where
-      val        = takeWhile (/=';') ctype
-      Just ctype = getHeader "Content-Type" contents
+      val   = takeWhile (/=';') ctype
+      ctype = case getHeader "Content-Type" contents of
+                    Nothing -> error "Lib.URL.isTextHTML: getHeader failed"
+                    Just c  -> c
 
 -- | Retrieve the specified header from the server response being
 -- careful to strip the trailing carriage return.  I swiped this code
