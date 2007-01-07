@@ -33,7 +33,7 @@ assert_ loc True = return ()
 
 -- lb
 assertLambdabot_ :: Location -> String -> String -> HU.Assertion
-assertLambdabot_ loc expected src = do
+assertLambdabot_ loc src expected = do
     actual <- echo src
 
     if expected /= actual
@@ -179,11 +179,19 @@ echo cmd = E.handle (\e -> return (show e)) $ do
     p <- getCurrentDirectory
     setCurrentDirectory lambdabotHome
     let s = cmd ++ "\n"
-    v <- run lambdabot s clean
+    v <- eval lambdabot s clean
     setCurrentDirectory p
     return v
  where
-    clean = let f = drop 11 . reverse in init . f . f
+    clean s = let f = drop 11 . reverse
+              in case f (f s) of
+                    [] -> []
+                    x  -> init x
+
+    eval :: FilePath -> String -> (String -> String) -> IO String
+    eval binary src scrub = do
+        (out,_,_) <- popen binary [] (Just src)
+        return ( scrub out )
 
 random :: Arbitrary a => IO a
 random = do

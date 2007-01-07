@@ -3,16 +3,20 @@ module Tests where
 import Control.Monad
 import TestFramework
 
+-- number of tests to run
 n    = 10
 
 run f = mapM_ (const f) [1..n]
 
 $(tests "dummy" [d|
 
- test1 = lb "dummy" "dummy"
+ testDummy = lb "dummy" "dummy"
+ testEval  = lb "eval"  ""
 
- test2 = run $ do
+ testId= run $ do
             s <- io80 random
-            lb (" " ++ s) ("id " ++ s)
+            lb ("id " ++ s) (" " ++ s)
+
+ testBug = lb "bug" "http://hackage.haskell.org/trac/ghc/newticket?type=bug"
 
  |])
