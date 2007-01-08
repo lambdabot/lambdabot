@@ -26,6 +26,8 @@ instance Module LocaltimeModule TimeMap where
   process x y z "time" a = process x y z "localtime" a
 
   -- record this person as a callback, for when we (asynchronously) get a result
+  process m msg whoAsked "localtime" []     = process m msg whoAsked "localtime" (Msg.nName whoAsked)
+
   process _ msg whoAsked "localtime" rawWho = do
         let whoToPing = Msg.readNick msg $ fst $ break (== ' ') rawWho
         if whoToPing /= Msg.lambdabotName msg
