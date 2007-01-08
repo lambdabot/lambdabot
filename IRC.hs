@@ -51,13 +51,14 @@ encodeMessage msg
     encodeParams (p:ps) = showChar ' ' . showString p . encodeParams ps
 
 -- | 'decodeMessage' Takes an input line from the IRC protocol stream
---   and decodes it into a message.
-decodeMessage :: String -> String -> IrcMessage
-decodeMessage svr line =
+--   and decodes it into a message.  FIXME: this has too many parameters.
+decodeMessage :: String -> String -> String -> IrcMessage
+decodeMessage svr lbn line =
     let (prefix, rest1) = decodePrefix (,) line
         (cmd, rest2)    = decodeCmd (,) rest1
         params          = decodeParams rest2
-    in IrcMessage { msgServer = svr, msgPrefix = prefix, msgCommand = cmd, msgParams = params }
+    in IrcMessage { msgServer = svr, msgLBName = lbn, msgPrefix = prefix,
+                    msgCommand = cmd, msgParams = params }
   where
     decodePrefix k (':':cs) = decodePrefix' k cs
       where decodePrefix' j ""       = j "" ""
@@ -129,7 +130,7 @@ online tag host portnum nickn ui recv = do
          let line' = filter (\c -> c /= '\n' && c /= '\r') line
          if pING `isPrefixOf` line'
            then liftIO $ hPutStr sock ("PONG " ++ drop 5 line')
-           else do forkLB $ recv (IRC.decodeMessage tag line')
+           else do forkLB $ recv (IRC.decodeMessage tag nickn line')
                    return ()
          readerLoop sock
       pING = "PING "
@@ -175,6 +176,7 @@ offline tag recv = do
 
                 let m  = IrcMessage { msgPrefix  = "null!n=user@null"
                                     , msgServer  = tag
+                                    , msgLBName  = "lambdabot"
                                     , msgCommand = "PRIVMSG"
                                     , msgParams  = ["offline",":" ++ msg ] }
                 liftLB (timeout (15 * 1000 * 1000)) $ recv m

@@ -15,8 +15,6 @@ import Message
 import Lib.Util (split, breakOnGlue, clean)
 import qualified Lib.Util as Util (concatWith) 
 
-import qualified Config (config, name)
-
 import Data.Char (chr,isSpace)
 
 import Control.Monad (liftM2)
@@ -25,6 +23,7 @@ import Control.Monad (liftM2)
 data IrcMessage
   = IrcMessage {
         msgServer   :: !String,
+        msgLBName   :: !String,
         msgPrefix   :: !String,
         msgCommand  :: !String,
         msgParams   :: ![String]
@@ -51,8 +50,8 @@ mkMessage :: String -- ^ Server
           -> [String] -- ^ Parameters
           -> IrcMessage -- ^ Returns: The created message
 
-mkMessage svr cmd params = IrcMessage { msgServer = svr, msgPrefix = "",
-                                        msgCommand = cmd, msgParams = params }
+mkMessage svr cmd params = IrcMessage { msgServer = svr, msgPrefix = "", msgCommand = cmd, msgParams = params,
+                                        msgLBName = "urk!<outputmessage>" }
 
 -- | 'nick' extracts the nickname involved in a given message.
 nick :: IrcMessage -> Nick
@@ -120,6 +119,7 @@ timeReply :: IrcMessage -> IrcMessage
 timeReply msg    = 
    IrcMessage { msgPrefix  = msgPrefix (msg)
               , msgServer  = msgServer (msg)
+              , msgLBName  = msgLBName (msg)
               , msgCommand = "PRIVMSG"
               , msgParams  = [head (msgParams msg)
                              ,":@localtime-reply " ++ (nName $ IRCBase.nick msg) ++ ":" ++
@@ -138,4 +138,4 @@ setNick :: Nick -> IrcMessage
 setNick nick_ = IRCBase.mkMessage (nTag nick_) "NICK" [nName nick_]
 
 lambdabotName :: IrcMessage -> Nick
-lambdabotName _ = Config.name Config.config
+lambdabotName msg = Nick (msgServer msg) (msgLBName msg)
