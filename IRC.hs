@@ -133,12 +133,12 @@ online tag host portnum nickn ui recv = do
                    return ()
          readerLoop sock
       pING = "PING "
-      sendMsg sock sem1 sem2 msg =
-          catchError (liftIO $ do waitQSem sem2
-                                  P.hPut sock $ P.pack $ IRC.encodeMessage msg "\r"
-                                  signalQSem sem1)
-                     (\err -> do io $ hPutStrLn stderr $ "irc[" ++ tag ++ "] error: " ++ show err
-                                 io $ hClose sock)
+      sendMsg sock sem1 sem2 msg = liftIO $
+          catchJust ioErrors (do waitQSem sem2
+                                 P.hPut sock $ P.pack $ IRC.encodeMessage msg "\r"
+                                 signalQSem sem1)
+                             (\err -> do hPutStrLn stderr $ "irc[" ++ tag ++ "] error: " ++ show err
+                                         hClose sock)
                  
                                
  
