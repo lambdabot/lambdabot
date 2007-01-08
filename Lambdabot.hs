@@ -84,6 +84,7 @@ import GHC.Err
 data IRCRState
   = IRCRState {
         ircMainThread  :: ThreadId,
+        ircInitDoneMVar:: MVar (),
         ircQuitMVar    :: MVar ()
         -- ^This is a mildly annoying hack.  In order to prevent the program
         -- from closing immediately, we have to keep the main thread alive, but
@@ -304,14 +305,18 @@ mainLoop :: LB a -> LB ()
 mainLoop loop = do
     threadmain <- io myThreadId
     quitMVar <- io newEmptyMVar
+    initDoneMVar <- io newEmptyMVar
 
     let chans = IRCRState {
                     ircQuitMVar    = quitMVar,
+                    ircInitDoneMVar= initDoneMVar,
                     ircMainThread  = threadmain
                 }
 
     catchIrc
-       (localLB (Just chans) (loop >> io (takeMVar quitMVar) >> error "don't write to the quitMVar!"))
+       (localLB (Just chans) $ do loop >> io (putMVar initDoneMVar ())
+                                  io (takeMVar quitMVar)
+                                  fail "don't write to the quitMVar!")
        (\e -> do -- catch anything, print informative message, and clean up
             io $ hPutStrLn stderr $
                        (case e of
