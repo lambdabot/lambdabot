@@ -26,16 +26,18 @@ instance Module LocaltimeModule TimeMap where
   process x y z "time" a = process x y z "localtime" a
 
   -- record this person as a callback, for when we (asynchronously) get a result
-  process m msg whoAsked "localtime" []     = process m msg whoAsked "localtime" (Msg.nName whoAsked)
+  process m msg whoAsked "localtime" []     = do
+    let n = Msg.nName (Msg.nick msg)
+    process m msg whoAsked "localtime" n
 
   process _ msg whoAsked "localtime" rawWho = do
-        let whoToPing = Msg.readNick msg $ fst $ break (== ' ') rawWho
-        if whoToPing /= Msg.lambdabotName msg
-            then do modifyMS $ \st -> M.insertWith (++) whoToPing [whoAsked] st
-                -- this is a CTCP time call, which returns a NOTICE
-                    lift $ ircPrivmsg' whoToPing ("\^ATIME\^A")     -- has to be raw
-                    return []
-            else return ["I live on the internet, do you expect me to have a local time?"]
+    let whoToPing = Msg.readNick msg $ fst $ break (== ' ') rawWho
+    if whoToPing /= Msg.lambdabotName msg
+        then do modifyMS $ \st -> M.insertWith (++) whoToPing [whoAsked] st
+            -- this is a CTCP time call, which returns a NOTICE
+                lift $ ircPrivmsg' whoToPing ("\^ATIME\^A")     -- has to be raw
+                return []
+        else return ["I live on the internet, do you expect me to have a local time?"]
 
   -- the Base module caught the NOTICE TIME, mapped it to a PRIVMGS, and here it is :)
   process _ msg _ "localtime-reply" text = do
