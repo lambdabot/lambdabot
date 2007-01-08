@@ -171,7 +171,7 @@ runTestTT t = do (counts, 0) <- runTestText (HU.putTextToHandle stderr True) t
                  return counts
 
 lambdabot     = "./lambdabot"
-lambdabotHome = "/home/dons/lambdabot"
+lambdabotHome = ".."
 
 -- run the lambdabot
 echo :: String -> IO String

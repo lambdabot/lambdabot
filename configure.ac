@@ -30,10 +30,18 @@ AC_SUBST(REPO_PATH)
 PATCH_COUNT=`darcs changes --xml-output 2> /dev/null | sed -n '/TAG/q;/^<\/patch/p' | wc -l | sed 's/ *//g'`
 AC_SUBST(PATCH_COUNT)
 
+# Use GNU m4, which is called gm4 on *BSD
+if gm4 --version > /dev/null 2>&1 ; then
+        AC_PATH_PROG(WithM4,gm4)
+else
+        AC_PATH_PROG(WithM4,m4)
+fi
+
 # need to recompile this if configure is rerun
 touch Plugin/Version.hs
 
 AC_SUBST(SYMS)
 
-AC_CONFIG_FILES([config.h])
+AC_CONFIG_FILES([config.h testsuite/logpp])
+AC_CONFIG_COMMANDS([default], [chmod 700 testsuite/logpp] )
 AC_OUTPUT

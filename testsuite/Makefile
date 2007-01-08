@@ -1,4 +1,4 @@
-HC_OPTS=        -fasm -O2 -fth -fglasgow-exts -i../..
+HC_OPTS=        -fasm -O2 -fth -fglasgow-exts -i..
 PP=             ./logpp
 GHC=            ghc $(HC_OPTS) --make -pgmF $(PP) -F -threaded
 
@@ -10,4 +10,4 @@ run-utests:
 
 .PHONY: clean
 clean:
-	rm -f *.o *.hi $(BINS)
+	rm -f *.o *.hi $(BINS) run-utests
