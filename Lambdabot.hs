@@ -115,6 +115,7 @@ data IRCRWState = IRCRWState {
         ircPrivCommands    :: [String],
         ircStayConnected   :: !Bool,
         ircDynLoad         :: S.DynLoad,
+        ircOnStartupCmds   :: [String],
         ircPlugins         :: [String]
     }
 
@@ -259,11 +260,11 @@ data Mode = Online | Offline deriving Eq
 -- (i.e. print a message and exit). Non-fatal exceptions should be dealt
 -- with in the mainLoop or further down.
 --
-runIrc :: LB a -> LB () -> S.DynLoad -> [String] -> IO ()
-runIrc initialise aftinit ld plugins = withSocketsDo $ do
+runIrc :: [String] -> LB a -> LB () -> S.DynLoad -> [String] -> IO ()
+runIrc evcmds initialise aftinit ld plugins = withSocketsDo $ do
     r <- try $ evalLB (do withDebug "Initialising plugins" initialise
                           withIrcSignalCatch (mainLoop aftinit))
-                       (initState (Config.admins Config.config) ld plugins)
+                       (initState (Config.admins Config.config) ld plugins evcmds)
 
     -- clean up and go home
     case r of
@@ -275,8 +276,8 @@ runIrc initialise aftinit ld plugins = withSocketsDo $ do
 --
 -- | Default rw state
 --
-initState :: [Msg.Nick] -> S.DynLoad -> [String] -> IRCRWState
-initState as ld plugins = IRCRWState {
+initState :: [Msg.Nick] -> S.DynLoad -> [String] -> [String] -> IRCRWState
+initState as ld plugins evcmds = IRCRWState {
         ircPrivilegedUsers = M.fromList $ zip as (repeat True),
         ircChannels        = M.empty,
         ircModules         = M.empty,
@@ -292,7 +293,8 @@ initState as ld plugins = IRCRWState {
         ircPrivCommands    = [],
         ircStayConnected   = True,
         ircDynLoad         = ld,
-        ircPlugins         = plugins
+        ircPlugins         = plugins,
+        ircOnStartupCmds   = evcmds
     }
 
 --

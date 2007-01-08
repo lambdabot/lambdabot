@@ -16,17 +16,26 @@ import System.Environment
 import Data.Maybe
 import Control.Monad.State (get, liftIO, modify)
 
+data Args = Args { privileged :: Bool,
+                   initcmds   :: [String],
+                   runOnline  :: Bool }
 
 main' :: Maybe DynLoad -> (LB (), [String]) -> IO ()
 main' dyn (loadStaticModules, pl) = do
     x    <- getArgs
-    case x of
-        ["--online"]     -> runIrc loadStaticModules onlineMain  ld pl 
-        ["--restricted"] -> runIrc loadStaticModules (offlineMain False) ld pl
-        []               -> runIrc loadStaticModules (offlineMain True)  ld pl
-        _                -> putStrLn "Usage: lambdabot [--online|--restricted]"
+    let a = parseArgs x
+    case a of
+        Just args -> runIrc (initcmds args) loadStaticModules
+                     (if runOnline args then onlineMain else offlineMain (privileged args)) ld pl
+        _         -> putStrLn "Usage: lambdabot [--online|--restricted|-e 'cmd']*"
 
     where ld = fromMaybe (error "no dynamic loading") dyn
+          parseArgs ("--online":x)     = parseArgs x >>$ \a -> a { runOnline = True }
+          parseArgs ("--restricted":x) = parseArgs x >>$ \a -> a { privileged = False }
+          parseArgs ("-e":cmd:x)       = parseArgs x >>$ \a -> a { initcmds = cmd : initcmds a }
+          parseArgs []                 = Just $ Args { privileged = True, initcmds = [], runOnline = False }
+          parseArgs _                  = Nothing
+          (>>$) = flip fmap
 
 
 ------------------------------------------------------------------------
