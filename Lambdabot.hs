@@ -185,13 +185,12 @@ mkCN = ChanName . liftM2 Msg.Nick Msg.nTag (map toLower . Msg.nName)
 -- instances Monad, Functor, MonadIO, MonadState, MonadError
 
 
-newtype LB a = LB { runLB :: ReaderT (IORef (Maybe IRCRState),IORef IRCRWState) IO a }
+newtype LB a = LB { runLB :: ReaderT (IRCRState,IORef IRCRWState) IO a }
     deriving (Monad,Functor,MonadIO)
 
 -- Actually, this isn't a reader anymore
 instance MonadReader IRCRState LB where
-    ask   = LB $ fmap (maybe (error "No connection") id) $
-                        io . readIORef =<< asks fst
+    ask   = LB $ asks fst
     local = error "You are not supposed to call local"
 
 instance MonadState IRCRWState LB where
@@ -219,23 +218,11 @@ data IRCError = IRCRaised Exception | SignalCaught Signal deriving Show
 lbIO :: ((forall a. LB a -> IO a) -> IO b) -> LB b
 lbIO k = LB . ReaderT $ \r -> k (\(LB m) -> m `runReaderT` r)
 
--- | Take a state, and a lambdabot monad action, run the action,
--- preserving the state before and after you run the action.
-localLB :: Maybe IRCRState -> LB a -> LB a
-localLB new (LB m) = LB $ do
-    ref <- asks fst
-    old <- io $ readIORef ref
-    io $ writeIORef ref new
-    res <- m
-    io $ writeIORef ref old
-    return res
-
 -- | run a computation in the LB monad
-evalLB :: LB a -> IRCRWState -> IO a
-evalLB (LB lb) rws = do
+evalLB :: LB a -> IRCRState -> IRCRWState -> IO a
+evalLB (LB lb) rs rws = do
     ref  <- newIORef rws
-    ref' <- newIORef Nothing
-    lb `runReaderT` (ref',ref)
+    lb `runReaderT` (rs,ref)
 
 -- May wish to add more things to the things caught, or restructure things 
 -- a bit. Can't just catch everything - in particular EOFs from the socket
@@ -263,9 +250,10 @@ data Mode = Online | Offline deriving Eq
 --
 runIrc :: [String] -> LB a -> LB () -> S.DynLoad -> [String] -> IO ()
 runIrc evcmds initialise aftinit ld plugins = withSocketsDo $ do
+    rost <- initRoState
     r <- try $ evalLB (do withDebug "Initialising plugins" initialise
                           withIrcSignalCatch (mainLoop aftinit))
-                       (initState (Config.admins Config.config) ld plugins evcmds)
+                       rost (initState (Config.admins Config.config) ld plugins evcmds)
 
     -- clean up and go home
     case r of
@@ -273,6 +261,21 @@ runIrc evcmds initialise aftinit ld plugins = withSocketsDo $ do
                       print er
                       exitWith (ExitFailure 1) -- won't happen.  exitImmediately cleans it all up
         Right _ -> exitWith ExitSuccess
+
+--
+-- | Default ro state
+--
+initRoState :: IO IRCRState
+initRoState = do
+    threadmain <- io myThreadId
+    quitMVar <- io newEmptyMVar
+    initDoneMVar <- io newEmptyMVar
+
+    return $ IRCRState {
+                 ircQuitMVar    = quitMVar,
+                 ircInitDoneMVar= initDoneMVar,
+                 ircMainThread  = threadmain
+             }
 
 --
 -- | Default rw state
@@ -303,20 +306,12 @@ initState as ld plugins evcmds = IRCRWState {
 --
 mainLoop :: LB a -> LB ()
 mainLoop loop = do
-    threadmain <- io myThreadId
-    quitMVar <- io newEmptyMVar
-    initDoneMVar <- io newEmptyMVar
-
-    let chans = IRCRState {
-                    ircQuitMVar    = quitMVar,
-                    ircInitDoneMVar= initDoneMVar,
-                    ircMainThread  = threadmain
-                }
 
     catchIrc
-       (localLB (Just chans) $ do loop >> io (putMVar initDoneMVar ())
-                                  io (takeMVar quitMVar)
-                                  fail "don't write to the quitMVar!")
+       (do loop
+           asks ircInitDoneMVar >>= io . flip putMVar ()
+           asks ircQuitMVar >>= io . takeMVar
+           fail "don't write to the quitMVar!")
        (\e -> do -- catch anything, print informative message, and clean up
             io $ hPutStrLn stderr $
                        (case e of
