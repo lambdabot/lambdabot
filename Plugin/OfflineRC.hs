@@ -15,6 +15,7 @@ import Control.Monad.State( get, put )
 import Control.Concurrent( forkIO )
 import Control.Concurrent.MVar( readMVar )
 import Lib.Error( finallyError )
+import System.Console.Readline( readline, addHistory )
 
 PLUGIN OfflineRC
 
@@ -24,12 +25,18 @@ PLUGIN OfflineRC
 type OfflineRC = ModuleT Integer LB 
 
 instance Module OfflineRCModule Integer where
-    moduleInit      _ = do act <- bindModule0 onInit
-                           lift $ liftLB forkIO $ do mv <- asks ircInitDoneMVar
-                                                     io $ readMVar mv
-                                                     act
-                           return ()
-    moduleDefState _  = return 0
+    modulePrivs  _         = ["offline"]
+    moduleHelp _ _         = "offline. Start a repl"
+    moduleInit      _      = do act <- bindModule0 onInit
+                                lift $ liftLB forkIO $ do mv <- asks ircInitDoneMVar
+                                                          io $ readMVar mv
+                                                          act
+                                return ()
+    moduleDefState _       = return 0
+    process_ _ "offline" _ = do act <- bindModule0 $ finallyError replLoop unlockRC
+                                lockRC
+                                lift $ liftLB forkIO act
+                                return []
 
 onInit :: ModuleT Integer LB ()
 onInit = do st <- get
@@ -55,6 +62,14 @@ handleMsg msg = liftIO $ do
                               (x:_) -> tail x
                   hPutStrLn stdout str
                   hFlush stdout
+
+replLoop :: OfflineRC ()
+replLoop = do line <- io $ readline "lambdabot> "
+              s' <- case line of Nothing -> fail "<eof>"
+                                 Just x -> return $ dropWhile isSpace x
+              when (not $ null s') (do io (addHistory s')
+                                       feed s')
+              replLoop
 
 
 lockRC :: OfflineRC ()
