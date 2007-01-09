@@ -248,11 +248,11 @@ data Mode = Online | Offline deriving Eq
 -- (i.e. print a message and exit). Non-fatal exceptions should be dealt
 -- with in the mainLoop or further down.
 --
-runIrc :: [String] -> LB a -> LB () -> S.DynLoad -> [String] -> IO ()
-runIrc evcmds initialise aftinit ld plugins = withSocketsDo $ do
+runIrc :: [String] -> LB a -> S.DynLoad -> [String] -> IO ()
+runIrc evcmds initialise ld plugins = withSocketsDo $ do
     rost <- initRoState
     r <- try $ evalLB (do withDebug "Initialising plugins" initialise
-                          withIrcSignalCatch (mainLoop aftinit))
+                          withIrcSignalCatch mainLoop)
                        rost (initState (Config.admins Config.config) ld plugins evcmds)
 
     -- clean up and go home
@@ -282,7 +282,7 @@ initRoState = do
 --
 initState :: [Msg.Nick] -> S.DynLoad -> [String] -> [String] -> IRCRWState
 initState as ld plugins evcmds = IRCRWState {
-        ircPrivilegedUsers = M.fromList $ zip as (repeat True),
+        ircPrivilegedUsers = M.fromList $ zip (Msg.Nick "offlinerc" "null" : as) (repeat True),
         ircChannels        = M.empty,
         ircModules         = M.empty,
         ircServerMap       = M.empty,
@@ -304,12 +304,11 @@ initState as ld plugins evcmds = IRCRWState {
 --
 -- Actually, this isn't a loop anymore.  FIXME: better name.
 --
-mainLoop :: LB a -> LB ()
-mainLoop loop = do
+mainLoop :: LB ()
+mainLoop = do
 
     catchIrc
-       (do loop
-           asks ircInitDoneMVar >>= io . flip putMVar ()
+       (do asks ircInitDoneMVar >>= io . flip putMVar ()
            asks ircQuitMVar >>= io . takeMVar
            fail "don't write to the quitMVar!")
        (\e -> do -- catch anything, print informative message, and clean up

@@ -42,7 +42,7 @@ onInit :: ModuleT Integer LB ()
 onInit = do st <- get
             put (st { ircOnStartupCmds = [] })
             let cmds = ircOnStartupCmds st
-            when (cmds /= []) (lockRC >> finallyError (mapM_ feed cmds) unlockRC)
+            lockRC >> finallyError (mapM_ feed cmds) unlockRC
 
 feed :: String -> ModuleT Integer LB ()
 feed msg = let msg' = case msg of '>':xs -> "@run " ++ xs
