@@ -114,8 +114,8 @@ online tag hostn portnum nickn ui = do
     signalQSem sem2
   catchError (addServer tag $ io . sendMsg tag sock sem1 sem2)
              (\err -> io (hClose sock) >> throwError err)
-  lift $ liftLB forkIO $ catchError (do ircSignOn hostn (Nick tag nickn) ui
-                                        readerLoop tag nickn sock)
+  lift $ ircSignOn hostn (Nick tag nickn) ui
+  lift $ liftLB forkIO $ catchError (readerLoop tag nickn sock)
                                    (\e -> do io $ hPutStrLn stderr $ "irc[" ++ tag ++ "] error: " ++ show e
                                              remServer tag)
   return ()
