@@ -23,7 +23,7 @@ instance Module ActivityModule ActivityState where
         secs <- (normalizeTimeDiff . \sec -> TimeDiff 0 0 0 0 0 sec 0) `fmap` readM rest
         now <- io getClockTime
         users <- (map snd . filter ((< secs) . diffClockTimes now . fst)) `fmap` readMS
-        let agg_users = sort . map (length &&& head) . group . sort $ users
+        let agg_users = reverse . sort . map (length &&& head) . group . sort $ users
         let fmt_agg = concatWith " " . (:) (show (length users) ++ "*total") .
                       map (\(n,u) -> show n ++ "*" ++ Msg.showNick msg u) $ agg_users
         return [fmt_agg]
