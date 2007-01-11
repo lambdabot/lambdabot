@@ -15,6 +15,7 @@ import Control.Monad.State( get, put )
 import Control.Concurrent( forkIO )
 import Control.Concurrent.MVar( readMVar )
 import Lib.Error( finallyError )
+import Control.Exception( evaluate )
 import System.Console.Readline( readline, addHistory )
 
 PLUGIN OfflineRC
@@ -38,8 +39,8 @@ instance Module OfflineRCModule Integer where
                                 lockRC
                                 lift $ liftLB forkIO act
                                 return []
-    process_ _ "source" fn = do txt <- readFile fn
-                                evaluate $ foldr seq () txt
+    process_ _ "source" fn = do txt <- io $ readFile fn
+                                io $ evaluate $ foldr seq () txt
                                 act <- bindModule0 $ finallyError (mapM_ feed $ lines txt) unlockRC
                                 lockRC
                                 lift $ liftLB forkIO act
