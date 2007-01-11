@@ -6,9 +6,9 @@ module Plugin.System (theModule) where
 import Plugin
 import Lib.AltTime
 import qualified Message (Message, Nick, joinChannel, partChannel, server, readNick)
-import qualified Data.Map as M       (Map,keys,fromList,lookup,union)
+import qualified Data.Map as M       (Map,keys,fromList,lookup,union,insert,delete)
 
-import Control.Monad.State      (MonadState(get), gets)
+import Control.Monad.State      (MonadState(get, put), gets)
 
 PLUGIN System
 
@@ -32,6 +32,7 @@ syscmds :: M.Map String String
 syscmds = M.fromList
        [("listchans",   "Show channels bot has joined")
        ,("listmodules", "listmodules. Show available plugins")
+       ,("listservers", "listservers. Show current servers")
        ,("list",        "list [module|command]\n"++
                         "show all commands or command for [module]. http://www.cse.unsw.edu.au/~dons/lambdabot/COMMANDS")
        ,("echo",        "echo <msg>. echo irc protocol string")
@@ -46,6 +47,7 @@ privcmds = M.fromList [
        ,("quit",        "quit [msg], have the bot exit with msg")
        ,("listall",     "list all commands")
        ,("flush",       "flush. flush state to disk")
+       ,("admin",       "admin [+|-] nick. change a user's admin status.")
        ,("reconnect",   "reconnect to server")]
 
 ------------------------------------------------------------------------
@@ -57,6 +59,7 @@ doSystem :: Message.Message a => a -> Message.Nick -> [Char] -> [Char] -> Module
 doSystem msg _ cmd rest = get >>= \s -> case cmd of
   "listchans"   -> return [pprKeys (ircChannels s)]
   "listmodules" -> return [pprKeys (ircModules s) ]
+  "listservers" -> return [pprKeys (ircServerMap s)]
   "listall"     -> lift listAll
   "list"| null rest -> return ["http://www.cse.unsw.edu.au/~dons/lambdabot/COMMANDS"]
         | otherwise -> lift $ listModule rest >>= return . (:[])
@@ -84,6 +87,14 @@ doSystem msg _ cmd rest = get >>= \s -> case cmd of
 
   "flush" -> lift $ do flushModuleState
                        return []
+
+  "admin" -> do let pu = ircPrivilegedUsers s
+                pu' <- case rest of '+':' ':_ -> return $ M.insert nck True pu
+                                    '-':' ':_ -> return $ M.delete nck pu
+                                    _         -> fail "@admin: invalid usage"
+                put (s {ircPrivilegedUsers = pu'})
+                return []
+      where nck = Message.readNick msg (drop 2 rest)
 
   "uptime" -> do
           (loaded, m) <- readMS
