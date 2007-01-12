@@ -6,8 +6,10 @@
 --
 module Plugin.Vixen where
 
+import Data.Binary
+import Data.Binary.Put
+import Data.Binary.Get
 import Plugin
-import Lib.Binary
 
 import Control.Arrow ((***))
 import System.Directory
@@ -42,10 +44,7 @@ instance Module VixenModule (Bool, String -> IO String) where
     moduleInit _     = do
       b <- io $ doesFileExist file
       when b $ do
-          s <- io $ do h  <- openFile file ReadMode
-                       bh <- openBinIO_ h
-                       st <- get bh :: IO Choice
-                       hClose h
+          s <- io $ do st <- decodeFile file
                        let compiled = map (regex *** id) st
                        return (vixen (mkResponses compiled))
           modifyMS $ \(v,_) -> (v, s)
@@ -76,17 +75,13 @@ mkResponses choices them = (\((_,wtree):_) -> wtree) $
 data WTree = Leaf !P.ByteString | Node ![WTree]
 
 instance Binary WTree where
-    put_ h (Leaf s)  = do
-        putByte h 0
-        put_ h s
-    put_ h (Node ls) = do
-        putByte h 1
-        put_ h ls
-    get h = do
-        tag <- getWord8 h
+    put (Leaf s)  = putWord8 0 >> put s
+    put (Node ls) = putWord8 1 >> put ls
+    get = do
+        tag <- getWord8
         case tag of
-            0 -> Leaf `fmap` get h
-            1 -> Node `fmap` get h
+            0 -> liftM Leaf get
+            1 -> liftM Node get
 
 type Choice  = [(P.ByteString, WTree)]
 type RChoice = [(Regex, WTree)] -- compiled choices

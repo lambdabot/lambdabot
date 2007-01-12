@@ -7,9 +7,10 @@
 --
 module Plugin.Seen (theModule) where
 
+import Data.Binary
+
 import Plugin
 import Lib.AltTime
-import Lib.Binary
 import Lib.Error         (tryError)
 import Lib.Util          (lowerCaseString)
 
@@ -17,6 +18,7 @@ import qualified Message as G (Message, names, channels, nick, packNick, unpackN
 
 import qualified Data.Map as M
 import qualified Data.ByteString.Char8 as P
+import qualified Data.ByteString.Lazy as L
 
 import System.Directory
 
@@ -71,66 +73,61 @@ type Seen m a  = ModuleT SeenState m a
 -- is use Binary to pack this value, since Read is sooo slow and exe (as
 -- my gf says :)
 
+{-
 instance Binary (M.Map Nick UserStatus) where
     put_ bh m = put_ bh (M.toList m)
     get bh    = do x <- get bh ; return (M.fromList x)
+-}
 
 instance Binary StopWatch where
-    put_ bh (Stopped td) = do
-        putByte bh 0
-        put_ bh td
+    put (Stopped td) = putWord8 0 >> put td
+    put (Running ct) = putWord8 1 >> put ct
 
-    put_ bh (Running ct) = do
-        putByte bh 1
-        put_ bh ct
-
-    get bh = do
-        h <- getWord8 bh
+    get = do
+        h <- getWord8
         case h of
-                0 -> do x <- get bh ; return (Stopped x)
-                1 -> do x <- get bh ; return (Running x)
-                _ -> error "Seen.StopWatch.get"
+            0 -> liftM Stopped get
+            1 -> liftM Running get
+            _ -> error "Seen.StopWatch.get"
 
 instance Binary UserStatus where
-    put_ bh (Present spoke chans) = do
-        putByte bh 0
-        put_ bh spoke
-        put_ bh chans
-    put_ bh (NotPresent ct sw chans) = do
-        putByte bh 1
-        put_ bh ct
-        put_ bh sw
-        put_ bh chans
-    put_ bh (WasPresent ct sw spoke chans) = do
-        putByte bh 2
-        put_ bh ct
-        put_ bh sw
-        put_ bh spoke
-        put_ bh chans
-    put_ bh (NewNick n) = do
-        putByte bh 3
-        put_ bh n
+    put (Present spoke chans) = do
+        putWord8 0
+        put spoke
+        put chans
+    put (NotPresent ct sw chans) = do
+        putWord8 1
+        put ct
+        put sw
+        put chans
+    put (WasPresent ct sw spoke chans) = do
+        putWord8 2
+        put ct
+        put sw
+        put spoke
+        put chans
+    put (NewNick n) = putWord8 3 >> put n
 
-    get bh = do
-        h <- getWord8 bh
+    get = do
+        h <- getWord8
         case h of
             0 -> do
-                x <- get bh
-                y <- get bh
+                x <- get
+                y <- get
                 return (Present x y)
             1 -> do
-                x <- get bh
-                y <- get bh
-                z <- get bh
+                x <- get
+                y <- get
+                z <- get
                 return (NotPresent x y z)
             2 -> do
-                x <- get bh
-                y <- get bh
-                z <- get bh
-                a <- get bh
+                x <- get
+                y <- get
+                z <- get
+                a <- get
                 return (WasPresent x y z a)
             3 -> do
-                x <- get bh
+                x <- get
                 return (NewNick x)
 
             _ -> error "Seen.UserStatus.get"
@@ -194,13 +191,10 @@ instance Module SeenModule SeenState where
 
       -- and suck in our state. We read directly from the handle, to avoid copying
       b <- io $ doesFileExist "State/seen"
-      when b $ do
-          s <- io $ do h  <- openFile "State/seen" ReadMode
-                       bh <- openBinIO_ h
-                       st <- get bh
-                       hClose h
-                       return st
-          writeMS s
+      when b $ io (do
+            s <- io (P.readFile "State/seen")
+            let ls = L.fromChunks [s]
+            return (decode ls)) >>= writeMS
 
     moduleExit _ = do
       chans <- lift $ ircGetChannels
@@ -209,12 +203,7 @@ instance Module SeenModule SeenState where
             modifyMS $ \(n,m) -> (n, botPart ct (map G.packNick chans) m)
 
         -- and write out our state:
-      withMS $ \s _ -> do
-          io $ do h  <- openFile "State/seen" WriteMode
-                  bh <- openBinIO_ h
-                  put_ bh s
-                  hClose h
-          return ()
+      withMS $ \s _ -> io ( encodeFile "State/seen" s)
 
 lcNick :: G.Nick -> G.Nick
 lcNick (G.Nick svr nck) = G.Nick svr (lowerCaseString nck)

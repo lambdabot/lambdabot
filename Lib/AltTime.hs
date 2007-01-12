@@ -7,9 +7,9 @@ module Lib.AltTime (
     module System.Time
   ) where
 
-import Lib.Binary
-
 import Control.Arrow (first)
+
+import Data.Binary
 
 import Data.List
 import System.Time (TimeDiff(..), noTimeDiff)
@@ -76,31 +76,22 @@ timeDiffPretty td = concat . intersperse " " $ filter (not . null) [
 ------------------------------------------------------------------------
 
 instance Binary ClockTime where
-        put_ bh (ClockTime (T.TOD i j)) = do
-                put_ bh i
-                put_ bh j
-        get bh = do
-                i <- get bh
-                j <- get bh
-                return (ClockTime (T.TOD i j))
+        put (ClockTime (T.TOD i j)) = put i >> put j
+        get = do i <- get
+                 j <- get
+                 return (ClockTime (T.TOD i j))
 
 instance Binary TimeDiff where
-        put_ bh (TimeDiff ye mo da ho mi se ps) = do
-                put_ bh ye
-                put_ bh mo
-                put_ bh da
-                put_ bh ho
-                put_ bh mi
-                put_ bh se
-                put_ bh ps
-        get bh = do
-                ye <- get bh 
-                mo <- get bh 
-                da <- get bh 
-                ho <- get bh 
-                mi <- get bh 
-                se <- get bh 
-                ps <- get bh 
+        put (TimeDiff ye mo da ho mi se ps) = do
+                put ye; put mo; put da; put ho; put mi; put se; put ps
+        get = do
+                ye <- get
+                mo <- get
+                da <- get
+                ho <- get
+                mi <- get
+                se <- get
+                ps <- get
                 return (TimeDiff ye mo da ho mi se ps)
 
 
