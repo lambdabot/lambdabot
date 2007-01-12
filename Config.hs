@@ -3,25 +3,14 @@
 --
 module Config where
 
-import Message(Nick(Nick))
-
-data Protocol = Irc | Xmpp
-
 -- | The 'Config' type provides configurations for lambdabot. It is used
 --   when lambdabot is started to determine the name of lambdabot, what
 --   IRC-network lambdabot should join, which channels lambdabot should
 --   join upon successful connection, etc.
 --
 data Config = Config {
-        name      :: Nick,          -- ^ The nickname of lambdabot
-        userinfo  :: String,        -- ^ The userinfo string for lambdabot
-        host      :: String,        -- ^ Host to join
-        port      :: Int,           -- ^ The port number to use on the host
-        protocol  :: Protocol,      -- ^ either irc or xmpp/jabber
         verbose   :: Bool,          -- ^ Should lambdabot be verbose?
         textwidth :: Int,           -- ^ How many columns should we use
-        autojoin  :: [Nick],        -- ^ List of channels to autojoin
-        admins    :: [Nick],        -- ^ List of nicknames that are admins
         proxy     :: Maybe ([Char], Integer), -- ^ A proxy given as
                                               --   a pair of host and port.
 
@@ -53,45 +42,9 @@ data Config = Config {
 --
 config :: Config
 config = Config {
-        name            = nck "lambdabot",
-        userinfo        = "Lambda_Robots:_100%_Loyal",
-        host            = "irc.freenode.net",
-        protocol        = Irc,
-
-        port            = 6667,
         verbose         = True,
         textwidth       = 350,
         proxy           = Nothing, -- Just ("www-proxy",3128),
-
-        autojoin        = [nck "#haskell"
-                          ,nck "#haskell-blah"
-                          ,nck "#haskell-overflow"
-                          ,nck "#haskell.hac07"
-                     {-   ,nck "#haskell.de"
-                          ,nck "#haskell.es"
-                          ,nck "#haskell.fi"
-                          ,nck "#haskell.fr"
-                          ,nck "#haskell.hr"
-                          ,nck "#haskell.it"
-                          ,nck "#haskell.jp"
-                          ,nck "#haskell.no"
-                          ,nck "#haskell.se" -}
-                          ,nck "#gentoo-haskell"
-                          ,nck "#gentoo-uy"
-                          ,nck "#ghc"
-                          ,nck "#darcs"
-                          ,nck "#oasis"
-                          ,nck "#perl6"
-                          ,nck "#jtiger"
-                          ,nck "#unicycling"
-                          ,nck "#ScannedInAvian"],
-
-        admins          = map nck [
-                "Pseudonym",    "shapr",    "vincenz",   "Igloo",
-                "Cale",         "dons",     "TheHunter", "musasabi",
-                "Lemmih",       "sjanssen", "sorear",    "int-e"
-
-        ],
 
         fortunePath     = "/home/dons/fortune/",
         fptoolsPath     = "/home/dons/fptools",
@@ -105,5 +58,3 @@ config = Config {
         disabledCommands = ["listchans", "slap", "echo", "remember", "state"]
 
    }
- where nck = Nick "freenode"
-

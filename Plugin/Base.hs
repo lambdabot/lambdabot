@@ -7,7 +7,7 @@ import Plugin
 
 import IRCBase (IrcMessage, timeReply, errShowMsg)
 -- import Message (getTopic, nick, joinChannel, body, fullName, channels)
-import Message (getTopic, nick, joinChannel, server, body, Nick(..), lambdabotName, showNick, readNick)
+import Message (getTopic, nick, server, body, Nick(..), lambdabotName, showNick, readNick)
 
 import qualified Data.Map as M   (insert, delete)
 
@@ -127,7 +127,7 @@ doTOPIC msg
          put (s { ircChannels = M.insert (mkCN loc) (tail $ head $ tail $ body msg) (ircChannels s)})
 
 doRPL_WELCOME :: Callback
-doRPL_WELCOME _msg = mapM_ (send . joinChannel) (autojoin config)
+doRPL_WELCOME = doIGNORE
 
 doQUIT :: Callback
 doQUIT msg = doIGNORE msg

@@ -36,7 +36,6 @@ module Lambdabot (
 
 import qualified Message as Msg
 import qualified Shared  as S
-import qualified Config (config, name, admins)
 import qualified IRCBase as IRC (IrcMessage, quit, privmsg)
 
 import Lib.Signals
@@ -253,7 +252,7 @@ runIrc evcmds initialise ld plugins = withSocketsDo $ do
     rost <- initRoState
     r <- try $ evalLB (do withDebug "Initialising plugins" initialise
                           withIrcSignalCatch mainLoop)
-                       rost (initState (Config.admins Config.config) ld plugins evcmds)
+                       rost (initState ld plugins evcmds)
 
     -- clean up and go home
     case r of
@@ -280,9 +279,9 @@ initRoState = do
 --
 -- | Default rw state
 --
-initState :: [Msg.Nick] -> S.DynLoad -> [String] -> [String] -> IRCRWState
-initState as ld plugins evcmds = IRCRWState {
-        ircPrivilegedUsers = M.fromList $ zip (Msg.Nick "offlinerc" "null" : as) (repeat True),
+initState :: S.DynLoad -> [String] -> [String] -> IRCRWState
+initState ld plugins evcmds = IRCRWState {
+        ircPrivilegedUsers = M.singleton (Msg.Nick "offlinerc" "null") True,
         ircChannels        = M.empty,
         ircModules         = M.empty,
         ircServerMap       = M.empty,
@@ -717,7 +716,8 @@ mlines = (mbreak =<<) . lines
 -- | Don't send any output to alleged bots.
 checkRecip :: OutputFilter
 checkRecip who msg
-    | who == Config.name Config.config                   = return []
+--  FIXME: this doesn't work with plugin protocols :(
+--  | who == Config.name Config.config                   = return []
     | "bot" `isSuffixOf` lowerCaseString (Msg.nName who) = return []
     | otherwise                                          = return msg
 
