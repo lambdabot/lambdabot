@@ -95,7 +95,8 @@ doNOTICE msg =
       isCTCPTimeReply = ":\SOHTIME" `isPrefixOf` (last (body msg)) 
 
 doJOIN :: Callback
-doJOIN msg
+doJOIN msg | lambdabotName msg /= nick msg = doIGNORE msg
+           | otherwise
   = do s <- get
        put (s { ircChannels = M.insert  (mkCN loc) "[currently unknown]" (ircChannels s)}) -- the empty topic causes problems
        send $ getTopic loc -- initialize topic
