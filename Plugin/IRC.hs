@@ -82,16 +82,8 @@ decodeMessage svr lbn line =
 
 ircSignOn :: String -> Nick -> String -> LB ()
 ircSignOn svr nickn ircname = do
-    -- password support.
-    -- If plugin initialising was delayed till after we connected, we'd
-    -- be able to write a Passwd plugin.
     send $ user (nTag nickn) (nName nickn) svr ircname
     send $ setNick nickn
-    mpasswd <- liftIO (handleJust ioErrors (const (return "")) $
-                       readFile "State/passwd")
-    case readM mpasswd of
-      Nothing     -> return ()
-      Just passwd -> ircPrivmsg (Nick (nTag nickn) "nickserv") $ "identify " ++ passwd
 
 ------------------------------------------------------------------------
 --
