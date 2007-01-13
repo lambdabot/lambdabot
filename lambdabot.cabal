@@ -15,7 +15,7 @@ Author:              Don Stewart
 Maintainer:          dons@cse.unsw.edu.au
 Build-Depends:       base, unix, network, parsec, mtl, haskell-src,
                      readline, QuickCheck, template-haskell, 
-                     regex-compat, regex-posix, 
+                     regex-compat, regex-posix, time,
                      zlib, binary
 
 --
