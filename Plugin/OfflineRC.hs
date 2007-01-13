@@ -26,9 +26,9 @@ PLUGIN OfflineRC
 type OfflineRC = ModuleT Integer LB 
 
 instance Module OfflineRCModule Integer where
-    modulePrivs  _         = ["offline", "source"]
+    modulePrivs  _         = ["offline", "rc"]
     moduleHelp _ "offline" = "offline. Start a repl"
-    moduleHelp _ "source"  = "source name. Read a file of commands (asynchonously)"
+    moduleHelp _ "rc"      = "rc name. Read a file of commands (asynchonously). FIXME: better name."
     moduleInit      _      = do act <- bindModule0 onInit
                                 lift $ liftLB forkIO $ do mv <- asks ircInitDoneMVar
                                                           io $ readMVar mv
@@ -39,7 +39,7 @@ instance Module OfflineRCModule Integer where
                                 lockRC
                                 lift $ liftLB forkIO act
                                 return []
-    process_ _ "source" fn = do txt <- io $ readFile fn
+    process_ _ "rc" fn     = do txt <- io $ readFile fn
                                 io $ evaluate $ foldr seq () txt
                                 act <- bindModule0 $ finallyError (mapM_ feed $ lines txt) unlockRC
                                 lockRC

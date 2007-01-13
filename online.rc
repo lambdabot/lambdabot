@@ -34,4 +34,4 @@ admin + Lemmih
 admin + sjanssen
 admin + sorear
 admin + int-e
-source passwd.rc
+rc passwd.rc
