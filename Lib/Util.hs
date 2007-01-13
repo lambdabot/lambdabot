@@ -38,7 +38,7 @@ module Lib.Util (
 
         pprKeys,
 
-        isLeft, isRight, unEither,
+        isLeft, isRight, unEither, fromRightM,
 
         io,
 
@@ -457,6 +457,10 @@ isRight         = not . isLeft
 unEither :: Either a a -> a
 unEither = either id id
 
+-- | Convert from an Either into an error monad
+fromRightM :: (Monad m, Show a) => Either a b -> m b
+fromRightM (Left x)  = fail $ show x
+fromRightM (Right y) = return y
 
 -- convenience:
 io :: forall a (m :: * -> *). (MonadIO m) => IO a -> m a

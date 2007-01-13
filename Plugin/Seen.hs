@@ -194,7 +194,7 @@ instance Module SeenModule SeenState where
       when b $ io (do
             s <- io (P.readFile "State/seen")
             let ls = L.fromChunks [s]
-            return (decode ls)) >>= writeMS
+            fromRightM (decode ls)) >>= writeMS
 
     moduleExit _ = do
       chans <- lift $ ircGetChannels

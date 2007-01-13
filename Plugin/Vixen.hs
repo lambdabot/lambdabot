@@ -44,7 +44,7 @@ instance Module VixenModule (Bool, String -> IO String) where
     moduleInit _     = do
       b <- io $ doesFileExist file
       when b $ do
-          s <- io $ do st <- decodeFile file
+          s <- io $ do st <- fromRightM =<< decodeFile file
                        let compiled = map (regex *** id) st
                        return (vixen (mkResponses compiled))
           modifyMS $ \(v,_) -> (v, s)
