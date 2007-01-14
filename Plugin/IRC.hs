@@ -3,7 +3,8 @@
 --
 module Plugin.IRC (theModule) where
 
-import Control.Concurrent( forkIO, newQSem, waitQSem, QSem, threadDelay, signalQSem )
+import Control.Concurrent( forkIO, newQSem, waitQSem, threadDelay, signalQSem,
+                           newEmptyMVar, putMVar, takeMVar, MVar )
 import Control.Exception
 import IRCBase
 import LMain( received )
@@ -99,12 +100,17 @@ online tag hostn portnum nickn ui = do
   io $ hSetBuffering sock NoBuffering
   -- Implements flood control: RFC 2813, section 5.8
   sem1 <- io $ newQSem 0
-  sem2 <- io $ newQSem 5
+  sem2 <- io $ newQSem 4 -- one extra token stays in the MVar
+  sendmv <- io $ newEmptyMVar
   io $ forkIO $ sequence_ $ repeat $ do
     waitQSem sem1
     threadDelay 2000000
     signalQSem sem2
-  catchError (addServer tag $ io . sendMsg tag sock sem1 sem2)
+  io $ forkIO $ sequence_ $ repeat $ do
+    waitQSem sem2
+    putMVar sendmv ()
+    signalQSem sem1
+  catchError (addServer tag $ io . sendMsg tag sock sendmv)
              (\err -> io (hClose sock) >> throwError err)
   lift $ ircSignOn hostn (Nick tag nickn) ui
   lift $ liftLB forkIO $ catchError (readerLoop tag nickn sock)
@@ -122,10 +128,9 @@ readerLoop tag nickn sock = do
               return ()
   readerLoop tag nickn sock
 
-sendMsg :: String -> Handle -> QSem -> QSem -> IrcMessage -> IO ()
-sendMsg tag sock sem1 sem2 msg =
-    catchJust ioErrors (do waitQSem sem2
-                           P.hPut sock $ P.pack $ encodeMessage msg "\r\n"
-                           signalQSem sem1)
+sendMsg :: String -> Handle -> MVar () -> IrcMessage -> IO ()
+sendMsg tag sock mv msg =
+    catchJust ioErrors (do takeMVar mv
+                           P.hPut sock $ P.pack $ encodeMessage msg "\r\n")
                   (\err -> do hPutStrLn stderr $ "irc[" ++ tag ++ "] error: " ++ show err
                               hClose sock)
