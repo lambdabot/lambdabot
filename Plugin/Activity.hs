@@ -9,6 +9,7 @@ import qualified Message as Msg
 import Data.Time.Clock
 import Control.Arrow ((&&&))
 import Data.Maybe (fromMaybe)
+import Control.Exception (evaluate)
 
 PLUGIN Activity
 
@@ -30,7 +31,8 @@ instance Module ActivityModule ActivityState where
         return [fmt_agg]
 
 activityFilter :: Msg.Nick -> [String] -> ModuleLB ActivityState
-activityFilter target lns = do withMS $ \ st wr -> do
+activityFilter target lns = do io $ evaluate $ foldr seq () $ map (foldr seq ()) $ lns
+                               withMS $ \ st wr -> do
                                  now <- io getCurrentTime
                                  wr (map (const (now,target)) lns ++ st)
                                return lns
