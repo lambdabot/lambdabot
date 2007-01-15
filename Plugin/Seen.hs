@@ -174,10 +174,14 @@ instance Module SeenModule SeenState where
               ]
             ]
 
-    process _ msg _ _      rest = do
+    process _ msg target _      rest = do
          (_,seenFM) <- readMS
          now        <- io getClockTime
-         return [unlines $ getAnswer msg rest seenFM now]
+         let (safe,txt) = second unlines (getAnswer msg rest seenFM now)
+         if safe || not ("#" `isPrefixOf` G.nName target)
+             then return [txt]
+             else do ircPrivmsg (G.nick msg) txt
+                     return ["Due to the existance of massively broken IRC clients, I will not answer you in channel."]
 
     moduleInit _        = do
       wSFM <- bindModule2 withSeenFM
@@ -209,7 +213,7 @@ lcNick :: G.Nick -> G.Nick
 lcNick (G.Nick svr nck) = G.Nick svr (lowerCaseString nck)
 
 ------------------------------------------------------------------------
-getAnswer :: G.Message a => a -> String -> SeenMap -> ClockTime -> [String]
+getAnswer :: G.Message a => a -> String -> SeenMap -> ClockTime -> ([String], Bool)
 getAnswer msg rest seenFM now
   | null nick' =
        let people  = map fst $ filter isActive $ M.toList seenFM
@@ -218,13 +222,13 @@ getAnswer msg rest seenFM now
                _ -> False
            recent t = normalizeTimeDiff (diffClockTimes now t) < gap_minutes
            gap_minutes = TimeDiff 0 0 0 0 15 0 0
-       in ["Lately, I have seen " ++ (if null people then "nobody"
-               else listToStr "and" (map upAndShow people)) ++ "."]
+       in (["Lately, I have seen " ++ (if null people then "nobody"
+                else listToStr "and" (map upAndShow people)) ++ "."], False)
 
   | pnick == G.lambdabotName msg =
         case M.lookup (G.packNick pnick) seenFM of
             Just (Present _ cs) ->
-                ["Yes, I'm here. I'm in " ++ listToStr "and" (map upAndShow cs)]
+                (["Yes, I'm here. I'm in " ++ listToStr "and" (map upAndShow cs)], True)
             _ -> error "I'm here, but not here. And very confused!"
 
   | head (G.nName pnick) == '#' =
@@ -233,16 +237,16 @@ getAnswer msg rest seenFM now
                (Present (Just _) cs)
                   -> G.packNick pnick `elem` cs
                _ -> False
-       in ["In "++nick'++" I can see "
+       in (["In "++nick'++" I can see "
             ++ (if null people then "nobody"    -- todo, how far back does this go?
-               else listToStr "and" (map upAndShow people)) ++ "."]
+               else listToStr "and" (map upAndShow people)) ++ "."], False)
 
-  | otherwise        = case M.lookup (G.packNick pnick) seenFM of
+  | otherwise        = ((case M.lookup (G.packNick pnick) seenFM of
       Just (Present mct cs)            -> nickPresent mct (map upAndShow cs)
       Just (NotPresent ct td chans)    -> nickNotPresent ct td (map upAndShow chans)
       Just (WasPresent ct sw _ chans)  -> nickWasPresent ct sw (map upAndShow chans)
       Just (NewNick newnick)           -> nickIsNew newnick
-      _ -> ircMessage ["I haven't seen ", nick, "."]
+      _ -> ircMessage ["I haven't seen ", nick, "."]), True)
   where
     -- I guess the only way out of this spagetty hell are printf-style responses.
     upAndShow = G.showNick msg . G.unpackNick
@@ -266,7 +270,7 @@ getAnswer msg rest seenFM now
        listToStr "and" chans , " ", clockDifference ct,
        prettyMissed sw ", and " ""]
     nickIsNew newnick = ircMessage [if you then "You have" else nick++" has",
-        " changed nick to ", us, "."] ++ getAnswer msg us seenFM now
+        " changed nick to ", us, "."] ++ fst (getAnswer msg us seenFM now)
       where
 
         findFunc pstr = case M.lookup pstr seenFM of
