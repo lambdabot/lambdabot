@@ -18,7 +18,7 @@ You need the zlib library:
 Build with cabal (simple)
     $ vi Config.hs
     $ ./build
-    $ ./lambdabot
+    $ ./lambdabot { -e command }
 
 If the ./Setup.hs step doesn't seem to like the cabal file, you likely
 need to install an updated version of Cabal:
@@ -41,13 +41,14 @@ cabal as above anyway. So this is mostly for development purposes.
 then
     *Main> main
 or
-    *Main> online
+    *Main> online <list>
+where <list> is a list of commands to execute, as with -e.
 
 OFFLINE MODE:
     ./lambdabot
 
 CONNECTING:
-    ./lambdabot --online
+    ./lambdabot -e 'rc online.rc'
 
 SSL MODE (with stunnel):
 
@@ -57,10 +58,10 @@ append the following to your stunnel.conf
     accept = 6667
     connect = ssl-irc-server.org:6667
 
-and edit Config.hs to use localhost as server, then restart the stunnel
-server, rebuild lambdabot and start it with:
+and edit online.rc to use localhost as server, then restart the stunnel
+server and restart lambdabot with:
 
-    ./lambdabot --online
+    ./lambdabot -e 'rc online.rc'
 
 SCRIPTS:
     The scripts directory contains some shell scripts for Vim editor support
