@@ -102,8 +102,9 @@ Pete Kazmier <pete-lambdabot@kazmier.com>
     * Contextual messages
 
 Stefan O'Rear <stefanor@cox.net> aka sorear on #haskell
-    * @nazi-on, @nazi-off
+    * @nazi-on, @nazi-off, @activity
     * Non-flat nick namespace
+    * Separation of servers out of base
 
 Spencer Janssen <sjanssen@cse.unl.edu> aka sjanssen on #haskell
     * @undo, @redo
