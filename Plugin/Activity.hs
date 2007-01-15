@@ -6,14 +6,15 @@ module Plugin.Activity (theModule) where
 import Plugin
 import qualified Message as Msg
 
-import Data.Time.Clock
 import Control.Arrow ((&&&))
 import Data.Maybe (fromMaybe)
 import Control.Exception (evaluate)
 
+import System.Time
+
 PLUGIN Activity
 
-type ActivityState = [(UTCTime,Msg.Nick)]
+type ActivityState = [(ClockTime,Msg.Nick)]
 
 instance Module ActivityModule ActivityState where
     moduleHelp _ _              = "activity seconds. Find out where/how much the bot is being used"
@@ -22,8 +23,8 @@ instance Module ActivityModule ActivityState where
     moduleInit   _              = bindModule2 activityFilter >>=
                                       ircInstallOutputFilter
     process      _ msg _ _ rest = do
-        let secs = fromMaybe 90 $ readM rest
-        cutoff <- io $ addUTCTime (fromInteger . negate $ secs) `fmap` getCurrentTime
+        TOD secs ps <- io getClockTime
+        let cutoff = TOD (secs - (fromMaybe 90 $ readM rest)) ps
         users <- (map snd . takeWhile ((> cutoff) . fst)) `fmap` readMS
         let agg_users = reverse . sort . map (length &&& head) . group . sort $ users
         let fmt_agg = concatWith " " . (:) (show (length users) ++ "*total") .
@@ -33,6 +34,6 @@ instance Module ActivityModule ActivityState where
 activityFilter :: Msg.Nick -> [String] -> ModuleLB ActivityState
 activityFilter target lns = do io $ evaluate $ foldr seq () $ map (foldr seq ()) $ lns
                                withMS $ \ st wr -> do
-                                 now <- io getCurrentTime
+                                 now <- io getClockTime
                                  wr (map (const (now,target)) lns ++ st)
                                return lns
