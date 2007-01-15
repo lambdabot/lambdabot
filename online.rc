@@ -1,4 +1,17 @@
 irc-connect freenode chat.freenode.net 6667 lambdabot Lambda_Robots:_100%_Loyal
+rc passwd.rc
+admin + freenode:Pseudonym
+admin + freenode:shapr
+admin + freenode:vincenz
+admin + freenode:Igloo
+admin + freenode:Cale
+admin + freenode:dons
+admin + freenode:TheHunter
+admin + freenode:musasabi
+admin + freenode:Lemmih
+admin + freenode:sjanssen
+admin + freenode:sorear
+admin + freenode:int-e
 join freenode:#haskell
 join freenode:#haskell
 join freenode:#haskell-blah
@@ -22,16 +35,3 @@ join freenode:#perl6
 join freenode:#jtiger
 join freenode:#unicycling
 join freenode:#ScannedInAvian
-admin + Pseudonym
-admin + shapr
-admin + vincenz
-admin + Igloo
-admin + Cale
-admin + dons
-admin + TheHunter
-admin + musasabi
-admin + Lemmih
-admin + sjanssen
-admin + sorear
-admin + int-e
-rc passwd.rc
