@@ -5,6 +5,8 @@ import Lambdabot
 import Message
 import IRCBase
 
+import Lib.Util( listToMaybeAll )
+
 import qualified Data.Map as M
 
 import System.Environment
@@ -19,7 +21,7 @@ main' dyn (loadStaticModules, pl) = do
     x    <- getArgs
     let a = parseArgs x
     case a of
-        Just args -> runIrc (initcmds args) loadStaticModules ld pl
+        Just args -> runIrc (fromMaybe ["offline"] $ listToMaybeAll $ initcmds args) loadStaticModules ld pl
         _         -> putStrLn "Usage: lambdabot [-e 'cmd']*"
 
     where ld = fromMaybe (error "no dynamic loading") dyn
