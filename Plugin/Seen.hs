@@ -25,6 +25,7 @@ import System.Directory
 import System.Time (normalizeTimeDiff) -- or export from AltTime.hs?
 
 import Control.Monad       (unless, zipWithM_)
+import Control.Arrow       (first)
 import Text.Printf
 
 PLUGIN Seen
@@ -177,10 +178,10 @@ instance Module SeenModule SeenState where
     process _ msg target _      rest = do
          (_,seenFM) <- readMS
          now        <- io getClockTime
-         let (safe,txt) = second unlines (getAnswer msg rest seenFM now)
+         let (txt,safe) = first unlines (getAnswer msg rest seenFM now)
          if safe || not ("#" `isPrefixOf` G.nName target)
              then return [txt]
-             else do ircPrivmsg (G.nick msg) txt
+             else do lift $ ircPrivmsg (G.nick msg) txt
                      return ["Due to the existance of massively broken IRC clients, I will not answer you in channel."]
 
     moduleInit _        = do
