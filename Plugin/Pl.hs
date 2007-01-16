@@ -18,7 +18,8 @@ import Plugin
 import Plugin.Pl.Common          (TopLevel, mapTopLevel, getExpr)
 import Plugin.Pl.Parser          (parsePF)
 import Plugin.Pl.PrettyPrinter   (Expr)
-import Plugin.Pl.Transform       (transform, optimize)
+import Plugin.Pl.Transform       (transform)
+import Plugin.Pl.Optimize        (optimize)
 
 import Message( Nick )
 
