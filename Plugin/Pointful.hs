@@ -19,6 +19,6 @@ instance Module PointfulModule PfState where
 
     moduleDefState _ = return $ ()
 
-    process _ _ _ _ rest = case pointful rest of
+    process _ _ _ _ rest = case pointful (rest ++ "\n") of -- newline to make comments work
                              ParseOk h -> return (lines h)
                              ParseFailed l s -> return (lines (show l ++ ": " ++ s))
