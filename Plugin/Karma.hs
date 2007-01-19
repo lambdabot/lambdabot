@@ -39,11 +39,11 @@ instance Module KarmaModule KarmaState where
 
     -- ^nick++($| )
     contextual   _ msg _ text = do
-        let sender     = Msg.nick msg
         mapM_ (changeKarma msg (-1) sender) decs
         mapM_ (changeKarma msg   1  sender) incs
         return []
       where
+        sender      = Msg.nick msg
         ws          = words text
         decs        = match "--"
         incs        = match "++"
