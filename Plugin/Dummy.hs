@@ -60,7 +60,7 @@ dummylst =
     ,("bug",        const "http://hackage.haskell.org/trac/ghc/newticket?type=bug")
     ,("get-shapr",  const "shapr!!")
     ,("faq",        const "The answer is: Yes! Haskell can do that.")
-    ,("paste",      const "http://fserv.pikapphi.umr.edu:8000/")
+    ,("paste",      const "Haskell pastebin: http://kakapo.scannedinavian.com:8000/new")
     ,("learn",      const "http://www.haskell.org/learning.html")
     ,("map",        const "http://www.haskell.org/hawiki/HaskellUserLocations")
     ,("shootout",   const "http://shootout.alioth.debian.org/gp4/benchmark.php?test=all&lang=all")
