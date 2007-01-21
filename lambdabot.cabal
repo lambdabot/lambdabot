@@ -24,6 +24,11 @@ Executable:          BotPP
 hs-source-dirs:      scripts/
 Main-is:             BotPP.hs
 ghc-options:         -fasm -funbox-strict-fields -O
+-- lie, for the benefit of shim
+-- shim is not smart enough to tell what executable contains each file, so it
+-- assumes the first one; it needs to know this for parsing.  there is probably
+-- a better solution :(
+extensions:          CPP, RankNTypes
 
 --
 -- Lambdabot
