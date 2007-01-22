@@ -17,37 +17,33 @@ module NickEq ( Polynick, nickMatches, readPolynick, showPolynick, lookupMononic
 
 import Message( Message, Nick, readNick, showNick )
 import Lambdabot
-import Control.Arrow( first )
+import Lib.Util (concatWith, split)
+import Data.Maybe (mapMaybe)
 
 import qualified Data.Map as M
 
-data Polynick = Polynick Nick deriving (Eq) -- for now
-
-instance Show Polynick where
-    showsPrec p (Polynick n) = showsPrec p n
-instance Read Polynick where
-    readsPrec p s = map (first Polynick) (readsPrec p s)
+data Polynick = Polynick [Nick] deriving (Eq) -- for now
 
 -- |Determine if a nick matches a polynick.  The state is read at the
 -- point of binding.
 nickMatches :: LB (Nick -> Polynick -> Bool)
 nickMatches = return m'
     where
-      m' nck (Polynick nck2) = nck == nck2
+      m' nck (Polynick nck2) = nck `elem` nck2
 
 -- | Parse a read polynick.
 readPolynick :: Message a => a -> String -> Polynick
-readPolynick m = Polynick . readNick m
+readPolynick m = Polynick . map (readNick m) . split "|"
 
 -- | Format a polynick.
 showPolynick :: Message a => a -> Polynick -> String
-showPolynick m (Polynick n) = showNick m n
+showPolynick m (Polynick n) = concatWith "|" $ map (showNick m) n
 
 -- | Convert a regular mononick into a polynick.
 mononickToPolynick :: Nick -> Polynick
-mononickToPolynick = Polynick
+mononickToPolynick = Polynick . (:[])
 
 -- | Lookup (using a polynick) in a map keyed on mononicks.
 lookupMononickMap :: LB (Polynick -> M.Map Nick a -> [(Nick,a)])
-lookupMononickMap = return $ \ (Polynick n) m -> case M.lookup n m of Just x -> [(n,x)]
-                                                                      Nothing -> []
+lookupMononickMap = return $ look'
+    where look' (Polynick ns) m = mapMaybe (\n -> (,) n `fmap` M.lookup n m) ns
