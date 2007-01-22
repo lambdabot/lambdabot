@@ -13,12 +13,20 @@
 -- bar-separated list of (nicks or open terms); an open term is like a
 -- nick but preceded with a star.
 
-module NickEq ( Polynick, nickMatches, readPolynick, showPolynick ) where
+module NickEq ( Polynick, nickMatches, readPolynick, showPolynick, lookupMononickMap, mononickToPolynick ) where
 
-import Message( Nick, readNick, showNick )
+import Message( Message, Nick, readNick, showNick )
 import Lambdabot
+import Control.Arrow( first )
 
-data Polynick = Polynick Nick -- for now
+import qualified Data.Map as M
+
+data Polynick = Polynick Nick deriving (Eq) -- for now
+
+instance Show Polynick where
+    showsPrec p (Polynick n) = showsPrec p n
+instance Read Polynick where
+    readsPrec p s = map (first Polynick) (readsPrec p s)
 
 -- |Determine if a nick matches a polynick.  The state is read at the
 -- point of binding.
@@ -29,8 +37,17 @@ nickMatches = return m'
 
 -- | Parse a read polynick.
 readPolynick :: Message a => a -> String -> Polynick
-readPolynick m = Polynick . readNick
+readPolynick m = Polynick . readNick m
 
 -- | Format a polynick.
 showPolynick :: Message a => a -> Polynick -> String
 showPolynick m (Polynick n) = showNick m n
+
+-- | Convert a regular mononick into a polynick.
+mononickToPolynick :: Nick -> Polynick
+mononickToPolynick = Polynick
+
+-- | Lookup (using a polynick) in a map keyed on mononicks.
+lookupMononickMap :: LB (Polynick -> M.Map Nick a -> [(Nick,a)])
+lookupMononickMap = return $ \ (Polynick n) m -> case M.lookup n m of Just x -> [(n,x)]
+                                                                      Nothing -> []
