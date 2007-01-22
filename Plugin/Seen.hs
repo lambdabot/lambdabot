@@ -182,7 +182,7 @@ instance Module SeenModule SeenState where
          if safe || not ("#" `isPrefixOf` G.nName target)
              then return [txt]
              else do lift $ ircPrivmsg (G.nick msg) txt
-                     return ["Due to the existance of massively broken IRC clients, I will not answer you in channel."]
+                     return []
 
     moduleInit _        = do
       wSFM <- bindModule2 withSeenFM
