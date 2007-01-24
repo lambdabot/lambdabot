@@ -48,7 +48,10 @@ con :: String -> HsType
 con = HsTyCon . UnQual . HsIdent
 
 tuple :: [HsType] -> HsType
-tuple = HsTyTuple
+tuple = HsTyTuple . concatMap unpack
+    where
+    unpack (HsTyTuple xs) = xs
+    unpack x = [x]
 
 fromCon :: HsType -> Maybe String
 fromCon (HsTyCon (UnQual (HsIdent v))) = Just v
