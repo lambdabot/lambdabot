@@ -49,6 +49,11 @@ instance Module DummyModule () where
     Nothing -> error "Dummy: invalid command"
     Just f  -> return $ lines $ f rest
 
+  contextual _ _ _ "lisppaste2: url" = return [pastebinMsg]
+  contextual _ _ _ _                 = return []
+
+pastebinMsg :: String
+pastebinMsg = "Haskell pastebin: http://kakapo.scannedinavian.com:8000/new"
 
 dummylst :: [(String, String -> String)]
 dummylst = 
