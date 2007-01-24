@@ -32,7 +32,11 @@ instance P.Module UnMtlModule () where
 infixr 5 -->
 
 (-->) :: HsType -> HsType -> HsType
-a --> b = HsTyFun a b
+a --> b = cu a b
+
+cu :: HsType -> HsType -> HsType
+cu (HsTyTuple xs) y = foldr HsTyFun y xs
+cu a b = HsTyFun a b
 
 app :: HsType -> HsType -> HsType
 app = HsTyApp
