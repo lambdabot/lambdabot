@@ -122,7 +122,7 @@ writerT    w m a = m (tuple [a, w])
 
 mtlParser :: String -> Either String HsType
 mtlParser input = do
-    HsModule _ _ _ _ decls <- liftE $ parseModule ("type X = " ++ input)
+    HsModule _ _ _ _ decls <- liftE $ parseModule ("type X = "++input++"\n")
     hsType <- case decls of
         (HsTypeDecl _ _ _ hsType:_) -> return hsType 
         _ -> fail "No parse?"
