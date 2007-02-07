@@ -35,9 +35,13 @@ import qualified Data.Map as M
 
 import qualified Data.ByteString.Char8 as P
 import Data.ByteString.Char8 (ByteString)
+
+#ifndef mingw32_HOST_OS
 import Data.ByteString.Lazy (fromChunks,toChunks)
 
 import Codec.Compression.GZip
+#endif
+
 
 ------------------------------------------------------------------------
 
@@ -49,11 +53,21 @@ data Serial s = Serial {
         deserialize :: ByteString -> Maybe s
      }
 
+#ifdef mingw32_HOST_OS
+-- XXX I haven't built a gzip library yet.
+gzip   :: ByteString -> ByteString
+gzip = id
+
+gunzip :: ByteString -> ByteString
+gunzip = id
+
+#else
 gzip   :: ByteString -> ByteString
 gzip   = P.concat . toChunks . compress . fromChunks . (:[])
 
 gunzip :: ByteString -> ByteString
 gunzip = P.concat . toChunks . decompress .fromChunks . (:[])
+#endif
 
 --
 -- read-only serialisation

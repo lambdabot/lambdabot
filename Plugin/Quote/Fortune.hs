@@ -12,10 +12,12 @@ import Control.Monad
 import System.Directory
 import qualified Control.Exception as C (catch)
 
+#ifndef mingw32_HOST_OS
 --
 -- No good for win32
 --
 import System.Posix (isRegularFile, getFileStatus)
+#endif
 
 -- | The 'filelist' function returns a List of fortune files from the
 --   configured 'fortunePath' directory.
@@ -51,5 +53,10 @@ randFortune section = case section of
     Just fname -> fortuneRandom =<< (return (fortunePath config ++ fname))
 
 -- | 'isFile' is a predicate wheter or not a given FilePath is a file.
+#ifdef mingw32_HOST_OS
+isFile :: FilePath -> IO Bool
+isFile = doesFileExist
+#else
 isFile :: FilePath -> IO Bool
 isFile = (isRegularFile `fmap`) . getFileStatus
+#endif

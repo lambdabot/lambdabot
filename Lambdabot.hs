@@ -49,10 +49,12 @@ import Network                  (withSocketsDo)
 import System.Exit
 import System.IO
 
+#ifndef mingw32_HOST_OS
 import System.Posix.Signals
 
 -- n.b comment this out for prof
 import System.Posix.Process     ( exitImmediately )
+#endif
 
 import Data.Char
 import Data.IORef               (newIORef, IORef, readIORef, writeIORef)
@@ -72,6 +74,12 @@ import Control.Monad.Trans      ( liftIO )
 
 #if __GLASGOW_HASKELL__ >= 605
 import GHC.Err
+#endif
+
+#ifdef mingw32_HOST_OS
+-- compatability shim
+exitImmediately :: ExitCode -> IO a
+exitImmediately = exitWith
 #endif
 
 ------------------------------------------------------------------------

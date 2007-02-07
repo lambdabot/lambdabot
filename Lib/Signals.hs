@@ -12,6 +12,20 @@
 --
 module Lib.Signals where
 
+#ifdef mingw32_HOST_OS
+import Data.Typeable
+import Control.Monad.Error
+
+type Signal = String
+newtype SignalException = SignalException Signal deriving Typeable
+
+ircSignalMessage :: Signal -> [Char]
+ircSignalMessage s = s
+
+withIrcSignalCatch :: (MonadError e m,MonadIO m) => m () -> m ()
+withIrcSignalCatch m = m
+
+#else
 import Lib.Error
 import Lib.Util
 
@@ -32,14 +46,10 @@ newtype SignalException = SignalException Signal deriving Typeable
 -- A bit of sugar for installing a new handler
 -- 
 withHandler :: (MonadIO m,MonadError e m) => Signal -> Handler -> m () -> m ()
-#ifdef mingw32_HOST_OS
-withHandler s h m = return ()
-#else
 withHandler s h m
   = bracketError (io (installHandler s h Nothing))
                  (io . flip (installHandler s) Nothing)
                  (const m)
-#endif
 
 -- And more sugar for installing a list of handlers
 withHandlerList :: (MonadError e m,MonadIO m)
@@ -54,7 +64,6 @@ withHandlerList sl h m = foldr (withHandler `ap` h) m sl
 --
 ircSignalsToCatch :: [Signal]
 ircSignalsToCatch = [
-#ifndef mingw32_HOST_OS
     busError,
     segmentationViolation,
     keyboardSignal,
@@ -62,7 +71,6 @@ ircSignalsToCatch = [
     keyboardTermination,
     lostConnection,
     internalAbort
-#endif
     ]
 
 --
@@ -70,7 +78,6 @@ ircSignalsToCatch = [
 --
 ircSignalMessage :: Signal -> [Char]
 ircSignalMessage s
-#ifndef mingw32_HOST_OS
    | s==busError              = "SIGBUS"
    | s==segmentationViolation = "SIGSEGV"
    | s==keyboardSignal        = "SIGINT"
@@ -78,7 +85,6 @@ ircSignalMessage s
    | s==keyboardTermination   = "SIGQUIT"
    | s==lostConnection        = "SIGHUP"
    | s==internalAbort         = "SIGABRT"
-#endif
 -- this case shouldn't happen if the list of messages is kept up to date
 -- with the list of signals caught
    | otherwise                  = "killed by unknown signal"
@@ -92,9 +98,6 @@ ircSignalMessage s
 --
 ircSignalHandler :: ThreadId -> Signal -> Handler
 ircSignalHandler threadid s
-#ifdef mingw32_HOST_OS
-  = ()
-#else
   = CatchOnce $ do
         putMVar catchLock ()
         releaseSignals
@@ -118,7 +121,6 @@ releaseSignals =
 {-# NOINLINE catchLock #-}
 catchLock :: MVar ()
 catchLock = unsafePerformIO newEmptyMVar
-#endif
 
 --
 -- | Register signal handlers to catch external signals
@@ -129,3 +131,4 @@ withIrcSignalCatch m = do
     io $ installHandler sigALRM Ignore Nothing
     threadid <- io myThreadId
     withHandlerList ircSignalsToCatch (ircSignalHandler threadid) m
+#endif
