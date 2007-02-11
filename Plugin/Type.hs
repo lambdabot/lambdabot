@@ -122,7 +122,7 @@ extract_signatures output
 --
 query_ghci' :: String -> String -> IO String
 query_ghci' cmd expr = do
-       (output, errors, _) <- popen (ghci config) ["-fglasgow-exts","-fno-th"]
+       (output, errors, _) <- popen (ghci config) ["-fglasgow-exts","-fno-th","-iscripts"]
                                        (Just (context ++ command cmd (stripComments expr)))
        let ls = extract_signatures output
        return $ if null ls
