@@ -6,7 +6,7 @@
 --
 module ShowQ where
 
-import Language.Haskell.TH
+-- import Language.Haskell.TH
 import System.IO.Unsafe
 import Data.Dynamic
 import Data.Ratio
@@ -22,8 +22,8 @@ import System.Random
 type T = [Int]
 type I = Int
 
-instance Ppr a => Show (Q a) where
-    show e = unsafePerformIO $ runQ e >>= return . pprint
+-- instance Ppr a => Show (Q a) where
+--     show e = unsafePerformIO $ runQ e >>= return . pprint
 
 instance Arbitrary Char where
     arbitrary     = choose (minBound, maxBound)
