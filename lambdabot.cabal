@@ -4,9 +4,6 @@
 -- Currently only builds the static version of the bot, which should be
 -- enough for most people
 --
--- This version doesn't use plugins in any way. So also this means no
--- runplugs, but that's ok if you're using lambdabot in GOA.
---
 Name:                lambdabot
 Version:             4.0
 License:             GPL
@@ -15,7 +12,7 @@ Author:              Don Stewart
 Maintainer:          dons@cse.unsw.edu.au
 Build-Depends:       base, unix, network, parsec, mtl, haskell-src,
                      readline, QuickCheck, template-haskell, 
-                     regex-compat, regex-posix, zlib, binary
+                     regex-compat, regex-posix, zlib, binary>=0.2, plugins>=1.0
 
 --
 -- first build the preprocessor
@@ -96,3 +93,31 @@ Executable:          ft
 hs-source-dirs:      scripts/FT
 Main-is:             FTbase.hs
 ghc-options:         -O
+
+------------------------------------------------------------------------
+-- The following only work if plugins are enabled
+
+--
+-- runplugs
+--
+Executable:          runplugs
+hs-source-dirs:      scripts/
+ghc-options:         -funbox-strict-fields -O
+Main-is:             RunPlugs.hs
+
+--
+-- check
+--
+Executable:          quickcheck
+hs-source-dirs:      scripts/
+ghc-options:         -funbox-strict-fields -O
+Main-is:             QuickCheck.hs
+
+--
+-- check
+--
+Executable:          smallcheck
+hs-source-dirs:      scripts/
+ghc-options:         -funbox-strict-fields -O
+Main-is:             RunSmallCheck.hs
+
