@@ -129,21 +129,71 @@ query_ghci' cmd expr = do
                 then unlines . take 3 . lines . expandTab . cleanRE $ errors -- "bzzt" 
                 else ls
   where
-     context = concatMap (\m -> ":m + "++m++"\n") $
-                    prehier ++ datas ++ qualifieds ++ controls ++ other ++ extras
+     context = ":l L\n" ++ (concatMap (\m -> ":m + "++m++"\n") $
+                    prehier ++ datas ++ qualifieds ++ controls ++ other ++ extras)
 
-     other      = ["Text.Printf"]
+     other      =
+        ["Text.Printf"
+        ,"Text.PrettyPrint.HughesPJ"]
+
      prehier    = ["Char", "List", "Maybe", "Numeric", "Random" ]
-     qualifieds = []
-     datas   = map ("Data." ++) [
-                    "Array", "Complex",
-                    "Bits", "Bool", "Char", "Dynamic", "Either",
-                    "Graph", "Int", "Ix", "List",
-                    "Maybe", "Ratio", "Tree", "Tuple", "Typeable", "Word"
-                  ]
-     controls = map ("Control." ++) ["Monad", "Monad.Cont", "Monad.State", "Monad.Writer", "Monad.Reader", "Monad.Fix", "Monad.Identity", "Monad.Cont", "Monad.List", "Arrow", "Monad.Error"]
 
-     extras   = [] -- ["L"] -- TODO
+     qualifieds = []
+
+     datas   = map ("Data." ++)
+        ["Array"
+        ,"Bits"
+        ,"Bool"
+        ,"Char"
+        ,"Complex"
+        ,"Dynamic"
+        ,"Either"
+        ,"Eq"
+        ,"Fixed"
+    --  ,"Foldable"
+    --  ,"Function"
+    --  ,"Generics"
+        ,"Graph"
+        ,"Int"
+    --  ,"IntMap"
+    --  ,"IntSet"
+        ,"Ix"
+        ,"List"
+    --  ,"Map"
+        ,"Maybe"
+        ,"Monoid"
+        ,"Ord"
+        ,"Ratio"
+    --  ,"Set"
+        ,"Traversable"
+        ,"Tree"
+        ,"Tuple"
+        ,"Typeable"
+        ,"Word"
+        ]
+     extras   = [] -- ["L"]
+
+     controls = map ("Control." ++)
+        ["Monad"
+        ,"Monad.Cont"
+        ,"Monad.Error"
+        ,"Monad.Identity"
+        ,"Monad.List"
+        ,"Monad.RWS"
+        ,"Monad.Reader"
+        ,"Monad.State"
+        ,"Monad.Trans"
+        ,"Monad.Writer"
+        ,"Monad.Fix"
+        ,"Monad.Instances"
+        ,"Applicative"
+        ,"Arrow"
+    --  ,"Arrow.Transformer"
+    --  ,"Arrow.Transformer.All"
+    --  ,"Arrow.Operations"
+        ,"Parallel"
+        ,"Parallel.Strategies"
+        ]
 
      cleanRE :: String -> String
      cleanRE s
