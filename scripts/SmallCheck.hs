@@ -20,9 +20,9 @@ module SmallCheck (
   depth, inc, dec
   ) where
 
-import List (intersperse)
-import Monad (when)
-import IO (stdout, hFlush)
+import Data.List (intersperse)
+import Control.Monad (when)
+import System.IO (stdout, hFlush)
 
 ------------------ <Series of depth-bounded values> -----------------
 
