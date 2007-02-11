@@ -27,25 +27,79 @@ rlimit = ResourceLimit 3
 
 context = prelude ++ prehier ++ datas ++ qualifieds ++ controls ++ other ++ template ++ extras
 
-prelude = ["qualified Prelude as P", "Prelude"]
+prelude =
+    ["qualified Prelude as P", "Prelude"]
 
-other = ["Text.Printf"]
+other   =
+    ["Text.Printf"
+    ,"Text.PrettyPrint.HughesPJ"]
 
-prehier = ["Char", "List", "Maybe", "Numeric", "Random" ]
+prehier =
+    ["Char", "List", "Maybe", "Numeric", "Random" ]
 
-qualifieds = ["qualified Data.Map as M"
-             ,"qualified Data.Set as S"
-             ,"qualified Data.Generics as G"
-             ,"qualified Data.IntSet as I"]
+qualifieds =
+    ["qualified Data.Map      as M"
+    ,"qualified Data.Set"
+    ,"qualified Data.Generics"
+    ,"qualified Data.IntSet"
+    ,"qualified Data.Foldable"
+    ]
 
-datas   = map ("Data." ++) [
-                "Array", "Complex",
-                "Bits", "Bool", "Char", "Dynamic", "Either",
-                "Graph", "Int", "Ix", "List",
-                "Maybe", "Ratio", "Tree", "Tuple", "Typeable", "Word"
-              ]
+datas   = map ("Data." ++)
+    ["Array"
+    ,"Bits"
+    ,"Bool"
+    ,"ByteString"
+    ,"Char"
+    ,"Complex"
+    ,"Dynamic"
+    ,"Either"
+    ,"Eq"
+    ,"Fixed"
+--  ,"Foldable"
+--  ,"Function"
+--  ,"Generics"
+    ,"Graph"
+    ,"Int"
+--  ,"IntMap"
+--  ,"IntSet"
+    ,"Ix"
+    ,"List"
+--  ,"Map"
+    ,"Maybe"
+    ,"Monoid"
+    ,"Ord"
+    ,"Ratio"
+    ,"Sequence"
+--  ,"Set"
+    ,"Traversable"
+    ,"Tree"
+    ,"Tuple"
+    ,"Typeable"
+    ,"Word"
+    ]
 
-controls = map ("Control." ++) ["Monad", "Monad.Cont", "Monad.State", "Monad.Writer", "Monad.Reader", "Monad.Fix", "Monad.Identity", "Monad.Cont", "Monad.List", "Arrow", "Monad.Error"]
+controls = map ("Control." ++)
+    ["Monad"
+    ,"Monad.Cont"
+    ,"Monad.Error"
+    ,"Monad.Identity"
+    ,"Monad.List"
+    ,"Monad.RWS"
+    ,"Monad.Reader"
+    ,"Monad.State"
+    ,"Monad.Trans"
+    ,"Monad.Writer"
+    ,"Monad.Fix"
+    ,"Monad.Instances"
+    ,"Applicative"
+    ,"Arrow"
+--  ,"Arrow.Transformer"
+--  ,"Arrow.Transformer.All"
+--  ,"Arrow.Operations"
+    ,"Parallel"
+    ,"Parallel.Strategies"
+    ]
 
 --
 -- See if TH is safe with runIO and friends hidden.
