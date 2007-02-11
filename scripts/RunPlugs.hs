@@ -39,17 +39,21 @@ prehier =
 
 qualifieds =
     ["qualified Data.Map      as M"
+    ,"qualified Data.ByteString             as S"
+    ,"qualified Data.ByteString.Char8       as SC"
+    ,"qualified Data.ByteString.Lazy        as L"
+    ,"qualified Data.ByteString.Lazy.Char8  as LC"
     ,"qualified Data.Set"
     ,"qualified Data.Generics"
     ,"qualified Data.IntSet"
     ,"qualified Data.Foldable"
+    ,"qualified Data.Sequence"
     ]
 
 datas   = map ("Data." ++)
     ["Array"
     ,"Bits"
     ,"Bool"
-    ,"ByteString"
     ,"Char"
     ,"Complex"
     ,"Dynamic"
@@ -70,7 +74,6 @@ datas   = map ("Data." ++)
     ,"Monoid"
     ,"Ord"
     ,"Ratio"
-    ,"Sequence"
 --  ,"Set"
     ,"Traversable"
     ,"Tree"
@@ -118,7 +121,7 @@ main = do
         s <- unsafeEval_ ("let { "++x++
                          " = \n# 1 \"<irc>\"\n"++s++
                          "\n} in P.take 2048 (P.show "++x++
-                         ")") context ["-O"] [] []
+                         ")") context ["-O","-fextended-default-rules"] [] []
         case s of
             Left  e -> mapM_ putStrLn e
             Right v -> Control.Exception.catch
