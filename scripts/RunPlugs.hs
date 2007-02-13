@@ -38,7 +38,8 @@ prehier =
     ["Char", "List", "Maybe", "Numeric", "Random" ]
 
 qualifieds =
-    ["qualified Data.Map      as M"
+    ["qualified Data.Map                    as M"
+    ,"qualified Data.IntMap                 as I"
     ,"qualified Data.ByteString             as S"
     ,"qualified Data.ByteString.Char8       as SC"
     ,"qualified Data.ByteString.Lazy        as L"
