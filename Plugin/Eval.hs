@@ -52,13 +52,16 @@ plugs src = do
         ParseFailed _ e -> return $ " " ++ e
         ParseOk     _   -> do
             (out,err,_) <- popen binary [] (Just src)
-            let o = munge out
-                e = munge err
-            return $ case () of {_
-                | null o && null e -> "Terminated\n"
-                | null o           -> " " ++ e
-                | otherwise        -> " " ++ o
-            }
+            case (out,err) of
+                ([],[]) -> return "Terminated\n"
+                _       -> do
+                    let o = munge out
+                        e = munge err
+                    return $ case () of {_
+                        | null o && null e -> "Terminated\n"
+                        | null o           -> " " ++ e
+                        | otherwise        -> " " ++ o
+                    }
 
 ------------------------------------------------------------------------
 -- define a new binding
