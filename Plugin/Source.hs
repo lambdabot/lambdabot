@@ -26,11 +26,15 @@ instance Module SourceModule Env where
             splat []   = []
             splat s    = a : splat (tail b) where (a,b) = break P.null s
 
-    fprocess_ _ _ key = readMS >>= \env -> case M.lookup key env of
+    fprocess_ _ _ key = readMS >>= \env -> case fetch key env of
         _ | M.null env -> box $ pack "No source in the environment yet"
         _ | P.null key -> box $ pack help
         Nothing        -> box . P.pack . ("Source not found. " ++) =<< io (random insult)
         Just s         -> box s
+
+fetch :: ByteString -> M.Map ByteString ByteString -> Maybe ByteString
+fetch x m = M.lookup x m `mplus`
+            M.lookup (P.concat [P.singleton '(', x, P.singleton ')']) m
 
 help :: String
 help = "src <id>. Display the implementation of a standard function"
