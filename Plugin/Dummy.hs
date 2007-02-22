@@ -81,7 +81,12 @@ dummylst =
     ,("source",     lookupPackage "http://darcs.haskell.org/packages/" '/' "hs")
 
     ,("fptools",    lookupPackage "http://darcs.haskell.org/packages/" '/' "hs")
+    ,("hackage",    lookupHackage)
     ]
+
+lookupHackage :: String -> String
+lookupHackage "" = "http://hackage.haskell.org"
+lookupHackage xs = "http://hackage.haskell.org/cgi-bin/hackage-scripts/package/" ++ xs
 
 docPrefix :: String
 docPrefix = "http://haskell.org/ghc/docs/latest/html/libraries/"
