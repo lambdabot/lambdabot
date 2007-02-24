@@ -1,6 +1,6 @@
 module L where
 
-import Prelude
+import Prelude hiding (mapM, sequence, mapM_, sequence_)
 import Char
 import List
 import Maybe
