@@ -13,19 +13,10 @@ admin + freenode:sjanssen
 admin + freenode:sorear
 admin + freenode:int-e
 join freenode:#haskell
-join freenode:#haskell
 join freenode:#haskell-blah
 join freenode:#haskell-overflow
 join freenode:#haskell.hac07
-join freenode:#haskell.de
-join freenode:#haskell.es
-join freenode:#haskell.fi
-join freenode:#haskell.fr
-join freenode:#haskell.hr
-join freenode:#haskell.it
-join freenode:#haskell.jp
-join freenode:#haskell.no
-join freenode:#haskell.se
+join freenode:#haskell.dut
 join freenode:#gentoo-haskell
 join freenode:#gentoo-uy
 join freenode:#ghc
@@ -35,5 +26,3 @@ join freenode:#perl6
 join freenode:#jtiger
 join freenode:#unicycling
 join freenode:#ScannedInAvian
-join freenode:#ai
-ignore + freenode:ai-depot
