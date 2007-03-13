@@ -71,7 +71,7 @@ dummylst =
     ,("shootout",   const "http://shootout.alioth.debian.org/gp4/benchmark.php?test=all&lang=all")
     ,("botsnack",   const ":)")
 
-    ,("wiki",        ("http://www.haskell.org/haskellwiki/" ++))
+    ,("wiki",       lookupWiki)
     ,("oldwiki",     ("http://www.haskell.org/hawiki/" ++))
 
     ,("docs",        \x -> if null x
@@ -83,6 +83,10 @@ dummylst =
     ,("fptools",    lookupPackage "http://darcs.haskell.org/packages/" '/' "hs")
     ,("hackage",    lookupHackage)
     ]
+
+lookupWiki :: String -> String
+lookupWiki page = "http://www.haskell.org/haskellwiki/" ++ spacesToUnderscores page
+  where spacesToUnderscores = map (\c -> if c == ' ' then '_' else c)
 
 lookupHackage :: String -> String
 lookupHackage "" = "http://hackage.haskell.org"
