@@ -146,7 +146,10 @@ doPRIVMSG :: IrcMessage -> Base ()
 doPRIVMSG msg = do
 --  now <- io getClockTime
 --  io $ appendFile "State/log" $ ppr now
-    mapM_ (doPRIVMSG' (lambdabotName msg) msg) targets
+    ignored <- lift $ checkIgnore msg
+    if ignored
+      then lift $ doIGNORE msg
+      else mapM_ (doPRIVMSG' (lambdabotName msg) msg) targets
   where
     alltargets = head (body msg)
     targets = map (readNick msg) $ split "," alltargets

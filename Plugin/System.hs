@@ -48,6 +48,7 @@ privcmds = M.fromList [
        ,("listall",     "list all commands")
        ,("flush",       "flush. flush state to disk")
        ,("admin",       "admin [+|-] nick. change a user's admin status.")
+       ,("ignore",      "ignore [+|-] nick. change a user's ignore status.")
        ,("reconnect",   "reconnect to server")]
 
 ------------------------------------------------------------------------
@@ -94,6 +95,14 @@ doSystem msg _ cmd rest = get >>= \s -> case cmd of
                                     _         -> fail "@admin: invalid usage"
                 put (s {ircPrivilegedUsers = pu'})
                 return []
+      where nck = Message.readNick msg (drop 2 rest)
+
+  "ignore" -> do let iu = ircIgnoredUsers s
+                 iu' <- case rest of '+':' ':_ -> return $ M.insert nck True iu
+                                     '-':' ':_ -> return $ M.delete nck iu
+                                     _         -> fail "@ignore: invalid usage"
+                 put (s {ircIgnoredUsers = iu'})
+                 return []
       where nck = Message.readNick msg (drop 2 rest)
 
   "uptime" -> do

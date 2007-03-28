@@ -31,7 +31,7 @@ module Lambdabot (
 
         ircLoad, ircUnload,
 
-        checkPrivs, mkCN, handleIrc, catchIrc, runIrc,
+        checkPrivs, checkIgnore, mkCN, handleIrc, catchIrc, runIrc,
   ) where
 
 import qualified Message as Msg
@@ -110,6 +110,7 @@ type OutputFilter = Msg.Nick -> [String] -> LB [String]
 data IRCRWState = IRCRWState {
         ircServerMap       :: Map String (String, IRC.IrcMessage -> LB ()),
         ircPrivilegedUsers :: Map Msg.Nick Bool,
+        ircIgnoredUsers    :: Map Msg.Nick Bool,
 
         ircChannels        :: Map ChanName String,
             -- ^ maps channel names to topics
@@ -290,6 +291,7 @@ initRoState = do
 initState :: S.DynLoad -> [String] -> [String] -> IRCRWState
 initState ld plugins evcmds = IRCRWState {
         ircPrivilegedUsers = M.singleton (Msg.Nick "offlinerc" "null") True,
+        ircIgnoredUsers    = M.empty,
         ircChannels        = M.empty,
         ircModules         = M.empty,
         ircServerMap       = M.empty,
@@ -591,6 +593,12 @@ ircInstallOutputFilter f = do
 --   only in this case.
 checkPrivs :: IRC.IrcMessage -> LB Bool
 checkPrivs msg = gets (isJust . M.lookup (Msg.nick msg) . ircPrivilegedUsers)
+
+-- | Checks if the given user is being ignored.
+--   Privileged users can't be ignored.
+checkIgnore :: IRC.IrcMessage -> LB Bool
+checkIgnore msg = liftM2 (&&) (liftM not (checkPrivs msg))
+                  (gets (isJust . M.lookup (Msg.nick msg) . ircIgnoredUsers))
 
 ------------------------------------------------------------------------
 -- Some generic server operations
