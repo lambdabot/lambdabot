@@ -35,3 +35,5 @@ join freenode:#perl6
 join freenode:#jtiger
 join freenode:#unicycling
 join freenode:#ScannedInAvian
+join freenode:#ai
+ignore + freenode:ai-depot
