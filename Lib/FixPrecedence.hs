@@ -1,8 +1,7 @@
-module Lib.FixPrecedence (withPrec, precTable) where
+module Lib.FixPrecedence (withPrecExp, withPrecDecl, precTable) where
 
 import qualified Data.Map as M
 import Language.Haskell.Syntax
--- import Language.Haskell.Parser  import if uncommenting test code
 
 {-
     PrecedenceData
@@ -11,7 +10,7 @@ import Language.Haskell.Syntax
     for each operator, its precedence level (a number), and associativity
     (one of HsAssocNone, HsAssocLeft, or HsAssocRight).
 -}
-type PrecedenceData = M.Map HsQOp (HsAssoc, Int)
+type PrecedenceData = M.Map HsQName (HsAssoc, Int)
 
 {-
     findPrec
@@ -20,90 +19,156 @@ type PrecedenceData = M.Map HsQOp (HsAssoc, Int)
     is not in the precedence data, the Haskell report specifies that it
     should be treated as infixl 9.
 -}
-findPrec :: PrecedenceData -> HsQOp -> (HsAssoc, Int)
+findPrec :: PrecedenceData -> HsQName -> (HsAssoc, Int)
 findPrec = flip (M.findWithDefault defaultPrec)
     where defaultPrec = (HsAssocLeft, 9)
 
 {-
-    <. and >. operators
+    precWrong
 
-    Precedence relations between operators are defined here in terms of
-    the classic dotted relational operators <. and >.
+    This returns True iff the first operator should be a parent of the
+    second in the expression tree, when they occur consecutively left to
+    right in the input.  This is called "wrong" because the parser in
+    Language.Haskell.Parser treats everything as left associative at the
+    same precedence, so the right-most operator will be the parent in the
+    expression tree in the original input.
 
-    For these purposes, only the associativity of the left-most operator
-    is considered.  If the associativity of the right-most operator differs,
-    this is an error.
+    XXX: Currently, this function treats operators with no associativity
+         as if they were left associative.  It also looks only at the
+         associativity of the left-most operator.  This should work for
+         correct code, but it does not report errors for incorrect code.
 -}
-precWrong :: PrecedenceData -> HsQOp -> HsQOp -> Bool
+precWrong :: PrecedenceData -> HsQName -> HsQName -> Bool
 precWrong pd a b = let (assoc, prec) = findPrec pd a
                        (_, prec')    = findPrec pd b
                    in     (prec < prec')
                        || (prec == prec' && assoc == HsAssocRight)
 
 {-
-    withPrec
+    nameFromQOp
 
-    This is the heart of the whole thing.  It applies an algorithm
-    described in LaLonde and Rivieres to convert the operators into
-    an expression tree according to their correct precedences.
+    Extracts the HsQName from an HsQOp.
 -}
-withPrec :: PrecedenceData -> HsExp -> HsExp
+nameFromQOp :: HsQOp -> HsQName
+nameFromQOp (HsQVarOp s) = s
+nameFromQOp (HsQConOp s) = s
 
-withPrec pd (HsInfixApp k@(HsInfixApp e op' f) op g) =
-    let g' = withPrec pd g
+{-
+    withPrecExp
+
+    This routine fixes up an expression by applying precedence data.
+-}
+withPrecExp :: PrecedenceData -> HsExp -> HsExp
+
+{-
+    This is the heart of the whole thing.  It applies an algorithm
+    described by LaLonde and Rivieres in ACM Transactions on Programming
+    Languages and Systems, January 1981.  The idea is to take a parse
+    tree with a consistent left-associative organization, and rearrange it
+    to match a precedence table.
+
+    A few changes have been made.  LaLonde and Rivieres remove parentheses
+    from their parse tree, which isn't necessary here; and they work with
+    an inherently right-associative grammar, while Language.Haskell.Parser
+    produces a left-associative grammar.
+-}
+withPrecExp pd (HsInfixApp k@(HsInfixApp e qop' f) qop g) =
+    let g'  = withPrecExp pd g
+        op  = nameFromQOp qop
+        op' = nameFromQOp qop'
     in  if precWrong pd op' op
-        then withPrec pd (HsInfixApp
-                             (withPrec pd e)
-                             op'
-                             (HsInfixApp (withPrec pd f) op g'))
-        else HsInfixApp (withPrec pd k) op g'
+        then let e' = withPrecExp pd e
+                 f' = withPrecExp pd f
+             in  withPrecExp pd (HsInfixApp e' qop' (HsInfixApp f' qop g'))
+        else HsInfixApp (withPrecExp pd k) qop g'
 
-withPrec pd (HsInfixApp e op f) = HsInfixApp (withPrec pd e) op (withPrec pd f)
+withPrecExp pd (HsInfixApp e op f) =
+    HsInfixApp (withPrecExp pd e) op (withPrecExp pd f)
 
-withPrec _  (HsVar v)                = HsVar v
-withPrec _  (HsCon c)                = HsCon c
-withPrec _  (HsLit l)                = HsLit l
-withPrec pd (HsApp e f)              = HsApp (withPrec pd e) (withPrec pd f)
-withPrec pd (HsNegApp e)             = HsNegApp (withPrec pd e)
-withPrec pd (HsLambda loc pats e)    = let pats' = map (withPrecPat pd) pats
-                                       in  HsLambda loc pats' (withPrec pd e)
-withPrec pd (HsLet decls e)          = let decls' = map (withPrecDecl pd) decls
-                                       in  HsLet decls' (withPrec pd e)
-withPrec pd (HsIf e f g)             = HsIf (withPrec pd e)
-                                            (withPrec pd f)
-                                            (withPrec pd g)
-withPrec pd (HsCase e alts)          = let alts' = map (withPrecAlt pd) alts
-                                       in  HsCase (withPrec pd e) alts'
-withPrec pd (HsDo stmts)             = let stmts' = map (withPrecStmt pd) stmts
-                                       in  HsDo stmts'
-withPrec pd (HsTuple exps)           = let exps' = map (withPrec pd) exps
-                                       in  HsTuple exps'
-withPrec pd (HsList exps)            = let exps' = map (withPrec pd) exps
-                                       in  HsList exps'
-withPrec pd (HsParen e)              = HsParen (withPrec pd e)
-withPrec pd (HsLeftSection e op)     = HsLeftSection (withPrec pd e) op
-withPrec pd (HsRightSection op e)    = HsRightSection op (withPrec pd e)
-withPrec pd (HsRecConstr n upd)      = let upd' = map (withPrecUpd pd) upd
-                                       in  HsRecConstr n upd'
-withPrec pd (HsRecUpdate e upd)      = let upd' = map (withPrecUpd pd) upd
-                                       in  HsRecUpdate (withPrec pd e) upd'
-withPrec pd (HsEnumFrom e)           = HsEnumFrom (withPrec pd e)
-withPrec pd (HsEnumFromTo e f)       = HsEnumFromTo (withPrec pd e)
-                                                    (withPrec pd f)
-withPrec pd (HsEnumFromThenTo e f g) = HsEnumFromThenTo (withPrec pd e)
-                                                        (withPrec pd f)
-                                                        (withPrec pd g)
-withPrec pd (HsListComp e stmts)     = let stmts' = map (withPrecStmt pd) stmts
-                                       in  HsListComp (withPrec pd e) stmts'
-withPrec pd (HsExpTypeSig l e t)     = HsExpTypeSig l (withPrec pd e) t
-withPrec pd (HsAsPat n e)            = HsAsPat n (withPrec pd e)
-withPrec _  (HsWildCard)             = HsWildCard
-withPrec pd (HsIrrPat e)             = HsIrrPat (withPrec pd e)
+{-
+    The remaining cases simply propogate the correction throughout other
+    elements of the grammar.
+-}
+withPrecExp _  (HsVar v)                = HsVar v
+withPrecExp _  (HsCon c)                = HsCon c
+withPrecExp _  (HsLit l)                = HsLit l
+withPrecExp pd (HsApp e f)              =
+    HsApp (withPrecExp pd e) (withPrecExp pd f)
+withPrecExp pd (HsNegApp e)             =
+    HsNegApp (withPrecExp pd e)
+withPrecExp pd (HsLambda loc pats e)    =
+    let pats' = map (withPrecPat pd) pats
+    in  HsLambda loc pats' (withPrecExp pd e)
+withPrecExp pd (HsLet decls e)          =
+    let decls' = map (withPrecDecl pd) decls
+    in  HsLet decls' (withPrecExp pd e)
+withPrecExp pd (HsIf e f g)             =
+    HsIf (withPrecExp pd e) (withPrecExp pd f) (withPrecExp pd g)
+withPrecExp pd (HsCase e alts)          =
+    let alts' = map (withPrecAlt pd) alts
+    in  HsCase (withPrecExp pd e) alts'
+withPrecExp pd (HsDo stmts)             =
+    let stmts' = map (withPrecStmt pd) stmts
+    in  HsDo stmts'
+withPrecExp pd (HsTuple exps)           =
+    let exps' = map (withPrecExp pd) exps
+    in  HsTuple exps'
+withPrecExp pd (HsList exps)            =
+    let exps' = map (withPrecExp pd) exps
+    in  HsList exps'
+withPrecExp pd (HsParen e)              =
+    HsParen (withPrecExp pd e)
+withPrecExp pd (HsLeftSection e op)     =
+    HsLeftSection (withPrecExp pd e) op
+withPrecExp pd (HsRightSection op e)    =
+    HsRightSection op (withPrecExp pd e)
+withPrecExp pd (HsRecConstr n upd)      =
+    let upd' = map (withPrecUpd pd) upd
+    in  HsRecConstr n upd'
+withPrecExp pd (HsRecUpdate e upd)      =
+    let upd' = map (withPrecUpd pd) upd
+    in  HsRecUpdate (withPrecExp pd e) upd'
+withPrecExp pd (HsEnumFrom e)           =
+    HsEnumFrom (withPrecExp pd e)
+withPrecExp pd (HsEnumFromThen e f)     =
+    HsEnumFromThen (withPrecExp pd e) (withPrecExp pd f)
+withPrecExp pd (HsEnumFromTo e f)       =
+    HsEnumFromTo (withPrecExp pd e) (withPrecExp pd f)
+withPrecExp pd (HsEnumFromThenTo e f g) =
+    HsEnumFromThenTo (withPrecExp pd e) (withPrecExp pd f) (withPrecExp pd g)
+withPrecExp pd (HsListComp e stmts)     =
+    let stmts' = map (withPrecStmt pd) stmts
+    in  HsListComp (withPrecExp pd e) stmts'
+withPrecExp pd (HsExpTypeSig l e t)     =
+    HsExpTypeSig l (withPrecExp pd e) t
+withPrecExp pd (HsAsPat n e)            =
+    HsAsPat n (withPrecExp pd e)
+withPrecExp _  (HsWildCard)             =
+    HsWildCard
+withPrecExp pd (HsIrrPat e)             =
+    HsIrrPat (withPrecExp pd e)
 
+{-
+    This function is analogous to withPrec, but operates on patterns instead
+    of expressions.
+-}
 withPrecPat :: PrecedenceData -> HsPat -> HsPat
 
--- XXX: not sure what to do here
-withPrecPat _  (HsPInfixApp _ _  _) = undefined
+{-
+    This is the same algorithm based on Lalonde and Rivieres, but designed
+    to work with infix data constructors in pattern matching.
+-}
+withPrecPat pd (HsPInfixApp k@(HsPInfixApp e op' f) op g) =
+    let g' = withPrecPat pd g
+    in  if precWrong pd op' op
+        then let e' = withPrecPat pd e
+                 f' = withPrecPat pd f
+             in  withPrecPat pd (HsPInfixApp e' op' (HsPInfixApp f' op g'))
+        else HsPInfixApp (withPrecPat pd k) op g'
+
+withPrecPat pd (HsPInfixApp e op f) =
+    HsPInfixApp (withPrecPat pd e) op (withPrecPat pd f)
+
 withPrecPat _  (HsPVar n)           = HsPVar n
 withPrecPat _  (HsPLit l)           = HsPLit l
 withPrecPat pd (HsPNeg p)           = HsPNeg (withPrecPat pd p)
@@ -120,13 +185,63 @@ withPrecPat pd (HsPAsPat n p)       = HsPAsPat n (withPrecPat pd p)
 withPrecPat _  (HsPWildCard)        = HsPWildCard
 withPrecPat pd (HsPIrrPat p)        = HsPIrrPat (withPrecPat pd p)
 
+{-
+    Propogates precedence fixing through a pattern "field"
+-}
 withPrecPatField :: PrecedenceData -> HsPatField -> HsPatField
 withPrecPatField pd (HsPFieldPat n p) = HsPFieldPat n (withPrecPat pd p)
 
--- XXX: This needs to be completed, or let bindings won't get fixed
+{-
+    XXX: decls may contain infix operators, which will change the
+         precedence data.  The type should be changed to
+         PrecedenceData -> HsDecl -> (HsDecl, PrecedenceData)
+         and the new precedence should be propogated to other
+         expressions affected by the declaration.
+-}
 withPrecDecl :: PrecedenceData -> HsDecl -> HsDecl
-withPrecDecl _  d = d
+withPrecDecl _  d@(HsInfixDecl _ _ _ _)        = d -- XXX: see above
+withPrecDecl pd (HsClassDecl l ctx n ns decls) =
+    let decls' = map (withPrecDecl pd) decls
+    in  HsClassDecl l ctx n ns decls'
+withPrecDecl pd (HsInstDecl l ctx n ts decls)  =
+    let decls' = map (withPrecDecl pd) decls
+    in  HsInstDecl l ctx n ts decls'
+withPrecDecl pd (HsFunBind ms)                 =
+    let ms' = map (withPrecMatch pd) ms
+    in  HsFunBind ms'
+withPrecDecl pd (HsPatBind l p rhs decls)      =
+    let p'     = withPrecPat pd p
+        rhs'   = withPrecRhs pd rhs
+        decls' = map (withPrecDecl pd) decls
+    in  HsPatBind l p' rhs' decls'
 
+withPrecDecl _  d                              = d
+
+{-
+    Propogates precedence fixing through HsMatch
+-}
+withPrecMatch :: PrecedenceData -> HsMatch -> HsMatch
+withPrecMatch pd (HsMatch l n ps rhs decls)           =
+    let ps'    = map (withPrecPat pd) ps
+        rhs'   = withPrecRhs pd rhs
+        decls' = map (withPrecDecl pd) decls
+    in  HsMatch l n ps' rhs' decls'
+
+{-
+    Propogates precedence fixing through HsRhs
+-}
+withPrecRhs :: PrecedenceData -> HsRhs -> HsRhs
+withPrecRhs pd (HsUnGuardedRhs e)  = HsUnGuardedRhs (withPrecExp pd e)
+withPrecRhs pd (HsGuardedRhss grs) = let grs' = map (withPrecGRhs pd) grs
+                                     in HsGuardedRhss grs'
+
+withPrecGRhs :: PrecedenceData -> HsGuardedRhs -> HsGuardedRhs
+withPrecGRhs pd (HsGuardedRhs l e f) =
+    HsGuardedRhs l (withPrecExp pd e) (withPrecExp pd f)
+
+{-
+    Propogates precedence fixing through case statement alternatives.
+-}
 withPrecAlt :: PrecedenceData -> HsAlt -> HsAlt
 withPrecAlt pd (HsAlt l p alts ds) = let ds' = map (withPrecDecl pd) ds
                                      in HsAlt l
@@ -135,76 +250,72 @@ withPrecAlt pd (HsAlt l p alts ds) = let ds' = map (withPrecDecl pd) ds
                                               ds'
 
 withPrecGAlts :: PrecedenceData -> HsGuardedAlts -> HsGuardedAlts
-withPrecGAlts pd (HsUnGuardedAlt e) = HsUnGuardedAlt (withPrec pd e)
+withPrecGAlts pd (HsUnGuardedAlt e) = HsUnGuardedAlt (withPrecExp pd e)
 withPrecGAlts pd (HsGuardedAlts alts) = let alts' = map (withPrecGAlt pd) alts
                                         in  HsGuardedAlts alts'
 
 withPrecGAlt :: PrecedenceData -> HsGuardedAlt -> HsGuardedAlt
-withPrecGAlt pd (HsGuardedAlt l e f) = HsGuardedAlt l
-                                                    (withPrec pd e)
-                                                    (withPrec pd f)
+withPrecGAlt pd (HsGuardedAlt l e f) =
+    HsGuardedAlt l (withPrecExp pd e) (withPrecExp pd f)
 
+{-
+    Propogates precedence fixing through do blocks.
+-}
 withPrecStmt :: PrecedenceData -> HsStmt -> HsStmt
-withPrecStmt pd (HsGenerator l p e) = HsGenerator l
-                                                  (withPrecPat pd p)
-                                                  (withPrec pd e)
-withPrecStmt pd (HsQualifier e) = HsQualifier (withPrec pd e)
+withPrecStmt pd (HsGenerator l p e) =
+    HsGenerator l (withPrecPat pd p) (withPrecExp pd e)
+withPrecStmt pd (HsQualifier e) = HsQualifier (withPrecExp pd e)
 withPrecStmt pd (HsLetStmt ds)  = let ds' = map (withPrecDecl pd) ds
                                   in  HsLetStmt ds'
 
+{-
+    Propogates precedence fixing through record field updates.
+-}
 withPrecUpd :: PrecedenceData -> HsFieldUpdate -> HsFieldUpdate
-withPrecUpd pd (HsFieldUpdate n e) = HsFieldUpdate n (withPrec pd e)
+withPrecUpd pd (HsFieldUpdate n e) = HsFieldUpdate n (withPrecExp pd e)
 
+{-
+    This is the default precedence table used for parsing expressions.
+    It is taken from the precedences of the main operators in the Haskell
+    Prelude.
+
+    XXX: It might be a good idea to search the standard library docs for
+         other operators.  These are the ones listed in the Haskell Report
+         section 4.  For example, one that is not included here is
+         Data.Ratio.%
+-}
 precTable :: PrecedenceData
 precTable = M.fromList
     [
-        (HsQVarOp (UnQual (HsSymbol "!!")),      (HsAssocLeft,  9)),
-        (HsQVarOp (UnQual (HsSymbol ".")),       (HsAssocRight, 9)),
-        (HsQVarOp (UnQual (HsSymbol "^")),       (HsAssocRight, 8)),
-        (HsQVarOp (UnQual (HsSymbol "^^")),      (HsAssocRight, 8)),
-        (HsQVarOp (UnQual (HsSymbol "**")),      (HsAssocLeft,  8)),
-        (HsQVarOp (UnQual (HsSymbol "*")),       (HsAssocLeft,  7)),
-        (HsQVarOp (UnQual (HsSymbol "/")),       (HsAssocLeft,  7)),
-        (HsQVarOp (UnQual (HsIdent  "div")),     (HsAssocLeft,  7)),
-        (HsQVarOp (UnQual (HsIdent  "mod")),     (HsAssocLeft,  7)),
-        (HsQVarOp (UnQual (HsIdent  "rem")),     (HsAssocLeft,  7)),
-        (HsQVarOp (UnQual (HsIdent  "quot")),    (HsAssocLeft,  7)),
-        (HsQVarOp (UnQual (HsSymbol "+")),       (HsAssocLeft,  6)),
-        (HsQVarOp (UnQual (HsSymbol "-")),       (HsAssocLeft,  6)),
-        (HsQVarOp (UnQual (HsSymbol ":")),       (HsAssocRight, 5)),
-        (HsQVarOp (UnQual (HsSymbol "++")),      (HsAssocRight, 5)),
-        (HsQVarOp (UnQual (HsSymbol "==")),      (HsAssocNone,  4)),
-        (HsQVarOp (UnQual (HsSymbol "/=")),      (HsAssocNone,  4)),
-        (HsQVarOp (UnQual (HsSymbol "<")),       (HsAssocNone,  4)),
-        (HsQVarOp (UnQual (HsSymbol "<=")),      (HsAssocNone,  4)),
-        (HsQVarOp (UnQual (HsSymbol ">")),       (HsAssocNone,  4)),
-        (HsQVarOp (UnQual (HsSymbol ">=")),      (HsAssocNone,  4)),
-        (HsQVarOp (UnQual (HsIdent  "elem")),    (HsAssocNone,  4)),
-        (HsQVarOp (UnQual (HsIdent  "notElem")), (HsAssocNone,  4)),
-        (HsQVarOp (UnQual (HsSymbol "&&")),      (HsAssocRight, 3)),
-        (HsQVarOp (UnQual (HsSymbol "||")),      (HsAssocRight, 2)),
-        (HsQVarOp (UnQual (HsSymbol ">>")),      (HsAssocLeft,  1)),
-        (HsQVarOp (UnQual (HsSymbol ">>=")),     (HsAssocLeft,  1)),
-        (HsQVarOp (UnQual (HsSymbol "$")),       (HsAssocRight, 0)),
-        (HsQVarOp (UnQual (HsSymbol "$!")),      (HsAssocRight, 0)),
-        (HsQVarOp (UnQual (HsIdent  "seq")),     (HsAssocRight, 0))
+        (UnQual (HsSymbol "!!"),      (HsAssocLeft,  9)),
+        (UnQual (HsSymbol "."),       (HsAssocRight, 9)),
+        (UnQual (HsSymbol "^"),       (HsAssocRight, 8)),
+        (UnQual (HsSymbol "^^"),      (HsAssocRight, 8)),
+        (UnQual (HsSymbol "**"),      (HsAssocLeft,  8)),
+        (UnQual (HsSymbol "*"),       (HsAssocLeft,  7)),
+        (UnQual (HsSymbol "/"),       (HsAssocLeft,  7)),
+        (UnQual (HsIdent  "div"),     (HsAssocLeft,  7)),
+        (UnQual (HsIdent  "mod"),     (HsAssocLeft,  7)),
+        (UnQual (HsIdent  "rem"),     (HsAssocLeft,  7)),
+        (UnQual (HsIdent  "quot"),    (HsAssocLeft,  7)),
+        (UnQual (HsSymbol "+"),       (HsAssocLeft,  6)),
+        (UnQual (HsSymbol "-"),       (HsAssocLeft,  6)),
+        (UnQual (HsSymbol ":"),       (HsAssocRight, 5)),
+        (Special HsCons,              (HsAssocRight, 5)),
+        (UnQual (HsSymbol "++"),      (HsAssocRight, 5)),
+        (UnQual (HsSymbol "=="),      (HsAssocNone,  4)),
+        (UnQual (HsSymbol "/="),      (HsAssocNone,  4)),
+        (UnQual (HsSymbol "<"),       (HsAssocNone,  4)),
+        (UnQual (HsSymbol "<="),      (HsAssocNone,  4)),
+        (UnQual (HsSymbol ">"),       (HsAssocNone,  4)),
+        (UnQual (HsSymbol ">="),      (HsAssocNone,  4)),
+        (UnQual (HsIdent  "elem"),    (HsAssocNone,  4)),
+        (UnQual (HsIdent  "notElem"), (HsAssocNone,  4)),
+        (UnQual (HsSymbol "&&"),      (HsAssocRight, 3)),
+        (UnQual (HsSymbol "||"),      (HsAssocRight, 2)),
+        (UnQual (HsSymbol ">>"),      (HsAssocLeft,  1)),
+        (UnQual (HsSymbol ">>="),     (HsAssocLeft,  1)),
+        (UnQual (HsSymbol "$"),       (HsAssocRight, 0)),
+        (UnQual (HsSymbol "$!"),      (HsAssocRight, 0)),
+        (UnQual (HsIdent  "seq"),     (HsAssocRight, 0))
     ]
-
-{-
-    Largely stolen from Pointful, used for testing
-
-modifyOk :: (t -> a) -> ParseResult t -> ParseResult a
-modifyOk f r = case r of
-  ParseOk v -> ParseOk (f v)
-  ParseFailed l m -> ParseFailed l m
-
-parseExpr :: String -> ParseResult HsExp
-parseExpr s = modifyOk (\(HsModule _ _ _ _ [HsPatBind _ _ (HsUnGuardedRhs e) []]) -> e)
-                       (parseModule ("main = " ++ s))
-
-test :: IO ()
-test = let ParseOk exp1 = parseExpr "1 + 2 * 4"
-           ParseOk exp2 = parseExpr "if 3 * 4 + 2 == 5 then 3 else 2 + 5^2"
-       in  do print $ withPrec precTable exp1
-              print $ withPrec precTable exp2
--}

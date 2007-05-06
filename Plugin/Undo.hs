@@ -12,6 +12,7 @@ import Language.Haskell.Pretty
 import Data.Generics
 import qualified Data.Set as Set
 import Control.Monad (guard)
+import Lib.FixPrecedence (withPrecExp, precTable)
 
 PLUGIN Undo
 
@@ -40,8 +41,9 @@ findVar e = head $ do
 transform :: (String -> HsExp -> HsExp) -> String -> String
 transform f s =
     case parseExpr (s ++ "\n") of -- newline to make comments work
-        ParseOk e -> prettyPrintWithMode ppMode 
-                        $ everywhere (mkT . f . findVar $ e) e
+        ParseOk e -> let e' = withPrecExp precTable e
+                     in  prettyPrintWithMode ppMode 
+                             $ everywhere (mkT . f . findVar $ e') e'
         err       -> show err
 
 undo :: String -> HsExp -> HsExp
