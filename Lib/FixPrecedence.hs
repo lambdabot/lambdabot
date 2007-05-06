@@ -2,6 +2,7 @@ module Lib.FixPrecedence (withPrecExp, withPrecDecl, precTable) where
 
 import qualified Data.Map as M
 import Language.Haskell.Syntax
+import Data.List
 
 {-
     PrecedenceData
@@ -53,6 +54,10 @@ nameFromQOp :: HsQOp -> HsQName
 nameFromQOp (HsQVarOp s) = s
 nameFromQOp (HsQConOp s) = s
 
+nameFromOp :: HsOp -> HsQName
+nameFromOp (HsVarOp n) = UnQual n
+nameFromOp (HsConOp n) = UnQual n
+
 {-
     withPrecExp
 
@@ -100,15 +105,15 @@ withPrecExp pd (HsLambda loc pats e)    =
     let pats' = map (withPrecPat pd) pats
     in  HsLambda loc pats' (withPrecExp pd e)
 withPrecExp pd (HsLet decls e)          =
-    let decls' = map (withPrecDecl pd) decls
-    in  HsLet decls' (withPrecExp pd e)
+    let (pd', decls') = mapAccumL withPrecDecl pd decls
+    in  HsLet decls' (withPrecExp pd' e)
 withPrecExp pd (HsIf e f g)             =
     HsIf (withPrecExp pd e) (withPrecExp pd f) (withPrecExp pd g)
 withPrecExp pd (HsCase e alts)          =
     let alts' = map (withPrecAlt pd) alts
     in  HsCase (withPrecExp pd e) alts'
 withPrecExp pd (HsDo stmts)             =
-    let stmts' = map (withPrecStmt pd) stmts
+    let (_, stmts') = mapAccumL withPrecStmt pd stmts
     in  HsDo stmts'
 withPrecExp pd (HsTuple exps)           =
     let exps' = map (withPrecExp pd) exps
@@ -137,7 +142,7 @@ withPrecExp pd (HsEnumFromTo e f)       =
 withPrecExp pd (HsEnumFromThenTo e f g) =
     HsEnumFromThenTo (withPrecExp pd e) (withPrecExp pd f) (withPrecExp pd g)
 withPrecExp pd (HsListComp e stmts)     =
-    let stmts' = map (withPrecStmt pd) stmts
+    let (_, stmts') = mapAccumL withPrecStmt pd stmts
     in  HsListComp (withPrecExp pd e) stmts'
 withPrecExp pd (HsExpTypeSig l e t)     =
     HsExpTypeSig l (withPrecExp pd e) t
@@ -192,39 +197,45 @@ withPrecPatField :: PrecedenceData -> HsPatField -> HsPatField
 withPrecPatField pd (HsPFieldPat n p) = HsPFieldPat n (withPrecPat pd p)
 
 {-
-    XXX: decls may contain infix operators, which will change the
-         precedence data.  The type should be changed to
-         PrecedenceData -> HsDecl -> (HsDecl, PrecedenceData)
-         and the new precedence should be propogated to other
-         expressions affected by the declaration.
+    Propogates precedence fixing through declaration sections.  This
+    gets interesting, because declarations can actually change the
+    existing precedence, so withPrecDecl returns both the transformed
+    tree and an augmented precedence relation.
 -}
-withPrecDecl :: PrecedenceData -> HsDecl -> HsDecl
-withPrecDecl _  d@(HsInfixDecl _ _ _ _)        = d -- XXX: see above
+withPrecDecl :: PrecedenceData -> HsDecl -> (PrecedenceData, HsDecl)
+withPrecDecl pd d@(HsInfixDecl _ assoc p ops)  =
+    let nms      = map nameFromOp ops
+        prec     = (assoc, p)
+        pd'      = M.union pd $ M.fromList $ map (flip (,) prec) nms
+    in  (pd', d)
 withPrecDecl pd (HsClassDecl l ctx n ns decls) =
-    let decls' = map (withPrecDecl pd) decls
-    in  HsClassDecl l ctx n ns decls'
+    let (pd', decls') = mapAccumL withPrecDecl pd decls
+    in  (pd', HsClassDecl l ctx n ns decls')
 withPrecDecl pd (HsInstDecl l ctx n ts decls)  =
-    let decls' = map (withPrecDecl pd) decls
-    in  HsInstDecl l ctx n ts decls'
+    -- The question of what to do with fixity declarations here is
+    -- interesting.  The report says they aren't allowed (4.3.2), but
+    -- GHC accepts them as of version 6.6 and apparently ignores them.
+    -- The best thing is probably to match GHC's behavior.
+    let decls' = map snd $ map (withPrecDecl pd) decls
+    in  (pd, HsInstDecl l ctx n ts decls')
 withPrecDecl pd (HsFunBind ms)                 =
     let ms' = map (withPrecMatch pd) ms
-    in  HsFunBind ms'
+    in  (pd, HsFunBind ms')
 withPrecDecl pd (HsPatBind l p rhs decls)      =
     let p'     = withPrecPat pd p
-        rhs'   = withPrecRhs pd rhs
-        decls' = map (withPrecDecl pd) decls
-    in  HsPatBind l p' rhs' decls'
-
-withPrecDecl _  d                              = d
+        (pd',decls') = mapAccumL withPrecDecl pd decls
+        rhs'   = withPrecRhs pd' rhs
+    in  (pd, HsPatBind l p' rhs' decls')
+withPrecDecl pd d                              = (pd, d)
 
 {-
     Propogates precedence fixing through HsMatch
 -}
 withPrecMatch :: PrecedenceData -> HsMatch -> HsMatch
 withPrecMatch pd (HsMatch l n ps rhs decls)           =
-    let ps'    = map (withPrecPat pd) ps
-        rhs'   = withPrecRhs pd rhs
-        decls' = map (withPrecDecl pd) decls
+    let ps'           = map (withPrecPat pd) ps
+        (pd', decls') = mapAccumL withPrecDecl pd decls
+        rhs'          = withPrecRhs pd' rhs
     in  HsMatch l n ps' rhs' decls'
 
 {-
@@ -243,11 +254,9 @@ withPrecGRhs pd (HsGuardedRhs l e f) =
     Propogates precedence fixing through case statement alternatives.
 -}
 withPrecAlt :: PrecedenceData -> HsAlt -> HsAlt
-withPrecAlt pd (HsAlt l p alts ds) = let ds' = map (withPrecDecl pd) ds
-                                     in HsAlt l
-                                              (withPrecPat pd p)
-                                              (withPrecGAlts pd alts)
-                                              ds'
+withPrecAlt pd (HsAlt l p alts ds) =
+    let (pd', ds') = mapAccumL withPrecDecl pd ds
+    in HsAlt l (withPrecPat pd p) (withPrecGAlts pd' alts) ds'
 
 withPrecGAlts :: PrecedenceData -> HsGuardedAlts -> HsGuardedAlts
 withPrecGAlts pd (HsUnGuardedAlt e) = HsUnGuardedAlt (withPrecExp pd e)
@@ -259,14 +268,16 @@ withPrecGAlt pd (HsGuardedAlt l e f) =
     HsGuardedAlt l (withPrecExp pd e) (withPrecExp pd f)
 
 {-
-    Propogates precedence fixing through do blocks.
+    Propogates precedence fixing through do blocks.  Because let statements
+    can change precedence, the result is both the transformed tree and an
+    augmented precedence relation, much like in withPrecDecl.
 -}
-withPrecStmt :: PrecedenceData -> HsStmt -> HsStmt
+withPrecStmt :: PrecedenceData -> HsStmt -> (PrecedenceData, HsStmt)
 withPrecStmt pd (HsGenerator l p e) =
-    HsGenerator l (withPrecPat pd p) (withPrecExp pd e)
-withPrecStmt pd (HsQualifier e) = HsQualifier (withPrecExp pd e)
-withPrecStmt pd (HsLetStmt ds)  = let ds' = map (withPrecDecl pd) ds
-                                  in  HsLetStmt ds'
+    (pd, HsGenerator l (withPrecPat pd p) (withPrecExp pd e))
+withPrecStmt pd (HsQualifier e) = (pd, HsQualifier (withPrecExp pd e))
+withPrecStmt pd (HsLetStmt ds)  = let (pd', ds') = mapAccumL withPrecDecl pd ds
+                                  in  (pd', HsLetStmt ds')
 
 {-
     Propogates precedence fixing through record field updates.

@@ -177,7 +177,7 @@ pointfulParsed :: (Eq a, Pretty a, Data a) => ParseResult a -> ParseResult Strin
 pointfulParsed = modifyOk (prettyPrintInLine  . optimize . uncomb)
 
 pointfulExpr = pointfulParsed . modifyOk (withPrecExp precTable) . parseExpr
-pointfulDecl = pointfulParsed . modifyOk (withPrecDecl precTable) . parseDecl
+pointfulDecl = pointfulParsed . modifyOk (snd . withPrecDecl precTable) . parseDecl
 pointful = pointfulExpr `orParse` pointfulDecl
 
 prettyPrintInLine :: Pretty a => a -> String
