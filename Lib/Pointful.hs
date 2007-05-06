@@ -8,6 +8,7 @@ import Data.Generics
 import Control.Monad.State
 import Data.Maybe
 import qualified Data.Map as M
+import Lib.FixPrecedence (withPrec, precTable)
 
 ---- Utilities ----
 
@@ -175,7 +176,7 @@ optimize = stabilize optimizeOnce
 pointfulParsed :: (Eq a, Pretty a, Data a) => ParseResult a -> ParseResult String
 pointfulParsed = modifyOk (prettyPrintInLine  . optimize . uncomb)
 
-pointfulExpr = pointfulParsed . parseExpr
+pointfulExpr = pointfulParsed . modifyOk (withPrec precTable) . parseExpr
 pointfulDecl = pointfulParsed . parseDecl
 pointful = pointfulExpr `orParse` pointfulDecl
 
