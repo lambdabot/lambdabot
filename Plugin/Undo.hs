@@ -86,17 +86,23 @@ pvar = HsPVar . HsIdent
 
 redo :: String -> HsExp -> HsExp
 redo _ (HsLet ds (HsDo s)) = HsDo (HsLetStmt ds : s)
-redo v app@(HsInfixApp l (HsQVarOp (UnQual (HsSymbol op))) r) = 
+redo v e@(HsInfixApp l (HsQVarOp (UnQual (HsSymbol op))) r) = 
     case op of
         ">>=" ->
             case r of
                 (HsLambda loc [p] (HsDo stms)) -> HsDo (HsGenerator loc p l : stms)
                 (HsLambda loc [p] s)           -> HsDo [HsGenerator loc p l, HsQualifier s]
                 _ -> HsDo [ HsGenerator undefined (pvar v) l
-                          , HsQualifier . HsApp r $ var v]
+                          , HsQualifier . app r $ var v]
         ">>" ->
             case r of
                 (HsDo stms) -> HsDo (HsQualifier l : stms)
                 _           -> HsDo [HsQualifier l, HsQualifier r]
-        _    -> app
+        _    -> e
 redo _ x = x
+
+-- | 'app' is a smart constructor that inserts parens when the first argument
+-- is an infix application.
+app :: HsExp -> HsExp -> HsExp
+app e@(HsInfixApp {}) f = HsApp (HsParen e) f
+app e                 f = HsApp e f
