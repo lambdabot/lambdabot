@@ -49,6 +49,7 @@ qualifieds =
     ,"qualified Data.IntSet"
     ,"qualified Data.Foldable"
     ,"qualified Data.Sequence"
+    ,"qualified Monad.Writer"
     ]
 
 datas   = map ("Data." ++)
@@ -93,7 +94,6 @@ controls = map ("Control." ++)
     ,"Monad.Reader"
     ,"Monad.State"
     ,"Monad.Trans"
-    ,"Monad.Writer"
     ,"Monad.Fix"
     ,"Monad.Instances"
     ,"Applicative"
