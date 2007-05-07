@@ -1,5 +1,5 @@
 module Util(mapFst, mapSnd, insert, makeSet) where
-import List(sort)
+import Data.List(sort)
 
 mapFst :: (a->b) -> [(a,c)] -> [(b, c)]
 mapFst f xys = [ (f x, y) | (x, y) <- xys ]
@@ -15,6 +15,6 @@ insert a (a':as) = a' : insert a as
 makeSet :: (Ord a) => [a] -> [a]
 makeSet = remDup . sort
   where remDup [] = []
-	remDup [x] = [x]
-	remDup (x : xs@(x' : _)) | x == x' = remDup xs
-	remDup (x : xs) = x : remDup xs
+        remDup [x] = [x]
+        remDup (x : xs@(x' : _)) | x == x' = remDup xs
+        remDup (x : xs) = x : remDup xs

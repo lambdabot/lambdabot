@@ -1,5 +1,5 @@
 module MonadBFS(MonadBFS(..), BFS, runBFS) where
-import Monad
+import Control.Monad
 
 class MonadPlus m => MonadBFS m where
     mwrap :: m a -> m a
@@ -21,7 +21,7 @@ instance Monad BFS where
 fjoin :: BFS (BFS a) -> BFS a
 fjoin = BFS . concatMap tjoin . unBFS
   where tjoin (Tip x) = unBFS x
-	tjoin (Fork x) = [Fork $ fjoin x]
+        tjoin (Fork x) = [Fork $ fjoin x]
 
 instance MonadPlus BFS where
     mzero = BFS []
@@ -45,8 +45,8 @@ deq _ = error "deq"
 runBFS :: BFS a -> [a]
 runBFS fr = run (enq [fr] mtq)
   where run aq =
-	    case deq aq of
-	    Nothing -> []
-	    Just (BFS xs, q) ->
-	        [x | Tip x <- xs] ++ 
-	        run (enq [ f | Fork f <- xs] q)
+            case deq aq of
+            Nothing -> []
+            Just (BFS xs, q) ->
+                [x | Tip x <- xs] ++ 
+                run (enq [ f | Fork f <- xs] q)

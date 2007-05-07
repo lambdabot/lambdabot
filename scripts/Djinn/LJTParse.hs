@@ -3,7 +3,7 @@
 -- See LICENSE for licensing details.
 --
 module LJTParse(parseFormula, parseLJT) where
-import Char(isAlphaNum)
+import Data.Char(isAlphaNum)
 import Text.ParserCombinators.ReadP(ReadP, (+++), char, sepBy1, readP_to_S, skipSpaces, munch1, many)
 import LJTFormula
 
@@ -24,8 +24,8 @@ removeComments :: String -> String
 removeComments "" = ""
 removeComments ('%':cs) = skip cs
   where skip "" = ""
-	skip s@('\n':_) = removeComments s
-	skip (_:s) = skip s
+        skip s@('\n':_) = removeComments s
+        skip (_:s) = skip s
 removeComments (c:cs) = c : removeComments cs
 
 pTop :: ReadP Formula
@@ -79,9 +79,9 @@ pVar = do
     skipSpaces
     cs <- munch1 isAlphaNum
     case cs of
-	"false" -> return false
-	"true" -> return true
-	_ -> return $ PVar $ Symbol cs
+        "false" -> return false
+        "true" -> return true
+        _ -> return $ PVar $ Symbol cs
 
 pParen :: ReadP a -> ReadP a
 pParen p = do

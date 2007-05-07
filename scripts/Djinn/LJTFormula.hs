@@ -3,9 +3,9 @@
 -- See LICENSE for licensing details.
 --
 module LJTFormula(Symbol(..), Formula(..), (<->), (&), (|:), fnot, false, true,
-	ConsDesc(..),
-	Term(..), applys, freeVars
-	) where
+        ConsDesc(..),
+        Term(..), applys, freeVars
+        ) where
 import Data.List(union, (\\))
 
 infixr 2 :->
@@ -19,14 +19,14 @@ newtype Symbol = Symbol String
 instance Show Symbol where
     show (Symbol s) = s
 
-data ConsDesc = ConsDesc String Int	-- name and arity
+data ConsDesc = ConsDesc String Int     -- name and arity
      deriving (Eq, Ord, Show)
 
 data Formula
-	= Conj [Formula]
-	| Disj [(ConsDesc, Formula)]
-	| Formula :-> Formula
-	| PVar Symbol
+        = Conj [Formula]
+        | Disj [(ConsDesc, Formula)]
+        | Formula :-> Formula
+        | PVar Symbol
      deriving (Eq, Ord)
 
 (<->) :: Formula -> Formula -> Formula
@@ -52,34 +52,34 @@ instance Show Formula where
     showsPrec _ (Conj []) = showString "true"
     showsPrec _ (Conj [c]) = showParen True $ showString "&" . showsPrec 0 c
     showsPrec p (Conj cs) =
-	showParen (p>40) $ loop cs
-	  where loop [f] = showsPrec 41 f
-		loop (f : fs) = showsPrec 41 f . showString " & " . loop fs
-		loop [] = error "showsPrec Conj"
+        showParen (p>40) $ loop cs
+          where loop [f] = showsPrec 41 f
+                loop (f : fs) = showsPrec 41 f . showString " & " . loop fs
+                loop [] = error "showsPrec Conj"
     showsPrec _ (Disj []) = showString "false"
     showsPrec _ (Disj [(_,c)]) = showParen True $ showString "|" . showsPrec 0 c
     showsPrec p (Disj ds) =
-	showParen (p>30) $ loop ds
-	  where loop [(_,f)] = showsPrec 31 f
-		loop ((_,f) : fs) = showsPrec 31 f . showString " v " . loop fs
-		loop [] = error "showsPrec Disj"
+        showParen (p>30) $ loop ds
+          where loop [(_,f)] = showsPrec 31 f
+                loop ((_,f) : fs) = showsPrec 31 f . showString " v " . loop fs
+                loop [] = error "showsPrec Disj"
     showsPrec _ (f1 :-> Disj []) =
-	showString "~" . showsPrec 100 f1
+        showString "~" . showsPrec 100 f1
     showsPrec p (f1 :-> f2) =
-	showParen (p>20) $ showsPrec 21 f1 . showString " -> " . showsPrec 20 f2
+        showParen (p>20) $ showsPrec 21 f1 . showString " -> " . showsPrec 20 f2
     showsPrec p (PVar s) = showsPrec p s
 
 ------------------------------
 
 data Term
-	= Var Symbol
-	| Lam Symbol Term
-	| Apply Term Term
-	| Ctuple Int
-	| Csplit Int
-	| Cinj ConsDesc Int
-	| Ccases [ConsDesc]
-	| Xsel Int Int Term		--- XXX just temporary by MJ
+        = Var Symbol
+        | Lam Symbol Term
+        | Apply Term Term
+        | Ctuple Int
+        | Csplit Int
+        | Cinj ConsDesc Int
+        | Ccases [ConsDesc]
+        | Xsel Int Int Term             --- XXX just temporary by MJ
     deriving (Eq, Ord)
 
 instance Show Term where

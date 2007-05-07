@@ -1,6 +1,6 @@
 BINDIR = /usr/local/bin
 #
-GHC = ghc
+GHC = /usr/local/bin/ghc
 GHCFLAGS = -Wall
 #GHCFLAGS = -Wall -prof -auto-all -O2
 
@@ -44,5 +44,5 @@ install:	djinn
 
 .PHONY: clean
 clean:
-	rm -f djinn MLJT a.out *.o *.hi *.old out */*.o */*.hi
+	rm -f djinn MLJT a.out *.o *.hi *.old out */*.o
 	cd tests; ${MAKE} clean

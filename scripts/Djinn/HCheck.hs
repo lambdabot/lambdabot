@@ -5,7 +5,7 @@
 module HCheck(htCheckEnv, htCheckType) where
 import Data.List(union)
 --import Control.Monad.Trans
-import Control.Monad.Error
+import Control.Monad.Error()
 import Control.Monad.State
 import Data.IntMap(IntMap, insert, (!), empty)
 
@@ -33,8 +33,8 @@ getVar :: Int -> M (Maybe HKind)
 getVar i = do
     (_, m) <- get
     case m!i of
-	Just (KVar i') -> getVar i'
-	mk -> return mk
+        Just (KVar i') -> getVar i'
+        mk -> return mk
 
 addMap :: Int -> HKind -> M ()
 addMap i k = do
@@ -54,14 +54,14 @@ htCheckType its t = flip evalStateT initState $ do
 htCheckEnv :: [(HSymbol, ([HSymbol], HType, a))] -> Either String [(HSymbol, ([HSymbol], HType, HKind))]
 htCheckEnv its =
     let graph = [ (n, i, getHTCons t) | n@(i, (_, t, _)) <- its ]
-	order = stronglyConnComp graph
+        order = stronglyConnComp graph
     in  case [ c | CyclicSCC c <- order ] of
-	c : _ -> Left $ "Recursive types are not allowed: " ++ unwords [ i | (i, _) <- c ]
-	[] -> flip evalStateT initState $ addKinds
-	    where addKinds = do
-		        env <- inferHKinds [] $ map (\ (AcyclicSCC n) -> n) order
-		  	let getK i = maybe (error $ "htCheck " ++ i) id $ lookup i env
-			return [ (i, (vs, t, getK i)) | (i, (vs, t, _)) <- its ]
+        c : _ -> Left $ "Recursive types are not allowed: " ++ unwords [ i | (i, _) <- c ]
+        [] -> flip evalStateT initState $ addKinds
+            where addKinds = do
+                        env <- inferHKinds [] $ map (\ (AcyclicSCC n) -> n) order
+                        let getK i = maybe (error $ "htCheck " ++ i) id $ lookup i env
+                        return [ (i, (vs, t, getK i)) | (i, (vs, t, _)) <- its ]
 
 inferHKinds :: KEnv -> [(HSymbol, ([HSymbol], HType, a))] -> M KEnv
 inferHKinds env [] = return env
@@ -107,16 +107,16 @@ iHKindStar env t = do
 unifyK :: HKind -> HKind -> M ()
 unifyK k1 k2 = do
     let follow k@(KVar i) = getVar i >>= return . maybe k id 
-	follow k = return k
-	unify KStar KStar = return ()
-	unify (KArrow k11 k12) (KArrow k21 k22) = do unifyK k11 k21; unifyK k12 k22
-	unify (KVar i1) (KVar i2) | i1 == i2 = return ()
-	unify (KVar i) k = do occurs i k; addMap i k
-	unify k (KVar i) = do occurs i k; addMap i k
-	unify _ _ = lift $ Left "kind error"
-	occurs _ KStar = return ()
-	occurs i (KArrow f a) = do follow f >>= occurs i; follow a >>= occurs i
-	occurs i (KVar i') = if i == i' then lift $ Left "cyclic kind" else return ()
+        follow k = return k
+        unify KStar KStar = return ()
+        unify (KArrow k11 k12) (KArrow k21 k22) = do unifyK k11 k21; unifyK k12 k22
+        unify (KVar i1) (KVar i2) | i1 == i2 = return ()
+        unify (KVar i) k = do occurs i k; addMap i k
+        unify k (KVar i) = do occurs i k; addMap i k
+        unify _ _ = lift $ Left "kind error"
+        occurs _ KStar = return ()
+        occurs i (KArrow f a) = do follow f >>= occurs i; follow a >>= occurs i
+        occurs i (KVar i') = if i == i' then lift $ Left "cyclic kind" else return ()
     k1' <- follow k1
     k2' <- follow k2
     unify k1' k2'
@@ -132,7 +132,7 @@ getConHKind :: KEnv -> HSymbol -> M HKind
 getConHKind env v =
     case lookup v env of
     Just k -> return k
-    Nothing -> newKVar		-- allow uninterpreted type constructors
+    Nothing -> newKVar          -- allow uninterpreted type constructors
 
 ground :: HKind -> M HKind
 ground KStar = return KStar
@@ -140,8 +140,8 @@ ground (KArrow k1 k2) = liftM2 KArrow (ground k1) (ground k2)
 ground (KVar i) = do
     mk <- getVar i
     case mk of
-	Just k -> return k
-	Nothing -> return KStar
+        Just k -> return k
+        Nothing -> return KStar
 
 getHTCons :: HType -> [HSymbol]
 getHTCons (HTApp f a) = getHTCons f `union` getHTCons a

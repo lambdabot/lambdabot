@@ -152,7 +152,7 @@ verboseHelp = "\
 \Theory\n\
 \======\n\
 \  Djinn interprets a Haskell type as a logic formula using the\n\
-\Curry-Howard isomorphism and then a decision procedure for\n\
+\Curry-Howard isomorphism and then uses a decision procedure for\n\
 \Intuitionistic Propositional Calculus.  This decision procedure is\n\
 \based on Gentzen's LJ sequent calculus, but in a modified form, LJT,\n\
 \that ensures termination.  This variation on LJ has a long history,\n\

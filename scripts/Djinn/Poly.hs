@@ -1,6 +1,6 @@
 module Poly(Ninf, inf, ninfToN,
-	    Poly, var, constp, coeffsOf, mustBeConst, substPolyVars,
-	    EqnSystem, solveEqnSystem) where
+            Poly, var, constp, coeffsOf, mustBeConst, substPolyVars,
+            EqnSystem, solveEqnSystem) where
 import List(partition, sort)
 import Util.Digraph(stronglyConnComp, SCC(..))
 import Util(mapSnd, insert, makeSet)
@@ -23,7 +23,7 @@ instance Show Ninf where
 
 instance Eq Ninf where
     I i == I j  =  i == j
-    Inf == Inf  =  error "Ninf: Inf == Inf" --True	 -- XXX?
+    Inf == Inf  =  error "Ninf: Inf == Inf" --True       -- XXX?
     _   == _    = False
 
 instance Ord Ninf where
@@ -42,30 +42,30 @@ instance Num Ninf where
     abs _   = error "Ninf: abs"
     signum _   = error "Ninf: signum"
     fromInteger i | i < 0 = error "Ninf: fromInteger"
-		  | otherwise = I i
+                  | otherwise = I i
 
 
 ---------------------------------------
 ----- Polynomials over Ninf
 -- Parametrized over the variable type
 
-data Poly a = P ![Summand a]		-- summands, sorted
+data Poly a = P ![Summand a]            -- summands, sorted
     deriving (Eq, Ord)
 
-data Summand a = S ![(a, Integer)] !Ninf	-- variables with their exponents and scalar factor, sorted
+data Summand a = S ![(a, Integer)] !Ninf        -- variables with their exponents and scalar factor, sorted
     deriving (Eq, Ord)
 
 instance (Show a) => Show (Poly a) where
     showsPrec _ (P []) = showString "0"
     showsPrec _ (P ss) = mix (map showS ss) " + "
         where mix [] _ = error "Poly.mix"
-	      mix [x] _ = x
-	      mix (x:xs) m = x . showString m . mix xs m
-	      showS (S [] i) = showsPrec 0 i
-	      showS (S vs 1) = mix (map showV vs) "*"
-	      showS (S vs n) = mix (showsPrec 0 n : map showV vs) "*"
-	      showV (v, 1) = showsPrec 0 v
-	      showV (v, n) = showsPrec 0 v . showString "^" . showsPrec 0 n
+              mix [x] _ = x
+              mix (x:xs) m = x . showString m . mix xs m
+              showS (S [] i) = showsPrec 0 i
+              showS (S vs 1) = mix (map showV vs) "*"
+              showS (S vs n) = mix (showsPrec 0 n : map showV vs) "*"
+              showV (v, 1) = showsPrec 0 v
+              showV (v, n) = showsPrec 0 v . showString "^" . showsPrec 0 n
 
 mkS :: [(a, Integer)] -> Ninf -> Summand a
 mkS ves Inf = S [(v,1) | (v,_) <- ves] Inf
@@ -91,8 +91,8 @@ instance (Show a, Ord a) => Num (Poly a) where
     abs _   = error "Poly: abs"
     signum _   = error "Poly: signum"
     fromInteger i | i < 0 = error "Poly: fromInteger"
-		  | i == 0 = P []
-		  | otherwise = P [S [] (fromInteger i)]
+                  | i == 0 = P []
+                  | otherwise = P [S [] (fromInteger i)]
 
 add :: (Ord a) => [Summand a] -> [Summand a] -> [Summand a]
 add [] ss = ss
@@ -106,12 +106,12 @@ add (s1@(S vs1 k1) : ss1) (s2@(S vs2 k2) : ss2) =
 muls :: (Ord a) => Summand a -> Summand a -> Summand a
 muls (S vs1 k1) (S vs2 k2) = mkS (merge vs1 vs2) (k1 * k2)
   where merge [] ys = ys
-	merge xs [] = xs
-	merge (x@(v1, e1):xs) (y@(v2, e2):ys) =
-	    case compare v1 v2 of
-	    LT -> x : merge xs (y:ys)
-	    EQ -> (v1, e1+e2) : merge xs ys
-	    GT -> y : merge (x:xs) ys
+        merge xs [] = xs
+        merge (x@(v1, e1):xs) (y@(v2, e2):ys) =
+            case compare v1 v2 of
+            LT -> x : merge xs (y:ys)
+            EQ -> (v1, e1+e2) : merge xs ys
+            GT -> y : merge (x:xs) ys
 
 -----
 -- Return all the coefficints for a certain variable of
@@ -120,12 +120,12 @@ muls (S vs1 k1) (S vs2 k2) = mkS (merge vs1 vs2) (k1 * k2)
 coeffsOf :: (Show a, Ord a) => a -> Poly a -> [(Integer, Poly a)]
 coeffsOf x (P ss) = sort $ foldr coeff [] ss
   where coeff s@(S vs k) cs =
-	    case partition (\ (v, _) -> v == x) vs of
-	    ([(_, a)], vs') -> addCoeff a (P [S vs' k]) cs
-	    _ -> addCoeff 0 (P [s]) cs
-	addCoeff a c [] = [(a, c)]
-	addCoeff a c ((a', c'):cs) | a == a' = (a, c + c') : cs
-	addCoeff a c (k:cs) = k : addCoeff a c cs
+            case partition (\ (v, _) -> v == x) vs of
+            ([(_, a)], vs') -> addCoeff a (P [S vs' k]) cs
+            _ -> addCoeff 0 (P [s]) cs
+        addCoeff a c [] = [(a, c)]
+        addCoeff a c ((a', c'):cs) | a == a' = (a, c + c') : cs
+        addCoeff a c (k:cs) = k : addCoeff a c cs
 
 mustBeConst :: (Show a) => Poly a -> Ninf
 mustBeConst (P []) = 0
@@ -159,24 +159,24 @@ solveEqnSystem eqns =
     -- The definition could be  mapSnd mustBeConst $ solve eqns
     -- but this can be very slow.
     let groups = map flatten $ stronglyConnComp [ (eqn, v, getPolyVars rhs) | eqn@(v, rhs) <- eqns ]
-		  where	flatten (CyclicSCC es) = es
-			flatten (AcyclicSCC e) = [e]
-	solveGroup :: (Ord var, Show var) => [(var, Ninf)] -> EqnSystem var -> [(var, Ninf)]
-	solveGroup sols es =
-	    let newsols = mapSnd mustBeConst $ solve (mapSnd (evalPolyConst sols) es)
-	    in  foldr insert sols newsols
+                  where flatten (CyclicSCC es) = es
+                        flatten (AcyclicSCC e) = [e]
+        solveGroup :: (Ord var, Show var) => [(var, Ninf)] -> EqnSystem var -> [(var, Ninf)]
+        solveGroup sols es =
+            let newsols = mapSnd mustBeConst $ solve (mapSnd (evalPolyConst sols) es)
+            in  foldr insert sols newsols
     in  foldl solveGroup [] groups
 
 solve :: (Ord var, Show var) => EqnSystem var -> [(var, Poly var)]
 solve [] = []
 solve ((v,f):xfs) =
     let cs = coeffsOf v f
-	a0 = getCoeff 0 cs
-	a = sum [ ai | (i, ai) <- cs, i /= 0 ]
+        a0 = getCoeff 0 cs
+        a = sum [ ai | (i, ai) <- cs, i /= 0 ]
         g = a0 + a0 * a * constp inf
-	xfs' = [ (y, evalPoly [(v, g)] p) | (y, p) <- xfs ]
-	sol = solve xfs'
-	x = evalPoly sol g
+        xfs' = [ (y, evalPoly [(v, g)] p) | (y, p) <- xfs ]
+        sol = solve xfs'
+        x = evalPoly sol g
     in  (v, x) : sol
 
 evalPoly :: (Ord var, Show var) => [(var, Poly var)] -> Poly var -> Poly var
@@ -191,13 +191,13 @@ evalPolyConst _ poly | isConstPoly poly = poly -- just a speedup
 -- Assume vps is sorted in the same order as vs.
 evalPolyConst vcs (P ss) = P (concatMap evalS ss)
   where evalS (S ves k) = loop vcs ves [] k
-	loop [] ves rves k = [mkS (reverse rves ++ ves) k]
-	loop _  []  rves k = [mkS (reverse rves) k]
-	loop ovps@((v,c) : vps) oves@(ve@(v',e) : ves) rves k =
-	    case v `compare` v' of
-	    LT -> loop vps oves rves k
-	    EQ -> if c == 0 then [] else loop vps ves rves (k * c^e)
-	    GT -> loop ovps ves (ve:rves) k
+        loop [] ves rves k = [mkS (reverse rves ++ ves) k]
+        loop _  []  rves k = [mkS (reverse rves) k]
+        loop ovps@((v,c) : vps) oves@(ve@(v',e) : ves) rves k =
+            case v `compare` v' of
+            LT -> loop vps oves rves k
+            EQ -> if c == 0 then [] else loop vps ves rves (k * c^e)
+            GT -> loop ovps ves (ve:rves) k
 
 getCoeff :: (Ord a, Show a) => Integer -> [(Integer, Poly a)] -> Poly a
 getCoeff i ips = maybe 0 id $ lookup i ips

@@ -149,7 +149,7 @@ Further examples
 Theory
 ======
   Djinn interprets a Haskell type as a logic formula using the
-Curry-Howard isomorphism and then a decision procedure for
+Curry-Howard isomorphism and then uses a decision procedure for
 Intuitionistic Propositional Calculus.  This decision procedure is
 based on Gentzen's LJ sequent calculus, but in a modified form, LJT,
 that ensures termination.  This variation on LJ has a long history,
