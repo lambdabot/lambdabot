@@ -141,7 +141,7 @@ instance Binary UserStatus where
 
 instance Module SeenModule SeenState where
     moduleHelp _ "seen"  = "seen <user>. Report if a user has been seen by the bot"
-    moduleHelp _ "users" = "users [chan]. Report the maximum number of users seen in a channel, and active users in last 4 hours"
+    moduleHelp _ "users" = "users [chan]. Report the maximum number of users seen in a channel, and active users in the last 30 minutes"
     moduleCmds _         = ["users","seen"]
     moduleDefState _     = return (M.empty,M.empty)
 
@@ -162,7 +162,7 @@ instance Module SeenModule SeenState where
              isActive _                             = False
 
              recent t = normalizeTimeDiff (diffClockTimes s t) < gap_minutes
-             gap_minutes = TimeDiff 0 0 0 4 0 0 0 -- 4 hours
+             gap_minutes = TimeDiff 0 0 0 0 30 0 0 -- 30 minutes
 
          return $!
            [concat
