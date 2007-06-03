@@ -165,7 +165,6 @@ query_ghci' cmd expr = do
         ,"Ord"
         ,"Ratio"
     --  ,"Set"
-        ,"Traversable"
         ,"Tree"
         ,"Tuple"
         ,"Typeable"
