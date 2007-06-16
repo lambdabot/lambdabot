@@ -72,7 +72,9 @@ showNick msg nick_ | nTag nick_ == server msg = nName nick_
 -- |Parse a nickname received in a message.  If the server field is not
 -- provided, it defaults to the same as that of the message.
 readNick :: Message a => a -> String -> Nick
-readNick msg str = upckStr (server msg) str
+readNick msg str = upckStr (server msg) str'
+	where str' | last str `elem` ":" = init str
+	           | otherwise           = str
 
 instance Show Nick where
     show x | nTag x == "freenode" = show $ nName x
