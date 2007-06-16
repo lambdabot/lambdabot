@@ -70,6 +70,9 @@ dummylst =
     ,("map",        const "http://www.haskell.org/hawiki/HaskellUserLocations")
     ,("shootout",   const "http://shootout.alioth.debian.org/gp4/benchmark.php?test=all&lang=all")
     ,("botsnack",   const ":)")
+    ,("thanks",     const "you are welcome")
+    ,("thx",        const "you are welcome")
+    ,("thank you",  const "you are welcome")
 
     ,("wiki",       lookupWiki)
     ,("oldwiki",     ("http://www.haskell.org/hawiki/" ++))
