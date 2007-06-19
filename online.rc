@@ -12,17 +12,22 @@ admin + freenode:Lemmih
 admin + freenode:sjanssen
 admin + freenode:sorear
 admin + freenode:int-e
-join freenode:#haskell
-join freenode:#haskell-blah
-join freenode:#haskell-overflow
-join freenode:#haskell.hac07
-join freenode:#haskell.dut
+admin + freenode:igli
+join freenode:#ScannedInAvian
+join freenode:#darcs
 join freenode:#gentoo-haskell
 join freenode:#gentoo-uy
 join freenode:#ghc
-join freenode:#darcs
-join freenode:#oasis
-join freenode:#perl6
+join freenode:#haskell
+join freenode:#haskell-blah
+join freenode:#haskell-overflow
+join freenode:#haskell-soc
 join freenode:#jtiger
+join freenode:#oasis
+join freenode:#parrot
+join freenode:#perl6
 join freenode:#unicycling
-join freenode:#ScannedInAvian
+join freenode:#xmonad
+join freenode:#dreamlinux-es
+join freenode:#debian-es
+join freenode:#friendly-coders
