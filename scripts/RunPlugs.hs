@@ -49,6 +49,7 @@ qualifieds =
     ,"qualified Data.IntSet"
     ,"qualified Data.Foldable"
     ,"qualified Data.Sequence"
+    ,"qualified Data.Traversable"
     ,"qualified Control.Monad.Writer"
     ]
 
@@ -77,7 +78,6 @@ datas   = map ("Data." ++)
     ,"Ord"
     ,"Ratio"
 --  ,"Set"
-    ,"Traversable"
     ,"Tree"
     ,"Tuple"
     ,"Typeable"
