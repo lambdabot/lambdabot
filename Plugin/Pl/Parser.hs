@@ -92,7 +92,8 @@ lambda = do
 
 var :: Parser Expr
 var = try (makeVar `fmap` atomic <|> 
-           parens (try rightSection <|> try (makeVar `fmap` many1 (char ',')) 
+           parens (try unaryNegation <|> try rightSection
+                   <|> try (makeVar `fmap` many1 (char ',')) 
                    <|> tuple) <|> list <|> (Var Pref . show) `fmap` charLiteral
                    <|> stringVar `fmap` stringLiteral)
         <?> "variable" where
@@ -134,6 +135,13 @@ tuple = do
     let name = Var Pref $ replicate (length elts - 1) ','
     return $ foldl App name elts
   <?> "tuple"
+
+unaryNegation :: Parser Expr
+unaryNegation = do
+    symbol "-"
+    e <- myParser False
+    return $ Var Pref "negate" `App` e
+  <?> "unary negation"
 
 rightSection :: Parser Expr
 rightSection = do
