@@ -1,3 +1,8 @@
+all:
+	@echo
+	@echo "This Makefile only supports \"make clean\". For build instructions, see README."
+	@echo
+
 clean:
 	./Setup.hs clean
 	rm -f ${CLEANS}
