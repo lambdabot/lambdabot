@@ -16,10 +16,11 @@ type Key    = P.ByteString
 type Quotes = M.Map Key [P.ByteString]
 
 instance Module QuoteModule Quotes where
-    moduleCmds           _ = ["quote", "remember", "ghc", "fortune"
+    moduleCmds           _ = ["quote", "remember", "forget", "ghc", "fortune"
                              ,"yow","arr","yarr","keal","b52s","brain","palomer"
                              ,"girl19", "v", "yhjulwwiefzojcbxybbruweejw", "protontorpedo"]
 
+    moduleHelp _ "forget"  = "forget nick quote.  Delete a quote"
     moduleHelp _ "fortune" = "fortune. Provide a random fortune"
     moduleHelp _ "yow"     = "yow. The zippy man."
     moduleHelp _ "arr"     = "arr. Talk to a pirate"
@@ -40,6 +41,7 @@ instance Module QuoteModule Quotes where
     moduleDefState  _       = return M.empty
 
     process_ _ cmd s = case cmd of
+          "remember"      -> runForget   (dropSpace s)
           "remember"      -> runRemember (dropSpace s)
           "quote"         -> runQuote    (dropSpace s)
           "ghc"           -> runQuote    ("ghc " ++ dropSpace s)
@@ -84,6 +86,21 @@ runRemember str
             fm' = M.insert (P.pack nm) (P.pack q : ss) fm
         writer fm'
         return ["Done."]
+    where
+        (nm,rest) = break isSpace str
+        q         = tail rest
+
+-- @forget, to remove a quote
+runForget :: String -> ModuleLB Quotes
+runForget str
+    | null rest = return ["Incorrect arguments to quote"]
+    | otherwise = withMS $ \fm writer -> do
+        let ss  = fromMaybe [] (M.lookup (P.pack nm) fm)
+            fm' = M.insert (P.pack nm) (delete (P.pack q) ss) fm
+        writer fm'
+        if P.pack q `elem` ss
+            then return ["Done."]
+            else return ["No match."]
     where
         (nm,rest) = break isSpace str
         q         = tail rest
