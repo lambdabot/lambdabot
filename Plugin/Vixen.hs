@@ -6,6 +6,7 @@
 --
 module Plugin.Vixen where
 
+-- import Data.Int (for code to read old state data)
 import Data.Binary
 import Data.Binary.Put
 import Data.Binary.Get
@@ -73,6 +74,7 @@ mkResponses choices them = (\((_,wtree):_) -> wtree) $
 --
 
 data WTree = Leaf !P.ByteString | Node ![WTree]
+             deriving Show
 
 instance Binary WTree where
     put (Leaf s)  = putWord8 0 >> put s
@@ -86,3 +88,28 @@ instance Binary WTree where
 type Choice  = [(P.ByteString, WTree)]
 type RChoice = [(Regex, WTree)] -- compiled choices
 
+{- Sample of how to rescue data in the old 32-bit Binary format
+
+newtype OldChoice = OC { unOC :: Choice }
+                    deriving Show
+instance Binary OldChoice where
+    get = do liftM OC (getList (getPair getBS getWTree))
+        where
+          getList :: (Get a) -> Get [a]
+          getList getA = do
+            n <- liftM fromIntegral (get :: Get Int32)
+            replicateM n getA
+
+          getShort :: Get Int
+          getShort = liftM fromIntegral (get :: Get Int32)
+
+          getPair = liftM2 (,)
+
+          getBS   = getShort >>= getByteString
+          
+          getWTree = do
+            tag <- getWord8
+            case tag of
+              0 -> liftM Leaf getBS
+              1 -> liftM Node (getList getWTree)
+-}
