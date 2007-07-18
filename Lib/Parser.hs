@@ -8234,7 +8234,7 @@ parseExpr = runParser parse
 
 
 
-#if __GLASGOW_HASKELL__ > 606
+#if __GLASGOW_HASKELL__ >= 606
 as_name = HsIdent "as"
 hiding_name = HsIdent "hiding"
 qualified_name = HsIdent "qualified"
