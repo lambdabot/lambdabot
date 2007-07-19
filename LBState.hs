@@ -129,12 +129,11 @@ writeGS :: g -> ModuleT (GlobalPrivate g p) LB ()
 writeGS g = withGS (\_ writer -> writer g)
 
 -- | run an IO action in another thread, with a timeout, lifted into LB
-forkLB :: LB a -> LB ()
+forkLB :: LB a -> LB ThreadId
 forkLB f = (`liftLB` f) $ \g -> do
             forkIO $ do
                 timeout (15 * 1000 * 1000) g
                 return ()
-            return ()
 
 -- | lift an io transformer into LB
 liftLB :: (IO a -> IO b) -> LB a -> LB b

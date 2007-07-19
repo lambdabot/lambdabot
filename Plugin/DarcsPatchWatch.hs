@@ -19,25 +19,26 @@ import Control.Monad       ( when )
 
 import System.Directory
 import System.Time
+import Message
 
-newtype DarcsPatchWatch = DarcsPatchWatch ()
-
-theModule :: MODULE
-theModule = MODULE $ DarcsPatchWatch ()
+PLUGIN DarcsPatchWatch
 
 
 --
 -- Configuration variables
 --
 
-maxNumberOfRepos :: Int
-maxNumberOfRepos = 20
-
 debugFlag :: Bool
 debugFlag = False
 
-announceTarget :: String
-announceTarget = "#z123lambdabot"
+maxNumberOfRepos :: Int
+maxNumberOfRepos = 20
+
+announceTarget :: Nick
+announceTarget = Nick {
+  nTag  = "freenode",
+  nName = "#lazybottoms-dev"
+  }
 
 inventoryFile :: String
 inventoryFile = "_darcs/inventory"
@@ -114,7 +115,7 @@ withRepos = accessorMS $ \s -> (dpw_repos s, \t -> s { dpw_repos = t })
 -- The plugin itself
 --
 
-instance Module DarcsPatchWatch DarcsPatchWatchState where
+instance Module DarcsPatchWatchModule DarcsPatchWatchState where
 
     moduleCmds  _ = ["repos", "repo-add", "repo-del"]
 
@@ -127,7 +128,7 @@ instance Module DarcsPatchWatch DarcsPatchWatchState where
     moduleSerialize _ = Just stateSerial
     moduleDefState  _ = return (DarcsPatchWatchState Nothing [])
     moduleInit      _ = do
-      tid <- lbIO (\conv -> forkIO $ conv watchRepos)
+      tid <- watchRepos -- must return thread ID.
       modifyMS (\s -> s { dpw_threadId = Just tid })
 
     moduleExit      _ =
@@ -141,6 +142,7 @@ instance Module DarcsPatchWatch DarcsPatchWatchState where
                          "repo-add"    -> addRepo rest
                          "repo-del"    -> delRepo rest
 
+
 --
 -- Configuration commands
 --
@@ -151,7 +153,7 @@ printRepos _  = error "@todo given arguments, try @todo-add or @list todo"
 addRepo :: String -> DPW [String]
 addRepo rest | null (dropSpace rest) = return ["argument required"]
 addRepo rest = do
-   x <- mkRepo rest
+   x <- lift $ mkRepo rest
    case x of
      Right r -> withRepos $ \repos setRepos -> case () of {_
             | length repos >= maxNumberOfRepos ->
@@ -168,7 +170,7 @@ addRepo rest = do
 delRepo :: String -> DPW [String]
 delRepo rest | null (dropSpace rest) = return ["argument required"]
 delRepo rest = do
-   x <- mkRepo rest
+   x <- lift $ mkRepo rest
    case x of
      Left s -> return ["cannot delete invalid repository: " ++ s]
      Right r -> withRepos $ \repos setRepos -> case findRepo r repos of
@@ -202,16 +204,27 @@ mkRepo pref_ =
 -- The heart of the plugin: watching darcs repositories
 --
 
-watchRepos :: DPW ()
-watchRepos =
-    do withRepos $ \repos setRepos ->
-           do debug ("checking darcs repositories " ++ showRepos repos)
-              repos_ <- mapM checkRepo repos
-              setRepos repos_
-       io $ threadDelay sleepTime
-       watchRepos
+watchRepos :: DPW ThreadId
+watchRepos = do
+      ref <- getRef
+      lift . forkForeverLB $ helper ref
     where sleepTime :: Int  -- in milliseconds
           sleepTime = checkInterval * 1000 * 1000
+          helper    :: MVar DarcsPatchWatchState -> LB () -- !
+          helper ref = do
+              repos <- io . liftM dpw_repos . readMVar $ ref
+              debug ("checking darcs repositories " ++ showRepos repos)
+              repos_ <- mapM checkRepo repos
+              io $ modifyMVar_ ref (\s -> return s{dpw_repos = repos_})
+              io $ threadDelay sleepTime
+              helper ref
+          -- | run an IO action in another thread, with a timeout, lifted into LB
+          forkForeverLB :: LB a -> LB ThreadId
+          forkForeverLB f = (`liftLB` f) $ \g -> do
+                      forkIO $ do
+                          g
+                          return ()
+          
 
 -- actually work out if we need to send a message
 --
@@ -234,7 +247,7 @@ checkRepo r = do
        return $ r { repo_nlinesAtLastAnnouncement = nlines
                   , repo_lastAnnounced = Just ct }
     where
-       send' = ircPrivmsg announceTarget . Just
+       send' = ircPrivmsg announceTarget
 
 mkMsg :: String -> (String,String,Integer) -> String
 mkMsg r (who,msg,0) = "[" ++ basename r ++ ":" ++ who ++ "] " ++ msg
