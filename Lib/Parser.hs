@@ -16,7 +16,7 @@
 module Lib.Parser (
               parseExpr,
               ParseMode(..), defaultParseMode, ParseResult(..)) where
-import Language.Haskell.Syntax
+import Language.Haskell.Syntax hiding (as_name, qualified_name, hiding_name, minus_name, pling_name)
 import Language.Haskell.ParseMonad
 import Language.Haskell.Lexer
 import Language.Haskell.ParseUtils
