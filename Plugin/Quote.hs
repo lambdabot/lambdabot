@@ -41,7 +41,7 @@ instance Module QuoteModule Quotes where
     moduleDefState  _       = return M.empty
 
     process_ _ cmd s = case cmd of
-          "remember"      -> runForget   (dropSpace s)
+          "forget"        -> runForget   (dropSpace s)
           "remember"      -> runRemember (dropSpace s)
           "quote"         -> runQuote    (dropSpace s)
           "ghc"           -> runQuote    ("ghc " ++ dropSpace s)
