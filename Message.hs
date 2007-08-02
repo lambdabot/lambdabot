@@ -5,6 +5,7 @@ module Message(Message(..), Nick(..), showNick, readNick, Pipe, packNick, unpack
 
 import qualified Data.ByteString.Char8 as P
 import Control.Concurrent
+import Data.Char(toUpper)
 
 import Control.Arrow( first )
 
@@ -52,7 +53,11 @@ data Nick
   = Nick {
         nTag :: !String, -- ^The tag of the server this nick is on
         nName :: !String -- ^The server-specific nickname of this nick
-  } deriving (Eq,Ord)
+  } deriving (Ord)
+
+instance Eq Nick where
+  (Nick tag name) == (Nick tag2 name2) =
+     (map toUpper name == map toUpper name2) && (tag == tag2)
 
 -- Helper functions
 upckStr :: String -> String -> Nick
