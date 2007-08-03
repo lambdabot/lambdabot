@@ -65,8 +65,8 @@ instance Eq Nick where
      (canonicalizeName name == canonicalizeName name2) && (tag == tag2)
 
 instance Ord Nick where
-  (Nick tag name) < (Nick tag2 name2) =
-     (tag < tag2) || (tag == tag2 && canonicalizeName name < canonicalizeName name2)
+  (Nick tag name) <= (Nick tag2 name2) =
+     (tag, canonicalizeName name) <= (tag2, canonicalizeName name2)
   
 
 -- Helper functions
