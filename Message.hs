@@ -53,11 +53,21 @@ data Nick
   = Nick {
         nTag :: !String, -- ^The tag of the server this nick is on
         nName :: !String -- ^The server-specific nickname of this nick
-  } deriving (Ord)
+  }
+
+-- This definition of canonicalizeName breaks strict RFC rules, but so does
+-- freenode
+canonicalizeName :: String -> String
+canonicalizeName = map toUpper
 
 instance Eq Nick where
   (Nick tag name) == (Nick tag2 name2) =
-     (map toUpper name == map toUpper name2) && (tag == tag2)
+     (canonicalizeName name == canonicalizeName name2) && (tag == tag2)
+
+instance Ord Nick where
+  (Nick tag name) < (Nick tag2 name2) =
+     (tag < tag2) || (tag == tag2 && canonicalizeName name < canonicalizeName name2)
+  
 
 -- Helper functions
 upckStr :: String -> String -> Nick
