@@ -1,6 +1,6 @@
 module L where
 
-import Prelude
+import Prelude hiding (mapM, sequence, mapM_, sequence_)
 import Char
 import List
 import Maybe
@@ -39,3 +39,5 @@ import Test.QuickCheck
 import ShowQ
 
 {-# LINE 1 "<local>" #-}
+s x y z = x z (y z); k x _ = x; i x = x
+on f g x y = g x `f` g y
