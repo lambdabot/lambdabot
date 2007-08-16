@@ -13,17 +13,17 @@ admin + freenode:sjanssen
 admin + freenode:sorear
 admin + freenode:int-e
 admin + freenode:igli
-join freenode:#ScannedInAvian
 join freenode:#darcs
 join freenode:#ghc
 join freenode:#haskell
+join freenode:#scala
 join freenode:#haskell-blah
 join freenode:#haskell-overflow
 join freenode:#haskell-soc
 join freenode:#jtiger
-join freenode:#oasis
 join freenode:#parrot
 join freenode:#perl6
 join freenode:#unicycling
 join freenode:#xmonad
 join freenode:##logic
+join freenode:#gentoo-haskell
