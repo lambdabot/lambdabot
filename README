@@ -13,7 +13,7 @@ If you're *not* using ghc 6.6, build the Data.ByteString library at
 http://www.cse.unsw.edu.au/~dons, version 0.7 and later are ok.
 
 You need the zlib library:
-    darcs get http://haskell.org/~duncan/zlib
+    http://hackage.haskell.org/cgi-bin/hackage-scripts/package/zlib
 
 Build with cabal (simple)
     $ vi Config.hs
