@@ -14,7 +14,7 @@ import Control.Monad.Error ()
 
 import Language.Haskell.Syntax
 import Language.Haskell.Parser
-import Language.Haskell.Pretty
+import Lib.Parser (prettyPrintInLine)
 
 import Plugin as P
 
@@ -24,7 +24,7 @@ instance P.Module UnMtlModule () where
     moduleCmds   _ = ["unmtl"]
     moduleHelp _ _ = "unroll mtl monads"
     process_ _ _ mtl =
-        return $ [ either ("err: "++) pretty (mtlParser mtl) ]
+        return $ [ either ("err: "++) prettyPrintInLine (mtlParser mtl) ]
 
 -----------------------------------------------------------
 -- Helpers
@@ -174,12 +174,6 @@ mtlParser' hsType@(HsTyCon _) =
         _       -> return (HsTyApp hsType)
 
 mtlParser' hsType = return (HsTyApp hsType)
-
------------------------------------------------------------
--- Pretty printing
-
-pretty :: HsType -> String
-pretty = prettyPrintWithMode (defaultMode { layout = PPNoLayout })
 
 -----------------------------------------------------------
 -- Examples

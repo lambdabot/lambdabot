@@ -24,9 +24,9 @@ binary = "./quickcheck"
 
 check :: String -> IO String
 check src = do
-    case parseExpr (src ++ "\n") of
-        ParseFailed _ e -> return $ " " ++ e
-        ParseOk     _   -> do
+    case parseExpr src of
+        Left e  -> return e
+        Right _ -> do
             (out,err,_) <- popen binary [] (Just src)
             let o = munge out
                 e = munge err

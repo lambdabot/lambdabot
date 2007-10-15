@@ -1,4 +1,4 @@
-module Lib.FixPrecedence (withPrecExp, withPrecDecl, precTable) where
+module Lib.FixPrecedence (withPrecExp, withPrecDecl, precTable, FixPrecedence(..) ) where
 
 import qualified Data.Map as M
 import Language.Haskell.Syntax
@@ -330,3 +330,14 @@ precTable = M.fromList
         (UnQual (HsSymbol "$!"),      (HsAssocRight, 0)),
         (UnQual (HsIdent  "seq"),     (HsAssocRight, 0))
     ]
+
+
+class FixPrecedence a where
+    fixPrecedence :: a -> a
+
+instance FixPrecedence HsExp where
+    fixPrecedence = withPrecExp precTable
+
+instance FixPrecedence HsDecl where
+    fixPrecedence = snd . withPrecDecl precTable
+

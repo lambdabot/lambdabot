@@ -1,14 +1,13 @@
 {-# OPTIONS -fno-warn-missing-signatures #-}
 module Lib.Pointful (pointful, ParseResult(..), test, main, combinatorModule) where
 
+import Lib.Parser
 import Language.Haskell.Parser
 import Language.Haskell.Syntax
-import Language.Haskell.Pretty
 import Data.Generics
 import Control.Monad.State
 import Data.Maybe
 import qualified Data.Map as M
-import Lib.FixPrecedence (withPrecExp, withPrecDecl, precTable)
 
 ---- Utilities ----
 
@@ -28,19 +27,6 @@ succName (HsIdent s) = HsIdent . reverse . succAlpha . reverse $ s
 succAlpha ('z':xs) = 'a' : succAlpha xs
 succAlpha (x  :xs) = succ x : xs
 succAlpha []       = "a"
-
-modifyOk f r = case r of
-  ParseOk v -> ParseOk (f v)
-  ParseFailed l m -> ParseFailed l m
-
-parseExpr s = modifyOk (\(HsModule _ _ _ _ [HsPatBind _ _ (HsUnGuardedRhs e) []]) -> e)
-                       (parseModule ("main = " ++ s))
-
-parseDecl s = modifyOk (\(HsModule _ _ _ _ [d]) -> d)
-                       (parseModule s)
-
-(a `orParse` b) x = case a x of r@(ParseOk _) -> r
-                                _             -> b x
 
 ---- Optimization (removing explicit lambdas) and restoration of infix ops ----
 
@@ -173,15 +159,7 @@ optimizeOnce x = everywhere (mkT optimizeD `extT'` optimizeRhs `extT'` optimizeE
 optimize :: (Eq a, Data a) => a -> a
 optimize = stabilize optimizeOnce
 
-pointfulParsed :: (Eq a, Pretty a, Data a) => ParseResult a -> ParseResult String
-pointfulParsed = modifyOk (prettyPrintInLine  . optimize . uncomb)
-
-pointfulExpr = pointfulParsed . modifyOk (withPrecExp precTable) . parseExpr
-pointfulDecl = pointfulParsed . modifyOk (snd . withPrecDecl precTable) . parseDecl
-pointful = pointfulExpr `orParse` pointfulDecl
-
-prettyPrintInLine :: Pretty a => a -> String
-prettyPrintInLine = prettyPrintWithMode $ defaultMode { layout = PPInLine }
+pointful = withParsed (optimize . uncomb)
 
 test s = case parseModule s of
   f@(ParseFailed _ _) -> fail (show f)

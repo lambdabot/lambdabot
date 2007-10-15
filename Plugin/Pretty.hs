@@ -33,13 +33,14 @@ instance Module PrettyModule (String -> IO String) where
 prettyCmd :: String -> ModuleLB (String -> IO String)
 prettyCmd rest = 
     let code = dropWhile (`elem` " \t>") rest
-        modPrefix = "module Main where "
-            ++ if "let" `isPrefixOf` code then "i = " else ""
-        prefLen = length modPrefix
-        result = case parseModule (modPrefix ++ code) of
-            (ParseOk a)           -> doPretty a
-            (ParseFailed loc msg) -> let (SrcLoc _ _ col) = loc in
-                (show msg ++ " at column " ++ show (col - prefLen)) : []
+        modPrefix1 = "module Main where "
+        modPrefix2 = "module Main where __expr__ = "
+        prefLen1 = length modPrefix1
+        result = case (parseModule (modPrefix1 ++ code ++ "\n"), parseModule (modPrefix2 ++ code ++ "\n"))  of
+            (ParseOk a, _)          -> doPretty a
+            (_, ParseOk a)          -> doPretty a
+            (ParseFailed loc msg,_) -> let (SrcLoc _ _ col) = loc in
+                   (show msg ++ " at column " ++ show (col - prefLen1)) : []
     in return result -- XXX will this work? No, spaces are compressed.
 
 -- | calculates "desired" indentation and return pretty-printed declarations
@@ -63,8 +64,16 @@ doPretty (HsModule _ _ _ _ decls) =
             caseIndent   = 4,
             onsideIndent = declLen decl
         }
+        makeModeExp _ = defaultMode {
+            doIndent     = 3,
+            caseIndent   = 4,
+            onsideIndent = 0
+        }
+        prettyDecl (HsPatBind _ (HsPVar (HsIdent "__expr__")) (HsUnGuardedRhs e) []) -- pretty printing an expression
+                     = prettyPrintWithMode (makeModeExp e) e
+        prettyDecl d = prettyPrintWithMode (makeMode d) d
     -- FIXME: prefixing with hashes is done, because i didn't find a way
     --   to disable the indentation filter of lambdabot only for this module...
     in map (" "++) . lines . concat . intersperse "\n" 
        -- . map show $ decls
-       . map (\d -> prettyPrintWithMode (makeMode d) d) $ decls
+       . map prettyDecl $ decls

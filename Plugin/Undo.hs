@@ -8,11 +8,9 @@ module Plugin.Undo where
 import Plugin
 import Lib.Parser
 import Language.Haskell.Syntax hiding (Module)
-import Language.Haskell.Pretty
 import Data.Generics
 import qualified Data.Set as Set
 import Control.Monad (guard)
-import Lib.FixPrecedence (withPrecExp, precTable)
 
 PLUGIN Undo
 
@@ -26,10 +24,7 @@ instance Module UndoModule () where
                 "redo" -> redo
                 _      -> error "unknown command"
 
-ppMode :: PPHsMode
-ppMode = defaultMode { layout = PPInLine }
-
-findVar :: HsExp -> String
+findVar :: Data a => a -> String
 findVar e = head $ do
                     i <- [0 ..]
                     x <- ['a' .. 'z']
@@ -39,12 +34,7 @@ findVar e = head $ do
  where s = Set.fromList $ listify (const True :: String -> Bool) e
 
 transform :: (String -> HsExp -> HsExp) -> String -> String
-transform f s =
-    case parseExpr (s ++ "\n") of -- newline to make comments work
-        ParseOk e -> let e' = withPrecExp precTable e
-                     in  prettyPrintWithMode ppMode 
-                             $ everywhere (mkT . f . findVar $ e') e'
-        err       -> show err
+transform f = withParsed $ \e -> everywhere (mkT . f . findVar $ e) e
 
 undo :: String -> HsExp -> HsExp
 undo v (HsDo stms) = f stms
