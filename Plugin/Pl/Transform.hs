@@ -20,11 +20,13 @@ nub = nub' S.empty where
     | otherwise = x: nub' (x `S.insert` set) xs
 -}
 
+-- | Does a name occur in a pattern?
 occursP :: String -> Pattern -> Bool
 occursP v (PVar v') = v == v'
 occursP v (PTuple p1 p2) = v `occursP` p1 || v `occursP` p2
 occursP v (PCons  p1 p2) = v `occursP` p1 || v `occursP` p2
 
+-- | How often does the given name occur free in an expression?
 freeIn :: String -> Expr -> Int
 freeIn v (Var _ v') = fromEnum $ v == v'
 freeIn v (Lambda pat e) = if v `occursP` pat then 0 else freeIn v e
@@ -32,6 +34,7 @@ freeIn v (App e1 e2) = freeIn v e1 + freeIn v e2
 freeIn v (Let ds e') = if v `elem` map declName ds then 0 
   else freeIn v e' + sum [freeIn v e | Define _ e <- ds]
 
+-- | Does a name occur free in an expression?
 isFreeIn :: String -> Expr -> Bool
 isFreeIn v e = freeIn v e > 0
 
@@ -41,9 +44,11 @@ tuple es  = foldr1 (\x y -> Var Inf "," `App` x `App` y) es
 tupleP :: [String] -> Pattern
 tupleP vs = foldr1 PTuple $ PVar `map` vs
 
+-- | The subset of ds that d depends on
 dependsOn :: [Decl] -> Decl -> [Decl]
 dependsOn ds d = [d' | d' <- ds, declName d' `isFreeIn` declExpr d]
-  
+
+-- | Convert recursive lets to lambdas with tuple patterns and fix calls
 unLet :: Expr -> Expr
 unLet (App e1 e2) = App (unLet e1) (unLet e2)
 unLet (Let [] e) = unLet e
@@ -61,6 +66,8 @@ unLet (Var f x) = Var f x
 
 type Env = M.Map String String
 
+-- | Rename all variables to (locally) unqiue fresh ones
+--
 -- It's a pity we still need that for the pointless transformation.
 -- Otherwise a newly created id/const/... could be bound by a lambda
 -- e.g. transform' (\id x -> x) ==> transform' (\id -> id) ==> id
@@ -88,6 +95,10 @@ alphaRename e = alpha e `evalState` M.empty where
 transform :: Expr -> Expr
 transform = transform' . alphaRename . unLet
 
+-- | Transform patterns to:
+--     fst/snd for tuple patterns
+--     head/tail for cons patterns
+--     id/const/flip/. for variable paterns
 transform' :: Expr -> Expr
 transform' (Let {}) = assert False bt
 transform' (Var f v) = Var f v
