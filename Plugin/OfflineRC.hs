@@ -16,7 +16,22 @@ import Control.Concurrent( forkIO )
 import Control.Concurrent.MVar( readMVar )
 import Lib.Error( finallyError )
 import Control.Exception( evaluate )
+
+#ifdef mingw32_HOST_OS
+-- Work around the lack of readline on windows
+readline :: String -> IO (Maybe String)
+readline p = do
+    putStr p
+    hFlush stdout
+    liftM Just getLine
+
+addHistory :: String -> IO ()
+addHistory _ = return ()
+
+#else
 import System.Console.Readline( readline, addHistory )
+#endif
+
 
 PLUGIN OfflineRC
 
