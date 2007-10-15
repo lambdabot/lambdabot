@@ -42,7 +42,7 @@ module Lib.Util (
 
         io,
 
-        random, insult
+        random, insult, confirmation
     ) where
 
 import Data.List                (intersperse, isPrefixOf)
@@ -241,8 +241,8 @@ stdGetRandItem = getStdRandom . getRandItem
 randomElem :: [a] -> IO a
 randomElem = stdGetRandItem
 
-random :: [a] -> IO a
-random = randomElem
+random :: MonadIO m => [a] -> m a
+random = liftIO . randomElem
 
 ------------------------------------------------------------------------
 
@@ -517,5 +517,33 @@ insult =
     "Listen, broccoli brains, I don't have time to listen to this trash.",
     "I've seen penguins that can type better than that.",
     "Have you considered trying to match wits with a rutabaga?",
-    "You speak an infinite deal of nothing"
+    "You speak an infinite deal of nothing",
+    
+    -- More haskellish insults
+    "You untyped fool!",
+    "My brain just exploded",
+    
+    -- some more friendly replies
+    "I am sorry.","Sorry.",
+    "Maybe you made a typo?",
+    "Just try something else.",
+    "There are some things that I just don't know.",
+    -- sometimes don't insult at all
+    ":(",":(",
+    "","",""
     ]
+
+--
+-- Some more interesting confirmations for @remember and @where
+--
+confirmation :: [String]
+confirmation =
+   ["Done.","Done.",
+    "Okay.",
+    "I will remember.",
+    "Good to know.",
+    "It is stored.",
+    "I will never forget.",
+    "It is forever etched in my memory.",
+    "Nice!"
+   ]

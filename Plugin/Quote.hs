@@ -85,7 +85,8 @@ runRemember str
         let ss  = fromMaybe [] (M.lookup (P.pack nm) fm)
             fm' = M.insert (P.pack nm) (P.pack q : ss) fm
         writer fm'
-        return ["Done."]
+        r <- random confirmation
+        box r
     where
         (nm,rest) = break isSpace str
         q         = tail rest

@@ -11,6 +11,7 @@
 module Plugin.Where (theModule) where
 
 import Plugin
+import Lib.Util (confirmation)
 import qualified Data.ByteString.Char8 as P
 import qualified Data.Map as M
 
@@ -60,5 +61,5 @@ getWhere fm fact =
 updateWhere :: Bool -> WhereState -> WhereWriter -> String -> String -> LB String
 updateWhere _guard factFM writer fact dat = do
         writer $ M.insert (P.pack fact) (P.pack dat) factFM
-        return "Done."
+        random confirmation
 
