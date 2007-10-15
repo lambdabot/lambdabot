@@ -74,9 +74,9 @@ type Env = M.Map String String
 alphaRename :: Expr -> Expr
 alphaRename e = alpha e `evalState` M.empty where
   alpha :: Expr -> State Env Expr
-  alpha (Var f v) = do fm <- get; return $ Var f $ maybe v id (M.lookup v fm)
-  alpha (App e1 e2) = liftM2 App (alpha e1) (alpha e2)
-  alpha (Let _ _) = assert False bt
+  alpha (Var f v)     = do fm <- get; return $ Var f $ maybe v id (M.lookup v fm)
+  alpha (App e1 e2)   = liftM2 App (alpha e1) (alpha e2)
+  alpha (Let _ _)     = assert False undefined
   alpha (Lambda v e') = inEnv $ liftM2 Lambda (alphaPat v) (alpha e')
 
   -- act like a reader monad
@@ -89,9 +89,9 @@ alphaRename e = alpha e `evalState` M.empty where
     put $ M.insert v v' fm
     return $ PVar v'
   alphaPat (PTuple p1 p2) = liftM2 PTuple (alphaPat p1) (alphaPat p2)
-  alphaPat (PCons p1 p2) = liftM2 PCons (alphaPat p1) (alphaPat p2)
+  alphaPat (PCons  p1 p2) = liftM2 PCons  (alphaPat p1) (alphaPat p2)
 
-
+-- | Make an expression points free
 transform :: Expr -> Expr
 transform = transform' . alphaRename . unLet
 
@@ -100,7 +100,7 @@ transform = transform' . alphaRename . unLet
 --     head/tail for cons patterns
 --     id/const/flip/. for variable paterns
 transform' :: Expr -> Expr
-transform' (Let {}) = assert False bt
+transform' (Let {}) = assert False undefined
 transform' (Var f v) = Var f v
 transform' (App e1 e2) = App (transform' e1) (transform' e2)
 transform' (Lambda (PTuple p1 p2) e) 
