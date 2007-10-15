@@ -8,6 +8,7 @@ import Plugin.Pl.Rules
 import Plugin.Pl.PrettyPrinter
 
 import Data.List (nub)
+import Data.Maybe (listToMaybe)
 import Control.Monad.State
 
 cut :: [a] -> [a]
@@ -18,6 +19,8 @@ toMonadPlus Nothing = mzero
 toMonadPlus (Just x)= return x
 
 type Size = Double
+-- | The 'size' of an expression, lower is better
+--
 -- This seems to be a better size for our purposes,
 -- despite being "a little" slower because of the wasteful uglyprinting
 sizeExpr' :: Expr -> Size 
@@ -44,25 +47,27 @@ sizeExpr' e = fromIntegral (length $ show e) + adjust e where
   adjust (App e1 e2)  = adjust e1 + adjust e2
   adjust _ = 0
 
+-- | Optimize an expression
 optimize :: Expr -> [Expr]
 optimize e = result where
   result :: [Expr]
   result = map (snd . fromJust) . takeWhile isJust . 
-    iterate ((=<<) simpleStep) $ Just (sizeExpr' e, e)
+    iterate (>>= simpleStep) $ Just (sizeExpr' e, e)
 
   simpleStep :: (Size, Expr) -> Maybe (Size, Expr)
   simpleStep t = do 
-    let chn = let ?first = True in step (snd t)
+    let chn  = let ?first = True  in step (snd t)
         chnn = let ?first = False in step =<< chn
-        new = filter (\(x,_) -> x < fst t) . map (sizeExpr' &&& id) $ 
+        new  = filter (\(x,_) -> x < fst t) . map (sizeExpr' &&& id) $ 
                 snd t: chn ++ chnn
-    case new of
-      [] -> Nothing
-      (new':_) -> return new'
+    listToMaybe new
 
+-- | Apply all rewrite rules once
 step :: (?first :: Bool) => Expr -> [Expr]
 step e = nub $ rewrite rules e
  
+-- | Apply a single rewrite rule
+--   
 rewrite :: (?first :: Bool) => RewriteRule -> Expr -> [Expr]
 rewrite rl e = case rl of
     Up r1 r2     -> let e'  = cut $ rewrite r1 e
@@ -81,6 +86,7 @@ rewrite rl e = case rl of
     
   where -- rew = ...; rewDeep = ...
 
+-- Apply a 'deep' reqrite rule
 rewDeep :: (?first :: Bool) => RewriteRule -> Expr -> [Expr]
 rewDeep rule e = rew rule e `mplus` case e of
     Var _ _    -> mzero
@@ -89,12 +95,14 @@ rewDeep rule e = rew rule e `mplus` case e of
     App e1 e2  -> ((`App` e2) `map` rewDeep rule e1) `mplus`
                   ((e1 `App`) `map` rewDeep rule e2)
 
+-- | Apply a rewrite rule to an expression
+--   in a 'deep' position, i.e. from inside a RR,CRR or Down
 rew :: (?first :: Bool) => RewriteRule -> Expr -> [Expr]
-rew (RR r1 r2) e = toMonadPlus $ fire r1 r2 e 
-rew (CRR r) e = toMonadPlus $ r e
-rew (Or rs) e = (\x -> rew x e) =<< rs
-rew (Down r1 r2) e
-  = if null e'' then e' else e'' where
+rew (RR r1 r2)   e = toMonadPlus $ fire r1 r2 e 
+rew (CRR r)      e = toMonadPlus $ r e
+rew (Or rs)      e = (\x -> rew x e) =<< rs
+rew (Down r1 r2) e = if null e'' then e' else e''
+  where
     e'  = cut $ rew r1 e
     e'' = rewDeep r2 =<< e'
 rew r@(Then   {}) e = rewrite r e

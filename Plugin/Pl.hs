@@ -60,6 +60,7 @@ res target = do
     Nothing -> return ["pointless: sorry, nothing to resume."]
     Just d' -> optimizeTopLevel target d'
 
+-- | Convert a string to pointfree form
 pf :: Nick -> String -> Pl
 pf target inp = case parsePF inp of
   Right d  -> optimizeTopLevel target (firstTimeout, mapTopLevel transform d)

@@ -14,6 +14,7 @@ instance Show TopLevel where
   showsPrec p (TLE e) = showsPrec p e
   showsPrec p (TLD _ d) = showsPrec p d
 
+-- | Expression with syntactic sugar
 data SExpr
   = SVar !String
   | SLambda ![Pattern] !SExpr
