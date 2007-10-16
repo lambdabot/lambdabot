@@ -54,6 +54,21 @@ undo v (HsDo stms) = f stms
                                             (HsLit $ HsString "")
                                     ]
         where alt pat x = HsAlt s pat (HsUnGuardedAlt x) []
+undo v (HsListComp e stms) = f stms
+ where
+    f []                       = HsList [e]
+    f (HsQualifier g     : xs) = HsIf g (f xs) nil
+    f (HsLetStmt   ds    : xs) = HsLet ds $ f xs
+    f (HsGenerator s p l : xs) 
+        | irrefutable p = concatMap' $ HsLambda s [p] $ f xs
+        | otherwise     = concatMap' $ 
+                            HsLambda s [pvar v] $ 
+                                HsCase (var v) 
+                                    [ alt p (f xs)
+                                    , alt HsPWildCard nil
+                                    ]
+        where alt pat x = HsAlt s pat (HsUnGuardedAlt x) []
+              concatMap' fun = HsApp (HsApp (var "concatMap") (HsParen fun)) l
 undo _ x           = x
 
 irrefutable :: HsPat -> Bool
@@ -67,6 +82,9 @@ irrefutable _              = False
 
 infixed :: HsExp -> String -> HsExp -> HsExp
 infixed l o r = HsInfixApp l (HsQVarOp $ UnQual $ HsSymbol o) r
+
+nil :: HsExp
+nil = HsVar list_tycon_name
 
 var :: String -> HsExp
 var = HsVar . UnQual . HsIdent
