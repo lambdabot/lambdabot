@@ -17,7 +17,7 @@ parseExpr s
         ParseOk (HsModule _ _ _ _ [HsPatBind _ _ (HsUnGuardedRhs e) _])
             -> Right $ fixPrecedence $ unparen e
         ParseFailed (SrcLoc _ _ col) msg
-            -> Left $ show (col - length prefix) ++ ": " ++ msg
+            -> Left $ showParseError msg (col - length prefix) s
   where
     prefix  = "module Main where { main = ("
     wrapped = prefix ++ s ++ "\n)}"
@@ -50,7 +50,17 @@ parseExpr s
 parseDecl :: String -> Either String HsDecl
 parseDecl s = case parseModule s of
         ParseOk (HsModule _ _ _ _ [d])   -> Right $ fixPrecedence d
-        ParseFailed (SrcLoc _ _ col) msg -> Left $ show col ++ ": " ++ msg
+        ParseFailed (SrcLoc _ _ col) msg -> Left $ showParseError msg col s
+
+showParseError :: String -> Int -> String -> String
+showParseError msg col s = " " ++ msg
+                       ++ case (col < 0, drop (col - 1) s) of
+                            (True, _) -> " at end of input" -- on the next line, which has no prefix
+                            (_,[]   ) -> " at end of input"
+                            (_,ctx  ) -> let ctx' = takeWhile (/= ' ') ctx
+                                         in " at \"" ++ (take 5 ctx')
+                                         ++ (if length ctx' > 5 then "..." else "")
+                                         ++ "\" (column " ++ show col ++ ")"
 
 -- Not really parsing
 

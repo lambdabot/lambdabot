@@ -219,7 +219,11 @@ instance MonadError IRCError LB where
               `catch` \e -> conv $ h $ IRCRaised e
 
 -- A type for handling both Haskell exceptions and external signals
-data IRCError = IRCRaised Exception | SignalCaught Signal deriving Show
+data IRCError = IRCRaised Exception | SignalCaught Signal
+
+instance Show IRCError where
+    show (IRCRaised    e) = show e
+    show (SignalCaught s) = show s
 
 -- lbIO return :: LB (LB a -> IO a)
 -- CPS to work around predicativiy of haskell's type system.

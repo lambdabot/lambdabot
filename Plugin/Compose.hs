@@ -53,7 +53,7 @@ compose f g xs = g xs >>= f . unlines
 --
 lookupP :: Message a => (a, Nick) -> String -> LB (String -> LB [String])
 lookupP (a,b) cmd = withModule ircCommands cmd
-    (error $ "Parse error: " ++ show cmd) 
+    (error $ "Unknown command: " ++ show cmd) 
     (\m -> do
         privs <- gets ircPrivCommands -- no priv commands can be composed
         when (cmd `elem` privs) $ error "Privledged commands cannot be composed"
