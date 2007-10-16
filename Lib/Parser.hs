@@ -36,6 +36,7 @@ parseExpr s
     balanced n (_  :cs) =           balanced n     cs
     
     balancedString :: Char -> Int -> String -> Bool
+    balancedString _     n []          = n == 0 -- the parse error will be reported by L.H.Parser
     balancedString delim n ('\\':c:cs)
       | isSpace c                      = case dropWhile isSpace cs of
                                             '\\':cs' -> balancedString delim n cs'
