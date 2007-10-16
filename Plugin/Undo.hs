@@ -99,6 +99,13 @@ redo v e@(HsInfixApp l (HsQVarOp (UnQual (HsSymbol op))) r) =
         ">>=" ->
             case r of
                 (HsLambda loc [p] (HsDo stms)) -> HsDo (HsGenerator loc p l : stms)
+                (HsLambda loc [HsPVar v1] (HsCase (HsVar (UnQual v2))
+                                           [ HsAlt _ p (HsUnGuardedAlt s) []
+                                           , HsAlt _ HsPWildCard (HsUnGuardedAlt (HsApp (HsVar (UnQual (HsIdent "fail"))) _)) []
+                                           ]))
+                          | v1 == v2           -> case s of
+                                                      HsDo stms -> HsDo (HsGenerator loc p l : stms)
+                                                      _         -> HsDo [HsGenerator loc p l, HsQualifier s]
                 (HsLambda loc [p] s)           -> HsDo [HsGenerator loc p l, HsQualifier s]
                 _ -> HsDo [ HsGenerator undefined (pvar v) l
                           , HsQualifier . app r $ var v]
