@@ -222,6 +222,9 @@ rules = Or [
   -- s (const f) --> (.) f
   rr  (\f -> sE `a` (constE `a` f))
       (\f -> compE `a` f),
+  -- (`ap` f) . const . h --> (. f) . h
+  rr  (\f g h -> (flipE `a` sE `a` f) `c` (flipE `a` compE `a` g) `c` constE `c` h)
+      (\f _ h -> (flipE `a` compE `a` f) `c` h),
   -- s (f . fst) snd --> uncurry f
   rr  (\f -> sE `a` (f `c` fstE) `a` sndE)
       (\f -> uncurryE `a` f),
@@ -247,6 +250,12 @@ rules = Or [
   -- const x . f --> const x
   rr (\x f -> constE `a` x `c` f)
      (\x _ -> constE `a` x),
+  -- (. f) . const --> const
+  rr (\f -> (flipE `a` compE `a` f) `c` constE)
+     (\_ -> constE),
+  -- (. f) . const . g --> const . g
+  rr (\f g -> (flipE `a` compE `a` f) `c` constE `c` g)
+     (\_ g -> constE `c` g),
   -- fix f --> f (fix x)
   Hard $
   rr0 (\f -> fixE `a` f)
