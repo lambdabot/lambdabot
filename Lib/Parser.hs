@@ -12,7 +12,7 @@ import Lib.FixPrecedence
 
 parseExpr :: String -> Either String HsExp
 parseExpr s
-    | not (balanced 0 s) = Left "Unbalanced parenthesis"
+    | not (balanced 0 ' ' s) = Left "Unbalanced parentheses"
     | otherwise          = case parseModule wrapped of
         ParseOk (HsModule _ _ _ _ [HsPatBind _ _ (HsUnGuardedRhs e) _])
             -> Right $ fixPrecedence $ unparen e
@@ -25,26 +25,36 @@ parseExpr s
     unparen (HsParen e) = e
     unparen e           = e
     
-    balanced :: Int -> String -> Bool
-    balanced n ""       = n == 0
-    balanced n ('(':cs) =           balanced (n+1) cs
-    balanced n (')':cs) = n > 0  && balanced (n-1) cs
-    balanced n (c  :cs) | c `elem` "\"'"
-                        =           balancedString c n cs
-    balanced n (c:'\'':cs) | isAlphaNum c
-                        =           balanced n     cs
-    balanced n (_  :cs) =           balanced n     cs
+    -- balanced (open-parentheses) (previous-character) (remaining-string)
+    balanced :: Int -> Char -> String -> Bool
+    balanced n _ ""           = n == 0
+    balanced n _ ('(':cs)     =           balanced (n+1) '(' cs
+    balanced n _ (')':cs)     = n > 0  && balanced (n-1) ')' cs
+    balanced n p (c  :cs)
+      | c `elem` "\"'" && (not  (isAlphaNum p) || c /= '\'')
+                              =           balancedString c n cs
+    balanced n p ('-':'-':_)
+      | not (isSymbol p)      = n == 0
+    balanced n _ ('{':'-':cs) =           balancedComment 1 n cs
+    balanced n _ (c  :cs)     =           balanced n     c   cs
     
     balancedString :: Char -> Int -> String -> Bool
-    balancedString _     n []          = n == 0 -- the parse error will be reported by L.H.Parser
+    balancedString _     n ""          = n == 0 -- the parse error will be reported by L.H.Parser
     balancedString delim n ('\\':c:cs)
       | isSpace c                      = case dropWhile isSpace cs of
                                             '\\':cs' -> balancedString delim n cs'
                                             cs'      -> balancedString delim n cs'
       | otherwise                      = balancedString delim n cs
     balancedString delim n (c     :cs)
-      | delim == c                     = balanced n cs
+      | delim == c                     = balanced n c cs
       | otherwise                      = balancedString delim n cs
+   
+    balancedComment :: Int -> Int -> String -> Bool
+    balancedComment 0 n cs           = balanced n ' ' cs
+    balancedComment _ _ ""           = True -- the parse error will be reported by L.H.Parser
+    balancedComment m n ('{':'-':cs) = balancedComment (m+1) n cs
+    balancedComment m n ('-':'}':cs) = balancedComment (m-1) n cs
+    balancedComment m n (_      :cs) = balancedComment m     n cs
 
 
 parseDecl :: String -> Either String HsDecl
