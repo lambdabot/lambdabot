@@ -88,7 +88,7 @@ go _ _      = []   -- unterminated
 --
 extract_signatures :: String -> String
 extract_signatures output
-        = reverse . removeExp 0 . reverse .
+        = reverse . removeExp . reverse .
           unwords . map (dropWhile isSpace . expandTab) .
           mapMaybe ((>>= last') . R.matchRegex signature_regex) .
           lines $ output
@@ -96,12 +96,16 @@ extract_signatures output
         last' [] = Nothing
         last' xs = Just $ last xs
 
-        removeExp :: Int -> String -> String
-        removeExp 0 (' ':':':':':' ':_) = []
-        removeExp n ('(':xs) = '(':removeExp (n+1) xs
-        removeExp n (')':xs) = ')':removeExp (n-1) xs
-        removeExp n (x  :xs) = x  :removeExp  n xs
-        removeExp _ []       = error "invalid ghci output: no type signature"
+        removeExp :: String -> String
+        removeExp [] = []
+        removeExp xs = removeExp' 0 xs
+        
+        removeExp' :: Int -> String -> String
+        removeExp' 0 (' ':':':':':' ':_) = []
+        removeExp' n ('(':xs)            = '(':removeExp' (n+1) xs
+        removeExp' n (')':xs)            = ')':removeExp' (n-1) xs
+        removeExp' n (x  :xs)            = x  :removeExp'  n    xs
+        removeExp' _ []                  = error "invalid ghci output: no type signature"
 
 --
 --     With this the command handler can be easily defined using popen:
@@ -114,7 +118,8 @@ query_ghci' cmd expr = do
                                        (Just (context ++ command cmd (stripComments expr)))
        let ls = extract_signatures output
        return $ if null ls
-                then unlines . take 3 . lines . expandTab . cleanRE $ errors -- "bzzt" 
+                then unlines . take 3 . filter (not . null) . map cleanRE2 .
+                     lines . expandTab . cleanRE . filter (/='\r') $ errors -- "bzzt" 
                 else ls
   where
      context = ":l L\n" ++ (concatMap (\m -> ":m + "++m++"\n") $
@@ -182,9 +187,12 @@ query_ghci' cmd expr = do
         ,"Parallel.Strategies"
         ]
 
-     cleanRE :: String -> String
+     cleanRE, cleanRE2 :: String -> String
      cleanRE s
         | Just _         <- notfound `R.matchRegex` s = "Couldn\'t find qualified module."
+        | Just (_,_,b,_) <- ghci_msg `R.matchRegexAll`  s = b
+        | otherwise      = s
+     cleanRE2 s
         | Just (_,_,b,_) <- ghci_msg `R.matchRegexAll`  s = b
         | otherwise      = s
      ghci_msg = R.mkRegex "<interactive>:[^:]*:[^:]*: ?"
