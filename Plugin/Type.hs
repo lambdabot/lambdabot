@@ -82,38 +82,26 @@ go _ _      = []   -- unterminated
 --     through IRC.
 
 --
---     We first strip 7 leading lines, which is the GHCi logo, then the final line,
---     which is the last prompt, before filtering out the lines that match our regex,
+--     We filtering out the lines that match our regex,
 --     selecting the last subset match on each matching line before finally concatting
 --     the whole lot together again.
 --
--- TODO, just use ghci -v0
---
 extract_signatures :: String -> String
 extract_signatures output
-        = removeExp . concat . intersperse " " . map (dropWhile isSpace . expandTab) .
+        = reverse . removeExp 0 . reverse .
+          unwords . map (dropWhile isSpace . expandTab) .
           mapMaybe ((>>= last') . R.matchRegex signature_regex) .
-          reverse . drop 1 . reverse . drop 7 . lines $ output
+          lines $ output
         where
         last' [] = Nothing
         last' xs = Just $ last xs
 
-        removeExp :: String -> String
-        removeExp (' ':':':':':' ':xs) = xs
-        removeExp xs = case lex xs of
-          [("(",ys)] -> removeExp $ stripParens 1 ys
-          [("","")]  -> []
-          [(_,ys)]   -> removeExp ys
-          _          -> error "invalid ghci output: unexpected lex behavior"
-
-        stripParens :: Int -> String -> String
-        stripParens 0 xs = xs
-        stripParens n xs = case lex xs of
-          [("(",ys)] -> stripParens (n+1) ys
-          [(")",ys)] -> stripParens (n-1) ys
-          [("","")]  -> error "invalid ghci output: open parenthesis"
-          [(_,ys)]   -> stripParens n     ys
-          _          -> error "invalid ghci output: unexpected lex behavior"
+        removeExp :: Int -> String -> String
+        removeExp 0 (' ':':':':':' ':_) = []
+        removeExp n ('(':xs) = '(':removeExp (n+1) xs
+        removeExp n (')':xs) = ')':removeExp (n-1) xs
+        removeExp n (x  :xs) = x  :removeExp  n xs
+        removeExp _ []       = error "invalid ghci output: no type signature"
 
 --
 --     With this the command handler can be easily defined using popen:
@@ -122,7 +110,7 @@ extract_signatures output
 --
 query_ghci' :: String -> String -> IO String
 query_ghci' cmd expr = do
-       (output, errors, _) <- popen (ghci config) ["-fglasgow-exts","-fno-th","-iscripts"]
+       (output, errors, _) <- popen (ghci config) ["-v0","-fglasgow-exts","-fno-th","-iscripts"]
                                        (Just (context ++ command cmd (stripComments expr)))
        let ls = extract_signatures output
        return $ if null ls
