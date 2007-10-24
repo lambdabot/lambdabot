@@ -69,9 +69,13 @@ lookupP (a,b) cmd = withModule ircCommands cmd
 -- | More interesting composition/evaluation
 -- @@ @f x y (@g y z)
 evalBracket :: Message a => (a, Nick) -> String -> LB [String]
-evalBracket a args = liftM concat' $ mapM (evalExpr a) $ fst $ parseBracket True args
+evalBracket a args = liftM (map addSpace . concat') $ mapM (evalExpr a) $ fst $ parseBracket True args
  where concat' ([x]:[y]:xs) = concat' ([x++y]:xs)
        concat' xs           = concat xs
+       
+       addSpace :: String -> String
+       addSpace (' ':xs) = ' ':xs
+       addSpace xs       = ' ':xs
 
 evalExpr :: Message a => (a, Nick) -> Expr -> LB [String]
 evalExpr _ (Arg s) = return [s]
