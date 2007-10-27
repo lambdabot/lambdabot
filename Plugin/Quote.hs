@@ -50,7 +50,7 @@ instance Module QuoteModule Quotes where
 
           "keal"          -> rand kealList
           "b52s"          -> rand b52s
-          "brain"         -> rand brain
+          "brain"         -> rand (if "pondering" `isInfixOf` s then brainPondering else brain)
           "palomer"       -> rand palomer
           "girl19"        -> rand girl19
           "protontorpedo" -> rand protontorpedo

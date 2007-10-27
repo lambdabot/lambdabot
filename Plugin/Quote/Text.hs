@@ -231,7 +231,10 @@ brain =
     ,("Has it ever occurred to you, Pinklet, that your scarf is\n" ++
       "constricting the bloodflow to your head?")
     , "Are you pondering what I'm pondering?"
-    , "But where are we going to find a duck and a hose at this hour?"
+    ] ++ brainPondering
+brainPondering :: [String]
+brainPondering =
+    [ "But where are we going to find a duck and a hose at this hour?"
     , "But where will we find an open tattoo parlor at this time of night?"
     , "Uh... yeah, Brain, but where are we going to find rubber pants our size?"
     , "Uh, I think so, Brain, but balancing a family and a career ... ooh, it's all too much for me."
@@ -262,7 +265,7 @@ brain =
     , "I think so, Brain, but we're already naked."
     , "I think so, Brain, but Lederhosen won't stretch that far."
     , "Yeah, but I thought Madonna already had a steady bloke!"
-    , "I think so, Brain?but how would we ever determine Sandra Bullock's shoe size?"
+    , "I think so, Brain, but how would we ever determine Sandra Bullock's shoe size?"
     , "I think so, Brain, but a codpiece made from a real fish would get smelly after a while, wouldn?t it?"
     , "I think so, Commander Brain from Outer Space! But do we have time to grease the rockets?"
     , "I think so, Doctor. But are these really the legs of a show girl?"
@@ -270,7 +273,7 @@ brain =
     , "I think so, Brain! But ruby-studded stockings would be mighty uncomfortable wouldn't they?"
     , "I think so, Brain! How much deeper would the ocean be if there weren't sponges down there?"
     , "I think so, Brain! But do I have what it take to be the 'Lord of the Dance'?"
-    , "I think so, Brain, but I didn?t know 90210 was a real zip code! Will Tori be there?"
+    , "I think so, Brain, but I didn't know 90210 was a real zip code! Will Tori be there?"
     , "The game does not conclude until the woman with the eating disorder ululates."
     ]
 
