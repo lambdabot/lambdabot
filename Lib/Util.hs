@@ -57,7 +57,8 @@ import Control.Concurrent       (MVar, newEmptyMVar, takeMVar, tryPutMVar, putMV
                                  forkIO, killThread, threadDelay)
 import Control.Exception        (bracket)
 
-import System.Random hiding (split,random)
+-- getStdRandom has a bug, see safeGetStdRandom below.
+import System.Random hiding (split,random,getStdRandom)
 
 import System.IO
 import qualified System.Time as T
@@ -217,6 +218,15 @@ listToMaybeAll = listToMaybeWith id
 
 ------------------------------------------------------------------------
 
+-- | getStdRandom has a bug when 'f' returns bottom, we strictly evaluate the
+-- new generator before calling setStdGen.
+safeGetStdRandom :: (StdGen -> (a,StdGen)) -> IO a
+safeGetStdRandom f = do
+    g <- getStdGen
+    let (x, g') = f g
+    setStdGen $! g'
+    return x
+
 -- | 'getRandItem' takes as input a list and a random number generator. It
 --   then returns a random element from the list, paired with the altered
 --   state of the RNG
@@ -236,7 +246,7 @@ getRandItem mylist rng = (mylist !! index,newRng)
 --   and the state of the RNG is hidden, so one don't need to pass it
 --   explicitly.
 stdGetRandItem :: [a] -> IO a
-stdGetRandItem = getStdRandom . getRandItem
+stdGetRandItem = safeGetStdRandom . getRandItem
 
 randomElem :: [a] -> IO a
 randomElem = stdGetRandItem
