@@ -234,7 +234,7 @@ getRandItem :: (RandomGen g) =>
                [a] -- ^ The list to pick a random item from
             -> g   -- ^ The RNG to use
             -> (a, g) -- ^ A pair of the item, and the new RNG seed
-getRandItem [] _       = error "getRandItem: empty list"
+getRandItem [] g       = (error "getRandItem: empty list", g)
 getRandItem mylist rng = (mylist !! index,newRng)
                          where
                          llen = length mylist
