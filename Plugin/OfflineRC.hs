@@ -11,7 +11,7 @@ import System.IO( hPutStrLn, hFlush, stdout )
 import LMain( received )
 import IRCBase
 import Control.Monad.Reader( asks )
-import Control.Monad.State( get, put )
+import Control.Monad.State( get, gets, put )
 import Control.Concurrent( forkIO )
 import Control.Concurrent.MVar( readMVar )
 import Lib.Error( finallyError )
@@ -92,7 +92,8 @@ replLoop = do line <- io $ readline "lambdabot> "
                                  Just x -> return $ dropWhile isSpace x
               when (not $ null s') (do io (addHistory s')
                                        feed s')
-              replLoop
+              continue <- gets ircStayConnected
+              when continue replLoop
 
 
 lockRC :: OfflineRC ()
