@@ -175,7 +175,8 @@ doPRIVMSG' myname msg target
   | (commands `arePrefixesOf` text)
   && length text > 1
   && (text !! 1 /= ' ') -- elem of prefixes
-  && (not (commands `arePrefixesOf` [text !! 1]))
+  && (not (commands `arePrefixesOf` [text !! 1]) ||
+      (length text > 2 && text !! 2 == ' ')) -- ignore @@ prefix, but not the @@ command itself
     = let (cmd, params) = breakOnGlue " " (dropWhile (==' ') text)
       in doPublicMsg cmd (dropWhile (==' ') params)
 
