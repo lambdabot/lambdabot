@@ -22,11 +22,11 @@ instance Module ComposeModule () where
     moduleCmds _   = [".", "compose", "@", "?"]
     moduleHelp _ c = unlines $
                        if c `elem` ["@","?"]
-                        then ["@ [args]."
-                             ,"@ executes plugin invocations in its arguments, parentheses can be used."
+                        then [c++" [args]."
+                             ,c++" executes plugin invocations in its arguments, parentheses can be used."
                              ," The commands are right associative."
-                             ," For example:    @ @pl @undo code"
-                             ," is the same as: @ (@pl (@undo code))"]
+                             ," For example:    "++c++" "++c++"pl "++c++"undo code"
+                             ," is the same as: "++c++" ("++c++"pl ("++c++"undo code))"]
                         else [". <cmd1> <cmd2> [args]."
                              ,". [or compose] is the composition of two plugins"
                              ," The following semantics are used: . f g xs == g xs >>= f"]
@@ -69,7 +69,7 @@ lookupP (a,b) cmd = withModule ircCommands cmd
 -- | More interesting composition/evaluation
 -- @@ @f x y (@g y z)
 evalBracket :: Message a => (a, Nick) -> String -> LB [String]
-evalBracket a args = liftM (map addSpace . concat') $ mapM (evalExpr a) $ fst $ parseBracket True args
+evalBracket a args = liftM (map addSpace . concat') $ mapM (evalExpr a) $ fst $ parseBracket 0 True args
  where concat' ([x]:[y]:xs) = concat' ([x++y]:xs)
        concat' xs           = concat xs
        
@@ -92,35 +92,46 @@ data Expr = Command String [Expr]
     deriving Show
 
 -- | Parse a command invocation that can contain parentheses
-parseBracket :: Bool -> String -> ([Expr],String)
-parseBracket True  []       = ([],[])
-parseBracket False []       = error "Missing ')' in nested command"
-parseBracket False (')':xs) = ([],xs)
-parseBracket top   ('(':xxs) | Just xs <- isCommand xxs
-                            = -- (@cmd arg arg)
-                              let (cmd, ys) = break (`elem` " )") xs
-                                  (args,zs) = parseBracket False (dropWhile (==' ') ys)
-                                  (rest,ws) = parseBracket top zs
-                              in  (Command cmd args:rest, ws)
-parseBracket top   (xxs)     | Just xs <- isCommand xxs
-                            = case break (`elem` " )") xs of
-                                  -- @(cmd arg arg)
-                                  ('(':cmd,ys) -> let (args,zs) = parseBracket False (dropWhile (==' ') ys)
-                                                      (rest,ws) = parseBracket top zs
-                                                  in  (Command cmd args:rest, ws)
-                                  -- @cmd arg arg
-                                  (cmd,    ys) -> let (rest,zs) = parseBracket top (dropWhile (==' ') ys)
-                                                  in  (Command cmd rest:[], zs)
-parseBracket top   xxs@(x:xs)
-    | x `elem` "\"'"        = let (str, ys) = parseString x xs
-                                  (rest,zs) = parseBracket top ys
-                              in  (addArg (x:str) rest, zs)
-    | otherwise             = let (arg, ys) = break (`elem` " )") xxs
-                                  (arg',zs) = case arg of
-                                                  [] -> (take 1 ys, drop 1 ys)
-                                                  _  -> (arg,       ys)
-                                  (rest,ws) = parseBracket top zs
-                              in  (addArg arg' rest, ws)
+--   The Int indicates how many brackets must be closed to end the current argument, or 0
+--   The Bool indicates if this is a valid location for a character constant
+parseBracket :: Int -> Bool -> String -> ([Expr],String)
+parseBracket 0 _ []       = ([],[])
+parseBracket _ _ []       = error "Missing ')' in nested command"
+parseBracket 1 _ (')':xs) = ([],xs)
+parseBracket n _ (')':xs) | n > 0
+                          = first (addArg ")") $ parseBracket (n-1) True xs
+parseBracket n _ ('(':xs) | Just ys <- isCommand xs       -- (@cmd arg arg)
+                          = parseCommand n ys
+parseBracket n _ ('(':xs) | n > 0
+                          = first (addArg "(") $ parseBracket (n+1) True xs
+parseBracket n _ xs       | Just ('(':ys) <- isCommand xs -- @(cmd arg arg)
+                          = parseCommand n ys
+parseBracket n _ xs       | Just ys <- isCommand xs       -- @cmd arg arg
+                          = parseInlineCommand n ys
+parseBracket n c (x:xs)   | x `elem` "\"'" && (c || x /= '\'')
+                          = let (str, ys) = parseString x xs
+                                (rest,zs) = parseBracket n True ys
+                            in  (addArg (x:str) rest, zs)
+parseBracket n c (x:xs)   = first (addArg [x])
+                          $ parseBracket n (not (isAlphaNum x) && (c || x /= '\'')) xs
+
+parseCommand, parseInlineCommand :: Int -> String -> ([Expr],String)
+parseCommand n xs = let (cmd, ys) = break (`elem` " )") xs
+                        (args,zs) = parseBracket 1 True (dropWhile (==' ') ys)
+                        (rest,ws) = parseBracket n True zs
+                    in  (Command cmd args:rest, ws)
+
+parseInlineCommand n xs = let (cmd, ys) = break (`elem` " )") xs
+                              (rest,zs) = parseBracket n True (dropWhile (==' ') ys)
+                          in  (Command cmd rest:[], zs)
+
+parseString :: Char -> String -> (String, String)
+parseString _     []          = ([],[])
+parseString delim ('\\':x:xs) = first (\ys -> '\\':x:ys) (parseString delim xs)
+parseString delim (x:xs)
+  | delim == x                = ([x],xs)
+  | otherwise                 = first (x:) (parseString delim xs)
+
 
 -- | Does xs start with a command prefix?
 isCommand :: String -> Maybe String
@@ -132,10 +143,3 @@ isCommand xs = msum $ map dropPrefix (commandPrefixes config)
 addArg :: String -> [Expr] -> [Expr]
 addArg s (Arg a:es) = Arg (s++a):es
 addArg s es         = Arg s     :es
-
-parseString :: Char -> String -> (String, String)
-parseString _     []          = ([],[])
-parseString delim ('\\':x:xs) = first (\ys -> '\\':x:ys) (parseString delim xs)
-parseString delim (x:xs)
-  | delim == x                = ([x],xs)
-  | otherwise                 = first (x:) (parseString delim xs)
