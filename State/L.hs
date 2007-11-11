@@ -37,6 +37,7 @@ import Control.Arrow
 import Text.Printf
 import Test.QuickCheck
 import ShowQ
+import Math.OEIS
 
 {-# LINE 1 "<local>" #-}
 s x y z = x z (y z); k x _ = x; i x = x
