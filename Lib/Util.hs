@@ -469,7 +469,7 @@ unEither = either id id
 
 
 -- convenience:
-io :: forall a (m :: * -> *). (MonadIO m) => IO a -> m a
+io :: MonadIO m => IO a -> m a
 io = liftIO
 {-# INLINE io #-}
 
