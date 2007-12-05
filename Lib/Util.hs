@@ -374,8 +374,10 @@ parIO a1 a2 = do
   c1 <- forkIO $ putMVar m =<< a1
   c2 <- forkIO $ putMVar m =<< a2
   r <- takeMVar m
-  killThread c1
-  killThread c2
+  -- killThread blocks until the thread has been killed.  Therefore, we call
+  -- killThread asynchronously in case one thread is blocked in a foreign
+  -- call.
+  forkIO $ killThread c1 >> killThread c2
   return r
 
 -- | run an action with a timeout
