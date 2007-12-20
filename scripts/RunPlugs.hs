@@ -32,7 +32,7 @@ prelude =
 
 other   =
     ["Text.Printf"
-    ,"Text.PrettyPrint.HughesPJ"]
+    ,"Text.PrettyPrint.HughesPJ hiding (empty)"]
 
 prehier =
     ["Char", "List", "Maybe", "Numeric", "Random" ]
