@@ -97,7 +97,7 @@ controls = map ("Control." ++)
     ,"Monad.Fix"
     ,"Monad.Instances"
     ,"Applicative"
-    ,"Arrow"
+    ,"Arrow hiding (pure)"
 --  ,"Arrow.Transformer"
 --  ,"Arrow.Transformer.All"
 --  ,"Arrow.Operations"
