@@ -25,14 +25,16 @@ import qualified Control.Exception
 
 rlimit = ResourceLimit 3
 
-context = prelude ++ prehier ++ datas ++ qualifieds ++ controls ++ other ++ template ++ extras
+context = prelude ++ prehier ++ datas ++ qualifieds ++ controls ++ other
+       ++ template ++ extras ++ numbers
 
 prelude =
     ["qualified Prelude as P", "Prelude"]
 
 other   =
     ["Text.Printf"
-    ,"Text.PrettyPrint.HughesPJ hiding (empty)"]
+    ,"Text.PrettyPrint.HughesPJ hiding (empty)"
+    ,"Math.OEIS"]
 
 prehier =
     ["Char", "List", "Maybe", "Numeric", "Random" ]
@@ -83,6 +85,15 @@ datas   = map ("Data." ++)
     ,"Typeable"
     ,"Word"
     ]
+
+numbers = map ("Data.Number." ++)
+    ["Symbolic"
+    ,"Dif"
+    ,"CReal"
+    ,"Fixed"
+    ,"Interval"
+    ,"BigFloat"
+    ,"Natural"]
 
 controls = map ("Control." ++)
     ["Monad"
