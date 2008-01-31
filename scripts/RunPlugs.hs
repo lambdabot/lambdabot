@@ -123,7 +123,7 @@ controls = map ("Control." ++)
 -- bit blurry. It depends on what GHC allows.
 --
 template = [] -- ["Language.Haskell.TH hiding (runIO,reify)"]
-extras   = ["ShowQ","ShowFun","L","LargeWord"]
+extras   = ["ShowQ","ShowFun","L","LargeWord","SimpleReflect hiding (var)"]
 
 main = do
     setResourceLimit ResourceCPUTime (ResourceLimits rlimit rlimit)
