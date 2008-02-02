@@ -1,7 +1,7 @@
 ----------------------------------------------------------------------
 -- |
 -- Module      : Plugin.UnMtl
--- Copyright   : Don Stewart, Lennart Kolmodin 2007
+-- Copyright   : Don Stewart, Lennart Kolmodin 2007, Twan van Laarhoven 2008
 -- License     : GPL-style (see LICENSE)
 -- 
 -- Unroll the MTL monads with your favorite bot! 
@@ -27,95 +27,123 @@ instance P.Module UnMtlModule () where
         return $ [ either ("err: "++) prettyPrintInLine (mtlParser mtl) ]
 
 -----------------------------------------------------------
--- Helpers
+-- 'PType' wrapper type
+
+data PMonad a = PMonad
+       { pResult :: a                      -- The result (trsnsformed type)
+       , pError  :: Maybe String           -- An error message?
+       , pFun    :: Maybe (PType -> PType) -- A type function
+       }
+
+type PType = PMonad HsType
+
+-- A monad instance so we get things like liftM and sequence for free
+instance Monad PMonad where
+    return t = PMonad t Nothing Nothing
+    m >>= g  = let x = g (pResult m)
+               in PMonad (pResult x) (pError m `mplus` pError x) Nothing
+
+-----------------------------------------------------------
+-- Lifiting function types
+
+type P = PType
+
+lift0 :: P                            -> HsType -> P
+lift1 :: (P -> P)                     -> HsType -> P
+lift2 :: (P -> P -> P)                -> HsType -> P
+lift3 :: (P -> P -> P -> P)           -> HsType -> P
+lift4 :: (P -> P -> P -> P -> P)      -> HsType -> P
+lift5 :: (P -> P -> P -> P -> P -> P) -> HsType -> P
+
+lift0 f _ = f
+lift1 f n = mkPfun n (lift0 . f)
+lift2 f n = mkPfun n (lift1 . f)
+lift3 f n = mkPfun n (lift2 . f)
+lift4 f n = mkPfun n (lift3 . f)
+lift5 f n = mkPfun n (lift4 . f)
+
+mkPfun :: HsType -> (PType -> HsType -> PType) -> PType
+mkPfun n cont = PMonad n (Just msg) (Just fun)
+  where fun p = cont p (HsTyApp n (pResult p))
+        msg = "`" ++ prettyPrintInLine n ++ "' is not applied to enough arguments" ++ full fun ['A'..'Z'] "/\\"
+        full p (x:xs) l = case p (con [x]) of
+                   PMonad{pFun    = Just p'} -> full p' xs l'
+                   PMonad{pError  = Just _}  -> "."
+                   PMonad{pResult = t }      -> ", giving `" ++ init l' ++ ". " ++ prettyPrintInLine t ++ "'"
+          where l' = l ++ [x] ++ " "
+
+-----------------------------------------------------------
+-- Helpers for constructing types
 
 infixr 5 -->
+infixl 6 $$
 
-(-->) :: HsType -> HsType -> HsType
-a --> b = cu a b
+-- Function type
+(-->) :: PType -> PType -> PType
+a --> b = liftM2 cu a b
 
 cu :: HsType -> HsType -> HsType
 cu (HsTyTuple xs) y = foldr HsTyFun y xs
 cu a b = HsTyFun a b
 
-app :: HsType -> HsType -> HsType
-app = HsTyApp
+-- Type application:
+--   If we have a type function, use that
+--   Otherwise use HsTyApp, but check for stupid errors
+($$) :: PType -> PType -> PType
+($$) PMonad{ pFun=Just f } x = f x
+($$) f x = PMonad
+         { pResult = HsTyApp (pResult f) (pResult x)
+         , pError  = pError f `mplus` -- ignore errors in x, the type constructor f might have a higher kind and ignore x
+                      if isFunction (pResult f) then Nothing else
+                            Just $ "`" ++ prettyPrintInLine (pResult f) ++ "' is not a type function."
+         , pFun    = Nothing
+         }
+  where
+    isFunction (HsTyFun _ _) = False
+    isFunction (HsTyTuple _) = False
+    isFunction _             = True
 
-var :: String -> HsType
-var = HsTyVar . HsIdent
+con, var :: String -> PType
+con = return . HsTyCon . UnQual . HsIdent
+var = return . HsTyVar . HsIdent
 
-con :: String -> HsType
-con = HsTyCon . UnQual . HsIdent
-
-tuple :: [HsType] -> HsType
-tuple = HsTyTuple . concatMap unpack
+tuple :: [PType] -> PType
+tuple = liftM (HsTyTuple . concatMap unpack) . sequence
     where
     unpack (HsTyTuple xs) = xs
     unpack x = [x]
 
-fromCon :: HsType -> Maybe String
-fromCon (HsTyCon (UnQual (HsIdent v))) = Just v
-fromCon _ = Nothing
-
+-- a bit of a hack
+forall_ :: String -> (PType -> PType) -> PType
+forall_ x f = var ("forall "++x++".") $$ f (var x)
 
 -----------------------------------------------------------
 -- Definitions from the MTL library
 
-type T = HsType
-
--- Cont r a = (a  -> r)  -> r
-cont :: T -> T -> T
-cont    r a = (a --> r) --> r
-
--- ContT r m a = (a  -> m r)  -> m r
-contT :: T -> (T -> T) -> T -> T
-contT    r m a = (a --> m r) --> m r
-
--- Error a = Either s a
-error_ :: T -> T
-error_   a = app (app (con "Either") (con "String")) a
-
--- ErrorT e m a = m (Either e a)
-errorT :: T -> (T -> T) -> T -> T
-errorT    e m a = m (app (app (con "Either") e) a)
-
--- Identity a = a
-identity :: T -> T
-identity    a  = a
-
--- ListT m a = m [a]
-listT :: (T -> T) -> T -> T
-listT    m a = m (app list_tycon a)
-
-rws :: T -> T -> T -> T -> T
-rws  r w s a    = r --> s --> tuple [a, s, w]
-
-rwsT :: T -> T -> T -> (T -> T) -> T -> T
-rwsT r w s m a  = r --> s --> m (tuple [a, s, w])
-
--- Reader r a = r  -> a
-reader :: T -> T -> T
-reader    r a = r --> a
-
--- ReaderT r m a = r  -> m a
-readerT :: T -> (T -> T) -> T -> T
-readerT    r m a = r --> m a
-
--- State s a = s  -> (a, s)
-state :: T -> T -> T
-state    s a = s --> (tuple [a, s])
-
--- StateT s m a = s  -> m (a, s)
-stateT :: T -> (T -> T) -> T -> T
-stateT    s m a = s --> m (tuple [a, s])
-
--- Writer w a = (a, w)
-writer :: T -> T -> T
-writer    w a = tuple [a, w]
-
--- WriterT w m a = m (a, w)
-writerT :: T -> (T -> T) -> T -> T
-writerT    w m a = m (tuple [a, w])
+-- MTL types (plus MaybeT)
+types :: [(String, HsType -> PType)]
+types =
+    [ ("Cont",     lift2 $ \r       a -> (a -->      r) -->      r)
+    , ("ContT",    lift3 $ \r     m a -> (a --> m $$ r) --> m $$ r)
+    , ("ErrorT",   lift3 $ \e     m a -> m $$ (con "Either" $$ e $$ a))
+    , ("Identity", lift1 $ \        a -> a)
+    , ("ListT",    lift2 $ \      m a -> m $$ (return list_tycon $$ a))
+    , ("RWS",      lift4 $ \r w s   a -> r --> s -->      tuple [a, s, w])
+    , ("RWST",     lift5 $ \r w s m a -> r --> s --> m $$ tuple [a, s, w])
+    , ("Reader",   lift2 $ \r       a -> r -->            a)
+    , ("ReaderT",  lift3 $ \r     m a -> r -->       m $$ a)
+    , ("Writer",   lift2 $ \  w     a ->                  tuple [a,    w])
+    , ("WriterT",  lift3 $ \  w   m a ->             m $$ tuple [a,    w])
+    , ("State",    lift2 $ \    s   a ->       s -->      tuple [a, s   ])
+    , ("StateT",   lift3 $ \    s m a ->       s --> m $$ tuple [a, s   ])
+    -- very common:
+    , ("MaybeT",   lift2 $ \      m a -> m $$ (con "Maybe" $$ a))
+    -- from the Haskell wiki
+    , ("Rand",     lift2 $ \g       a -> g -->      tuple [a, g])
+    , ("RandT",    lift3 $ \g     m a -> g --> m $$ tuple [a, g])
+    , ("NonDet",   lift1 $ \        a -> forall_ "b" $ \b -> (a --> b --> b) --> b --> b)
+    , ("NonDetT",  lift2 $ \      m a -> forall_ "b" $ \b -> (a --> m $$ b --> m $$ b) --> m $$ b --> m $$ b)
+    ]
 
 --------------------------------------------------
 -- Parsing of types
@@ -126,54 +154,20 @@ mtlParser input = do
     hsType <- case decls of
         (HsTypeDecl _ _ _ hsType:_) -> return hsType 
         _ -> fail "No parse?"
-    case hsType of
-        HsTyApp mtl a -> do
-            monad <- mtlParser' mtl
-            return (monad a)
-        _ -> fail "No applications"
-    where
+    let result = mtlParser' hsType
+    case pError result of
+        Just e  -> fail e
+        Nothing -> return (pResult result)
+  where
     liftE (ParseOk a) = return a
     liftE (ParseFailed _src str) = fail str
 
-mtlParser' :: HsType -> Either String (HsType -> HsType)
-mtlParser' (HsTyApp (HsTyApp (HsTyApp (HsTyApp topMonad r) w) s) m) = do
-    mtl' <- mtlParser' m
-    mtl <- case fromCon topMonad of
-        Just "RWST" -> return rwsT
-        _      -> fail "Unknown MTL(4)"
-    return (mtl r w s mtl')
-mtlParser' (HsTyApp (HsTyApp (HsTyApp topMonad r) w) s) = do
-    m <- case fromCon topMonad of
-        Just "RWS" -> return rws
-        _     -> fail "Unknown MTL(3)"
-    return (m r w s)
-mtlParser' (HsTyApp (HsTyApp topMonad arg) innerMonad) = do
-    mtl' <- mtlParser' innerMonad
-    mtl  <- case fromCon topMonad of
-        Just "ContT"   -> return contT
-        Just "ErrorT"  -> return errorT
-        Just "ReaderT" -> return readerT
-        Just "StateT"  -> return stateT
-        Just "WriterT" -> return writerT
-        _         -> fail "Unknown MTL(2)"
-    return (mtl arg mtl')
-mtlParser' (HsTyApp hsMonad arg) = do
-    mtl <- case fromCon hsMonad of
-        Just "Cont"   -> return cont
-        Just "ListT"  -> do
-            mtl' <- mtlParser' arg
-            return (const $ listT mtl')
-        Just "Reader" -> return reader
-        Just "State"  -> return state
-        Just "Writer" -> return writer
-        _        -> fail "Unknown MTL(1)"
-    return (mtl arg)
-mtlParser' hsType@(HsTyCon _) =
-    case fromCon hsType of
-        Just "Error" -> return error_
-        _       -> return (HsTyApp hsType)
-
-mtlParser' hsType = return (HsTyApp hsType)
+mtlParser' :: HsType -> PType
+mtlParser' t@(HsTyCon (UnQual (HsIdent v))) = case lookup v types of
+     Just pt -> pt t
+     Nothing -> return t
+mtlParser' t@(HsTyApp a b) = mtlParser' a $$ mtlParser' b
+mtlParser' t = return t
 
 -----------------------------------------------------------
 -- Examples
