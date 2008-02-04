@@ -37,7 +37,7 @@ other   =
     ,"Math.OEIS"]
 
 prehier =
-    ["Char", "List", "Maybe", "Numeric", "Random" ]
+    ["Numeric"]
 
 qualifieds =
     ["qualified Data.Map                    as M"

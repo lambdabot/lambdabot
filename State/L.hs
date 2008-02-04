@@ -1,11 +1,7 @@
 module L where
 
 import Prelude hiding (mapM, sequence, mapM_, sequence_)
-import Char
-import List
-import Maybe
 import Numeric
-import Random
 import Data.Array
 import Data.Complex
 import Data.Generics

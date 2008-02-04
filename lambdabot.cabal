@@ -11,8 +11,10 @@ License-file:        LICENSE
 Author:              Don Stewart
 Maintainer:          dons@cse.unsw.edu.au
 Build-Depends:       base, unix, network, parsec, mtl, haskell-src,
-                     readline, QuickCheck, arrows,
-                     regex-compat, regex-posix, zlib, binary>=0.2, plugins>=1.0, oeis
+                     readline, QuickCheck, arrows, containers,
+                     regex-compat, regex-posix, zlib, binary>=0.2,
+                     plugins>=1.0, oeis, bytestring, old-time,
+                     random, process, directory, array, pretty
 
 
 --

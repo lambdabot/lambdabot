@@ -166,7 +166,7 @@ mtlParser' :: HsType -> PType
 mtlParser' t@(HsTyCon (UnQual (HsIdent v))) = case lookup v types of
      Just pt -> pt t
      Nothing -> return t
-mtlParser' t@(HsTyApp a b) = mtlParser' a $$ mtlParser' b
+mtlParser' (HsTyApp a b) = mtlParser' a $$ mtlParser' b
 mtlParser' t = return t
 
 -----------------------------------------------------------

@@ -11,7 +11,6 @@ module Lambdabot (
         ModuleT, ModuleLB, ModuleUnit, Mode(..),
 
         IRCRState(..), IRCRWState(..), IRCError(..),
-        module Msg,
 
         LB(..), lbIO,
 
@@ -449,7 +448,7 @@ data ModuleRef = forall m s. (Module m s) => ModuleRef m (MVar s) String
 --   need to access its name or its state.
 --
 newtype ModuleT s m a = ModuleT { moduleT :: ReaderT (MVar s, String) m a }
-    deriving (Functor, Monad, MonadTrans, MonadIO, MonadError IRCError, MonadState t)
+    deriving (Functor, Monad, MonadTrans, MonadIO, MonadError e, MonadState t)
 
 getRef :: Monad m => ModuleT s m (MVar s)
 getRef  = ModuleT $ ask >>= return . fst

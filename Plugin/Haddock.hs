@@ -20,7 +20,7 @@ instance Module HaddockModule HaddockState where
     moduleSerialize _ = Just (readOnly readPacked)
     fprocess_ _ _ k = readMS >>= \m -> box $ maybe
         (pack "bzzt")
-        (P.join (pack ", "))
+        (P.intercalate (pack ", "))
         (M.lookup (stripPs k) m)
 
         where
