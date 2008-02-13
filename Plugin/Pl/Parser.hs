@@ -28,8 +28,14 @@ brackets = T.brackets tp
 symbol :: String -> Parser String
 symbol = T.symbol tp
 
+modIdentifier :: Parser String
+modIdentifier = T.lexeme tp $ do
+  c <- oneOf ['A'..'Z']
+  cs <- many ( alphaNum <|> oneOf "_'.")
+  return (c:cs)
+
 atomic :: Parser String
-atomic = try (show `fmap` T.natural tp) <|> T.identifier tp
+atomic = try (string "()") <|> try (show `fmap` T.natural tp) <|> modIdentifier <|> T.identifier tp
 
 reserved :: String -> Parser ()
 reserved = T.reserved tp
