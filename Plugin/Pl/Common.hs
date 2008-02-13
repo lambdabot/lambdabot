@@ -111,12 +111,12 @@ operators = (map . map . second . second $ (+shift))
    [inf name AssocLeft 7
      | name <- ["*", "/", "`quot`", "`rem`", "`div`", "`mod`", ":%", "%"]],
    [inf name AssocLeft 6  | name <- ["+", "-"]],
-   [inf name AssocRight 5 | name <- [":", "++"]],
-   [inf name AssocNone 4 
-     | name <- ["==", "/=", "<", "<=", ">=", ">", "`elem`", "`notElem`"]],
-   [inf "&&" AssocRight 3],
-   [inf "||" AssocRight 2],
-   [inf ">>" AssocLeft 1, inf ">>=" AssocLeft 1, inf "=<<" AssocRight 1],
+   [inf name AssocRight 5 | name <- [":", "++", "<+>"]],
+   [inf name AssocNone 4
+     | name <- ["==", "/=", "<", "<=", ">=", ">", "`elem`", "`notElem`"]] ++[inf name AssocLeft 4 | name <- ["<*","*>","<$>","<$","<**>"]],
+   [inf "&&" AssocRight 3, inf "***" AssocRight 3, inf "&&&" AssocRight 3, inf "<|>" AssocLeft 3],
+   [inf "||" AssocRight 2, inf "+++" AssocRight 2, inf "|||" AssocRight 2],
+   [inf ">>" AssocLeft 1, inf ">>=" AssocLeft 1, inf "=<<" AssocRight 1, inf ">>>" AssocRight 1, inf "^>>" AssocRight 1, inf "^<<" AssocRight 1],
    [inf name AssocRight 0 | name <- ["$", "$!", "`seq`"]]
   ] where
   inf name assoc fx = (name, (assoc, fx))
