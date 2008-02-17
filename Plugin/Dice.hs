@@ -52,14 +52,22 @@ ndRandomIO = do r   <- randomRIO (0, 1)
                 return (r' * sin phi)
 
 expr :: CharParser st [(Integer, Integer)]
-expr = do res <- primExp `sepBy1` (char '+')
+expr = do first <- dieExp
+          res <- option [] (char '+' >> primExp `sepBy1` (char '+'))
           eof <?> "end"
-          return res
+          return (first:res)
 
 primExp :: CharParser st (Integer, Integer)
-primExp = do v <- number
-             d <- option 1 (char 'd' >> number)
-             return (v,d)
+primExp = try dieExp <|> numExp
+
+dieExp :: CharParser st (Integer, Integer)
+dieExp = do v <- option 1 number
+	    d <- char 'd' >> number
+	    return (v,d)
+
+numExp :: CharParser st (Integer, Integer)
+numExp = do v <- number
+	    return (v, 1)
 
 number :: CharParser st Integer
 number = read `fmap` many1 digit <?> "number"
