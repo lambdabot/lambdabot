@@ -13,7 +13,7 @@ import Text.ParserCombinators.Parsec
 $(plugin "Dice")
 
 instance Module DiceModule () where
-    moduleCmds   _  = ["dice"]
+    moduleCmds   _  = ["dice", "roll"]
     moduleHelp _ _  = "dice <expr>. Throw random dice. <expr> is of the form 3d6+2."
     process_ _ _ xs = ios (dice xs)
 
