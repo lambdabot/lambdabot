@@ -73,7 +73,7 @@ type Telling a   = ModuleT NoticeBoard LB a
 $(plugin "Tell")
 
 instance Module TellModule NoticeBoard where
-    moduleCmds      _ = ["tell", "ask", "messages", "messages?", "clear-messages"]
+    moduleCmds      _ = ["tell", "ask", "messages", "messages-loud", "messages?", "clear-messages"]
     modulePrivs     _ = ["print-notices", "purge-notices"]
     moduleHelp      _ = fromJust . flip lookup help
     moduleDefState  _ = return M.empty
@@ -109,6 +109,13 @@ instance Module TellModule NoticeBoard where
 
     -- | Give a user their messages
     process _ msg _ "messages" _ =
+      do msgs <- getMessages msg $ nick msg
+         let res = fromMaybe ["You don't have any new messages."] msgs
+         clearMessages (nick msg)
+         lift (ircPrivmsg (nick msg) (unlines res))
+         return []
+
+    process _ msg _ "messages-loud" _ =
       do msgs <- getMessages msg $ nick msg
          let res = fromMaybe ["You don't have any new messages."] msgs
          clearMessages (nick msg)
@@ -214,12 +221,12 @@ doRemind msg sender = do
   ms  <- getMessages msg sender
   now <- io getClockTime
   modifyMS (M.update (Just . first (const $ Just now)) sender)
-  return $ case ms of
+  case ms of
              Just msgs ->
                let (messages, pronoun) =
                      if length msgs > 1
                        then ("messages", "them") else ("message", "it")
-               in [printf "%s: You have %d new %s. '/msg %s @messages' to read %s."
-                          (showNick msg sender) (length msgs) messages (showNick msg $ lambdabotName msg) pronoun
-                   :: String]
-             Nothing -> []
+               in lift (ircPrivmsg sender (printf "You have %d new %s. '/msg %s @messages' to read %s."
+                          (length msgs) messages (showNick msg $ lambdabotName msg) pronoun
+                   :: String)) >> return []
+             Nothing -> return []
