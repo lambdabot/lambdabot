@@ -132,5 +132,6 @@ fetchInstances' cls mdls = do
   return $ if null is
              then err
              else concatWith ", " is
-  where cxt     = ":m " ++ unwords mdls
+  where cxt     = ":l State/L\n" ++
+		  ":m + " ++ unwords mdls
         command = ":i " ++ cls
