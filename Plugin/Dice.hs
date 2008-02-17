@@ -15,11 +15,14 @@ $(plugin "Dice")
 instance Module DiceModule () where
     moduleCmds   _  = ["dice", "roll"]
     moduleHelp _ _  = "dice <expr>. Throw random dice. <expr> is of the form 3d6+2."
-    process_ _ _ xs = ios (dice xs)
+    process_ _ _ xs = ios (dice True xs)
+    contextual _ _ _ text = ios (dice False text)
 
-dice :: String -> IO String
-dice str = case parse expr "dice" (filter (not.isSpace) str) of
-            Left err  -> return . trimError $ err
+dice :: Bool -> String -> IO String
+dice barf str = case parse expr "dice" (filter (not.isSpace) str) of
+            Left err  -> if barf 
+                then return . trimError $ err
+                else return []
             Right e   -> do res <- eval e
                             return (brk 30 str++" => "++brk 45 (show res))
            where
