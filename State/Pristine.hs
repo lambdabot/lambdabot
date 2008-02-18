@@ -1,11 +1,8 @@
 module L where
 
 import Prelude hiding (mapM, sequence, mapM_, sequence_)
-import Char
-import List
-import Maybe
 import Numeric
-import Random
+import System.Random
 import Data.Array
 import Data.Complex
 import Data.Generics
@@ -33,9 +30,13 @@ import Control.Monad.State
 import Control.Monad.ST
 import Control.Monad.Reader
 import Control.Monad.Fix
-import Control.Arrow
+import Control.Monad.Writer
+import Control.Arrow hiding (pure)
 import Text.Printf
 import Test.QuickCheck
 import ShowQ
+import Math.OEIS
+
+describeSequence = fmap description . lookupSequence 
 
 {-# LINE 1 "<local>" #-}
