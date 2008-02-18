@@ -32,7 +32,7 @@ prelude = ["qualified Prelude as P", "Prelude"]
 
 other = ["Text.Printf"]
 
-prehier = ["Char", "List", "Maybe", "Numeric", "Random" ]
+prehier = ["Numeric"]
 
 qualifieds = ["qualified Data.Map as M"
              ,"qualified Data.Set as S"

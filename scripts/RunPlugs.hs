@@ -12,6 +12,7 @@ import System.Eval.Haskell      (unsafeEval_)
 import Data.Char                (chr)
 import Data.Maybe               (isJust, fromJust)
 import Control.Monad
+import Control.Exception
 
 import System.Random
 import System.Exit              (exitWith, ExitCode(ExitSuccess))
@@ -37,7 +38,7 @@ other   =
     ,"Math.OEIS"]
 
 prehier =
-    ["Numeric"]
+    ["Numeric", "System.Random"]
 
 qualifieds =
     ["qualified Data.Map                    as M"
@@ -103,6 +104,7 @@ controls = map ("Control." ++)
     ,"Monad.List"
     ,"Monad.RWS"
     ,"Monad.Reader"
+    ,"Monad.Writer"
     ,"Monad.State"
     ,"Monad.Trans"
     ,"Monad.Fix"

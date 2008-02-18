@@ -129,7 +129,7 @@ query_ghci' cmd expr = do
         ["Text.Printf"
         ,"Text.PrettyPrint.HughesPJ"]
 
-     prehier    = ["Char", "List", "Maybe", "Numeric", "Random" ]
+     prehier    = ["Numeric"]
 
      qualifieds = []
 
