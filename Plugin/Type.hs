@@ -114,7 +114,10 @@ extract_signatures output
 --
 query_ghci' :: String -> String -> IO String
 query_ghci' cmd expr = do
-       imports <- fmap (map (unwords . drop 1 . words) 
+       imports <- fmap (map (unwords . drop 1 . words)
+                        . filter (null 
+			          . intersect ["as","hiding","qualified"] 
+				  . words)
 		        . filter (isPrefixOf "import")
 		        . lines) 
 		       (readFile "imports.h")

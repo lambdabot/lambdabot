@@ -1,7 +1,4 @@
 Known bugs and silliness:
-* Currently, the Type module sends qualified imports to ghci
-  which doesn't know what to do with them, and spits out errors.
-  This is currently harmless, but bad.
 * L.hs gets copied to the main directory from State/ by something
   and this requires import.h to be present in both places. It would
   be worthwhile to simplify whatever the heck is going on there.
