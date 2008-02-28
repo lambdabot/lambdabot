@@ -20,7 +20,7 @@ instance Module SourceModule Env where
 
     -- all the hard work is done to build the src map.
     -- uses a slighly custom Map format
-    moduleSerialize _= Just . readOnly $ M.fromList . map pair . splat . P.lines . gunzip
+    moduleSerialize _= Just . readOnly $ M.fromList . map pair . splat . P.lines
         where
             pair (a:b) = (a, P.unlines b)
             splat []   = []

@@ -434,7 +434,7 @@ class Module m s | m -> s where
     moduleInit _       = return ()
     moduleSticky _     = False
     moduleSerialize _  = Nothing
-    moduleDefState  _  = return $ error "state not initalized"
+    moduleDefState  _  = return $ error "state not initialized"
 
 -- | An existential type holding a module, used to represent modules on
 -- the value level, for manipluation at runtime by the dynamic linker.

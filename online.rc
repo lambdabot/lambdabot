@@ -1,4 +1,4 @@
-irc-connect freenode chat.freenode.net 6667 lambdabot Lambda_Robots:_100%_Loyal
+irc-connect freenode chat.freenode.net 7000 lambdabot Lambda_Robots:_100%_Loyal
 rc passwd.rc
 admin + freenode:Pseudonym
 admin + freenode:shapr
@@ -28,3 +28,5 @@ join freenode:#xmonad
 join freenode:##logic
 join freenode:#gentoo-haskell
 join freenode:#scannedinavian
+join freenode:#rosettacode
+join freenode:#gentoo-uy pancake

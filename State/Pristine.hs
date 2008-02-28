@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 module L where
 
 import Prelude hiding (mapM, sequence, mapM_, sequence_)
@@ -37,5 +38,8 @@ import Control.Arrow
 import Text.Printf
 import Test.QuickCheck
 import ShowQ
+
+(.) :: Functor f => (a -> b) -> f a -> f b
+(.) = fmap
 
 {-# LINE 1 "<local>" #-}

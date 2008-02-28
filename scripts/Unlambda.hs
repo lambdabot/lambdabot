@@ -29,11 +29,9 @@
 
 import Data.Char
 import System.IO
-import System.Posix.Resource
+import Resource
 
-rlimit = ResourceLimit 3
-
-main = setResourceLimit ResourceCPUTime (ResourceLimits rlimit rlimit) >> run
+main = setCPULimit 3 >> run
 
 run = do
   exp <- parse stdin

@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 module L where
 
 import Prelude hiding (mapM, sequence, mapM_, sequence_)

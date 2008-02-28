@@ -114,7 +114,12 @@ extract_signatures output
 --
 query_ghci' :: String -> String -> IO String
 query_ghci' cmd expr = do
-       (output, errors, _) <- popen (ghci config) ["-v0","-fglasgow-exts","-fno-th","-iscripts"]
+       imports <- fmap (map (unwords . drop 1 . words) 
+		        . filter (isPrefixOf "import")
+		        . lines) 
+		       (readFile "imports.h")
+       let context = ":l L\n" ++ concatMap ((":m + " ++) . (++"\n")) imports
+       (output, errors, _) <- popen (ghci config) ["-v0","-fglasgow-exts","-fno-th","-iState","-iscripts","-XNoMonomorphismRestriction"]
                                        (Just (context ++ command cmd (stripComments expr)))
        let ls = extract_signatures output
        return $ if null ls
@@ -122,6 +127,7 @@ query_ghci' cmd expr = do
                      lines . expandTab . cleanRE . filter (/='\r') $ errors -- "bzzt" 
                 else ls
   where
+     {-
      context = ":l L\n" ++ (concatMap (\m -> ":m + "++m++"\n") $
                     prehier ++ datas ++ qualifieds ++ controls ++ other ++ extras)
 
@@ -186,6 +192,7 @@ query_ghci' cmd expr = do
         ,"Parallel"
         ,"Parallel.Strategies"
         ]
+     -}
 
      cleanRE, cleanRE2 :: String -> String
      cleanRE s
