@@ -17,6 +17,8 @@ import Control.Concurrent.MVar( readMVar )
 import Lib.Error( finallyError )
 import Control.Exception( evaluate )
 
+import Config
+
 #ifdef mingw32_HOST_OS
 -- Work around the lack of readline on windows
 readline :: String -> IO (Maybe String)
@@ -68,15 +70,16 @@ onInit = do st <- get
             lockRC >> finallyError (mapM_ feed cmds) unlockRC
 
 feed :: String -> ModuleT Integer LB ()
-feed msg = let msg' = case msg of '>':xs -> "@run " ++ xs
+feed msg = let msg' = case msg of '>':xs -> cmdPrefix ++ "run " ++ xs
                                   '!':xs -> xs
-                                  _      -> "@"     ++ dropWhile (== ' ') msg
-           in lift $ (>> return ()) $ liftLB (timeout (15 * 1000 * 1000)) $ received $
+                                  _      -> cmdPrefix ++ dropWhile (== ' ') msg
+           in lift . (>> return ()) . liftLB (timeout (15 * 1000 * 1000)) . received $
               IrcMessage { msgServer = "offlinerc"
                          , msgLBName = "offline"
                          , msgPrefix = "null!n=user@null"
                          , msgCommand = "PRIVMSG"
                          , msgParams = ["offline", ":" ++ msg' ] }
+   where cmdPrefix = head (commandPrefixes config)
 
 handleMsg :: IrcMessage -> LB ()
 handleMsg msg = liftIO $ do
