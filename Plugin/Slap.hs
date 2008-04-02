@@ -54,6 +54,7 @@ slapList =
     ,(\x -> "/me hits " ++ x ++ " with an assortment of kitchen utensils")
     ,(\x -> "/me slaps " ++ x ++ " with a slab of concrete")
     ,(\x -> "/me puts on her slapping gloves, and slaps " ++ x)
+    ,(\x -> "/me decomposes " ++ x ++ " into several parts using the Banach-Tarski theorem and reassembles them to get two copies of " ++ x ++ "!")
     ]
 
 -- | The possesive form of a name, "x's"
