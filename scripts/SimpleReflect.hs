@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveDataTypeable #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  SimpleReflect
@@ -17,8 +18,17 @@ module SimpleReflect
     , a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z
     ) where
 
+
 import Data.List
 import Control.Applicative
+
+{- -- Lennart Augustsson's extensions, temporarily disabled.
+import Control.Monad.State hiding(lift)
+-}
+
+import Data.Typeable
+import Data.Generics hiding (Fixity)
+
 
 ------------------------------------------------------------------------------
 -- Data type
@@ -29,7 +39,7 @@ data Expr = Expr
    , intExpr    :: Maybe Integer
    , doubleExpr :: Maybe Double
    , reduced    :: Maybe Expr
-   }
+   } deriving (Typeable, Data)
 
 instance Show Expr where
     showsPrec p r = showExpr r p
@@ -210,3 +220,31 @@ instance Enum Expr where
 instance Bounded Expr where
     minBound = var "minBound"
     maxBound = var "maxBound"
+
+{- -- Lennart Augustsson's Extensions, temporarily disabled.
+
+instance (Show a, ExprArg a, Show r) => Show (a -> r) where
+    showsPrec _ f = showString "\\ " . showsPrec 0 v . showString " -> " .
+                    showsPrec 0 (f v)
+      where v = evalState exprArg vars
+            dummy = evalState exprArg $ repeat "_"
+            vars = supply \\ tokenize (show $ f dummy)
+            supply = ["x","y","z"] ++ [ "x" ++ show i | i <- [1..]]
+            tokenize "" = []
+            tokenize s = case lex s of (x,s') : _ -> x : tokenize s'
+
+class ExprArg a where
+    exprArg :: State [String] a
+
+instance ExprArg Expr where
+    exprArg = do v:vs <- get; put vs; return (var v)
+
+instance ExprArg () where
+    exprArg = return ()
+
+instance (ExprArg a, ExprArg b) => ExprArg (a, b) where
+    exprArg = liftM2 (,) exprArg exprArg
+
+instance (ExprArg a, ExprArg b, ExprArg c) => ExprArg (a, b, c) where
+    exprArg = liftM3 (,,) exprArg exprArg exprArg
+-}

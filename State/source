@@ -171,7 +171,7 @@ const
 const x _ = x
 
 (.)
-(.) f g x = f (g x)
+(f . g) x = f (g x)
 
 flip
 flip f x y = f y x
@@ -1155,10 +1155,10 @@ _xs    == _ys    = False
 fmap = map
 
 [] (>>=)
-m >>= k     = foldr ((++) . k) [] m
+xs >>= f     = concatMap f xs
 
 [] (>>)
-m >> k      = foldr ((++) . (\ _ -> k)) [] m
+xs >> ys      = concatMap (const xs) ys
 
 [] return
 return x    = [x]

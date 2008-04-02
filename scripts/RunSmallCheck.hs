@@ -25,7 +25,7 @@ import qualified Control.Exception
 main = do
     setCPULimit 5 
     s <- getLine
-    context <- fmap (("L":) 
+    context <- fmap ((["L", "SmallCheck"]++)
                      . map (unwords . drop 1 . words) 
 		     . filter (isPrefixOf "import")
 		     . lines) 
