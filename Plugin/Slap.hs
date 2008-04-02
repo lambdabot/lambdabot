@@ -41,7 +41,7 @@ slapList =
     ,(\x -> "/me clobbers " ++ x ++ " with an untyped language")
     ,(\x -> "/me pulls " ++ x ++ " through the Evil Mangler")
     ,(\x -> "/me secretly deletes " ++ possesiveForm x ++ " source code")
-    ,(\x -> "/me places her fist firmely on " ++ possesiveForm x ++ " jaw")
+    ,(\x -> "/me places her fist firmly on " ++ possesiveForm x ++ " jaw")
     ,(\x -> "/me locks up " ++ x ++ " in a Monad")
     ,(\x -> "/me submits " ++ possesiveForm x ++ " email address to a dozen spam lists")
     ,(\x -> "/me moulds " ++ x ++ " into a delicous cookie, and places it in her oven")
