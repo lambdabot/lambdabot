@@ -7,39 +7,39 @@ import qualified Data.ByteString.Char8 as P
 -- pack all these strings
 
 base :: P.ByteString
-base = P.pack "4"
+base = P.pack "base"
 stm :: P.ByteString
-stm  = P.pack "3"
+stm  = P.pack "stm"
 mtl :: P.ByteString
-mtl  = P.pack "3"
+mtl  = P.pack "mtl"
 fgl :: P.ByteString
-fgl  = P.pack "3"
+fgl  = P.pack "fgl"
 qc  :: P.ByteString
-qc   = P.pack "0"
+qc   = P.pack "QuickCheck"
 hunit  :: P.ByteString
-hunit = P.pack "5"
+hunit = P.pack "bytestring"
 parsec  :: P.ByteString
-parsec = P.pack "6"
+parsec = P.pack "parsec"
 unix  :: P.ByteString
-unix   = P.pack "4"
+unix   = P.pack "unix"
 readline :: P.ByteString
-readline = P.pack "8"
+readline = P.pack "readline"
 network :: P.ByteString
-network  = P.pack "7"
+network  = P.pack "network"
 th :: P.ByteString
-th       = P.pack "6"
+th       = P.pack "template-haskell"
 hs :: P.ByteString
 hs       = P.pack "1"
 cabal :: P.ByteString
-cabal    = P.pack "5"
+cabal    = P.pack "Cabal"
 hgl :: P.ByteString
 hgl      = P.pack "3"
 glut :: P.ByteString
-glut     = P.pack "4"
+glut     = P.pack "GLUT"
 x11 :: P.ByteString
 x11      = P.pack "3"
 opengl :: P.ByteString
-opengl   = P.pack "6"
+opengl   = P.pack "OpenGL"
 
 docAssocs :: M.Map P.ByteString P.ByteString
 docAssocs = {-# SCC "Dummy.DocAssocs" #-} M.fromList [
