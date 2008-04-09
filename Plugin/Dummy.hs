@@ -73,6 +73,7 @@ dummylst =
     ,("thanks",     const "you are welcome")
     ,("thx",        const "you are welcome")
     ,("thank you",  const "you are welcome")
+    ,("ping",	    const "pong")
 
     ,("wiki",       lookupWiki)
     ,("oldwiki",     ("http://www.haskell.org/hawiki/" ++))
