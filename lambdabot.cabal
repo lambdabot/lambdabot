@@ -16,6 +16,7 @@ Build-Depends:       base, unix, network, parsec, mtl, haskell-src,
                      plugins>=1.0, oeis, bytestring, old-time,
                      random, process, directory, array, pretty,
                      parallel, numbers
+build-type:          Simple
 
 
 --
