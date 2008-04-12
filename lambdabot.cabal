@@ -33,7 +33,7 @@ ghc-options:         -funbox-strict-fields
 Executable:          lambdabot
 Main-is:             Main.hs
 extensions:          CPP
-ghc-options:         -Wall -Werror -fglasgow-exts -pgmF dist/build/BotPP/BotPP -F -H64m -funbox-strict-fields -fno-warn-incomplete-patterns -fno-warn-missing-methods -fno-warn-orphans -I. -optl-Wl,-s -threaded
+ghc-options:         -Wall -Werror -fglasgow-exts -pgmF dist/build/BotPP/BotPP -F -H64m -funbox-strict-fields -fno-warn-incomplete-patterns -fno-warn-missing-methods -fno-warn-orphans -optl-Wl,-s -threaded
 
 --
 -- For a fast build use add -Onot
@@ -49,8 +49,8 @@ ghc-options:         -Wall -Werror -fglasgow-exts -pgmF dist/build/BotPP/BotPP -
 --Executable:         lambdabot-dynamic
 --main-is:            Boot.hs
 --extensions:         CPP
---ghc-options:        -main-is Boot.main -Wall -Werror -fglasgow-exts -H64m -Onot -fasm -I. -threaded
--- ghc-options:         -Wall -Werror -fglasgow-exts -funbox-strict-fields -I. -optl-Wl,-s -threaded
+--ghc-options:        -main-is Boot.main -Wall -Werror -fglasgow-exts -H64m -Onot -fasm -threaded
+-- ghc-options:         -Wall -Werror -fglasgow-exts -funbox-strict-fields -optl-Wl,-s -threaded
 
 --
 -- Hoogle
