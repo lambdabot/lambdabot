@@ -13,17 +13,27 @@ import Data.Char                (chr)
 import Data.Maybe               (isJust, fromJust)
 import Control.Monad
 import Control.Exception
+import Control.Concurrent      (myThreadId)
 
 import Data.List
 
 import System.Random
 import System.Exit              (exitWith, ExitCode(ExitSuccess))
-import System.IO                (getContents, putStrLn)
+import System.IO                (getContents, hSetBuffering, BufferMode(NoBuffering),
+                                 stdout)
+import System.Posix.Signals     (sigXCPU, installHandler, Handler(CatchOnce))
 
-import Resource (setCPULimit)
+import Resource
+
+-- These should not be identical, to give the XCPU handler time to trigger
+cpuTimeLimitHard = ResourceLimit 6
+cpuTimeLimitSoft = ResourceLimit 5
 
 main = do
-    setCPULimit 5 
+    mainThread <- myThreadId
+    installHandler sigXCPU (CatchOnce $ throwTo mainThread $ ErrorCall "Time limit exceeded") Nothing
+    setResourceLimit ResourceCPUTime $ ResourceLimits cpuTimeLimitSoft cpuTimeLimitHard
+    hSetBuffering stdout NoBuffering
     s <- getLine
     context <- fmap ((["L","ShowFun"]++) 
                      . map (unwords . drop 1 . words) 
@@ -39,7 +49,7 @@ main = do
         case s of
             Left  e -> mapM_ putStrLn e
             Right v -> Control.Exception.catch
-                (putStrLn v)
+                (mapM_ putChar v)
                 (\e -> Control.Exception.handle (const $ putStrLn "Exception") $ do
                             e' <- Control.Exception.evaluate e
                             putStrLn $ "Exception: " ++ take 1024 (show e'))

@@ -32,9 +32,9 @@ import Data.List         ( find, findIndex, groupBy )
 import Data.Maybe        ( catMaybes )
 import Control.Monad     ( when )
 import Control.Monad.State
-import Resource (setCPULimit)
+import Resource
 
-main = setCPULimit 3 >> run
+main = setResourceLimit ResourceCPUTime $ ResourceLimits (ResourceLimit 5) (ResourceLimit 5) >> run
 
 run = do
   prog <- getContents

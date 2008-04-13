@@ -17,14 +17,14 @@ import Control.Monad
 import System.Random
 import System.Exit              (exitWith, ExitCode(ExitSuccess))
 import System.IO                (getContents, putStrLn)
-import Resource (setCPULimit)
+import Resource
 
 import Test.QuickCheck
 
 import qualified Control.Exception
 
 main = do
-    setCPULimit 5
+    setResourceLimit ResourceCPUTime $ ResourceLimits (ResourceLimit 5) (ResourceLimit 5)
     s <- getLine
     context <- fmap ((["L","ShowFun"]++) 
                      . map (unwords . drop 1 . words) 

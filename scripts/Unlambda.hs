@@ -31,7 +31,7 @@ import Data.Char
 import System.IO
 import Resource
 
-main = setCPULimit 3 >> run
+main = setResourceLimit ResourceCPUTime $ ResourceLimits (ResourceLimit 5) (ResourceLimit 5) >> run
 
 run = do
   exp <- parse stdin
