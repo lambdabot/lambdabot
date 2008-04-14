@@ -54,14 +54,6 @@ include-dirs:        .
 -- ghc-options:         -Wall -Werror -fglasgow-exts -funbox-strict-fields -optl-Wl,-s -threaded
 
 --
--- Hoogle
---
-Executable:          hoogle
-hs-source-dirs:      scripts/hoogle/src
-ghc-options:         -funbox-strict-fields
-Main-is:             CmdLine.hs
-
---
 -- Djinn
 --
 Executable:          djinn
