@@ -54,13 +54,6 @@ include-dirs:        .
 -- ghc-options:         -Wall -Werror -fglasgow-exts -funbox-strict-fields -optl-Wl,-s -threaded
 
 --
--- Djinn
---
-Executable:          djinn
-hs-source-dirs:      scripts/Djinn
-Main-is:             Djinn.hs
-
---
 -- Unlambda
 --
 --Executable:          unlambda

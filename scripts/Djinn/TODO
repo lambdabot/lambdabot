@@ -1,8 +1,0 @@
-Generate multiple function clauses instead of case?
-
-Simplify proofs more:
-  split where no variables used can be removed
-
-Type check the proof terms against the formula.
-
-Switch to Herbelin's LJT to generate all proofs?
