@@ -34,6 +34,7 @@ Executable:          lambdabot
 Main-is:             Main.hs
 extensions:          CPP
 ghc-options:         -Wall -Werror -fglasgow-exts -pgmF dist/build/BotPP/BotPP -F -H64m -funbox-strict-fields -fno-warn-incomplete-patterns -fno-warn-missing-methods -fno-warn-orphans -optl-Wl,-s -threaded
+include-dirs:        .
 
 --
 -- For a fast build use add -Onot
