@@ -34,7 +34,9 @@ import Control.Monad     ( when )
 import Control.Monad.State
 import Resource
 
-main = setResourceLimit ResourceCPUTime $ ResourceLimits (ResourceLimit 5) (ResourceLimit 5) >> run
+main = do
+  setResourceLimit ResourceCPUTime $ ResourceLimits (ResourceLimit 5) (ResourceLimit 5)
+  run
 
 run = do
   prog <- getContents
