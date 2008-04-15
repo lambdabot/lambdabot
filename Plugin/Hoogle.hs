@@ -36,7 +36,7 @@ instance Module HoogleModule HoogleState where
 ------------------------------------------------------------------------
 
 hoogleBinary :: FilePath
-hoogleBinary = "./hoogle"
+hoogleBinary = "hoogle"
 
 hoogleText :: FilePath
 hoogleText = "State/hoogle.txt"
