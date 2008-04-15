@@ -118,7 +118,7 @@ instance Module DjinnModule DjinnEnv where
 
 -- | Should be built inplace by the build system
 binary :: String
-binary = "./djinn"
+binary = "djinn"
 
 -- | Extract the default environment
 getDjinnEnv :: DjinnEnv -> IO (Either [String] DjinnEnv)
