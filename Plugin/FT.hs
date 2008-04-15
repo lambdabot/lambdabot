@@ -15,7 +15,7 @@ instance Module FTModule () where
     process_ _ _ s = (liftM unlines . lift . query_ghci ":t") s >>= ios . ft
 
 binary :: String
-binary = "./ft"
+binary = "ftshell"
 
 ft :: String -> IO String
 ft src = run binary src $
