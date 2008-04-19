@@ -8,10 +8,15 @@ import Modules      (modulesInfo)
 import Lambdabot
 
 import Data.Maybe
+import System.Posix.Signals
 
 -- do argument handling
 main :: IO ()
-main = main' Nothing modulesInfo
+main = do
+    -- when 'popen' is called on a non-existing executable, SIGPIPE is sent,
+    -- causing lambdabot to exit:
+    installHandler sigPIPE Ignore Nothing
+    main' Nothing modulesInfo
 
 -- special online target for ghci use
 online :: [String] -> IO ()
