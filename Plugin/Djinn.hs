@@ -11,7 +11,6 @@
 module Plugin.Djinn (theModule) where
 
 import Plugin
-import System.Directory
 import Data.Char
 import Data.List
 import Data.Maybe
@@ -130,7 +129,9 @@ djinn :: [Decl] -> String -> IO (Either [String] String)
 djinn env' src = do
     let env = concat . intersperse "\n" $ env'
     (out,_,_) <- popen binary [] (Just (env <$> src <$> ":q"))
-    let o = dropNL . clean_ . unlines . init . drop 2 . lines $ out
+    let safeInit [] = []
+        safeInit xs = init xs
+        o = dropNL . clean_ . unlines . safeInit . drop 2 . lines $ out
     return $ case () of {_
         | failed `matches'` o -> Left (lines o)
         | unify  `matches'` o -> Left (lines o)
