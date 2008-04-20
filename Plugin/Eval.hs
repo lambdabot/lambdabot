@@ -138,12 +138,6 @@ munge = expandTab . dropWhile (=='\n') . dropNL . clean_
 --
 clean_ :: String -> String
 clean_ s|  no_io      `matches'`    s = "No IO allowed\n"
-        |  terminated `matches'`    s = "Terminated\n"
-        |  hput       `matches'`    s = "Terminated\n"
-        |  outofmem   `matches'`    s = "Terminated\n"
-        |  stack_o_f  `matches'`    s = "Stack overflow\n"
-        |  loop       `matches'`    s = "Loop\n"
-        |  undef      `matches'`    s = "Undefined\n"
         |  type_sig   `matches'`    s = "Add a type signature\n"
 
         | Just (_,m,_,_) <- ambiguous  `R.matchRegexAll` s = m
@@ -163,24 +157,18 @@ clean_ s|  no_io      `matches'`    s = "No IO allowed\n"
         -- s/<[^>]*>:[^:]: //
         type_sig   = regex' "add a type signature that fixes these type"
         no_io      = regex' "No instance for \\(Show \\(IO"
-        terminated = regex' "waitForProc"
-        stack_o_f  = regex' "Stack space overflow"
-        loop       = regex' "runplugs: <<loop>>"
         irc        = regex' "\n*<irc>:[^:]*:[^:]*:\n*"
         filename   = regex' "\n*<[^>]*>:[^:]*:\\?[^:]*:\\?\n* *"
         filename'  = regex' "/tmp/.*\\.hs[^\n]*\n"
         filepath   = regex' "\n*/[^\\.]*.hs:[^:]*:\n* *"
-        undef      = regex' "Prelude.undefined"
         ambiguous  = regex' "Ambiguous type variable `a\' in the constraints"
         runplugs   = regex' "runplugs: "
         notinscope = regex' "Variable not in scope:[^\n]*"
         hsplugins  = regex' "Compiled, but didn't create object"
-        outofmem   = regex' "out of memory \\(requested "
         extraargs  = regex' "[ \t\n]*In the [^ ]* argument"
         columnnum  = regex' " at <[^\\.]*\\.[^\\.]*>:[^ ]*"
         nomatch    = regex' "Couldn't match[^\n]*\n"
         inaninst   = regex' "^[ \t]*In a.*$"
-        hput       = regex' "<stdout>: hPutStr"
 
 ------------------------------------------------------------------------
 --
