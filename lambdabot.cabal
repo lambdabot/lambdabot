@@ -63,17 +63,16 @@ include-dirs:        .
 --
 -- BF
 --
---Executable:          bf
---hs-source-dirs:      scripts/
---Main-is:             BF.hs
---ghc-options:         -O2
+Executable:          bf
+hs-source-dirs:      scripts/
+Main-is:             BF.hs
 
 --
 -- FT
 --
-Executable:          ft
-hs-source-dirs:      scripts/FT
-Main-is:             FTbase.hs
+--Executable:          ft
+--hs-source-dirs:      scripts/FT
+--Main-is:             FTbase.hs
 
 ------------------------------------------------------------------------
 -- The following only work if plugins are enabled
