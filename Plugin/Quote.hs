@@ -18,7 +18,8 @@ type Quotes = M.Map Key [P.ByteString]
 instance Module QuoteModule Quotes where
     moduleCmds           _ = ["quote", "remember", "forget", "ghc", "fortune"
                              ,"yow","arr","yarr","keal","b52s","brain","palomer"
-                             ,"girl19", "v", "yhjulwwiefzojcbxybbruweejw", "protontorpedo"]
+                             ,"girl19", "v", "yhjulwwiefzojcbxybbruweejw"
+                             , "protontorpedo", "nixon", "farber"]
 
     moduleHelp _ "forget"  = "forget nick quote.  Delete a quote"
     moduleHelp _ "fortune" = "fortune. Provide a random fortune"
@@ -35,6 +36,9 @@ instance Module QuoteModule Quotes where
     moduleHelp _ "v"       = "let v = show v in v"
     moduleHelp _ "yhjulwwiefzojcbxybbruweejw"
                            = "V RETURNS!"
+    moduleHelp _ "farber"  = "Farberisms in the style of David Farber."
+    moduleHelp _ "nixon"   = "Richad Nixon's finest."
+
     moduleHelp _ _         = help -- required
 
     moduleSerialize _       = Just mapListPackedSerial
@@ -63,6 +67,8 @@ instance Module QuoteModule Quotes where
           -- afermative where as yarr! is more like a greeting. (Or something)
           "arr"           -> rand arrList
           "yarr"          -> rand yarrList
+          "farber"        -> rand farberList
+          "nixon"         -> rand nixonList
 
         where
            runit k = return `fmap` io k
