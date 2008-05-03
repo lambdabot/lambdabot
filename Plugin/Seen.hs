@@ -291,8 +291,8 @@ getAnswer msg rest seenFM now
       | otherwise        = diff ++ " ago"
       where diff = timeDiffPretty . diffClockTimes now $ past
 
-    prettyMissed (Stopped _) ifMissed _     = ifMissed ++ "."
-    prettyMissed _           _ ifNotMissed  = ifNotMissed ++ "."
+    prettyMissed (Stopped _) ifMissed _     = "." -- ifMissed ++ "."
+    prettyMissed _           _ ifNotMissed  = "." -- ifNotMissed ++ "."
 
 {-
     prettyMissed (Stopped missed) ifMissed _
