@@ -41,7 +41,7 @@ mainSym  = "dynmain"        -- main entry point
 -- can convert hs-plugins type to.
 main :: IO ()
 main = do
-    status  <- load lambdabotMain [lambdaPath] [] mainSym
+    status  <- load lambdabotMain [lambdaPath] ["System.Time"] mainSym
     dynmain <- case status of
         LoadSuccess _ v -> return (v :: MainType) -- should stick module in ioref
         LoadFailure e   -> do putStrLn "Unable to load Main, exiting"
