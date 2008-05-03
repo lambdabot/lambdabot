@@ -528,7 +528,7 @@ insult =
     "I've seen penguins that can type better than that.",
     "Have you considered trying to match wits with a rutabaga?",
     "You speak an infinite deal of nothing",
-
+    
     -- More haskellish insults
     "You untyped fool!",
     "My brain just exploded",
