@@ -74,15 +74,11 @@ define src = case parseModule (decodeString src ++ "\n") of -- extra \n so comme
     (ParseFailed _ e) -> return $ " " ++ e
     _                 -> return "Invalid declaration"
  where
-    okay (Hs.TypeSig      {}) = True
-    okay (Hs.FunBind      {}) = True
-    okay (Hs.PatBind      {}) = True
-    okay (Hs.InfixDecl    {}) = True
-    okay (Hs.TypeDecl     {}) = True
-    okay (Hs.DataDecl     {}) = True
-    okay (Hs.ClassDecl    {}) = True
-    okay (Hs.InstDecl     {}) = True
-    okay _                    = False
+    okay (HsTypeSig   {}) = True
+    okay (HsFunBind   {}) = True
+    okay (HsPatBind   {}) = True
+    okay (HsInfixDecl {}) = True
+    okay _                = False
 
 -- It parses. then add it to a temporary L.hs and typecheck
 comp :: Maybe String -> IO String
