@@ -15,7 +15,7 @@ import Control.Monad.State
 $(plugin "Elite")
 
 instance Module EliteModule () where
-    moduleCmds _   = ["elite"]
+    moduleCmds _   = ["elite", "leet", "l33t", "1337"]
     moduleHelp _ _ = "elite <phrase>. Translate English to elitespeak"
     process_ _ _ args = ios $
         case words args of
@@ -48,12 +48,16 @@ ruleList :: [(Regex,String)]
 ruleList = map (first regex')
            [("a","4")
            ,("b","8")
+           ,(" be "," b ")
            ,("c","(")
            ,("ck","xx")
            ,("cks ","x ")
+           ,("cks ","x0rs ")
+           ,("cks ","x0rz ")
            ,(" cool "," kewl ")
            ,("e","3")
            ,("elite","1337")
+           ,("elite","leet")
            ,("f","ph")
            ,(" for "," 4 ")
            ,("g","9")
@@ -70,9 +74,13 @@ ruleList = map (first regex')
            ,("s ","z0rz ")
            ,("t","7")
            ,("t","+")
+           ,(" to "," 2 ")
+           ,(" to "," too ")
+           ,(" too "," to ")
            ,("v","\\/")
            ,("w","\\/\\/")
            ,(" you "," u ")
+           ,(" you "," yu ")
            ,(" you "," joo ")
            ,("z","s")
            ]
