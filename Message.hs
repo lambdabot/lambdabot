@@ -3,6 +3,8 @@
 --
 module Message(Message(..), Nick(..), showNick, readNick, Pipe, packNick, unpackNick) where
 
+import Lib.Util(dropSpace)
+
 import qualified Data.ByteString.Char8 as P
 import Control.Concurrent (Chan)
 import Data.Char (toUpper)
@@ -58,7 +60,7 @@ data Nick
 -- This definition of canonicalizeName breaks strict RFC rules, but so does
 -- freenode
 canonicalizeName :: String -> String
-canonicalizeName = map toUpper
+canonicalizeName = dropSpace . map toUpper
 
 instance Eq Nick where
   (Nick tag name) == (Nick tag2 name2) =
