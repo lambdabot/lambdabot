@@ -1,31 +1,30 @@
 {-# OPTIONS -fglasgow-exts #-}
--- 
--- Uses pattern guards
---
--- This is an interpreter of the Unlambda language, written in
--- the pure, lazy, functional language Haskell.
--- 
--- Copyright (C) 2001 by Ørjan Johansen <oerjan@nvg.ntnu.no>
--- Copyright (C) 2006 by Don Stewart - http://www.cse.unsw.edu.au/~dons
---                                                                           
--- This program is free software; you can redistribute it and/or modify
--- it under the terms of the GNU General Public License as published by
--- the Free Software Foundation; either version 2 of the License, or
--- (at your option) any later version.
---                                                                           
--- This program is distributed in the hope that it will be useful,
--- but WITHOUT ANY WARRANTY; without even the implied warranty of
--- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
--- GNU General Public License for more details.
---                                                                           
--- You should have received a copy of the GNU General Public License
--- along with this program; if not, write to the Free Software
--- Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
---
 
---
+{-
+Uses pattern guards
+
+This is an interpreter of the Unlambda language, written in
+the pure, lazy, functional language Haskell.
+
+Copyright (C) 2001 by Ørjan Johansen <oerjan@nvg.ntnu.no>
+Copyright (C) 2006 by Don Stewart - http://www.cse.unsw.edu.au/~dons
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+-}
+
 -- A time- and output-limited unlambda
---
 
 import Data.Char
 import System.IO
@@ -37,28 +36,6 @@ run = do
   exp <- parse stdin
   let (Eval cp) = eval exp
   cp (Nothing, 2048) (const return)
-
-------------------------------------------------------------------------
--- Abstract syntax
-
-data Exp
-    = App Exp Exp
-    | K 
-    | K1 Exp
-    | S 
-    | S1 Exp
-    | S2 Exp Exp
-    | I 
-    | V 
-    | C 
-    | Cont (Cont Exp) 
-    | D 
-    | D1 Exp
-    | Dot Char 
-    | E 
-    | At 
-    | Ques Char 
-    | Pipe
 
 ------------------------------------------------------------------------
 -- Parsing of the Unlambda program directly from handle
@@ -78,6 +55,28 @@ parse h = do
       | otherwise                 -> error $ "Unknown operator " ++ show c
 
     where table = zip "ksivcdre@|" [K,S,I,V,C,D,Dot '\n',E,At,Pipe]
+
+------------------------------------------------------------------------
+-- Abstract syntax
+
+data Exp
+    = App Exp Exp
+    | K
+    | K1 Exp
+    | S
+    | S1 Exp
+    | S2 Exp Exp
+    | I
+    | V
+    | C
+    | Cont (Cont Exp)
+    | D
+    | D1 Exp
+    | Dot Char
+    | E
+    | At
+    | Ques Char
+    | Pipe
 
 ------------------------------------------------------------------------
 -- Printing
@@ -112,8 +111,8 @@ type Cont a = (Maybe Char, Int) -> a -> IO Exp
 
 instance Monad Eval where
 
-  (Eval cp1) >>= f = Eval $ \dat1 cont2 -> 
-                        cp1 dat1 $ \dat2 a -> 
+  (Eval cp1) >>= f = Eval $ \dat1 cont2 ->
+                        cp1 dat1 $ \dat2 a ->
                             let (Eval cp2) = f a in cp2 dat2 cont2
 
   return a = Eval $ \dat cont -> cont dat a
