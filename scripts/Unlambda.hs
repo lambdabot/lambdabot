@@ -30,11 +30,13 @@ import Data.Char
 import System.IO
 import Resource
 
+main :: IO Exp
 main = (setResourceLimit ResourceCPUTime $ ResourceLimits (ResourceLimit 5) (ResourceLimit 5)) >> run
 
+run :: IO Exp
 run = do
-  exp <- parse stdin
-  let (Eval cp) = eval exp
+  expr <- parse stdin
+  let (Eval cp) = eval expr
   cp (Nothing, 2048) (const return)
 
 ------------------------------------------------------------------------
@@ -44,7 +46,7 @@ parse :: Handle -> IO Exp
 parse h = do
   c <- catch (hGetChar h) (\_ -> error "Parse error at end of file")
   case toLower c of
-    c | c `elem` " \t\n"  -> parse h
+    d | d `elem` " \t\n"  -> parse h
     '`' -> do e1 <- parse h
               e2 <- parse h
               return (App e1 e2)
@@ -83,6 +85,7 @@ data Exp
 
 instance Show Exp where showsPrec _ e = sh e
 
+sh :: Exp -> String -> String
 sh (App x y)  = showChar '`' . sh x . sh y
 sh K          = showChar 'k'
 sh (K1 x)     = showString "`k" . sh x
@@ -120,17 +123,25 @@ instance Monad Eval where
 ------------------------------------------------------------------------
 -- Basics
 
+currentChar :: Eval (Maybe Char)
 currentChar      = Eval (\dat@(c,_) cont -> cont dat c)
+setCurrentChar :: Maybe Char -> Eval ()
 setCurrentChar c = Eval (\(_,i) cont -> cont (c,i) ())
+io :: IO a -> Eval a
 io iocp          = Eval (\dat cont -> iocp >>= cont dat)
-throw c x        = Eval (\dat cont -> c dat x)
+throw :: ((Maybe Char, Int) -> t -> IO Exp) -> t -> Eval a
+throw c x        = Eval (\dat _ -> c dat x)
+exit :: Exp -> Eval a
 exit e           = Eval (\_ _ -> return e)
+callCC :: (((Maybe Char, Int) -> a -> IO Exp) -> Eval a) -> Eval a
 callCC f         = Eval $ \dat cont -> let Eval cp2 = f cont in cp2 dat cont
+step :: Eval ()
 step             = Eval (\(c,i) cont -> if i<1 then return E else cont (c,i-1) ())
 
 ------------------------------------------------------------------------
 -- Interpretation in the Eval monad
 
+eval :: Exp -> Eval Exp
 eval (App e1 e2) = do
   f <- eval e1
   case f of
@@ -138,29 +149,28 @@ eval (App e1 e2) = do
     _ -> eval e2 >>= apply f
 eval e = return e
 
+apply :: Exp -> Exp -> Eval Exp
 apply K x        = return (K1 x)
-apply (K1 x) y   = return x
+apply (K1 x) _   = return x
 apply S x        = return (S1 x)
 apply (S1 x) y   = return (S2 x y)
 apply (S2 x y) z = eval (App (App x z) (App y z))
 apply I x        = return x
-apply V x        = return V
+apply V _        = return V
 apply C x        = callCC (\c -> apply x (Cont c))
 apply (Cont c) x = throw c x
 apply D x        = return x
 apply (D1 e) x   = do f <- eval e; apply f x
 apply (Dot c) x  = step >> io (putChar c) >> return x
 apply E x        = exit x
-
 apply At f = do
   dat <- io $ catch (getChar >>= return . Just) (const $ return Nothing)
   setCurrentChar dat
   apply f (case dat of Nothing -> V ; Just _  -> I)
-
 apply (Ques c) f = do
   cur <- currentChar
   apply f (if cur == Just c then I else V)
-
 apply Pipe f = do
   cur <- currentChar
   apply f (case cur of Nothing -> V ; Just c  -> (Dot c))
+apply (App _ _) _ = error "Unknown application"
