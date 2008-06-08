@@ -15,17 +15,17 @@ Dons:
 
 Cruft removal:
     * remove scripts/{FT, djinn, hoogle} in favor of hoogle, djinn, and ftshell
-      found on hackage.  Update each of the lambdabot plugins to call these new
+      found on Hackage.  Update each of the lambdabot plugins to call these new
       executables
     * remove Lib/OEIS (requires changes in the oeis package)
     * remove scripts/SmallCheck in favor of the hackage version
-    * remove scripts/Unlambda and BF.  Consider creating Hackage packages for
-      these, or just drop them (does anyone actually use these plugins?)
+    * remove scripts/Unlambda.  Consider creating Hackage packages for
+      this, or just drop it (does anyone actually use it?)
     * replace scripts/timein (Perl!  Naughty, naughty dons ;) with pure Haskell
 
-Todo:
+To do:
     * Better error reporting when connections fail at startup
-    * fsbot-style factoid parsing, 
+    * fsbot-style factoid parsing,
     * real hostmask matching
     * refactor utility functions out of the modules ex. gets(\s -> lookupFM ...)
     * @fact-to ircnick key for sending factoids via privmsg
@@ -36,12 +36,12 @@ Todo:
 
 Wishlist:
 
-    * search ghc haddocks by function name and type name and ghc command line option searching ;-)
+    * search GHC haddocks by function name and type name and GHC command line option searching ;-)
     * search Haskell 98 report
     * search citeseer
     * search local database of researching paper by keyword (swish++ ?)
-    * channel statistics, record of pasted urls
-    * unit tests, quickcheck tests, written tests... ok, maybe not written
+    * channel statistics, record of pasted URLs
+    * unit tests, QuickCheck tests, written tests... OK, maybe not written
     * Some support for bot clients to be able to do their own request/response stuff
 
 * add your wishes here ...
