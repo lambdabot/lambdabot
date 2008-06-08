@@ -2,7 +2,9 @@ module Main where
 
 import Language.Brainfuck
 import Language.Brainfuck.Examples
+import Control.Monad (when)
 
+import Data.Array hiding (array)
 import System.Posix.Resource
 
 main :: IO ()
