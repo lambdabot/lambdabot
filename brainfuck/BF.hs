@@ -1,49 +1,34 @@
-{-# OPTIONS -cpp #-}
--- This is an interpreter of the braif*ck language, written in
--- the pure, lazy, functional language Haskell.
--- 
--- Copyright (C) 2006 by Jason Dagit <dagit@codersbase.com>
---                                                                           
--- This program is free software; you can redistribute it and/or modify
--- it under the terms of the GNU General Public License as published by
--- the Free Software Foundation; either version 2 of the License, or
--- (at your option) any later version.
---                                                                           
--- This program is distributed in the hope that it will be useful,
--- but WITHOUT ANY WARRANTY; without even the implied warranty of
--- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
--- GNU General Public License for more details.
---                                                                           
--- You should have received a copy of the GNU General Public License
--- along with this program; if not, write to the Free Software
--- Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
---
+{-
+
+This is an interpreter of the brainf*ck language, written in
+the pure, lazy, functional language Haskell.
+
+Copyright (C) 2006 by Jason Dagit <dagit@codersbase.com>
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA -}
+
+module Language.Brainfuck where
 
 import Data.Array.IO
-#if __GLASGOW_HASKELL__ >= 606
 import Data.Array hiding (array)
-#else
-import Data.Array hiding (array,bounds)
-#endif
 import Data.Array.Base   (unsafeRead, unsafeWrite, array)
-import Data.Word         ( Word8(..) )
+import Data.Word         ( Word8 )
 import Data.Char         ( ord, chr )
-import Data.List         ( find, findIndex, groupBy )
+import Data.List         ( groupBy )
 import Data.Maybe        ( catMaybes )
-import Control.Monad     ( when )
 import Control.Monad.State
-import Resource
-
-main = do
-  setResourceLimit ResourceCPUTime $ ResourceLimits (ResourceLimit 5) (ResourceLimit 5)
-  run
-
-run = do
-  prog <- getContents
-  c    <- core
-  let cmds = loadProgram prog
-  when debug $ print cmds
-  execute cmds (snd (bounds cmds)) (BF c 0 0)
 
 {- | The complete BF language:
 
@@ -80,14 +65,14 @@ type CorePtr = Int
 data BF = BF !Core !CorePtr !InstPtr
 
 instance Show BF where
-    show (BF c cp ip) = "BF <core> CorePtr = " ++ show cp ++ " InstPtr = " ++ show ip
+    show (BF _ cp ip) = "BF <core> CorePtr = " ++ show cp ++ " InstPtr = " ++ show ip
 
 coreSize = 30000
 
 core :: IO Core
 core = newArray (0, coreSize - 1) (0::Word8)
 
-decode :: Char -> State Int Command 
+decode :: Char -> State Int Command
 decode '>' = return IncPtr
 decode '<' = return DecPtr
 decode '+' = return IncByte
@@ -103,6 +88,7 @@ decode ']' = do n <- get
 decode '@' = return Halt
 decode _   = return Ignored
 
+debug :: Bool
 debug = False
 
 incIP :: InstPtr -> InstPtr
@@ -116,7 +102,7 @@ incCP = (`mod` coreSize) . (1 +)
 decCP :: CorePtr -> CorePtr
 decCP = (`mod` coreSize) . subtract 1
 {-# INLINE decCP #-}
- 
+
 doCommand :: Array Int Command -> BF -> IO BF
 doCommand cmds bf@(BF _ _ ip) = doCommand' (cmds ! ip) cmds bf
   where
@@ -143,7 +129,7 @@ doCommand cmds bf@(BF _ _ ip) = doCommand' (cmds ! ip) cmds bf
   doCommand' (IncByteBy n) _ bf = {-# SCC "IncByteBy" #-} do
     when debug $ putStrLn $ "IncByteBy " ++ show n ++ " " ++ show bf
     updateByte bf (+ fromIntegral n)
-  doCommand' OutputByte _ bf@(BF c cp ip) = {-# SCC "OutputByte" #-} do 
+  doCommand' OutputByte _ bf@(BF c cp ip) = {-# SCC "OutputByte" #-} do
     when debug $ putStrLn $ "OutputByte " ++ show bf
     c' <- unsafeRead c cp
     putChar (word8ToChr c')
@@ -160,8 +146,8 @@ doCommand cmds bf@(BF _ _ ip) = doCommand' (cmds ! ip) cmds bf
 
   doCommand' (JmpForward n) cmds bf@(BF c cp ip) = {-# SCC "JmpForw" #-} do
     c' <- unsafeRead c cp
-    case c' of 
-      0 -> {-# SCC "JmpForward1" #-} do 
+    case c' of
+      0 -> {-# SCC "JmpForward1" #-} do
         when debug $ putStrLn $ "JmpForward1 " ++ show bf
         return (BF c cp newInstPtr)
       _ -> {-# SCC "JmpForward2" #-} do
@@ -171,10 +157,10 @@ doCommand cmds bf@(BF _ _ ip) = doCommand' (cmds ! ip) cmds bf
         return newBF
     where
     -- we add one to go one past the next back jump
-    newInstPtr = (nextJmp cmds ip (+1) (JmpBackward n)) + 1 
+    newInstPtr = (nextJmp cmds ip (+1) (JmpBackward n)) + 1
   doCommand' (JmpBackward n) cmds bf@(BF c cp ip) = {-# SCC "JmpBack" #-} do
     c' <- unsafeRead c cp
-    if (c' /= 0) 
+    if (c' /= 0)
       then do when debug $ putStrLn $ "JmpBackward1 " ++ show bf
               return (BF c cp newInstPtr)
       else do when debug $ putStrLn $ "JmpBackward2 " ++ show bf
@@ -183,22 +169,22 @@ doCommand cmds bf@(BF _ _ ip) = doCommand' (cmds ! ip) cmds bf
     newInstPtr = nextJmp cmds ip (subtract 1) (JmpForward n)
   doCommand' (SetIpTo i) _ bf@(BF c cp ip) = {-# SCC "SetIPTo" #-} do
     c' <- unsafeRead c cp
-    when debug $ putStrLn $ "SetIpTo " ++ show i ++ " " 
+    when debug $ putStrLn $ "SetIpTo " ++ show i ++ " "
                           ++ show bf ++ " @" ++ show c'
     -- jmping behaves differently depending on jmp forward vs. backward
     -- we handle that with pos. vs. neg addresses
-    -- Note: SetIpTo 0 is always a JmpBackward 
+    -- Note: SetIpTo 0 is always a JmpBackward
     -- Because the first instruction cannot be SetIpTo 0
     if i > 0
       then if (c' == 0)
              then return $ BF c cp i
              else return $ BF c cp (incIP ip)
-      else if (c' /= 0) 
+      else if (c' /= 0)
              then return $ BF c cp (-i)
              else return $ BF c cp (incIP ip)
 
-nextJmp :: Array Int Command 
-        -> InstPtr 
+nextJmp :: Array Int Command
+        -> InstPtr
         -> (InstPtr -> InstPtr) -> Command -> InstPtr
 nextJmp cmds ip f cmd = if cmds ! ip == cmd
                           then ip
@@ -223,7 +209,7 @@ loadProgram [] = array (0, 0) [(0, Halt)]
 loadProgram prog = optimize (cs++[Halt])
   where
   cs = fst $ runState (mapM decode prog) 0
-  n  = length cs
+  n  = length cs -- strictness
 
 optimize :: [Command] -> Array Int Command
 optimize cmds = listArray (0, (length reduced)-1) reduced
@@ -231,11 +217,11 @@ optimize cmds = listArray (0, (length reduced)-1) reduced
   reduced = phase3 . phase2 . phase1 $ cmds
   -- phase1 removes ignored things
   phase1 :: [Command] -> [Command]
-  phase1 = filter (/=Ignored) 
+  phase1 = filter (/=Ignored)
   -- in phase2 group inc/dec into special instructions
   phase2 :: [Command] -> [Command]
   phase2 cs = concat $ map reduce $ groupBy (==) cs
-    where 
+    where
     reduce :: [Command] -> [Command]
     reduce cs
       | all (==IncPtr)  cs = [IncPtrBy  (length cs)]
@@ -258,8 +244,6 @@ optimize cmds = listArray (0, (length reduced)-1) reduced
     nested (JmpForward  n) = n
     nested (JmpBackward n) = n
     nested _               = undefined
-    isJmp (JmpForward  _) = True
-    isJmp (JmpBackward _) = False
     isJmpB (JmpBackward _) = True
     isJmpB _               = False
     isJmpF (JmpForward  _) = True
@@ -277,7 +261,7 @@ optimize cmds = listArray (0, (length reduced)-1) reduced
     absJmpB (i, Just n)  = Just $ (i, SetIpTo (-n))
     absJmpF (_, Nothing) = Nothing
     absJmpF (i, Just n)  = Just $ (i, SetIpTo (n+1))
-    findPrevJmpF :: [Command] 
+    findPrevJmpF :: [Command]
                  -> Int -- ^ index to start at
                  -> Int -- ^ nesting level to match
                  -> Maybe Int -- ^ index of next JmpF
@@ -286,7 +270,7 @@ optimize cmds = listArray (0, (length reduced)-1) reduced
                               (JmpForward l) | l == n -> Just i
                               _ -> findPrevJmpF cmds (i-1) n
 
-    findNextJmpB :: [Command] 
+    findNextJmpB :: [Command]
                  -> Int -- ^ index to start at
                  -> Int -- ^ nesting level to match
                  -> Maybe Int -- ^ index of next JmpF
@@ -296,119 +280,11 @@ optimize cmds = listArray (0, (length reduced)-1) reduced
                                  _ -> findNextJmpB cmds (i+1) n
 
 execute :: Array Int Command -> Int -> BF -> IO ()
-execute cmds n bf@(BF c cp ip) = do
+execute cmds n bf@(BF _ _ ip) = do
   if ip >= n || cmds ! ip == Halt
     then halt
     else doCommand cmds bf >>= execute cmds n
 
-halt = if debug 
+halt = if debug
          then putStrLn "Machine Halted.\n"
          else putStrLn "\n"
-
--- Example Programs
-
-helloWorld = 
-  ">+++++++++[<++++++++>-]<.>+++++++[<++++>-]<+.+++++++..+++.[-]>++++++++[<++++>-]"++
-  "<.#>+++++++++++[<+++++>-]<.>++++++++[<+++>-]<.+++.------.--------.[-]>++++++++["++
-  "<++++>-]<+.[-]++++++++++."
-
-
--- works now, thanks to int-e for explaining the BF spec to me
-bottles = 
-  "99 Bottles of Beer in Urban Mueller's BrainF*** (The actual"++
-  "name is impolite)"++
-  ""++
-  "by Ben Olmstead"++
-  ""++
-  "ANSI C interpreter available on the internet; due to"++
-  "constraints in comments the address below needs to have the"++
-  "stuff in parenthesis replaced with the appropriate symbol:"++
-  ""++
-  "http://www(dot)cats(dash)eye(dot)com/cet/soft/lang/bf/"++
-  ""++
-  "Believe it or not this language is indeed Turing complete!"++
-  "Combines the speed of BASIC with the ease of INTERCAL and"++
-  "the readability of an IOCCC entry!"++
-  ""++
-  ">+++++++++[<+++++++++++>-]<[>[-]>[-]<<[>+>+<<-]>>[<<+>>-]>>>"++
-  "[-]<<<+++++++++<[>>>+<<[>+>[-]<<-]>[<+>-]>[<<++++++++++>>>+<"++
-  "-]<<-<-]+++++++++>[<->-]>>+>[<[-]<<+>>>-]>[-]+<<[>+>-<<-]<<<"++
-  "[>>+>+<<<-]>>>[<<<+>>>-]>[<+>-]<<-[>[-]<[-]]>>+<[>[-]<-]<+++"++
-  "+++++[<++++++<++++++>>-]>>>[>+>+<<-]>>[<<+>>-]<[<<<<<.>>>>>-"++
-  "]<<<<<<.>>[-]>[-]++++[<++++++++>-]<.>++++[<++++++++>-]<++.>+"++
-  "++++[<+++++++++>-]<.><+++++..--------.-------.>>[>>+>+<<<-]>"++
-  ">>[<<<+>>>-]<[<<<<++++++++++++++.>>>>-]<<<<[-]>++++[<+++++++"++
-  "+>-]<.>+++++++++[<+++++++++>-]<--.---------.>+++++++[<------"++
-  "---->-]<.>++++++[<+++++++++++>-]<.+++..+++++++++++++.>++++++"++
-  "++[<---------->-]<--.>+++++++++[<+++++++++>-]<--.-.>++++++++"++
-  "[<---------->-]<++.>++++++++[<++++++++++>-]<++++.-----------"++
-  "-.---.>+++++++[<---------->-]<+.>++++++++[<+++++++++++>-]<-."++
-  ">++[<----------->-]<.+++++++++++..>+++++++++[<---------->-]<"++
-  "-----.---.>>>[>+>+<<-]>>[<<+>>-]<[<<<<<.>>>>>-]<<<<<<.>>>+++"++
-  "+[<++++++>-]<--.>++++[<++++++++>-]<++.>+++++[<+++++++++>-]<."++
-  "><+++++..--------.-------.>>[>>+>+<<<-]>>>[<<<+>>>-]<[<<<<++"++
-  "++++++++++++.>>>>-]<<<<[-]>++++[<++++++++>-]<.>+++++++++[<++"++
-  "+++++++>-]<--.---------.>+++++++[<---------->-]<.>++++++[<++"++
-  "+++++++++>-]<.+++..+++++++++++++.>++++++++++[<---------->-]<"++
-  "-.---.>+++++++[<++++++++++>-]<++++.+++++++++++++.++++++++++."++
-  "------.>+++++++[<---------->-]<+.>++++++++[<++++++++++>-]<-."++
-  "-.---------.>+++++++[<---------->-]<+.>+++++++[<++++++++++>-"++
-  "]<--.+++++++++++.++++++++.---------.>++++++++[<---------->-]"++
-  "<++.>+++++[<+++++++++++++>-]<.+++++++++++++.----------.>++++"++
-  "+++[<---------->-]<++.>++++++++[<++++++++++>-]<.>+++[<----->"++
-  "-]<.>+++[<++++++>-]<..>+++++++++[<--------->-]<--.>+++++++[<"++
-  "++++++++++>-]<+++.+++++++++++.>++++++++[<----------->-]<++++"++
-  ".>+++++[<+++++++++++++>-]<.>+++[<++++++>-]<-.---.++++++.----"++
-  "---.----------.>++++++++[<----------->-]<+.---.[-]<<<->[-]>["++
-  "-]<<[>+>+<<-]>>[<<+>>-]>>>[-]<<<+++++++++<[>>>+<<[>+>[-]<<-]"++
-  ">[<+>-]>[<<++++++++++>>>+<-]<<-<-]+++++++++>[<->-]>>+>[<[-]<"++
-  "<+>>>-]>[-]+<<[>+>-<<-]<<<[>>+>+<<<-]>>>[<<<+>>>-]<>>[<+>-]<"++
-  "<-[>[-]<[-]]>>+<[>[-]<-]<++++++++[<++++++<++++++>>-]>>>[>+>+"++
-  "<<-]>>[<<+>>-]<[<<<<<.>>>>>-]<<<<<<.>>[-]>[-]++++[<++++++++>"++
-  "-]<.>++++[<++++++++>-]<++.>+++++[<+++++++++>-]<.><+++++..---"++
-  "-----.-------.>>[>>+>+<<<-]>>>[<<<+>>>-]<[<<<<++++++++++++++"++
-  ".>>>>-]<<<<[-]>++++[<++++++++>-]<.>+++++++++[<+++++++++>-]<-"++
-  "-.---------.>+++++++[<---------->-]<.>++++++[<+++++++++++>-]"++
-  "<.+++..+++++++++++++.>++++++++[<---------->-]<--.>+++++++++["++
-  "<+++++++++>-]<--.-.>++++++++[<---------->-]<++.>++++++++[<++"++
-  "++++++++>-]<++++.------------.---.>+++++++[<---------->-]<+."++
-  ">++++++++[<+++++++++++>-]<-.>++[<----------->-]<.+++++++++++"++
-  "..>+++++++++[<---------->-]<-----.---.+++.---.[-]<<<]"++
-  "@"
-
-helloum =
-  "++++++++++[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++.>++.<<+++++++++++++++.>.+++.------.--------.>+.>.@"
-
--- can't figure this one out either...
-sort =
-  "Here is a Brainf*** program that bubblesorts its input and spits it out:"++
-  ">>>>>,+[>>>,+]<<<[<<<"++
-  "[>>>[-<<<-<+>[>]>>]<<<[<]>>"++
-  "[>>>+<<<-]<[>+>>>+<<<<-]"++
-  "<<]>>>[-.[-]]>>>[>>>]<<<]"
-
-toupper =
-  ",----------[----------------------.,----------]"
-
-{-
-Example optimized programs:
-
-++++[>++++++++<-]>[.+]
-
-[(0,IncByteBy 4),  (1,SetIpTo 7),     (2,IncPtrBy 1),
- (3,IncByteBy 8),  (4,IncPtrBy (-1)), (5,IncByteBy (-1)),
- (6,SetIpTo (-1)), (7,IncPtrBy 1),    (8,SetIpTo 12),
- (9,OutputByte),   (10,IncByteBy 1),  (11,SetIpTo (-8)),
- (12,Halt)
-]
-
-[[]]
-
-[(0,SetIpTo 4), 
- (1,SetIpTo 3),
- (2,SetIpTo (-1)),
- (3,SetIpTo 0),
- (4,Halt)
-]
-
--}
