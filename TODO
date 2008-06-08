@@ -19,8 +19,6 @@ Cruft removal:
       executables
     * remove Lib/OEIS (requires changes in the oeis package)
     * remove scripts/SmallCheck in favor of the hackage version
-    * remove scripts/Unlambda.  Consider creating Hackage packages for
-      this, or just drop it (does anyone actually use it?)
     * replace scripts/timein (Perl!  Naughty, naughty dons ;) with pure Haskell
 
 To do:

@@ -15,7 +15,7 @@ Build-Depends:       base, unix, network, parsec, mtl, haskell-src,
                      regex-compat, regex-posix, zlib, binary>=0.2,
                      plugins>=1.0, oeis, bytestring, old-time,
                      random, process, directory, array, pretty,
-                     parallel, numbers, brainfuck
+                     parallel, numbers, brainfuck, unlambda
 build-type:          Simple
 
 
@@ -53,12 +53,6 @@ include-dirs:        .
 --ghc-options:        -main-is Boot.main -Wall -Werror -fglasgow-exts -H64m -Onot -fasm -threaded
 -- ghc-options:         -Wall -Werror -fglasgow-exts -funbox-strict-fields -optl-Wl,-s -threaded
 
---
--- Unlambda
---
---Executable:          unlambda
---hs-source-dirs:      scripts/
---Main-is:             Unlambda.hs
 
 --
 -- FT
