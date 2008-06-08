@@ -9,7 +9,7 @@ Version:             4.0
 License:             GPL
 License-file:        LICENSE
 Author:              Don Stewart
-Maintainer:          dons@cse.unsw.edu.au
+Maintainer:          Cale Gibbard <cgibbard@gmail.com>
 Build-Depends:       base, unix, network, parsec, mtl, haskell-src,
                      readline, QuickCheck, arrows, containers,
                      regex-compat, regex-posix, zlib, binary>=0.2,

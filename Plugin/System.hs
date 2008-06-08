@@ -34,7 +34,7 @@ syscmds = M.fromList
        ,("listmodules", "listmodules. Show available plugins")
        ,("listservers", "listservers. Show current servers")
        ,("list",        "list [module|command]\n"++
-                        "show all commands or command for [module]. http://www.cse.unsw.edu.au/~dons/lambdabot/COMMANDS")
+                        "show all commands or command for [module]. http://code.haskell.org/lambdabot/COMMANDS")
        ,("echo",        "echo <msg>. echo irc protocol string")
        ,("uptime",      "uptime. Show uptime")]
 
@@ -62,7 +62,7 @@ doSystem msg _ cmd rest = get >>= \s -> case cmd of
   "listmodules" -> return [pprKeys (ircModules s) ]
   "listservers" -> return [pprKeys (ircServerMap s)]
   "listall"     -> lift listAll
-  "list"| null rest -> return ["http://www.cse.unsw.edu.au/~dons/lambdabot/COMMANDS"]
+  "list"| null rest -> return ["http://code.haskell.org/lambdabot/COMMANDS"]
         | otherwise -> lift $ listModule rest >>= return . (:[])
 
   ------------------------------------------------------------------------
