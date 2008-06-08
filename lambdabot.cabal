@@ -15,7 +15,7 @@ Build-Depends:       base, unix, network, parsec, mtl, haskell-src,
                      regex-compat, regex-posix, zlib, binary>=0.2,
                      plugins>=1.0, oeis, bytestring, old-time,
                      random, process, directory, array, pretty,
-                     parallel, numbers
+                     parallel, numbers, brainfuck
 build-type:          Simple
 
 
@@ -38,11 +38,11 @@ include-dirs:        .
 
 --
 -- For a fast build use add -Onot
--- 
+--
 
 --
 -- And a dynamically linked lambdabot
--- 
+--
 -- Not quite there yet. The problem is how to recompile Modules.hs with
 -- a list of statics and plugins, and then to recompile the rest of
 -- lambdabot's core
@@ -59,13 +59,6 @@ include-dirs:        .
 --Executable:          unlambda
 --hs-source-dirs:      scripts/
 --Main-is:             Unlambda.hs
-
---
--- BF
---
-Executable:          bf
-hs-source-dirs:      scripts/
-Main-is:             BF.hs
 
 --
 -- FT
