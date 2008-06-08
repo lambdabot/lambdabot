@@ -1,0 +1,29 @@
+name:                brainfuck
+version:             0.1
+
+license:             GPL
+license-file:        LICENSE
+author:              Jason Dagit <dagit@codersbase.com>
+-- maintainer:          Cale
+
+stability:           Stable
+category:            Interpreter
+synopsis:            Brainfuck interpreter
+description:         This is an interpreter of the brainf*ck language,
+                     written in the pure, lazy, functional language Haskell.
+
+build-type:          Simple
+Cabal-Version:       >= 1.2
+tested-with:         GHC==6.8.2
+
+executable              bf
+   main-is:             Main.hs
+   build-depends:       base>3, unix, array, mtl
+
+library
+   exposed-modules:     Language.Brainfuck, Language.Brainfuck.Examples
+
+   build-depends:       base, array, mtl
+
+   ghc-options:         -Wall
+   ghc-prof-options:    -prof -auto-all
