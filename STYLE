@@ -55,7 +55,7 @@ splitFirstWord, join, breakOnGlue, debugStr, lookupSet, etc.
 *** Use hierarchical modules
 
 Old style non-hierarchical module imports should be replaced with
-their hierachial module counterpart. The List module, as an example,
+their hierarchical module counterpart. The List module, as an example,
 should be replaced with Data.List.
 
 *** Use non-deprecated modules
@@ -63,7 +63,7 @@ should be replaced with Data.List.
 Deprecated modules should be replaced by their non-deprecated
 counterparts since it prevents bitrot of the source code.
 
-*** Minimalize namespace
+*** Minimize namespace
 
 The namespace of a module should be minimized. Restrict imports such
 that only used function calls and data types are imported. Furthermore
@@ -73,7 +73,7 @@ use qualified imports to split of the namespace in comprehensible parts.
 
 *** Provide explicit type signatures
 
-We require all source code to build with -Werror. As a consequence
+We require all source code to be able to build with -Werror. As a consequence
 explicit type signatures for all functions should be provided.
 
 *** Haddock documentation
@@ -86,7 +86,7 @@ it easier to spot intent or catch errors.
 
 *** Portability
 
-Provide portable source code that works with ghc >= 6.2.2. Lambdabot
+Provide portable source code that works with GHC >= 6.2.2. Lambdabot
 has a number of portability layer modules to ease the transition; the
 most prominent being Map.hs, as it provides a portability layer to
 Data.Map/Data.FiniteMap.
@@ -104,7 +104,7 @@ The help format is:
     "command <arg1> <arg2>. Description goes here"
 
 No leading @ should be prefixed to the command (as this is meaningless
-in offline mode). The command should end in a fullstop, followed by a
+in offline mode). The command should end in a full stop, followed by a
 sentence or two describing the command.
 
 Check in offline mode that 'help command' looks good.
