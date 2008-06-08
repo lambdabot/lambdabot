@@ -10,6 +10,13 @@ License:             GPL
 License-file:        LICENSE
 Author:              Don Stewart
 Maintainer:          Cale Gibbard <cgibbard@gmail.com>
+Category:            Development
+Synopsis:            Lambdabot is a development tool and advanced IRC bot
+Description:         Lambdabot is an IRC bot written over several years by
+                     those on the #haskell IRC channel. It also operates in an
+                     offline mode as a Haskell development tool, and embedded as
+                     an extension to ghci.
+Homepage:            http://haskell.org/haskellwiki/Lambdabot
 Build-Depends:       base, unix, network, parsec, mtl, haskell-src,
                      readline, QuickCheck, arrows, containers,
                      regex-compat, regex-posix, zlib, binary>=0.2,
