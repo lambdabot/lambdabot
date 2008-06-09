@@ -7,7 +7,7 @@ Authors: Don Stewart
 
 Current module tree.
 
-(lambdabot : static) 
+(Lambdabot : static)
     +- Boot -+- hs-plugins
             -+- Shared
             -+- Map
@@ -37,30 +37,30 @@ Plugins live in Plugins/ and inhabit the Plugins.* namespace.
 
 ------------------------------------------------------------------------
 
-INOVKING COMMANDS
+INVOKING COMMANDS
 
 Each plugin lists the commands it will provide in its Module instance.
-Commands to lambdabot are prefixed with certain magic characters,
-described in Plugins/Base.hs. 
+Commands to Lambdabot are prefixed with certain magic characters,
+described in Plugins/Base.hs.
 
 ONLINE/OFFLINE MODES
 
 Lambdabot can run in an offline mode. This is in fact the default mode
-now, and invoking lambdabot with --online is the way to connect to an
-irc server. Otherwise you just get a prompt, and a chance to interact
+now, and invoking Lambdabot with --online is the way to connect to an
+IRC server. Otherwise you just get a prompt, and a chance to interact
 with the plugins.
 
 DEVELOPMENT
 
 When testing out a new plugin,
-    0) test out the plugin in ghci in isolation. don't both linking the
+    0) test out the plugin in GHCi in isolation. don't both linking the
     rest of the bot.
 then try:
     b) don't go online, just use offline mode
 
 GHCI:
 
-    You can quickly develop lambdabot inside ghci.
+    You can quickly develop Lambdabot inside GHCi.
     See the build details in README.
     It works best if you've already compiled the objects once, then you
     can quickly reload (interpreted) just the modules you're developing.
@@ -83,7 +83,7 @@ A default state may be provided via the `moduleDefState` method.
 
 LIBRARIES
 
-Libraries of common functoins are in Lib, they include code for:
+Libraries of common functions are in Lib, they include code for:
     * munging strings
     * getting random elements
     * serialising data
