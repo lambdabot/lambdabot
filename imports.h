@@ -15,6 +15,7 @@ import qualified Data.Foldable
 import Data.Function hiding ((.))
 import Data.Ord
 import qualified Data.Generics
+import Data.Generics hiding (GT)
 import Data.Graph
 import Data.Int
 import Data.Ix

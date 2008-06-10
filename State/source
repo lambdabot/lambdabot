@@ -128,8 +128,12 @@ map _ []     = []
 map f (x:xs) = f x : map f xs
 
 (++)
-(++) []     ys = ys
-(++) (x:xs) ys = x : xs ++ ys
+[]     ++ ys = ys
+(x:xs) ++ ys = x : (xs ++ ys)
+-- OR
+xs ++ ys = foldr (:) ys xs
+-- In lambdabot, this is generalised to:
+(++) = mappend
 
 Bool
 data Bool = False | True deriving (Eq, Ord)
@@ -172,12 +176,17 @@ const x _ = x
 
 (.)
 (f . g) x = f (g x)
+-- In lambdabot, it's been generalised to:
+(.) = fmap
 
 flip
 flip f x y = f y x
 
 ($)
 f $ x = f x
+
+($!)
+f $! x = x `seq` f x
 
 until
 until p f x | p x       = x
@@ -345,6 +354,10 @@ nubBy eq (x:xs)         =  x : nubBy eq (filter (\ y -> not (eq x y)) xs)
 
 delete
 delete = deleteBy (==)
+
+deleteBy
+deleteBy eq x []        = []
+deleteBy eq x (y:ys)    = if x `eq` y then ys else y : deleteBy eq x ys
 
 (\\)
 (\\) = foldl (flip delete)
@@ -1149,7 +1162,7 @@ m `mplus` n = m `catch` \_ -> n
 [] (==)
 []     == []     = True
 (x:xs) == (y:ys) = x == y && xs == ys
-_xs    == _ys    = False
+_      == _        = False
 
 [] fmap
 fmap = map
@@ -1190,8 +1203,8 @@ Maybe mzero
 mzero = Nothing
 
 Maybe mplus
-Nothing `mplus` ys  = ys
-xs      `mplus` _ys = xs
+Nothing `mplus` ys = ys
+xs      `mplus` ys = xs
 
 Maybe fmap
 fmap _ Nothing       = Nothing
