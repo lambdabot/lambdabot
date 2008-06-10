@@ -127,9 +127,9 @@ babelFish inLang outLang string = do
 
         {-
         -- totally unrelated :}
-        process _ _ src "timein" s =
+        process _ _ src "timein.hs" s =
           if s == "help"
             then ircPrivmsg src "  http://www.timeanddate.com"
-            else do (o,_,_) <- liftIO $ popen "timein" [s] Nothing
+            else do (o,_,_) <- liftIO $ popen "timein.hs" [s] Nothing
                     ircPrivmsg src $ "  " ++ o
         -}
