@@ -9,7 +9,6 @@ nice ./Setup.hs build
 ./Setup.hs copy
 ghc -v0 -c -O2 -odir . -hidir . scripts/ShowQ.hs
 ghc -v0 -c -O2 -odir . -hidir . scripts/ShowFun.hs
-ghc -v0 -c -O2 -odir . -hidir . scripts/LargeWord.hs
 ghc -v0 -c -O2 -funbox-strict-fields -odir . -hidir . scripts/SmallCheck.hs
 ghc -v0 -c -O2 -odir . -hidir . scripts/SimpleReflect.hs
 ghc -v0 -c -O2 -odir . -hidir . State/L.hs
