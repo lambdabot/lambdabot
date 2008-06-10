@@ -1,6 +1,4 @@
---
 -- | Some quote text
---
 module Plugin.Quote.Text where
 
 -- | Some funny palomer-isms
@@ -87,7 +85,7 @@ stewieList =
 --
 -- Actual quotes from an asshat called Keal over Jan 12-14 2006.
 --
--- Reappared as OrangeKid, 
+-- Reappared as OrangeKid,
 -- 06.10.18:19:44:00 --- join: OrangeKid -- (n=TRK@unaffiliated/Keal) joined #haskell
 --
 kealList :: [String]
@@ -187,7 +185,7 @@ kealList =
 
 --
 -- Quotes from the lyrics of B52s songs. They remind me (dons) of zippy.
--- 
+--
 b52s :: [String]
 b52s =
     [ "His ear lobe fell in the deep. Someone reached in and grabbed it. It was a rock lobster!"
@@ -306,46 +304,6 @@ notoriousV =
     ,"Just 'J'"
     ]
 
---
--- A troll going by the names:
---
---  proton-gun tbon shemale_magic HeyObjects parnassus gavino
---  hypothesys octon ava-its-pssa mel-gibson java-or-no proton-gun
---  protontorpedo deathsstar gavino99 proton-weapon thumper9 star-trekio
---  differentActGetD howya-doin linux-fun boobhz booger perlIsBetter
---  ramserver newlambder bublle-war ion-cannon thailand-fan blaastaar
---
--- n=bo@pool-71-106-182-86.lsanca.dsl-w.verizon.net
--- n=root@masqrd.la.teampcs.com
--- n=gschuett@masqrd.la.teampcs.com
--- n=gschuett@68.183.75.2
--- n=gschuett@208.201.11.51
--- n=gschuett@4.38.41.141
---
--- Trolled on and off for 10 months
---
--- First appeared:
---  05.10.05:16:51:41 --- join: howya-doin (n=gschuett@208.201.11.51) joined #haskell
--- Last appeared:
---  06.08.14:11:48 -- mode/#haskell [+b *!*n=bo@*.lsanca.dsl-w.verizon.net] by dons
---
--- Reappeared a few weeks later from a new ip address.
--- 
--- Reappeared:
--- 15:52 [freenode] -- ion-cannon [n=tits@pool-71-106-175-237.lsanca.dsl-w.verizon.net]
--- 15:52 [freenode] --  ircname  : wilt chamberlain
---
--- 19:55 -- mode/#haskell [+b *!*n=tits@*.lsanca.dsl-w.verizon.net] by -- dons
---
--- Reappeared: 06.11.28
---  10:34 [freenode] -- thailand-fan [n=bill@4.38.41.141]
---  10:34 [freenode] --  ircname  : bill gates
---  10:34 [freenode] --  channels : ##linux #archlinux 
---
--- Reappeared: 06.12.08
---  blaastaar (n=gschuett@4.38.41.141) joined #haskell
---
--- 
 protontorpedo :: [String]
 protontorpedo =
     [
