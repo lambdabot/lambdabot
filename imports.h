@@ -67,6 +67,6 @@ import Text.Printf
 import Text.PrettyPrint.HughesPJ hiding (empty)
 import Test.QuickCheck
 import ShowQ
-import LargeWord
+
 import SimpleReflect hiding (var)
 import Math.OEIS

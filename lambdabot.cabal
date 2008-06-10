@@ -67,5 +67,3 @@ Executable:          runplugs
 hs-source-dirs:      scripts/
 ghc-options:         -funbox-strict-fields
 Main-is:             RunPlugs.hs
-
-
