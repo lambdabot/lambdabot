@@ -9,7 +9,7 @@ Version:             4.0
 License:             GPL
 License-file:        LICENSE
 Author:              Don Stewart
-Maintainer:          dons@cse.unsw.edu.au
+Maintainer:          dons@galois.com
 Build-Depends:       base, unix, network, parsec, mtl, haskell-src, haskell98, readline, plugins>=1.0, fps>=0.7, QuickCheck
 Exposed-modules:     DMain, Modules
 ghc-options:         -Wall -Werror -fglasgow-exts -pgmF ./BotPP -F -H64m -Onot -fasm -fno-warn-incomplete-patterns -fno-warn-missing-methods -fno-warn-orphans -I. -threaded -no-link
