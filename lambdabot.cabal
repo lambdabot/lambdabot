@@ -1,9 +1,5 @@
---
--- Cabal build system for lambdabot
---
--- Currently only builds the static version of the bot, which should be
--- enough for most people
---
+-- Cabal build system for lambdabot. Currently only builds the static
+-- version of the bot, which should be enough for most people
 Name:                lambdabot
 Version:             4.0
 License:             GPL
@@ -27,64 +23,49 @@ Build-Depends:       base, unix, network, parsec, mtl, haskell-src,
 build-type:          Simple
 
 
---
 -- first build the preprocessor
---
 Executable:          BotPP
 hs-source-dirs:      scripts/
 Main-is:             BotPP.hs
 ghc-options:         -funbox-strict-fields
 
---
--- Lambdabot
---
+-- Lambdabot main
 Executable:          lambdabot
 Main-is:             Main.hs
 extensions:          CPP
 ghc-options:         -Wall -Werror -fglasgow-exts -pgmF dist/build/BotPP/BotPP -F -H64m -funbox-strict-fields -fno-warn-incomplete-patterns -fno-warn-missing-methods -fno-warn-orphans -threaded
 include-dirs:        .
+-- For a faster build use add -Onot
 
---
--- For a fast build use add -Onot
---
-
---
 -- And a dynamically linked lambdabot
---
 -- Not quite there yet. The problem is how to recompile Modules.hs with
 -- a list of statics and plugins, and then to recompile the rest of
 -- lambdabot's core
---
 --Executable:         lambdabot-dynamic
 --main-is:            Boot.hs
 --extensions:         CPP
 --ghc-options:        -main-is Boot.main -Wall -Werror -fglasgow-exts -H64m -Onot -fasm -threaded
--- ghc-options:         -Wall -Werror -fglasgow-exts -funbox-strict-fields -threaded
+--ghc-options:         -Wall -Werror -fglasgow-exts -funbox-strict-fields -threaded
 
-------------------------------------------------------------------------
--- The following only work if plugins are enabled
-
---
--- runplugs
---
-Executable:          runplugs
-hs-source-dirs:      scripts/
-ghc-options:         -funbox-strict-fields
-Main-is:             RunPlugs.hs
-
---
 -- check
---
 Executable:          quickcheck
 hs-source-dirs:      scripts/
 ghc-options:         -funbox-strict-fields
 Main-is:             QuickCheck.hs
 
---
 -- check
---
 Executable:          smallcheck
 hs-source-dirs:      scripts/
 ghc-options:         -funbox-strict-fields
 Main-is:             RunSmallCheck.hs
+
+------------------------------------------------------------------------
+-- The following only work if plugins are enabled
+
+-- runplugs
+Executable:          runplugs
+hs-source-dirs:      scripts/
+ghc-options:         -funbox-strict-fields
+Main-is:             RunPlugs.hs
+
 
