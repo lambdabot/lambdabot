@@ -57,7 +57,7 @@ Main-is:             QuickCheck.hs
 Executable:          smallcheck
 hs-source-dirs:      scripts/
 ghc-options:         -funbox-strict-fields
-Main-is:             RunSmallCheck.hs
+Main-is:             SmallCheck.hs
 
 ------------------------------------------------------------------------
 -- The following only work if plugins are enabled

@@ -10,8 +10,8 @@ License:             GPL
 License-file:        LICENSE
 Author:              Don Stewart
 Maintainer:          dons@cse.unsw.edu.au
-Build-Depends:       base, unix, network, parsec, mtl, 
-                     haskell-src, readline, QuickCheck, template-haskell, 
+Build-Depends:       base, unix, network, parsec, mtl,
+                     haskell-src, readline, QuickCheck, template-haskell,
                      haskell98, fps>=0.7, plugins>=1.0
 
 --
@@ -32,7 +32,7 @@ ghc-options:         -Wall -Werror -fglasgow-exts -pgmF dist/build/BotPP/BotPP -
 
 --
 -- And a dynamically linked lambdabot
--- 
+--
 -- Not quite there yet. The problem is how to recompile Modules.hs with
 -- a list of statics and plugins, and then to recompile the rest of
 -- lambdabot's core
@@ -108,5 +108,5 @@ Main-is:             QuickCheck.hs
 Executable:          smallcheck
 hs-source-dirs:      scripts/
 ghc-options:         -funbox-strict-fields -O
-Main-is:             RunSmallCheck.hs
+Main-is:             SmallCheck.hs
 
