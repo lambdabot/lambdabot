@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Lib.Regex
@@ -19,22 +18,14 @@ module Lib.Regex (
         matches',   -- :: Regex -> String -> Bool
 
         -- and the underlying module
-#if __GLASGOW_HASKELL__ >= 606
         module Text.Regex.Posix.ByteString
-#else
-        module Text.Regex
-#endif
 
     ) where
 
 import Data.ByteString.Char8
 
-#if __GLASGOW_HASKELL__ >= 606
 import Text.Regex.Posix.ByteString
 import System.IO.Unsafe (unsafePerformIO)
-#else
-import Text.Regex
-#endif
 
 ------------------------------------------------------------------------
 --
@@ -49,11 +40,7 @@ matches  :: Regex -> ByteString -> Bool
 
 ------------------------------------------------------------------------
 
-#if __GLASGOW_HASKELL__ >= 606
-
---
 -- For ghc 6.6 we use the regex-posix bytestring library
---
 
 regex' s = regex (pack s)
 
@@ -66,9 +53,7 @@ regex p = unsafePerformIO $ do
     compileFlags = compExtended
     execFlags    = 0
 
---
 -- match a regex against a string or bytestring
---
 matches' r s = matches r (pack s)
 
 matches r p = unsafePerformIO $ do
@@ -77,19 +62,3 @@ matches r p = unsafePerformIO $ do
         Left err       -> error $ "regex execute failed: " ++ show err
         Right Nothing  -> return False
         Right (Just _) -> return True
-
-#else
-
---
--- ghc 6.4.x Text.Regex compat:
---
-
-regex'  = mkRegex
-regex   = regex' . unpack
-
-matches' r s | Just _ <- matchRegex r s = True
-             | otherwise                = False
-
-matches  r s = matches' r (unpack s)
-
-#endif

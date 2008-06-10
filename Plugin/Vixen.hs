@@ -65,12 +65,10 @@ mkResponses choices them = (\((_,wtree):_) -> wtree) $
     filter (\(reg,_) -> matches' reg them) choices
 
 ------------------------------------------------------------------------
---
 -- serialisation for the vixen state
 --
 -- The tree of regexes and responses is written in binary form to
 -- State/vixen, and we suck it in on module init, then lazily regexify it all
---
 
 data WTree = Leaf !P.ByteString | Node ![WTree]
              deriving Show

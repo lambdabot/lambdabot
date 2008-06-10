@@ -1,9 +1,6 @@
-{-# OPTIONS -fvia-C #-}
--- 6.4 gives a name shadow warning I haven't tracked down.
+{-# OPTIONS_GHC -fvia-C #-}
 
---
 -- | This marvellous module contributed by Thomas J\344ger
---
 module Plugin.Pl.RuleLib
        (  -- Using rules
           RewriteRule(..), fire
@@ -23,7 +20,7 @@ import Control.Monad.Fix (fix)
 
 -- Next time I do somthing like this, I'll actually think about the combinator
 -- language before, instead of producing something ad-hoc like this:
-data RewriteRule 
+data RewriteRule
   = RR     Rewrite Rewrite           -- ^ A 'Rewrite' rule, rewrite the first to the second
                                      --   'Rewrite's can contain 'Hole's
   | CRR    (Expr -> Maybe Expr)      -- ^ Haskell function as a rule, applied to subexpressions
@@ -50,7 +47,7 @@ data Rewrite = Rewrite {
 
 -- What are you gonna do when no recursive modules are possible?
 class RewriteC a where
-  getRewrite :: a -> Rewrite 
+  getRewrite :: a -> Rewrite
 
 instance RewriteC MExpr where
   getRewrite rule = Rewrite {
@@ -63,7 +60,7 @@ instance RewriteC a => RewriteC (MExpr -> a) where
   getRewrite rule = Rewrite {
     holes = holes . getRewrite . rule . Hole $ pid,
     rid   = pid + 1
-  } where 
+  } where
     pid = rid $ getRewrite (undefined :: a)
 
 
@@ -83,9 +80,9 @@ nub' = S.toList . S.fromList
 
 -- | Create an array, only if the keys in 'lst' are unique and all keys [0..n-1] are given
 uniqueArray :: Ord v => Int -> [(Int, v)] -> Maybe (Array Int v)
-uniqueArray n lst 
+uniqueArray n lst
   | length (nub' lst) == n = Just $ array (0,n-1) lst
-  | otherwise = Nothing              
+  | otherwise = Nothing
 
 -- | Try to match a Rewrite to an expression,
 --   if there is a match, returns the expressions in the holes
@@ -101,7 +98,7 @@ fire r1 r2 e = (fromMExpr . fire' r2) `fmap` match r1 e
 
 -- | Match an Expr to a MExpr template, return the values used in the holes
 matchWith :: MExpr -> Expr -> Maybe [(Int, Expr)]
-matchWith (MApp e1 e2) (App e1' e2') = 
+matchWith (MApp e1 e2) (App e1' e2') =
   liftM2 (++) (matchWith e1 e1') (matchWith e2 e2')
 matchWith (Quote e) e' = if e == e' then Just [] else Nothing
 matchWith (Hole k) e = Just [(k,e)]
@@ -123,9 +120,9 @@ transformM :: Int -> MExpr -> MExpr
 transformM _ (Quote e) = constE `a` Quote e
 transformM n (Hole n') = if n == n' then idE else constE `a` Hole n'
 transformM n (Quote (Var _ ".") `MApp` e1 `MApp` e2)
-  | e1 `hasHole` n && not (e2 `hasHole` n) 
+  | e1 `hasHole` n && not (e2 `hasHole` n)
   = flipE `a` compE `a` e2 `c` transformM n e1
-transformM n e@(MApp e1 e2) 
+transformM n e@(MApp e1 e2)
   | fr1 && fr2 = sE `a` transformM n e1 `a` transformM n e2
   | fr1        = flipE `a` transformM n e1 `a` e2
   | fr2, Hole n' <- e2, n' == n = e1
@@ -177,7 +174,7 @@ rr0 r1 r2 = RR r1' r2' where
   r1' = getRewrite r1
   r2' = getRewrite r2
 
--- | Apply Down/Up repeatedly  
+-- | Apply Down/Up repeatedly
 down, up :: RewriteRule -> RewriteRule
 down = fix . Down
 up   = fix . Up

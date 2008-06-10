@@ -1,12 +1,9 @@
-{-# LANGUAGE ForeignFunctionInterface #-}
-{-# OPTIONS -cpp #-}
+{-# LANGUAGE CPP, ForeignFunctionInterface #-}
 
 module Resource (ResourceLimit(..), ResourceLimits(..), Resource(..), setResourceLimit) where
 
 #ifndef USE_RESOURCE_WORKAROUND
-
 import System.Posix.Resource
-
 #else
 
 import Foreign

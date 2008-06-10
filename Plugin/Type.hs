@@ -1,4 +1,3 @@
---
 -- |   The Type Module - another progressive plugin for lambdabot
 --
 -- pesco hamburg 2003-04-05
@@ -16,7 +15,6 @@
 --
 --     Well, what do you know, this plugin enables lambdabot to automate
 --     that lookup for you and your fellow lambda hackers.
---
 module Plugin.Type where
 
 import Plugin
@@ -61,7 +59,7 @@ signature_regex
 stripComments :: String -> String
 stripComments []          = []
 stripComments ('\n':_)    = [] -- drop any newwline and rest. *security*
-stripComments ('-':'-':_) = []  -- 
+stripComments ('-':'-':_) = []  --
 stripComments ('{':'-':cs)= stripComments (go 1 cs)
 stripComments (c:cs)      = c : stripComments cs
 
@@ -69,7 +67,7 @@ stripComments (c:cs)      = c : stripComments cs
 go :: Int -> String -> String
 go 0 xs         = xs
 go _ ('-':[])   = []   -- unterminated
-go n ('-':x:xs) 
+go n ('-':x:xs)
     | x == '}'  = go (n-1) xs
     | otherwise = go n (x:xs)
 go _ ('{':[])   = []  -- unterminated
@@ -99,7 +97,7 @@ extract_signatures output
         removeExp :: String -> String
         removeExp [] = []
         removeExp xs = removeExp' 0 xs
-        
+
         removeExp' :: Int -> String -> String
         removeExp' 0 (' ':':':':':' ':_) = []
         removeExp' n ('(':xs)            = '(':removeExp' (n+1) xs
@@ -115,11 +113,11 @@ extract_signatures output
 query_ghci' :: String -> String -> IO String
 query_ghci' cmd expr = do
        imports <- fmap (map (unwords . drop 1 . words)
-                        . filter (null 
-			          . intersect ["as","hiding","qualified"] 
+                        . filter (null
+			          . intersect ["as","hiding","qualified"]
 				  . words)
 		        . filter (isPrefixOf "import")
-		        . lines) 
+		        . lines)
 		       (readFile "imports.h")
        let context = ":l L\n" ++ concatMap ((":m + " ++) . (++"\n")) imports
        (output, errors, _) <- popen (ghci config) ["-v0","-fglasgow-exts","-fno-th","-iState","-iscripts","-XNoMonomorphismRestriction"]
@@ -127,7 +125,7 @@ query_ghci' cmd expr = do
        let ls = extract_signatures output
        return $ if null ls
                 then unlines . take 3 . filter (not . null) . map cleanRE2 .
-                     lines . expandTab . cleanRE . filter (/='\r') $ errors -- "bzzt" 
+                     lines . expandTab . cleanRE . filter (/='\r') $ errors -- "bzzt"
                 else ls
   where
      {-

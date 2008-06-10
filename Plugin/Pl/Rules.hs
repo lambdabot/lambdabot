@@ -1,9 +1,6 @@
-{-# OPTIONS -fvia-C #-}
--- 6.4 gives a name shadow warning I haven't tracked down.
+{-# OPTIONS_GHC -fvia-C #-}
 
---
 -- | This marvellous module contributed by Thomas J\344ger
---
 module Plugin.Pl.Rules (RewriteRule(..), fire, rules) where
 
 import Lib.Serial (readM)
@@ -39,13 +36,13 @@ evalUnary _ _ = Nothing
 assocR, assocL, assoc :: [String] -> Expr -> Maybe Expr
 -- (f `op` g) `op` h --> f `op` (g `op` h)
 assocR ops (Var f1 op1 `App` (Var f2 op2 `App` e1 `App` e2) `App` e3)
-  | op1 == op2 && op1 `elem` ops 
+  | op1 == op2 && op1 `elem` ops
   = Just (Var f1 op1 `App` e1 `App` (Var f2 op2 `App` e2 `App` e3))
 assocR _ _ = Nothing
 
 -- f `op` (g `op` h) --> (f `op` g) `op` h
 assocL ops (Var f1 op1 `App` e1 `App` (Var f2 op2 `App` e2 `App` e3))
-  | op1 == op2 && op1 `elem` ops 
+  | op1 == op2 && op1 `elem` ops
   = Just (Var f1 op1 `App` (Var f2 op2 `App` e1 `App` e2) `App` e3)
 assocL _ _ = Nothing
 
@@ -56,7 +53,7 @@ assoc ops (Var _ "." `App` (Var f1 op1 `App` e1) `App` (Var f2 op2 `App` e2))
 assoc _ _ = Nothing
 
 commutative :: [String] -> Expr -> Maybe Expr
-commutative ops (Var f op `App` e1 `App` e2) 
+commutative ops (Var f op `App` e1 `App` e2)
   | op `elem` ops = Just (Var f op `App` e2 `App` e1)
 commutative ops (Var _ "flip" `App` e@(Var _ op)) | op `elem` ops = Just e
 commutative _ _ = Nothing
@@ -144,7 +141,7 @@ simplifies = Or [
   -- map f . map g -> map (f . g)
   rr0 (\f g -> mapE `a` f `c` mapE `a` g)
       (\f g -> mapE `a` (f `c` g))
-  
+
   ]
 
 onceRewrites :: RewriteRule
@@ -172,7 +169,7 @@ rules :: RewriteRule
 rules = Or [
   -- f (g x) --> (f . g) x
   Hard $
-  rr  (\f g x -> f `a` (g `a` x)) 
+  rr  (\f g x -> f `a` (g `a` x))
       (\f g x -> (f `c` g) `a` x),
   -- (>>=) --> flip (=<<)
   Hard $
@@ -197,7 +194,7 @@ rules = Or [
   Hard $
   rr  (\f g -> flipE `a` (f `c` g))
       (\f g -> (flipE `a` compE `a` g) `c` (flipE `a` f)),
-  -- flip (.) f . flip id --> flip f 
+  -- flip (.) f . flip id --> flip f
   rr  (\f -> (flipE `a` compE `a` f) `c` (flipE `a` idE))
       (\f -> flipE `a` f),
   -- flip (.) f . flip flip --> flip (flip . f)
@@ -206,7 +203,7 @@ rules = Or [
   -- flip (flip (flip . f) g) --> flip (flip . flip f) g
   rr1 (\f g -> flipE `a` (flipE `a` (flipE `c` f) `a` g))
       (\f g -> flipE `a` (flipE `c` flipE `a` f) `a` g),
-  
+
   -- flip (.) id --> id
   rr (flipE `a` compE `a` idE)
      idE,
@@ -265,17 +262,17 @@ rules = Or [
   rr0 (\f -> f `a` (fixE `a` f))
       (\f -> fixE `a` f),
   -- fix f --> f (f (fix x))
-  Hard $ 
+  Hard $
   rr0 (\f -> fixE `a` f)
       (\f -> f `a` (f `a` (fixE `a` f))),
   -- fix (const f) --> f
-  rr (\f -> fixE `a` (constE `a` f)) 
+  rr (\f -> fixE `a` (constE `a` f))
      (\f -> f),
   -- flip const x --> id
   rr  (\x -> flipE `a` constE `a` x)
       (\_ -> idE),
   -- const . f --> flip (const f)
-  Hard $ 
+  Hard $
   rr  (\f -> constE `c` f)
       (\f -> flipE `a` (constE `a` f)),
   -- not (x == y) -> x /= y
@@ -349,9 +346,9 @@ rules = Or [
   Hard $
   rr (\f -> extE `c` flipE `a` (fmapE `c` f))
      (\f -> flipE `a` liftM2E `a` f),
-  
+
   -- (.) -> fmap
-  Hard $ 
+  Hard $
   rr compE fmapE,
 
   -- map f (zip xs ys) --> zipWith (curry f) xs ys
@@ -418,7 +415,7 @@ rules = Or [
   rr (\p q -> seqME `a` p `a` q)
      (\p q -> extE `a` (constE `a` q) `a` p),
 
-  -- experimental support for Control.Arrow stuff 
+  -- experimental support for Control.Arrow stuff
   -- (costs quite a bit of performace)
   -- uncurry ((. g) . (,) . f) --> f *** g
   rr (\f g -> uncurryE `a` ((flipE `a` compE `a` g) `c` commaE `c` f))
@@ -446,7 +443,7 @@ rules = Or [
   rr (\x -> consE `a` x `a` nilE)
      (\x -> returnE `a` x),
   -- list destructors
-  Hard $ 
+  Hard $
   If (Or [rr consE consE, rr nilE nilE]) $ Or [
     down $ Or [
       -- length [] --> 0
@@ -563,4 +560,3 @@ binaryBuiltins = [
     ("&&",   BA ((&&) :: Bool -> Bool -> Bool)),
     ("||",   BA ((||) :: Bool -> Bool -> Bool))
   ]
-

@@ -1,9 +1,6 @@
---
 -- Copyright (c) 2004-5 Don Stewart - http://www.cse.unsw.edu.au/~dons
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
---
 
---
 -- | Boot loader for lambdabot.
 -- This is a small stub that loads the dynamic code, then jumps to it.
 -- It solves the problem of unnecessary code linking.  As such, we only
@@ -14,8 +11,7 @@
 -- This is the only module that depends on -package plugins.
 --
 -- Compile with:
---      ghc-6.4 -fglasgow-exts -package plugins -main-is Boot.main Boot.hs
---
+--      ghc -fglasgow-exts -package plugins -main-is Boot.main Boot.hs
 
 module Boot ( main ) where
 
@@ -39,11 +35,10 @@ lambdaPath = "./dist/build/"
 mainSym :: Symbol
 mainSym  = "dynmain"        -- main entry point
 
--- | get a handle to Main.dynamic_main, and jump to it. 6.2.2 will need posix.
+-- | get a handle to Main.dynamic_main, and jump to it.
 --
 -- todo, link statically and dynamically, a module with a Module type we
 -- can convert hs-plugins type to.
---
 main :: IO ()
 main = do
     status  <- load lambdabotMain [lambdaPath] [] mainSym
@@ -90,10 +85,8 @@ hsplugins = S.DynLoad {
         S.unload     = dUnload
     }
 
---
 -- map module paths to hs-plugins' Module type. Saves us linking
 -- hs-plugins statically and dynamically (code bloat)
---
 modules :: IORef (Map FilePath Module)
 modules = unsafePerformIO $ newIORef (M.empty)
 {-# NOINLINE modules #-}

@@ -1,4 +1,4 @@
-{-# OPTIONS -cpp #-}
+{-# LANGUAGE CPP #-}
 --
 -- | The guts of lambdabot.
 --
@@ -71,9 +71,7 @@ import Control.Monad.Reader
 import Control.Monad.State
 import Control.Monad.Trans      ( liftIO )
 
-#if __GLASGOW_HASKELL__ >= 605
 import GHC.Err
-#endif
 
 #ifdef mingw32_HOST_OS
 -- compatability shim
@@ -132,7 +130,7 @@ data IRCRWState = IRCRWState {
 -- The virtual chat system sits between the chat drivers and the rest of
 -- Lambdabot.  It provides a mapping between the String server "tags" and
 -- functions which are able to handle sending messages.
--- 
+--
 -- When a message is recieved, the chat module is expected to call
 -- `LMain.received'.  This is not ideal.
 
@@ -235,7 +233,7 @@ evalLB (LB lb) rs rws = do
     ref  <- newIORef rws
     lb `runReaderT` (rs,ref)
 
--- May wish to add more things to the things caught, or restructure things 
+-- May wish to add more things to the things caught, or restructure things
 -- a bit. Can't just catch everything - in particular EOFs from the socket
 -- loops get thrown to this thread and we musn't just ignore them.
 handleIrc :: MonadError IRCError m => (IRCError -> m ()) -> m () -> m ()
@@ -313,9 +311,7 @@ initState ld plugins evcmds = IRCRWState {
         ircOnStartupCmds   = evcmds
     }
 
---
 -- Actually, this isn't a loop anymore.  FIXME: better name.
---
 mainLoop :: LB ()
 mainLoop = do
 
@@ -350,7 +346,7 @@ flushModuleState = do
 ------------------------------------------------------------------------
 
 -- | The Module type class.
--- Minimal complete definition: @moduleHelp@, @moduleCmds@, and 
+-- Minimal complete definition: @moduleHelp@, @moduleCmds@, and
 -- either @process@ or @process_@
 class Module m s | m -> s where
     -- | If the module wants its state to be saved, this function should
@@ -362,7 +358,7 @@ class Module m s | m -> s where
     -- | If the module maintains state, this method specifies the default state
     --   (for example in case the state can't be read from a state).
     --
-    --   The default implementation returns an error and assumes the state is 
+    --   The default implementation returns an error and assumes the state is
     --   never accessed.
     moduleDefState  :: m -> LB s
 
@@ -444,7 +440,7 @@ data MODULE = forall m s. (Module m s) => MODULE m
 data ModuleRef = forall m s. (Module m s) => ModuleRef m (MVar s) String
 
 --
--- | This transformer encodes the additional information a module might 
+-- | This transformer encodes the additional information a module might
 --   need to access its name or its state.
 --
 newtype ModuleT s m a = ModuleT { moduleT :: ReaderT (MVar s, String) m a }
@@ -578,7 +574,7 @@ ircUnload mod = do
 ------------------------------------------------------------------------
 
 ircSignalConnect :: String -> Callback -> ModuleT s LB ()
-ircSignalConnect str f = do 
+ircSignalConnect str f = do
     s <- get
     let cbs = ircCallbacks s
     name <- getName
