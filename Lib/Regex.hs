@@ -1,20 +1,21 @@
+{-# LANGUAGE CPP #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Lib.Regex
 -- Copyright   :  (c) Don Stewart 2007
 -- License     :  GPL (see LICENSE)
--- 
+--
 -- Maintainer  :  dons@cse.unsw.edu.au
 --
 -----------------------------------------------------------------------------
 
 module Lib.Regex (
         -- ByteString interface
-        regex,      -- :: ByteString -> Regex 
+        regex,      -- :: ByteString -> Regex
         matches,    -- :: Regex -> ByteString -> Bool
 
         -- String interface
-        regex',     -- :: String -> Regex 
+        regex',     -- :: String -> Regex
         matches',   -- :: Regex -> String -> Bool
 
         -- and the underlying module

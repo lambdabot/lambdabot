@@ -14,28 +14,65 @@ Description:         Lambdabot is an IRC bot written over several years by
                      It operates as a command line tool, embedded in an editor,
                      embedded in GHCi, via internet relay chat and on the web.
 Homepage:            http://haskell.org/haskellwiki/Lambdabot
-Build-Depends:       base, unix, network, parsec, mtl, haskell-src,
-                     readline, QuickCheck, smallcheck, arrows, containers,
-                     regex-compat, regex-posix, zlib, binary>=0.2,
-                     plugins>=1.0, bytestring, old-time,
-                     random, process, directory, array, pretty,
-                     parallel, numbers, brainfuck, unlambda, oeis
+-- Build-Depends:       base, unix, network, parsec, mtl, haskell-src,
+--                      readline, QuickCheck, smallcheck, arrows, containers,
+--                      regex-compat, regex-posix, zlib, binary>=0.2,
+--                      plugins>=1.0, bytestring, old-time,
+--                      random, process, directory, array, pretty,
+--                      parallel, numbers, brainfuck, unlambda, oeis
 build-type:          Simple
+Cabal-Version:       >= 1.2
 
+Library
+        Build-depends:   base, haskell-src, containers, zlib, bytestring, mtl,
+                         regex-compat, regex-posix, process, network, old-time, binary, unix, random
+        Exposed-modules: Lib.FixPrecedence, Lib.Serial,
+                         Lib.Error, Lib.Url, Lib.Process,
+                         Lib.Regex, Lib.MiniHTTP, Lib.AltTime,
+                         Lib.Pointful, Lib.Parser, Lib.Signals,
+                         Lib.Util
 
 -- first build the preprocessor
-Executable:          BotPP
-hs-source-dirs:      scripts/
-Main-is:             BotPP.hs
-ghc-options:         -funbox-strict-fields
+Executable          BotPP
+    hs-source-dirs:      scripts/
+    Main-is:             BotPP.hs
+    ghc-options:         -funbox-strict-fields
+
 
 -- Lambdabot main
-Executable:          lambdabot
-Main-is:             Main.hs
-extensions:          CPP
-ghc-options:         -Wall -Werror -fglasgow-exts -pgmF dist/build/BotPP/BotPP -F -H64m -funbox-strict-fields -fno-warn-incomplete-patterns -fno-warn-missing-methods -fno-warn-orphans -threaded
-include-dirs:        .
+Executable          lambdabot
+    Build-depends:       directory, pretty, parsec, array, readline, oeis,
+                         -- runtime dependencies
+                         brainfuck, unlambda
+    Main-is:             Main.hs
+    extensions:          CPP
+    ghc-options:         -Wall -Werror -fglasgow-exts -pgmF dist/build/BotPP/BotPP -F -H64m -funbox-strict-fields -fno-warn-incomplete-patterns -fno-warn-missing-methods -fno-warn-orphans -threaded
+    include-dirs:        .
 -- For a faster build use add -Onot
+
+-- check
+Executable          smallcheck
+    build-depends:       smallcheck
+    hs-source-dirs:      scripts/
+    ghc-options:         -funbox-strict-fields
+    Main-is:             SmallCheck.hs
+
+-- check
+Executable          quickcheck
+    build-depends:       QuickCheck, plugins
+    hs-source-dirs:      scripts/
+    ghc-options:         -funbox-strict-fields
+    Main-is:             QuickCheck.hs
+
+
+-- runplugs
+Executable          runplugs
+    hs-source-dirs:      scripts/
+    ghc-options:         -funbox-strict-fields
+    Main-is:             RunPlugs.hs
+
+------------------------------------------------------------------------
+-- The following only work if plugins are enabled
 
 -- And a dynamically linked lambdabot
 -- Not quite there yet. The problem is how to recompile Modules.hs with
@@ -47,23 +84,3 @@ include-dirs:        .
 --ghc-options:        -main-is Boot.main -Wall -Werror -fglasgow-exts -H64m -Onot -fasm -threaded
 --ghc-options:         -Wall -Werror -fglasgow-exts -funbox-strict-fields -threaded
 
--- check
-Executable:          quickcheck
-hs-source-dirs:      scripts/
-ghc-options:         -funbox-strict-fields
-Main-is:             QuickCheck.hs
-
--- check
-Executable:          smallcheck
-hs-source-dirs:      scripts/
-ghc-options:         -funbox-strict-fields
-Main-is:             SmallCheck.hs
-
-------------------------------------------------------------------------
--- The following only work if plugins are enabled
-
--- runplugs
-Executable:          runplugs
-hs-source-dirs:      scripts/
-ghc-options:         -funbox-strict-fields
-Main-is:             RunPlugs.hs

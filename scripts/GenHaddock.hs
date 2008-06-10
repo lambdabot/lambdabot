@@ -7,7 +7,7 @@ import Data.List
 
 main :: IO ()
 main = do
-    system $ "wget -nc -r -l 1 "++
+    system $ "wget -nc "++
       "http://haskell.org/ghc/docs/latest/html/libraries/doc-index.html"
     dir   <- getCurrentDirectory
     let filesdir = dir ++ "/haskell.org/ghc/docs/latest/html/libraries/"
@@ -22,10 +22,10 @@ getAssocs file = do
   cont <- lines `fmap` readFile file
   let isKey str = "><TD CLASS=\"indexentry\"" `isPrefixOf` str
       sections = tail $ groupBy (const $ not . isKey) cont
-  return $ do 
+  return $ do
     s <- sections
     let key = clean $ (reverse . drop 4 . reverse . drop 1) (s !! 1)
-    let values = map (reverse . drop 3 . reverse . drop 1) $ 
+    let values = map (reverse . drop 3 . reverse . drop 1) $
           filter ("</A"`isSuffixOf`) s
     return (key,values)
 

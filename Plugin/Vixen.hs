@@ -1,9 +1,8 @@
---
 -- | Talk to hot chixxors.
---
+
 -- (c) Mark Wotton
 -- Serialisation (c) 2007 Don Stewart
---
+
 module Plugin.Vixen where
 
 -- import Data.Int (for code to read old state data)
@@ -106,7 +105,7 @@ instance Binary OldChoice where
           getPair = liftM2 (,)
 
           getBS   = getShort >>= getByteString
-          
+
           getWTree = do
             tag <- getWord8
             case tag of

@@ -1,3 +1,5 @@
+{-# LANGUAGE Rank2Types #-}
+
 -- Haskell expression parser.  Big hack, but only uses documented APIs so it
 -- should be more robust than the previous hack.
 module Lib.Parser (parseExpr, parseDecl, withParsed, prettyPrintInLine) where
@@ -21,10 +23,10 @@ parseExpr s
   where
     prefix  = "module Main where { main = ("
     wrapped = prefix ++ s ++ "\n)}"
-    
+
     unparen (HsParen e) = e
     unparen e           = e
-    
+
     -- balanced (open-parentheses) (previous-character) (remaining-string)
     balanced :: Int -> Char -> String -> Bool
     balanced n _ ""           = n == 0
@@ -37,7 +39,7 @@ parseExpr s
       | not (isSymbol p)      = n == 0
     balanced n _ ('{':'-':cs) =           balancedComment 1 n cs
     balanced n _ (c  :cs)     =           balanced n     c   cs
-    
+
     balancedString :: Char -> Int -> String -> Bool
     balancedString _     n ""          = n == 0 -- the parse error will be reported by L.H.Parser
     balancedString delim n ('\\':c:cs)
@@ -48,7 +50,7 @@ parseExpr s
     balancedString delim n (c     :cs)
       | delim == c                     = balanced n c cs
       | otherwise                      = balancedString delim n cs
-   
+
     balancedComment :: Int -> Int -> String -> Bool
     balancedComment 0 n cs           = balanced n ' ' cs
     balancedComment _ _ ""           = True -- the parse error will be reported by L.H.Parser

@@ -1,9 +1,9 @@
---
+{-# LANGUAGE PatternGuards #-}
+
 -- TODO: How do I avoid threading the 'proxy' argument to the various
--- functions in here?  
---
+-- functions in here?
+
 -- | URL Utility Functions
---
 
 module Lib.Url (
     getHtmlPage,
@@ -34,7 +34,7 @@ maxTitleLength = 80
 replace :: [(String, String)] -> String -> String
 replace [] s = s
 replace (pair:pairs) s = replace pairs (f pair)
-    where 
+    where
       f :: (String, String) -> String
       f (from, to) = subRegex (mkRegex from) s to
 
@@ -47,7 +47,7 @@ replace (pair:pairs) s = replace pairs (f pair)
 urlPageTitle :: String -> Proxy -> IO (Maybe String)
 urlPageTitle url proxy = do
     title <- rawPageTitle url proxy
-    return $ maybe Nothing (return . prettyTitle . unhtml . urlDecode) title 
+    return $ maybe Nothing (return . prettyTitle . unhtml . urlDecode) title
     where
       limitLength s
           | length s > maxTitleLength = (take maxTitleLength s) ++ " ..."
@@ -86,7 +86,7 @@ getHtmlPage u p = getHtmlPage' u p 5
   where
   getHtmlPage' :: URI -> Proxy -> Int -> IO [String]
   getHtmlPage' _   _     0 = return []
-  getHtmlPage' uri proxy n = do 
+  getHtmlPage' uri proxy n = do
     contents <- getURIContents uri proxy
     case responseStatus contents of
       301       -> getHtmlPage' (redirectedUrl contents) proxy (n-1)
@@ -99,17 +99,17 @@ getHtmlPage u p = getHtmlPage' u p 5
       responseStatus hdrs = (read . (!!1) . words . (!!0)) hdrs :: Int
 
       -- | Return the value of the "Location" header in the server
-      -- response 
-      redirectedUrl hdrs 
-          | Just loc <- getHeader "Location" hdrs = 
+      -- response
+      redirectedUrl hdrs
+          | Just loc <- getHeader "Location" hdrs =
               case parseURI loc of
                 Nothing   -> (fromJust . parseURI) $ fullUrl loc
                 Just uri' -> uri'
           | otherwise = error("No Location header found in 3xx response.")
 
-      -- | Construct a full absolute URL based on the current uri.  This is 
-      -- used when a Location header violates the HTTP RFC and does not send  
-      -- an absolute URI in the response, instead, a relative URI is sent, so 
+      -- | Construct a full absolute URL based on the current uri.  This is
+      -- used when a Location header violates the HTTP RFC and does not send
+      -- an absolute URI in the response, instead, a relative URI is sent, so
       -- we must manually construct the absolute URI.
       fullUrl loc = let auth = fromJust $ uriAuthority uri
                     in (uriScheme uri) ++ "//" ++
@@ -164,7 +164,7 @@ isTextHtml contents = val == "text/html"
 -- | Retrieve the specified header from the server response being
 -- careful to strip the trailing carriage return.  I swiped this code
 -- from Search.hs, but had to modify it because it was not properly
--- stripping off the trailing CR (must not have manifested itself as a 
+-- stripping off the trailing CR (must not have manifested itself as a
 -- bug in that code; however, parseURI will fail against CR-terminated
 -- strings.
 getHeader :: String -> [String] -> Maybe String

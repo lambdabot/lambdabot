@@ -1,4 +1,4 @@
-{-# OPTIONS -cpp #-}
+{-# LANGUAGE CPP, DeriveDataTypeable #-}
 --
 -- | The signal story.
 --
@@ -44,7 +44,7 @@ newtype SignalException = SignalException Signal deriving Typeable
 
 --
 -- A bit of sugar for installing a new handler
--- 
+--
 withHandler :: (MonadIO m,MonadError e m) => Signal -> Handler -> m () -> m ()
 withHandler s h m
   = bracketError (io (installHandler s h Nothing))
