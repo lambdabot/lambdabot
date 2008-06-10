@@ -18,7 +18,7 @@ import System.Random
 import System.Exit              (exitWith, ExitCode(ExitSuccess))
 import System.IO                (getContents, putStrLn)
 import Resource
-import SmallCheck
+import Test.SmallCheck
 
 import qualified Control.Exception
 
@@ -26,9 +26,9 @@ main = do
     setResourceLimit ResourceCPUTime $ ResourceLimits (ResourceLimit 5) (ResourceLimit 5)
     s <- getLine
     context <- fmap ((["L", "SmallCheck"]++)
-                     . map (unwords . drop 1 . words) 
+                     . map (unwords . drop 1 . words)
 		     . filter (isPrefixOf "import")
-		     . lines) 
+		     . lines)
 		    (readFile "imports.h")
     when (not . null $ s) $ do
         x <- sequence (take 3 (repeat $ getStdRandom (randomR (97,122)) >>= return . chr))

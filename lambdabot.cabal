@@ -15,7 +15,7 @@ Description:         Lambdabot is an IRC bot written over several years by
                      embedded in GHCi, via internet relay chat and on the web.
 Homepage:            http://haskell.org/haskellwiki/Lambdabot
 Build-Depends:       base, unix, network, parsec, mtl, haskell-src,
-                     readline, QuickCheck, arrows, containers,
+                     readline, QuickCheck, smallcheck, arrows, containers,
                      regex-compat, regex-posix, zlib, binary>=0.2,
                      plugins>=1.0, bytestring, old-time,
                      random, process, directory, array, pretty,
