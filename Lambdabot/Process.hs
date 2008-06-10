@@ -1,10 +1,8 @@
---
 -- Copyright (c) 2004-6 Don Stewart - http://www.cse.unsw.edu.au/~dons
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
---
+
 -- | A Posix.popen compatibility mapping.
---
-module Lib.Process (popen, run) where
+module Lambdabot.Process (popen, run) where
 
 import System.Exit
 import System.IO

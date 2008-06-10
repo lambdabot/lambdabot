@@ -6,7 +6,7 @@
 module Plugin.Undo where
 
 import Plugin
-import Lib.Parser
+import Lambdabot.Parser
 import Language.Haskell.Syntax hiding (Module)
 import Data.Generics
 import qualified Data.Set as Set
@@ -42,11 +42,11 @@ undo v (HsDo stms) = f stms
     f [HsQualifier e]          = e
     f (HsQualifier e     : xs) = infixed e ">>" $ f xs
     f (HsLetStmt   ds    : xs) = HsLet ds $ f xs
-    f (HsGenerator s p e : xs) 
+    f (HsGenerator s p e : xs)
         | irrefutable p = infixed e ">>=" $ HsLambda s [p] $ f xs
-        | otherwise     = infixed e ">>=" $ 
-                            HsLambda s [pvar v] $ 
-                                HsCase (var v) 
+        | otherwise     = infixed e ">>=" $
+                            HsLambda s [pvar v] $
+                                HsCase (var v)
                                     [ alt p (f xs)
                                     , alt HsPWildCard $
                                         HsApp
@@ -59,11 +59,11 @@ undo v (HsListComp e stms) = f stms
     f []                       = HsList [e]
     f (HsQualifier g     : xs) = HsIf g (f xs) nil
     f (HsLetStmt   ds    : xs) = HsLet ds $ f xs
-    f (HsGenerator s p l : xs) 
+    f (HsGenerator s p l : xs)
         | irrefutable p = concatMap' $ HsLambda s [p] $ f xs
-        | otherwise     = concatMap' $ 
-                            HsLambda s [pvar v] $ 
-                                HsCase (var v) 
+        | otherwise     = concatMap' $
+                            HsLambda s [pvar v] $
+                                HsCase (var v)
                                     [ alt p (f xs)
                                     , alt HsPWildCard nil
                                     ]
@@ -94,7 +94,7 @@ pvar = HsPVar . HsIdent
 
 redo :: String -> HsExp -> HsExp
 redo _ (HsLet ds (HsDo s)) = HsDo (HsLetStmt ds : s)
-redo v e@(HsInfixApp l (HsQVarOp (UnQual (HsSymbol op))) r) = 
+redo v e@(HsInfixApp l (HsQVarOp (UnQual (HsSymbol op))) r) =
     case op of
         ">>=" ->
             case r of

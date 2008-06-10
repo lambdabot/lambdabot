@@ -3,7 +3,7 @@ module Plugin.Pl.PrettyPrinter (Expr) where
 
 -- Dummy export to make ghc -Wall happy
 
-import Lib.Serial (readM)
+import Lambdabot.Serial (readM)
 import Plugin.Pl.Common
 
 instance Show Decl where
@@ -30,7 +30,7 @@ data SExpr
 {-# INLINE toSExprHead #-}
 toSExprHead :: String -> [Expr] -> Maybe SExpr
 toSExprHead hd tl
-  | all (==',') hd, length hd+1 == length tl 
+  | all (==',') hd, length hd+1 == length tl
   = Just . Tuple . reverse $ map toSExpr tl
   | otherwise = case (hd,reverse tl) of
       ("enumFrom", [e])              -> Just $ Enum e Nothing   Nothing
@@ -49,13 +49,13 @@ toSExpr e | Just (hd,tl) <- getHead e, Just se <- toSExprHead hd tl = se
 toSExpr e | (ls, tl) <- getList e, tl == nil
   = List $ map toSExpr ls
 toSExpr (App e1 e2) = case e1 of
-  App (Var Inf v) e0 
+  App (Var Inf v) e0
     -> SInfix v (toSExpr e0) (toSExpr e2)
   Var Inf v | v /= "-"
     -> LeftSection v (toSExpr e2)
 
   Var _ "flip" | Var Inf v <- e2, v == "-" -> toSExpr $ Var Pref "subtract"
-    
+
   App (Var _ "flip") (Var pr v)
     | v == "-"  -> toSExpr $ Var Pref "subtract" `App` e2
     | v == "id" -> RightSection "$" (toSExpr e2)
@@ -72,33 +72,33 @@ instance Show Expr where
 
 instance Show SExpr where
   showsPrec _ (SVar v) = (getPrefName v ++)
-  showsPrec p (SLambda vs e) = showParen (p > minPrec) $ ('\\':) . 
+  showsPrec p (SLambda vs e) = showParen (p > minPrec) $ ('\\':) .
     foldr (.) id (intersperse (' ':) (map (showsPrec $ maxPrec+1) vs)) .
     (" -> "++) . showsPrec minPrec e
   showsPrec p (SApp e1 e2) = showParen (p > maxPrec) $
     showsPrec maxPrec e1 . (' ':) . showsPrec (maxPrec+1) e2
-  showsPrec _ (LeftSection fx e) = showParen True $ 
+  showsPrec _ (LeftSection fx e) = showParen True $
     showsPrec (snd (lookupFix fx) + 1) e . (' ':) . (getInfName fx++)
-  showsPrec _ (RightSection fx e) = showParen True $ 
+  showsPrec _ (RightSection fx e) = showParen True $
     (getInfName fx++) . (' ':) . showsPrec (snd (lookupFix fx) + 1) e
   showsPrec _ (Tuple es) = showParen True $
     (concat `id` intersperse ", " (map show es) ++)
-  
-  showsPrec _ (List es) 
+
+  showsPrec _ (List es)
     | Just cs <- mapM ((=<<) readM . fromSVar) es = shows (cs::String)
-    | otherwise = ('[':) . 
+    | otherwise = ('[':) .
       (concat `id` intersperse ", " (map show es) ++) . (']':)
     where fromSVar (SVar str) = Just str
           fromSVar _          = Nothing
-  showsPrec _ (Enum fr tn to) = ('[':) . shows fr . 
-    showsMaybe (((',':) . show) `fmap` tn) . (".."++) . 
+  showsPrec _ (Enum fr tn to) = ('[':) . shows fr .
+    showsMaybe (((',':) . show) `fmap` tn) . (".."++) .
     showsMaybe (show `fmap` to) . (']':)
       where showsMaybe = maybe id (++)
   showsPrec _ (SLet ds e) = ("let "++) . shows ds . (" in "++) . shows e
 
 
   showsPrec p (SInfix fx e1 e2) = showParen (p > fixity) $
-    showsPrec f1 e1 . (' ':) . (getInfName fx++) . (' ':) . 
+    showsPrec f1 e1 . (' ':) . (getInfName fx++) . (' ':) .
     showsPrec f2 e2 where
       fixity = snd $ lookupFix fx
       (f1, f2) = case fst $ lookupFix fx of
@@ -120,7 +120,7 @@ instance Show Pattern where
     showsPrec 0 p1 . (", "++) . showsPrec 0 p2
   showsPrec p (PCons p1 p2) = showParen (p>5) $
     showsPrec 6 p1 . (':':) . showsPrec 5 p2
-  
+
 isOperator :: String -> Bool
 isOperator = all (`elem` opchars)
 

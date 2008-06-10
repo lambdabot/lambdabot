@@ -15,7 +15,7 @@ module LBState (
   ) where
 
 import Lambdabot
-import Lib.Util            (withMWriter, timeout)
+import Lambdabot.Util            (withMWriter, timeout)
 
 import Control.Concurrent
 import Control.Monad.Reader
@@ -57,12 +57,12 @@ modifyMS f = getRef >>= liftIO . flip modifyMVar_ (return . f)
 
 -- | Write the module's private state. Try to use withMS instead.
 writeMS :: s -> ModuleT s LB ()
-writeMS (x :: s) = modifyMS . const $ x     -- need to help out 6.5 
+writeMS (x :: s) = modifyMS . const $ x     -- need to help out 6.5
 
--- | This datatype allows modules to conviently maintain both global 
+-- | This datatype allows modules to conviently maintain both global
 --   (i.e. for all clients they're interacting with) and private state.
 --   It is implemented on top of readMS\/withMS.
--- 
+--
 -- This simple implementation is linear in the number of private states used.
 data GlobalPrivate g p = GP {
   global :: !g,
@@ -98,7 +98,7 @@ readPS = accessPS (liftIO . readMVar) (\_ -> return Nothing)
 -- which take an MVar and an action producing a @Nothing@ MVar, respectively.
 accessPS :: (MVar (Maybe p) -> LB a) -> (LB (MVar (Maybe p)) -> LB a) -> Nick
   -> ModuleT (GlobalPrivate g p) LB a
-accessPS success failure who = withMS $ \state writer -> 
+accessPS success failure who = withMS $ \state writer ->
   case lookup who $ private state of
     Just mvar -> do
       let newPrivate = (who,mvar):

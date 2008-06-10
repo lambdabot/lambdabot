@@ -3,7 +3,7 @@ module Plugin.Pointful (theModule) where
 
 import Plugin
 
-import Lib.Pointful
+import Lambdabot.Pointful
 
 type PfState = ()
 

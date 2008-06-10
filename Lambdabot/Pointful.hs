@@ -1,12 +1,13 @@
 {-# OPTIONS -fno-warn-missing-signatures #-}
-module Lib.Pointful (pointful, ParseResult(..), test, main, combinatorModule) where
+module Lambdabot.Pointful (pointful, ParseResult(..), test, main, combinatorModule) where
 
-import Lib.Parser
+import Lambdabot.Parser
+
+import Control.Monad.State
+import Data.Generics
+import Data.Maybe
 import Language.Haskell.Parser
 import Language.Haskell.Syntax
-import Data.Generics
-import Control.Monad.State
-import Data.Maybe
 import qualified Data.Map as M
 
 ---- Utilities ----
@@ -90,7 +91,7 @@ fresh = do (_,    used) <- get
            return name
 
 -- rename all lambda-bound variables. TODO: rewrite lets as well
-rename = do everywhereM (mkM (\e -> case e of 
+rename = do everywhereM (mkM (\e -> case e of
               (HsLambda _ ps _) -> do
                 let pVars = concatMap pVarsIn ps
                 newVars <- mapM (const fresh) pVars
@@ -163,7 +164,7 @@ pointful = withParsed (optimize . uncomb)
 
 test s = case parseModule s of
   f@(ParseFailed _ _) -> fail (show f)
-  ParseOk (HsModule _ _ _ _ defs) -> 
+  ParseOk (HsModule _ _ _ _ defs) ->
     flip mapM_ defs $ \def -> do
       putStrLn . prettyPrintInLine  $ def
       putStrLn . prettyPrintInLine  . uncomb $ def

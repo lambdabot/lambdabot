@@ -5,7 +5,7 @@ import Lambdabot
 import Message
 import IRCBase
 
-import Lib.Util( listToMaybeAll )
+import Lambdabot.Util( listToMaybeAll )
 
 import qualified Data.Map as M
 

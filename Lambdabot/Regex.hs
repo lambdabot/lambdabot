@@ -1,14 +1,14 @@
 -----------------------------------------------------------------------------
 -- |
--- Module      :  Lib.Regex
+-- Module      :  Lambdabot.Regex
 -- Copyright   :  (c) Don Stewart 2007
 -- License     :  GPL (see LICENSE)
 --
--- Maintainer  :  dons@cse.unsw.edu.au
+-- Maintainer  :  dons@galois.com
 --
 -----------------------------------------------------------------------------
 
-module Lib.Regex (
+module Lambdabot.Regex (
         -- ByteString interface
         regex,      -- :: ByteString -> Regex
         matches,    -- :: Regex -> ByteString -> Bool

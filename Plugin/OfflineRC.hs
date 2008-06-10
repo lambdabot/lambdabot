@@ -14,7 +14,7 @@ import Control.Monad.Reader( asks )
 import Control.Monad.State( get, gets, put )
 import Control.Concurrent( forkIO )
 import Control.Concurrent.MVar( readMVar )
-import Lib.Error( finallyError )
+import Lambdabot.Error( finallyError )
 import Control.Exception( evaluate )
 
 import Config
@@ -40,7 +40,7 @@ PLUGIN OfflineRC
 -- We need to track the number of active sourcings so that we can
 -- unregister the server (-> allow the bot to quit) when it is not
 -- being used.
-type OfflineRC = ModuleT Integer LB 
+type OfflineRC = ModuleT Integer LB
 
 instance Module OfflineRCModule Integer where
     modulePrivs  _         = ["offline", "rc"]

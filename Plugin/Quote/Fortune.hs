@@ -4,8 +4,8 @@
 module Plugin.Quote.Fortune where
 
 import Config
-import Lib.Util (stdGetRandItem, split)
-import qualified Lib.Util hiding (stdGetRandItem)
+import Lambdabot.Util (stdGetRandItem, split)
+import qualified Lambdabot.Util hiding (stdGetRandItem)
 
 import Data.List
 import Control.Monad

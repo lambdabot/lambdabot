@@ -1,7 +1,5 @@
---
 -- | Error utilities
---
-module Lib.Error where
+module Lambdabot.Error where
 
 import Control.Monad       (liftM)
 import Control.Monad.Error (MonadError (..))

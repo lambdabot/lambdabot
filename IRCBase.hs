@@ -12,8 +12,8 @@ module IRCBase ( IrcMessage(..)
                ) where
 
 import Message
-import Lib.Util (split, breakOnGlue, clean)
-import qualified Lib.Util as Util (concatWith) 
+import Lambdabot.Util (split, breakOnGlue, clean)
+import qualified Lambdabot.Util as Util (concatWith)
 
 import Data.Char (chr,isSpace)
 
@@ -116,7 +116,7 @@ names svr chans = mkMessage svr "NAMES" [Util.concatWith "," chans]
 -- the @localtime-reply plugin, which then passes the output to
 -- the appropriate client.
 timeReply :: IrcMessage -> IrcMessage
-timeReply msg    = 
+timeReply msg    =
    IrcMessage { msgPrefix  = msgPrefix (msg)
               , msgServer  = msgServer (msg)
               , msgLBName  = msgLBName (msg)

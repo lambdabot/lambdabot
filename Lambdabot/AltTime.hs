@@ -1,7 +1,5 @@
---
 -- | Time compatibility layer
---
-module Lib.AltTime (
+module Lambdabot.AltTime (
     ClockTime,
     getClockTime, diffClockTimes, addToClockTime, timeDiffPretty,
     module System.Time
@@ -22,7 +20,7 @@ import qualified System.Time as T
 newtype ClockTime = ClockTime (T.ClockTime)
 
 instance Eq ClockTime where
-    ClockTime (T.TOD x1 y1) == ClockTime (T.TOD x2 y2) = 
+    ClockTime (T.TOD x1 y1) == ClockTime (T.TOD x2 y2) =
         x1 == x2 && y1 == y2
 
 instance Show ClockTime where

@@ -3,7 +3,7 @@
 -- | This marvellous module contributed by Thomas J\344ger
 module Plugin.Pl.Rules (RewriteRule(..), fire, rules) where
 
-import Lib.Serial (readM)
+import Lambdabot.Serial (readM)
 
 import Plugin.Pl.Common
 import Plugin.Pl.RuleLib

@@ -9,7 +9,7 @@
 module Plugin.Eval where
 
 import Plugin
-import Lib.Parser
+import Lambdabot.Parser
 import Language.Haskell.Parser
 import Language.Haskell.Syntax hiding (Module)
 import qualified Text.Regex as R
@@ -68,7 +68,7 @@ plugs src = do
 
 define :: String -> IO String
 define src = case parseModule (src ++ "\n") of -- extra \n so comments are parsed correctly
-    (ParseOk (HsModule _ _ (Just [HsEVar (UnQual (HsIdent "main"))]) [] ds)) 
+    (ParseOk (HsModule _ _ (Just [HsEVar (UnQual (HsIdent "main"))]) [] ds))
         | all okay ds -> comp (Just src)
     (ParseFailed _ e) -> return $ " " ++ e
     _                 -> return "Invalid declaration"
@@ -117,7 +117,7 @@ comp src = do
 -- 2
 -- lambdabot> let type Z = Int
 -- Defined.
--- lambdabot> let newtype P = P Int 
+-- lambdabot> let newtype P = P Int
 -- Defined.
 -- lambdabot> > L.P 1 :: L.P
 --  add an instance declaration for (Show L.P)

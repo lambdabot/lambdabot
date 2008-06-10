@@ -14,9 +14,9 @@ import qualified Message as Msg
 
 import Control.Monad (when)
 import qualified Data.Map as M
-import System.Time  
-import Lib.Util ( timeStamp )
-import System.Directory (createDirectoryIfMissing) 
+import System.Time
+import Lambdabot.Util ( timeStamp )
+import System.Directory (createDirectoryIfMissing)
 
 -- ------------------------------------------------------------------------
 
@@ -170,7 +170,7 @@ getDate :: Channel -> Log DateStamp
 getDate c = fmap chanDate . getChannel $ c
 
 getHandle :: Channel -> Log Handle
-getHandle c = fmap chanHandle . getChannel $ c 
+getHandle c = fmap chanHandle . getChannel $ c
     -- add points. otherwise:
     -- Unbound implicit parameters (?ref::GHC.IOBase.MVar LogState, ?name::String)
     --  arising from instantiating a type signature at
@@ -180,10 +180,10 @@ getHandle c = fmap chanHandle . getChannel $ c
 {-getHistory :: Channel -> Log [Event]
 getHistory = fmap chanHistory . getChannel-}
 
--- | Put a DateStamp and a Handle. Used by 'openChannelFile' and 
+-- | Put a DateStamp and a Handle. Used by 'openChannelFile' and
 --  'reopenChannelMaybe'.
 putHdlAndDS :: Channel -> Handle -> DateStamp -> Log ()
-putHdlAndDS c hdl ds = 
+putHdlAndDS c hdl ds =
   modifyMS (M.adjust (\(CS _ _ his) -> CS hdl ds his) c)
 
 -- | Append an event to the history of a channel
@@ -196,7 +196,7 @@ appendEvent c e =
 
 -- | Open a file to write the log to.
 openChannelFile :: Channel -> ClockTime -> Log Handle
-openChannelFile chan ct = 
+openChannelFile chan ct =
     io $ createDirectoryIfMissing True dir >> openFile file AppendMode
     where dir  = outputDir config </> "Log" </> Msg.nTag chan </> Msg.nName chan
           date = dateStamp ct
@@ -206,7 +206,7 @@ openChannelFile chan ct =
 reopenChannelMaybe :: Channel -> ClockTime -> Log ()
 reopenChannelMaybe chan ct = do
   date <- getDate chan
-  when (date /= dateStamp ct) $ do 
+  when (date /= dateStamp ct) $ do
     hdl <- getHandle chan
     io $ hClose hdl
     hdl' <- openChannelFile chan ct

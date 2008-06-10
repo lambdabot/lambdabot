@@ -1,10 +1,8 @@
---
 -- Copyright (c) 2006 Don Stewart - http://www.cse.unsw.edu.au/~dons
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
---
+
 -- | String and other utilities
---
-module Lib.Util (
+module Lambdabot.Util (
         concatWith,
         split, split2,
         breakOnGlue,
@@ -530,11 +528,11 @@ insult =
     "I've seen penguins that can type better than that.",
     "Have you considered trying to match wits with a rutabaga?",
     "You speak an infinite deal of nothing",
-    
+
     -- More haskellish insults
     "You untyped fool!",
     "My brain just exploded",
-    
+
     -- some more friendly replies
     "I am sorry.","Sorry.",
     "Maybe you made a typo?",

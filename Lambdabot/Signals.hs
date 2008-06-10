@@ -1,16 +1,14 @@
 {-# LANGUAGE CPP, DeriveDataTypeable #-}
---
+
 -- | The signal story.
---
 -- Posix signals are external events that invoke signal handlers in
 -- Haskell. The signal handlers in turn throw dynamic exceptions.  Our
 -- instance of MonadError for LB maps the dynamic exceptions to
 -- SignalCaughts, which can then be caught by a normal catchIrc or
 -- handleIrc
---
+
 -- Here's where we do that.
---
-module Lib.Signals where
+module Lambdabot.Signals where
 
 #ifdef mingw32_HOST_OS
 import Data.Typeable
@@ -26,8 +24,8 @@ withIrcSignalCatch :: (MonadError e m,MonadIO m) => m () -> m ()
 withIrcSignalCatch m = m
 
 #else
-import Lib.Error
-import Lib.Util
+import Lambdabot.Error
+import Lambdabot.Util
 
 import Data.Typeable
 

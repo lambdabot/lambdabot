@@ -1,5 +1,5 @@
 --
--- | 
+-- |
 -- Module    : Where
 -- Copyright : 2003 Shae Erisson
 --
@@ -11,7 +11,7 @@
 module Plugin.Where (theModule) where
 
 import Plugin
-import Lib.Util (confirmation)
+import Lambdabot.Util (confirmation)
 import qualified Data.ByteString.Char8 as P
 import qualified Data.Map as M
 

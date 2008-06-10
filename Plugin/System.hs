@@ -4,7 +4,7 @@
 module Plugin.System (theModule) where
 
 import Plugin
-import Lib.AltTime
+import Lambdabot.AltTime
 import qualified Message (Message, Nick, joinChannel, partChannel, server, readNick)
 import qualified Data.Map as M       (Map,keys,fromList,lookup,union,insert,delete)
 

@@ -9,7 +9,7 @@
 module Plugin.Small where
 
 import Plugin
-import Lib.Parser
+import Lambdabot.Parser
 import qualified Text.Regex as R
 
 PLUGIN Small

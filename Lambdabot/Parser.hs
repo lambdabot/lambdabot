@@ -2,15 +2,16 @@
 
 -- Haskell expression parser.  Big hack, but only uses documented APIs so it
 -- should be more robust than the previous hack.
-module Lib.Parser (parseExpr, parseDecl, withParsed, prettyPrintInLine) where
+module Lambdabot.Parser (parseExpr, parseDecl, withParsed, prettyPrintInLine) where
 
 import Control.Monad.Error () -- Monad Either instance
 import Data.Char
 import Data.Generics
-import Language.Haskell.Syntax
 import Language.Haskell.Parser
 import Language.Haskell.Pretty
-import Lib.FixPrecedence
+import Language.Haskell.Syntax
+
+import Lambdabot.FixPrecedence
 
 parseExpr :: String -> Either String HsExp
 parseExpr s

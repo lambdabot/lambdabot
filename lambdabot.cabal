@@ -26,11 +26,11 @@ Cabal-Version:       >= 1.2
 Library
         Build-depends:   base, haskell-src, containers, zlib, bytestring, mtl,
                          regex-compat, regex-posix, process, network, old-time, binary, unix, random
-        Exposed-modules: Lib.FixPrecedence, Lib.Serial,
-                         Lib.Error, Lib.Url, Lib.Process,
-                         Lib.Regex, Lib.MiniHTTP, Lib.AltTime,
-                         Lib.Pointful, Lib.Parser, Lib.Signals,
-                         Lib.Util
+        Exposed-modules: Lambdabot.FixPrecedence, Lambdabot.Serial,
+                         Lambdabot.Error, Lambdabot.Url, Lambdabot.Process,
+                         Lambdabot.Regex, Lambdabot.MiniHTTP, Lambdabot.AltTime,
+                         Lambdabot.Pointful, Lambdabot.Parser, Lambdabot.Signals,
+                         Lambdabot.Util
 
 -- first build the preprocessor
 Executable          BotPP

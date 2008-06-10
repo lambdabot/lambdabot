@@ -1,4 +1,4 @@
-module Lib.FixPrecedence (withPrecExp, withPrecDecl, precTable, FixPrecedence(..) ) where
+module Lambdabot.FixPrecedence (withPrecExp, withPrecDecl, precTable, FixPrecedence(..) ) where
 
 import qualified Data.Map as M
 import Language.Haskell.Syntax

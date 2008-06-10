@@ -3,8 +3,8 @@
 -- Module      : Plugin.UnMtl
 -- Copyright   : Don Stewart, Lennart Kolmodin 2007, Twan van Laarhoven 2008
 -- License     : GPL-style (see LICENSE)
--- 
--- Unroll the MTL monads with your favorite bot! 
+--
+-- Unroll the MTL monads with your favorite bot!
 --
 ----------------------------------------------------------------------
 
@@ -14,7 +14,7 @@ import Control.Monad.Error ()
 
 import Language.Haskell.Syntax
 import Language.Haskell.Parser
-import Lib.Parser (prettyPrintInLine)
+import Lambdabot.Parser (prettyPrintInLine)
 
 import Plugin as P
 
@@ -152,7 +152,7 @@ mtlParser :: String -> Either String HsType
 mtlParser input = do
     HsModule _ _ _ _ decls <- liftE $ parseModule ("type X = "++input++"\n")
     hsType <- case decls of
-        (HsTypeDecl _ _ _ hsType:_) -> return hsType 
+        (HsTypeDecl _ _ _ hsType:_) -> return hsType
         _ -> fail "No parse?"
     let result = mtlParser' hsType
     case pError result of

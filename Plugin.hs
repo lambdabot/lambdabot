@@ -12,12 +12,12 @@ module Plugin (
         module LBState,
         module Config,
 
-        module Lib.Util,
-        module Lib.Serial,
-        module Lib.Process,
-        module Lib.MiniHTTP,
-        module Lib.Url,
-        module Lib.Regex,
+        module Lambdabot.Util,
+        module Lambdabot.Serial,
+        module Lambdabot.Process,
+        module Lambdabot.MiniHTTP,
+        module Lambdabot.Url,
+        module Lambdabot.Regex,
 
         module Data.List,
         module Data.Char,
@@ -33,12 +33,12 @@ import Lambdabot
 import LBState
 import Config
 
-import Lib.Util
-import Lib.Serial
-import Lib.Process
-import Lib.MiniHTTP
-import Lib.Url
-import Lib.Regex
+import Lambdabot.Util
+import Lambdabot.Serial
+import Lambdabot.Process
+import Lambdabot.MiniHTTP
+import Lambdabot.Url
+import Lambdabot.Regex
 
 import Message
 

@@ -1,10 +1,8 @@
---
 -- | HTTP protocol binding.
 -- <http://homepages.paradise.net.nz/warrickg/haskell/http/>
 -- <http://www.dtek.chalmers.se/~d00bring/haskell-xml-rpc/http.html>
---
 
-module Lib.MiniHTTP (
+module Lambdabot.MiniHTTP (
         Proxy,
         mkPost,
         readPage,
@@ -14,16 +12,13 @@ module Lib.MiniHTTP (
         module Network.URI
     ) where
 
-import Data.Maybe (fromMaybe)
+import Control.Monad (liftM2)
 import Data.Bits  ((.&.))
 import Data.Char  (ord, chr, digitToInt, intToDigit)
-
-import Control.Monad (liftM2)
-
-import System.IO
-
+import Data.Maybe (fromMaybe)
 import Network
 import Network.URI hiding (authority)
+import System.IO
 
 authority :: URI -> String
 authority = uriRegName . maybe (error "authority") id . uriAuthority

@@ -10,9 +10,9 @@ module Plugin.Seen (theModule) where
 import Data.Binary
 
 import Plugin
-import Lib.AltTime
-import Lib.Error         (tryError)
-import Lib.Util          (lowerCaseString)
+import Lambdabot.AltTime
+import Lambdabot.Error         (tryError)
+import Lambdabot.Util          (lowerCaseString)
 
 import qualified Message as G (Message, names, channels, nick, packNick, unpackNick, Nick(..), body, lambdabotName, showNick, readNick)
 

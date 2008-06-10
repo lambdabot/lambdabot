@@ -5,7 +5,7 @@
 
 -- | URL Utility Functions
 
-module Lib.Url (
+module Lambdabot.Url (
     getHtmlPage,
     getHeader,
     rawPageTitle,
@@ -15,7 +15,7 @@ module Lib.Url (
 
 import Data.List
 import Data.Maybe
-import Lib.MiniHTTP
+import Lambdabot.MiniHTTP
 
 import Text.Regex
 
