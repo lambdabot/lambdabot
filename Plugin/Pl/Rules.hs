@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -fvia-C #-}
+{-# LANGUAGE ExistentialQuantification, PatternGuards, Rank2Types #-}
 
 -- | This marvellous module contributed by Thomas J\344ger
 module Plugin.Pl.Rules (RewriteRule(..), fire, rules) where

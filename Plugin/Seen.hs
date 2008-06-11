@@ -1,10 +1,9 @@
---
+{-# LANGUAGE MultiParamTypeClasses, TypeSynonymInstances #-}
 -- Copyright (c) 2004 Thomas Jaeger
 -- Copyright (c) 2005-6 Don Stewart - http://www.cse.unsw.edu.au/~dons
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
---
+
 -- | Keep track of IRC users.
---
 module Plugin.Seen (theModule) where
 
 import Data.Binary

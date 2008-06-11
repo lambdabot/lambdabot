@@ -1,7 +1,6 @@
---
+{-# LANGUAGE MultiParamTypeClasses, PatternGuards #-}
 -- | DICT (RFC 2229) Lookup Module for lambdabot IRC robot.
 -- Tom Moertel <tom@moertel.com>
---
 module Plugin.Dict (theModule) where
 
 import Plugin
@@ -98,7 +97,7 @@ getHelp dicts = unlines . map gH $ dicts
 --
 --     (1) firefly
 --     (2) "c'est la vie"
---     (3) 'pound cake' 
+--     (3) 'pound cake'
 --     (4) 'rock n\' roll'
 --     (5) et\ al
 

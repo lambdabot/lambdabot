@@ -1,12 +1,11 @@
---
+{-# LANGUAGE Rank2Types, TypeOperators #-}
+
 -- Copyright (c) 2005 Don Stewart - http://www.cse.unsw.edu.au/~dons
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
---
 
 -- | Shared types between static and dynamic code. This is the only
 -- module that is linked both statically and dynamically. (And doing so
 -- breaks us from running the whole of the bot in ghci -- so sue me).
---
 
 module Shared (Module(..), Symbol, DynLoad(..)) where
 

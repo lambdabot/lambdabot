@@ -1,7 +1,6 @@
---
+{-# LANGUAGE MultiParamTypeClasses, TypeSynonymInstances #-}
 -- | Persistent state
 -- A demo plugin
---
 module Plugin.State (theModule) where
 
 import Plugin

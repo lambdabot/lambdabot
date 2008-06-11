@@ -1,9 +1,8 @@
-{-# OPTIONS -fvia-C -O2 -optc-O3 #-}
---
--- Todo, use Language.Haskell
---
+{-# LANGUAGE PatternGuards #-}
+
+-- TODO, use Language.Haskell
 -- Doesn't handle string literals?
---
+
 module Plugin.Pl.Parser (parsePF) where
 
 import Plugin.Pl.Common
@@ -15,7 +14,7 @@ import qualified Text.ParserCombinators.Parsec.Token as T
 
 -- is that supposed to be done that way?
 tp :: T.TokenParser ()
-tp = T.makeTokenParser $ haskellStyle { 
+tp = T.makeTokenParser $ haskellStyle {
   reservedNames = ["if","then","else","let","in"]
 }
 
@@ -50,22 +49,22 @@ table :: [[Operator Char st Expr]]
 table = addToFirst def $ map (map inf) operators where
   addToFirst y (x:xs) = ((y:x):xs)
   addToFirst _ _ = assert False bt
-  
+
   def :: Operator Char st Expr
   def = Infix (try $ do
-      name <- parseOp  
+      name <- parseOp
       guard $ not $ isJust $ lookupOp name
       spaces
       return $ \e1 e2 -> App (Var Inf name) e1 `App` e2
     ) AssocLeft
 
   inf :: (String, (Assoc, Int)) -> Operator Char st Expr
-  inf (name, (assoc, _)) = Infix (try $ do 
+  inf (name, (assoc, _)) = Infix (try $ do
       string name
       notFollowedBy $ oneOf opchars
       spaces
-      let name' = if head name == '`' 
-                  then tail . reverse . tail . reverse $ name 
+      let name' = if head name == '`'
+                  then tail . reverse . tail . reverse $ name
                   else name
       return $ \e1 e2 -> App (Var Inf name') e1 `App` e2
     ) assoc
@@ -73,15 +72,15 @@ table = addToFirst def $ map (map inf) operators where
 
 parseOp :: CharParser st String
 parseOp = (between (char '`') (char '`') $ many1 (letter <|> digit))
-  <|> try (do 
+  <|> try (do
     op <- many1 $ oneOf opchars
     guard $ not $ op `elem` reservedOps
     return op)
 
 pattern :: Parser Pattern
-pattern = buildExpressionParser ptable ((PVar `fmap` 
-                       (    atomic 
-                        <|> (symbol "_" >> return ""))) 
+pattern = buildExpressionParser ptable ((PVar `fmap`
+                       (    atomic
+                        <|> (symbol "_" >> return "")))
                         <|> parens pattern)
     <?> "pattern" where
   ptable = [[Infix (symbol ":" >> return PCons) AssocRight],
@@ -97,9 +96,9 @@ lambda = do
   <?> "lambda abstraction"
 
 var :: Parser Expr
-var = try (makeVar `fmap` atomic <|> 
+var = try (makeVar `fmap` atomic <|>
            parens (try unaryNegation <|> try rightSection
-                   <|> try (makeVar `fmap` many1 (char ',')) 
+                   <|> try (makeVar `fmap` many1 (char ','))
                    <|> tuple) <|> list <|> (Var Pref . show) `fmap` charLiteral
                    <|> stringVar `fmap` stringLiteral)
         <?> "variable" where
@@ -112,7 +111,7 @@ var = try (makeVar `fmap` atomic <|>
 list :: Parser Expr
 list = msum (map (try . brackets) plist) <?> "list" where
   plist = [
-    foldr (\e1 e2 -> cons `App` e1 `App` e2) nil `fmap` 
+    foldr (\e1 e2 -> cons `App` e1 `App` e2) nil `fmap`
       (myParser False `sepBy` symbol ","),
     do e <- myParser False
        symbol ".."
@@ -132,7 +131,7 @@ list = msum (map (try . brackets) plist) <?> "list" where
        symbol ".."
        e'' <- myParser False
        return $ Var Pref "enumFromThenTo" `App` e `App` e' `App` e''
-    ] 
+    ]
 
 tuple :: Parser Expr
 tuple = do
@@ -156,7 +155,7 @@ rightSection = do
     let rs e = flip' `App` v `App` e
     option v (rs `fmap` myParser False)
   <?> "right section"
-    
+
 
 myParser :: Bool -> Parser Expr
 myParser b = lambda <|> expr b
@@ -166,7 +165,7 @@ expr b = buildExpressionParser table (term b) <?> "expression"
 
 decl :: Parser Decl
 decl = do
-  f <- atomic 
+  f <- atomic
   args <- pattern `endsIn` symbol "="
   e <- myParser False
   return $ Define f (foldr Lambda e args)
@@ -209,7 +208,7 @@ endsIn p end = do
 input :: Parser TopLevel
 input = do
   spaces
-  tl <- try (do 
+  tl <- try (do
       f    <- atomic
       args <- pattern `endsIn` symbol "="
       e    <- myParser False

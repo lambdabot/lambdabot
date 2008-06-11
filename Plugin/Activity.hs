@@ -1,6 +1,5 @@
---
+{-# LANGUAGE MultiParamTypeClasses, TypeSynonymInstances #-}
 -- | Logging an IRC channel..
---
 module Plugin.Activity (theModule) where
 
 import Plugin

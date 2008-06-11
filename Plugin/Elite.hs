@@ -1,10 +1,9 @@
---
+{-# LANGUAGE MultiParamTypeClasses #-}
 -- (c) Josef Svenningsson, 2005
 -- Licence: No licence, public domain
---
+
 -- Inspired by the following page:
 -- http://www.microsoft.com/athome/security/children/kidtalk.mspx
---
 module Plugin.Elite (theModule) where
 
 import Plugin

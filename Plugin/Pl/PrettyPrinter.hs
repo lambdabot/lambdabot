@@ -1,4 +1,4 @@
-{-# OPTIONS -fvia-C #-}
+{-# LANGUAGE PatternGuards #-}
 module Plugin.Pl.PrettyPrinter (Expr) where
 
 -- Dummy export to make ghc -Wall happy

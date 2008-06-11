@@ -1,11 +1,11 @@
-{-# LANGUAGE CPP #-}
---
+{-# LANGUAGE CPP, ExistentialQuantification, FlexibleContexts,
+  FunctionalDependencies, GeneralizedNewtypeDeriving, MultiParamTypeClasses,
+  PatternGuards, RankNTypes, TypeOperators #-}
 -- | The guts of lambdabot.
 --
 -- The LB/Lambdabot monad
 -- Generic server connection,disconnection
 -- The module typeclass, type and operations on modules
---
 module Lambdabot (
         MODULE(..), Module(..),
         ModuleT, ModuleLB, ModuleUnit, Mode(..),
@@ -434,7 +434,6 @@ class Module m s | m -> s where
 
 -- | An existential type holding a module, used to represent modules on
 -- the value level, for manipluation at runtime by the dynamic linker.
---
 data MODULE = forall m s. (Module m s) => MODULE m
 
 data ModuleRef = forall m s. (Module m s) => ModuleRef m (MVar s) String

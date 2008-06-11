@@ -1,6 +1,6 @@
---
+{-# LANGUAGE MultiParamTypeClasses #-}
 -- | The plugin-level IRC interface.
---
+
 module Plugin.IRC (theModule) where
 
 import Control.Concurrent( forkIO, newQSem, waitQSem, threadDelay, signalQSem,

@@ -1,12 +1,9 @@
---
+{-# LANGUAGE MultiParamTypeClasses #-}
 -- Copyright (c) 2004 Simon Winwood - http://www.cse.unsw.edu.au/~sjw
 -- Copyright (c) 2004-6 Don Stewart - http://www.cse.unsw.edu.au/~dons
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
---
 
---
 -- | A translator module for lambdabot, a binding to babelfish
---
 module Plugin.Babel where
 
 import Plugin

@@ -1,7 +1,6 @@
---
--- | Free theorems plugin, 
+{-# LANGUAGE MultiParamTypeClasses #-}
+-- | Free theorems plugin,
 -- Don Stewart 2006
--- 
 module Plugin.FT where
 
 import Plugin

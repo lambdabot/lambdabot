@@ -1,8 +1,7 @@
---
+{-# LANGUAGE MultiParamTypeClasses, PatternGuards, PatternSignatures, TypeSynonymInstances #-}
 -- | A todo list
--- 
--- (c) 2005 Samuel Bronson
 --
+-- (c) 2005 Samuel Bronson
 module Plugin.Todo (theModule) where
 
 import Plugin
@@ -39,30 +38,30 @@ instance Module TodoModule TodoState where
 getTodo :: Message.Message m => m -> TodoState -> String -> ModuleLB TodoState
 getTodo msg todoList [] = return [formatTodo msg todoList]
 getTodo _ _ _           = error "@todo has no args, try @todo-add or @list todo"
- 
+
 -- | Pretty print todo list
 formatTodo :: Message.Message m => m -> [(P.ByteString, P.ByteString)] -> String
 formatTodo _ [] = "Nothing to do!"
 formatTodo msg todoList =
-    unlines $ map (\(n::Int, (idea, nick_)) -> concat $ 
+    unlines $ map (\(n::Int, (idea, nick_)) -> concat $
             [ show n,". ",showNick msg $ unpackNick nick_,": ",P.unpack idea ]) $
-                zip [0..] todoList 
+                zip [0..] todoList
 
 -- | Add new entry to list
 addTodo :: P.ByteString -> String -> ModuleLB TodoState
-addTodo sender rest = do 
+addTodo sender rest = do
     modifyMS (++[(P.pack rest, sender)])
     return ["Entry added to the todo list"]
 
 -- | Delete an entry from the list
 delTodo :: String -> ModuleLB TodoState
-delTodo rest 
-    | Just n <- readM rest = withMS $ \ls write -> case () of   
+delTodo rest
+    | Just n <- readM rest = withMS $ \ls write -> case () of
       _ | null ls -> return ["Todo list is empty"]
         | n > length ls - 1 || n < 0
         -> return [show n ++ " is out of range"]
 
-        | otherwise -> do 
+        | otherwise -> do
             write (map snd . filter ((/= n) . fst) . zip [0..] $ ls)
             let (a,_) = ls !! n
             return ["Removed: " ++ P.unpack a]

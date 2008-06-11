@@ -1,4 +1,5 @@
---
+{-# LANGUAGE MultiParamTypeClasses, TypeSynonymInstances #-}
+
 -- |
 -- Module    : Where
 -- Copyright : 2003 Shae Erisson
@@ -7,7 +8,6 @@
 --
 -- Slightly specialised version of Where for associating projects with their urls.
 -- Code almost all copied.
---
 module Plugin.Where (theModule) where
 
 import Plugin

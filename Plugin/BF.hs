@@ -1,13 +1,9 @@
---
+{-# LANGUAGE MultiParamTypeClasses #-}
 -- Copyright (c) 2006 Jason Dagit - http://www.codersbase.com/
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
---
 
---
 -- | A plugin for the Haskell interpreter for the brainf*ck language
---
 -- http://www.muppetlabs.com/~breadbox/bf/
---
 module Plugin.BF (theModule) where
 
 import Plugin

@@ -1,6 +1,5 @@
---
+{-# LANGUAGE MultiParamTypeClasses, PatternGuards, TypeSynonymInstances #-}
 -- | Lambdabot base module. Controls message send and receive
---
 module Plugin.Base (theModule) where
 
 import Plugin
@@ -81,7 +80,7 @@ doNOTICE msg =
   if isCTCPTimeReply
      then do
         -- bind implicit params to Localtime module. boo on implict params :/
-  --    withModule ircModules 
+  --    withModule ircModules
   --               "Localtime"
   --               (error "Plugin/Base: no Localtime plugin? So I can't handle CTCP time messges")
   --               (\_ -> doPRIVMSG (timeReply msg))
@@ -92,7 +91,7 @@ doNOTICE msg =
 
      else debugStrLn $ "NOTICE: " ++ show (body msg)
     where
-      isCTCPTimeReply = ":\SOHTIME" `isPrefixOf` (last (body msg)) 
+      isCTCPTimeReply = ":\SOHTIME" `isPrefixOf` (last (body msg))
 
 doJOIN :: Callback
 doJOIN msg | lambdabotName msg /= nick msg = doIGNORE msg
@@ -101,13 +100,13 @@ doJOIN msg | lambdabotName msg /= nick msg = doIGNORE msg
        put (s { ircChannels = M.insert  (mkCN loc) "[currently unknown]" (ircChannels s)}) -- the empty topic causes problems
        send $ getTopic loc -- initialize topic
    where (_, aloc) = breakOnGlue ":" (head (body msg))
-         loc       = case aloc of 
-                        [] -> Nick "freenode" "weird#" 
+         loc       = case aloc of
+                        [] -> Nick "freenode" "weird#"
                         _  -> Nick (server msg) (tail aloc)
 
 doPART :: Callback
 doPART msg
-  = when (lambdabotName msg == nick msg) $ do  
+  = when (lambdabotName msg == nick msg) $ do
         let loc = Nick (server msg) (head (body msg))
         s <- get
         put (s { ircChannels = M.delete (mkCN loc) (ircChannels s) })
@@ -224,7 +223,7 @@ doPRIVMSG' myname msg target
 
             docmd cmd' = do
               act <- bindModule0 . withPS towhere $ \_ _ -> do
-                withModule ircCommands cmd'   -- Important. 
+                withModule ircCommands cmd'   -- Important.
                     (ircPrivmsg towhere "Unknown command, try @list")
                     (\m -> do
                         name'   <- getName

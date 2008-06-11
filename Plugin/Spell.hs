@@ -1,10 +1,9 @@
---
+{-# LANGUAGE MultiParamTypeClasses, PatternGuards #-}
 -- Copyright (c) 2004-6 Don Stewart - http://www.cse.unsw.edu.au/~dons
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
 --
 -- | Interface to /aspell/, an open source spelling checker, from a
 -- suggestion by Kai Engelhardt. Requires you to install aspell.
---
 module Plugin.Spell where
 
 import Plugin

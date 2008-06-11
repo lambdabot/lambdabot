@@ -1,4 +1,4 @@
---
+{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses #-}
 -- | Pretty-Printing echo
 --
 -- example:
@@ -12,7 +12,6 @@
 --    _ -> "else"
 --
 -- (c) Johannes Ahlmann, 2005-12-13, released under GPL 2
---
 module Plugin.Pretty where
 
 import Plugin
@@ -31,7 +30,7 @@ instance Module PrettyModule (String -> IO String) where
 ------------------------------------------------------------------------
 
 prettyCmd :: String -> ModuleLB (String -> IO String)
-prettyCmd rest = 
+prettyCmd rest =
     let code = dropWhile (`elem` " \t>") rest
         modPrefix1 = "module Main where "
         modPrefix2 = "module Main where __expr__ = "
@@ -74,6 +73,6 @@ doPretty (HsModule _ _ _ _ decls) =
         prettyDecl d = prettyPrintWithMode (makeMode d) d
     -- FIXME: prefixing with hashes is done, because i didn't find a way
     --   to disable the indentation filter of lambdabot only for this module...
-    in map (" "++) . lines . concat . intersperse "\n" 
+    in map (" "++) . lines . concat . intersperse "\n"
        -- . map show $ decls
        . map prettyDecl $ decls

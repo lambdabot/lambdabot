@@ -1,6 +1,5 @@
-{-# OPTIONS -fvia-C -O2 -optc-O3 #-}
--- ^ required to get results. -fasm seems to slow(!)
---
+{-# LANGUAGE MultiParamTypeClasses, TypeSynonymInstances #-}
+
 -- | Pointfree programming fun
 --
 -- A catalogue of refactorings is at:
@@ -10,7 +9,6 @@
 -- Use more Arrow stuff
 --
 -- TODO would be to plug into HaRe and use some of their refactorings.
---
 module Plugin.Pl (theModule) where
 
 import Plugin

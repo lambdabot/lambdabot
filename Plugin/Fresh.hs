@@ -1,7 +1,7 @@
---
+{-# LANGUAGE MultiParamTypeClasses #-}
+
 -- | Haskell project name generation
 -- semi-joke
---
 module Plugin.Fresh (theModule) where
 
 import Plugin

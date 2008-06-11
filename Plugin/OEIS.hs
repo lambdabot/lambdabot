@@ -1,7 +1,6 @@
---
+{-# LANGUAGE MultiParamTypeClasses #-}
 -- | Look up sequences in the Online Encyclopedia of Integer Sequences
 --   Based on the Math.OEIS library
---
 module Plugin.OEIS (theModule) where
 
 import Plugin

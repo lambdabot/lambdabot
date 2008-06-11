@@ -1,7 +1,6 @@
---
+{-# LANGUAGE MultiParamTypeClasses #-}
 -- | Simple template module
 -- Contains many constant bot commands.
---
 module Plugin.Dummy (theModule) where
 
 import Plugin
@@ -56,7 +55,7 @@ pastebinMsg :: String
 pastebinMsg = "Haskell pastebin: http://hpaste.org/new"
 
 dummylst :: [(String, String -> String)]
-dummylst = 
+dummylst =
     [("id",      (' ' :) . id)
     ,("read",    (' ' :) . filter (/= '\n') . read)
     ,("show",       show)

@@ -1,3 +1,5 @@
+{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses #-}
+
 -- | Talk to hot chixxors.
 
 -- (c) Mark Wotton

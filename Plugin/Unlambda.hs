@@ -1,11 +1,10 @@
---
+{-# LANGUAGE MultiParamTypeClasses #-}
 -- Copyright (c) 2006 Don Stewart - http://www.cse.unsw.edu.au/~dons
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
 --
 -- | A plugin for the Haskell interpreter for the unlambda language
 --
 -- http://www.madore.org/~david/programs/unlambda/
---
 module Plugin.Unlambda (theModule) where
 
 import Plugin

@@ -1,6 +1,5 @@
---
+{-# LANGUAGE MultiParamTypeClasses, PatternGuards #-}
 -- | Fetch URL page titles of HTML links.
---
 module Plugin.Url (theModule) where
 
 import Plugin
@@ -55,7 +54,7 @@ tinyurl = "http://tinyurl.com/api-create.php?url="
 
 -- | Fetch the title of the specified URL.
 fetchTiny :: String -> LB [String]
-fetchTiny url 
+fetchTiny url
     | Just uri <- parseURI (tinyurl ++ url) = do
         tiny <- io $ getHtmlPage uri (proxy config)
         return $ maybe [] return $ findTiny $ foldl' cat "" tiny
@@ -64,7 +63,7 @@ fetchTiny url
 
 -- | Tries to find the start of a tinyurl
 findTiny :: String -> Maybe String
-findTiny text = do 
+findTiny text = do
   (_,kind,rest,_) <- R.matchRegexAll begreg text
   let url = takeWhile (/=' ') rest
   return $ stripSuffixes ignoredUrlSuffixes $ kind ++ url
@@ -72,13 +71,13 @@ findTiny text = do
   begreg = R.mkRegexWithOpts "http://tinyurl.com/" True False
 
 -- | List of strings that, if present in a contextual message, will
--- prevent the looking up of titles.  This list can be used to stop 
+-- prevent the looking up of titles.  This list can be used to stop
 -- responses to lisppaste for example.  Another important use is to
--- another lambdabot looking up a url title that contains another 
--- url in it (infinite loop).  Ideally, this list could be added to 
+-- another lambdabot looking up a url title that contains another
+-- url in it (infinite loop).  Ideally, this list could be added to
 -- by an admin via a privileged command (TODO).
 ignoredStrings :: [String]
-ignoredStrings = 
+ignoredStrings =
     ["paste",                -- Ignore lisppaste, rafb.net
      "cpp.sourcforge.net",   -- C++ paste bin
      "HaskellIrcPastePage",  -- Ignore paste page
@@ -113,7 +112,7 @@ stripSuffixes (s:ss) str
 
 -- | Utility function to check of any of the Strings in the specified
 -- list are substrings of the String.
-areSubstringsOf :: [String] -> String -> Bool 
+areSubstringsOf :: [String] -> String -> Bool
 areSubstringsOf = flip (any . flip isSubstringOf)
     where
       isSubstringOf s str = any (isPrefixOf s) (tails str)

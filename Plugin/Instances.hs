@@ -1,18 +1,19 @@
+{-# LANGUAGE MultiParamTypeClasses #-}
 {- | A module to output the instances of a typeclass.
      Some sample input\/output:
 
 > lambdabot> @instances Monad
-> [], ArrowMonad a, WriterT w m, Writer w, ReaderT r m, Reader r, 
-> StateT s m, State s, RWST r w s m, RWS r w s, ErrorT e m, Either e, 
+> [], ArrowMonad a, WriterT w m, Writer w, ReaderT r m, Reader r,
+> StateT s m, State s, RWST r w s m, RWS r w s, ErrorT e m, Either e,
 > ContT r m, Cont r, Maybe, ST s, IO
-> 
+>
 > lambdabot> @instances Show
-> Float, Double, Integer, ST s a, [a], (a, b, c, d), (a, b, c), (a, b), 
+> Float, Double, Integer, ST s a, [a], (a, b, c, d), (a, b, c), (a, b),
 > (), Ordering, Maybe a, Int, Either a b, Char, Bool
-> 
+>
 > lambdabot> @instances-importing Text.Html Data.Tree Show
-> Float, Double, Tree a, HtmlTable, HtmlAttr, Html, HotLink, Integer, 
-> ST s a, [a], (a, b, c, d), (a, b, c), (a, b), (), Ordering, Maybe a, 
+> Float, Double, Tree a, HtmlTable, HtmlAttr, Html, HotLink, Integer,
+> ST s a, [a], (a, b, c, d), (a, b, c), (a, b), (), Ordering, Maybe a,
 > Int
 -}
 
@@ -72,7 +73,7 @@ parseInstance :: ClassName -> String -> Maybe Instance
 parseInstance cls = fmap dropSpace . eitherToMaybe
                     . parse (instanceP cls) "GHCi output"
 
--- | Split the input into a list of the instances, then run each instance 
+-- | Split the input into a list of the instances, then run each instance
 --   through the parser. Collect successes.
 getInstances :: String -> ClassName -> [Instance]
 getInstances s cls
@@ -88,7 +89,7 @@ getInstances s cls
                                [ isAlpha c,
                                  isSpace c,
                                  c `elem` "()" ])
-          unbracket str | head str == '(' && last str == ')' && 
+          unbracket str | head str == '(' && last str == ')' &&
                           all (/=',') str && notOperator str && str /= "()" =
                           init $ tail str
                         | otherwise = str
@@ -105,7 +106,7 @@ stdMdls = controls
                          "State", "Trans", "Writer" ]
           controls = map ("Control." ++) $ monads ++ ["Arrow"]
 
--- | Main processing function for \@instances. Takes a class name and 
+-- | Main processing function for \@instances. Takes a class name and
 --   return a list of lines to output (which will actually only be one).
 fetchInstances :: ClassName -> LB [String]
 fetchInstances cls =  do

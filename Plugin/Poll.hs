@@ -1,4 +1,4 @@
---
+{-# LANGUAGE MultiParamTypeClasses, TypeSynonymInstances #-}
 -- | Module: Vote
 -- | Support for voting
 -- |
@@ -6,7 +6,6 @@
 -- |
 -- | added by Kenneth Hoste (boegel), 22/11/2005
 -- |  inspiration: Where plugin (thanks shapr,dons)
---
 module Plugin.Poll (theModule) where
 
 import Plugin hiding (choice)
@@ -22,10 +21,10 @@ appendPoll :: String -> Poll -> (Maybe Poll)
 appendPoll choice (o,ls) = Just (o,(choice,0):ls)
 
 voteOnPoll :: Poll -> String -> (Poll,String)
-voteOnPoll (o,poll) choice = 
+voteOnPoll (o,poll) choice =
     if any (\(x,_) -> x == choice) poll
-        then ((o,map (\(c,n) -> 
-                    if c == choice then (c,n+1) 
+        then ((o,map (\(c,n) ->
+                    if c == choice then (c,n+1)
                                    else (c,n)) poll)
                                         ,"voted on " ++ show choice)
         else ((o,poll),show choice ++ " is not currently a candidate in this poll")
@@ -58,7 +57,7 @@ instance Module VoteModule VoteState where
                        ,"poll-close"
                        ,"poll-remove"]
 --
-   -- todo, should @vote foo automagically add foo as a possibility? 
+   -- todo, should @vote foo automagically add foo as a possibility?
     moduleHelp   _ s = case s of
         "poll-list"     -> "poll-list                   Shows all current polls"
         "poll-show"     -> "poll-show <poll>            Shows all choices for some poll"
@@ -68,14 +67,14 @@ instance Module VoteModule VoteState where
         "poll-result"   -> "poll-result <poll>          Show result for given poll"
         "poll-close"    -> "poll-close <poll>           Closes a poll"
         "poll-remove"   -> "poll-remove <poll>          Removes a poll"
-    
+
     moduleDefState _  = return M.empty
     moduleSerialize _ = Just voteSerial
 
-    process_ _ "poll-list" _ = do 
+    process_ _ "poll-list" _ = do
         result <- withMS $ \factFM writer -> processCommand factFM writer "poll-list" []
         return [result]
-        
+
     process_ _ _ [] = return ["Missing argument. Check @help <vote-cmd> for info."]
 
     process_ _ cmd dat = do
@@ -92,7 +91,7 @@ processCommand fm writer cmd dat = case cmd of
 
     -- show candidates
     "poll-show"    -> return $ case length dat of
-                        1 -> showPoll fm (head dat) 
+                        1 -> showPoll fm (head dat)
                         _ -> "usage: @poll-show <poll>"
 
     -- declare a new poll
@@ -128,24 +127,24 @@ listPolls :: VoteState -> String
 listPolls fm = show $ map fst (M.toList fm)
 
 showPoll :: VoteState -> String -> String
-showPoll fm poll = 
+showPoll fm poll =
     case M.lookup (P.pack poll) fm of
         Nothing -> "No such poll: " ++ show poll ++ " Use @poll-list to see the available polls."
         Just p  -> show $ map fst (snd p)
 
 addPoll :: VoteState -> VoteWriter -> String -> LB String
-addPoll fm writer poll = 
+addPoll fm writer poll =
     case M.lookup (P.pack poll) fm of
         Nothing -> do writer $ M.insert (P.pack poll) newPoll fm
                       return $ "Added new poll: " ++ show poll
-        Just _  -> return $ "Poll " ++ show poll ++ 
+        Just _  -> return $ "Poll " ++ show poll ++
                             " already exists, choose another name for your poll"
 
 addChoice :: VoteState -> VoteWriter -> String -> String -> LB String
 addChoice fm writer poll choice = case M.lookup (P.pack poll) fm of
     Nothing -> return $ "No such poll: " ++ show poll
     Just _  -> do writer $ M.update (appendPoll choice) (P.pack poll) fm
-                  return $ "New candidate " ++ show choice ++ 
+                  return $ "New candidate " ++ show choice ++
                            ", added to poll " ++ show poll ++ "."
 
 vote :: VoteState -> VoteWriter -> String -> String -> LB String
@@ -159,7 +158,7 @@ vote fm writer poll choice = case M.lookup (P.pack poll) fm of
 showResult :: VoteState -> String -> String
 showResult fm poll = case M.lookup (P.pack poll) fm of
     Nothing     -> "No such poll: "  ++ show poll
-    Just (o,p)  -> "Poll results for " ++ poll ++ " (" ++ (status o) ++ "): " 
+    Just (o,p)  -> "Poll results for " ++ poll ++ " (" ++ (status o) ++ "): "
                    ++ (concat $ intersperse ", " $ map ppr p)
         where
             status s | s         = "Open"

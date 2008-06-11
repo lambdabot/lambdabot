@@ -1,12 +1,11 @@
---
+{-# LANGUAGE MultiParamTypeClasses #-}
 -- | Search various things, Wikipedia and google for now.
 --
 -- (c) 2005 Samuel Bronson
 -- (c) 2006 Don Stewart
---
+
 -- Joel Koerwer 11-01-2005 generalized query for different methods
 --   and added extractConversion to make things like @google 1+2 work
---
 module Plugin.Search (theModule) where
 
 import Plugin

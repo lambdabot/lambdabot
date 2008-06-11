@@ -1,3 +1,4 @@
+{-# LANGUAGE MultiParamTypeClasses, PatternGuards #-}
 -- |   The Type Module - another progressive plugin for lambdabot
 --
 -- pesco hamburg 2003-04-05
@@ -114,11 +115,11 @@ query_ghci' :: String -> String -> IO String
 query_ghci' cmd expr = do
        imports <- fmap (map (unwords . drop 1 . words)
                         . filter (null
-			          . intersect ["as","hiding","qualified"]
-				  . words)
-		        . filter (isPrefixOf "import")
-		        . lines)
-		       (readFile "imports.h")
+                                  . intersect ["as","hiding","qualified"]
+                                  . words)
+                        . filter (isPrefixOf "import")
+                        . lines)
+                       (readFile "imports.h")
        let context = ":l L\n" ++ concatMap ((":m + " ++) . (++"\n")) imports
        (output, errors, _) <- popen (ghci config) ["-v0","-fglasgow-exts","-fno-th","-iState","-iscripts","-XNoMonomorphismRestriction"]
                                        (Just (context ++ command cmd (stripComments expr)))

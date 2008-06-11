@@ -1,3 +1,4 @@
+{-# LANGUAGE MultiParamTypeClasses, TypeSynonymInstances #-}
 {- | Leave a message with lambdabot, the faithful secretary.
 
 > 17:11 < davidhouse> @tell dmhouse foo

@@ -1,13 +1,10 @@
---
+{-# LANGUAGE MultiParamTypeClasses, PatternGuards, TypeSynonymInstances #-}
 -- Copyright (c) 2005 Donald Bruce Stewart - http://www.cse.unsw.edu.au/~dons
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
--- 
--- Written: Mon Dec 12 10:16:56 EST 2005
---
 
---
+-- Written: Mon Dec 12 10:16:56 EST 2005
+
 -- | A binding to Djinn.
---
 module Plugin.Djinn (theModule) where
 
 import Plugin
@@ -40,7 +37,7 @@ instance Module DjinnModule DjinnEnv where
                             ,"djinn-del"
                             ,"djinn-env"
                             ,"djinn-names"
-                            ,"djinn-clr" 
+                            ,"djinn-clr"
                             ,"djinn-ver"]
 
         moduleSerialize _ = Nothing -- Just listSerial
@@ -97,7 +94,7 @@ instance Module DjinnModule DjinnEnv where
             eenv <- io $ djinn env $ ":delete" <+> dropSpace s <$> ":environment"
             case eenv of
                 Left e     -> return [head e]
-                Right env' -> do 
+                Right env' -> do
                     modifyMS $ \(prel,_) ->
                         (prel,filter (\p -> p `notElem` prel) . nub . lines $ env')
                     return []

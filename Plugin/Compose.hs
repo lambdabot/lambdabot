@@ -1,12 +1,9 @@
---
+{-# LANGUAGE MultiParamTypeClasses, PatternGuards #-}
 -- Copyright (c) 2005 Don Stewart - http://www.cse.unsw.edu.au/~dons
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
---
 
---
 -- Another progressive plugin. Compose two (for now) plugins transparently
 -- A sort of mini interpreter. Could do with some more thinking.
---
 module Plugin.Compose (theModule) where
 
 import Plugin
@@ -53,13 +50,13 @@ compose f g xs = g xs >>= f . unlines
 --
 lookupP :: Message a => (a, Nick) -> String -> LB (String -> LB [String])
 lookupP (a,b) cmd = withModule ircCommands cmd
-    (error $ "Unknown command: " ++ show cmd) 
+    (error $ "Unknown command: " ++ show cmd)
     (\m -> do
         privs <- gets ircPrivCommands -- no priv commands can be composed
         when (cmd `elem` privs) $ error "Privledged commands cannot be composed"
-        bindModule1 $ \str -> catchError 
+        bindModule1 $ \str -> catchError
                     (process m a b cmd str)
-                    (\ex -> case (ex :: IRCError) of 
+                    (\ex -> case (ex :: IRCError) of
                                 (IRCRaised (NoMethodError _)) -> process_ m cmd str
                                 _ -> throwError ex))
 
@@ -72,7 +69,7 @@ evalBracket :: Message a => (a, Nick) -> String -> LB [String]
 evalBracket a args = liftM (map addSpace . concat') $ mapM (evalExpr a) $ fst $ parseBracket 0 True args
  where concat' ([x]:[y]:xs) = concat' ([x++y]:xs)
        concat' xs           = concat xs
-       
+
        addSpace :: String -> String
        addSpace (' ':xs) = ' ':xs
        addSpace xs       = ' ':xs

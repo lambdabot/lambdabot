@@ -1,4 +1,4 @@
---
+{-# LANGUAGE MultiParamTypeClasses, TypeSynonymInstances #-}
 -- Module    : Fact
 -- Copyright : 2003 Shae Erisson
 -- Copyright : 2005-06 Don Stewart
@@ -7,7 +7,6 @@
 --
 -- Quick ugly hack to get factoids in lambdabot.  This is a rewrite of
 -- Shae's original code to use internal module states. jlouis
---
 module Plugin.Fact (theModule) where
 
 import Plugin

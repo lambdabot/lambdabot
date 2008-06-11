@@ -1,3 +1,4 @@
+{-# LANGUAGE MultiParamTypeClasses #-}
 ----------------------------------------------------------------------
 -- |
 -- Module      : Plugin.UnMtl

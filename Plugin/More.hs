@@ -1,6 +1,5 @@
---
+{-# LANGUAGE MultiParamTypeClasses, TypeSynonymInstances #-}
 -- | Support for more(1) buffering
---
 module Plugin.More (theModule) where
 
 import Plugin

@@ -1,6 +1,5 @@
---
+{-# LANGUAGE MultiParamTypeClasses, TypeSynonymInstances #-}
 -- | Karma
---
 module Plugin.Karma (theModule) where
 
 import Plugin

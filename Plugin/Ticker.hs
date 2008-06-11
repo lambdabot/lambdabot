@@ -1,6 +1,6 @@
---
+{-# LANGUAGE MultiParamTypeClasses #-}
+
 -- | Pull quotes down from yahoo.
---
 module Plugin.Ticker (theModule) where
 
 import Plugin
@@ -56,7 +56,7 @@ extractQuote :: [String] -> Maybe String
 extractQuote [] = Nothing
 extractQuote ls = (getQuote . csv . last) ls
     where
-        getQuote (_:ticker:price:date:time:change:afterhrs:_) = 
+        getQuote (_:ticker:price:date:time:change:afterhrs:_) =
             Just $ printf "%s: %s %s %s @ %s %s %s" ticker' price change perc date' time' afterhrs'
             where ticker' = unquote ticker
                   time' = unquote time

@@ -1,6 +1,5 @@
---
+{-# LANGUAGE MultiParamTypeClasses #-}
 -- | Support for quotes
---
 module Plugin.Slap (theModule) where
 
 import Plugin

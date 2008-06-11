@@ -1,11 +1,8 @@
---
+{-# LANGUAGE MultiParamTypeClasses, PatternGuards #-}
 -- Copyright (c) 6 DonStewart - http://www.cse.unsw.edu.au/~dons
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
---
 
---
 -- | Test a property with SmallCheck
---
 module Plugin.Small where
 
 import Plugin

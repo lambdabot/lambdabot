@@ -1,6 +1,5 @@
---
+{-# LANGUAGE MultiParamTypeClasses, TypeSynonymInstances #-}
 -- | Hackish Haddock module.
---
 module Plugin.Haddock (theModule) where
 
 import Plugin

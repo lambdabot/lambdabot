@@ -23,17 +23,9 @@ Homepage:            http://haskell.org/haskellwiki/Lambdabot
 build-type:          Simple
 Cabal-Version:       >= 1.2
 
-Library
-        Build-depends:   base, haskell-src, containers, zlib, bytestring, mtl,
-                         regex-compat, regex-posix, process, network, old-time, binary, unix, random
-        Exposed-modules: Lambdabot.FixPrecedence, Lambdabot.Serial,
-                         Lambdabot.Error, Lambdabot.Url, Lambdabot.Process,
-                         Lambdabot.Regex, Lambdabot.MiniHTTP, Lambdabot.AltTime,
-                         Lambdabot.Pointful, Lambdabot.Parser, Lambdabot.Signals,
-                         Lambdabot.Util
-
 -- first build the preprocessor
 Executable          BotPP
+    build-depends:       base, unix, mtl, bytestring
     hs-source-dirs:      scripts/
     Main-is:             BotPP.hs
     ghc-options:         -funbox-strict-fields
@@ -41,21 +33,20 @@ Executable          BotPP
 
 -- Lambdabot main
 Executable          lambdabot
-    Build-depends:       directory, pretty, parsec, array, readline, oeis,
+    Build-depends:       containers, directory, pretty, parsec, old-time, random, array, network, regex-compat, readline, binary>0.2, oeis, lambdabot-utils, haskell-src,
                          -- runtime dependencies
                          brainfuck, unlambda
     Main-is:             Main.hs
-    extensions:          CPP
-    ghc-options:         -Wall -Werror -fglasgow-exts -pgmF dist/build/BotPP/BotPP -F -H64m -funbox-strict-fields -fno-warn-incomplete-patterns -fno-warn-missing-methods -fno-warn-orphans -threaded
+    Extensions:          CPP
+    ghc-options:         -Wall -Werror -pgmF dist/build/BotPP/BotPP -F -H64m -funbox-strict-fields -fno-warn-incomplete-patterns -fno-warn-missing-methods -fno-warn-orphans -threaded
     include-dirs:        .
 -- For a faster build use add -Onot
 
--- check
-Executable          smallcheck
-    build-depends:       smallcheck
+-- runplugs
+Executable          runplugs
     hs-source-dirs:      scripts/
     ghc-options:         -funbox-strict-fields
-    Main-is:             SmallCheck.hs
+    Main-is:             RunPlugs.hs
 
 -- check
 Executable          quickcheck
@@ -64,12 +55,12 @@ Executable          quickcheck
     ghc-options:         -funbox-strict-fields
     Main-is:             QuickCheck.hs
 
-
--- runplugs
-Executable          runplugs
+-- check
+Executable          smallcheck
+    build-depends:       smallcheck
     hs-source-dirs:      scripts/
     ghc-options:         -funbox-strict-fields
-    Main-is:             RunPlugs.hs
+    Main-is:             SmallCheck.hs
 
 ------------------------------------------------------------------------
 -- The following only work if plugins are enabled

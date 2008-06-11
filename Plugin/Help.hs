@@ -1,6 +1,5 @@
---
+{-# LANGUAGE MultiParamTypeClasses #-}
 -- | Provide help for plugins
---
 module Plugin.Help (theModule) where
 
 import Plugin

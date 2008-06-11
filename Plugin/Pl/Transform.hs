@@ -1,4 +1,4 @@
-{-# OPTIONS -fvia-C -O2 -optc-O3 #-}
+{-# LANGUAGE PatternGuards #-}
 module Plugin.Pl.Transform (
     transform,
   ) where
@@ -31,7 +31,7 @@ freeIn :: String -> Expr -> Int
 freeIn v (Var _ v') = fromEnum $ v == v'
 freeIn v (Lambda pat e) = if v `occursP` pat then 0 else freeIn v e
 freeIn v (App e1 e2) = freeIn v e1 + freeIn v e2
-freeIn v (Let ds e') = if v `elem` map declName ds then 0 
+freeIn v (Let ds e') = if v `elem` map declName ds then 0
   else freeIn v e' + sum [freeIn v e | Define _ e <- ds]
 
 -- | Does a name occur free in an expression?
@@ -60,7 +60,7 @@ unLet (Let ds e) = unLet $
   comps = stronglyConnComp [(d',d',dependsOn ds d') | d' <- ds]
   dsYes = flattenSCC $ head comps
   dsNo = flattenSCCs $ tail comps
-  
+
 unLet (Lambda v e) = Lambda v (unLet e)
 unLet (Var f x) = Var f x
 
@@ -103,23 +103,23 @@ transform' :: Expr -> Expr
 transform' (Let {}) = assert False undefined
 transform' (Var f v) = Var f v
 transform' (App e1 e2) = App (transform' e1) (transform' e2)
-transform' (Lambda (PTuple p1 p2) e) 
-  = transform' $ Lambda (PVar "z") $ 
+transform' (Lambda (PTuple p1 p2) e)
+  = transform' $ Lambda (PVar "z") $
       (Lambda p1 $ Lambda p2 $ e) `App` f `App` s where
     f = Var Pref "fst" `App` Var Pref "z"
     s = Var Pref "snd" `App` Var Pref "z"
-transform' (Lambda (PCons p1 p2) e) 
-  = transform' $ Lambda (PVar "z") $ 
+transform' (Lambda (PCons p1 p2) e)
+  = transform' $ Lambda (PVar "z") $
       (Lambda p1 $ Lambda p2 $ e) `App` f `App` s where
     f = Var Pref "head" `App` Var Pref "z"
     s = Var Pref "tail" `App` Var Pref "z"
 transform' (Lambda (PVar v) e) = transform' $ getRidOfV e where
   getRidOfV (Var f v') | v == v'   = id'
                        | otherwise = const' `App` Var f v'
-  getRidOfV l@(Lambda pat _) = assert (not $ v `occursP` pat) $ 
+  getRidOfV l@(Lambda pat _) = assert (not $ v `occursP` pat) $
     getRidOfV $ transform' l
   getRidOfV (Let {}) = assert False bt
-  getRidOfV e'@(App e1 e2) 
+  getRidOfV e'@(App e1 e2)
     | fr1 && fr2 = scomb `App` getRidOfV e1 `App` getRidOfV e2
     | fr1 = flip' `App` getRidOfV e1 `App` e2
     | Var _ v' <- e2, v' == v = e1

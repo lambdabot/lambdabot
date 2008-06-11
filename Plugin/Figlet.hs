@@ -1,11 +1,8 @@
---
+{-# LANGUAGE MultiParamTypeClasses #-}
 -- Copyright (c) 2006 Maxime Henrion <mux@FreeBSD.org>
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
---
 
---
 -- Call the `figlet' program
---
 
 module Plugin.Figlet where
 

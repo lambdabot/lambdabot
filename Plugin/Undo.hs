@@ -1,7 +1,7 @@
---
+{-# LANGUAGE MultiParamTypeClasses #-}
+
 -- Copyright (c) 2006 Spencer Janssen
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
---
 
 module Plugin.Undo where
 

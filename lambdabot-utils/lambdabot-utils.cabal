@@ -1,0 +1,34 @@
+Name:                lambdabot-utils
+Version:             4.1
+License:             GPL
+License-file:        LICENSE
+Author:              Don Stewart
+Maintainer:          Cale Gibbard <cgibbard@gmail.com>
+Category:            Development, Web
+Synopsis:            Utility libraries for the advanced IRC bot, Lambdabot
+Description:         Lambdabot is an IRC bot written over several years by
+                     those on the #haskell IRC channel.
+                     .
+                     Our own custom libraries for various plugin functions.
+                     .
+                     AltTime.hs: alternate version of the time library
+                     .
+                     MiniHTTP.hs: a mini http server
+                     .
+                     Process.hs: a wrapper over System.Process
+                     .
+                     Regex.hsc: a fast packed string regex library
+                     .
+                     Serial.hs:: a serialisation API
+                     .
+                     Util.hs: miscellaneous string, and other, functions
+Homepage:            http://haskell.org/haskellwiki/Lambdabot
+build-type:          Simple
+
+Build-depends:   base, haskell-src, containers, zlib, bytestring, mtl,
+                 regex-compat, regex-posix, process, network, old-time, binary, unix, random
+Exposed-modules: Lambdabot.FixPrecedence, Lambdabot.Serial,
+                 Lambdabot.Error, Lambdabot.Url, Lambdabot.Process,
+                 Lambdabot.Regex, Lambdabot.MiniHTTP, Lambdabot.AltTime,
+                 Lambdabot.Pointful, Lambdabot.Parser, Lambdabot.Signals,
+                 Lambdabot.Util

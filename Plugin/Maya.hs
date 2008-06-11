@@ -1,4 +1,4 @@
---
+{-# LANGUAGE MultiParamTypeClasses #-}
 -- Copyright (c) 2004 Donald Bruce Stewart - http://www.cse.unsw.edu.au/~dons
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
 --
@@ -16,21 +16,21 @@
 --
 
 -- PAGE='http://www.bom.gov.au/products/IDN65066.shtml'
--- 
+--
 -- w3m -dump_source $PAGE | perl -naWF", " -e '
 -- sub f($) {
  --        my $i = shift @_;
 --         return ($i == -9999) ? "-" : sprintf "%.1f", $i;
 -- }
--- 
+--
 -- if (/DATA.*Sydney Airport/) {
--- printf "now %s°, min %s°, max %s°, rain %smm, wind %dkm/h%s\n", 
+-- printf "now %s°, min %s°, max %s°, rain %smm, wind %dkm/h%s\n",
 --         f($F[3]),f($F[11]),f($F[13]),f($F[10]),$F[7], $F[6];
 -- exit
 -- }'
 --
 ------------------------------------------------------------------------
--- 
+--
 -- FORECAST:
 --
 --PAGE='http://www.bom.gov.au/cgi-bin/wrap_fwo.pl?IDN10064.txt'
@@ -65,7 +65,7 @@ instance Module MayaModule () where
 
         moduleCmds   _ = ["temp","forecast", "ring"]
 
-        process_ _ "temp" s = 
+        process_ _ "temp" s =
          if s == "help"
             then return ["  Sydney Ap (http://www.bom.gov.au/images/syd_aws.gif)" ]
             else do (o,_,_) <- liftIO $ popen "/home/dons/bin-pc.i86.linux/temp" [] Nothing

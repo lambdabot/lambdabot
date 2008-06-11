@@ -1,4 +1,5 @@
-{-# OPTIONS_GHC -fvia-C #-}
+{-# OPTIONS_GHC -fglasgow-exts #-} -- fix this later
+{-# LANGUAGE FlexibleInstances, PatternGuards #-}
 
 -- | This marvellous module contributed by Thomas J\344ger
 module Plugin.Pl.RuleLib
@@ -16,8 +17,6 @@ import qualified Data.Set as S
 
 import Control.Monad.Fix (fix)
 
---import PlModule.PrettyPrinter
-
 -- Next time I do somthing like this, I'll actually think about the combinator
 -- language before, instead of producing something ad-hoc like this:
 data RewriteRule
@@ -34,16 +33,11 @@ data RewriteRule
   | If     RewriteRule RewriteRule   -- ^ Apply the second rule only if the first rule has some results
   | Hard   RewriteRule               -- ^ Apply the rule only in the first pass
 
-
---instance Show MExpr where
---  show = show . fromMExpr
-
 -- | An expression with holes to match or replace
 data Rewrite = Rewrite {
   holes :: MExpr,  -- ^ Expression with holes
   rid   :: Int     -- ^ Number of holes
-   -- rlength - 1
-} --deriving Show
+}
 
 -- What are you gonna do when no recursive modules are possible?
 class RewriteC a where
@@ -61,7 +55,7 @@ instance RewriteC a => RewriteC (MExpr -> a) where
     holes = holes . getRewrite . rule . Hole $ pid,
     rid   = pid + 1
   } where
-    pid = rid $ getRewrite (undefined :: a)
+     pid = rid $ getRewrite (undefined :: a)
 
 
 ----------------------------------------------------------------------------------------

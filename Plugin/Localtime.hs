@@ -1,10 +1,8 @@
---
+{-# LANGUAGE MultiParamTypeClasses, TypeSynonymInstances #-}
 -- Copyright (c) 2005 Don Stewart - http://www.cse.unsw.edu.au/~dons
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
---
+
 -- | Simple wrapper over privmsg to get time information via the CTCP
---
---
 module Plugin.Localtime (theModule) where
 
 import Plugin

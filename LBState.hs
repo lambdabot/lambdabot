@@ -1,6 +1,5 @@
---
--- Support for the LB (LambdaBot) monad
---
+{-# LANGUAGE ScopedTypeVariables, PatternSignatures #-}
+-- | Support for the LB (LambdaBot) monad
 module LBState (
         -- ** Functions to access the module's state
         readMS, withMS, modifyMS, writeMS,

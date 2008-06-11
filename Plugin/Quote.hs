@@ -1,6 +1,5 @@
---
+{-# LANGUAGE MultiParamTypeClasses, PatternGuards, TypeSynonymInstances #-}
 -- | Support for quotes
---
 module Plugin.Quote (theModule) where
 
 import Plugin
