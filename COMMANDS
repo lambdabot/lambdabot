@@ -10,7 +10,6 @@ dummy provides: eval choose id read show dummy bug get-shapr faq paste learn map
 elite provides: elite
 eval provides: run let undefine
 fact provides: fact fact-set fact-delete fact-cons fact-snoc fact-update
-figlet provides: figlet figlet'
 free provides: free
 fresh provides: freshname
 ft provides: ft
