@@ -1,0 +1,31 @@
+name:                show
+version:             0.1
+
+license:             GPL
+license-file:        LICENSE
+author:              Lambdabot devs, Twan van Laarhoven <twanvl@gmail.com>
+-- maintainer:          Cale
+
+stability:           Experimental
+category:            Language
+synopsis:            'Show' instances for Lambdabot
+description:         This package provides ShowQ, ShowFun, and SimpleReflect.
+                     .
+                     ShowFun gives us Typeable instances for neutring IO expressions.
+                     .
+                     ShowQ adds QuickCheck support.
+                     .
+                     And SimpleReflect allows us to literally see how functions 'expand',
+                     through appropriate Show magic. See <http://twan.home.fmf.nl/blog/haskell/simple-reflection-of-expressions.details>.
+
+build-type:          Simple
+Cabal-Version:       >= 1.2
+tested-with:         GHC==6.8.2
+
+library
+   exposed-modules:     ShowQ, ShowFun, SimpleReflect
+
+   build-depends:       base, random, QuickCheck<2
+
+   ghc-options:         -Wall
+   ghc-prof-options:    -prof -auto-all

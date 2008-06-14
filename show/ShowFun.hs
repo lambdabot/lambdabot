@@ -1,6 +1,4 @@
---
 -- Helper code for runplugs that doesn't agree with SmallCheck
---
 
 module ShowFun where
 

@@ -4,12 +4,12 @@
 -- Module      :  SimpleReflect
 -- Copyright   :  (c) 2008 Twan van Laarhoven
 -- License     :  BSD-style
--- 
+--
 -- Maintainer  :  twanvl@gmail.com
 -- Stability   :  experimental
 -- Portability :  portable
 --
--- Simple reflection of haskell expressions containing variables.
+-- Simple reflection of Haskell expressions containing variables.
 --
 -----------------------------------------------------------------------------
 module SimpleReflect
@@ -222,6 +222,7 @@ instance Bounded Expr where
     maxBound = var "maxBound"
 
 {- -- Lennart Augustsson's Extensions, temporarily disabled.
+See <http://augustss.blogspot.com/2008/03/in-recent-blog-post-by-twan-van.html>.
 
 instance (Show a, ExprArg a, Show r) => Show (a -> r) where
     showsPrec _ f = showString "\\ " . showsPrec 0 v . showString " -> " .
