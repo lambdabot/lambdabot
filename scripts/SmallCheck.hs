@@ -17,7 +17,7 @@ import Control.Monad
 import System.Random
 import System.Exit              (exitWith, ExitCode(ExitSuccess))
 import System.IO                (getContents, putStrLn)
-import Resource
+import System.Posix.Resource
 import Test.SmallCheck
 
 import qualified Control.Exception
