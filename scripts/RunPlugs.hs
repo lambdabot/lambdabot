@@ -23,7 +23,7 @@ import System.IO                (getContents, hSetBuffering, BufferMode(NoBuffer
                                  stdout)
 import System.Posix.Signals     (sigXCPU, installHandler, Handler(CatchOnce))
 
-import Resource
+import System.Posix.Resource
 
 -- These should not be identical, to give the XCPU handler time to trigger
 cpuTimeLimitHard = ResourceLimit 6
