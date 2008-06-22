@@ -3,7 +3,7 @@
 set -e
 
 ghc -O2 --make scripts/BotPP.hs -o BotPP
-chmod +x Setup.hs configure
+chmod +x Setup.hs
 nice ./Setup.hs configure --bindir=`pwd` --libdir=`pwd`/lib
 nice ./Setup.hs build
 ./Setup.hs copy
