@@ -47,35 +47,37 @@ extractQuote s = (getQuote . csv) s
 
 condorCmd :: String -> LB [String]
 condorCmd [] = return ["Empty ticker list"]
-condorCmd tickers = liftM (:[]) $ io (calcCondor tickers)
+condorCmd tickers = 
+    case splitList '/' tickers of
+        [a,b,c,d] -> liftM (:[]) $ io $ calcCondor a b c d
+        _            -> return [printf "Invalid argument '%s'" tickers]
 
 -- fetch: b bid, a ask
-condorUrl :: String -> String
-condorUrl tickers =  "http://download.finance.yahoo.com/d/quotes.csv?f=ba&e=.csv&s=" ++ ts
-    where ts = concatWith "+" $ map urlEncode $ words tickers
+condorUrl :: [String] -> String
+condorUrl tickers = "http://download.finance.yahoo.com/d/quotes.csv?f=ba&e=.csv&s=" ++ ts
+    where ts = concatWith "+" $ map urlEncode tickers
 
-getBidAsk :: String -> IO (Maybe (Float, Float))
-getBidAsk ticker = do
-    xs <- fetchPage "GET" (condorUrl ticker)
-    case xs of
-        (x:_) -> (return . extractPrice . csv) x
-        _     -> return Nothing
+getBidAsks :: [String] -> IO [Maybe (Float, Float)]
+getBidAsks tickers = do
+    xs <- fetchPage "GET" (condorUrl tickers)
+    return $ map (extractPrice.csv) xs
     where
-        extractPrice [bid,ask] = Just (read bid, read ask)
-        extractPrice _ = Nothing
+        extractPrice :: [String] -> Maybe (Float, Float)
+        extractPrice [bid,ask] = liftM2 (,) (readMaybe bid) (readMaybe ask)
+        extractPrice _         = Nothing
 
-calcCondor :: String -> IO String
-calcCondor s = do
-    let ws = splitList '/' s
-    xs <- mapM getBidAsk ws
+calcCondor :: String -> String -> String -> String -> IO String
+calcCondor a b c d = do
+    xs <- getBidAsks [a,b,c,d]
     return $ case xs of
         [Just (ab,aa), Just (bb,ba), Just (cb,ca), Just (db,da)] -> 
               printf "%s: bid $%.02f  ask $%.02f" s (bb+cb-aa-da) (ba+ca-ab-db)
-        [Nothing, _, _, _] -> printf "Can't find '%s'" (ws !! 0)
-        [_, Nothing, _, _] -> printf "Can't find '%s'" (ws !! 1)
-        [_, _, Nothing, _] -> printf "Can't find '%s'" (ws !! 2)
-        [_, _, _, Nothing] -> printf "Can't find '%s'" (ws !! 3)
-        _ -> printf "Bad format '%s'" s
+        [Nothing, _, _, _] -> printf "Can't find '%s'" a
+        [_, Nothing, _, _] -> printf "Can't find '%s'" b
+        [_, _, Nothing, _] -> printf "Can't find '%s'" c
+        [_, _, _, Nothing] -> printf "Can't find '%s'" d
+        _                  -> "calcCondor: Internal error"
+    where s = a ++ "/" ++ b ++ "/" ++ c ++ "/" ++ d
 
 ---- Library routines, consider moving elsewhere. ----
 
