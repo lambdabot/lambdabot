@@ -21,4 +21,8 @@ infixr 5 ++
 zero :: Monoid m => m
 zero = mempty
 
+newtype Mu f = In { out :: f (Mu f) }
+
+newtype Rec a = InR { outR :: Rec a -> a }
+
 {-# LINE 1 "<local>" #-}
