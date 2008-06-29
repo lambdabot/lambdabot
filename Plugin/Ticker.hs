@@ -139,25 +139,9 @@ csv xs = case splitWhile (/= ',') xs of
              (word, [])       -> [word]
              _                -> error "shouldn't happen"
 
--- $ curl "http://download.finance.yahoo.com/d/quotes.csv?f=sl1cd1t1&e=.csv&s=C"
--- "C",23.19,"-0.45 - -1.90%","5/13/2008","1:32pm"
--- "GBPUSD=X",1.9478,"N/A - N/A","5/13/2008","1:52pm"
-extractQuote :: [String] -> Maybe String
-extractQuote [] = Nothing
-extractQuote ls = (getQuote . csv . filter (/= '\r') . last) ls
-    where
-        getQuote (_:ticker:price:date:time:change:afterhrs:_) = 
-            Just $ printf "%s: %s %s %s @ %s %s %s" ticker' price change perc date' time' afterhrs'
-            where ticker' = unquote ticker
-                  time' = unquote time
-                  date' = unquote date
-                  price' = val price
-                  change' = val change
-		  afterhrs' = if (val afterhrs) > 0.00
-                                 then printf "(AH %s)" afterhrs
-                                 else ""
-                  perc = if change == "N/A"
-                            then "-"
-                            else printf "(%.1f%%)" (100.0 * change' / (price' - change'))
-        getQuote _ = Nothing
+-- | Read a value from a string.
+readMaybe :: Read a => String -> Maybe a
+readMaybe x = case readsPrec 0 x of
+                [(y,"")] -> Just y
+                _        -> Nothing
 
