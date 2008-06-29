@@ -2,5 +2,5 @@
 
 set -e
 
-cabal install --libdir=`pwd`/lib --bindir=`pwd`
+cabal install --libdir=`pwd`/lib --bindir=`pwd` --docdir=`pwd`/doc
 ghc -v0 -c -O2 -funbox-strict-fields -odir . -hidir . scripts/SmallCheck.hs
