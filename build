@@ -1,6 +1,11 @@
 #!/bin/sh
 
 set -e
-
+for x in oeis brainfuck plugins show smallcheck numbers arrows parallel unlambda
+   do cabal --global install $x
+      done
+cd lambdabot-utils
+cabal --global install
+cd ..
 cabal install --libdir=`pwd`/lib --bindir=`pwd` --docdir=`pwd`/doc
 ghc -v0 -c -O2 -funbox-strict-fields -odir . -hidir . scripts/SmallCheck.hs
