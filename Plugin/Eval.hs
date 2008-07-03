@@ -48,7 +48,7 @@ plugs src = do
     case parseExpr src of
         Left  e -> return e
         Right _ -> do
-            (out,err,_) <- popen binary [] (Just src)
+            (out,err,_) <- popen binary ["+RTS","-M64m"] (Just src)
             case (out,err) of
                 ([],[]) -> return "Terminated\n"
                 _       -> do
@@ -136,6 +136,7 @@ munge = expandTab . dropWhile (=='\n') . dropNL . clean_
 clean_ :: String -> String
 clean_ s|  no_io      `matches'`    s = "No IO allowed\n"
         |  type_sig   `matches'`    s = "Add a type signature\n"
+        |  enomem     `matches'`    s = "Tried to use too much memory\n"
 
         | Just (_,m,_,_) <- ambiguous  `R.matchRegexAll` s = m
         | Just (_,_,b,_) <- inaninst   `R.matchRegexAll` s = clean_ b
@@ -166,6 +167,7 @@ clean_ s|  no_io      `matches'`    s = "No IO allowed\n"
         columnnum  = regex' " at <[^\\.]*\\.[^\\.]*>:[^ ]*"
         nomatch    = regex' "Couldn't match[^\n]*\n"
         inaninst   = regex' "^[ \t]*In a.*$"
+        enomem     = regex' "^Heap exhausted"
 
 ------------------------------------------------------------------------
 --
