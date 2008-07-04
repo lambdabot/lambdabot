@@ -45,7 +45,7 @@ searchCmd engine rest = do
     body    <- io $ queryit "GET" engine rest
     case getHeader "Location" headers `mplus` extractConversion body of
       Just url -> do
-        title <- io $ urlPageTitle url (proxy config)
+        title <- io $ runWebReq (urlPageTitle url) (proxy config)
         return $ maybe [url] (\t -> [url, t]) title
       Nothing  -> return ["No Result Found."]
 

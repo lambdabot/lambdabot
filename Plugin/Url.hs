@@ -45,7 +45,7 @@ instance Module UrlModule Bool where
 -- | Fetch the title of the specified URL.
 fetchTitle :: String -> LB [String]
 fetchTitle url = do
-    title <- io $ urlPageTitle url (proxy config)
+    title <- io $ runWebReq (urlPageTitle url) (proxy config)
     return $ maybe [] return title
 
 -- | base url for fetching tiny urls
@@ -56,7 +56,7 @@ tinyurl = "http://tinyurl.com/api-create.php?url="
 fetchTiny :: String -> LB [String]
 fetchTiny url
     | Just uri <- parseURI (tinyurl ++ url) = do
-        tiny <- io $ getHtmlPage uri (proxy config)
+        tiny <- io $ runWebReq (getHtmlPage uri) (proxy config)
         return $ maybe [] return $ findTiny $ foldl' cat "" tiny
     | otherwise = return $ maybe [] return $ Just url
     where cat x y = x ++ " " ++ y
