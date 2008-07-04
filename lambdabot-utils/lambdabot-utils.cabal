@@ -26,7 +26,7 @@ Homepage:            http://haskell.org/haskellwiki/Lambdabot
 build-type:          Simple
 
 Build-depends:   base, haskell-src, containers, zlib, bytestring, mtl,
-                 regex-compat, regex-posix, process, network, old-time, binary, unix, random
+                 regex-compat, regex-posix, process, network, old-time, binary, unix, random, tagsoup
 Exposed-modules: Lambdabot.FixPrecedence, Lambdabot.Serial,
                  Lambdabot.Error, Lambdabot.Url, Lambdabot.Process,
                  Lambdabot.Regex, Lambdabot.MiniHTTP, Lambdabot.AltTime,
