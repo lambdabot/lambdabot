@@ -19,6 +19,10 @@ import Lambdabot.MiniHTTP
 
 import Text.Regex
 
+import Text.HTML.TagSoup.Parser
+import Text.HTML.TagSoup.Match
+import Text.HTML.TagSoup
+
 -- | The string that I prepend to the quoted page title.
 urlTitlePrompt :: String
 urlTitlePrompt = "Title: "
@@ -75,7 +79,7 @@ rawPageTitle :: String -> Proxy -> IO (Maybe String)
 rawPageTitle url proxy
     | Just uri <- parseURI url  = do
         contents <- getHtmlPage uri proxy
-        return $ extractTitle contents
+        return $ extractTitle' contents
     | otherwise = return Nothing
 
 -- | Fetch the contents of a URL following HTTP redirects.  It returns
@@ -120,7 +124,7 @@ getHtmlPage u p = getHtmlPage' u p 5
 -- comprising the server response which includes the status line,
 -- response headers, and body.
 getURIContents :: URI -> Proxy -> IO [String]
-getURIContents uri proxy = readNBytes 2048 proxy uri request ""
+getURIContents uri proxy = readNBytes 3048 proxy uri request ""
     where
       request  = case proxy of
                    Nothing -> ["GET " ++ abs_path ++ " HTTP/1.1",
@@ -150,6 +154,16 @@ extractTitle contents
         (_,_,start,_) <- matchRegexAll begreg text
         (title,_,_,_) <- matchRegexAll endreg start
         return $ (unwords . words) title
+
+extractTitle' :: [String] -> Maybe String
+extractTitle' = content . tags where
+    content = maybeText . format . innerText
+    opening = dropWhile (not . tagOpenLit "title" (const True))
+    closing = takeWhile (not . tagCloseLit "title")
+    tags = closing . opening . canonicalizeTags . parseTags . unlines
+    format = unwords . words
+    maybeText [] = Nothing
+    maybeText t  = Just t
 
 -- | Is the server response of type "text/html"?
 isTextHtml :: [String] -> Bool
