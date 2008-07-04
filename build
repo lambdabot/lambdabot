@@ -1,14 +1,23 @@
 #!/bin/sh
 
 set -e
+
+## Install any extra packages needed.
 prefix=
 #prefix="--prefix /home/cgibbard/local"
 
 for x in oeis brainfuck plugins show smallcheck numbers arrows parallel unlambda
    do cabal $prefix --global install $x
       done
+
+## Install lambdabot-utils
 cd lambdabot-utils
+runghc Setup.hs clean
 cabal $prefix --global install
 cd ..
+
+## And finally lambdabot.
+runghc Setup.hs clean
 cabal install --libdir=`pwd`/lib --bindir=`pwd` --docdir=`pwd`/doc
 ghc -v0 -c -O2 -funbox-strict-fields -odir . -hidir . scripts/SmallCheck.hs
+
