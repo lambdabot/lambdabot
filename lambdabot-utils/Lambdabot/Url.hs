@@ -56,10 +56,19 @@ urlPageTitle url = do
 -- be displayed in an IRC channel.  Instead, use 'urlPageTitle'.
 rawPageTitle :: String -> WebReq (Maybe String)
 rawPageTitle url 
-    | Just uri <- parseURI url  = do
+    | Just uri <- parseURI url'  = do
         contents <- getHtmlPage uri
-        return $ extractTitle contents
+        case contentType contents of
+          Just "text/html"       -> return $ extractTitle contents
+          Just "application/pdf" -> rawPageTitle (googleCacheURL url)
+          _                      -> return $ Nothing
     | otherwise = return Nothing
+    -- URLs containing `#' fail to parse with parseURI, but
+    -- these kind of URLs are commonly pasted, so we ought to try
+    -- removing that part of provided URLs.
+    where url' = takeWhile (/='#') url
+          googleCacheURL = (gURL++) . escapeURIString (const False)
+          gURL = "http://www.google.com/search?hl=en&q=cache:"
 
 -- | Fetch the contents of a URL following HTTP redirects.  It returns
 -- a list of strings comprising the server response which includes the
@@ -132,10 +141,10 @@ extractTitle = content . tags where
     maybeText [] = Nothing
     maybeText t  = Just t
 
--- | Is the server response of type "text/html"?
-isTextHtml :: [String] -> Bool
-isTextHtml []       = False
-isTextHtml contents = val == "text/html"
+-- | What is the type of the server response?
+contentType :: [String] -> Maybe (String)
+contentType []       = Nothing
+contentType contents = Just val
     where
       val   = takeWhile (/=';') ctype
       ctype = case getHeader "Content-Type" contents of
@@ -156,4 +165,3 @@ getHeader hdr (_:hs) = lookup hdr $ concatMap mkassoc hs
       mkassoc s  = case findIndex (==':') s of
                     Just n  -> [(take n s, removeCR $ drop (n+2) s)]
                     Nothing -> []
-
