@@ -12,7 +12,7 @@ import Language.Haskell.Syntax hiding (Module)
 import qualified Text.Regex as R
 import System.Directory
 import System.Exit
-
+import Codec.Binary.UTF8.String (decodeString)
 import qualified Data.ByteString.Char8 as P
 
 PLUGIN Plugs
@@ -45,7 +45,7 @@ plugs :: String -> IO String
 plugs src = do
     -- first, verify the source is actually a Haskell 98 expression, to
     -- avoid code injection bugs.
-    case parseExpr src of
+    case parseExpr (decodeString src) of
         Left  e -> return e
         Right _ -> do
             (out,err,_) <- popen binary ["+RTS","-M64m"] (Just src)

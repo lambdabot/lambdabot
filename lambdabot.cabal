@@ -33,7 +33,7 @@ Executable          BotPP
 
 -- Lambdabot main
 Executable          lambdabot
-    Build-depends:       containers, directory, pretty, parsec, old-time, random, array, network, regex-compat, readline, binary>0.2, haskell-src, oeis, lambdabot-utils, show,
+    Build-depends:       containers, directory, pretty, parsec, old-time, random, array, network, regex-compat, readline, binary>0.2, haskell-src, oeis, lambdabot-utils, show, utf8-string,
                          -- runtime dependencies
                          brainfuck, unlambda
     Main-is:             Main.hs
