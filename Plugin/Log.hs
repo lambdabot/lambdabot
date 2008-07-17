@@ -27,8 +27,7 @@ newtype LogModule = LogModule ()
 
 type DateStamp = (Int, Month, Int)
 data ChanState = CS { chanHandle  :: Handle,
-                      chanDate    :: DateStamp,
-                      chanHistory :: [Event] }
+                      chanDate    :: DateStamp }
                deriving (Show, Eq)
 type LogState = M.Map Channel ChanState
 
@@ -94,7 +93,7 @@ instance Module LogModule LogState where
          now <- io getClockTime
          -- map over the channels this message was directed to, adding to each
          -- of their log files.
-         mapM_ (\c -> withValidLog (doLog c f msg) now c) (Msg.channels msg)
+         mapM_ (withValidLog (doLog f msg) now) (Msg.channels msg)
        Nothing -> return ()
      return []
 
@@ -102,10 +101,9 @@ instance Module LogModule LogState where
            --             /= (lowerCaseString . head $ Msg.channels m)
            --             -- We don't log /msgs to the lambdabot
 
-           doLog chan f m hdl ct = do
+           doLog f m hdl ct = do
              let event = f m ct
              logString hdl (show event)
-             appendEvent chan event
 
 -- process _ _ _ "last" rest = showHistory rest
 -- process _ _ _ "print-logs" _ = fmap ((:[]) . show) readMS
@@ -122,20 +120,6 @@ filterNick who = filter filterOneNick
     filterOneNick (Joined who' _ _)    = who == who'
     filterOneNick (Parted who' _ _)    = who == who'
     filterOneNick (Renick old _ _ new) = who == old || who == new
-
--- | Show the last 10 (or whatever) lines from the channel, in reverse order.
-showHistory :: Msg.Message m => m -> String -> Log [String]
-showHistory msg args = do
-  st <- readMS
-  case M.lookup chan' st of
-    Just cs -> let his = chanHistory cs
-               in return [unlines . reverse . map show
-                          . take nLines'.  reverse $ lines' his]
-    Nothing -> return ["I haven't got any logs for that channel."]
-  where chan:nLines:nick:_ = map listToMaybeAll (words args ++ repeat "")
-        chan'     = Msg.readNick msg $ fromMaybe (error "The channel name is required") chan
-        nLines'   = maybe numLastLines read nLines
-        lines' fm = maybe fm (\n -> filterNick (Msg.readNick msg n) fm) nick
 
 -- * Event -> String helpers
 --
@@ -160,7 +144,7 @@ dateStamp ct = let cal = toUTCTime ct in (ctDay cal, ctMonth cal, ctYear cal)
 cleanLogState :: Log ()
 cleanLogState =
     withMS $ \state writer -> do
-      io $ M.fold (\(CS hdl _ _) iom -> iom >> hClose hdl) (return ()) state
+      io $ M.fold (\cs iom -> iom >> hClose (chanHandle cs)) (return ()) state
       writer M.empty
 
 -- | Fetch a channel from the internal map. Uses LB's fail if not found.
@@ -178,19 +162,12 @@ getHandle c = fmap chanHandle . getChannel $ c
     -- Plugin/Log.hs:187:30-39
     -- Probable cause: `getChannel' is applied to too few arguments
 
-{-getHistory :: Channel -> Log [Event]
-getHistory = fmap chanHistory . getChannel-}
-
 -- | Put a DateStamp and a Handle. Used by 'openChannelFile' and
 --  'reopenChannelMaybe'.
 putHdlAndDS :: Channel -> Handle -> DateStamp -> Log ()
 putHdlAndDS c hdl ds =
-  modifyMS (M.adjust (\(CS _ _ his) -> CS hdl ds his) c)
+        modifyMS (M.adjust (\cs -> cs {chanHandle = hdl, chanDate = ds}) c)
 
--- | Append an event to the history of a channel
-appendEvent :: Channel -> Event -> Log ()
-appendEvent c e =
-  modifyMS (M.adjust (\(CS hdl ds his) -> CS hdl ds (his ++ [e])) c)
 
 -- * Logging IO
 --
@@ -219,7 +196,7 @@ initChannelMaybe chan ct = do
   chanp <- liftM (M.member chan) readMS
   unless chanp $ do
     hdl <- openChannelFile chan ct
-    modifyMS (M.insert chan $ CS hdl (dateStamp ct) [])
+    modifyMS (M.insert chan $ CS hdl (dateStamp ct))
 
 -- | Ensure that the log is correctly initialised etc.
 withValidLog :: (Handle -> ClockTime -> Log a) -> ClockTime -> Channel -> Log a
