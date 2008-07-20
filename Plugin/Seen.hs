@@ -334,10 +334,10 @@ partCB msg fm ct nick
   | otherwise      = case M.lookup nick fm of
       Just (Present mct xs) ->
         case xs \\ (msgChans msg) of
-          [] -> Right $ M.insert nick
+          [] -> Right $! M.insert nick
                  (NotPresent ct zeroWatch xs)
                  fm
-          ys -> Right $ M.insert nick
+          ys -> Right $! M.insert nick
                                  (Present mct ys)
                                  fm
       _ -> Left "someone who isn't known parted"
@@ -345,14 +345,14 @@ partCB msg fm ct nick
 -- | when somebody quits
 quitCB :: G.Message a => a -> SeenMap -> ClockTime -> Nick -> Either String SeenMap
 quitCB _ fm ct nick = case M.lookup nick fm of
-    Just (Present _ct xs) -> Right $ M.insert nick (NotPresent ct zeroWatch xs) fm
+    Just (Present _ct xs) -> Right $! M.insert nick (NotPresent ct zeroWatch xs) fm
     _ -> Left "someone who isn't known has quit"
 
 -- | when somebody changes his\/her name
 nickCB :: G.Message a => a -> SeenMap -> ClockTime -> Nick -> Either String SeenMap
 nickCB msg fm _ nick = case M.lookup nick fm of
    Just status -> let fm' = M.insert nick (NewNick lcnewnick) fm
-                  in  Right $ M.insert lcnewnick status fm'
+                  in  Right $! M.insert lcnewnick status fm'
    _           -> Left "someone who isn't here changed nick"
    where
    newnick = drop 1 $ head (G.body msg)
@@ -376,7 +376,7 @@ joinChanCB msg fm now _nick
 msgCB :: G.Message a => a -> SeenMap -> ClockTime -> Nick -> Either String SeenMap
 msgCB _ fm ct nick =
   case M.lookup nick fm of
-    Just (Present _ xs) -> Right $
+    Just (Present _ xs) -> Right $!
       M.insert nick (Present (Just (ct, noTimeDiff)) xs) fm
     _ -> Left "someone who isn't here msg us"
 
