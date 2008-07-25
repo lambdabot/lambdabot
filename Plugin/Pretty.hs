@@ -1,17 +1,19 @@
 {-# LANGUAGE FlexibleInstances, MultiParamTypeClasses #-}
--- | Pretty-Printing echo
---
--- example:
---
--- @pretty fun x = case x of {3 -> "hello" ; 5 -> "world" ; _ -> "else"}
---
--- fun x
---  = case x of
---    3 -> "hello"
---    5 -> "world"
---    _ -> "else"
---
--- (c) Johannes Ahlmann, 2005-12-13, released under GPL 2
+
+{- | Pretty-Printing echo
+
+example:
+
+> @pretty fun x = case x of {3 -> "hello" ; 5 -> "world" ; _ -> "else"}
+
+> fun x
+>  = case x of
+>   3 -> "hello"
+>   5 -> "world"
+>   _ -> "else"
+
+(c) Johannes Ahlmann, 2005-12-13, released under GPL 2 -}
+
 module Plugin.Pretty where
 
 import Plugin
