@@ -67,8 +67,11 @@ integralRandomR  (a,b) g = case randomR (fromIntegral a :: Integer,
                                          fromIntegral b :: Integer) g of
                             (x,g) -> (fromIntegral x, g)
 
-myquickcheck :: Testable a => a -> IO String
-myquickcheck a = do
+myquickcheck :: Testable a => a -> String
+myquickcheck = unsafePerformIO . myquickcheck'
+
+myquickcheck' :: Testable a => a -> IO String
+myquickcheck' a = do
     rnd <- newStdGen
     tests (evaluate a) rnd 0 0 []
 
