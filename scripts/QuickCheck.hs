@@ -1,12 +1,8 @@
---
 -- Copyright (c) 2004 Don Stewart - http://www.cse.unsw.edu.au/~dons
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
---
 
---
 -- | QuickCheck. use hs-plugins to run a Haskell expression under
 -- controlled conditions.
---
 import System.Eval.Haskell      (unsafeEval_)
 
 import Data.Char                (chr)
@@ -26,17 +22,17 @@ import qualified Control.Exception
 main = do
     setResourceLimit ResourceCPUTime $ ResourceLimits (ResourceLimit 5) (ResourceLimit 5)
     s <- getLine
-    context <- fmap ((["L","ShowFun"]++) 
-                     . map (unwords . drop 1 . words) 
-		     . filter (isPrefixOf "import")
-		     . lines) 
-		    (readFile "imports.h")
+    context <- fmap ((["L","ShowFun"]++)
+                     . map (unwords . drop 1 . words)
+                     . filter (isPrefixOf "import")
+                     . lines)
+                    (readFile "imports.h")
     when (not . null $ s) $ do
         x <- sequence (take 3 (repeat $ getStdRandom (randomR (97,122)) >>= return . chr))
         s <- unsafeEval_ ("let { "++x++
                          " = \n# 1 \"<irc>\"\n"++s++
                          "\n} in (myquickcheck "++x++
-                         ")") (context) ["-O","-fextended-default-rules","-package oeis", "-XNoMonomorphismRestriction"] [] []
+                         ")") (context) ["-O","-XExtendedDefaultRules","-package oeis", "-XNoMonomorphismRestriction"] [] []
         case s of
             Left  e -> mapM_ putStrLn e
             Right a -> Control.Exception.catch
