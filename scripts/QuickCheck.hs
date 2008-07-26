@@ -31,7 +31,7 @@ main = do
         x <- sequence (take 3 (repeat $ getStdRandom (randomR (97,122)) >>= return . chr))
         t <- unsafeEval_ ("let { "++x++
                          " = \n# 1 \"<irc>\"\n"++s++
-                         "\n} in (myquickcheck "++x++
+                         "\n} in (myquickcheck' "++x++
                          ")") (context) ["-O","-XExtendedDefaultRules","-package oeis", "-XNoMonomorphismRestriction"] [] []
         case t of
             Left  e -> mapM_ putStrLn e
