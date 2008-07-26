@@ -6,19 +6,19 @@
 import System.Eval.Haskell      (unsafeEval_)
 
 import Data.Char                (chr)
-import Data.Maybe               (isJust, fromJust)
 import Data.List
 import Control.Monad
 
 import System.Random
 import System.Exit              (exitWith, ExitCode(ExitSuccess))
-import System.IO                (getContents, putStrLn)
+import System.IO                (putStrLn)
 import System.Posix.Resource
 
 import Test.QuickCheck
 
 import qualified Control.Exception
 
+main :: IO ()
 main = do
     setResourceLimit ResourceCPUTime $ ResourceLimits (ResourceLimit 5) (ResourceLimit 5)
     s <- getLine
@@ -29,11 +29,11 @@ main = do
                     (readFile "imports.h")
     when (not . null $ s) $ do
         x <- sequence (take 3 (repeat $ getStdRandom (randomR (97,122)) >>= return . chr))
-        s <- unsafeEval_ ("let { "++x++
+        t <- unsafeEval_ ("let { "++x++
                          " = \n# 1 \"<irc>\"\n"++s++
                          "\n} in (myquickcheck "++x++
                          ")") (context) ["-O","-XExtendedDefaultRules","-package oeis", "-XNoMonomorphismRestriction"] [] []
-        case s of
+        case t of
             Left  e -> mapM_ putStrLn e
             Right a -> Control.Exception.catch
                 (a >>= putStr . take 512)
