@@ -4,7 +4,7 @@ version:             0.2
 license:             GPL
 license-file:        LICENSE
 author:              Lambdabot devs, Twan van Laarhoven <twanvl@gmail.com>
--- maintainer:          Cale
+maintainer:          Lambdabot developers
 
 stability:           Experimental
 category:            Language
