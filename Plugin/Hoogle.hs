@@ -52,7 +52,7 @@ hoogle s = do
         (out,err,_) <- popen hoogleBinary args (Just "")
         return $ result out err
 
-    where result [] [] = ["A Hoogle error occured."]
+    where result [] [] = ["A Hoogle error occurred."]
           result [] ys = [ys]
           result xs _  =
                 let xs' = map toPair $ lines xs
