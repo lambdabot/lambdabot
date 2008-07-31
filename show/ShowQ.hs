@@ -1,3 +1,4 @@
+{-# LANGUAGE NoMonomorphismRestriction #-}
 -- Helper code for runplugs
 --
 -- Note: must be kept in separate module to hide unsafePerformIO from
@@ -7,10 +8,9 @@ module ShowQ where
 
 -- import Language.Haskell.TH
 import System.IO.Unsafe
-import Data.Dynamic
 import Data.Ratio
 
-import Test.QuickCheck.Batch
+import qualified Test.SmallCheck (smallCheck, Testable)
 import Test.QuickCheck
 import Data.Char
 import Data.List
@@ -66,6 +66,11 @@ integralRandomR :: (Integral a, RandomGen g) => (a,a) -> g -> (a,g)
 integralRandomR  (a,b) g = case randomR (fromIntegral a :: Integer,
                                          fromIntegral b :: Integer) g of
                             (x,g) -> (fromIntegral x, g)
+
+mysmallcheck :: (Test.SmallCheck.Testable a) => a -> ()
+mysmallcheck = unsafePerformIO . mysmallcheck'
+mysmallcheck' :: (Test.SmallCheck.Testable a) => a -> IO ()
+mysmallcheck' a = Test.SmallCheck.smallCheck 6 a
 
 myquickcheck :: Testable a => a -> String
 myquickcheck = unsafePerformIO . myquickcheck'
