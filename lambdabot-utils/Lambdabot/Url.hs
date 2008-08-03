@@ -132,7 +132,7 @@ getURIContents uri = do
 -- between the title HTML element, only if it is text/html content.
 -- Now supports all(?) HTML entities thanks to TagSoup.
 extractTitle :: [String] -> Maybe String
-extractTitle = content . tags . decodeString . unlines where
+extractTitle = encodeString . content . tags . decodeString . unlines where
     tags = closing . opening . canonicalizeTags . parseTags
     opening = dropWhile (not . tagOpenLit "title" (const True))
     closing = takeWhile (not . tagCloseLit "title")
