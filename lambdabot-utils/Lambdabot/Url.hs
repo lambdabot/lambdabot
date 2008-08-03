@@ -19,6 +19,7 @@ import Control.Monad.Reader
 import Text.HTML.TagSoup.Parser
 import Text.HTML.TagSoup.Match
 import Text.HTML.TagSoup
+import Codec.Binary.UTF8.String
 
 -- | The string that I prepend to the quoted page title.
 urlTitlePrompt :: String
@@ -131,8 +132,8 @@ getURIContents uri = do
 -- between the title HTML element, only if it is text/html content.
 -- Now supports all(?) HTML entities thanks to TagSoup.
 extractTitle :: [String] -> Maybe String
-extractTitle = content . tags where
-    tags = closing . opening . canonicalizeTags . parseTags . unlines
+extractTitle = content . tags . decodeString . unlines where
+    tags = closing . opening . canonicalizeTags . parseTags
     opening = dropWhile (not . tagOpenLit "title" (const True))
     closing = takeWhile (not . tagCloseLit "title")
 
