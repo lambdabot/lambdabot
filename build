@@ -6,14 +6,14 @@ set -e
 prefix=
 #prefix="--prefix /home/cgibbard/local"
 
-for x in oeis brainfuck plugins show smallcheck numbers arrows parallel unlambda
-   do cabal $prefix --global install $x
+for x in oeis brainfuck plugins show smallcheck numbers arrows parallel unlambda logict
+   do cabal $prefix install --global $x
       done
 
 ## Install lambdabot-utils
 cd lambdabot-utils
 runghc Setup.hs clean
-cabal $prefix --global install
+cabal $prefix install --global
 cd ..
 
 ## And finally lambdabot.
