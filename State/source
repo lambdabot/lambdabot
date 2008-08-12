@@ -1,3 +1,21 @@
+Mu
+newtype Mu f = In { out :: f (Mu f) }
+
+In
+newtype Mu f = In { out :: f (Mu f) }
+
+out
+newtype Mu f = In { out :: f (Mu f) }
+
+Rec
+newtype Rec a = InR { outR :: Rec a -> a }
+
+InR
+newtype Rec a = InR { outR :: Rec a -> a }
+
+outR
+newtype Rec a = InR { outR :: Rec a -> a }
+
 (=<<)
 f =<< x = x >>= f
 
@@ -909,6 +927,15 @@ even n = n `rem` 2 == 0
 odd
 odd = not . even
 
+(^)
+x ^ 0            =  1
+x ^ n | n > 0    =  f x (n-1) x
+  where f _ 0 y = y
+        f x n y = g x n 
+          where g x n | even n  = g (x*x) (n `quot` 2)
+                      | otherwise = f x (n-1) (x*y)
+_ ^ _            = error "Prelude.^: negative exponent"
+
 (^^)
 x ^^ n      =  if n >= 0 then x^n else recip (x^(negate n))
 
@@ -1106,8 +1133,8 @@ class Functor f => Applicative f where
 
 Alternative
 class Applicative f => Alternative f where
-	empty :: f a
-	(<|>) :: f a -> f a -> f a
+    empty :: f a
+    (<|>) :: f a -> f a -> f a
 
 Monad
 class  Monad m  where

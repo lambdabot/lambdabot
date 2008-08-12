@@ -29,6 +29,7 @@ import Data.Tuple
 import qualified Data.Traversable
 import Data.Typeable
 import Data.Word
+import Data.STRef
 import qualified Data.Map as M
 import qualified Data.Set as S
 import qualified Data.IntSet as IS
@@ -49,13 +50,14 @@ import Control.Monad.Cont
 import Control.Monad.Identity
 import Control.Monad.State
 import Control.Monad.State
-import Control.Monad.ST
+import Control.Monad.ST (ST, runST, fixST)
 import Control.Monad.Reader
 import Control.Monad.Fix
 import Control.Monad.Writer
 import Control.Monad.RWS
 import Control.Monad.Error
 import Control.Monad.Instances
+import Control.Monad.Logic
 import Control.Arrow hiding (pure)
 import qualified Control.Arrow.Transformer as AT
 import qualified Control.Arrow.Transformer.All as AT
