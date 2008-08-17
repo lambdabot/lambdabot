@@ -17,12 +17,12 @@ instance Module SmallModule () where
     process _ _ to _ s = ios80 to (check s)
 
 binary :: String
-binary = "./smallcheck"
+binary = "mueval -E --expression \'mysmallcheck ("
 
 check :: String -> IO String
 check src = case parseExpr src of
     Left  e -> return e
-    Right _ -> run binary src $ expandTab . dropWhile (=='\n') . dropNL . clean_
+    Right _ -> run binary (src ++ ")\'") $ expandTab . dropWhile (=='\n') . dropNL . clean_
 
 clean_ :: String -> String
 clean_ s

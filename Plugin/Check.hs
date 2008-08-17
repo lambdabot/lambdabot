@@ -17,14 +17,14 @@ instance Module CheckModule () where
     process _ _ to _ s = ios80 to (check s)
 
 binary :: String
-binary = "./quickcheck"
+binary = "mueval -E --expression \'myquickcheck ("
 
 check :: String -> IO String
 check src = do
     case parseExpr src of
         Left e  -> return e
         Right _ -> do
-            (out,err,_) <- popen binary [] (Just src)
+            (out,err,_) <- popen binary [] (Just $ src ++ ")\'")
             let o = munge out
                 e = munge err
             return $ case () of {_

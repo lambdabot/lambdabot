@@ -1,5 +1,5 @@
 {-# LANGUAGE MultiParamTypeClasses, TypeSynonymInstances #-}
-{- | Leave a message with lambdabot, the faithful secretary.
+{- Leave a message with lambdabot, the faithful secretary
 
 > 17:11 < davidhouse> @tell dmhouse foo
 > 17:11 < hsbot> Consider it noted
@@ -104,7 +104,7 @@ instance Module TellModule NoticeBoard where
     -- | Write down a note
     process _ msg _ "tell" args = doTell args msg Tell
 
-    -- | Really just a synonym for @tell, but phrases it as a question instead.
+    -- | Really just a synonym for "@tell", but phrases it as a question instead.
     process _ msg _ "ask" args = doTell args msg Ask
 
     -- | Give a user their messages
