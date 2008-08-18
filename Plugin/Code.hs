@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses #-}
 --
 -- Copyright (c) 2005-6 Don Stewart - http://www.cse.unsw.edu.au/~dons
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
@@ -8,6 +9,7 @@
 module Plugin.Code where
 
 import Plugin
+import Text.Regex
 
 PLUGIN Code
 
@@ -45,7 +47,7 @@ getSourceFiles d = do
 
 -- give up:
 getRandSrcOf :: [String] -> Int -> IO String
-getRandSrcOf s 0 | s == []   = return [] 
+getRandSrcOf s 0 | s == []   = return []
                  | otherwise = return $ head s
 
 -- otherwise get a random src line
@@ -75,4 +77,4 @@ getRandSrcOf ss n = do
               imports = mkRegex "^import"
               wheres  = mkRegex "^ *where"
               mods    = mkRegex "module"
-        
+

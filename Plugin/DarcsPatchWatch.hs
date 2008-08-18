@@ -1,11 +1,9 @@
---
+{-# LANGUAGE MultiParamTypeClasses #-}
+
 -- Copyright (c) 2005 Stefan Wehr (http://www.stefanwehr.de)
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
---
 
---
 -- | Watch darcs patches arriving...
---
 module Plugin.DarcsPatchWatch (theModule) where
 
 import Plugin
@@ -160,7 +158,7 @@ addRepo rest = do
                 return ["maximum number of repositories reached!"]
             | r `elem` repos ->
                 return ["cannot add already existing repository " ++ showRepo r]
-            | otherwise -> 
+            | otherwise ->
                 do setRepos (r:repos)
                    return ["repository " ++ showRepo r ++ " added"]
             }
@@ -224,7 +222,7 @@ watchRepos = do
                       forkIO $ do
                           g
                           return ()
-          
+
 
 -- actually work out if we need to send a message
 --

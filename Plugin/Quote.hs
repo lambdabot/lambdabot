@@ -1,4 +1,4 @@
-{-# LANGUAGE MultiParamTypeClasses, PatternGuards, TypeSynonymInstances #-}
+{-# LANGUAGE CPP, MultiParamTypeClasses, PatternGuards, TypeSynonymInstances #-}
 -- | Support for quotes
 module Plugin.Quote (theModule) where
 

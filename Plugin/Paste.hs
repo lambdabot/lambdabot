@@ -1,14 +1,14 @@
---
+{-# LANGUAGE MultiParamTypeClasses #-}
+
 -- | Skeletal paste support
---
 module Plugin.Paste (theModule) where
 
 import Plugin
 import Control.Concurrent
+import Message
 
 PLUGIN Paste
 
-announceTarget :: String
 announceTarget = "#haskell" -- hmm :/
 
 instance Module PasteModule ThreadId where

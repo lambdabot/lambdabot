@@ -1,6 +1,6 @@
---
--- 	| Fortune.hs, quote the fortune file
---
+{-# LANGUAGE CPP #-}
+
+-- | Fortune.hs, quote the fortune file
 module Plugin.Quote.Fortune where
 
 import Config

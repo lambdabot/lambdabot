@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 module Main where
 
 #define READLINE
@@ -32,15 +33,15 @@ instance Arbitrary Expr where
   arbitrary = sized $ \size -> frequency $ zipWith (,) [1,size,size]
     [arbVar,
      liftM2 Lambda arbPat arbitrary,
-     let se = resize (size `div` 2) arbitrary in liftM2 App se se ] 
+     let se = resize (size `div` 2) arbitrary in liftM2 App se se ]
   coarbitrary = error "Expr.coarbitrary"
 
 arbVar :: Gen Expr
-arbVar = oneof [(Var Pref . return) `fmap` choose ('a','z'), 
+arbVar = oneof [(Var Pref . return) `fmap` choose ('a','z'),
                 (Var Inf .  return) `fmap` elements (opchars\\"=")]
 
 arbPat :: Gen Pattern
-arbPat = sized $ \size -> 
+arbPat = sized $ \size ->
   let
     spat = resize (size `div` 5) arbPat
   in
@@ -69,7 +70,7 @@ propMonotonic2 e e1 e2 = App e1 e `compare` App e2 e == e1 `compare` e2
 subExpr :: Expr -> [Expr]
 subExpr (Var _ _) = []
 subExpr (Lambda v e) = [e] ++ Lambda v `map` subExpr e
-subExpr (App e1 e2) = [e1, e2] 
+subExpr (App e1 e2) = [e1, e2]
   ++ App e1 `map` subExpr e2 ++ (`App` e2) `map` subExpr e1
 subExpr (Let {}) = bt
 
@@ -95,7 +96,7 @@ qcTests = do
 
 pf :: String -> IO ()
 pf inp = case parsePF inp of
-  Right d -> do 
+  Right d -> do
     putStrLn "Your expression:"
     print d
     putStrLn "Transformed to pointfree style:"
@@ -114,7 +115,7 @@ pf' = putStrLn . (id ||| show) . parsePF
 -- NB: this is a special case of (import Control.Monad.Reader)
 -- ap :: m (a -> b) -> m a -> m b
 s :: (t -> a -> b) -> (t -> a) -> t -> b
-s f g x = f x $ g x  
+s f g x = f x $ g x
 
 unitTest :: String -> [String] -> Test
 unitTest inp out = TestCase $ do
@@ -222,12 +223,12 @@ unitTests = TestList [
   ]
 
 main :: IO ()
-main = do 
+main = do
   hSetBuffering stdout NoBuffering
   args <- getArgs
   case args of
     ("tests":_) -> doTests
-    xs          -> do 
+    xs          -> do
         mapM_ pf xs
 #ifdef READLINE
         initialize
@@ -237,13 +238,13 @@ main = do
 
 pfloop :: IO ()
 pfloop = do
-#ifdef READLINE 
+#ifdef READLINE
   line' <- readline "pointless> "
 #else
   line' <- Just `fmap` getLine
 #endif
   case line' of
-    Just line 
+    Just line
       | all isSpace line -> pfloop
       | otherwise        -> do
 #ifdef READLINE
@@ -256,5 +257,5 @@ pfloop = do
 doTests :: IO ()
 doTests = do
   runTestTT unitTests
---  qcTests 
+--  qcTests
   return ()

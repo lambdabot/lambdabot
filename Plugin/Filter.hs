@@ -1,8 +1,8 @@
---
--- | GNU Talk Filters 
+{-# LANGUAGE MultiParamTypeClasses #-}
+-- | GNU Talk Filters
 -- needs: http://www.hyperrealm.com/main.php?s=talkfilters
 -- Edward Kmett 2006
--- 
+
 module Plugin.Filter where
 
 import Plugin
