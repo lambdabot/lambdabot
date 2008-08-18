@@ -18,13 +18,30 @@ Homepage:            http://haskell.org/haskellwiki/Lambdabot
 build-type:          Simple
 Cabal-Version:       >= 1.2
 
--- first build the preprocessor
-Executable          BotPP
-    build-depends:       base, unix, mtl, bytestring
-    hs-source-dirs:      scripts/
-    Main-is:             BotPP.hs
-    ghc-options:         -funbox-strict-fields
+extra-source-files: Modules.hs-boot, imports.h, Plugin/Hello.hs, Modules.hs
 
+Library
+    build-depends: base, mtl, bytestring, unix, botpp
+    exposed-modules: Config, IRCBase,
+                     LBState, LMain, Lambdabot, Message,
+                     NickEq, Plugin, Plugin.Activity, Plugin.BF,
+                     Plugin.Babel, Plugin.Base, Plugin.Check, Plugin.Code, Plugin.Compose,
+                     Plugin.DarcsPatchWatch, Plugin.Dice, Plugin.Dict, Plugin.Dict.DictLookup, Plugin.Djinn,
+                     Plugin.Dummy, Plugin.Dummy.DocAssocs, Plugin.Dynamic, Plugin.Elite, Plugin.Eval,
+                     Plugin.FT, Plugin.Fact, Plugin.Filter, Plugin.Free, Plugin.Free.Expr,
+                     Plugin.Free.FreeTheorem, Plugin.Free.Parse, Plugin.Free.Test, Plugin.Free.Theorem, Plugin.Free.Type,
+                     Plugin.Free.Util, Plugin.Fresh, Plugin.Haddock, Plugin.Help,
+                     Plugin.Hoogle, Plugin.IRC, Plugin.Instances, Plugin.Karma, Plugin.Localtime,
+                     Plugin.Log, Plugin.More, Plugin.OEIS, Plugin.OfflineRC,
+                     Plugin.Pl, Plugin.Pl.Common, Plugin.Pl.Names, Plugin.Pl.Optimize, Plugin.Pl.Parser,
+                     Plugin.Pl.PrettyPrinter, Plugin.Pl.RuleLib, Plugin.Pl.Rules, Plugin.Pl.Transform,
+                     Plugin.Pointful, Plugin.Poll, Plugin.Pretty, Plugin.Quote, Plugin.Quote.Fortune,
+                     Plugin.Quote.Text, Plugin.Search, Plugin.Seen, Plugin.Slap, Plugin.Small,
+                     Plugin.Source, Plugin.Spell, Plugin.State, Plugin.System, Plugin.Tell,
+                     Plugin.Ticker, Plugin.Todo, Plugin.Topic, Plugin.Type, Plugin.UnMtl,
+                     Plugin.Undo, Plugin.Unlambda, Plugin.Url, Plugin.Version, Plugin.Vixen,
+                     Plugin.Where, Shared
+    ghc-options: -pgmF BotPP -F
 -- Lambdabot main
 Executable          lambdabot
     Build-depends:       containers, directory, pretty, parsec, old-time, random, array, network,
@@ -33,6 +50,7 @@ Executable          lambdabot
                          brainfuck, unlambda, mueval>=0.6
     Main-is:             Main.hs
     Extensions:          CPP
-    ghc-options:         -Wall -pgmF dist/build/BotPP/BotPP -F -H64m -funbox-strict-fields -fno-warn-incomplete-patterns -fno-warn-missing-methods -fno-warn-orphans -threaded
+    ghc-options:         -Wall -pgmF BotPP -F -funbox-strict-fields -fno-warn-incomplete-patterns -fno-warn-missing-methods -fno-warn-orphans -threaded
     include-dirs:        .
 -- For a faster build use add -Onot
+
