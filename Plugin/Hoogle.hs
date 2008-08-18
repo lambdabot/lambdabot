@@ -35,9 +35,6 @@ instance Module HoogleModule HoogleState where
 hoogleBinary :: FilePath
 hoogleBinary = "hoogle"
 
-hoogleText :: FilePath
-hoogleText = "State/hoogle.txt"
-
 -- arbitrary cutoff point
 cutoff :: Int
 cutoff = -10
@@ -45,10 +42,7 @@ cutoff = -10
 -- | Actually run the hoogle binary
 hoogle :: String -> IO [String]
 hoogle s = do
-        let args = ["--count", "20"
-                   ,"-l", hoogleText
-                   ,"--verbose"
-                   ,s]
+        let args = ["--count=20", s]
         (out,err,_) <- popen hoogleBinary args (Just "")
         return $ result out err
 

@@ -14,11 +14,11 @@ Dons:
         djinn . hoogle
 
 Cruft removal:
-    * remove scripts/{FT, djinn, hoogle} in favor of hoogle, djinn, and ftshell
+    * remove scripts/{FT, djinn} in favor of djinn, and ftshell
       found on Hackage.  Update each of the lambdabot plugins to call these new
       executables
     * remove Lib/OEIS (requires changes in the oeis package)
-    * remove scripts/SmallCheck in favor of the hackage version
+    * remove scripts/SmallCheck in favor of the Hackage version
 
 To do:
     * Better error reporting when connections fail at startup
@@ -35,7 +35,7 @@ Wishlist:
 
     * search GHC haddocks by function name and type name and GHC command line option searching ;-)
     * search Haskell 98 report
-    * search citeseer
+    * search Citeseer
     * search local database of researching paper by keyword (swish++ ?)
     * channel statistics, record of pasted URLs
     * unit tests, QuickCheck tests, written tests... OK, maybe not written
