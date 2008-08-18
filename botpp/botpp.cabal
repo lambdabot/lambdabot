@@ -1,0 +1,21 @@
+Name:                botpp
+Version:             0.1
+License:             GPL
+License-file:        LICENSE
+Author:              Don Stewart
+Maintainer:          Cale Gibbard <cgibbard@gmail.com>
+Category:            Development, Web
+Synopsis:            Build tool for Lambdabot
+Description:         This is a build tool for the Lambdabot IRC bot, which processes
+                     simple directives to write a bunch of boilerplate Haskell code.
+Homepage:            http://haskell.org/haskellwiki/Lambdabot
+
+build-type:          Simple
+Cabal-Version:       >= 1.2
+
+Library
+        build-depends: base, bytestring
+        exposed-modules: BotLib
+
+Executable BotPP
+           main-is: BotPP.hs

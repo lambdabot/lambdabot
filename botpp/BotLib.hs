@@ -1,34 +1,15 @@
-{-# OPTIONS -O -funbox-strict-fields #-}
--- Copyright (c) 2006 Don Stewart - http://www.cse.unsw.edu.au/~dons
--- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
+module BotLib where
 
---
--- Implements a preprocessor for plugins, filling in commonly required
--- syntax.
---
--- Currently only useful for plugins that only:
---  import Plugin
--- and have () for state.  
---
--- Also used to generate the modules list in Modules.hs
---
-
-import System.Environment
-import Data.Char
-import Data.List
 
 import Data.ByteString.Char8 (pack, ByteString)
 import qualified Data.ByteString.Char8 as B -- crank it up, yeah!
 
-main = do
-    -- putStr "BotPP called with args: ";  print =<< getArgs
-    [orig,i,o] <- getArgs
-    let basename = baseName orig
-    -- putStr "basename = "; print basename
-    B.readFile i >>= \l -> B.writeFile o $ expand (B.length l) 0 basename l
+import Data.Char
+import Data.List
+
 
 baseName :: FilePath -> FilePath
-baseName s = base 
+baseName s = base
     where
     rfile = takeWhile (not . (`elem` "/\\")) (reverse s)
     base  = takeWhile (/='.') (reverse rfile)
@@ -58,9 +39,9 @@ expand l n basename xs
 render :: ByteString -> [ByteString]
 render name =
     pack "newtype "  : name :
-    pack "Module = " : name : pack "Module () \n\ 
-    \\n\ 
-    \theModule :: MODULE                            \n\ 
+    pack "Module = " : name : pack "Module () \n\
+    \\n\
+    \theModule :: MODULE                            \n\
     \theModule = MODULE $ " : name : pack "Module ()       \n" : []
 
 --
@@ -98,9 +79,9 @@ modules basename s =
           pluginify x = [pack "\""
                         ,B.map toLower x
                         ,pack "\""]
-                               
 
-          nonWhitespace s 
-              | s == pack ""   = False
-              | s == pack "\n" = False
+
+          nonWhitespace t
+              | t == pack ""   = False
+              | t == pack "\n" = False
               | otherwise      = True
