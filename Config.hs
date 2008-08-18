@@ -15,24 +15,24 @@ data Config = Config {
                                               --   a pair of host and port.
 
         -- | The 'path' component is a string to the location where the fortune files
-        --   are located. On some systems, this is /usr/share/games/fortunes, on others
-        --   this is /usr/share/games/fortune. Alter this to suit your configuration
+        --   are located. On some systems, this is "\/usr\/share\/games\/fortunes", on others
+        --   this is "\/usr\/share\/games\/fortune". Alter this to suit your configuration
         fortunePath :: FilePath,
 
-        -- | Path to the top of $fptools, used by @code
+        -- | Path to the top of "\$fptools", used by "\@code"
         fptoolsPath :: FilePath,
 
-        -- which ghci to use (in @type)
+        -- | which ghci to use (in "\@type")
         ghci        :: FilePath,
         outputDir   :: FilePath,
 
-        -- what prefixes to use for commands
+        -- | what prefixes to use for commands
         commandPrefixes :: [String],
 
-        -- what prefixes to use for Haskell evalution
+        -- | what prefixes to use for Haskell evalution
         evalPrefixes :: [String],
 
-        -- particular commands we'd like to disable
+        -- | Particular commands we'd like to disable
         -- (to disable whole plugins, remove them from Modules.hs)
         disabledCommands :: [String]
 }
