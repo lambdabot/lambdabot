@@ -33,8 +33,12 @@ run binary src scrub = do
 -- seems to be a dead lock on the pipe write from runplugs, for example.
 -- Posix.popen doesn't have this problem, so maybe we can reproduce its
 -- pipe handling somehow.
---
-popen :: FilePath -> [String] -> Maybe String -> IO (String,String,ExitCode)
+-- | popen lets you run a binary with specified arguments. This bypasses the shell.
+popen :: FilePath -- ^ The binary to execute
+      -> [String] -- ^ A list of arguments to pass to the binary. No need to
+                 -- space separate them
+      -> Maybe String -- ^ stdin
+      -> IO (String,String,ExitCode)
 popen file args minput =
     Control.Exception.handle (\e -> return ([],show e,error (show e))) $ do
 
