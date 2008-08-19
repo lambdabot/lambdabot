@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP #-}
 module L where
 
 import qualified Prelude as P
