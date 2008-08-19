@@ -65,7 +65,7 @@ gzip   :: ByteString -> ByteString
 gzip   = P.concat . toChunks . compress . fromChunks . (:[])
 
 gunzip :: ByteString -> ByteString
-gunzip = P.concat . toChunks . decompress .fromChunks . (:[])
+gunzip = P.concat . toChunks . decompress . fromChunks . (:[])
 #endif
 
 --
@@ -128,7 +128,6 @@ instance Packable (Map ByteString [ByteString]) where
                 readKV (k:rest) = let (vs, rest') = break (== P.empty) rest
                                   in  (k,vs) : readKV (drop 1 rest')
 
-
         showPacked m = gzip
                      . P.unlines
                      . concatMap (\(k,vs) -> k : vs ++ [P.empty]) $ M.toList m
@@ -173,7 +172,7 @@ mapListPackedSerial :: Serial (Map ByteString [ByteString])
 mapListPackedSerial = Serial (Just . showPacked) (Just . readPacked)
 
 -- And for association list
-assocListPackedSerial   :: Serial ([(ByteString,ByteString)])
+assocListPackedSerial :: Serial ([(ByteString,ByteString)])
 assocListPackedSerial = Serial (Just . showPacked) (Just . readPacked)
 
 ------------------------------------------------------------------------
