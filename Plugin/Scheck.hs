@@ -3,7 +3,7 @@
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
 
 -- | Test a property with SmallCheck
-module Plugin.Small where
+module Plugin.Scheck where
 
 import Plugin
 import Lambdabot.Parser
