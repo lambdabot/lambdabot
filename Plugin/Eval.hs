@@ -33,7 +33,7 @@ instance Module PlugsModule () where
         | otherwise  = return []
 
 binary :: String
-binary = "mueval -E --expression "
+binary = "mueval"
 
 isEval :: String -> Bool
 isEval = ((evalPrefixes config) `arePrefixesWithSpaceOf`)
@@ -48,7 +48,7 @@ plugs src = do
     case parseExpr (decodeString src) of
         Left  e -> return e
         Right _ -> do
-            (out,err,_) <- popen binary [] (Just $ src ++ "\'")
+            (out,err,_) <- popen binary ["--expression=" ++ src] Nothing
             case (out,err) of
                 ([],[]) -> return "Terminated\n"
                 _       -> do

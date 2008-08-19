@@ -17,12 +17,26 @@ instance Module SmallModule () where
     process _ _ to _ s = ios80 to (check s)
 
 binary :: String
-binary = "mueval -E --expression \'mysmallcheck ("
+binary = "mueval"
+
 
 check :: String -> IO String
-check src = case parseExpr src of
-    Left  e -> return e
-    Right _ -> run binary (src ++ ")\'") $ expandTab . dropWhile (=='\n') . dropNL . clean_
+check src = do
+    case parseExpr src of
+        Left e  -> return e
+        Right _ -> do
+            (out,err,_) <- popen binary ["-E", "-e", "mysmallcheck " ++ src ++ ""] Nothing
+            let o = munge out
+                e = munge err
+            return $ case () of {_
+                                 | null o && null e -> "Terminated\n"
+                                 | null o           -> " " ++ e
+                                 | otherwise        -> " " ++ o
+            }
+            where munge = id
+                  f []   = []
+                  f [x]  = [x]
+                  f (x:y)= [x ++ " " ++ (concat . intersperse ", ") y]
 
 clean_ :: String -> String
 clean_ s

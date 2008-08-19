@@ -8,6 +8,7 @@ module Plugin.Check where
 import Plugin
 import Lambdabot.Parser
 import qualified Text.Regex as R
+import Codec.Binary.UTF8.String (decodeString)
 
 PLUGIN Check
 
@@ -17,35 +18,31 @@ instance Module CheckModule () where
     process _ _ to _ s = ios80 to (check s)
 
 binary :: String
-binary = "mueval -E --expression \'myquickcheck ("
+binary = "mueval"
 
 check :: String -> IO String
 check src = do
-    case parseExpr src of
-        Left e  -> return e
+    -- first, verify the source is actually a Haskell 98 expression, to
+    -- avoid code injection bugs.
+    case parseExpr (decodeString src) of
+        Left  e -> return e
         Right _ -> do
-            (out,err,_) <- popen binary [] (Just $ src ++ ")\'")
-            let o = munge out
-                e = munge err
-            return $ case () of {_
-                | null o && null e -> "Terminated\n"
-                | null o           -> " " ++ e
-                | otherwise        -> " " ++ o
-            }
-            where munge = unlines
-                        . f
-                        . lines
-                        . expandTab
-                        . dropWhile (=='\n')
-                        . dropNL
-                        . clean_
-                  f []   = []
-                  f [x]  = [x]
-                  f (x:y)= [x ++ " " ++ (concat . intersperse ", ") y]
+            (out,err,_) <- popen binary ["-E", "-e", "myquickcheck $ " ++ src] Nothing
+            case (out,err) of
+                ([],[]) -> return "Terminated\n"
+                _       -> do
+                    let o = munge out
+                        e = munge err
+                    return $ case () of {_
+                        | null o && null e -> "Terminated\n"
+                        | null o           -> " " ++ e
+                        | otherwise        -> " " ++ o
+                    }
 
---
--- Clean up runplugs' output
---
+munge :: String -> String
+munge = expandTab . dropWhile (=='\n') . dropNL . clean_
+
+-- Clean up check's output
 clean_ :: String -> String
 clean_ s|  no_io      `matches'`    s = "No IO allowed\n"
         |  terminated `matches'`    s = "Terminated\n"
