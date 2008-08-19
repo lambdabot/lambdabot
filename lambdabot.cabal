@@ -55,7 +55,7 @@ Executable          lambdabot
                          brainfuck, unlambda, mueval>=0.6.1
     Main-is:             Main.hs
     Extensions:          CPP
-    ghc-options:         -Wall -pgmF BotPP -F -funbox-strict-fields -fno-warn-incomplete-patterns -fno-warn-missing-methods -fno-warn-orphans -threaded
+    ghc-options:         -pgmF BotPP -F -funbox-strict-fields -fno-warn-incomplete-patterns -fno-warn-missing-methods -fno-warn-orphans -threaded
     include-dirs:        .
 -- For a faster build use add -Onot
 

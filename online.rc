@@ -1,4 +1,4 @@
-irc-connect freenode chat.freenode.net 7000 lambdabot Lambda_Robots:_100%_Loyal
+irc-connect freenode chat.freenode.net 6667 lambdabot Lambda_Robots:_100%_Loyal
 rc passwd.rc
 admin + freenode:Pseudonym
 admin + freenode:shapr
@@ -22,7 +22,6 @@ join freenode:#haskell-blah
 join freenode:#haskell-overflow
 join freenode:#haskell-soc
 join freenode:#jtiger
-join freenode:#parrot
 join freenode:#perl6
 join freenode:#unicycling
 join freenode:#xmonad
@@ -45,12 +44,10 @@ join freenode:#haskell.dut
 join freenode:#haskell.cz
 join freenode:#haskell_ru
 join freenode:#haskell-hac07
-join freenode:#thunks
 join freenode:#debian-es
 join freenode:#dreamlinux-es
 join freenode:#friendly-coders
 join freenode:#gentoo-uy
-join freenode:#haskell-hac4
 join freenode:#arch-haskell
 join freenode:#macosx
 join freenode:#japanese

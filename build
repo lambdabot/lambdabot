@@ -7,17 +7,22 @@ prefix=
 #prefix="--prefix /home/cgibbard/local"
 
 for x in oeis brainfuck plugins show smallcheck numbers arrows parallel unlambda logict
-   do cabal $prefix install --global $x
+   do cabal $prefix install $x
       done
 
 ## Install lambdabot-utils
 cd lambdabot-utils
 runghc Setup.hs clean
-cabal $prefix install --global
+cabal $prefix install
+cd ..
+
+## Install botpp 
+cd botpp
+runghc Setup.hs clean
+cabal $prefix install
 cd ..
 
 ## And finally lambdabot.
 runghc Setup.hs clean
 cabal install --libdir=`pwd`/lib --bindir=`pwd` --docdir=`pwd`/doc
-ghc -v0 -c -O2 -funbox-strict-fields -odir . -hidir . scripts/SmallCheck.hs
 
