@@ -48,7 +48,7 @@ plugs src = do
     case parseExpr (decodeString src) of
         Left  e -> return e
         Right _ -> do
-            (out,err,_) <- popen binary ["--expression=" ++ src] Nothing
+            (out,err,_) <- popen binary ["-l", "State/L.hs", "--expression=" ++ src] Nothing
             case (out,err) of
                 ([],[]) -> return "Terminated\n"
                 _       -> do

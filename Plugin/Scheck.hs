@@ -25,7 +25,7 @@ check src = do
     case parseExpr src of
         Left e  -> return e
         Right _ -> do
-            (out,err,_) <- popen binary ["-E", "-e", "mysmallcheck " ++ src ++ ""] Nothing
+            (out,err,_) <- popen binary ["--loadfile=", "State/L.hs", "-E", "-e", "mysmallcheck " ++ src ++ ""] Nothing
             let o = munge out
                 e = munge err
             return $ case () of {_

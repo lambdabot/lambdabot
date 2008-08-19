@@ -27,7 +27,7 @@ check src = do
     case parseExpr (decodeString src) of
         Left  e -> return e
         Right _ -> do
-            (out,err,_) <- popen binary ["-E", "-e", "myquickcheck $ " ++ src] Nothing
+            (out,err,_) <- popen binary ["--loadfile=", "State/L.hs", "-E", "-e", "myquickcheck $ " ++ src] Nothing
             case (out,err) of
                 ([],[]) -> return "Terminated\n"
                 _       -> do
