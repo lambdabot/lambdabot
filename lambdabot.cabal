@@ -15,8 +15,11 @@ Description:         Lambdabot is an IRC bot written over several years by
                      embedded in GHCi, via internet relay chat and on the web.
 Homepage:            http://haskell.org/haskellwiki/Lambdabot
 
+-- TODO: We specify Hoogle here because we can't in build-depends. Eventually, Hoogle will export a library.
+-- On that day, we can remove build-tools and add it to build-depends.
+build-tools:         Hoogle >= 4
 build-type:          Simple
-Cabal-Version:       >= 1.2
+cabal-version:       >= 1.2
 
 extra-source-files: Modules.hs-boot, imports.h, Plugin/Hello.hs, Modules.hs,
                     State/djinn, State/url, State/haddock, State/source,
@@ -51,7 +54,7 @@ Library
 Executable          lambdabot
     Build-depends:       containers, directory, pretty, parsec, old-time, random, array, network,
                          regex-compat, readline, binary>0.2, haskell-src, oeis, lambdabot-utils, show>=0.3, utf8-string,
-                         -- runtime dependencies; Hoogle is omitted since it doesn't export a library for Cabal...
+                         -- runtime dependencies
                          brainfuck, unlambda, mueval>=0.6.3
     Main-is:             Main.hs
     Extensions:          CPP
