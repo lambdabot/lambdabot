@@ -1,32 +1,32 @@
 irc-connect freenode chat.freenode.net 6667 lambdabot2 Lambda_Robots:_100%_Loyal
 rc passwd.rc
-admin + freenode:Pseudonym
-admin + freenode:shapr
-admin + freenode:vincenz
-admin + freenode:Igloo
 admin + freenode:Cale
-admin + freenode:dons
-admin + freenode:TheHunter
-admin + freenode:musasabi
+admin + freenode:Igloo
 admin + freenode:Lemmih
+admin + freenode:Pseudonym
+admin + freenode:TheHunter
+admin + freenode:dons
+admin + freenode:int-e
+admin + freenode:musasabi
+admin + freenode:shapr
 admin + freenode:sjanssen
 admin + freenode:sorear
-admin + freenode:int-e
-join freenode:#haskell.se
-join freenode:#haskell.ru
-join freenode:#haskell.no
-join freenode:#haskell.jp
-join freenode:#haskell.it
-join freenode:#haskell.hr
-join freenode:#haskell.fr
-join freenode:#haskell.fi
-join freenode:#haskell.es
-join freenode:#haskell.de
-join freenode:#haskell.dut
-join freenode:#haskell_ru
-join freenode:#haskell-hac07
-join freenode:#thunks
+admin + freenode:vincenz
 join freenode:#debian-es
 join freenode:#dreamlinux-es
 join freenode:#friendly-coders
 join freenode:#gentoo-uy
+join freenode:#haskell-hac07
+join freenode:#haskell.de
+join freenode:#haskell.dut
+join freenode:#haskell.es
+join freenode:#haskell.fi
+join freenode:#haskell.fr
+join freenode:#haskell.hr
+join freenode:#haskell.it
+join freenode:#haskell.jp
+join freenode:#haskell.no
+join freenode:#haskell.ru
+join freenode:#haskell.se
+join freenode:#haskell_ru
+join freenode:#thunks
