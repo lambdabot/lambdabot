@@ -52,7 +52,7 @@ Executable          lambdabot
     Build-depends:       containers, directory, pretty, parsec, old-time, random, array, network,
                          regex-compat, readline, binary>0.2, haskell-src, oeis, lambdabot-utils, show>=0.3, utf8-string,
                          -- runtime dependencies; Hoogle is omitted since it doesn't export a library for Cabal...
-                         brainfuck, unlambda, mueval>=0.6.1
+                         brainfuck, unlambda, mueval>=0.6.3
     Main-is:             Main.hs
     Extensions:          CPP
     ghc-options:         -pgmF BotPP -F -funbox-strict-fields -fno-warn-incomplete-patterns -fno-warn-missing-methods -fno-warn-orphans -threaded
