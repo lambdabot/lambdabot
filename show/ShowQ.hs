@@ -21,9 +21,6 @@ import System.Random
 type T = [Int]
 type I = Int
 
--- instance Ppr a => Show (Q a) where
---     show e = unsafePerformIO $ runQ e >>= return . pprint
-
 instance Arbitrary Char where
     arbitrary     = choose (minBound, maxBound)
     coarbitrary c = variant (ord c `rem` 4)
@@ -108,13 +105,12 @@ done mesg ntest stamps = return $ mesg ++ " " ++ show ntest ++ " tests" ++ table
         . filter (not . null)
         $ stamps
 
-  display []  = ".\n"
-  display [x] = " (" ++ x ++ ").\n"
-  display xs  = ".\n" ++ unlines (map (++ ".") xs)
+  display []  = "."
+  display [x] = " (" ++ x ++ ")."
+  display xs  = "." ++ unlines (map (++ ".") xs)
 
   pairLength xss@(xs:_) = (length xss, xs)
   entry (n, xs)         = percentage n ntest
-                       ++ " "
                        ++ concat (intersperse ", " xs)
 
   percentage n m        = show ((100 * n) `div` m) ++ "%"
