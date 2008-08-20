@@ -85,9 +85,9 @@ go _ _      = []   -- unterminated
 --     selecting the last subset match on each matching line before finally concatting
 --     the whole lot together again.
 --
-extract_signatures :: String -> String
+extract_signatures :: String -> Maybe String
 extract_signatures output
-        = reverse . removeExp . reverse .
+        = fmap reverse . removeExp . reverse .
           unwords . map (dropWhile isSpace . expandTab) .
           mapMaybe ((>>= last') . R.matchRegex signature_regex) .
           lines $ output
@@ -95,16 +95,16 @@ extract_signatures output
         last' [] = Nothing
         last' xs = Just $ last xs
 
-        removeExp :: String -> String
-        removeExp [] = []
+        removeExp :: String -> Maybe String
+        removeExp [] = Nothing
         removeExp xs = removeExp' 0 xs
 
-        removeExp' :: Int -> String -> String
-        removeExp' 0 (' ':':':':':' ':_) = []
-        removeExp' n ('(':xs)            = '(':removeExp' (n+1) xs
-        removeExp' n (')':xs)            = ')':removeExp' (n-1) xs
-        removeExp' n (x  :xs)            = x  :removeExp'  n    xs
-        removeExp' _ []                  = error "invalid ghci output: no type signature"
+        removeExp' :: Int -> String -> Maybe String
+        removeExp' 0 (' ':':':':':' ':_) = Just []
+        removeExp' n ('(':xs)            = ('(':) `fmap` removeExp' (n+1) xs
+        removeExp' n (')':xs)            = (')':) `fmap` removeExp' (n-1) xs
+        removeExp' n (x  :xs)            = (x  :) `fmap` removeExp'  n    xs
+        removeExp' _ []                  = Nothing
 
 --
 --     With this the command handler can be easily defined using popen:
@@ -125,10 +125,10 @@ query_ghci' cmd expr = do
        (output, errors, _) <- popen (ghci config) ["-v0","-fglasgow-exts","-fno-th","-iState","-iscripts","-XNoMonomorphismRestriction"]
                                        (Just (context ++ command cmd (stripComments expr)))
        let ls = extract_signatures output
-       return $ if null ls
-                then unlines . take 3 . filter (not . null) . map cleanRE2 .
-                     lines . expandTab . cleanRE . filter (/='\r') $ errors -- "bzzt"
-                else ls
+       return $ case ls of
+                  Nothing -> unlines . take 3 . filter (not . null) . map cleanRE2 .
+                             lines . expandTab . cleanRE . filter (/='\r') $ errors -- "bzzt"
+                  Just t -> t
   where
      {-
      context = ":l L\n" ++ (concatMap (\m -> ":m + "++m++"\n") $
