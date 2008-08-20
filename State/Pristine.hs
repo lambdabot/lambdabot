@@ -50,7 +50,6 @@ import Data.Tuple
 import Data.Typeable
 import Data.Word
 import Numeric
-import Prelude hiding (mapM, sequence, mapM_, sequence_, (.), (++), map)
 import ShowQ
 import System.Random
 import Test.QuickCheck
@@ -70,7 +69,6 @@ import qualified Data.Map as M
 import qualified Data.Sequence
 import qualified Data.Set as S
 import qualified Data.Traversable
-import qualified Prelude as P
 
 import SimpleReflect hiding (var)
 import Math.OEIS
