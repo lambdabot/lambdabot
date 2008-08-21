@@ -150,8 +150,6 @@ map f (x:xs) = f x : map f xs
 (x:xs) ++ ys = x : (xs ++ ys)
 -- OR
 xs ++ ys = foldr (:) ys xs
--- In lambdabot, this is generalised to:
-(++) = mappend
 
 Bool
 data Bool = False | True deriving (Eq, Ord)
@@ -194,8 +192,6 @@ const x _ = x
 
 (.)
 (f . g) x = f (g x)
--- In lambdabot, it's been generalised to:
-(.) = fmap
 
 flip
 flip f x y = f y x
@@ -931,7 +927,7 @@ odd = not . even
 x ^ 0            =  1
 x ^ n | n > 0    =  f x (n-1) x
   where f _ 0 y = y
-        f x n y = g x n 
+        f x n y = g x n
           where g x n | even n  = g (x*x) (n `quot` 2)
                       | otherwise = f x (n-1) (x*y)
 _ ^ _            = error "Prelude.^: negative exponent"
@@ -1000,7 +996,7 @@ foldr1 _ []     = undefined
 scanr1
 scanr1 f []     = []
 scanr1 f [x]    = [x]
-scanr1 f (x:xs) = f x q : qs where qs@(q:_) = scanr1 f xs 
+scanr1 f (x:xs) = f x q : qs where qs@(q:_) = scanr1 f xs
 
 trace
 trace string expr = unsafePerformIO $ do
@@ -1339,7 +1335,7 @@ newtype Identity a = Identity { runIdentity :: a }
 Identity fmap
 fmap f m = Identity (f (runIdentity m))
 
-Identity return 
+Identity return
 return a = Identity a
 
 Identity (>>=)
@@ -1460,7 +1456,7 @@ mfix f = case fix (f . head) of
            (x:_) -> x : mfix (tail . f)
 
 IO mfix
-mfix = fixIO 
+mfix = fixIO
 
 Maybe pure
 pure = return
