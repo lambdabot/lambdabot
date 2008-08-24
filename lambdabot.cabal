@@ -15,9 +15,6 @@ Description:         Lambdabot is an IRC bot written over several years by
                      embedded in GHCi, via internet relay chat and on the web.
 Homepage:            http://haskell.org/haskellwiki/Lambdabot
 
--- TODO: We specify Hoogle here because we can't in build-depends. Eventually, Hoogle will export a library.
--- On that day, we can remove build-tools and add it to build-depends.
-build-tools:         Hoogle >= 4
 build-type:          Simple
 cabal-version:       >= 1.2
 
