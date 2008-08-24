@@ -54,9 +54,12 @@ cpDataToHome f = do rofile <- getDataFileName f
 findFile :: FilePath -> IO (Maybe String)
 findFile f = do first <- lookLocally f
                 case first of
+                  -- With any luck we can exit quickly
                   Just a -> return $ Just a
                   Nothing -> do second <- lookHome f
                                 case second of
+                                  -- OK, we didn't get lucky with local, so
+                                  -- hopefully it's in ~/.lambdabot
                                   Just a -> return $ Just a
                                   -- Uh oh. We didn't find it locally, nor did we
                                   -- find it in ~/.lambdabot/State. So now we
@@ -64,9 +67,6 @@ findFile f = do first <- lookLocally f
                                   Nothing -> do exists <- isHome
                                                 when (not exists) mkdirL
                                                 cpDataToHome f
+                                                -- With the file copied/created,
+                                                -- a second attempt should work.
                                                 lookHome f
-                                return ()
-                                lookHome f
-                -- Finally, we pretend all the foregoing never happened, and
-                -- ~/.lambdabot existed all along.
-                lookHome f
