@@ -1,5 +1,3 @@
--- Cabal build system for lambdabot. Currently only builds the static
--- version of the bot, which should be enough for most people
 Name:                lambdabot
 Version:             4.2
 License:             GPL
@@ -18,8 +16,8 @@ Homepage:            http://haskell.org/haskellwiki/Lambdabot
 build-type:          Simple
 cabal-version:       >= 1.2
 
-extra-source-files: Modules.hs-boot, imports.h, Plugin/Hello.hs, Modules.hs,
-                    State/djinn, State/url, State/haddock, State/source,
+extra-source-files: Modules.hs-boot, imports.h, Plugin/Hello.hs, Modules.hs
+data-files:         State/djinn, State/url, State/haddock, State/source,
                     State/L.hs, State/seen, State/state, State/Pristine.hs,
                     State/poll, State/quote, State/todo, State/vixen,
                     State/fresh, State/tell, State/system, State/where,
@@ -47,6 +45,7 @@ Library
                      Plugin.Undo, Plugin.Unlambda, Plugin.Url, Plugin.Version, Plugin.Vixen,
                      Plugin.Where, Shared
     ghc-options: -pgmF BotPP -F
+
 -- Lambdabot main
 Executable          lambdabot
     Build-depends:       containers, directory, pretty, parsec, old-time, random, array, network,
@@ -55,7 +54,8 @@ Executable          lambdabot
                          brainfuck, unlambda, mueval>=0.6.3
     Main-is:             Main.hs
     Extensions:          CPP
+    -- For a faster build use add -Onot
     ghc-options:         -pgmF BotPP -F -funbox-strict-fields -fno-warn-incomplete-patterns -fno-warn-missing-methods -fno-warn-orphans -threaded
     include-dirs:        .
--- For a faster build use add -Onot
+
 
