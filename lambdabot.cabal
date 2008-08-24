@@ -25,7 +25,7 @@ data-files:         State/djinn, State/url, State/haddock, State/source,
 
 Library
     build-depends: base, mtl, bytestring, unix, botpp
-    exposed-modules: Config, IRCBase,
+    exposed-modules: Config, IRCBase, File,
                      LBState, LMain, Lambdabot, Message,
                      NickEq, Plugin, Plugin.Activity, Plugin.BF,
                      Plugin.Babel, Plugin.Base, Plugin.Check, Plugin.Code, Plugin.Compose,
