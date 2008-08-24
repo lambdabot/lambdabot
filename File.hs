@@ -6,8 +6,9 @@ import Paths_lambdabot (getDataFileName)
 
 -- | Constants.
 lambdabot, state :: String
-lambdabot = "/.lambdabot"
-state = "/.lambdabot/State"
+lambdabot = "/.lambdabot/"
+state = lambdabot ++ local
+local = "State/"
 
 -- | For a given file, look locally under State/. That is, suppose one is
 -- running out of a Lambdabot darcs repository in /home/cale/lambdabot. Then
@@ -16,7 +17,6 @@ state = "/.lambdabot/State"
 lookLocally :: FilePath -> IO (Maybe String)
 lookLocally f = do b <- doesFileExist local
                    if b then return $ Just local else return Nothing
-                    where local = "State/" ++ f
 
 -- | For a given file, look at the home directory. By default, we stash files in
 -- ~/.lambdabot. So, running Lambdabot normally would let us do:
