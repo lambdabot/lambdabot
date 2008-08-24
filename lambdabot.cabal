@@ -53,7 +53,6 @@ Executable          lambdabot
                          -- runtime dependencies
                          brainfuck, unlambda, mueval>=0.6.3
     Main-is:             Main.hs
-    Extensions:          CPP
     -- For a faster build use add -Onot
     ghc-options:         -pgmF BotPP -F -funbox-strict-fields -fno-warn-incomplete-patterns -fno-warn-missing-methods -fno-warn-orphans -threaded
     include-dirs:        .
