@@ -2,7 +2,6 @@ module File where
 
 import Control.Monad
 import System.Directory
-import Directory
 import Paths_lambdabot (getDataFileName)
 
 -- | Constants.
