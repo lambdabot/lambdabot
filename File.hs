@@ -53,16 +53,16 @@ cpDataToHome f = do rofile <- getDataFileName ("State/" ++ f)
 -- | Complicated. If a file exists locally, we return that. If a file exists in
 -- ~/lambdabot/State, we return that. If neither the file nor ~/lambdabot/State
 -- exist, we create the directories and then copy the file into it.
-findFile :: FilePath -> IO (Maybe String)
+findFile :: FilePath -> IO String
 findFile f = do first <- lookLocally f
                 case first of
                   -- With any luck we can exit quickly
-                  Just a -> return $ Just a
+                  Just a -> return a
                   Nothing -> do second <- lookHome f
                                 case second of
                                   -- OK, we didn't get lucky with local, so
                                   -- hopefully it's in ~/.lambdabot
-                                  Just a -> return $ Just a
+                                  Just a -> return a
                                   -- Uh oh. We didn't find it locally, nor did we
                                   -- find it in ~/.lambdabot/State. So now we
                                   -- need to make ~/.lambdabot/State and copy it in.
@@ -71,4 +71,7 @@ findFile f = do first <- lookLocally f
                                                 cpDataToHome f
                                                 -- With the file copied/created,
                                                 -- a second attempt should work.
-                                                lookHome f
+                                                g <- lookHome f
+                                                case g of
+                                                  Just a -> return a
+                                                  Nothing -> return ""
