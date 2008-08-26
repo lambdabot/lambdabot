@@ -16,7 +16,7 @@ local = "State/"
 -- > lookLocally "fact" ~> "/home/cale/lambdabot/State/fact"
 lookLocally :: FilePath -> IO (Maybe String)
 lookLocally f = do b <- doesFileExist (local ++ f)
-                   if b then return $ Just local else return Nothing
+                   if b then return $ Just (local ++ f) else return Nothing
 
 -- | For a given file, look at the home directory. By default, we stash files in
 -- ~/.lambdabot. So, running Lambdabot normally would let us do:
@@ -57,6 +57,7 @@ cpDataToHome f = do rofile <- getDataFileName ("State/" ++ f)
 -- into the conventional functions easily; unfortunately, this removes
 -- error-checking, as an error is now just \"\".
 findFile :: FilePath -> IO String
+
 findFile f = do first <- lookLocally f
                 case first of
                   -- With any luck we can exit quickly
