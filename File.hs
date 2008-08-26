@@ -45,9 +45,10 @@ mkdirL = do home <- getHomeDirectory
 
 -- | Ask Cabal for the read-only copy of a file, and copy it into ~/.lambdabot/State.
 cpDataToHome :: FilePath -> IO ()
-cpDataToHome f = do rofile <- getDataFileName f
+cpDataToHome f = do rofile <- getDataFileName ("State/" ++ f)
                     home <- getHomeDirectory
-                    copyFile rofile (home ++ state)
+                    -- cp /.../lambdabot-4.foo/State/foo ~/.lambdabot/State/foo
+                    copyFile rofile (home ++ state ++ f)
 
 -- | Complicated. If a file exists locally, we return that. If a file exists in
 -- ~/lambdabot/State, we return that. If neither the file nor ~/lambdabot/State
