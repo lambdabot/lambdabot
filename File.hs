@@ -53,6 +53,9 @@ cpDataToHome f = do rofile <- getDataFileName ("State/" ++ f)
 -- | Complicated. If a file exists locally, we return that. If a file exists in
 -- ~/lambdabot/State, we return that. If neither the file nor ~/lambdabot/State
 -- exist, we create the directories and then copy the file into it.
+-- Note that the return type is simple so we can just do a binding and stuff it
+-- into the conventional functions easily; unfortunately, this removes
+-- error-checking, as an error is now just \"\".
 findFile :: FilePath -> IO String
 findFile f = do first <- lookLocally f
                 case first of
