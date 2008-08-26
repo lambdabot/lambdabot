@@ -15,7 +15,7 @@ local = "State/"
 --
 -- > lookLocally "fact" ~> "/home/cale/lambdabot/State/fact"
 lookLocally :: FilePath -> IO (Maybe String)
-lookLocally f = do b <- doesFileExist local
+lookLocally f = do b <- doesFileExist (local ++ f)
                    if b then return $ Just local else return Nothing
 
 -- | For a given file, look at the home directory. By default, we stash files in
@@ -26,8 +26,9 @@ lookLocally f = do b <- doesFileExist local
 -- (Note that for convenience we preserve the "State/foo" address pattern.)
 lookHome :: FilePath -> IO (Maybe String)
 lookHome f = do home <- getHomeDirectory
-                b <- doesFileExist (home ++ state ++ f)
-                if b then return $ Just (state ++ f) else return Nothing
+                let full = home ++ state ++ f
+                b <- doesFileExist (full)
+                if b then return $ Just full else return Nothing
 
 -- | Do ~/.lambdabot & ~/.lambdabot/State exist?
 isHome :: IO Bool
