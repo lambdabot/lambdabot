@@ -5,6 +5,7 @@
 -- | Test a property with SmallCheck
 module Plugin.Scheck where
 
+import File (findFile)
 import Plugin
 import Lambdabot.Parser
 import qualified Text.Regex as R
@@ -25,7 +26,8 @@ check src = do
     case parseExpr src of
         Left e  -> return e
         Right _ -> do
-            (out,err,_) <- popen binary ["--loadfile=", "State/L.hs", "-E", "-e", "mysmallcheck " ++ src ++ ""] Nothing
+            file <- findFile "L.hs"
+            (out,err,_) <- popen binary ["--loadfile=", file, "-E", "-e", "mysmallcheck " ++ src ++ ""] Nothing
             let o = munge out
                 e = munge err
             return $ case () of {_

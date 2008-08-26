@@ -144,7 +144,7 @@ doRPL_TOPIC msg -- nearly the same as doTOPIC but has our nick on the front of b
 doPRIVMSG :: IrcMessage -> Base ()
 doPRIVMSG msg = do
 --  now <- io getClockTime
---  io $ appendFile "State/log" $ ppr now
+--  io $ appendFile (File.findFile "log") $ ppr now
     ignored <- lift $ checkIgnore msg
     if ignored
       then lift $ doIGNORE msg

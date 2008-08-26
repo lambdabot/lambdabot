@@ -33,6 +33,8 @@ module Lambdabot (
         checkPrivs, checkIgnore, mkCN, handleIrc, catchIrc, runIrc,
   ) where
 
+import File (findFile)
+
 import qualified Message as Msg
 import qualified Shared  as S
 import qualified IRCBase as IRC (IrcMessage, quit, privmsg)
@@ -47,6 +49,7 @@ import Network                  (withSocketsDo)
 
 import System.Exit
 import System.IO
+import System.IO.Unsafe
 
 #ifndef mingw32_HOST_OS
 import System.Posix.Signals
@@ -249,14 +252,12 @@ catchIrc = flip handleIrc
 --
 data Mode = Online | Offline deriving Eq
 
---
 -- | The Lambdabot entry point.
 -- Initialise plugins, connect, and run the bot in the LB monad
 --
 -- Also, handle any fatal exceptions (such as non-recoverable signals),
 -- (i.e. print a message and exit). Non-fatal exceptions should be dealt
 -- with in the mainLoop or further down.
---
 runIrc :: [String] -> LB a -> S.DynLoad -> [String] -> IO ()
 runIrc evcmds initialise ld plugins = withSocketsDo $ do
     rost <- initRoState
@@ -496,13 +497,13 @@ readGlobalState mod name
         catch (evaluate $ maybe Nothing (Just $!) (deserialize ser =<< state)) -- Monad Maybe)
               (\e -> do hPutStrLn stderr $ "Error parsing state file for: "
                                         ++ name ++ ": " ++ show e
-                        hPutStrLn stderr $ "Try removing: "++show (toFilename name)
-                        return Nothing) -- proceed irregardless
+                        hPutStrLn stderr $ "Try removing: "++ show (toFilename name)
+                        return Nothing) -- proceed regardless
     | otherwise = return Nothing
 
 -- | helper
 toFilename :: String -> String
-toFilename = ("State/"++)
+toFilename = unsafePerformIO . findFile
 
 ------------------------------------------------------------------------
 --

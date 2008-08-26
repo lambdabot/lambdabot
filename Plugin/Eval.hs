@@ -1,3 +1,4 @@
+
 {-# LANGUAGE MultiParamTypeClasses, PatternGuards #-}
 -- Copyright (c) 2004-6 Donald Bruce Stewart - http://www.cse.unsw.edu.au/~dons
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
@@ -5,6 +6,7 @@
 -- | A Haskell evaluator for the pure part, using plugs
 module Plugin.Eval where
 
+import File (findFile)
 import Plugin
 import Lambdabot.Parser
 import Language.Haskell.Parser
@@ -24,9 +26,12 @@ instance Module PlugsModule () where
     moduleHelp _ _             = "run <expr>. You have Haskell, 3 seconds and no IO. Go nuts!"
     process _ _ to "run" s     = ios80 to (plugs s)
     process _ _ to "let" s     = ios80 to (define s)
-    process _ _ _ "undefine" _ = do io $ copyFile "State/Pristine.hs" "State/L.hs"
-                                    x <- io $ comp Nothing
-                                    return [x]
+    process _ _ _ "undefine" _ = do l <- io $ findFile "L.hs"
+                                    p <- io $ findFile "Pristine.hs"
+                                    io $ copyFile p l
+--                                    x <- io $ comp Nothing
+--                                    return [x]
+                                    return []
 
     contextual _ _ to txt
         | isEval txt = ios80 to . plugs . dropPrefix $ txt
@@ -48,7 +53,8 @@ plugs src = do
     case parseExpr (decodeString src) of
         Left  e -> return e
         Right _ -> do
-            (out,err,_) <- popen binary ["-E", "-l", "State/L.hs", "--expression=" ++ src] Nothing
+            load <- findFile "L.hs"
+            (out,err,_) <- popen binary ["-E", "-l", load, "--expression=" ++ src] Nothing
             case (out,err) of
                 ([],[]) -> return "Terminated\n"
                 _       -> do
@@ -79,28 +85,32 @@ define src = case parseModule (src ++ "\n") of -- extra \n so comments are parse
 -- It parses. then add it to a temporary L.hs and typecheck
 comp :: Maybe String -> IO String
 comp src = do
-    copyFile "State/L.hs" "L.hs"
+    l <- findFile "L.hs"
+    -- Note we copy to .L.hs, not L.hs. This hides the temporary files as dot-files
+    copyFile l ".L.hs"
     case src of
         Nothing -> return () -- just reset from Pristine
-        Just s  -> P.appendFile "L.hs" (P.pack (s  ++ "\n"))
+        Just s  -> P.appendFile l (P.pack (s  ++ "\n"))
 
     -- and compile Local.hs
     -- careful with timeouts here. need a wrapper.
     (o',e',c) <- popen "ghc" ["-O","-v0","-c"
                              ,"-Werror"
-                             ,"-odir", "State/"
-                             ,"-hidir","State/"
-                             ,"L.hs"] Nothing
+--                             ,"-odir", "State/"
+--                             ,"-hidir","State/"
+                             ,".L.hs"] Nothing
+    -- cleanup
+    removeFile ".L.hi"
+    removeFile ".L.o"
 
     case (munge o', munge e') of
         ([],[]) | c /= ExitSuccess -> return "Error."
                 | otherwise -> do
-                    renameFile "L.hs" "State/L.hs"
-                    renameFile "State/L.hi" "L.hi"
-                    renameFile "State/L.o" "L.o"
+                    renameFile ".L.hs" l
                     return (maybe "Undefined." (const "Defined.") src)
         (ee,[]) -> return (concat . intersperse " " . lines $ ee)
         (_ ,ee) -> return (concat . intersperse " " . lines $ ee)
+
 
 -- test cases
 -- lambdabot> undefine

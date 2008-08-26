@@ -5,8 +5,10 @@
 -- | Test a property with QuickCheck
 module Plugin.Check where
 
+import File (findFile)
 import Plugin
 import Lambdabot.Parser
+
 import qualified Text.Regex as R
 import Codec.Binary.UTF8.String (decodeString)
 
@@ -27,7 +29,8 @@ check src = do
     case parseExpr (decodeString src) of
         Left  e -> return e
         Right _ -> do
-            (out,err,_) <- popen binary ["--loadfile=", "State/L.hs", "-E", "-e", "myquickcheck $ " ++ src] Nothing
+            l <- findFile "L.hs"
+            (out,err,_) <- popen binary ["--loadfile=", l, "-E", "-e", "myquickcheck $ " ++ src] Nothing
             case (out,err) of
                 ([],[]) -> return "Terminated\n"
                 _       -> do

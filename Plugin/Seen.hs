@@ -8,6 +8,7 @@ module Plugin.Seen (theModule) where
 
 import Data.Binary
 
+import File (findFile)
 import Plugin
 import Lambdabot.AltTime
 import Lambdabot.Error         (tryError)
@@ -194,11 +195,11 @@ instance Module SeenModule SeenState where
       lift $ tryError $ send . G.names "freenode" . map G.nName =<< ircGetChannels
 
       -- and suck in our state. We read directly from the handle, to avoid copying
-      b <- io $ doesFileExist "State/seen"
-      when b $ io (do
-            s <- io (P.readFile "State/seen")
-            let ls = L.fromChunks [s]
-            return (decode ls)) >>= writeMS
+
+      c <- io $ findFile "seen"
+      s <- io $ P.readFile c
+      let ls = L.fromChunks [s]
+      return (decode ls) >>= writeMS
 
     moduleExit _ = do
       chans <- lift $ ircGetChannels
@@ -207,7 +208,7 @@ instance Module SeenModule SeenState where
             modifyMS $ \(n,m) -> (n, botPart ct (map G.packNick chans) m)
 
         -- and write out our state:
-      withMS $ \s _ -> io ( encodeFile "State/seen" s)
+      withMS $ \s _ -> io ( findFile "seen" >>= \ c -> encodeFile c s)
 
 lcNick :: G.Nick -> G.Nick
 lcNick (G.Nick svr nck) = G.Nick svr (lowerCaseString nck)

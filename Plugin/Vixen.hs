@@ -11,11 +11,13 @@ module Plugin.Vixen where
 import Data.Binary
 import Data.Binary.Put
 import Data.Binary.Get
-import Plugin
 
 import Control.Arrow ((***))
 import System.Directory
 import qualified Data.ByteString.Char8 as P
+
+import File (findFile)
+import Plugin
 
 PLUGIN Vixen
 
@@ -44,14 +46,12 @@ instance Module VixenModule (Bool, String -> IO String) where
     -- suck in our (read only) regex state from disk
     -- compile it, and stick it in the plugin state
     moduleInit _     = do
-      b <- io $ doesFileExist file
+      b <- io $ doesFileExist =<< findFile "vixen"
       when b $ do
-          s <- io $ do st <- decodeFile file
+          s <- io $ do st <- decodeFile =<< findFile "vixen"
                        let compiled = map (regex *** id) st
                        return (vixen (mkResponses compiled))
           modifyMS $ \(v,_) -> (v, s)
-
-      where file = "State/vixen"
 
 ------------------------------------------------------------------------
 

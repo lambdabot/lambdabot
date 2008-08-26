@@ -116,5 +116,6 @@ data Dictionary
 
 -- path to the master dictionary
 instance Show Dictionary where
+    -- TODO: use findFile from File.hs. But does this module even work anymore?
     showsPrec _ Lambdabot = showString "State/lambdabot"
 
