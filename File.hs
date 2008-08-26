@@ -5,7 +5,7 @@ import System.Directory
 import Paths_lambdabot (getDataFileName)
 
 -- | Constants.
-lambdabot, state :: String
+lambdabot, local, state :: String
 lambdabot = "/.lambdabot/"
 state = lambdabot ++ local
 local = "State/"
