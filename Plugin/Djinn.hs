@@ -130,13 +130,15 @@ djinn env' src = do
         safeInit xs = init xs
         o = dropNL . clean_ . unlines . safeInit . drop 2 . lines $ out
     return $ case () of {_
-        | failed `matches'` o -> Left (lines o)
-        | unify  `matches'` o -> Left (lines o)
+        | failed `matches'` o ||
+          unify  `matches'` o ||
+          err    `matches'` o -> Left (lines o)
         | otherwise                          -> Right o
     }
     where
         failed = regex' "Cannot parse command"
         unify  = regex' "cannot be realized"
+        err = regex' "^Error:"
 
 --
 -- Clean up djinn output
