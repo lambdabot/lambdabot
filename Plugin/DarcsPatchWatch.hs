@@ -11,7 +11,7 @@ import Plugin
 import qualified Data.ByteString.Char8 as P
 import Prelude hiding ( catch )
 
-import Control.Concurrent
+import Control.Concurrent (forkIO, killThread, modifyMVar_, readMVar, threadDelay, MVar, ThreadId)
 import Control.Exception
 import Control.Monad       ( when )
 
@@ -35,7 +35,7 @@ maxNumberOfRepos = 20
 announceTarget :: Nick
 announceTarget = Nick {
   nTag  = "freenode",
-  nName = "#lazybottoms-dev"
+  nName = "#haskell"
   }
 
 inventoryFile :: String

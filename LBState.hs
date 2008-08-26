@@ -16,11 +16,11 @@ module LBState (
 import Lambdabot
 import Lambdabot.Util            (withMWriter, timeout)
 
-import Control.Concurrent
+import Control.Concurrent (forkIO, readMVar, modifyMVar_, newMVar, MVar, ThreadId)
 import Control.Monad.Reader
 import Control.Monad.Trans (liftIO)
 
-import Message(Nick)
+import Message (Nick)
 
 -- withMWriter :: MVar a -> (a -> (a -> IO ()) -> IO b) -> IO b
 -- | Update the module's private state.

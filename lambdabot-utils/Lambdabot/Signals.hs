@@ -29,7 +29,7 @@ import Lambdabot.Util
 
 import Data.Typeable
 
-import Control.Concurrent
+import Control.Concurrent (myThreadId, newEmptyMVar, putMVar, MVar, ThreadId)
 import Control.Exception
 import Control.Monad.Error
 

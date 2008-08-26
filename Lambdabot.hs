@@ -67,7 +67,8 @@ import qualified Data.Map as M hiding (Map)
 import qualified Data.ByteString.Char8 as P
 import Data.ByteString (ByteString)
 
-import Control.Concurrent
+import Control.Concurrent (myThreadId, newEmptyMVar, newMVar, readMVar, putMVar,
+                           takeMVar, threadDelay, MVar, ThreadId)
 import Control.Exception
 import Control.Monad.Error (MonadError (..))
 import Control.Monad.Reader

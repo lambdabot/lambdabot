@@ -4,7 +4,7 @@
 module Plugin.Paste (theModule) where
 
 import Plugin
-import Control.Concurrent
+import Control.Concurrent (forkIO, ThreadID)
 import Message
 
 PLUGIN Paste
