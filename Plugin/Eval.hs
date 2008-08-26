@@ -54,7 +54,7 @@ plugs src = do
         Left  e -> return e
         Right _ -> do
             load <- findFile "L.hs"
-            (out,err,_) <- popen binary ["-E", "-l", load, "--expression=" ++ src] Nothing
+            (out,err,_) <- popen binary ["-E", "--timelimit=", "10", "-l", load, "--expression=" ++ src] Nothing
             case (out,err) of
                 ([],[]) -> return "Terminated\n"
                 _       -> do
