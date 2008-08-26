@@ -44,7 +44,8 @@ Library
                      Plugin.Ticker, Plugin.Todo, Plugin.Topic, Plugin.Type, Plugin.UnMtl,
                      Plugin.Undo, Plugin.Unlambda, Plugin.Url, Plugin.Version, Plugin.Vixen,
                      Plugin.Where, Shared
-    ghc-options: -pgmF BotPP -F
+    -- BotPP does not generate all methods, so remove those.
+    ghc-options: -pgmF BotPP -F  -fno-warn-missing-methods
 
 -- Lambdabot main
 Executable          lambdabot
