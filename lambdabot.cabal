@@ -21,7 +21,9 @@ data-files:         State/djinn, State/url, State/haddock, State/source,
                     State/L.hs, State/seen, State/state, State/Pristine.hs,
                     State/poll, State/quote, State/todo, State/vixen,
                     State/fresh, State/tell, State/system, State/where,
-                    State/karma, State/fact
+                    State/karma, State/fact,
+                    -- Needed for @type
+                    imports.h
 
 Library
     build-depends: base, mtl, bytestring, unix, botpp
