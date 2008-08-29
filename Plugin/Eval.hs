@@ -90,9 +90,9 @@ comp src = do
     copyFile l ".L.hs"
     case src of
         Nothing -> return () -- just reset from Pristine
-        Just s  -> P.appendFile l (P.pack (s  ++ "\n"))
+        Just s  -> P.appendFile ".L.hs" (P.pack (s  ++ "\n"))
 
-    -- and compile Local.hs
+    -- and compile .L.hs
     -- careful with timeouts here. need a wrapper.
     (o',e',c) <- popen "ghc" ["-O","-v0","-c"
                              ,"-Werror"
