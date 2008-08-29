@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -F -pgmF BotPP #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 -- Copyright (c) 2004 Simon Winwood - http://www.cse.unsw.edu.au/~sjw
 -- Copyright (c) 2004-6 Don Stewart - http://www.cse.unsw.edu.au/~dons

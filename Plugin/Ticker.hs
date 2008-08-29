@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -F -pgmF BotPP #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
 -- | Pull quotes down from yahoo.
@@ -51,7 +52,7 @@ extractQuote = getQuote . csv
 
 -- Fetch quotes for tickers and sum their bid/ask prices.
 bidsCmd :: String -> LB [String]
-bidsCmd tickers = 
+bidsCmd tickers =
     case words tickers of
         [] -> return [printf "Invalid argument '%s'" tickers]
         xs -> io $ (:[]) <$> calcBids xs
@@ -89,12 +90,12 @@ calcBids ticks = do
     return $ case foldl accumOption (Right (0,0)) (zip ticks xs) of
         (Left err)        -> err
         (Right (bid,ask)) -> printf "%s: bid $%.02f, ask $%.02f" s bid ask
-    where 
+    where
         s = unwords ticks
         noPrefix ('+':xs) = xs
         noPrefix ('-':xs) = xs
         noPrefix xs = xs
-        
+
 
 ---- Library routines, consider moving elsewhere. ----
 

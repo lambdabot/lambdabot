@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -F -pgmF BotPP #-}
 {-# LANGUAGE CPP, MultiParamTypeClasses, PatternGuards, TypeSynonymInstances #-}
 -- | Support for quotes
 module Plugin.Quote (theModule) where

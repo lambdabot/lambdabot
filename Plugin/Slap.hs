@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -F -pgmF BotPP #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 -- | Support for quotes
 module Plugin.Slap (theModule) where

@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -F -pgmF BotPP #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 -- | GNU Talk Filters
 -- needs: http://www.hyperrealm.com/main.php?s=talkfilters

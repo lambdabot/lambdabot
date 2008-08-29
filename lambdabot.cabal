@@ -47,7 +47,8 @@ Library
                      Plugin.Undo, Plugin.Unlambda, Plugin.Url, Plugin.Version, Plugin.Vixen,
                      Plugin.Where, Shared
     -- BotPP does not generate all methods, so remove those.
-    ghc-options: -pgmF BotPP -F  -fno-warn-missing-methods
+    -- Note that we do BotPP as OPTIONS_GHC pragmas so we can load Plugin/ modules in GHCi
+    ghc-options: -fno-warn-missing-methods
 
 -- Lambdabot main
 Executable          lambdabot
@@ -56,8 +57,8 @@ Executable          lambdabot
                          -- runtime dependencies
                          brainfuck, unlambda
     Main-is:             Main.hs
-    -- For a faster build use add -Onot
-    ghc-options:         -pgmF BotPP -F -funbox-strict-fields -fno-warn-incomplete-patterns -fno-warn-missing-methods -fno-warn-orphans
+    -- For a faster build, use -Onot
+    ghc-options:         -funbox-strict-fields -fno-warn-incomplete-patterns -fno-warn-missing-methods -fno-warn-orphans
     include-dirs:        .
 
 

@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -F -pgmF BotPP #-}
 {-# OPTIONS_GHC -fno-warn-unused-binds #-}
 {-# LANGUAGE MultiParamTypeClasses, TypeSynonymInstances #-}
 

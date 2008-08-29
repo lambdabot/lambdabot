@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -F -pgmF BotPP #-}
 {-# LANGUAGE MultiParamTypeClasses, PatternGuards, TypeSynonymInstances #-}
 -- | Lambdabot base module. Controls message send and receive
 module Plugin.Base (theModule) where

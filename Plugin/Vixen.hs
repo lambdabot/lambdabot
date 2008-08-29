@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -F -pgmF BotPP #-}
 {-# LANGUAGE FlexibleInstances, MultiParamTypeClasses #-}
 
 -- | Talk to hot chixxors.

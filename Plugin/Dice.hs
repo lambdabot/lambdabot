@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -F -pgmF BotPP #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 -- | This module is for throwing dice for e.g. RPGs. (\@dice 3d6+2)
 

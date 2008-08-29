@@ -19,3 +19,4 @@ Library
 
 Executable BotPP
            main-is: BotPP.hs
+           ghc-options: -O2

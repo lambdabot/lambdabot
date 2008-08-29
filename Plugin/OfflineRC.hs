@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -F -pgmF BotPP #-}
 {-# LANGUAGE CPP, MultiParamTypeClasses #-}
 -- | Offline mode / RC file / -e support module.  Handles spooling lists
 -- of commands (from readline, files, or the command line) into the vchat
