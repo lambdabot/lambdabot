@@ -9,8 +9,8 @@ module Plugin.Eval where
 import File (findFile)
 import Plugin
 import Lambdabot.Parser
-import Language.Haskell.Parser
-import Language.Haskell.Syntax hiding (Module)
+import Language.Haskell.Exts.Parser
+import Language.Haskell.Exts.Syntax hiding (Module)
 import qualified Text.Regex as R
 import System.Directory
 import System.Exit
@@ -48,11 +48,6 @@ dropPrefix = dropWhile (' ' ==) . drop 2
 
 plugs :: String -> IO String
 plugs src = do
-    -- first, verify the source is actually a Haskell 98 expression, to
-    -- avoid code injection bugs.
-    case parseExpr (decodeString src) of
-        Left  e -> return e
-        Right _ -> do
             load <- findFile "L.hs"
             (out,err,_) <- popen binary ["-E", "--timelimit=", "10", "-l", load, "--expression=" ++ src] Nothing
             case (out,err) of
@@ -70,7 +65,7 @@ plugs src = do
 -- define a new binding
 
 define :: String -> IO String
-define src = case parseModule (src ++ "\n") of -- extra \n so comments are parsed correctly
+define src = case parseModule (decodeString src ++ "\n") of -- extra \n so comments are parsed correctly
     (ParseOk (HsModule _ _ (Just [HsEVar (UnQual (HsIdent "main"))]) [] ds))
         | all okay ds -> comp (Just src)
     (ParseFailed _ e) -> return $ " " ++ e

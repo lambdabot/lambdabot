@@ -53,7 +53,7 @@ Library
 -- Lambdabot main
 Executable          lambdabot
     Build-depends:       containers, directory, pretty, parsec, old-time, random, array, network,
-                         regex-compat, readline, binary>0.2, haskell-src, oeis, lambdabot-utils, show>=0.3, utf8-string,
+                         regex-compat, readline, binary>0.2, haskell-src, haskell-src-exts>=0.3.6, oeis, lambdabot-utils, show>=0.3, utf8-string,
                          -- runtime dependencies
                          brainfuck, unlambda, template-haskell
     Main-is:             Main.hs
