@@ -17,7 +17,7 @@
 --     Well, what do you know, this plugin enables lambdabot to automate
 --     that lookup for you and your fellow lambda hackers.
 module Plugin.Type where
-
+import File
 import Plugin
 import qualified Text.Regex as R
 
@@ -113,13 +113,14 @@ extract_signatures output
 --
 query_ghci' :: String -> String -> IO String
 query_ghci' cmd expr = do
+       importHeader <- findFile "imports.h"
        imports <- fmap (map (unwords . drop 1 . words)
                         . filter (null
                                   . intersect ["as","hiding","qualified"]
                                   . words)
                         . filter (isPrefixOf "import")
                         . lines)
-                       (readFile "imports.h")
+                       (readFile importHeader)
        let context = ":l L\n" ++ concatMap ((":m + " ++) . (++"\n")) imports
        (output, errors, _) <- popen (ghci config) ["-v0","-fglasgow-exts","-fno-th","-iState","-iscripts","-XNoMonomorphismRestriction"]
                                        (Just (context ++ command cmd (stripComments expr)))
