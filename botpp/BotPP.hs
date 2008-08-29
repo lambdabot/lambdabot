@@ -1,4 +1,4 @@
-{-# OPTIONS -O -funbox-strict-fields #-}
+{-# OPTIONS_GHC -funbox-strict-fields #-}
 -- Copyright (c) 2006 Don Stewart - http://www.cse.unsw.edu.au/~dons
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
 
@@ -20,9 +20,7 @@ import qualified Data.ByteString.Char8 as B -- crank it up, yeah!
 import BotLib
 
 main :: IO ()
-main = do
-    -- putStr "BotPP called with args: ";  print =<< getArgs
-    [orig,i,o] <- getArgs
-    let basename = baseName orig
-    -- putStr "basename = "; print basename
-    B.readFile i >>= \l -> B.writeFile o $ expand (B.length l) 0 basename l
+main = do -- putStr "BotPP called with args: ";  print =<< getArgs
+          [orig,i,o] <- getArgs
+          -- putStr "basename = "; print (baseName orig)
+          B.readFile i >>= \l -> B.writeFile o $ expand (B.length l) 0 (baseName orig) l
