@@ -57,12 +57,16 @@ instance Module DjinnModule DjinnEnv where
         process_ _ "djinn" s = do
                 (_,env) <- readMS
                 e       <- io $ djinn env $ ":set +sorted" <$> "f ?" <+> dropForall s
-                return $ either id (tail . lines) e
+                return $ either id (parse . lines) e
             where
-            dropForall t
-                | Just (_, _, x, _) <- R.matchRegexAll re t = x
-                | otherwise = t
-            re = regex' "^forall [[:alnum:][:space:]]+\\."
+              dropForall t
+                  | Just (_, _, x, _) <- R.matchRegexAll re t = x
+                  | otherwise = t
+              re = regex' "^forall [[:alnum:][:space:]]+\\."
+              parse :: [String] -> [String]
+              parse x = if length x < 2
+                        then ["No output from Djinn; installed?"]
+                        else tail x
 
         -- Augment environment. Have it checked by djinn.
         process_ _ "djinn-add"  s = do
