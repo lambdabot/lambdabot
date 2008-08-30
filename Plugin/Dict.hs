@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -F -pgmF BotPP #-}
 {-# LANGUAGE MultiParamTypeClasses, PatternGuards #-}
 -- | DICT (RFC 2229) Lookup Module for lambdabot IRC robot.
 -- Tom Moertel <tom@moertel.com>

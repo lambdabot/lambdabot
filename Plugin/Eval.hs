@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -F -pgmF BotPP #-}
 
 {-# LANGUAGE MultiParamTypeClasses, PatternGuards #-}
 -- Copyright (c) 2004-6 Donald Bruce Stewart - http://www.cse.unsw.edu.au/~dons

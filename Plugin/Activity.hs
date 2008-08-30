@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -F -pgmF BotPP #-}
 {-# LANGUAGE MultiParamTypeClasses, TypeSynonymInstances #-}
 -- | Logging an IRC channel..
 module Plugin.Activity (theModule) where

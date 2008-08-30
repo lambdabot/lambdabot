@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -F -pgmF BotPP #-}
 {-# LANGUAGE MultiParamTypeClasses, TypeSynonymInstances #-}
 -- Module    : Fact
 -- Copyright : 2003 Shae Erisson

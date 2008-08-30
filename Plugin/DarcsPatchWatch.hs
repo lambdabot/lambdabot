@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -F -pgmF BotPP #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
 -- Copyright (c) 2005 Stefan Wehr (http://www.stefanwehr.de)

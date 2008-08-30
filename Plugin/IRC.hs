@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -F -pgmF BotPP #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 -- | The plugin-level IRC interface.
 

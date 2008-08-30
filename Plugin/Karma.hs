@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -F -pgmF BotPP #-}
 {-# LANGUAGE MultiParamTypeClasses, TypeSynonymInstances #-}
 -- | Karma
 module Plugin.Karma (theModule) where

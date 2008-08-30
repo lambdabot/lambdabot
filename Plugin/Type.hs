@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -F -pgmF BotPP #-}
 {-# LANGUAGE MultiParamTypeClasses, PatternGuards #-}
 -- |   The Type Module - another progressive plugin for lambdabot
 --

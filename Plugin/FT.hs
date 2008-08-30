@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -F -pgmF BotPP #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 -- | Free theorems plugin,
 -- Don Stewart 2006

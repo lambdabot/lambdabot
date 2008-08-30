@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -F -pgmF BotPP #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 -- (c) Josef Svenningsson, 2005
 -- Licence: No licence, public domain

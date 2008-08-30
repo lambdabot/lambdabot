@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -F -pgmF BotPP #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {- | A module to output the instances of a typeclass.
      Some sample input\/output:

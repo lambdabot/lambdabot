@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -F -pgmF BotPP #-}
 {-# LANGUAGE MultiParamTypeClasses, TypeSynonymInstances #-}
 -- | Support for more(1) buffering
 module Plugin.More (theModule) where

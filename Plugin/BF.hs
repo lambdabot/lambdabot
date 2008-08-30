@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -F -pgmF BotPP #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 -- Copyright (c) 2006 Jason Dagit - http://www.codersbase.com/
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)

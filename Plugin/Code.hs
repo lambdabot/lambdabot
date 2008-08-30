@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -F -pgmF BotPP #-}
 {-# LANGUAGE FlexibleInstances, MultiParamTypeClasses, PatternGuards #-}
 --
 -- Copyright (c) 2005-6 Don Stewart - http://www.cse.unsw.edu.au/~dons

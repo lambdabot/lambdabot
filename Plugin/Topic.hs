@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -F -pgmF BotPP #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 -- | The Topic plugin is an interface for messing with the channel topic.
 --   It can alter the topic in various ways and keep track of the changes.

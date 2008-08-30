@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -F -pgmF BotPP #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 -- | Look up sequences in the Online Encyclopedia of Integer Sequences
 --   Based on the Math.OEIS library

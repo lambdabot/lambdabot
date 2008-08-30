@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -F -pgmF BotPP #-}
 {-# LANGUAGE MultiParamTypeClasses, TypeSynonymInstances #-}
 -- Undo pointfree transformations. Plugin code derived from Pl.hs.
 module Plugin.Pointful (theModule) where

@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -F -pgmF BotPP #-}
 {-# LANGUAGE MultiParamTypeClasses, PatternGuards #-}
 -- | Fetch URL page titles of HTML links.
 module Plugin.Url (theModule) where

@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -F -pgmF BotPP #-}
 {-# LANGUAGE FlexibleInstances, MultiParamTypeClasses, Rank2Types #-}
 -- | System module : IRC control functions
 module Plugin.System (theModule) where
