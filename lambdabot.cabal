@@ -23,7 +23,8 @@ data-files:         State/djinn, State/url, State/haddock, State/source,
                     State/fresh, State/tell, State/system, State/where,
                     State/karma, State/fact,
                     -- Needed for @type
-                    State/imports.h
+                    State/imports.h,
+                    online.rc, online2.rc
 
 Library
     build-depends: base, mtl, bytestring, unix, botpp
