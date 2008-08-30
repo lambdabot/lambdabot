@@ -1,4 +1,4 @@
-{-# LANGUAGE MultiParamTypeClasses, TypeSynonymInstances #-}
+{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses, TypeSynonymInstances #-}
 -- | Module: Vote
 -- | Support for voting
 -- |
@@ -12,7 +12,7 @@ import Plugin hiding (choice)
 import qualified Data.ByteString.Char8 as P
 import qualified Data.Map as M
 
-PLUGIN Vote
+$(plugin "Vote")
 
 newPoll :: Poll
 newPoll = (True,[])

@@ -1,4 +1,4 @@
-{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses #-}
 
 -- Copyright (c) 2005 Stefan Wehr (http://www.stefanwehr.de)
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
@@ -19,7 +19,7 @@ import System.Directory
 import System.Time
 import Message
 
-PLUGIN DarcsPatchWatch
+$(plugin "DarcsPatchWatch")
 
 
 --

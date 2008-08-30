@@ -1,4 +1,4 @@
-{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses #-}
 -- Copyright (c) 2004-06 Don Stewart - http://www.cse.unsw.edu.au/~dons
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
 --
@@ -9,7 +9,7 @@ module Plugin.Dynamic (theModule) where
 import Plugin
 import Control.Monad.State
 
-PLUGIN Dynamic
+$(plugin "Dynamic")
 
 instance Module DynamicModule () where
 

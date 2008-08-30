@@ -1,4 +1,4 @@
-{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses #-}
 -- Copyright (c) 2004 Simon Winwood - http://www.cse.unsw.edu.au/~sjw
 -- Copyright (c) 2004-6 Don Stewart - http://www.cse.unsw.edu.au/~dons
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
@@ -9,7 +9,7 @@ module Plugin.Babel where
 import Plugin
 import qualified Text.Regex as R
 
-PLUGIN Babel
+$(plugin "Babel")
 
 instance Module BabelModule () where
     moduleCmds _   = ["babel"]

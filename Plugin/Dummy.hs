@@ -1,4 +1,4 @@
-{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses #-}
 -- | Simple template module
 -- Contains many constant bot commands.
 module Plugin.Dummy (theModule) where
@@ -10,7 +10,7 @@ import Plugin.Dummy.DocAssocs (docAssocs)
 import qualified Data.Map as M
 import qualified Data.ByteString.Char8 as P
 
-PLUGIN Dummy
+$(plugin "Dummy")
 
 instance Module DummyModule () where
 

@@ -1,4 +1,4 @@
-{-# LANGUAGE MultiParamTypeClasses, TypeSynonymInstances #-}
+{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses, TypeSynonymInstances #-}
 -- Undo pointfree transformations. Plugin code derived from Pl.hs.
 module Plugin.Pointful (theModule) where
 
@@ -8,7 +8,7 @@ import Lambdabot.Pointful
 
 type PfState = ()
 
-PLUGIN Pointful
+$(plugin "Pointful")
 
 --type Pf = ModuleLB PfState
 

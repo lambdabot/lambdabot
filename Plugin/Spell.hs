@@ -1,4 +1,4 @@
-{-# LANGUAGE MultiParamTypeClasses, PatternGuards #-}
+{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses, PatternGuards #-}
 -- Copyright (c) 2004-6 Don Stewart - http://www.cse.unsw.edu.au/~dons
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
 --
@@ -9,7 +9,7 @@ module Plugin.Spell where
 import Plugin
 import qualified Text.Regex as R
 
-PLUGIN Spell
+$(plugin "Spell")
 
 instance Module SpellModule Bool where
     moduleCmds   _   = ["spell", "spell-all"]

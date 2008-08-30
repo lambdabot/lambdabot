@@ -1,4 +1,4 @@
-{-# LANGUAGE MultiParamTypeClasses, TypeSynonymInstances #-}
+{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses, TypeSynonymInstances #-}
 
 -- Copyright (c) 2004-5 Don Stewart - http://www.cse.unsw.edu.au/~dons
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
@@ -8,7 +8,7 @@ module Plugin.Hoogle (theModule) where
 
 import Plugin
 
-PLUGIN Hoogle
+$(plugin "Hoogle")
 
 type HoogleState = [String]
 

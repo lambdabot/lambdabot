@@ -1,4 +1,4 @@
-{-# LANGUAGE MultiParamTypeClasses, TypeSynonymInstances #-}
+{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses, TypeSynonymInstances #-}
 {- Leave a message with lambdabot, the faithful secretary
 
 > 17:11 < davidhouse> @tell dmhouse foo
@@ -70,7 +70,7 @@ type NoticeBoard = M.Map Nick (Maybe ClockTime, [Note])
 -- | A nicer synonym for the Tell monad.
 type Telling a   = ModuleT NoticeBoard LB a
 
-PLUGIN Tell
+$(plugin "Tell")
 
 instance Module TellModule NoticeBoard where
     moduleCmds      _ = ["tell", "ask", "messages", "messages?", "clear-messages"]

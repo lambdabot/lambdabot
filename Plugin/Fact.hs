@@ -1,4 +1,4 @@
-{-# LANGUAGE MultiParamTypeClasses, TypeSynonymInstances #-}
+{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses, TypeSynonymInstances #-}
 -- Module    : Fact
 -- Copyright : 2003 Shae Erisson
 -- Copyright : 2005-06 Don Stewart
@@ -15,7 +15,7 @@ import qualified Data.ByteString.Char8 as P
 
 ------------------------------------------------------------------------
 
-PLUGIN Fact
+$(plugin "Fact")
 
 type FactState  = M.Map P.ByteString P.ByteString
 type FactWriter = FactState -> LB ()

@@ -1,4 +1,4 @@
-{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses #-}
 -- Copyright (c) 2006 Don Stewart - http://www.cse.unsw.edu.au/~dons
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
 --
@@ -9,7 +9,7 @@ module Plugin.Unlambda (theModule) where
 
 import Plugin
 
-PLUGIN Unlambda
+$(plugin "Unlambda")
 
 instance Module UnlambdaModule () where
     moduleCmds   _     = ["unlambda"]

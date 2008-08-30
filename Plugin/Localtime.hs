@@ -1,4 +1,4 @@
-{-# LANGUAGE MultiParamTypeClasses, TypeSynonymInstances #-}
+{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses, TypeSynonymInstances #-}
 -- Copyright (c) 2005 Don Stewart - http://www.cse.unsw.edu.au/~dons
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
 
@@ -9,7 +9,7 @@ import Plugin
 import qualified Data.Map as M
 import qualified Message as Msg
 
-PLUGIN Localtime
+$(plugin "Localtime")
 
 type TimeMap = M.Map Msg.Nick  -- the person who's time we requested
                     [Msg.Nick] -- a list of targets waiting on this time

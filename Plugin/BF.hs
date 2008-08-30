@@ -1,4 +1,4 @@
-{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses #-}
 -- Copyright (c) 2006 Jason Dagit - http://www.codersbase.com/
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
 
@@ -8,7 +8,7 @@ module Plugin.BF (theModule) where
 
 import Plugin
 
-PLUGIN BF
+$(plugin "BF")
 
 instance Module BFModule () where
     moduleCmds   _     = ["bf"]

@@ -1,4 +1,4 @@
-{-# LANGUAGE MultiParamTypeClasses, PatternGuards #-}
+{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses, PatternGuards #-}
 -- Copyright (c) 6 DonStewart - http://www.cse.unsw.edu.au/~dons
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
 
@@ -12,7 +12,7 @@ import Lambdabot.Parser
 import qualified Text.Regex as R
 import Codec.Binary.UTF8.String (decodeString)
 
-PLUGIN Check
+$(plugin "Check")
 
 instance Module CheckModule () where
     moduleCmds   _     = ["check"]

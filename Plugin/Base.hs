@@ -1,4 +1,4 @@
-{-# LANGUAGE MultiParamTypeClasses, PatternGuards, TypeSynonymInstances #-}
+{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses, PatternGuards, TypeSynonymInstances #-}
 -- | Lambdabot base module. Controls message send and receive
 module Plugin.Base (theModule) where
 
@@ -21,7 +21,7 @@ import qualified Text.Regex as R
 commands :: [String]
 commands  = commandPrefixes config
 
-PLUGIN Base
+$(plugin "Base")
 
 type BaseState = GlobalPrivate () ()
 type Base a = ModuleT BaseState LB a

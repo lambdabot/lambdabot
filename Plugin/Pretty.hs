@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses #-}
+{-# LANGUAGE TemplateHaskell, FlexibleInstances, MultiParamTypeClasses #-}
 
 {- | Pretty-Printing echo
 
@@ -22,7 +22,7 @@ import Language.Haskell.Parser
 import Language.Haskell.Syntax hiding (Module)
 import Language.Haskell.Pretty
 
-PLUGIN Pretty
+$(plugin "Pretty")
 
 instance Module PrettyModule (String -> IO String) where
     moduleCmds _   = ["pretty"]

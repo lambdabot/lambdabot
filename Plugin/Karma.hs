@@ -1,4 +1,4 @@
-{-# LANGUAGE MultiParamTypeClasses, TypeSynonymInstances #-}
+{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses, TypeSynonymInstances #-}
 -- | Karma
 module Plugin.Karma (theModule) where
 
@@ -8,7 +8,7 @@ import qualified NickEq as E
 import qualified Data.Map as M
 import Text.Printf
 
-PLUGIN Karma
+$(plugin "Karma")
 
 type KarmaState = M.Map Msg.Nick Integer
 type Karma m a = ModuleT KarmaState m a

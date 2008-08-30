@@ -3,7 +3,7 @@
 --
 module Plugin.Hello where
 
-PLUGIN Hello
+$(plugin "Hello")
 
 instance Module Hello () where
     moduleCmds _  = ["hello","goodbye"]

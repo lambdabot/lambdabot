@@ -1,4 +1,4 @@
-{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses #-}
 -- | The plugin-level IRC interface.
 
 module Plugin.IRC (theModule) where
@@ -14,7 +14,7 @@ import Plugin
 import System.IO (hGetLine, hPutStr, hPutStrLn, hSetBuffering, BufferMode(NoBuffering), stderr, hClose)
 import qualified Data.ByteString.Char8 as P
 
-PLUGIN IRC
+$(plugin "IRC")
 
 instance Module IRCModule () where
     modulePrivs  _         = ["irc-connect"]

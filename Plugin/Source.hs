@@ -1,4 +1,4 @@
-{-# LANGUAGE MultiParamTypeClasses, TypeSynonymInstances #-}
+{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses, TypeSynonymInstances #-}
 -- Plugin.Source
 -- Display source for specified identifiers
 module Plugin.Source (theModule) where
@@ -9,7 +9,7 @@ import qualified Data.Map as M
 import qualified Data.ByteString.Char8 as P
 import Data.ByteString.Char8 (pack,ByteString)
 
-PLUGIN Source
+$(plugin "Source")
 
 type Env = M.Map ByteString ByteString
 

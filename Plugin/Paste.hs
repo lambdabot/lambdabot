@@ -1,4 +1,4 @@
-{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses #-}
 
 -- | Skeletal paste support
 module Plugin.Paste (theModule) where
@@ -7,7 +7,7 @@ import Plugin
 import Control.Concurrent (forkIO, ThreadID)
 import Message
 
-PLUGIN Paste
+$(plugin "Paste")
 
 announceTarget = "#haskell" -- hmm :/
 

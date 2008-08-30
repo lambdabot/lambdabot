@@ -1,4 +1,4 @@
-{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses #-}
 -- Copyright (c) 2005-6 Don Stewart - http://www.cse.unsw.edu.au/~dons
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
 
@@ -9,7 +9,7 @@ import Plugin
 import Paths_lambdabot (version)
 import Data.Version (showVersion)
 
-PLUGIN Version
+$(plugin "Version")
 
 instance Module VersionModule () where
     moduleCmds   _ = ["version"]

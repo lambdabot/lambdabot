@@ -1,4 +1,4 @@
-{-# LANGUAGE CPP, MultiParamTypeClasses #-}
+{-# LANGUAGE TemplateHaskell, CPP, MultiParamTypeClasses #-}
 -- | Offline mode / RC file / -e support module.  Handles spooling lists
 -- of commands (from readline, files, or the command line) into the vchat
 -- layer.
@@ -34,7 +34,7 @@ import System.Console.Readline( readline, addHistory )
 #endif
 
 
-PLUGIN OfflineRC
+$(plugin "OfflineRC")
 
 -- We need to track the number of active sourcings so that we can
 -- unregister the server (-> allow the bot to quit) when it is not

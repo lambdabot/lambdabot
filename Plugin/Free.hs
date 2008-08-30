@@ -1,4 +1,4 @@
-{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses #-}
 -- | Free theorems plugin
 -- Andrew Bromage, 2006
 module Plugin.Free where
@@ -7,7 +7,7 @@ import Plugin
 import Plugin.Free.FreeTheorem
 import Plugin.Type (query_ghci)
 
-PLUGIN Free
+$(plugin "Free")
 
 instance Module FreeModule () where
     moduleCmds _  = ["free"]

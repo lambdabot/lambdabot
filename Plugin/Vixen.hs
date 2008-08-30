@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses #-}
+{-# LANGUAGE TemplateHaskell, FlexibleInstances, MultiParamTypeClasses #-}
 
 -- | Talk to hot chixxors.
 
@@ -19,7 +19,7 @@ import qualified Data.ByteString.Char8 as P
 import File (findFile)
 import Plugin
 
-PLUGIN Vixen
+$(plugin "Vixen")
 
 instance Module VixenModule (Bool, String -> IO String) where
     moduleCmds   _   = ["vixen"]

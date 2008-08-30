@@ -1,4 +1,4 @@
-{-# LANGUAGE MultiParamTypeClasses, TypeSynonymInstances #-}
+{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses, TypeSynonymInstances #-}
 
 -- |
 -- Module    : Where
@@ -15,7 +15,7 @@ import Lambdabot.Util (confirmation)
 import qualified Data.ByteString.Char8 as P
 import qualified Data.Map as M
 
-PLUGIN Where
+$(plugin "Where")
 
 type WhereState         = M.Map P.ByteString P.ByteString
 type WhereWriter        = WhereState -> LB ()

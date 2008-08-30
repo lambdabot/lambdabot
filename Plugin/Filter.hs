@@ -1,4 +1,4 @@
-{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses #-}
 -- | GNU Talk Filters
 -- needs: http://www.hyperrealm.com/main.php?s=talkfilters
 -- Edward Kmett 2006
@@ -7,7 +7,7 @@ module Plugin.Filter where
 
 import Plugin
 
-PLUGIN Filter
+$(plugin "Filter")
 
 instance Module FilterModule () where
         moduleCmds _   = ["austro","b1ff","brooklyn","chef","cockney","drawl","dubya","fudd","funetak","jethro","jive","kraut","pansy","pirate","postmodern","redneck","valspeak","warez"]

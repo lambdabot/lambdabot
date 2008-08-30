@@ -1,4 +1,4 @@
-{-# LANGUAGE MultiParamTypeClasses, PatternGuards #-}
+{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses, PatternGuards #-}
 -- | Fetch URL page titles of HTML links.
 module Plugin.Url (theModule) where
 
@@ -7,7 +7,7 @@ import Network.URI
 
 import qualified Text.Regex as R -- legacy
 
-PLUGIN Url
+$(plugin "Url")
 
 instance Module UrlModule Bool where
     moduleHelp  _ "url-title"     = "url-title <url>. Fetch the page title."

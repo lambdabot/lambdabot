@@ -1,11 +1,11 @@
-{-# LANGUAGE MultiParamTypeClasses, TypeSynonymInstances #-}
+{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses, TypeSynonymInstances #-}
 -- | Persistent state
 -- A demo plugin
 module Plugin.State (theModule) where
 
 import Plugin
 
-PLUGIN State
+$(plugin "State")
 
 instance Module StateModule String where
     moduleCmds      _ = [] -- ["state","++"]

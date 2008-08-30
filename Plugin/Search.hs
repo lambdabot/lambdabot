@@ -1,4 +1,4 @@
-{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses #-}
 -- | Search various things, Wikipedia and google for now.
 --
 -- (c) 2005 Samuel Bronson
@@ -12,7 +12,7 @@ import Plugin
 import Control.Monad            (mplus)
 import qualified Text.Regex as R
 
-PLUGIN Search
+$(plugin "Search")
 
 engines :: [(String, (String, String))]
 engines =

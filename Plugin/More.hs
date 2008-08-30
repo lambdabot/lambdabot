@@ -1,4 +1,4 @@
-{-# LANGUAGE MultiParamTypeClasses, TypeSynonymInstances #-}
+{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses, TypeSynonymInstances #-}
 -- | Support for more(1) buffering
 module Plugin.More (theModule) where
 
@@ -6,7 +6,7 @@ import Plugin
 
 import Message( Nick )
 
-PLUGIN More
+$(plugin "More")
 
 type MoreState = GlobalPrivate () [String]
 

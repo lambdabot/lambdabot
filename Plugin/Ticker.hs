@@ -1,4 +1,4 @@
-{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses #-}
 
 -- | Pull quotes down from yahoo.
 module Plugin.Ticker (theModule) where
@@ -9,7 +9,7 @@ import Control.Applicative ((<$>))
 -- import Control.Arrow (second)
 import Text.Printf
 
-PLUGIN Ticker
+$(plugin "Ticker")
 
 instance Module TickerModule () where
     moduleCmds      _     = ["ticker", "bid"]

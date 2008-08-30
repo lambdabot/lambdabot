@@ -1,4 +1,4 @@
-{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses #-}
 -- | This module is for throwing dice for e.g. RPGs. (\@dice 3d6+2)
 
 -- Copyright Einar Karttunen <ekarttun@cs.helsinki.fi> 2005-04-06.
@@ -10,7 +10,7 @@ import Control.Monad                    (replicateM,foldM)
 import System.Random                    (randomRIO)
 import Text.ParserCombinators.Parsec
 
-PLUGIN Dice
+$(plugin "Dice")
 
 instance Module DiceModule () where
     moduleCmds   _  = ["dice"]

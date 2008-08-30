@@ -1,4 +1,4 @@
-{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses #-}
 
 -- Copyright (c) 2006 Spencer Janssen
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
@@ -12,7 +12,7 @@ import Data.Generics
 import qualified Data.Set as Set
 import Control.Monad (guard)
 
-PLUGIN Undo
+$(plugin "Undo")
 
 instance Module UndoModule () where
     moduleCmds   _ = ["undo", "redo"]

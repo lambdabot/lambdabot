@@ -1,5 +1,5 @@
 
-{-# LANGUAGE MultiParamTypeClasses, PatternGuards #-}
+{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses, PatternGuards #-}
 -- Copyright (c) 2004-6 Donald Bruce Stewart - http://www.cse.unsw.edu.au/~dons
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
 
@@ -17,7 +17,7 @@ import System.Exit
 import Codec.Binary.UTF8.String (decodeString)
 import qualified Data.ByteString.Char8 as P
 
-PLUGIN Plugs
+$(plugin "Plugs")
 
 instance Module PlugsModule () where
     moduleCmds   _             = ["run","let","undefine"]

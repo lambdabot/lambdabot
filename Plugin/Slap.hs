@@ -1,11 +1,11 @@
-{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses #-}
 -- | Support for quotes
 module Plugin.Slap (theModule) where
 
 import Plugin
 import qualified Message (nick, showNick)
 
-PLUGIN Quote
+$(plugin "Quote")
 
 instance Module QuoteModule () where
     moduleCmds _           = ["slap", "smack"]

@@ -1,4 +1,4 @@
-{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses #-}
 
 -- | Haskell project name generation
 -- semi-joke
@@ -6,7 +6,7 @@ module Plugin.Fresh (theModule) where
 
 import Plugin
 
-PLUGIN Fresh
+$(plugin "Fresh")
 
 instance Module FreshModule Integer where
     moduleCmds      _ = ["freshname"]

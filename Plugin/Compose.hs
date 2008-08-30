@@ -1,4 +1,4 @@
-{-# LANGUAGE MultiParamTypeClasses, PatternGuards #-}
+{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses, PatternGuards #-}
 -- Copyright (c) 2005 Don Stewart - http://www.cse.unsw.edu.au/~dons
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
 
@@ -13,7 +13,7 @@ import Control.Monad.State
 import Control.Arrow (first)
 import GHC.IOBase   (Exception(NoMethodError))
 
-PLUGIN Compose
+$(plugin "Compose")
 
 instance Module ComposeModule () where
     moduleCmds _   = [".", "compose", "@", "?"]

@@ -1,4 +1,4 @@
-{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses #-}
 -- | Free theorems plugin,
 -- Don Stewart 2006
 module Plugin.FT where
@@ -6,7 +6,7 @@ module Plugin.FT where
 import Plugin
 import Plugin.Type (query_ghci)
 
-PLUGIN FT
+$(plugin "FT")
 
 instance Module FTModule () where
     moduleCmds _   = ["ft"]

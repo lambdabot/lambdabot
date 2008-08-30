@@ -1,4 +1,4 @@
-{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses #-}
 ----------------------------------------------------------------------
 -- |
 -- Module      : Plugin.UnMtl
@@ -19,7 +19,7 @@ import Lambdabot.Parser (prettyPrintInLine)
 
 import Plugin as P
 
-PLUGIN UnMtl
+$(plugin "UnMtl")
 
 instance P.Module UnMtlModule () where
     moduleCmds   _ = ["unmtl"]

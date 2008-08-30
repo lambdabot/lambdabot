@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses, Rank2Types #-}
+{-# LANGUAGE TemplateHaskell, FlexibleInstances, MultiParamTypeClasses, Rank2Types #-}
 -- | System module : IRC control functions
 module Plugin.System (theModule) where
 
@@ -9,7 +9,7 @@ import qualified Data.Map as M       (Map,keys,fromList,lookup,union,insert,dele
 
 import Control.Monad.State      (MonadState(get, put), gets)
 
-PLUGIN System
+$(plugin "System")
 
 instance Module SystemModule (ClockTime, TimeDiff) where
     moduleCmds   _   = M.keys syscmds

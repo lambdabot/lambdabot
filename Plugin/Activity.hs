@@ -1,4 +1,4 @@
-{-# LANGUAGE MultiParamTypeClasses, TypeSynonymInstances #-}
+{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses, TypeSynonymInstances #-}
 -- | Logging an IRC channel..
 module Plugin.Activity (theModule) where
 
@@ -11,7 +11,7 @@ import Control.Exception (evaluate)
 
 import System.Time
 
-PLUGIN Activity
+$(plugin "Activity")
 
 type ActivityState = [(ClockTime,Msg.Nick)]
 

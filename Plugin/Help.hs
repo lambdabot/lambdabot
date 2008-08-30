@@ -1,11 +1,11 @@
-{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses #-}
 -- | Provide help for plugins
 module Plugin.Help (theModule) where
 
 import Plugin
 import Control.Exception    (Exception(..), evaluate)
 
-PLUGIN Help
+$(plugin "Help")
 
 instance Module HelpModule () where
     moduleHelp _ _ = "help <command>. Ask for help for <command>. Try 'list' for all commands"

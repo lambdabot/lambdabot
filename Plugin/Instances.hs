@@ -1,4 +1,4 @@
-{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses #-}
 {- | A module to output the instances of a typeclass.
      Some sample input\/output:
 
@@ -27,7 +27,7 @@ type Instance   = String
 type ClassName  = String
 type ModuleName = String
 
-PLUGIN Instances
+$(plugin "Instances")
 
 instance Module InstancesModule () where
     moduleCmds _ = map fst help

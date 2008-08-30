@@ -1,4 +1,4 @@
-{-# LANGUAGE CPP, MultiParamTypeClasses, PatternGuards, TypeSynonymInstances #-}
+{-# LANGUAGE TemplateHaskell, CPP, MultiParamTypeClasses, PatternGuards, TypeSynonymInstances #-}
 -- | Support for quotes
 module Plugin.Quote (theModule) where
 
@@ -9,7 +9,7 @@ import Plugin.Quote.Text
 import qualified Data.Map as M
 import qualified Data.ByteString.Char8 as P
 
-PLUGIN Quote
+$(plugin "Quote")
 
 type Key    = P.ByteString
 type Quotes = M.Map Key [P.ByteString]

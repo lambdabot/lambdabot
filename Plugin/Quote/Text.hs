@@ -2330,3 +2330,10 @@ nixonList =
     "You have to face the fact that whole problem is really the blacks. The key is to divise a system that reconizes this while not appearing to...",
     "Your boys will be home for Christmas." ]
 
+harrop :: [String]
+harrop = 
+    [ "Our conclusion is, of course, that we are not going to consider diversifying into the Haskell market, at least not until it matures. Right now, Scala is looking much more viable."
+    , "These remarkable new figures show that Haskell is still a virgin language: despite a huge number of open source projects being started in Haskell, virtually none reach maturity and the vast majority of those never garner a significant user base (i.e. they remain untested)."
+    , "almost all of the examples of Haskell's use in industry are fakes"
+    , "On Mr. Harrop: \"Where exactly did we pick up this, er, individual?  Would they please take it back as defective?\""
+    ]

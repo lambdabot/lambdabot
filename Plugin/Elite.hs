@@ -1,4 +1,4 @@
-{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses #-}
 -- (c) Josef Svenningsson, 2005
 -- Licence: No licence, public domain
 
@@ -12,7 +12,7 @@ import qualified Text.Regex as R
 import Control.Arrow
 import Control.Monad.State
 
-PLUGIN Elite
+$(plugin "Elite")
 
 instance Module EliteModule () where
     moduleCmds _   = ["elite"]

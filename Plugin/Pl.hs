@@ -1,4 +1,4 @@
-{-# LANGUAGE MultiParamTypeClasses, TypeSynonymInstances #-}
+{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses, TypeSynonymInstances #-}
 
 -- | Pointfree programming fun
 --
@@ -32,7 +32,7 @@ maxTimeout   = 15000000 -- 15 seconds
 
 type PlState = GlobalPrivate () (Int, TopLevel)
 
-PLUGIN Pl
+$(plugin "Pl")
 
 type Pl = ModuleLB PlState
 
