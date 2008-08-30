@@ -56,7 +56,7 @@ Executable          lambdabot
     Build-depends:       containers, directory, pretty, parsec, old-time, random, array, network,
                          regex-compat, readline, binary>0.2, haskell-src, oeis, lambdabot-utils, show>=0.3, utf8-string,
                          -- runtime dependencies
-                         brainfuck, unlambda
+                         brainfuck, unlambda, template-haskell
     Main-is:             Main.hs
     -- For a faster build, use -Onot
     ghc-options:         -funbox-strict-fields -fno-warn-incomplete-patterns -fno-warn-missing-methods -fno-warn-orphans

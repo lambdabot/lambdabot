@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 --
 -- Copyright (c) 2006 Don Stewart - http://www.cse.unsw.edu.au/~dons
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
@@ -6,7 +8,7 @@
 -- Simplifies import lists, and abstracts over common patterns
 --
 module Plugin (
-        ios, box, list, ios80,
+        ios, box, list, ios80, plugin,
 
         module Lambdabot,
         module LBState,
@@ -52,6 +54,8 @@ import System.IO
 import Control.Monad.Error
 import Control.Monad.Trans
 
+import Language.Haskell.TH
+
 -- | convenience, we often want to perform some io, get a string, and box it.
 ios  :: (Functor m, MonadIO m) => IO a -> m [a]
 ios  = list . io
@@ -71,3 +75,12 @@ ios80 to what = list . io $ what >>= return . lim
                     _       -> id      -- private message: get everything
           abbr n s = let (b, t) = splitAt n s in
                      if null t then b else take (n-3) b ++ "..."
+
+plugin :: String -> Q [Dec]
+plugin n = sequence [typedec, fundec]
+ where
+    fundec = funD themod [clause [] (normalB ([| MODULE $(conE mod) |]) ) []]
+    -- typedec = newtypeD (cxt []) mod [] (normalC mod [strictType notStrict [t|()|]]) []
+    typedec = dataD (cxt []) mod [] [normalC mod []] []
+    themod = mkName "theModule"
+    mod = mkName $ n ++ "Module"
