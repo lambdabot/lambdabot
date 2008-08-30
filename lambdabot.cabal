@@ -27,7 +27,7 @@ data-files:         State/djinn, State/url, State/haddock, State/source,
                     online.rc, online2.rc
 
 Library
-    build-depends: base, mtl, bytestring, unix, botpp
+    build-depends: base, mtl, bytestring, unix
     exposed-modules: Config, IRCBase, File,
                      LBState, LMain, Lambdabot, Message,
                      NickEq, Plugin, Plugin.Activity, Plugin.BF,
@@ -47,8 +47,6 @@ Library
                      Plugin.Ticker, Plugin.Todo, Plugin.Topic, Plugin.Type, Plugin.UnMtl,
                      Plugin.Undo, Plugin.Unlambda, Plugin.Url, Plugin.Version, Plugin.Vixen,
                      Plugin.Where, Shared
-    -- BotPP does not generate all methods, so remove those.
-    -- Note that we do BotPP as OPTIONS_GHC pragmas so we can load Plugin/ modules in GHCi
     ghc-options: -fno-warn-missing-methods
     buildable:   False
 

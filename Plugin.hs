@@ -8,7 +8,7 @@
 -- Simplifies import lists, and abstracts over common patterns
 --
 module Plugin (
-        ios, box, list, ios80, plugin,
+        ios, box, list, ios80, plugin, modules,
 
         module Lambdabot,
         module LBState,
@@ -84,3 +84,12 @@ plugin n = sequence [typedec, fundec]
     typedec = dataD (cxt []) mod [] [normalC mod []] []
     themod = mkName "theModule"
     mod = mkName $ n ++ "Module"
+
+modules :: [String] -> Q Exp
+modules xs = [| ($install, $names) |]
+ where
+    names = listE $ map (stringE . map toLower) xs
+    install = [| sequence_ $(listE $ map instalify xs) |]
+    instalify x = let mod = varE $ mkName $ concat $ ["Plugin.", x, ".theModule"]
+                      low = stringE $ map toLower x
+                  in [| ircInstallModule $mod $low |]
