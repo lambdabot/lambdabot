@@ -50,6 +50,7 @@ Library
     -- BotPP does not generate all methods, so remove those.
     -- Note that we do BotPP as OPTIONS_GHC pragmas so we can load Plugin/ modules in GHCi
     ghc-options: -fno-warn-missing-methods
+    buildable:   False
 
 -- Lambdabot main
 Executable          lambdabot
