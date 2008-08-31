@@ -60,8 +60,7 @@ import qualified Plugin.Where
 modulesInfo :: (LB (), [String])
 modulesInfo = $(modules 
                     -- plugins also go in this list:
-                    [ "Base"
-                    , "Activity"
+                    [ "Activity"
                     , "Babel"
                     , "Base"
                     , "BF"
