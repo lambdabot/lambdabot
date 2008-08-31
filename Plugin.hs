@@ -62,6 +62,10 @@ import Codec.Binary.UTF8.String
 
 import Language.Haskell.TH
 
+import Codec.Binary.UTF8.String
+
+import Language.Haskell.TH
+
 -- | convenience, we often want to perform some io, get a string, and box it.
 ios  :: (Functor m, MonadIO m) => IO a -> m [a]
 ios  = list . io
@@ -75,7 +79,7 @@ box = return . return
 -- | convenience, similar to ios but also cut output to channel to 80 characters
 -- usage:  @process _ _ to _ s = ios80 to (plugs s)@
 ios80 :: (Functor m, MonadIO m) => Nick -> IO String -> m [String]
-ios80 to what = list . io $ what >>= return . encodeString . lim . spaceOut . removeControl . decodeString
+ios80 to what = list . io $ what >>= return . lim . encodeString . spaceOut . removeControl . decodeString
     where lim = case nName to of
                     ('#':_) -> abbr 80 -- message to channel: be nice
                     _       -> id      -- private message: get everything
