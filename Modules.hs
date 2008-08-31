@@ -3,6 +3,7 @@
 module Modules (modulesInfo) where
 
 import Plugin
+import Data.List (nub)
 
 -- to add a new plugin, one must first add a qualified import here, and also
 -- add a string in the list below
@@ -58,11 +59,17 @@ import qualified Plugin.Vixen
 import qualified Plugin.Where
 
 modulesInfo :: (LB (), [String])
-modulesInfo = $(modules 
+modulesInfo = $(modules $ nub
+                    -- these must be listed first.  Maybe.  Nobody really
+                    -- knows, but better to be safe than sorry.
+                    [ "Base"
+                    , "State"
+                    , "System"
+                    , "OfflineRC"
+
                     -- plugins also go in this list:
-                    [ "Activity"
+                    , "Activity"
                     , "Babel"
-                    , "Base"
                     , "BF"
                     , "Check"
                     , "Compose"
@@ -85,7 +92,6 @@ modulesInfo = $(modules
                     , "Localtime"
                     , "More"
                     , "OEIS"
-                    , "OfflineRC"
                     , "Pl"
                     , "Pointful"
                     , "Poll"
@@ -96,8 +102,6 @@ modulesInfo = $(modules
                     , "Slap"
                     , "Source"
                     , "Spell"
-                    , "State"
-                    , "System"
                     , "Tell"
                     , "Ticker"
                     , "Todo"
