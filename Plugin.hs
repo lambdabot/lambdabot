@@ -54,6 +54,10 @@ import System.IO
 import Control.Monad.Error
 import Control.Monad.Trans
 
+import Codec.Binary.UTF8.String
+
+import Language.Haskell.TH
+
 -- | convenience, we often want to perform some io, get a string, and box it.
 ios  :: (Functor m, MonadIO m) => IO a -> m [a]
 ios  = list . io
