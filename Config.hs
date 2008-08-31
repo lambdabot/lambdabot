@@ -46,7 +46,7 @@ config = Config {
         textwidth       = 350,
         proxy           = Nothing, -- Just ("www-proxy",3128),
 
-        fortunePath     = "/home/dons/fortune/",
+        fortunePath     = "/usr/share/games/fortunes/",
         fptoolsPath     = "/home/dons/fptools",
 
         ghci            = "ghci",
