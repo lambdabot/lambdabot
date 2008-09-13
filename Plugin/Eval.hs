@@ -16,6 +16,7 @@ import System.Directory
 import System.Exit
 import Codec.Binary.UTF8.String (decodeString)
 import qualified Data.ByteString.Char8 as P
+import Control.Exception (try)
 
 $(plugin "Plugs")
 
@@ -94,9 +95,9 @@ comp src = do
 --                             ,"-odir", "State/"
 --                             ,"-hidir","State/"
                              ,".L.hs"] Nothing
-    -- cleanup
-    removeFile ".L.hi"
-    removeFile ".L.o"
+    -- cleanup, in case of error the files are not generated
+    try $ removeFile ".L.hi"
+    try $ removeFile ".L.o"
 
     case (munge o', munge e') of
         ([],[]) | c /= ExitSuccess -> return "Error."
