@@ -104,8 +104,8 @@ comp src = do
                 | otherwise -> do
                     renameFile ".L.hs" l
                     return (maybe "Undefined." (const "Defined.") src)
-        (ee,[]) -> return (concat . intersperse " " . lines $ ee)
-        (_ ,ee) -> return (concat . intersperse " " . lines $ ee)
+        (ee,[]) -> return ee
+        (_ ,ee) -> return ee
 
 
 -- test cases
