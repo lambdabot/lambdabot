@@ -6,6 +6,8 @@ module Plugin.Dice (theModule) where
 
 import Plugin
 
+import Message
+
 import Control.Monad                    (replicateM,foldM)
 import System.Random                    (randomRIO)
 import Text.ParserCombinators.Parsec
@@ -14,17 +16,17 @@ $(plugin "Dice")
 
 instance Module DiceModule () where
     moduleCmds   _  = ["dice", "roll"]
-    moduleHelp _ _  = "dice <expr>. Throw random dice. <expr> is of the form 3d6+2."
-    process_ _ _ xs = ios (dice True xs)
-    contextual _ _ _ text = ios (dice False text)
+    moduleHelp   _ _  = "dice <expr>. Throw random dice. <expr> is of the form 3d6+2."
+    process      _ msg _ _ xs = ios (dice (nName $ nick $ msg) True xs)
+    contextual   _ msg _ text = ios (dice (nName $ nick $ msg) False text)
 
-dice :: Bool -> String -> IO String
-dice barf str = case parse expr "dice" (filter (not.isSpace) str) of
+dice :: String -> Bool -> String -> IO String
+dice user barf str = case parse expr "dice" (filter (not.isSpace) str) of
             Left err  -> if barf 
                 then return . trimError $ err
                 else return []
             Right e   -> do res <- eval e
-                            return (brk 30 str++" => "++brk 45 (show res))
+                            return (user ++ ": " ++ brk 30 str ++" => "++brk 45 (show res))
            where
             brk n s | length s <= n = s
                     | otherwise     = take (n-3) s ++ "..."
