@@ -46,8 +46,8 @@ config = Config {
         textwidth       = 350,
         proxy           = Nothing, -- Just ("www-proxy",3128),
 
-        fortunePath     = "/home/dons/fortune/",
-        fptoolsPath     = "/home/dons/fptools",
+        fortunePath     = "/deepbondi/fortune/",
+        fptoolsPath     = "/home/susie/fptools",
 
         ghci            = "ghci",
         outputDir       = "State/",
