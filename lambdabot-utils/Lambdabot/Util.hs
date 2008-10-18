@@ -529,6 +529,9 @@ insult =
     "Have you considered trying to match wits with a rutabaga?",
     "You speak an infinite deal of nothing",
     
+    -- other
+    "Are you typing with your feet?",
+    
     -- More haskellish insults
     "You untyped fool!",
     "My brain just exploded",
