@@ -56,7 +56,7 @@ defaultHelp :: String
 defaultHelp = "system : irc management"
 
 doSystem :: Message.Message a => a -> Message.Nick -> [Char] -> [Char] -> ModuleLB (ClockTime, TimeDiff)
-doSystem msg _ cmd rest = get >>= \s -> case cmd of
+doSystem msg target cmd rest = get >>= \s -> case cmd of
   "listchans"   -> return [pprKeys (ircChannels s)]
   "listmodules" -> return [pprKeys (ircModules s) ]
   "listservers" -> return [pprKeys (ircServerMap s)]
@@ -83,7 +83,7 @@ doSystem msg _ cmd rest = get >>= \s -> case cmd of
   "reconnect" -> lift $ do ircReconnect (Message.server msg) $ if null rest then "request" else rest
                            return []
 
-  "echo" -> return [concat ["echo; msg:", show msg, " rest:", show rest]]
+  "echo" -> return [concat ["echo; msg:", show msg, " target:" , show target, " rest:", show rest]]
 
   "flush" -> lift $ do flushModuleState
                        return []
