@@ -3,7 +3,7 @@
 --
 module Message(Message(..), Nick(..), showNick, readNick, Pipe, packNick, unpackNick) where
 
-import Lib.Util(dropSpace)
+import Lambdabot.Util(dropSpace)
 
 import qualified Data.ByteString.Char8 as P
 import Control.Concurrent (Chan)
