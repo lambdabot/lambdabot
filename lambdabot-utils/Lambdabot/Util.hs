@@ -512,12 +512,14 @@ insult =
 
     "Wrong!  You cheating scum!",
     "And you call yourself a Rocket Scientist!",
+    "And you call yourself a Rocket Surgeon!",
     "Where did you learn to type?",
     "Are you on drugs?",
     "My pet ferret can type better than you!",
     "You type like i drive.",
     "Do you think like you type?",
     "Your mind just hasn't been the same since the electro-shock, has it?",
+    "I don't think I can be your friend on Facebook anymore.",
 
     "Maybe if you used more than just two fingers...",
     "BOB says:  You seem to have forgotten your passwd, enter another!",
@@ -527,10 +529,11 @@ insult =
     "Listen, broccoli brains, I don't have time to listen to this trash.",
     "I've seen penguins that can type better than that.",
     "Have you considered trying to match wits with a rutabaga?",
-    "You speak an infinite deal of nothing",
+    "You speak an infinite deal of nothing.",
     
     -- other
     "Are you typing with your feet?",
+    "Abort, Retry, Panic?",
     
     -- More haskellish insults
     "You untyped fool!",
@@ -541,6 +544,7 @@ insult =
     "Maybe you made a typo?",
     "Just try something else.",
     "There are some things that I just don't know.",
+    "Whoa.",
     -- sometimes don't insult at all
     ":(",":(",
     "","",""
