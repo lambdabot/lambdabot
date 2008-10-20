@@ -97,9 +97,9 @@ comp src = do
 --                             ,"-odir", "State/"
 --                             ,"-hidir","State/"
                              ,".L.hs"] Nothing
-    -- cleanup, in case of error the files are not generated
-    try $ removeFile ".L.hi"
-    try $ removeFile ".L.o"
+    -- cleanup
+    removeFile ".L.hi"
+    removeFile ".L.o"
 
     case (munge o', munge e') of
         ([],[]) | c /= ExitSuccess -> return "Error."
