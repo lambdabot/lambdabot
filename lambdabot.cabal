@@ -58,7 +58,9 @@ Executable          lambdabot
                          brainfuck, unlambda, template-haskell
     Main-is:             Main.hs
     -- For a faster build, use -Onot
-    ghc-options:         -funbox-strict-fields -fno-warn-incomplete-patterns -fno-warn-missing-methods -fno-warn-orphans
+    ghc-options:         -funbox-strict-fields -fno-warn-incomplete-patterns
+                         -fno-warn-missing-methods -fno-warn-orphans
+                         -- Apparently needed to work around zombie & IRC connection issues
+                         -threaded
     include-dirs:        .
-
 
