@@ -1,5 +1,4 @@
 module L where
-
 import Control.Applicative
 import Control.Arrow hiding (pure)
 import Control.Arrow.Operations
@@ -13,7 +12,6 @@ import Control.Monad.Logic
 import Control.Monad.RWS
 import Control.Monad.Reader
 import Control.Monad.ST (ST, runST, fixST)
-import Control.Monad.State
 import Control.Monad.State
 import Control.Monad.Writer
 import Control.Parallel
@@ -55,6 +53,7 @@ import System.Random
 import Test.QuickCheck
 import Text.PrettyPrint.HughesPJ hiding (empty)
 import Text.Printf
+import Text.Regex.Posix
 import qualified Control.Arrow.Transformer as AT
 import qualified Control.Arrow.Transformer.All as AT
 import qualified Data.ByteString as BS
