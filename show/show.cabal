@@ -11,7 +11,7 @@ category:            Language
 synopsis:            'Show' instances for Lambdabot
 description:         This package provides ShowQ, ShowFun, and SimpleReflect.
                      .
-                     ShowFun gives us Typeable instances for neutring IO expressions.
+                     ShowFun gives us Typeable instances for neutering IO expressions.
                      .
                      ShowQ adds SmallCheck & QuickCheck support.
                      .
