@@ -11,7 +11,7 @@ import Message
 
 import Control.Monad.State
 import Control.Arrow (first)
-import GHC.IOBase   (Exception(NoMethodError))
+import Control.Exception   (Exception(NoMethodError))
 
 $(plugin "Compose")
 
