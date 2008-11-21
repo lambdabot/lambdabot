@@ -40,6 +40,7 @@ instance Module DummyModule () where
         "shootout"    -> "shootout. The debian language shootout"
         "faq"         -> "faq. Answer frequently asked questions about Haskell"
         "choose"      -> "choose. Lambdabot featuring AI power"
+        "googleit"    -> "letmegooglethatforyou."
 
   process_ _ "eval"   _    = return []
   process_ _ "choose" []   = return ["Choose between what?"]
@@ -85,6 +86,7 @@ dummylst =
 
     ,("fptools",    lookupPackage "http://darcs.haskell.org/packages/" '/' "hs")
     ,("hackage",    lookupHackage)
+    ,("googleit",   lookupGoogle)
     ]
 
 lookupWiki :: String -> String
@@ -94,6 +96,15 @@ lookupWiki page = "http://www.haskell.org/haskellwiki/" ++ spacesToUnderscores p
 lookupHackage :: String -> String
 lookupHackage "" = "http://hackage.haskell.org"
 lookupHackage xs = "http://hackage.haskell.org/cgi-bin/hackage-scripts/package/" ++ xs
+
+googlePrefix :: String
+googlePrefix = "http://letmegooglethatforyou.com"
+
+lookupGoogle :: String -> String
+lookupGoogle "" = googlePrefix
+lookupGoogle xs = googlePrefix ++ "/?q=" ++ quote xs
+ where
+    quote = map (\x -> if x == ' ' then '+' else x)
 
 docPrefix :: String
 docPrefix = "http://haskell.org/ghc/docs/latest/html/libraries/"
