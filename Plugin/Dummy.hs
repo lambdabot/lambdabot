@@ -21,7 +21,7 @@ instance Module DummyModule () where
         "bug"         -> "bug. Submit a bug to GHC's trac"
         "eval"        -> "eval. Do nothing (perversely)"
 
-        "id"          -> "id <arg>. The identiy plugin"
+        "id"          -> "id <arg>. The identity plugin"
         "read"        -> "read \"<foo>\". Print <foo>"
         "show"        -> "show <foo>. Print \"<foo>\""
         "wiki"        -> "wiki <page>. URLs of Haskell wiki pages"
