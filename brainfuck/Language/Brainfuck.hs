@@ -97,7 +97,7 @@ incIP = (+ 1)
 
 incCP :: CorePtr -> CorePtr
 incCP = (`mod` coreSize) . (1 +)
-{-# inlinE incCP #-}
+{-# INLINE incCP #-}
 
 decCP :: CorePtr -> CorePtr
 decCP = (`mod` coreSize) . subtract 1
