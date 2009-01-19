@@ -10,7 +10,7 @@ import File (findFile)
 import Plugin
 import Lambdabot.Parser
 import Language.Haskell.Exts.Parser
-import Language.Haskell.Exts.Syntax hiding (Module)
+import qualified Language.Haskell.Exts.Syntax as Hs
 import qualified Text.Regex as R
 import System.Directory
 import System.Exit
@@ -68,16 +68,16 @@ plugs src = do
 
 define :: String -> IO String
 define src = case parseModule (decodeString src ++ "\n") of -- extra \n so comments are parsed correctly
-    (ParseOk (HsModule _ _ (Just [HsEVar (UnQual (HsIdent "main"))]) [] ds))
+    (ParseOk (HsModule _ _ _ _ (Just [Hs.EVar (Hs.UnQual (Hs.Ident "main"))]) [] ds))
         | all okay ds -> comp (Just src)
     (ParseFailed _ e) -> return $ " " ++ e
     _                 -> return "Invalid declaration"
  where
-    okay (HsTypeSig   {}) = True
-    okay (HsFunBind   {}) = True
-    okay (HsPatBind   {}) = True
-    okay (HsInfixDecl {}) = True
-    okay _                = False
+    okay (Hs.TypeSig   {}) = True
+    okay (Hs.FunBind   {}) = True
+    okay (Hs.PatBind   {}) = True
+    okay (Hs.InfixDecl {}) = True
+    okay _                 = False
 
 -- It parses. then add it to a temporary L.hs and typecheck
 comp :: Maybe String -> IO String

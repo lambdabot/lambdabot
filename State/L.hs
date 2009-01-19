@@ -1,6 +1,6 @@
 module L where
 import Control.Applicative
-import Control.Arrow hiding (pure)
+import Control.Arrow
 import Control.Arrow.Operations
 import Control.Monad
 import Control.Monad.Cont
