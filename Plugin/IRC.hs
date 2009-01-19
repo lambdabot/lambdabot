@@ -5,7 +5,7 @@ module Plugin.IRC (theModule) where
 
 import Control.Concurrent( forkIO, newQSem, waitQSem, threadDelay, signalQSem,
                            newEmptyMVar, putMVar, takeMVar, MVar )
-import Control.Exception
+import Control.OldException
 import IRCBase
 import LMain( received )
 import Message

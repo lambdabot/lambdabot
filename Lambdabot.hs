@@ -69,7 +69,7 @@ import Data.ByteString (ByteString)
 
 import Control.Concurrent (myThreadId, newEmptyMVar, newMVar, readMVar, putMVar,
                            takeMVar, threadDelay, MVar, ThreadId)
-import Control.Exception
+import Control.OldException
 import Control.Monad.Error (MonadError (..))
 import Control.Monad.Reader
 import Control.Monad.State

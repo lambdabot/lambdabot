@@ -19,7 +19,7 @@ module Plugin.Dict.DictLookup ( simpleDictLookup, QueryConfig(..), LookupResult)
 
 import Data.List
 import System.IO
-import Control.Exception (handle)
+import Control.OldException (handle)
 import Network
 
 data QueryConfig    = QC { host :: String, port :: Int }

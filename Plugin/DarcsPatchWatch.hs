@@ -12,7 +12,7 @@ import qualified Data.ByteString.Char8 as P
 import Prelude hiding ( catch )
 
 import Control.Concurrent (forkIO, killThread, modifyMVar_, readMVar, threadDelay, MVar, ThreadId)
-import Control.Exception
+import Control.OldException
 import Control.Monad       ( when )
 
 import System.Directory

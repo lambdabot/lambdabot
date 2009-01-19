@@ -10,7 +10,7 @@ import qualified Lambdabot.Util hiding (stdGetRandItem)
 import Data.List
 import Control.Monad
 import System.Directory
-import qualified Control.Exception as C (catch)
+import qualified Control.OldException as C (catch)
 
 #ifndef mingw32_HOST_OS
 --

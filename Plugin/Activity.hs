@@ -7,7 +7,7 @@ import qualified Message as Msg
 
 import Control.Arrow ((&&&))
 import Data.Maybe (fromMaybe)
-import Control.Exception (evaluate)
+import Control.OldException (evaluate)
 
 import System.Time
 

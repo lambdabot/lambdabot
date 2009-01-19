@@ -12,7 +12,7 @@ import qualified Data.Map as M   (insert, delete)
 
 import Control.Monad.State  (MonadState(..), when, gets)
 
-import Control.Exception    (Exception(NoMethodError))
+import Control.OldException (Exception(NoMethodError))
 
 import qualified Data.ByteString.Char8 as P
 import qualified Text.Regex as R
