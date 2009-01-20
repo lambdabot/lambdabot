@@ -68,7 +68,7 @@ plugs src = do
 
 define :: String -> IO String
 define src = case parseModule (decodeString src ++ "\n") of -- extra \n so comments are parsed correctly
-    (ParseOk (HsModule _ _ _ _ (Just [Hs.EVar (Hs.UnQual (Hs.Ident "main"))]) [] ds))
+    (ParseOk (Hs.Module _ _ _ _ (Just [Hs.EVar (Hs.UnQual (Hs.Ident "main"))]) [] ds))
         | all okay ds -> comp (Just src)
     (ParseFailed _ e) -> return $ " " ++ e
     _                 -> return "Invalid declaration"
