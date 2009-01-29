@@ -1194,7 +1194,7 @@ fmap = map
 xs >>= f     = concatMap f xs
 
 [] (>>)
-xs >> ys      = concatMap (const xs) ys
+xs >> ys      = concatMap (const ys) xs
 
 [] return
 return x    = [x]

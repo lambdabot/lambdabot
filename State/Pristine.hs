@@ -1,3 +1,4 @@
+{-# LANGUAGE NoMonomorphismRestriction #-}
 module L where
 import Control.Applicative
 import Control.Arrow hiding (pure)
