@@ -56,7 +56,7 @@ instance Module KarmaModule KarmaState where
         okay x      = not (elem x badNicks || any (`isPrefixOf` x) badPrefixes)
         -- Special cases.  Ignore the null nick.  C must also be ignored
         -- because C++ and C-- are languages.
-        badNicks    = ["", "C", "c"]
+        badNicks    = ["", "C", "c", "notepad"]
         -- More special cases, to ignore Perl code.
         badPrefixes = ["$", "@", "%"]
 
