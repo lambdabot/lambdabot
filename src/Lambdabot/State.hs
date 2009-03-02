@@ -1,4 +1,4 @@
-{-# LANGUAGE ScopedTypeVariables, TypeFamilies #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 -- | Support for the LB (LambdaBot) monad
 module Lambdabot.State (
         -- ** Functions to access the module's state
