@@ -23,6 +23,17 @@ import System.IO
 authority :: URI -> String
 authority = uriRegName . maybe (error "authority") id . uriAuthority
 
+authPort :: URI -> Integer
+authPort uri = fromMaybe 80 (tryReadPort . uriPort =<< uriAuthority uri)
+    where
+        tryReadPort (':': port) = tryRead port
+        tryReadPort port        = tryRead port
+        
+        tryRead s = case reads s of
+            [(x, "")]   -> Just x
+            _           -> Nothing
+
+
 type Proxy = Maybe (String, Integer)
 
 -- HTTP specific stuff
@@ -54,7 +65,7 @@ readPage proxy uri headers body = withSocketsDo $ do
       hClose h
       return contents
     where
-    (host, port) = fromMaybe (authority uri, 80) proxy
+    (host, port) = fromMaybe (authority uri, authPort uri) proxy
 
 --
 -- read lines, up to limit of n bytes. Useful to ensure people don't
@@ -70,7 +81,7 @@ readNBytes n proxy uri headers body = withSocketsDo $ do
       hClose h
       return contents
     where
-    (host, port) = fromMaybe (authority uri, 80) proxy
+    (host, port) = fromMaybe (authority uri, authPort uri) proxy
 
     hGetN :: Int -> Handle -> IO String
     hGetN i h | i `seq` h `seq` False = undefined -- strictify
