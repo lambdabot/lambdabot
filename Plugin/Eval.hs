@@ -98,8 +98,8 @@ comp src = do
 --                             ,"-hidir","State/"
                              ,".L.hs"] Nothing
     -- cleanup
-    removeFile ".L.hi"
-    removeFile ".L.o"
+    try $ removeFile ".L.hi"
+    try $ removeFile ".L.o"
 
     case (munge o', munge e') of
         ([],[]) | c /= ExitSuccess -> return "Error."
