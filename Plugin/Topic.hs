@@ -31,10 +31,10 @@ commands = M.fromList [(alias, cmd) | cmd <- cmds, alias <- commandAliases cmd]
               "Recite the topic of the channel"
               (reciteTopic)
               
-            , TopicCommand ["shift-topic", "queue-topic"]
+            , TopicCommand ["unshift-topic", "queue-topic"]
               "Add a new topic item to the front of the topic list"
               (alterListTopic (:))
-            , TopicCommand ["unshift-topic"]
+            , TopicCommand ["shift-topic"]
               "Remove a topic item from the front of the topic list"
               (alterListTopic (const tail))
               
