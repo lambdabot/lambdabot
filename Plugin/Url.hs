@@ -29,7 +29,7 @@ instance Module UrlModule Bool where
         then case containsUrl text of
                Nothing  -> return []
                Just url
-                 | length url > 65 -> do
+                 | length url > 60 -> do
                      title <- lift $ fetchTitle url
                      tiny  <- lift $ fetchTiny url
                      return $ zipWith' cat title tiny
