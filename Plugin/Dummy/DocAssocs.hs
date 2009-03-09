@@ -40,6 +40,8 @@ x11 :: P.ByteString
 x11      = P.pack "3"
 opengl :: P.ByteString
 opengl   = P.pack "OpenGL"
+containers :: P.ByteString
+containers = P.pack "containers"
 
 docAssocs :: M.Map P.ByteString P.ByteString
 docAssocs = {-# SCC "Dummy.DocAssocs" #-} M.fromList [
@@ -94,7 +96,7 @@ docAssocs = {-# SCC "Dummy.DocAssocs" #-} M.fromList [
   (P.pack "Data.Generics.Schemes", base),
   (P.pack "Data.Generics.Text", base),
   (P.pack "Data.Generics.Twins", base),
-  (P.pack "Data.Graph", base),
+  (P.pack "Data.Graph", containers),
   (P.pack "Data.Graph.Inductive", fgl),
   (P.pack "Data.Graph.Inductive.Basic", fgl),
   (P.pack "Data.Graph.Inductive.Example", fgl),
@@ -126,11 +128,11 @@ docAssocs = {-# SCC "Dummy.DocAssocs" #-} M.fromList [
   (P.pack "Data.HashTable", base),
   (P.pack "Data.IORef", base),
   (P.pack "Data.Int", base),
-  (P.pack "Data.IntMap", base),
-  (P.pack "Data.IntSet", base),
+  (P.pack "Data.IntMap", containers),
+  (P.pack "Data.IntSet", containers),
   (P.pack "Data.Ix", base),
   (P.pack "Data.List", base),
-  (P.pack "Data.Map", base),
+  (P.pack "Data.Map", containers),
   (P.pack "Data.Maybe", base),
   (P.pack "Data.Monoid", base),
   (P.pack "Data.PackedString", base),
@@ -139,8 +141,9 @@ docAssocs = {-# SCC "Dummy.DocAssocs" #-} M.fromList [
   (P.pack "Data.STRef", base),
   (P.pack "Data.STRef.Lazy", base),
   (P.pack "Data.STRef.Strict", base),
-  (P.pack "Data.Set", base),
-  (P.pack "Data.Tree", base),
+  (P.pack "Data.Sequence", containers),
+  (P.pack "Data.Set", containers),
+  (P.pack "Data.Tree", containers),
   (P.pack "Data.Tuple", base),
   (P.pack "Data.Typeable", base),
   (P.pack "Data.Unique", base),
