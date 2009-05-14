@@ -15,13 +15,13 @@ import Control.Monad (guard)
 $(plugin "Undo")
 
 instance Module UndoModule () where
-    moduleCmds   _ = ["undo", "redo"]
+    moduleCmds   _ = ["undo", "do"]
     moduleHelp _ "undo" = "undo <expr>\nTranslate do notation to Monad operators."
-    moduleHelp _ "redo" = "redo <expr>\nTranslate Monad operators to do notation."
+    moduleHelp _ "do" = "do <expr>\nTranslate Monad operators to do notation."
     process_ _ cmd args = ios $ return $ transform f args
      where f = case cmd of
                 "undo" -> undo
-                "redo" -> redo
+                "do" -> do'
                 _      -> error "unknown command"
 
 findVar :: Data a => a -> String
@@ -92,29 +92,29 @@ var = HsVar . UnQual . HsIdent
 pvar :: String -> HsPat
 pvar = HsPVar . HsIdent
 
-redo :: String -> HsExp -> HsExp
-redo _ (HsLet ds (HsDo s)) = HsDo (HsLetStmt ds : s)
-redo v e@(HsInfixApp l (HsQVarOp (UnQual (HsSymbol op))) r) =
-    case op of
-        ">>=" ->
-            case r of
-                (HsLambda loc [p] (HsDo stms)) -> HsDo (HsGenerator loc p l : stms)
-                (HsLambda loc [HsPVar v1] (HsCase (HsVar (UnQual v2))
-                                           [ HsAlt _ p (HsUnGuardedAlt s) []
-                                           , HsAlt _ HsPWildCard (HsUnGuardedAlt (HsApp (HsVar (UnQual (HsIdent "fail"))) _)) []
-                                           ]))
-                          | v1 == v2           -> case s of
-                                                      HsDo stms -> HsDo (HsGenerator loc p l : stms)
-                                                      _         -> HsDo [HsGenerator loc p l, HsQualifier s]
-                (HsLambda loc [p] s)           -> HsDo [HsGenerator loc p l, HsQualifier s]
-                _ -> HsDo [ HsGenerator undefined (pvar v) l
-                          , HsQualifier . app r $ var v]
-        ">>" ->
-            case r of
-                (HsDo stms) -> HsDo (HsQualifier l : stms)
-                _           -> HsDo [HsQualifier l, HsQualifier r]
-        _    -> e
-redo _ x = x
+do' :: String -> HsExp -> HsExp
+do' _ (HsLet ds (HsDo s)) = HsDo (HsLetStmt ds : s)
+do' v e@(HsInfixApp l (HsQVarOp (UnQual (HsSymbol op))) r) =
+     case op of
+         ">>=" ->
+             case r of
+                 (HsLambda loc [p] (HsDo stms)) -> HsDo (HsGenerator loc p l : stms)
+                 (HsLambda loc [HsPVar v1] (HsCase (HsVar (UnQual v2))
+                                            [ HsAlt _ p (HsUnGuardedAlt s) []
+                                            , HsAlt _ HsPWildCard (HsUnGuardedAlt (HsApp (HsVar (UnQual (HsIdent "fail"))) _)) []
+                                            ]))
+                           | v1 == v2           -> case s of
+                                                       HsDo stms -> HsDo (HsGenerator loc p l : stms)
+                                                       _         -> HsDo [HsGenerator loc p l, HsQualifier s]
+                 (HsLambda loc [p] s)           -> HsDo [HsGenerator loc p l, HsQualifier s]
+                 _ -> HsDo [ HsGenerator undefined (pvar v) l
+                           , HsQualifier . app r $ var v]
+         ">>" ->
+             case r of
+                 (HsDo stms) -> HsDo (HsQualifier l : stms)
+                 _           -> HsDo [HsQualifier l, HsQualifier r]
+         _    -> e
+do' _ x = x
 
 -- | 'app' is a smart constructor that inserts parens when the first argument
 -- is an infix application.
