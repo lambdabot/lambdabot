@@ -51,7 +51,6 @@ import Data.Word
 import Numeric
 import ShowQ
 import System.Random
-import Test.QuickCheck
 import Text.PrettyPrint.HughesPJ hiding (empty)
 import Text.Printf
 import Text.Regex.Posix

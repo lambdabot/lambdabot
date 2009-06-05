@@ -8,4 +8,4 @@ instance (Typeable a, Typeable b) => Show (a -> b) where
     show e = '<' : (show . typeOf) e ++ ">"
 
 instance Typeable a => Show (IO a) where
-    show e = error $ show ('<' : (show . typeOf) e ++ ">")
+    show e = '<' : (show . typeOf) e ++ ">"

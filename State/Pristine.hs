@@ -1,7 +1,7 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 module L where
 import Control.Applicative
-import Control.Arrow hiding (pure)
+import Control.Arrow
 import Control.Arrow.Operations
 import Control.Monad
 import Control.Monad.Cont
@@ -51,7 +51,6 @@ import Data.Word
 import Numeric
 import ShowQ
 import System.Random
-import Test.QuickCheck
 import Text.PrettyPrint.HughesPJ hiding (empty)
 import Text.Printf
 import Text.Regex.Posix
