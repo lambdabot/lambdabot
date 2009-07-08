@@ -95,7 +95,7 @@ lookupWiki page = "http://www.haskell.org/haskellwiki/" ++ spacesToUnderscores p
 
 lookupHackage :: String -> String
 lookupHackage "" = "http://hackage.haskell.org"
-lookupHackage xs = "http://hackage.haskell.org/cgi-bin/hackage-scripts/package/" ++ xs
+lookupHackage xs = "http://hackage.haskell.org/package/" ++ xs
 
 googlePrefix :: String
 googlePrefix = "http://letmegooglethatforyou.com"
