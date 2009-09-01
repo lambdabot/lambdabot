@@ -123,7 +123,7 @@ query_ghci' cmd expr = do
                        (readFile importHeader)
        l <- findFile "L.hs"
        let context = ":load "++l++"\n" ++ concatMap ((":m + " ++) . (++"\n")) imports
-       (output, errors, _) <- popen (ghci config) ["-v0","-fglasgow-exts","-fno-th","-iState","-iscripts","-XNoMonomorphismRestriction"]
+       (output, errors, _) <- popen (ghci config) ["-v0","-fglasgow-exts","-XNoTemplateHaskell","-iState","-iscripts","-XNoMonomorphismRestriction"]
                                        (Just (context ++ command cmd (stripComments expr)))
        let ls = extract_signatures output
        return $ case ls of
