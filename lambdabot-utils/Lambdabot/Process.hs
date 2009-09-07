@@ -7,9 +7,9 @@ module Lambdabot.Process (popen, run) where
 import System.Exit
 import System.IO
 import System.Process
-import Control.Concurrent       (forkIO, newEmptyMVar, putMVar, takeMVar)
+import Control.Concurrent       (forkIO, newEmptyMVar, putMVar, takeMVar, killThread)
 
-import qualified Control.Exception
+import qualified Control.Exception as E
 
 run :: FilePath -> String -> (String -> String) -> IO String
 run binary src scrub = do
@@ -22,27 +22,20 @@ run binary src scrub = do
         | otherwise        -> o
     }
 
---
--- Ignoring exit status for now.
---
--- You have to ignore SIGPIPE, otherwise popening a non-existing executable
--- will result in an attempt to write to a closed pipe and crash the wholw
--- program.
---
--- XXX there are still issues. Large amounts of output can cause what
--- seems to be a dead lock on the pipe write from runplugs, for example.
--- Posix.popen doesn't have this problem, so maybe we can reproduce its
--- pipe handling somehow.
 -- | popen lets you run a binary with specified arguments. This bypasses the shell.
+-- | It'll also terminate (SIGTERM) the spawned process in case of
+-- | exception, this is very important if the timeout for a Plugin
+-- | expires while it is waiting for the result of a looping process.
+-- | It's fundamental to link the final executable with -threaded.
 popen :: FilePath -- ^ The binary to execute
       -> [String] -- ^ A list of arguments to pass to the binary. No need to
                  -- space separate them
       -> Maybe String -- ^ stdin
       -> IO (String,String,ExitCode)
 popen file args minput =
-    Control.Exception.handle (\e -> return ([],show e,error (show e))) $ do
-
-    (inp,out,err,pid) <- runInteractiveProcess file args Nothing Nothing
+  E.handle (\e -> return ([],show e,error (show e))) $ 
+   E.bracketOnError (runInteractiveProcess file args Nothing Nothing) (\(_,_,_,pid) -> terminateProcess pid) $
+     \(inp,out,err,pid) -> do
 
     case minput of
         Just input -> hPutStr inp input >> hClose inp -- importante!
@@ -65,15 +58,14 @@ popen file args minput =
     outMVar <- newEmptyMVar
     errMVar <- newEmptyMVar
 
-    forkIO (Control.Exception.evaluate (length output) >> putMVar outMVar ())
-    forkIO (Control.Exception.evaluate (length errput) >> putMVar errMVar ())
-
-    takeMVar outMVar
-    takeMVar errMVar
+    E.bracketOnError (do t1 <- forkIO (E.evaluate (length output) >> putMVar outMVar ())
+                         t2 <- forkIO (E.evaluate (length errput) >> putMVar errMVar ())
+                         return (t1,t2))
+                     (\(t1,t2) -> killThread t1    >> killThread t2   )
+                     (\_ ->       takeMVar outMVar >> takeMVar errMVar)
 
     -- And now we wait. We must wait after we read, unsurprisingly.
     -- blocks without -threaded, you're warned.
     -- and maybe the process has already completed..
-    e <- Control.Exception.catch (waitForProcess pid) (\_ -> return ExitSuccess)
-
+    e <- waitForProcess pid 
     return (output,errput,e)
