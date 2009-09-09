@@ -50,7 +50,7 @@ dropPrefix = dropWhile (' ' ==) . drop 2
 plugs :: String -> IO String
 plugs src = do
             load <- findFile "L.hs"
-            (out,err,_) <- popen binary ["-E", "--timelimit=", "10", "-l",
+            (out,err,_) <- popen binary ["-E", "--timelimit=", "10", "--noimports", "-l",
                                          load, "--expression=" ++ src, "+RTS", "-N2", "-RTS"] Nothing
             case (out,err) of
                 ([],[]) -> return "Terminated\n"
