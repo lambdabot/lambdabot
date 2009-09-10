@@ -27,7 +27,7 @@ data-files:         State/djinn, State/url, State/haddock, State/source,
                     online.rc, online2.rc
 
 Library
-    build-depends: base == 4.*, mtl, bytestring, unix
+    build-depends: base == 4.*, mtl, bytestring, unix, filepath
     exposed-modules: Config, IRCBase, File,
                      LBState, LMain, Lambdabot, Message,
                      NickEq, Plugin, Plugin.Activity, Plugin.BF,
@@ -54,7 +54,7 @@ Library
 Executable          lambdabot
     Build-depends:       base == 4.*, containers, directory, pretty, parsec, old-time, random, array, network, syb,
                          regex-compat, readline, binary>0.2, haskell-src, haskell-src-exts>=0.4.8,
-                         oeis>=0.2, lambdabot-utils, show>=0.3, utf8-string, template-haskell,
+                         oeis>=0.2, lambdabot-utils, show>=0.3, utf8-string, template-haskell, filepath,
                          -- runtime dependencies - for eval etc.
                          brainfuck, unlambda, template-haskell, numbers, logict
     Main-is:             Main.hs
