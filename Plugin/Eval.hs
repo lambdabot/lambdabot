@@ -50,8 +50,9 @@ dropPrefix = dropWhile (' ' ==) . drop 2
 plugs :: String -> IO String
 plugs src = do
             load <- findFile "L.hs"
-            (out,err,_) <- popen binary ["-E", "--timelimit=", "10", "--noimports", "-l",
-                                         load, "--expression=" ++ src, "+RTS", "-N2", "-RTS"] Nothing
+            let args = ["-E", "--noimports", "-l", load, "--expression=" ++ src, "+RTS", "-N2", "-RTS"]
+            print args
+            (out,err,_) <- popen binary args Nothing
             case (out,err) of
                 ([],[]) -> return "Terminated\n"
                 _       -> do
@@ -141,6 +142,8 @@ munge = expandTab . dropWhile (=='\n') . dropNL . clean_
 -- Clean up runplugs' output
 --
 clean_ :: String -> String
+clean_ = id
+{-
 clean_ s|  no_io      `matches'`    s = "No IO allowed\n"
         |  type_sig   `matches'`    s = "Add a type signature\n"
         |  enomem     `matches'`    s = "Tried to use too much memory\n"
@@ -175,6 +178,7 @@ clean_ s|  no_io      `matches'`    s = "No IO allowed\n"
         nomatch    = regex' "Couldn't match[^\n]*\n"
         inaninst   = regex' "^[ \t]*In a.*$"
         enomem     = regex' "^Heap exhausted"
+-}
 
 ------------------------------------------------------------------------
 --
