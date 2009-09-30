@@ -12,11 +12,11 @@ $(plugin "BF")
 
 instance Module BFModule () where
     moduleCmds   _     = ["bf"]
-    moduleHelp _ _     = "bf <expr>. Evaluate a bainf*ck expression"
+    moduleHelp _ _     = "bf <expr>. Evaluate a brainf*ck expression"
     process _ _ to _ s = ios80 to (bf s)
 
 binary :: String
-binary = "./bf"
+binary = "bf"
 
 bf :: String -> IO String
 bf src = run binary src scrub

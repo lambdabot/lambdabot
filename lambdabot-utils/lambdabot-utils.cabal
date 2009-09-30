@@ -25,7 +25,7 @@ Description:         Lambdabot is an IRC bot written over several years by
 Homepage:            http://haskell.org/haskellwiki/Lambdabot
 build-type:          Simple
 
-Build-depends:   base, haskell-src, containers, zlib, bytestring, mtl,
+Build-depends:   base >= 4 && < 5, haskell-src, containers, zlib, bytestring, mtl, syb,
                  regex-compat, regex-posix, process, network, old-time, binary, unix, random, tagsoup, utf8-string
 Exposed-modules: Lambdabot.FixPrecedence, Lambdabot.Serial,
                  Lambdabot.Error, Lambdabot.Url, Lambdabot.Process,

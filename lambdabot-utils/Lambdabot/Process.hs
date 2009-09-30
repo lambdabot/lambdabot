@@ -8,7 +8,7 @@ import System.Exit
 import System.IO
 import System.Process
 import Control.Concurrent       (forkIO, newEmptyMVar, putMVar, takeMVar, killThread)
-
+import Control.Monad
 import qualified Control.Exception as E
 
 run :: FilePath -> String -> (String -> String) -> IO String
@@ -33,12 +33,13 @@ popen :: FilePath -- ^ The binary to execute
       -> Maybe String -- ^ stdin
       -> IO (String,String,ExitCode)
 popen file args minput =
-  E.handle (\e -> return ([],show e,error (show e))) $ 
+  E.handle (\(E.SomeException e) -> return ([],show e,error (show e))) $ 
    E.bracketOnError (runInteractiveProcess file args Nothing Nothing) (\(_,_,_,pid) -> terminateProcess pid) $
      \(inp,out,err,pid) -> do
 
     case minput of
-        Just input -> hPutStr inp input >> hClose inp -- importante!
+        Just input -> hPutStr inp input >> E.catch (hClose inp)
+                                                   (\(E.SomeException e) -> return ())
         Nothing    -> return ()
 
     -- Now, grab the input

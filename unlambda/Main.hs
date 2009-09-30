@@ -7,6 +7,7 @@ module Main where
 import System.Posix.Resource
 import Data.Char
 import System.IO
+import Control.Monad
 
 import Language.Unlambda
 
