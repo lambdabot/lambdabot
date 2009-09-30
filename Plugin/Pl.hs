@@ -22,7 +22,7 @@ import Plugin.Pl.Optimize        (optimize)
 import Message( Nick )
 
 import Control.Concurrent.Chan    (Chan, newChan, isEmptyChan, readChan, writeList2Chan)
-
+import Control.Exception (unblock)
 -- firstTimeout is the timeout when the expression is simplified for the first
 -- time. After each unsuccessful attempt, this number is doubled until it hits
 -- maxTimeout.
@@ -80,7 +80,10 @@ optimizeTopLevel target (to, d) = do
 optimizeIO :: Int -> Expr -> IO (Expr, Bool)
 optimizeIO to e = do
   chan <- newChan
-  result <- timeout to $ writeList2Chan chan $ optimize e
+  -- We need "unblock" here because "timeout" will terminate the thread
+  -- with an async exception and the current thread is in blocked
+  -- mode for reasons that still aren't clear to me.
+  result <- timeout to $ unblock (writeList2Chan chan $ optimize e)
   e' <- getChanLast chan e
   return $ case result of
     Nothing -> (e', False)
