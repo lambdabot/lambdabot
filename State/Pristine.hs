@@ -1,3 +1,5 @@
+-- IMPORTANT: Any change made to L.hs is reverted when @undefine is called.
+--            Edit Pristine.hs instead.
 {-# LANGUAGE NoMonomorphismRestriction #-}
 module L where
 import Control.Applicative
