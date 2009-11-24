@@ -39,7 +39,7 @@ import qualified Plugin.Poll
 import qualified Plugin.Pretty
 import qualified Plugin.Quote
 import qualified Plugin.Search
---import qualified Plugin.Seen
+import qualified Plugin.Seen
 import qualified Plugin.Slap
 import qualified Plugin.Source
 import qualified Plugin.Spell
@@ -98,7 +98,7 @@ modulesInfo = $(modules $ nub
                     , "Pretty"
                     , "Quote"
                     , "Search"
-                    --, "Seen"
+                    , "Seen"
                     , "Slap"
                     , "Source"
                     , "Spell"
