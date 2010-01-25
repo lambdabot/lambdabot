@@ -26,6 +26,9 @@ data-files:         State/djinn, State/url, State/haddock, State/source,
                     State/imports.h,
                     online.rc, online2.rc
 
+flag eval
+    description: Use mueval to evaluate pure Haskell expressions at runtime
+
 Library
     build-depends: base == 4.*, mtl, bytestring, unix, filepath
     exposed-modules: Config, IRCBase, File,
@@ -57,6 +60,9 @@ Executable          lambdabot
                          oeis>=0.2, lambdabot-utils, show>=0.3, utf8-string, template-haskell, filepath,
                          -- runtime dependencies - for eval etc.
                          brainfuck, unlambda, template-haskell, numbers, logict
+    if flag(eval)
+        Build-depends: mueval
+
     Main-is:             Main.hs
     -- For a faster build, use -Onot
     ghc-options:         -funbox-strict-fields -fno-warn-incomplete-patterns
@@ -64,4 +70,3 @@ Executable          lambdabot
                          -- Apparently needed to work around zombie & IRC connection issues
                          -threaded
     include-dirs:        .
-
