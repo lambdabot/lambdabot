@@ -14,7 +14,7 @@ Description:         Lambdabot is an IRC bot written over several years by
 Homepage:            http://haskell.org/haskellwiki/Lambdabot
 
 build-type:          Simple
-cabal-version:       >= 1.2
+cabal-version:       >= 1.6
 
 extra-source-files: Modules.hs-boot, State/imports.h, Plugin/Hello.hs, Modules.hs
 data-files:         State/djinn, State/url, State/haddock, State/source,
@@ -53,7 +53,7 @@ Library
 -- Lambdabot main
 Executable          lambdabot
     Build-depends:       base == 4.*, containers, directory, pretty, parsec, old-time, random, array, network, syb,
-                         regex-compat, readline, binary>0.2, haskell-src, haskell-src-exts>=0.4.8,
+                         unix, mtl, bytestring, regex-compat, readline, binary>0.2, haskell-src, haskell-src-exts>=0.4.8,
                          oeis>=0.2, lambdabot-utils, show>=0.3, utf8-string, template-haskell, filepath,
                          -- runtime dependencies - for eval etc.
                          brainfuck, unlambda, template-haskell, numbers, logict
