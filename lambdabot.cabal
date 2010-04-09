@@ -61,7 +61,7 @@ Executable          lambdabot
                          -- runtime dependencies - for eval etc.
                          brainfuck, unlambda, template-haskell, numbers, logict
     if flag(eval)
-        Build-depends: mueval
+        Build-depends: mueval>=0.8
 
     Main-is:             Main.hs
     -- For a faster build, use -Onot

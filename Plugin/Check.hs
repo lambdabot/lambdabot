@@ -30,7 +30,7 @@ check src = do
         Left  e -> return e
         Right _ -> do
             l <- findFile "L.hs"
-            (out,err,_) <- popen binary ["--loadfile=", l, "-E", "-e", "myquickcheck $ " ++ src] Nothing
+            (out,err,_) <- popen binary ["--loadfile=", l, "-XExtendedDefaultRules", "-e", "myquickcheck $ " ++ src] Nothing
             case (out,err) of
                 ([],[]) -> return "Terminated\n"
                 _       -> do
