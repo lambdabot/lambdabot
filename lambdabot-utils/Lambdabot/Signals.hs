@@ -30,7 +30,7 @@ import Lambdabot.Util
 import Data.Typeable
 
 import Control.Concurrent (myThreadId, newEmptyMVar, putMVar, MVar, ThreadId)
-import Control.Exception
+import Control.OldException (throwDynTo)
 import Control.Monad.Error
 
 import System.IO.Unsafe
