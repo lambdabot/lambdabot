@@ -16,7 +16,6 @@ import Data.Maybe
 import Lambdabot.MiniHTTP
 
 import Control.Monad.Reader
-import Text.HTML.TagSoup.Parser
 import Text.HTML.TagSoup.Match
 import Text.HTML.TagSoup
 import Codec.Binary.UTF8.String
