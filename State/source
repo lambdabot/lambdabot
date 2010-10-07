@@ -1,3 +1,7 @@
+asTypeIn
+a `asTypeIn` f = a where _ = f a
+infixl 0 `asTypeIn`
+
 Mu
 newtype Mu f = In { out :: f (Mu f) }
 
@@ -192,6 +196,7 @@ const x _ = x
 
 (.)
 (f . g) x = f (g x)
+NB: In lambdabot,  (.) = fmap
 
 flip
 flip f x y = f y x
@@ -279,6 +284,11 @@ splitAt n xs           =  (take n xs, drop n xs)
 
 break
 break p =  span (not . p)
+
+span
+span _ xs@[]                     =  (xs, xs)
+span p xs@(x:xs') | p x          =  let (ys,zs) = span p xs' in (x:ys,zs)
+                  | otherwise    =  ([],xs)
 
 reverse
 reverse = foldl (flip (:)) []
@@ -744,28 +754,8 @@ withFile name mode = bracket (openFile name mode) hClose
 exitFailure
 exitFailure = exitWith (ExitFailure 1)
 
-IO
-newtype IO a = IO (State# RealWorld -> (# State# RealWorld, a #))
-
 failIO
 failIO s = ioError (userError s)
-
-bindIO
-bindIO (IO m) k = IO ( \ s ->
-  case m s of (# new_s, a #) -> unIO (k a) new_s)
-
-thenIO
-thenIO (IO m) k = IO ( \ s ->
-  case m s of (# new_s, a #) -> unIO k new_s)
-
-returnIO :: a -> IO a
-returnIO x = IO (\ s -> (# s, x #))
-
-unsafePerformIO
-unsafePerformIO (IO m) = lazy (case m realWorld# of (# _, r #) -> r)
-
-unsafeInterleaveIO
-unsafeInterleaveIO (IO m) = IO ( \ s -> let r = case m s of (# _, res #) -> res in (# s, r #))
 
 FilePath
 type FilePath = String
@@ -800,10 +790,6 @@ throw exception = raise# exception
 IOMode
 data IOMode = ReadMode | WriteMode | AppendMode | ReadWriteMode
 
-forkIO
-forkIO action = IO $ \ s -> case (fork# action_plus s) of (# s1, id #) -> (# s1, ThreadId id #)
-    where action_plus = catchException action childHandler
-
 killThread
 killThread tid = throwTo tid (AsyncException ThreadKilled)
 
@@ -836,9 +822,6 @@ error s = throw (ErrorCall s)
 
 catch
 catch m k = catchException m handler where handler (IOException err) = k err
-
-evaluate
-evaluate a = IO $ \s -> case a `seq` () of () -> (# s, a #)
 
 Float
 data Float = F# Float#

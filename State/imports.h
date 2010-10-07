@@ -44,7 +44,6 @@ import Data.Number.CReal
 import Data.Number.Fixed
 import Data.Number.Interval
 import Data.Number.BigFloat
-import Data.Number.Natural
 import Control.Monad
 import Control.Monad.Cont
 import Control.Monad.Identity
@@ -72,3 +71,9 @@ import ShowQ
 
 import SimpleReflect hiding (var)
 import Math.OEIS
+
+import Data.VectorSpace
+import Data.NumInstances
+import Data.LinearMap
+
+import Data.Fixed

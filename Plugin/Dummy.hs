@@ -53,7 +53,7 @@ instance Module DummyModule () where
   contextual _ _ _ _                 = return []
 
 pastebinMsg :: String
-pastebinMsg = "Haskell pastebin: http://moonpatio.com/fastcgi/hpaste.fcgi/"
+pastebinMsg = "Haskell pastebin: http://hpaste.org/"
 
 dummylst :: [(String, String -> String)]
 dummylst =

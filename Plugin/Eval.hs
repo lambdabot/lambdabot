@@ -50,7 +50,7 @@ dropPrefix = dropWhile (' ' ==) . drop 2
 plugs :: String -> IO String
 plugs src = do
             load <- findFile "L.hs"
-            let args = ["-XExtendedDefaultRules", "--noimports", "-l", load, "--expression=" ++ src, "+RTS", "-N2", "-RTS"]
+            let args = ["-E", "--noimports", "-l", load, "--expression=" ++ src, "+RTS", "-N2", "-RTS"]
             print args
             (out,err,_) <- popen binary args Nothing
             case (out,err) of
