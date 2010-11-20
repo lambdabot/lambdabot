@@ -57,7 +57,7 @@ Library
 Executable          lambdabot
     Build-depends:       base == 4.*, containers, directory, pretty, parsec, old-time, random, array, network, syb,
                          unix, mtl, bytestring, regex-compat, readline, binary>0.2, haskell-src, haskell-src-exts>=0.4.8,
-                         oeis>=0.2, lambdabot-utils, show>=0.3, utf8-string, template-haskell, filepath,
+                         oeis>=0.2, lambdabot-utils, show>=0.3, utf8-string, template-haskell, filepath, tagsoup, HTTP,
                          -- runtime dependencies - for eval etc.
                          brainfuck, unlambda, template-haskell, numbers, logict
     if flag(eval)
