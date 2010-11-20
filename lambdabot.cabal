@@ -59,7 +59,8 @@ Executable          lambdabot
                          unix, mtl, bytestring, regex-compat, readline, binary>0.2, haskell-src, haskell-src-exts>=0.4.8,
                          oeis>=0.2, lambdabot-utils, show>=0.3, utf8-string, template-haskell, filepath, tagsoup, HTTP,
                          -- runtime dependencies - for eval etc.
-                         brainfuck, unlambda, template-haskell, numbers, logict
+                         brainfuck, unlambda, template-haskell, numbers, logict, IOSpec==0.1.*, vector-space, MonadRandom, 
+                         data-memocombinators
     if flag(eval)
         Build-depends: mueval>=0.8
 
