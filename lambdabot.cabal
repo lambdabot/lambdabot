@@ -60,7 +60,7 @@ Executable          lambdabot
                          oeis>=0.2, lambdabot-utils, show>=0.3, utf8-string, template-haskell, filepath, tagsoup, HTTP,
                          -- runtime dependencies - for eval etc.
                          brainfuck, unlambda, template-haskell, numbers, logict, IOSpec==0.1.*, vector-space, MonadRandom, 
-                         data-memocombinators
+                         data-memocombinators, arrows
     if flag(eval)
         Build-depends: mueval>=0.8
 
