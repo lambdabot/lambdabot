@@ -1,5 +1,5 @@
 name:                show
-version:             0.4
+version:             0.4.1
 
 license:             GPL
 license-file:        LICENSE
@@ -25,7 +25,7 @@ tested-with:         GHC==6.8.2
 library
    exposed-modules:     ShowQ, ShowFun, SimpleReflect
 
-   build-depends:       base<4, random, QuickCheck>=2, smallcheck>=0.4
+   build-depends:       base<4, random, QuickCheck>=2.4, smallcheck>=0.4
 
    ghc-options:         -Wall
    ghc-prof-options:    -prof -auto-all
