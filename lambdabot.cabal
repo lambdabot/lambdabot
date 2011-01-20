@@ -26,8 +26,8 @@ data-files:         State/djinn, State/url, State/haddock, State/source,
                     State/imports.h,
                     online.rc, online2.rc
 
-flag eval
-    description: Use mueval to evaluate pure Haskell expressions at runtime
+-- flag eval
+--     description: Use mueval to evaluate pure Haskell expressions at runtime
 
 Library
     build-depends: base == 4.*, mtl, bytestring, unix, filepath
@@ -61,8 +61,8 @@ Executable          lambdabot
                          -- runtime dependencies - for eval etc.
                          brainfuck, unlambda, template-haskell, numbers, logict, IOSpec, vector-space, MonadRandom,
                          data-memocombinators, arrows
-    if flag(eval)
-        Build-depends: mueval>=0.8
+    -- if flag(eval)
+    --     Build-depends: mueval>=0.8
 
     Main-is:             Main.hs
     -- For a faster build, use -Onot
