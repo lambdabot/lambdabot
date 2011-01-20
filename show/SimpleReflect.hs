@@ -18,16 +18,15 @@ module SimpleReflect
     , a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z
     ) where
 
-
-import Data.List
 import Control.Applicative
 
 {- -- Lennart Augustsson's extensions, temporarily disabled.
 import Control.Monad.State hiding(lift)
 -}
 
-import Data.Typeable
-import Data.Generics hiding (Fixity)
+import Data.Maybe (fromMaybe)
+import Data.Ord (comparing)
+import Data.Generics (Typeable, Data)
 
 
 ------------------------------------------------------------------------------
@@ -42,7 +41,7 @@ data Expr = Expr
    } deriving (Typeable, Data)
 
 instance Show Expr where
-    showsPrec p r = showExpr r p
+    showsPrec pp rr = showExpr rr pp
 
 -- Default expression
 emptyExpr :: Expr
@@ -58,40 +57,45 @@ emptyExpr = Expr { showExpr   = \_ -> showString ""
 
 -- | A variable
 var :: String -> Expr
-var s = emptyExpr { showExpr = \_ -> showString s }
+var ss = emptyExpr { showExpr = \_ -> showString ss }
 
 lift :: Show a => a -> Expr
-lift x = emptyExpr { showExpr = \p -> showsPrec p x }
+lift xx = emptyExpr { showExpr = (`showsPrec` xx) }
 
 data Fixity = L | R deriving Eq
 
 -- | A operator as expression
 op :: Fixity -> Int -> String -> Expr -> Expr -> Expr
-op fix prec op a b = emptyExpr { showExpr = showFun }
- where showFun p = showParen (p > prec)
-                     $ showExpr a (if fix == L then prec else prec + 1)
-                     . showString op
-                     . showExpr b (if fix == R then prec else prec + 1)
+op fix prec opp aa bb = emptyExpr { showExpr = showFun }
+ where showFun pp = showParen (pp > prec)
+                     $ showExpr aa (if fix == L then prec else prec + 1)
+                     . showString opp
+                     . showExpr bb (if fix == R then prec else prec + 1)
 
 ------------------------------------------------------------------------------
 -- Adding numeric results
 ------------------------------------------------------------------------------
+iOp :: (Expr -> Expr) -> (Integer -> Integer) -> Expr -> Expr
+iOp  rr ff aa   = (rr a  ) { intExpr    = ff <$> intExpr    aa }
+iOp2 :: (Expr -> Expr -> Expr) -> (Integer -> Integer -> Integer) -> Expr -> Expr -> Expr
+iOp2 rr ff aa bb = (rr aa bb) { intExpr    = ff <$> intExpr    aa <*> intExpr    bb }
+dOp :: (Expr -> Expr) -> (Double -> Double) -> Expr -> Expr
+dOp  rr ff aa   = (rr aa  ) { doubleExpr = ff <$> doubleExpr aa }
+dOp2 :: (Expr -> Expr -> Expr) -> (Double -> Double -> Double) -> Expr -> Expr -> Expr
+dOp2 rr ff aa bb = (rr aa bb) { doubleExpr = ff <$> doubleExpr aa <*> doubleExpr bb }
 
-iOp  r f a   = (r a  ) { intExpr    = f <$> intExpr    a }
-iOp2 r f a b = (r a b) { intExpr    = f <$> intExpr    a <*> intExpr    b }
-dOp  r f a   = (r a  ) { doubleExpr = f <$> doubleExpr a }
-dOp2 r f a b = (r a b) { doubleExpr = f <$> doubleExpr a <*> doubleExpr b }
-
-withReduce r a    = let rr = r a in
-                    rr { reduced = withReduce r <$> reduced a
-                               <|> fromInteger <$> intExpr    rr
-                               <|> fromDouble  <$> doubleExpr rr
+withReduce :: (Expr -> Expr) -> Expr -> Expr
+withReduce rr aa    = let rrr = rr aa in
+                    rrr { reduced = withReduce rr <$> reduced aa
+                               <|> fromInteger <$> intExpr    rrr
+                               <|> fromDouble  <$> doubleExpr rrr
                        }
-withReduce2 r a b = let rr = r a b in
-                    rr { reduced = (\a' -> withReduce2 r a' b) <$> reduced a
-                               <|> (\b' -> withReduce2 r a b') <$> reduced b
-                               <|> fromInteger <$> intExpr    rr
-                               <|> fromDouble  <$> doubleExpr rr
+withReduce2 :: (Expr -> Expr -> Expr) -> Expr -> Expr -> Expr
+withReduce2 rr aa bb = let rrr = rr aa bb in
+                    rrr { reduced = (\aa' -> withReduce2 rr aa' b) <$> reduced aa
+                               <|> withReduce2 rr aa <$> reduced bb
+                               <|> fromInteger <$> intExpr    rrr
+                               <|> fromDouble  <$> doubleExpr rrr
                        }
 
 ------------------------------------------------------------------------------
@@ -105,7 +109,7 @@ instance FromExpr Expr where
     fromExpr = id
 
 instance (Show a, FromExpr b) => FromExpr (a -> b) where
-    fromExpr f a = fromExpr $ op L 10 " " f (lift a)
+    fromExpr ff aa = fromExpr $ op L 10 " " ff (lift aa)
 
 fun :: FromExpr a => String -> a
 fun = fromExpr . var
@@ -116,7 +120,7 @@ fun = fromExpr . var
 
 a,b,c,d,e,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z :: Expr
 [a,b,c,d,e,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z]
-   = [var [x] | x <- ['a'..'e']++['i'..'z']]
+   = [var [xx] | xx <- ['a'..'e']++['i'..'z']]
 
 f,g,h :: FromExpr a => a
 f = fun "f"
@@ -134,24 +138,21 @@ expr = id
 -- | Reduce (evaluate) an expression once
 --   for example 1 + 2 + 3 + 4 ==> 3 + 3 + 4
 reduce :: Expr -> Expr
-reduce e = maybe e id (reduced e)
-
-reduction :: Expr -> [Expr]
-reduction e = e : unfoldr (\e -> do e' <- reduced e; return (e',e')) e
+reduce ee = fromMaybe ee (reduced ee)
 
 ------------------------------------------------------------------------------
 -- Numeric classes
 ------------------------------------------------------------------------------
 
 instance Eq Expr where
-    Expr{ intExpr    = Just a } == Expr{ intExpr    = Just b }  =  a == b
-    Expr{ doubleExpr = Just a } == Expr{ doubleExpr = Just b }  =  a == b
-    a                           == b                            =  show a == show b
+    Expr{ intExpr    = Just aa } == Expr{ intExpr    = Just bb }  =  aa == bb
+    Expr{ doubleExpr = Just aa } == Expr{ doubleExpr = Just bb }  =  aa == bb
+    aa                           == bb                            =  show aa == show bb
 
 instance Ord Expr where
-    compare Expr{ intExpr    = Just a } Expr{ intExpr    = Just b }  =  compare a b
-    compare Expr{ doubleExpr = Just a } Expr{ doubleExpr = Just b }  =  compare a b
-    compare a                           b                            =  compare (show a) (show b)
+    compare Expr{ intExpr    = Just aa } Expr{ intExpr    = Just bb }  =  compare aa bb
+    compare Expr{ doubleExpr = Just aa } Expr{ doubleExpr = Just bb }  =  compare aa bb
+    compare aa                           bb                            =  comparing show aa bb
     min = fun "min" `iOp2` min `dOp2` min
     max = fun "max" `iOp2` max `dOp2` max
 
@@ -162,33 +163,34 @@ instance Num Expr where
     negate = withReduce  $ fun "negate" `iOp` negate `dOp` negate
     abs    = withReduce  $ fun "abs"    `iOp` abs    `dOp` abs
     signum = withReduce  $ fun "signum" `iOp` signum `dOp` signum
-    fromInteger i = (lift i)
-                     { intExpr    = Just i
-                     , doubleExpr = Just $ fromInteger i }
+    fromInteger ii = (lift ii)
+                     { intExpr    = Just ii
+                     , doubleExpr = Just $ fromInteger ii }
 
 instance Real Expr where
-    toRational expr = case (doubleExpr expr, intExpr expr) of
-          (Just d,_) -> toRational d
-          (_,Just i) -> toRational i
+    toRational xpr = case (doubleExpr xpr, intExpr xpr) of
+          (Just dd,_) -> toRational dd
+          (_,Just ii) -> toRational ii
           _          -> error "not a number"
 
 instance Integral Expr where
-    quotRem a b = (quot a b, rem a b)
-    divMod  a b = (div  a b, mod a b)
+    quotRem aa bb = (quot aa bb, rem aa bb)
+    divMod  aa bb = (div aa bb, mod aa bb)
     quot = withReduce2 $ op L 7 " `quot` " `iOp2` quot
     rem  = withReduce2 $ op L 7 " `rem` "  `iOp2` rem
     div  = withReduce2 $ op L 7 " `div` "  `iOp2` div
     mod  = withReduce2 $ op L 7 " `mod` "  `iOp2` mod
-    toInteger expr = case intExpr expr of
-          Just i -> i
+    toInteger xpr = case intExpr xpr of
+          Just ii -> ii
           _      -> error "not a number"
 
 instance Fractional Expr where
     (/)   = withReduce2 $ op L 7 " / " `dOp2` (/)
     recip = withReduce  $ fun "recip"  `dOp` recip
-    fromRational r = fromDouble (fromRational r)
+    fromRational rr = fromDouble (fromRational rr)
 
-fromDouble d = (lift d) { doubleExpr = Just d }
+fromDouble :: Double -> Expr
+fromDouble dd = (lift dd) { doubleExpr = Just dd }
 
 instance Floating Expr where
     pi    = (var "pi") { doubleExpr = Just pi }
@@ -212,10 +214,10 @@ instance Enum Expr where
     pred   = withReduce  $ fun "pred" `iOp` pred `dOp` pred
     toEnum = fun "toEnum"
     fromEnum = fromEnum . toInteger
-    enumFrom       a     = map fromInteger $ enumFrom       (toInteger a)
-    enumFromThen   a b   = map fromInteger $ enumFromThen   (toInteger a) (toInteger b)
-    enumFromTo     a   c = map fromInteger $ enumFromTo     (toInteger a)               (toInteger c)
-    enumFromThenTo a b c = map fromInteger $ enumFromThenTo (toInteger a) (toInteger b) (toInteger c)
+    enumFrom       aa     = map fromInteger $ enumFrom       (toInteger aa)
+    enumFromThen   aa bb  = map fromInteger $ enumFromThen (toInteger aa) (toInteger bb)
+    enumFromTo     aa  cc = map fromInteger $ enumFromTo (toInteger aa) (toInteger cc)
+    enumFromThenTo aa bb cc = map fromInteger $ enumFromThenTo (toInteger aa) (toInteger bb) (toInteger cc)
 
 instance Bounded Expr where
     minBound = var "minBound"
