@@ -11,15 +11,6 @@ import qualified Data.Map as M
 import Data.Graph (stronglyConnComp, flattenSCC, flattenSCCs)
 import Control.Monad.State
 
-{-
-nub :: Ord a => [a] -> [a]
-nub = nub' S.empty where
-  nub' _ [] = []
-  nub' set (x:xs)
-    | x `S.member` set = nub' set xs
-    | otherwise = x: nub' (x `S.insert` set) xs
--}
-
 -- | Does a name occur in a pattern?
 occursP :: String -> Pattern -> Bool
 occursP v (PVar v') = v == v'
