@@ -1,5 +1,5 @@
 Name:                lambdabot
-Version:             4.2.3.1
+Version:             4.2.3.2
 License:             GPL
 License-file:        LICENSE
 Author:              Don Stewart
@@ -59,7 +59,7 @@ Executable          lambdabot
                          unix, mtl>2, bytestring, regex-compat, readline, binary>0.2, haskell-src, haskell-src-exts>=0.4.8,
                          oeis>=0.2, lambdabot-utils, show>=0.3, utf8-string, template-haskell, filepath, tagsoup, HTTP,
                          -- runtime dependencies - for eval etc.
-                         brainfuck, unlambda, template-haskell, numbers, logict, IOSpec, vector-space, MonadRandom,
+                         brainfuck, unlambda, template-haskell, numbers, logict>=0.4.2, IOSpec, vector-space, MonadRandom,
                          data-memocombinators, arrows
     -- if flag(eval)
     --     Build-depends: mueval>=0.8
