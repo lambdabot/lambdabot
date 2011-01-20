@@ -3,90 +3,33 @@
 
 module ShowQ where
 
-import System.IO.Unsafe
-import Data.Ratio
+import Data.List (group, intercalate, sort)
+import System.IO.Unsafe (unsafePerformIO)
+import Test.QuickCheck (numTests, quickCheckWithResult, stdArgs, Result(..), Testable)
+import qualified Test.SmallCheck as SC (smallCheck, Testable)
 
-import qualified Test.SmallCheck (smallCheck, Testable)
-import Test.QuickCheck
-import Data.Char
-import Data.List
-import Data.Word
-import Data.Int
-import System.Random
-
-type T = [Int]
-type I = Int
-
-instance Arbitrary Char where
-    arbitrary     = choose (minBound, maxBound)
-    coarbitrary c = variant (ord c `rem` 4)
-
-instance Arbitrary Word8 where
-    arbitrary = choose (minBound, maxBound)
-    coarbitrary c = variant (fromIntegral ((fromIntegral c) `rem` 4))
-
-instance Arbitrary Ordering where
-    arbitrary     = elements [LT,EQ,GT]
-    coarbitrary LT = variant 1
-    coarbitrary EQ = variant 2
-    coarbitrary GT = variant 0
-
-instance Arbitrary Int64 where
-  arbitrary     = sized $ \n -> choose (-fromIntegral n,fromIntegral n)
-  coarbitrary n = variant (fromIntegral (if n >= 0 then 2*n else 2*(-n) + 1))
-
-instance (Integral a, Arbitrary a) => Arbitrary (Ratio a) where
-  arbitrary    = do a <- arbitrary
-                    b <- arbitrary
-                    return $ if b == 0
-                         then if a == 0
-                            then (1 % 1)
-                            else (b % a)
-                         else (a % b)
-
-  coarbitrary m = variant (fromIntegral $ if n >= 0 then 2*n else 2*(-n) + 1)
-    where n = numerator m
-
-instance Random Word8 where
-  randomR = integralRandomR
-  random = randomR (minBound,maxBound)
-
-instance Random Int64 where
-  randomR = integralRandomR
-  random  = randomR (minBound,maxBound)
-
-integralRandomR :: (Integral a, RandomGen g) => (a,a) -> g -> (a,g)
-integralRandomR  (a,b) g = case randomR (fromIntegral a :: Integer,
-                                         fromIntegral b :: Integer) g of
-                            (x,g) -> (fromIntegral x, g)
-
-mysmallcheck :: (Test.SmallCheck.Testable a) => a -> ()
+mysmallcheck :: (SC.Testable prop) => prop -> ()
 mysmallcheck = unsafePerformIO . mysmallcheck'
-mysmallcheck' :: (Test.SmallCheck.Testable a) => a -> IO ()
-mysmallcheck' a = Test.SmallCheck.smallCheck 6 a
+mysmallcheck' :: (SC.Testable prop) => prop -> IO ()
+mysmallcheck' = SC.smallCheck 6
 
-myquickcheck :: Testable a => a -> String
+myquickcheck :: Testable prop => prop -> String
 myquickcheck = unsafePerformIO . myquickcheck'
 
-myquickcheck' :: Testable a => a -> IO String
-myquickcheck' a = do
-    rnd <- newStdGen
-    tests (evaluate a) rnd 0 0 []
+myquickcheck' :: Testable prop => prop -> IO String
+myquickcheck' a = tests a 0 []
 
-tests :: Gen Result -> StdGen -> Int -> Int -> [[String]] -> IO String
-tests gen rnd0 ntest nfail stamps
-  | ntest == 500  = done "OK, passed" ntest stamps
-  | nfail == 1000 = done "Arguments exhausted after" ntest stamps
-  | otherwise = case ok result of
-       Nothing    -> tests gen rnd1 ntest (nfail+1) stamps
-       Just True  -> tests gen rnd1 (ntest+1) nfail (stamp result:stamps)
-       Just False -> return $ "Falsifiable, after "
-                               ++ show ntest
-                               ++ " tests:\n"
-                               ++ unlines (arguments result)
-   where
-      result      = generate (((+ 3) . (`div` 2)) ntest) rnd2 gen
-      (rnd1,rnd2) = split rnd0
+tests :: (Testable prop) => prop -> Int -> [[String]] -> IO String
+tests prop ntest stamps =
+  do result <- quickCheckWithResult stdArgs prop
+     case result of
+       NoExpectedFailure _ _ _ -> done "Arguments exhausted after" (numTests result) stamps
+       GaveUp _ _ _ -> done "Arguments exhausted after" (numTests result) stamps
+       Success _ _ _  -> done "OK, passed" (numTests result) stamps
+       Failure _ _ _ _ _ _ _ -> return $ "Falsifiable, after "
+                                ++ show ntest
+                                ++ " tests:\n"
+                                ++ reason result
 
 done :: String -> Int -> [[String]] -> IO String
 done mesg ntest stamps = return $ mesg ++ " " ++ show ntest ++ " tests" ++ table
@@ -103,10 +46,14 @@ done mesg ntest stamps = return $ mesg ++ " " ++ show ntest ++ " tests" ++ table
 
   display []  = "."
   display [x] = " (" ++ x ++ ")."
-  display xs  = "." ++ unlines (map (++ ".") xs)
+  display xs  = '.' : unlines (map (++ ".") xs)
 
+  pairLength :: [a] -> (Int, a)
+  pairLength [] = (0, error "pairLength should never get an empty list")
   pairLength xss@(xs:_) = (length xss, xs)
+
   entry (n, xs)         = percentage n ntest
-                       ++ concat (intersperse ", " xs)
+                       ++ intercalate ", " xs
 
   percentage n m        = show ((100 * n) `div` m) ++ "%"
+
