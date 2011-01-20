@@ -72,7 +72,7 @@ alphaRename e = alpha e `evalState` M.empty where
 
   -- act like a reader monad
   inEnv :: State s a -> State s a
-  inEnv (State f) = State $ \s -> (fst $ f s, s)
+  inEnv f = state $ \s -> (fst $ runState f s, s)
 
   alphaPat (PVar v) = do
     fm <- get
