@@ -1,5 +1,5 @@
 name:                show
-version:             0.4.1
+version:             0.4.1.1
 
 license:             GPL
 license-file:        LICENSE
@@ -22,10 +22,18 @@ build-type:          Simple
 Cabal-Version:       >= 1.2
 tested-with:         GHC==6.8.2
 
+Flag base4
+ Description: Build with base-4
+ Default: False
+
 library
    exposed-modules:     ShowQ, ShowFun, SimpleReflect
 
-   build-depends:       base<4, random, QuickCheck>=2.4, smallcheck>=0.4
+   build-depends:       random, QuickCheck>=2.4, smallcheck>=0.4
+   if flag(base4)
+    build-depends:       base>=4 && <4.4, syb >= 0.3 && < 0.4
+   else
+    build-depends:       base<4
 
    ghc-options:         -Wall
    ghc-prof-options:    -prof -auto-all
