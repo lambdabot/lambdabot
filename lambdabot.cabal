@@ -1,5 +1,5 @@
 Name:                lambdabot
-Version:             4.2.3.0
+Version:             4.2.3.1
 License:             GPL
 License-file:        LICENSE
 Author:              Don Stewart
@@ -30,7 +30,7 @@ data-files:         State/djinn, State/url, State/haddock, State/source,
 --     description: Use mueval to evaluate pure Haskell expressions at runtime
 
 Library
-    build-depends: base == 4.*, mtl, bytestring, unix, filepath
+    build-depends: base == 4.*, mtl>2, bytestring, unix, filepath
     exposed-modules: Config, IRCBase, File,
                      LBState, LMain, Lambdabot, Message,
                      NickEq, Plugin, Plugin.Activity, Plugin.BF,
@@ -56,7 +56,7 @@ Library
 -- Lambdabot main
 Executable          lambdabot
     Build-depends:       base == 4.*, containers, directory, pretty, parsec, old-time, random, array, network, syb,
-                         unix, mtl, bytestring, regex-compat, readline, binary>0.2, haskell-src, haskell-src-exts>=0.4.8,
+                         unix, mtl>2, bytestring, regex-compat, readline, binary>0.2, haskell-src, haskell-src-exts>=0.4.8,
                          oeis>=0.2, lambdabot-utils, show>=0.3, utf8-string, template-haskell, filepath, tagsoup, HTTP,
                          -- runtime dependencies - for eval etc.
                          brainfuck, unlambda, template-haskell, numbers, logict, IOSpec, vector-space, MonadRandom,
