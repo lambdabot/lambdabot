@@ -1,5 +1,5 @@
 Name:                lambdabot
-Version:             4.2.3.2
+Version:             4.2.3.3
 License:             GPL
 License-file:        LICENSE
 Author:              Don Stewart
@@ -15,6 +15,7 @@ Homepage:            http://haskell.org/haskellwiki/Lambdabot
 
 build-type:          Simple
 cabal-version:       >= 1.6
+tested-with:         GHC==6.12.1
 
 extra-source-files: Modules.hs-boot, State/imports.h, Plugin/Hello.hs, Modules.hs
 data-files:         State/djinn, State/url, State/haddock, State/source,
@@ -25,6 +26,10 @@ data-files:         State/djinn, State/url, State/haddock, State/source,
                     -- Needed for @type
                     State/imports.h,
                     online.rc, online2.rc
+
+source-repository head
+  type:     darcs
+  location: http://code.haskell.org/lambdabot
 
 -- flag eval
 --     description: Use mueval to evaluate pure Haskell expressions at runtime
