@@ -11,6 +11,10 @@ import Control.Monad
 
 import Language.Unlambda
 
+{- WARNING: There is no way this is actually enough sandboxing (mueval has to do
+a heck of a lot more to safely valuate expressions and not all of it
+involves libraries), but since no one seems to be attacking via `unlambda`
+we'll leave this be. -}
 main :: IO Exp
 main = (setResourceLimit ResourceCPUTime $ ResourceLimits (ResourceLimit 5) (ResourceLimit 5)) >> run
 
