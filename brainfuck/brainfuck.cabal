@@ -13,17 +13,21 @@ description:         This is an interpreter of the brainf*ck language,
                      written in the pure, lazy, functional language Haskell.
 
 build-type:          Simple
-Cabal-Version:       >= 1.2
-tested-with:         GHC==6.8.2
+Cabal-Version:       >= 1.6
+tested-with:         GHC==6.12.1
+
+source-repository head
+  type:     darcs
+  location: http://code.haskell.org/lambdabot
 
 executable              bf
    main-is:             Main.hs
-   build-depends:       base>3, unix, array, mtl
+   build-depends:       base>3 && <4, unix, array, mtl
 
 library
    exposed-modules:     Language.Brainfuck, Language.Brainfuck.Examples
 
-   build-depends:       base, array, mtl
+   build-depends:       base>3 && <4, array, mtl
 
    ghc-options:         -Wall
    ghc-prof-options:    -prof -auto-all
