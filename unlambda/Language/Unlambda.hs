@@ -1,5 +1,3 @@
-{-# OPTIONS -fglasgow-exts #-}
-
 {-
 Uses pattern guards
 
@@ -51,7 +49,8 @@ data Exp
 ------------------------------------------------------------------------
 -- Printing
 
-instance Show Exp where showsPrec _ e = sh e
+instance Show Exp where
+  showsPrec _ = sh
 
 sh :: Exp -> String -> String
 sh (App x y)  = showChar '`' . sh x . sh y
@@ -125,14 +124,14 @@ apply (S1 x) y   = return (S2 x y)
 apply (S2 x y) z = eval (App (App x z) (App y z))
 apply I x        = return x
 apply V _        = return V
-apply C x        = callCC (\c -> apply x (Cont c))
+apply C x        = callCC (apply x . Cont)
 apply (Cont c) x = throw c x
 apply D x        = return x
 apply (D1 e) x   = do f <- eval e; apply f x
 apply (Dot c) x  = step >> io (putChar c) >> return x
 apply E x        = exit x
 apply At f = do
-  dat <- io $ catch (getChar >>= return . Just) (const $ return Nothing)
+  dat <- io $ catch (fmap Just getChar) (const $ return Nothing)
   setCurrentChar dat
   apply f (case dat of Nothing -> V ; Just _  -> I)
 apply (Ques c) f = do
@@ -140,5 +139,5 @@ apply (Ques c) f = do
   apply f (if cur == Just c then I else V)
 apply Pipe f = do
   cur <- currentChar
-  apply f (case cur of Nothing -> V ; Just c  -> (Dot c))
+  apply f (case cur of Nothing -> V ; Just c  -> Dot c)
 apply (App _ _) _ = error "Unknown application"
