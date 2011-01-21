@@ -19,8 +19,12 @@ description:         This package provides ShowQ, ShowFun, and SimpleReflect.
                      through appropriate Show magic. See <http://twan.home.fmf.nl/blog/haskell/simple-reflection-of-expressions.details>.
 
 build-type:          Simple
-Cabal-Version:       >= 1.2
-tested-with:         GHC==6.8.2
+Cabal-Version:       >= 1.6
+tested-with:         GHC==6.12.1
+
+source-repository head
+  type:     darcs
+  location: http://code.haskell.org/lambdabot
 
 Flag base4
  Description: Build with base-4
