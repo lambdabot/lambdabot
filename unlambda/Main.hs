@@ -5,9 +5,8 @@ module Main where
 -- A time- and output-limited unlambda
 
 import System.Posix.Resource
-import Data.Char
-import System.IO
-import Control.Monad
+import Data.Char (toLower)
+import System.IO (hGetChar, hGetLine, stdin, Handle())
 
 import Language.Unlambda
 
