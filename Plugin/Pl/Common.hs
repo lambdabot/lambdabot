@@ -1,5 +1,3 @@
-{-# OPTIONS -fvia-C #-}
-
 module Plugin.Pl.Common (
         Fixity(..), Expr(..), Pattern(..), Decl(..), TopLevel(..),
         bt, sizeExpr, mapTopLevel, getExpr,
@@ -48,13 +46,13 @@ data Expr
   deriving (Eq, Ord)
 
 data Pattern
-  = PVar String 
+  = PVar String
   | PCons Pattern Pattern
   | PTuple Pattern Pattern
   deriving (Eq, Ord)
 
-data Decl = Define { 
-  declName :: String, 
+data Decl = Define {
+  declName :: String,
   declExpr :: Expr
 } deriving (Eq, Ord)
 
@@ -64,7 +62,7 @@ mapTopLevel :: (Expr -> Expr) -> TopLevel -> TopLevel
 mapTopLevel f tl = case getExpr tl of (e, c) -> c $ f e
 
 getExpr :: TopLevel -> (Expr, Expr -> TopLevel)
-getExpr (TLD True (Define foo e)) = (Let [Define foo e] (Var Pref foo), 
+getExpr (TLD True (Define foo e)) = (Let [Define foo e] (Var Pref foo),
                                      \e' -> TLD False $ Define foo e')
 getExpr (TLD False (Define foo e)) = (e, \e' -> TLD False $ Define foo e')
 getExpr (TLE e)      = (e, TLE)
