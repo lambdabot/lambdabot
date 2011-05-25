@@ -27,7 +27,7 @@ check src = do
         Left e  -> return e
         Right _ -> do
             file <- findFile "L.hs"
-            (out,err,_) <- popen binary ["--loadfile=", file, "-XExtendedDefaultRules", "-e", "mysmallcheck " ++ src ++ ""] Nothing
+            (out,err,_) <- popen binary ["--load-file=", file, "-XExtendedDefaultRules", "-e", "mysmallcheck " ++ src ++ ""] Nothing
             let o = munge out
                 e = munge err
             return $ case () of {_
