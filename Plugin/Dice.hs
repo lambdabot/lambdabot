@@ -17,6 +17,7 @@ import Text.ParserCombinators.Parsec.Token
 import Text.ParserCombinators.Parsec.Language
 
 import Data.Ratio
+import Data.Random.Dice (rollEm)
 import Text.Printf
 
 $(plugin "Dice")
@@ -165,8 +166,8 @@ fmtExprPrec showConst e = foldExpr
 ----------------------------------------------------------------
 -- Rolling dice
 
-rollEm :: String -> IO (Either ParseError String)
-rollEm str = case parseExpr "rollEm" str of
+rollEm' :: String -> IO (Either ParseError String)
+rollEm' str = case parseExpr "rollEm" str of
     Left err    -> return (Left err)
     Right ex    -> do
         ex <- runExpr ex :: IO (Expr [Integer])
