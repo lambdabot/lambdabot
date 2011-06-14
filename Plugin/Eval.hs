@@ -74,11 +74,23 @@ define src = case parseModule (decodeString src ++ "\n") of -- extra \n so comme
     (ParseFailed _ e) -> return $ " " ++ e
     _                 -> return "Invalid declaration"
  where
-    okay (HsTypeSig   {}) = True
-    okay (HsFunBind   {}) = True
-    okay (HsPatBind   {}) = True
-    okay (HsInfixDecl {}) = True
-    okay _                = False
+    okay (Hs.TypeSig      {}) = True
+    okay (Hs.FunBind      {}) = True
+    okay (Hs.PatBind      {}) = True
+    okay (Hs.InfixDecl    {}) = True
+    okay (Hs.TypeDecl     {}) = True
+    okay (Hs.DataDecl     {}) = True
+    okay (Hs.ClassDecl    {}) = True
+    okay (Hs.InstDecl     _ _ hsQName _ _) 
+        = case hsQName of
+                Hs.Qual _ (Hs.Ident "Typeable")     -> False
+                Hs.UnQual (Hs.Ident "Typeable")     -> False
+                Hs.Qual _ (Hs.Ident "Data")         -> False
+                Hs.UnQual (Hs.Ident "Data")         -> False
+                Hs.Qual _ (Hs.Ident "Ix")           -> False
+                Hs.UnQual (Hs.Ident "Ix")           -> False
+                _                               -> True
+    okay _                   = False
 
 -- It parses. then add it to a temporary L.hs and typecheck
 comp :: Maybe String -> IO String
@@ -97,7 +109,7 @@ comp src = do
 --                             ,"-odir", "State/"
 --                             ,"-hidir","State/"
                              ,".L.hs"] Nothing
-    -- cleanup
+    -- cleanup, in case of error the files are not generated
     try $ removeFile ".L.hi"
     try $ removeFile ".L.o"
 

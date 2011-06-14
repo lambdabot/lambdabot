@@ -18,7 +18,6 @@ import Control.OldException ( evaluate )
 
 import Config
 
-#ifdef mingw32_HOST_OS
 -- Work around the lack of readline on windows
 readline :: String -> IO (Maybe String)
 readline p = do
@@ -28,10 +27,6 @@ readline p = do
 
 addHistory :: String -> IO ()
 addHistory _ = return ()
-
-#else
-import System.Console.Readline( readline, addHistory )
-#endif
 
 
 $(plugin "OfflineRC")
