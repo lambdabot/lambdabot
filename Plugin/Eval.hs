@@ -41,7 +41,12 @@ instance Module PlugsModule () where
 binary :: String
 binary = "mueval"
 
-exts = ["BangPatterns", "NoMonomorphismRestriction", "ViewPatterns"]
+exts = 
+    [ "BangPatterns"
+    , "NoMonomorphismRestriction"
+    , "MultiParamTypeClasses"
+    , "ViewPatterns"
+    ]
 
 args :: String -> String -> [String]
 args load src = concat
