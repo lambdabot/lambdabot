@@ -41,6 +41,17 @@ instance Module PlugsModule () where
 binary :: String
 binary = "mueval"
 
+exts = ["BangPatterns", "NoMonomorphismRestriction", "ViewPatterns"]
+
+args :: String -> String -> [String]
+args load src = concat
+    [ ["-E"]
+    , map ("-X" ++) exts
+    , ["--no-imports", "-l", load]
+    , ["--expression=" ++ src]
+    , ["+RTS", "-N2", "-RTS"]
+    ]
+
 isEval :: String -> Bool
 isEval = ((evalPrefixes config) `arePrefixesWithSpaceOf`)
 
@@ -50,9 +61,7 @@ dropPrefix = dropWhile (' ' ==) . drop 2
 plugs :: String -> IO String
 plugs src = do
             load <- findFile "L.hs"
-            let args = ["-E", "-XBangPatterns", "-XNoMonomorphismRestriction", "-XViewPatterns", "--no-imports", "-l", load, "--expression=" ++ src, "+RTS", "-N2", "-RTS"]
-            print args
-            (out,err,_) <- popen binary args Nothing
+            (out,err,_) <- popen binary (args load src) Nothing
             case (out,err) of
                 ([],[]) -> return "Terminated\n"
                 _       -> do
