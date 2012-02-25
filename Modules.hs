@@ -53,7 +53,7 @@ import qualified Plugin.Type
 import qualified Plugin.Undo
 import qualified Plugin.Unlambda
 import qualified Plugin.UnMtl
---import qualified Plugin.Url
+import qualified Plugin.Url
 import qualified Plugin.Version
 import qualified Plugin.Vixen
 import qualified Plugin.Where
@@ -110,7 +110,7 @@ modulesInfo = $(modules $ nub
                     , "Undo"
                     , "Unlambda"
                     , "UnMtl"
-                    --, "Url"
+                    , "Url"
                     , "Version"
                     , "Vixen"
                     , "Where"
