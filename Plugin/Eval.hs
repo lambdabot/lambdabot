@@ -39,16 +39,19 @@ instance Module PlugsModule () where
 binary :: String
 binary = "mueval"
 
-exts = 
-    [ "BangPatterns"
-    , "NoMonomorphismRestriction"
-    , "MultiParamTypeClasses"
-    , "ViewPatterns"
-    ]
+exts 
+    | evalUsesSafeHaskell config = 
+        [] -- if using safe haskell, L.hs can turn on its own exts
+    | otherwise = 
+        [ "BangPatterns"
+        , "NoMonomorphismRestriction"
+        , "MultiParamTypeClasses"
+        , "ViewPatterns"
+        ]
 
 args :: String -> String -> [String]
 args load src = concat
-    [ ["-E"]
+    [ ["-E" | not (evalUsesSafeHaskell config)]
     , map ("-X" ++) exts
     , ["--no-imports", "-l", load]
     , ["--expression=" ++ src]
