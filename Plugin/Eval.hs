@@ -80,11 +80,13 @@ plugs src = do
 -- define a new binding
 
 define :: String -> IO String
-define src = case parseModule (decodeString src ++ "\n") of -- extra \n so comments are parsed correctly
-    (ParseOk (Hs.Module _ _ _ _ (Just [Hs.EVar (Hs.UnQual (Hs.Ident "main"))]) [] ds))
-        | all okay ds -> comp src
-    (ParseFailed _ e) -> return $ " " ++ e
-    _                 -> return "Invalid declaration"
+define src
+    | evalUsesSafeHaskell config = comp src
+    | otherwise = case parseModule (decodeString src ++ "\n") of -- extra \n so comments are parsed correctly
+        (ParseOk (Hs.Module _ _ _ _ (Just [Hs.EVar (Hs.UnQual (Hs.Ident "main"))]) [] ds))
+            | all okay ds -> comp src
+        (ParseFailed _ e) -> return $ " " ++ e
+        _                 -> return "Invalid declaration"
  where
     okay (Hs.TypeSig      {}) = True
     okay (Hs.FunBind      {}) = True

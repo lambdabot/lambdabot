@@ -31,6 +31,10 @@ data Config = Config {
 
         -- | what prefixes to use for Haskell evalution
         evalPrefixes :: [String],
+        
+        -- | eval can rely on Safe Haskell (so no filtering will be done; 
+        -- any code the user offers will be passed to the compiler!)
+        evalUsesSafeHaskell :: Bool,
 
         -- | Particular commands we'd like to disable
         -- (to disable whole plugins, remove them from Modules.hs)
@@ -42,19 +46,21 @@ data Config = Config {
 --
 config :: Config
 config = Config {
-        verbose         = True,
-        textwidth       = 350,
-        proxy           = Nothing, -- Just ("www-proxy",3128),
+        verbose                 = True,
+        textwidth               = 350,
+        proxy                   = Nothing, -- Just ("www-proxy",3128),
 
-        fortunePath     = "/deepbondi/fortune/",
-        fptoolsPath     = "/home/susie/fptools",
+        fortunePath             = "/deepbondi/fortune/",
+        fptoolsPath             = "/home/susie/fptools",
 
-        ghci            = "ghci",
-        outputDir       = "State/",
+        ghci                    = "ghci",
+        outputDir               = "State/",
 
-        commandPrefixes = ["@","?"],
-        evalPrefixes    = [">"],
+        commandPrefixes         = ["@","?"],
 
-        disabledCommands = ["state"]
+        evalPrefixes            = [">"],
+        evalUsesSafeHaskell     = False,
+
+        disabledCommands        = ["state"]
 
    }
