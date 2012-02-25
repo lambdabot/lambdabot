@@ -21,7 +21,6 @@ import qualified Plugin.Eval
 import qualified Plugin.Fact
 import qualified Plugin.Free
 import qualified Plugin.Fresh
-import qualified Plugin.FT
 import qualified Plugin.Haddock
 import qualified Plugin.Help
 import qualified Plugin.Hoogle
@@ -80,7 +79,6 @@ modulesInfo = $(modules $ nub
                     , "Fact"
                     , "Free"
                     , "Fresh"
-                    , "FT"
                     , "Haddock"
                     , "Help"
                     , "Hoogle"
