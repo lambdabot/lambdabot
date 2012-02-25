@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, CPP, MultiParamTypeClasses, PatternGuards, TypeSynonymInstances #-}
+{-# LANGUAGE TemplateHaskell, CPP, MultiParamTypeClasses, PatternGuards, TypeSynonymInstances, FlexibleInstances #-}
 -- | Support for quotes
 module Plugin.Quote (theModule) where
 

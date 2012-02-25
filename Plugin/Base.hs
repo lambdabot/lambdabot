@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses, PatternGuards, TypeSynonymInstances #-}
+{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses, PatternGuards, TypeSynonymInstances, FlexibleInstances #-}
 -- | Lambdabot base module. Controls message send and receive
 module Plugin.Base (theModule) where
 
