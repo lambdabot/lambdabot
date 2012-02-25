@@ -30,9 +30,7 @@ instance Module PlugsModule () where
     process _ _ _ "undefine" _ = do l <- io $ findFile "L.hs"
                                     p <- io $ findFile "Pristine.hs"
                                     io $ copyFile p l
---                                    x <- io $ comp Nothing
---                                    return [x]
-                                    return []
+                                    return ["Undefined."]
 
     contextual _ _ to txt
         | isEval txt = ios80 to . plugs . dropPrefix $ txt
@@ -84,7 +82,7 @@ plugs src = do
 define :: String -> IO String
 define src = case parseModule (decodeString src ++ "\n") of -- extra \n so comments are parsed correctly
     (ParseOk (Hs.Module _ _ _ _ (Just [Hs.EVar (Hs.UnQual (Hs.Ident "main"))]) [] ds))
-        | all okay ds -> comp (Just src)
+        | all okay ds -> comp src
     (ParseFailed _ e) -> return $ " " ++ e
     _                 -> return "Invalid declaration"
  where
@@ -107,23 +105,19 @@ define src = case parseModule (decodeString src ++ "\n") of -- extra \n so comme
     okay _                   = False
 
 -- It parses. then add it to a temporary L.hs and typecheck
-comp :: Maybe String -> IO String
+comp :: String -> IO String
 comp src = do
     l <- findFile "L.hs"
     -- Note we copy to .L.hs, not L.hs. This hides the temporary files as dot-files
     copyFile l ".L.hs"
-    case src of
-        Nothing -> return () -- just reset from Pristine
-        Just s  -> P.appendFile ".L.hs" (P.pack (s  ++ "\n"))
-
+    P.appendFile ".L.hs" (P.pack (src ++ "\n"))
+    
     -- and compile .L.hs
     -- careful with timeouts here. need a wrapper.
     (o',e',c) <- popen "ghc" ["-O","-v0","-c"
                              ,"-Werror"
---                             ,"-odir", "State/"
---                             ,"-hidir","State/"
                              ,".L.hs"] Nothing
-    -- cleanup, in case of error the files are not generated
+    -- cleanup, 'try' because in case of error the files are not generated
     try $ removeFile ".L.hi"
     try $ removeFile ".L.o"
 
@@ -131,7 +125,7 @@ comp src = do
         ([],[]) | c /= ExitSuccess -> return "Error."
                 | otherwise -> do
                     renameFile ".L.hs" l
-                    return (maybe "Undefined." (const "Defined.") src)
+                    return "Defined."
         (ee,[]) -> return ee
         (_ ,ee) -> return ee
 
@@ -158,53 +152,8 @@ comp src = do
 --  P
 --
 
-
-
-
 munge :: String -> String
-munge = expandTab . dropWhile (=='\n') . dropNL . clean_
-
---
--- Clean up runplugs' output
---
-clean_ :: String -> String
-clean_ = id
-{-
-clean_ s|  no_io      `matches'`    s = "No IO allowed\n"
-        |  type_sig   `matches'`    s = "Add a type signature\n"
-        |  enomem     `matches'`    s = "Tried to use too much memory\n"
-
-        | Just (_,m,_,_) <- ambiguous  `R.matchRegexAll` s = m
-        | Just (_,_,b,_) <- inaninst   `R.matchRegexAll` s = clean_ b
-        | Just (_,_,b,_) <- irc        `R.matchRegexAll` s = clean_ b
-        | Just (_,m,_,_) <- nomatch    `R.matchRegexAll` s = m
-        | Just (_,m,_,_) <- notinscope `R.matchRegexAll` s = m
-        | Just (_,m,_,_) <- hsplugins  `R.matchRegexAll`  s = m
-        | Just (a,_,_,_) <- columnnum  `R.matchRegexAll`  s = a
-        | Just (a,_,_,_) <- extraargs  `R.matchRegexAll`  s = a
-        | Just (_,_,b,_) <- filename'  `R.matchRegexAll`  s = clean_ b
-        | Just (a,_,b,_) <- filename   `R.matchRegexAll`  s = a ++ clean_ b
-        | Just (a,_,b,_) <- filepath   `R.matchRegexAll`   s = a ++ clean_ b
-        | Just (a,_,b,_) <- runplugs   `R.matchRegexAll`  s = a ++ clean_ b
-        | otherwise      = s
-    where
-        -- s/<[^>]*>:[^:]: //
-        type_sig   = regex' "add a type signature that fixes these type"
-        no_io      = regex' "No instance for \\(Show \\(IO"
-        irc        = regex' "\n*<irc>:[^:]*:[^:]*:\n*"
-        filename   = regex' "\n*<[^>]*>:[^:]*:\\?[^:]*:\\?\n* *"
-        filename'  = regex' "/tmp/.*\\.hs[^\n]*\n"
-        filepath   = regex' "\n*/[^\\.]*.hs:[^:]*:\n* *"
-        ambiguous  = regex' "Ambiguous type variable `a\' in the constraints"
-        runplugs   = regex' "runplugs: "
-        notinscope = regex' "Variable not in scope:[^\n]*"
-        hsplugins  = regex' "Compiled, but didn't create object"
-        extraargs  = regex' "[ \t\n]*In the [^ ]* argument"
-        columnnum  = regex' " at <[^\\.]*\\.[^\\.]*>:[^ ]*"
-        nomatch    = regex' "Couldn't match[^\n]*\n"
-        inaninst   = regex' "^[ \t]*In a.*$"
-        enomem     = regex' "^Heap exhausted"
--}
+munge = expandTab . dropWhile (=='\n') . dropNL
 
 ------------------------------------------------------------------------
 --
