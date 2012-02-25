@@ -8,7 +8,6 @@ import Data.List (nub)
 -- to add a new plugin, one must first add a qualified import here, and also
 -- add a string in the list below
 import qualified Plugin.Activity
-import qualified Plugin.Babel
 import qualified Plugin.Base
 import qualified Plugin.BF
 import qualified Plugin.Check
@@ -69,7 +68,6 @@ modulesInfo = $(modules $ nub
 
                     -- plugins also go in this list:
                     , "Activity"
-                    , "Babel"
                     , "BF"
                     , "Check"
                     , "Compose"

@@ -36,7 +36,7 @@ Library
     exposed-modules: Config, IRCBase, File,
                      LBState, LMain, Lambdabot, Message,
                      NickEq, Plugin, Plugin.Activity, Plugin.BF,
-                     Plugin.Babel, Plugin.Base, Plugin.Check, Plugin.Code, Plugin.Compose,
+                     Plugin.Base, Plugin.Check, Plugin.Code, Plugin.Compose,
                      Plugin.DarcsPatchWatch, Plugin.Dice, Plugin.Dict, Plugin.Dict.DictLookup, Plugin.Djinn,
                      Plugin.Dummy, Plugin.Dummy.DocAssocs, Plugin.Dynamic, Plugin.Elite, Plugin.Eval,
                      Plugin.FT, Plugin.Fact, Plugin.Filter, Plugin.Free, Plugin.Free.Expr,
