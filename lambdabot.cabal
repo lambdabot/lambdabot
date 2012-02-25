@@ -22,7 +22,7 @@ data-files:         State/djinn, State/url, State/haddock, State/source,
                     State/L.hs, State/seen, State/state, State/Pristine.hs,
                     State/poll, State/quote, State/todo, State/vixen,
                     State/fresh, State/tell, State/system, State/where,
-                    State/karma, State/fact,
+                    State/karma,
                     -- Needed for @type
                     State/imports.h,
                     online.rc, online2.rc
@@ -39,7 +39,7 @@ Library
                      Plugin.Base, Plugin.Check, Plugin.Code, Plugin.Compose,
                      Plugin.DarcsPatchWatch, Plugin.Dice, Plugin.Dict, Plugin.Dict.DictLookup, Plugin.Djinn,
                      Plugin.Dummy, Plugin.Dummy.DocAssocs, Plugin.Dynamic, Plugin.Elite, Plugin.Eval,
-                     Plugin.Fact, Plugin.Filter, Plugin.Free, Plugin.Free.Expr,
+                     Plugin.Filter, Plugin.Free, Plugin.Free.Expr,
                      Plugin.Free.FreeTheorem, Plugin.Free.Parse, Plugin.Free.Test, Plugin.Free.Theorem, Plugin.Free.Type,
                      Plugin.Free.Util, Plugin.Fresh, Plugin.Haddock, Plugin.Help,
                      Plugin.Hoogle, Plugin.IRC, Plugin.Instances, Plugin.Karma, Plugin.Localtime,
