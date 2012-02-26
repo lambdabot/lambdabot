@@ -8,7 +8,7 @@ import Plugin
 import System.IO( hPutStrLn, hFlush, stdout )
 
 import LMain( received )
-import IRCBase
+import Lambdabot.IRC
 import Control.Monad.Reader( asks )
 import Control.Monad.State( get, gets, put )
 import Control.Concurrent( forkIO )

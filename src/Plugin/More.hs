@@ -4,7 +4,7 @@ module Plugin.More (theModule) where
 
 import Plugin
 
-import Message( Nick )
+import Lambdabot.Message( Nick )
 
 $(plugin "More")
 

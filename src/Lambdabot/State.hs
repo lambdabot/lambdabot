@@ -1,6 +1,6 @@
 {-# LANGUAGE ScopedTypeVariables, TypeFamilies #-}
 -- | Support for the LB (LambdaBot) monad
-module LBState (
+module Lambdabot.State (
         -- ** Functions to access the module's state
         readMS, withMS, modifyMS, writeMS,
         accessorMS,
@@ -20,7 +20,7 @@ import Control.Concurrent (forkIO, readMVar, modifyMVar_, newMVar, MVar, ThreadI
 import Control.Monad.Reader
 import Control.Monad.Trans (liftIO)
 
-import Message (Nick)
+import Lambdabot.Message (Nick)
 
 -- withMWriter :: MVar a -> (a -> (a -> IO ()) -> IO b) -> IO b
 -- | Update the module's private state.

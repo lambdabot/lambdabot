@@ -19,7 +19,7 @@ import Plugin.Pl.PrettyPrinter   (Expr)
 import Plugin.Pl.Transform       (transform)
 import Plugin.Pl.Optimize        (optimize)
 
-import Message( Nick )
+import Lambdabot.Message( Nick )
 
 import Control.Concurrent.Chan    (Chan, newChan, isEmptyChan, readChan, writeList2Chan)
 import Control.Exception (unblock)

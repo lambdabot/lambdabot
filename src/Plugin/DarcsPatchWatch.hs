@@ -17,7 +17,7 @@ import Control.Monad       ( when )
 
 import System.Directory
 import System.Time
-import Message
+import Lambdabot.Message
 
 $(plugin "DarcsPatchWatch")
 

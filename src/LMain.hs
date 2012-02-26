@@ -1,9 +1,9 @@
 module LMain where
 
-import Shared
+import Lambdabot.Shared
 import Lambdabot
-import Message
-import IRCBase
+import Lambdabot.Message
+import Lambdabot.IRC
 
 import Lambdabot.Util( listToMaybeAll )
 

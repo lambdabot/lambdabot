@@ -11,7 +11,7 @@ module Plugin (
         ios, box, list, ios80, plugin, modules,
 
         module Lambdabot,
-        module LBState,
+        module Lambdabot.State,
         module Config,
 
         module Lambdabot.Util,
@@ -32,17 +32,16 @@ module Plugin (
     ) where
 
 import Lambdabot
-import LBState
+import Lambdabot.State
 import Config
 
-import Lambdabot.Util
-import Lambdabot.Serial
-import Lambdabot.Process
+import Lambdabot.Message
 import Lambdabot.MiniHTTP
-import Lambdabot.Url
+import Lambdabot.Process
 import Lambdabot.Regex
-
-import Message
+import Lambdabot.Serial
+import Lambdabot.Url
+import Lambdabot.Util
 
 import Data.List
 import Data.Char

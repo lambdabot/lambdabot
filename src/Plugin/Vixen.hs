@@ -16,7 +16,7 @@ import Control.Arrow ((***))
 import System.Directory
 import qualified Data.ByteString.Char8 as P
 
-import File (findFile)
+import Lambdabot.File (findFile)
 import Plugin
 
 $(plugin "Vixen")

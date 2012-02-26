@@ -7,7 +7,7 @@
 -- module that is linked both statically and dynamically. (And doing so
 -- breaks us from running the whole of the bot in ghci -- so sue me).
 
-module Shared (Module(..), Symbol, DynLoad(..)) where
+module Lambdabot.Shared (Module(..), Symbol, DynLoad(..)) where
 
 type Symbol = String
 

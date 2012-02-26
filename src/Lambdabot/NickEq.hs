@@ -13,9 +13,9 @@
 -- bar-separated list of (nicks or open terms); an open term is like a
 -- nick but preceded with a star.
 
-module NickEq ( Polynick, nickMatches, readPolynick, showPolynick, lookupMononickMap, mononickToPolynick ) where
+module Lambdabot.NickEq ( Polynick, nickMatches, readPolynick, showPolynick, lookupMononickMap, mononickToPolynick ) where
 
-import Message( Message, Nick, readNick, showNick )
+import Lambdabot.Message( Message, Nick, readNick, showNick )
 import Lambdabot
 import Lambdabot.Util (concatWith, split)
 import Data.Maybe (mapMaybe)

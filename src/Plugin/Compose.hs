@@ -7,7 +7,7 @@
 module Plugin.Compose (theModule) where
 
 import Plugin
-import Message
+import Lambdabot.Message
 
 import Control.Monad.State
 import Control.Arrow (first)

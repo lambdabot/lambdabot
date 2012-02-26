@@ -8,13 +8,13 @@ module Plugin.Seen (theModule) where
 
 import Data.Binary
 
-import File (findFile)
+import Lambdabot.File (findFile)
 import Plugin
 import Lambdabot.AltTime
 import Lambdabot.Error         (tryError)
 import Lambdabot.Util          (lowerCaseString)
 
-import qualified Message as G (Message, names, channels, nick, packNick, unpackNick, Nick(..), body, lambdabotName, showNick, readNick)
+import qualified Lambdabot.Message as G (Message, names, channels, nick, packNick, unpackNick, Nick(..), body, lambdabotName, showNick, readNick)
 
 import qualified Data.Map as M
 import qualified Data.ByteString.Char8 as P

@@ -1,4 +1,4 @@
-module File where
+module Lambdabot.File where
 
 import Control.Monad
 import System.Directory

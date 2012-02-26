@@ -6,7 +6,7 @@
 -- | A Haskell evaluator for the pure part, using plugs
 module Plugin.Eval where
 
-import File (findFile)
+import Lambdabot.File (findFile)
 import Plugin
 import Lambdabot.Parser
 import Language.Haskell.Exts.Parser

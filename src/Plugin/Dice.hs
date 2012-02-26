@@ -7,7 +7,7 @@ module Plugin.Dice (theModule) where
 
 import Plugin
 
-import Message
+import Lambdabot.Message
 
 import Control.Monad                    (replicateM,foldM)
 import System.Random                    (Random, randomRIO)

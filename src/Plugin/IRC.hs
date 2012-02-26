@@ -7,9 +7,9 @@ import Control.Concurrent( forkIO, newQSem, waitQSem, threadDelay, signalQSem,
                            newEmptyMVar, putMVar, takeMVar, MVar )
 import Control.Exception
 import Prelude hiding (catch)
-import IRCBase
+import Lambdabot.IRC
 import LMain( received )
-import Message
+import Lambdabot.Message
 import Network( connectTo, PortID(..) )
 import Plugin
 import System.IO (hGetLine, hPutStr, hPutStrLn, hSetBuffering, BufferMode(NoBuffering), stderr, hClose)

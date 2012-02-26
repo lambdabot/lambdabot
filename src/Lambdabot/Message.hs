@@ -1,7 +1,7 @@
 --
 -- Provides interface to messages, message pipes
 --
-module Message(Message(..), Nick(..), showNick, readNick, Pipe, packNick, unpackNick) where
+module Lambdabot.Message(Message(..), Nick(..), showNick, readNick, Pipe, packNick, unpackNick) where
 
 import Lambdabot.Util(dropSpace)
 

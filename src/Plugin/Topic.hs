@@ -7,7 +7,7 @@
 module Plugin.Topic (theModule) where
 
 import Plugin
-import Message (Message, setTopic, Nick, nName, readNick)
+import Lambdabot.Message as Msg (Message, setTopic, Nick, nName, readNick)
 import qualified Data.Map as M
 
 import Control.Monad.State (gets)
@@ -72,7 +72,7 @@ instance Module TopicModule where
 
 installTopic :: TopicAction
 installTopic chan topic = withTopic chan $ \_oldTopic -> do
-    send (Message.setTopic chan topic)
+    send (Msg.setTopic chan topic)
     return []
 
 reciteTopic :: TopicAction
@@ -83,7 +83,7 @@ reciteTopic _ _           = return ["I don't know what all that extra stuff is a
 
 alterTopic :: (String -> String -> String) -> TopicAction
 alterTopic f chan args = withTopic chan $ \oldTopic -> do
-    send (Message.setTopic chan (f args oldTopic))
+    send (Msg.setTopic chan (f args oldTopic))
     return []
 
 alterListTopic :: (String -> [String] -> [String]) -> TopicAction

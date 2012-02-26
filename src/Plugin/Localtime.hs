@@ -7,7 +7,7 @@ module Plugin.Localtime (theModule) where
 
 import Plugin
 import qualified Data.Map as M
-import qualified Message as Msg
+import qualified Lambdabot.Message as Msg
 
 $(plugin "Localtime")
 

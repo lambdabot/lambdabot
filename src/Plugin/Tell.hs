@@ -53,7 +53,7 @@ import qualified Data.Map as M
 import Text.Printf (printf)
 
 import Lambdabot.AltTime
-import Message
+import Lambdabot.Message
 import Plugin
 
 -- | Was it @tell or @ask that was the original command?

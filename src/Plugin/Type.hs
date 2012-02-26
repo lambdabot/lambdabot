@@ -17,7 +17,7 @@
 --     Well, what do you know, this plugin enables lambdabot to automate
 --     that lookup for you and your fellow lambda hackers.
 module Plugin.Type where
-import File
+import Lambdabot.File
 import Plugin
 import qualified Text.Regex as R
 

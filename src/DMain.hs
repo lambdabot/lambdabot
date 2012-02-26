@@ -2,7 +2,7 @@ module DMain where
 
 import LMain
 import DynModules
-import Shared
+import Lambdabot.Shared
 
 ------------------------------------------------------------------------
 

@@ -4,7 +4,7 @@ module Plugin.System (theModule) where
 
 import Plugin
 import Lambdabot.AltTime
-import qualified Message (Message, Nick, joinChannel, partChannel, server, readNick)
+import qualified Lambdabot.Message as Msg (Message, Nick, joinChannel, partChannel, server, readNick)
 import qualified Data.Map as M       (Map,keys,fromList,lookup,union,insert,delete)
 
 import Control.Monad.State      (MonadState(get, put), gets)
@@ -58,7 +58,7 @@ privcmds = M.fromList [
 defaultHelp :: String
 defaultHelp = "system : irc management"
 
-doSystem :: Message.Message a => a -> Message.Nick -> [Char] -> [Char] -> System [String]
+doSystem :: Msg.Message a => a -> Msg.Nick -> [Char] -> [Char] -> System [String]
 doSystem msg target cmd rest = get >>= \s -> case cmd of
   "listchans"   -> return [pprKeys (ircChannels s)]
   "listmodules" -> return [pprKeys (ircModules s) ]
@@ -71,19 +71,19 @@ doSystem msg target cmd rest = get >>= \s -> case cmd of
 
   --TODO error handling
    -- system commands
-  "join"  -> lift $ send (Message.joinChannel (Message.readNick msg rest)) >> return []
-  "leave" -> lift $ send (Message.partChannel (Message.readNick msg rest)) >> return []
-  "part"  -> lift $ send (Message.partChannel (Message.readNick msg rest)) >> return []
+  "join"  -> lift $ send (Msg.joinChannel (Msg.readNick msg rest)) >> return []
+  "leave" -> lift $ send (Msg.partChannel (Msg.readNick msg rest)) >> return []
+  "part"  -> lift $ send (Msg.partChannel (Msg.readNick msg rest)) >> return []
 
    -- writes to another location:
-  "msg"   -> lift $ ircPrivmsg (Message.readNick msg tgt) txt' >> return []
+  "msg"   -> lift $ ircPrivmsg (Msg.readNick msg tgt) txt' >> return []
                   where (tgt, txt) = breakOnGlue " " rest
                         txt'       = dropWhile (== ' ') txt
 
-  "quit" -> lift $ do ircQuit (Message.server msg) $ if null rest then "requested" else rest
+  "quit" -> lift $ do ircQuit (Msg.server msg) $ if null rest then "requested" else rest
                       return []
 
-  "reconnect" -> lift $ do ircReconnect (Message.server msg) $ if null rest then "request" else rest
+  "reconnect" -> lift $ do ircReconnect (Msg.server msg) $ if null rest then "request" else rest
                            return []
 
   "echo" -> return [concat ["echo; msg:", show msg, " target:" , show target, " rest:", show rest]]
@@ -97,7 +97,7 @@ doSystem msg target cmd rest = get >>= \s -> case cmd of
                                     _         -> fail "@admin: invalid usage"
                 put (s {ircPrivilegedUsers = pu'})
                 return []
-      where nck = Message.readNick msg (drop 2 rest)
+      where nck = Msg.readNick msg (drop 2 rest)
 
   "ignore" -> do let iu = ircIgnoredUsers s
                  iu' <- case rest of '+':' ':_ -> return $ M.insert nck True iu
@@ -105,7 +105,7 @@ doSystem msg target cmd rest = get >>= \s -> case cmd of
                                      _         -> fail "@ignore: invalid usage"
                  put (s {ircIgnoredUsers = iu'})
                  return []
-      where nck = Message.readNick msg (drop 2 rest)
+      where nck = Msg.readNick msg (drop 2 rest)
 
   "uptime" -> do
           (loaded, m) <- readMS

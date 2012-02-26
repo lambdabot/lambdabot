@@ -2,16 +2,17 @@
 -- | The IRC module processes the IRC protocol and provides a nice API for sending
 --   and recieving IRC messages with an IRC server.
 --
-module IRCBase ( IrcMessage(..)
-               , privmsg
-               , quit
-               , timeReply
-               , errShowMsg -- TODO: remove
-               , user
-               , setNick
-               ) where
+module Lambdabot.IRC
+    ( IrcMessage(..)
+    , privmsg
+    , quit
+    , timeReply
+    , errShowMsg -- TODO: remove
+    , user
+    , setNick
+    ) where
 
-import Message
+import Lambdabot.Message
 import Lambdabot.Util (split, breakOnGlue, clean)
 import qualified Lambdabot.Util as Util (concatWith)
 
@@ -31,18 +32,18 @@ data IrcMessage
   deriving (Show)
 
 instance Message IrcMessage where
-    nick          = IRCBase.nick
-    server        = IRCBase.msgServer
-    fullName      = IRCBase.fullName
-    names         = IRCBase.names
-    channels      = IRCBase.channels
-    joinChannel   = IRCBase.join
-    partChannel   = IRCBase.part
-    getTopic      = IRCBase.getTopic
-    setTopic      = IRCBase.setTopic
-    body          = IRCBase.msgParams
-    command       = IRCBase.msgCommand
-    lambdabotName = IRCBase.lambdabotName
+    nick          = Lambdabot.IRC.nick
+    server        = Lambdabot.IRC.msgServer
+    fullName      = Lambdabot.IRC.fullName
+    names         = Lambdabot.IRC.names
+    channels      = Lambdabot.IRC.channels
+    joinChannel   = Lambdabot.IRC.join
+    partChannel   = Lambdabot.IRC.part
+    getTopic      = Lambdabot.IRC.getTopic
+    setTopic      = Lambdabot.IRC.setTopic
+    body          = Lambdabot.IRC.msgParams
+    command       = Lambdabot.IRC.msgCommand
+    lambdabotName = Lambdabot.IRC.lambdabotName
 
 -- | 'mkMessage' creates a new message from a server, a cmd, and a list of parameters.
 mkMessage :: String -- ^ Server
@@ -122,7 +123,7 @@ timeReply msg    =
               , msgLBName  = msgLBName (msg)
               , msgCommand = "PRIVMSG"
               , msgParams  = [head (msgParams msg)
-                             ,":@localtime-reply " ++ (nName $ IRCBase.nick msg) ++ ":" ++
+                             ,":@localtime-reply " ++ (nName $ Lambdabot.IRC.nick msg) ++ ":" ++
                                 (init $ drop 7 (last (msgParams msg))) ]
               }
 
@@ -132,10 +133,10 @@ errShowMsg msg = "ERROR> <" ++ msgServer msg ++ (':' : msgPrefix msg) ++
       "> [" ++ msgCommand msg ++ "] " ++ show (msgParams msg)
 
 user :: String -> String -> String -> String -> IrcMessage
-user svr nick_ server_ ircname = IRCBase.mkMessage svr "USER" [nick_, "localhost", server_, ircname]
+user svr nick_ server_ ircname = Lambdabot.IRC.mkMessage svr "USER" [nick_, "localhost", server_, ircname]
 
 setNick :: Nick -> IrcMessage
-setNick nick_ = IRCBase.mkMessage (nTag nick_) "NICK" [nName nick_]
+setNick nick_ = Lambdabot.IRC.mkMessage (nTag nick_) "NICK" [nName nick_]
 
 lambdabotName :: IrcMessage -> Nick
 lambdabotName msg = Nick (msgServer msg) (msgLBName msg)

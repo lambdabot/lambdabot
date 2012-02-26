@@ -4,9 +4,9 @@ module Plugin.Base (theModule) where
 
 import Plugin
 
-import IRCBase (IrcMessage, timeReply, errShowMsg)
--- import Message (getTopic, nick, joinChannel, body, fullName, channels)
-import Message (getTopic, nick, server, body, Nick(..), lambdabotName, showNick, readNick)
+import Lambdabot.IRC (IrcMessage, timeReply, errShowMsg)
+-- import Lambdabot.Message (getTopic, nick, joinChannel, body, fullName, channels)
+import Lambdabot.Message (getTopic, nick, server, body, Nick(..), lambdabotName, showNick, readNick)
 
 import qualified Data.Map as M   (insert, delete)
 

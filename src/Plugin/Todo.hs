@@ -5,7 +5,7 @@
 module Plugin.Todo (theModule) where
 
 import Plugin
-import Message (Message, nick, packNick, unpackNick, showNick)
+import Lambdabot.Message as Msg (Message, nick, packNick, unpackNick, showNick)
 import qualified Data.ByteString.Char8 as P
 
 $(plugin "Todo")
@@ -34,15 +34,15 @@ instance Module TodoModule where
            "todo-add"    -> addTodo sender rest
            "todo-delete" -> delTodo rest
 
-        where sender = Message.packNick $ Message.nick msg
+        where sender = Msg.packNick $ Msg.nick msg
 
 -- | Print todo list
-getTodo :: Message.Message m => m -> TodoState -> String -> Todo [String]
+getTodo :: Msg.Message m => m -> TodoState -> String -> Todo [String]
 getTodo msg todoList [] = return [formatTodo msg todoList]
 getTodo _ _ _           = error "@todo has no args, try @todo-add or @list todo"
 
 -- | Pretty print todo list
-formatTodo :: Message.Message m => m -> [(P.ByteString, P.ByteString)] -> String
+formatTodo :: Msg.Message m => m -> [(P.ByteString, P.ByteString)] -> String
 formatTodo _ [] = "Nothing to do!"
 formatTodo msg todoList =
     unlines $ map (\(n::Int, (idea, nick_)) -> concat $

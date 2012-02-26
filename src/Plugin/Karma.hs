@@ -3,8 +3,8 @@
 module Plugin.Karma (theModule) where
 
 import Plugin
-import qualified Message as Msg (nick, Nick, Message, showNick, readNick, lambdabotName, nName)
-import qualified NickEq as E
+import qualified Lambdabot.Message as Msg (nick, Nick, Message, showNick, readNick, lambdabotName, nName)
+import qualified Lambdabot.NickEq as E
 import qualified Data.Map as M
 import Text.Printf
 

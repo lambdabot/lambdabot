@@ -3,7 +3,7 @@
 module Plugin.Activity (theModule) where
 
 import Plugin
-import qualified Message as Msg
+import qualified Lambdabot.Message as Msg
 
 import Control.Arrow ((&&&))
 import Data.Maybe (fromMaybe)

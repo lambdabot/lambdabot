@@ -33,11 +33,11 @@ module Lambdabot (
         checkPrivs, checkIgnore, mkCN, handleIrc, catchIrc, runIrc,
   ) where
 
-import File (findFile)
+import Lambdabot.File (findFile)
 
-import qualified Message as Msg
-import qualified Shared  as S
-import qualified IRCBase as IRC (IrcMessage, quit, privmsg)
+import qualified Lambdabot.Message as Msg
+import qualified Lambdabot.Shared  as S
+import qualified Lambdabot.IRC as IRC (IrcMessage, quit, privmsg)
 
 import Lambdabot.Signals
 import Lambdabot.Util
