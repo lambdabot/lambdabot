@@ -59,7 +59,7 @@ config = Config {
         commandPrefixes         = ["@","?"],
 
         evalPrefixes            = [">"],
-        evalUsesSafeHaskell     = False,
+        evalUsesSafeHaskell     = True,
 
         disabledCommands        = []
 

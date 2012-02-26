@@ -17,7 +17,10 @@ build-type:             Simple
 cabal-version:          >= 1.6
 tested-with:            GHC==7.4.1
 
-extra-source-files:     src/*.hs,
+extra-source-files:     lambdabot-trusted/lambdabot-trusted.cabal
+                        lambdabot-trusted/Setup.lhs
+                        lambdabot-trusted/src/*.hs
+                        src/*.hs,
                         src/*.hs-boot,
                         src/Lambdabot/*.hs
                         src/Plugin/*.hs,
