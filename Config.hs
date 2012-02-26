@@ -61,6 +61,6 @@ config = Config {
         evalPrefixes            = [">"],
         evalUsesSafeHaskell     = False,
 
-        disabledCommands        = ["state"]
+        disabledCommands        = []
 
    }

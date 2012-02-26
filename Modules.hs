@@ -40,7 +40,6 @@ import qualified Plugin.Seen
 import qualified Plugin.Slap
 import qualified Plugin.Source
 import qualified Plugin.Spell
-import qualified Plugin.State
 import qualified Plugin.System
 import qualified Plugin.Tell
 import qualified Plugin.Ticker
@@ -60,7 +59,6 @@ modulesInfo = $(modules $ nub
                     -- these must be listed first.  Maybe.  Nobody really
                     -- knows, but better to be safe than sorry.
                     [ "Base"
-                    , "State"
                     , "System"
                     , "OfflineRC"
 

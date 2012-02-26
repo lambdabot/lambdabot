@@ -48,7 +48,7 @@ Library
                      Plugin.Pl.PrettyPrinter, Plugin.Pl.RuleLib, Plugin.Pl.Rules, Plugin.Pl.Transform,
                      Plugin.Pointful, Plugin.Poll, Plugin.Pretty, Plugin.Quote, Plugin.Quote.Fortune,
                      Plugin.Quote.Text, Plugin.Search, Plugin.Seen, Plugin.Slap
-                     Plugin.Source, Plugin.Spell, Plugin.State, Plugin.System, Plugin.Tell,
+                     Plugin.Source, Plugin.Spell, Plugin.System, Plugin.Tell,
                      Plugin.Ticker, Plugin.Todo, Plugin.Topic, Plugin.Type, Plugin.UnMtl,
                      Plugin.Undo, Plugin.Unlambda, Plugin.Url, Plugin.Version, Plugin.Vixen,
                      Plugin.Where, Shared
