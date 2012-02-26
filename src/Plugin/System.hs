@@ -12,6 +12,7 @@ import Control.Monad.State      (MonadState(get, put), gets)
 $(plugin "System")
 
 instance Module SystemModule where
+    -- State is time current instance started and longest recorded uptime
     type ModuleState SystemModule = (ClockTime, TimeDiff)
     
     moduleCmds   _   = M.keys syscmds
