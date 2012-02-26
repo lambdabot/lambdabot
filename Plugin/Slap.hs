@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses #-}
+{-# LANGUAGE TemplateHaskell #-}
 -- | Support for quotes
 module Plugin.Slap (theModule) where
 
@@ -7,7 +7,7 @@ import qualified Message (nick, showNick)
 
 $(plugin "Quote")
 
-instance Module QuoteModule () where
+instance Module QuoteModule where
     moduleCmds _           = ["slap", "smack"]
     moduleHelp _ _         = "slap <nick>. Slap someone amusingly."
     process _ msg _ _ rest = ios $ slapRandom (if rest == "me" then sender else rest)

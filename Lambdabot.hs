@@ -1,5 +1,5 @@
 {-# LANGUAGE CPP, ExistentialQuantification, FlexibleContexts,
-  FunctionalDependencies, GeneralizedNewtypeDeriving, MultiParamTypeClasses,
+  TypeFamilies, GeneralizedNewtypeDeriving, MultiParamTypeClasses,
   PatternGuards, RankNTypes, TypeOperators, ScopedTypeVariables #-}
 -- | The guts of lambdabot.
 --
@@ -350,19 +350,22 @@ flushModuleState = do
 -- | The Module type class.
 -- Minimal complete definition: @moduleHelp@, @moduleCmds@, and
 -- either @process@ or @process_@
-class Module m s | m -> s where
+class Module m where
+    type ModuleState m
+    type ModuleState m = ()
+    
     -- | If the module wants its state to be saved, this function should
     --   return a Serial.
     --
     --   The default implementation returns Nothing.
-    moduleSerialize :: m -> Maybe (Serial s)
+    moduleSerialize :: m -> Maybe (Serial (ModuleState m))
 
     -- | If the module maintains state, this method specifies the default state
     --   (for example in case the state can't be read from a state).
     --
     --   The default implementation returns an error and assumes the state is
     --   never accessed.
-    moduleDefState  :: m -> LB s
+    moduleDefState  :: m -> LB (ModuleState m)
 
     -- | Is the module sticky? Sticky modules (as well as static ones) can't be
     --   unloaded. By default, modules are not sticky.
@@ -378,10 +381,10 @@ class Module m s | m -> s where
     modulePrivs     :: m -> [String]
 
     -- | Initialize the module. The default implementation does nothing.
-    moduleInit      :: m -> ModuleT s LB ()
+    moduleInit      :: m -> ModuleT (ModuleState m) LB ()
 
     -- | Finalize the module. The default implementation does nothing.
-    moduleExit      :: m -> ModuleT s LB ()
+    moduleExit      :: m -> ModuleT (ModuleState m) LB ()
 
     -- | Process a command a user sent, the resulting string is draw in
     -- some fashion. If the `process' function doesn't exist, we catch
@@ -395,7 +398,7 @@ class Module m s | m -> s where
         -> Msg.Nick                         -- ^ target
         -> String                           -- ^ command
         -> String                           -- ^ the arguments to the command
-        -> ModuleLB s                       -- ^ maybe output
+        -> ModuleLB (ModuleState m)         -- ^ maybe output
 
     -- | Process contextual input. A plugin that implements 'contextual'
     -- is able to respond to text not part of a normal command.
@@ -404,7 +407,7 @@ class Module m s | m -> s where
         -> a                                -- ^ the message
         -> Msg.Nick                         -- ^ target
         -> String                           -- ^ the text
-        -> ModuleLB s                       -- ^ maybe output
+        -> ModuleLB (ModuleState m)         -- ^ maybe output
 
     -- | Like process, but uncommonly used args are ignored
     -- Lambdabot will attempt to run process first, and then fall back
@@ -412,13 +415,13 @@ class Module m s | m -> s where
     --
     process_ :: m                           -- ^ phantom
              -> String -> String            -- ^ command, args
-             -> ModuleLB s                  -- ^ maybe output
+             -> ModuleLB (ModuleState m)    -- ^ maybe output
 
     -- A bytestring version
     --
     fprocess_ :: m                        -- ^ phantom
               -> ByteString -> ByteString -- ^ command, args
-              -> ModuleF s                -- ^ maybe output
+              -> ModuleF (ModuleState m)  -- ^ maybe output
 
 ------------------------------------------------------------------------
 
@@ -436,9 +439,9 @@ class Module m s | m -> s where
 
 -- | An existential type holding a module, used to represent modules on
 -- the value level, for manipluation at runtime by the dynamic linker.
-data MODULE = forall m s. (Module m s) => MODULE m
+data MODULE = forall m. Module m => MODULE m
 
-data ModuleRef = forall m s. (Module m s) => ModuleRef m (MVar s) String
+data ModuleRef = forall m s. Module m => ModuleRef m (MVar (ModuleState m)) String
 
 --
 -- | This transformer encodes the additional information a module might
@@ -481,7 +484,7 @@ type ModuleUnit s = ModuleT s LB ()
 --
 
 -- | Peristence: write the global state out
-writeGlobalState :: Module m s => m -> String -> ModuleT s LB ()
+writeGlobalState :: Module m => m -> String -> ModuleT (ModuleState m) LB ()
 writeGlobalState mod name = case moduleSerialize mod of
   Nothing  -> return ()
   Just ser -> do
@@ -491,7 +494,7 @@ writeGlobalState mod name = case moduleSerialize mod of
         Just out -> io $ P.writeFile (toFilename name) out
 
 -- | Read it in
-readGlobalState :: Module m s => m -> String -> IO (Maybe s)
+readGlobalState :: Module m => m -> String -> IO (Maybe (ModuleState m))
 readGlobalState mod name
     | Just ser <- moduleSerialize mod  = do
         state <- Just `fmap` P.readFile (toFilename name) `catch` \(_ :: SomeException) -> return Nothing
@@ -662,7 +665,7 @@ withModule :: (Ord k)
            => (IRCRWState -> Map k ModuleRef)
            -> k
            -> LB a
-           -> (forall mod s. Module mod s => mod -> ModuleT s LB a)
+           -> (forall mod. Module mod => mod -> ModuleT (ModuleState mod) LB a)
            -> LB a
 
 withModule dict modname def f = do
@@ -675,7 +678,7 @@ withModule dict modname def f = do
       _                           -> def
 
 -- | Interpret a function in the context of all modules
-withAllModules :: (forall mod s. Module mod s => mod -> ModuleT s LB a) -> LB [a]
+withAllModules :: (forall mod. Module mod => mod -> ModuleT (ModuleState mod) LB a) -> LB [a]
 withAllModules f = do
     mods <- gets $ M.elems . ircModules :: LB [ModuleRef]
     (`mapM` mods) $ \(ModuleRef m ref name) -> do

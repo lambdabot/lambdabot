@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, FlexibleInstances, MultiParamTypeClasses #-}
+{-# LANGUAGE TemplateHaskell, TypeFamilies #-}
 
 {- | Pretty-Printing echo
 
@@ -24,7 +24,9 @@ import Language.Haskell.Pretty
 
 $(plugin "Pretty")
 
-instance Module PrettyModule (String -> IO String) where
+instance Module PrettyModule where
+    type ModuleState PrettyModule = String -> IO String
+    
     moduleCmds _   = ["pretty"]
     moduleHelp _ _ = "pretty <expr>. Display haskell code in a pretty-printed manner"
     process_ _ _ r = prettyCmd r

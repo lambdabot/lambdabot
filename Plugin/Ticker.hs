@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 -- | Pull quotes down from yahoo.
 module Plugin.Ticker (theModule) where
@@ -11,7 +11,7 @@ import Text.Printf
 
 $(plugin "Ticker")
 
-instance Module TickerModule () where
+instance Module TickerModule where
     moduleCmds      _     = ["ticker", "bid"]
     moduleHelp _ s        = case s of
          "ticker" -> "ticker symbols.  Look up quotes for symbols"

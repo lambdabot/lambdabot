@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses, PatternGuards #-}
+{-# LANGUAGE TemplateHaskell, PatternGuards #-}
 -- |   The Type Module - another progressive plugin for lambdabot
 --
 -- pesco hamburg 2003-04-05
@@ -23,7 +23,7 @@ import qualified Text.Regex as R
 
 $(plugin "Type")
 
-instance Module TypeModule () where
+instance Module TypeModule where
      moduleCmds        _  = ["type", "kind"]
      moduleHelp _ "kind"  = "kind <type>. Return the kind of a type"
      moduleHelp _ _       = "type <expr>. Return the type of a value"

@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses, PatternGuards, ViewPatterns #-}
+{-# LANGUAGE TemplateHaskell, PatternGuards, ViewPatterns #-}
 -- Copyright (c) 2005 Don Stewart - http://www.cse.unsw.edu.au/~dons
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
 
@@ -15,7 +15,7 @@ import Control.Exception (NoMethodError(..), fromException)
 
 $(plugin "Compose")
 
-instance Module ComposeModule () where
+instance Module ComposeModule where
     moduleCmds _   = [".", "compose", "@", "?"]
     moduleHelp _ c = unlines $
                        if c `elem` ["@","?"]

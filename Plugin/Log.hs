@@ -1,5 +1,5 @@
 {-# OPTIONS_GHC -fno-warn-unused-binds #-}
-{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses, TypeSynonymInstances #-}
+{-# LANGUAGE TemplateHaskell, TypeFamilies #-}
 
 -- Copyright (c) 2004 Thomas Jaeger
 -- Copyright (c) 2005 Simon Winwood
@@ -81,7 +81,9 @@ loggers = [("PRIVMSG", msgCB ),
            ("PART",    partCB),
            ("NICK",    nickCB)]
 
-instance Module LogModule LogState where
+instance Module LogModule where
+   type ModuleState LogModule = LogState
+   
    moduleHelp   _ s = fromJust $ lookup s commands
    moduleCmds     _ = map fst commands
    moduleDefState _ = return M.empty

@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses, PatternGuards #-}
+{-# LANGUAGE TemplateHaskell, TypeFamilies, PatternGuards #-}
 -- Copyright (c) 2004-6 Don Stewart - http://www.cse.unsw.edu.au/~dons
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
 --
@@ -11,7 +11,9 @@ import qualified Text.Regex as R
 
 $(plugin "Spell")
 
-instance Module SpellModule Bool where
+instance Module SpellModule where
+    type ModuleState SpellModule = Bool
+    
     moduleCmds   _   = ["spell", "spell-all"]
     modulePrivs  _   = ["nazi-on", "nazi-off"]
     moduleHelp _ _   = "spell <word>. Show spelling of word"

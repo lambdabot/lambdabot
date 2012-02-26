@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses, TypeSynonymInstances, FlexibleInstances #-}
+{-# LANGUAGE TemplateHaskell, TypeFamilies #-}
 -- Copyright (c) 2005 Don Stewart - http://www.cse.unsw.edu.au/~dons
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
 
@@ -14,7 +14,9 @@ $(plugin "Localtime")
 type TimeMap = M.Map Msg.Nick  -- the person who's time we requested
                     [Msg.Nick] -- a list of targets waiting on this time
 
-instance Module LocaltimeModule TimeMap where
+instance Module LocaltimeModule where
+  
+  type ModuleState LocaltimeModule = TimeMap
 
   moduleHelp _ _      = "time <user>. Print a user's local time. User's client must support ctcp pings."
   moduleCmds   _      = ["time", "localtime", "localtime-reply"]

@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses #-}
+{-# LANGUAGE TemplateHaskell #-}
 ----------------------------------------------------------------------
 -- |
 -- Module      : Plugin.UnMtl
@@ -21,7 +21,7 @@ import Plugin as P
 
 $(plugin "UnMtl")
 
-instance P.Module UnMtlModule () where
+instance P.Module UnMtlModule where
     moduleCmds   _ = ["unmtl"]
     moduleHelp _ _ = "unroll mtl monads"
     process_ _ _ mtl =

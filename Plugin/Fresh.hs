@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses #-}
+{-# LANGUAGE TemplateHaskell, TypeFamilies #-}
 
 -- | Haskell project name generation
 -- semi-joke
@@ -8,7 +8,9 @@ import Plugin
 
 $(plugin "Fresh")
 
-instance Module FreshModule Integer where
+instance Module FreshModule where
+    type ModuleState FreshModule = Integer
+    
     moduleCmds      _ = ["freshname"]
     moduleHelp    _ _ = "freshname. Return a unique Haskell project name."
     moduleDefState  _ = return 0

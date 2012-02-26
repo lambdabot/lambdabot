@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 -- Copyright (c) 2006 Spencer Janssen
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
@@ -14,7 +14,7 @@ import Control.Monad (guard)
 
 $(plugin "Undo")
 
-instance Module UndoModule () where
+instance Module UndoModule where
     moduleCmds   _ = ["undo", "do"]
     moduleHelp _ "undo" = "undo <expr>\nTranslate do notation to Monad operators."
     moduleHelp _ "do" = "do <expr>\nTranslate Monad operators to do notation."

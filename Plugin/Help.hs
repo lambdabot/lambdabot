@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses, ViewPatterns #-}
+{-# LANGUAGE TemplateHaskell, ViewPatterns #-}
 -- | Provide help for plugins
 module Plugin.Help (theModule) where
 
@@ -7,7 +7,7 @@ import Control.Exception (NoMethodError(..), fromException, evaluate)
 
 $(plugin "Help")
 
-instance Module HelpModule () where
+instance Module HelpModule where
     moduleHelp _ _ = "help <command>. Ask for help for <command>. Try 'list' for all commands"
     moduleCmds   _ = ["help"]
     process_ _ cmd rest = lift $ doHelp cmd rest

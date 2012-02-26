@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses #-}
+{-# LANGUAGE TemplateHaskell #-}
 -- | The plugin-level IRC interface.
 
 module Plugin.IRC (theModule) where
@@ -17,7 +17,7 @@ import qualified Data.ByteString.Char8 as P
 
 $(plugin "IRC")
 
-instance Module IRCModule () where
+instance Module IRCModule where
     modulePrivs  _         = ["irc-connect"]
     moduleHelp _ _         = "irc-connect tag host portnum nickname userinfo.  connect to an irc server"
     process_ _ "irc-connect" rest =

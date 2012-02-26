@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses, ViewPatterns #-}
+{-# LANGUAGE TemplateHaskell, ViewPatterns #-}
 -- | Search various things, Wikipedia and google for now.
 --
 -- (c) 2005 Samuel Bronson
@@ -43,7 +43,7 @@ googleUri :: URI
 googleUri = makeUri "www.google.com" "/search"
 -- wikipediaUri = makeUri "en.wikipedia.org" "/wiki/Special:Search"
 
-instance Module SearchModule () where
+instance Module SearchModule where
     moduleHelp _ s      = case s of
          "google"    -> "google <expr>. Search google and show url of first hit"
          -- "wikipedia" -> "wikipedia <expr>. Search wikipedia and show url of first hit"

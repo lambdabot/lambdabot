@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses, GADTs #-}
+{-# LANGUAGE TemplateHaskell #-}
 -- | This module is for throwing dice for e.g. RPGs. (\@dice 3d6+2)
 
 -- Original version copyright Einar Karttunen <ekarttun@cs.helsinki.fi> 2005-04-06.
@@ -22,7 +22,7 @@ import Text.Printf
 
 $(plugin "Dice")
 
-instance Module DiceModule () where
+instance Module DiceModule where
     moduleCmds   _               = ["dice", "roll"]
     moduleHelp   _ cmd           = cmd ++ " <expr>. Throw random dice. <expr> is of the form 3d6+2."
     process      _ msg _ _  text = doDice msg text True

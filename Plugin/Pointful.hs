@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses, TypeSynonymInstances #-}
+{-# LANGUAGE TemplateHaskell, TypeFamilies #-}
 -- Undo pointfree transformations. Plugin code derived from Pl.hs.
 module Plugin.Pointful (theModule) where
 
@@ -12,7 +12,8 @@ $(plugin "Pointful")
 
 --type Pf = ModuleLB PfState
 
-instance Module PointfulModule PfState where
+instance Module PointfulModule where
+    type ModuleState PointfulModule = PfState
 
     moduleCmds _ = ["pointful","pointy","repoint","unpointless","unpl","unpf"]
 

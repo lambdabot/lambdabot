@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses, PatternGuards, TypeSynonymInstances, FlexibleInstances #-}
+{-# LANGUAGE TemplateHaskell, TypeFamilies, PatternGuards #-}
 -- Copyright (c) 2005 Donald Bruce Stewart - http://www.cse.unsw.edu.au/~dons
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
 
@@ -20,7 +20,8 @@ $(plugin "Djinn")
 type DjinnEnv = ([Decl] {- prelude -}, [Decl])
 type Decl = String
 
-instance Module DjinnModule DjinnEnv where
+instance Module DjinnModule where
+        type ModuleState DjinnModule = DjinnEnv
 
         moduleHelp _ s = case s of
             "djinn"     -> "djinn <type>.\nGenerates Haskell code from a type.\n" ++

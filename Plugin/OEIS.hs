@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses #-}
+{-# LANGUAGE TemplateHaskell #-}
 -- | Look up sequences in the Online Encyclopedia of Integer Sequences
 --   Based on the Math.OEIS library
 module Plugin.OEIS (theModule) where
@@ -9,7 +9,7 @@ import Math.OEIS
 
 $(plugin "OEIS")
 
-instance Module OEISModule () where
+instance Module OEISModule where
     moduleCmds   _     = ["oeis", "sequence"]
     moduleHelp _ _     = "oeis <sequence>. Look up a sequence in the Online Encyclopedia of Integer Sequences"
     process _ _ to _ a = do s <- liftIO $ lookupOEIS a

@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, CPP, MultiParamTypeClasses #-}
+{-# LANGUAGE TemplateHaskell, CPP, TypeFamilies #-}
 -- | Offline mode / RC file / -e support module.  Handles spooling lists
 -- of commands (from readline, files, or the command line) into the vchat
 -- layer.
@@ -36,7 +36,9 @@ $(plugin "OfflineRC")
 -- being used.
 type OfflineRC = ModuleT Integer LB
 
-instance Module OfflineRCModule Integer where
+instance Module OfflineRCModule where
+    type ModuleState OfflineRCModule = Integer
+    
     modulePrivs  _         = ["offline", "rc"]
     moduleHelp _ "offline" = "offline. Start a repl"
     moduleHelp _ "rc"      = "rc name. Read a file of commands (asynchonously). FIXME: better name."

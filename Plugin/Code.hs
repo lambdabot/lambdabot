@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, FlexibleInstances, MultiParamTypeClasses, PatternGuards #-}
+{-# LANGUAGE TemplateHaskell, TypeFamilies, PatternGuards #-}
 --
 -- Copyright (c) 2005-6 Don Stewart - http://www.cse.unsw.edu.au/~dons
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
@@ -13,7 +13,8 @@ import Text.Regex
 
 $(plugin "Code")
 
-instance Module CodeModule [FilePath] where
+instance Module CodeModule where
+  type ModuleState CodeModule = [FilePath]
 
   moduleDefState _ = io $ getSourceFiles $
         fptoolsPath config </> "libraries" </> "base"

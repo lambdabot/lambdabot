@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses, PatternGuards, ScopedTypeVariables, TypeSynonymInstances, FlexibleInstances #-}
+{-# LANGUAGE TemplateHaskell, TypeFamilies, PatternGuards, ScopedTypeVariables #-}
 -- | A todo list
 --
 -- (c) 2005 Samuel Bronson
@@ -13,7 +13,9 @@ $(plugin "Todo")
 -- A list of key/elem pairs with an ordering determined by its position in the list
 type TodoState = [(P.ByteString, P.ByteString)]
 
-instance Module TodoModule TodoState where
+instance Module TodoModule where
+    type ModuleState TodoModule = TodoState
+    
     moduleCmds  _ = ["todo", "todo-add"]
     modulePrivs _ = ["todo-delete"]
     moduleHelp _ s = case s of

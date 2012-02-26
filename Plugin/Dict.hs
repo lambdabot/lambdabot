@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses, PatternGuards #-}
+{-# LANGUAGE TemplateHaskell, PatternGuards #-}
 -- | DICT (RFC 2229) Lookup Module for lambdabot IRC robot.
 -- Tom Moertel <tom@moertel.com>
 module Plugin.Dict (theModule) where
@@ -10,7 +10,7 @@ $(plugin "Dict")
 
 -- | This is the module handler.  Here we process commands from users.
 
-instance Module DictModule () where
+instance Module DictModule where
     moduleHelp _ _ = getHelp []
     moduleCmds _   = "dict" : "dict-help" : dictNames
 

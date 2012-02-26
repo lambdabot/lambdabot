@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses #-}
+{-# LANGUAGE TemplateHaskell #-}
 {- | A module to output the instances of a typeclass.
      Some sample input\/output:
 
@@ -29,7 +29,7 @@ type ModuleName = String
 
 $(plugin "Instances")
 
-instance Module InstancesModule () where
+instance Module InstancesModule where
     moduleCmds _ = map fst help
     moduleHelp _ = fromJust . flip lookup help
     process_ _ "instances"           cls  = lift $ fetchInstances cls

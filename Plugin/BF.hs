@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses #-}
+{-# LANGUAGE TemplateHaskell #-}
 -- Copyright (c) 2006 Jason Dagit - http://www.codersbase.com/
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
 
@@ -10,7 +10,7 @@ import Plugin
 
 $(plugin "BF")
 
-instance Module BFModule () where
+instance Module BFModule where
     moduleCmds   _     = ["bf"]
     moduleHelp _ _     = "bf <expr>. Evaluate a brainf*ck expression"
     process _ _ to _ s = ios80 to (bf s)

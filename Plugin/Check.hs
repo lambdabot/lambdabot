@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses #-}
+{-# LANGUAGE TemplateHaskell #-}
 -- Copyright (c) 6 DonStewart - http://www.cse.unsw.edu.au/~dons
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
 
@@ -11,7 +11,7 @@ import Lambdabot.Parser
 
 $(plugin "Check")
 
-instance Module CheckModule () where
+instance Module CheckModule where
     moduleCmds   _     = ["check"]
     moduleHelp _ _     = "check <expr>\nYou have QuickCheck and 3 seconds. Prove something."
     process _ _ to _ s = ios80 to (check s)

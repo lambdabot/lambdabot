@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, FlexibleInstances, MultiParamTypeClasses #-}
+{-# LANGUAGE TemplateHaskell, TypeFamilies #-}
 
 -- | Talk to hot chixxors.
 
@@ -21,7 +21,9 @@ import Plugin
 
 $(plugin "Vixen")
 
-instance Module VixenModule (Bool, String -> IO String) where
+instance Module VixenModule where
+    type ModuleState VixenModule = (Bool, String -> IO String)
+    
     moduleCmds   _   = ["vixen"]
     modulePrivs  _   = ["vixen-on", "vixen-off"] -- could be noisy
     moduleHelp _ _   = "vixen <phrase>. Sergeant Curry's lonely hearts club"

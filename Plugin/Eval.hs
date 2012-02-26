@@ -1,5 +1,5 @@
 
-{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses, PatternGuards #-}
+{-# LANGUAGE TemplateHaskell, PatternGuards #-}
 -- Copyright (c) 2004-6 Donald Bruce Stewart - http://www.cse.unsw.edu.au/~dons
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
 
@@ -20,7 +20,7 @@ import Control.Exception (try, SomeException)
 
 $(plugin "Plugs")
 
-instance Module PlugsModule () where
+instance Module PlugsModule where
     moduleCmds   _             = ["run","let","undefine"]
     moduleHelp _ "let"         = "let <x> = <e>. Add a binding"
     moduleHelp _ "undefine"    = "undefine. Reset evaluator local bindings"

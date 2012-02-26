@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses #-}
+{-# LANGUAGE TemplateHaskell #-}
 -- Copyright (c) 2006 Don Stewart - http://www.cse.unsw.edu.au/~dons
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
 --
@@ -11,7 +11,7 @@ import Plugin
 
 $(plugin "Unlambda")
 
-instance Module UnlambdaModule () where
+instance Module UnlambdaModule where
     moduleCmds   _     = ["unlambda"]
     moduleHelp _ _     = "unlambda <expr>. Evaluate an unlambda expression"
     process _ _ to _ s = ios80 to (unlambda s)

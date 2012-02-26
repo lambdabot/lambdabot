@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses, TypeSynonymInstances, FlexibleInstances #-}
+{-# LANGUAGE TemplateHaskell, TypeFamilies #-}
 -- | Logging an IRC channel..
 module Plugin.Activity (theModule) where
 
@@ -15,7 +15,9 @@ $(plugin "Activity")
 
 type ActivityState = [(ClockTime,Msg.Nick)]
 
-instance Module ActivityModule ActivityState where
+instance Module ActivityModule where
+    type ModuleState ActivityModule = ActivityState
+    
     moduleHelp _ _              = "activity seconds. Find out where/how much the bot is being used"
     moduleCmds   _              = ["activity"]
     modulePrivs  _              = ["activity-full"]

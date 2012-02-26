@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, FlexibleInstances, MultiParamTypeClasses, Rank2Types #-}
+{-# LANGUAGE TemplateHaskell, TypeFamilies, Rank2Types #-}
 -- | System module : IRC control functions
 module Plugin.System (theModule) where
 
@@ -11,7 +11,9 @@ import Control.Monad.State      (MonadState(get, put), gets)
 
 $(plugin "System")
 
-instance Module SystemModule (ClockTime, TimeDiff) where
+instance Module SystemModule where
+    type ModuleState SystemModule = (ClockTime, TimeDiff)
+    
     moduleCmds   _   = M.keys syscmds
     modulePrivs  _   = M.keys privcmds
     moduleHelp _ s   = fromMaybe defaultHelp (M.lookup s $ syscmds `M.union` privcmds)
@@ -123,7 +125,7 @@ listModule s = withModule ircModules s fromCommand printProvides
         (return $ "No module \""++s++"\" loaded") printProvides
 
     -- ghc now needs a type annotation here
-    printProvides :: (forall mod s. Module mod s => mod -> ModuleT s LB String)
+    printProvides :: (forall mod. Module mod => mod -> ModuleT (ModuleState mod) LB String)
     printProvides m = do
         let cmds = moduleCmds m
         privs <- gets ircPrivCommands

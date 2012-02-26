@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses #-}
+{-# LANGUAGE TemplateHaskell, TypeFamilies #-}
 
 -- | Skeletal paste support
 module Plugin.Paste (theModule) where
@@ -11,7 +11,9 @@ $(plugin "Paste")
 
 announceTarget = "#haskell" -- hmm :/
 
-instance Module PasteModule ThreadId where
+instance Module PasteModule where
+    type ModuleState PasteModule = ThreadId
+    
     moduleInit _ = do
       tid <- lbIO (\conv ->
         forkIO $ pasteListener $ conv . ircPrivmsg announceTarget . Just)

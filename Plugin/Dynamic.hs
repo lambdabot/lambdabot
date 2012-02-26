@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses #-}
+{-# LANGUAGE TemplateHaskell #-}
 -- Copyright (c) 2004-06 Don Stewart - http://www.cse.unsw.edu.au/~dons
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
 --
@@ -11,7 +11,7 @@ import Control.Monad.State
 
 $(plugin "Dynamic")
 
-instance Module DynamicModule () where
+instance Module DynamicModule where
 
     moduleSticky _ = True
     moduleHelp _ _ = "An interface to dynamic linker"

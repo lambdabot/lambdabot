@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses #-}
+{-# LANGUAGE TemplateHaskell, TypeFamilies #-}
 
 -- Copyright (c) 2005 Stefan Wehr (http://www.stefanwehr.de)
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
@@ -113,7 +113,8 @@ withRepos = accessorMS $ \s -> (dpw_repos s, \t -> s { dpw_repos = t })
 -- The plugin itself
 --
 
-instance Module DarcsPatchWatchModule DarcsPatchWatchState where
+instance Module DarcsPatchWatchModule where
+    type ModuleState DarcsPatchWatchModule = DarcsPatchWatchState
 
     moduleCmds  _ = ["repos", "repo-add", "repo-del"]
 

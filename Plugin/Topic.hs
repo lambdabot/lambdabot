@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses #-}
+{-# LANGUAGE TemplateHaskell #-}
 -- | The Topic plugin is an interface for messing with the channel topic.
 --   It can alter the topic in various ways and keep track of the changes.
 --   The advantage of having the bot maintain the topic is that we get an
@@ -50,7 +50,7 @@ commands = M.fromList [(alias, cmd) | cmd <- cmds, alias <- commandAliases cmd]
               (alterListTopic (\_ _ -> []))
             ]
 
-instance Module TopicModule () where
+instance Module TopicModule where
   moduleHelp _ s = case words s of
     [cmd] -> "@" ++ s ++ " -- " ++ commandHelp (commands M.! cmd)
     _     -> "Are you typing with your feet?"

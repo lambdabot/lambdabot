@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses, PatternGuards, TypeSynonymInstances, FlexibleInstances, ViewPatterns #-}
+{-# LANGUAGE TemplateHaskell, TypeFamilies, PatternGuards, ViewPatterns #-}
 -- | Lambdabot base module. Controls message send and receive
 module Plugin.Base (theModule) where
 
@@ -26,7 +26,9 @@ $(plugin "Base")
 type BaseState = GlobalPrivate () ()
 type Base a = ModuleT BaseState LB a
 
-instance Module BaseModule BaseState where
+instance Module BaseModule where
+    type ModuleState BaseModule = BaseState
+    
     moduleDefState  _ = return $ mkGlobalPrivate 20 ()
     moduleInit _ = do
              ircSignalConnect "PING"    doPING

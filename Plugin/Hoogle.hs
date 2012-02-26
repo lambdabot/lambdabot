@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses, TypeSynonymInstances, FlexibleInstances #-}
+{-# LANGUAGE TemplateHaskell, TypeFamilies #-}
 
 -- Copyright (c) 2004-5 Don Stewart - http://www.cse.unsw.edu.au/~dons
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
@@ -12,7 +12,9 @@ $(plugin "Hoogle")
 
 type HoogleState = [String]
 
-instance Module HoogleModule HoogleState where
+instance Module HoogleModule where
+    type ModuleState HoogleModule = HoogleState
+    
     moduleDefState _ = return []
     moduleCmds   _ = ["hoogle", "hoogle+"]
     moduleHelp _ _ = "hoogle <expr>. Haskell API Search for either names, or types."

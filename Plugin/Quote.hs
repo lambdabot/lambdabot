@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, CPP, MultiParamTypeClasses, PatternGuards, TypeSynonymInstances, FlexibleInstances #-}
+{-# LANGUAGE TemplateHaskell, CPP, TypeFamilies, PatternGuards #-}
 -- | Support for quotes
 module Plugin.Quote (theModule) where
 
@@ -14,7 +14,9 @@ $(plugin "Quote")
 type Key    = P.ByteString
 type Quotes = M.Map Key [P.ByteString]
 
-instance Module QuoteModule Quotes where
+instance Module QuoteModule where
+    type ModuleState QuoteModule = Quotes
+    
     moduleCmds           _ = ["quote", "remember", "forget", "ghc", "fortune"
                              ,"yow","arr","yarr","keal","b52s","brain","palomer"
                              ,"girl19", "v", "yhjulwwiefzojcbxybbruweejw"

@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses #-}
+{-# LANGUAGE TemplateHaskell #-}
 -- Copyright (c) 2005-6 Don Stewart - http://www.cse.unsw.edu.au/~dons
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
 
@@ -11,7 +11,7 @@ import Data.Version (showVersion)
 
 $(plugin "Version")
 
-instance Module VersionModule () where
+instance Module VersionModule where
     moduleCmds   _ = ["version"]
     moduleHelp _ _ = "version/source. Report the version " ++
                      "and darcs repo of this bot"

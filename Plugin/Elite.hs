@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses #-}
+{-# LANGUAGE TemplateHaskell #-}
 -- (c) Josef Svenningsson, 2005
 -- Licence: No licence, public domain
 
@@ -14,7 +14,7 @@ import Control.Monad.State
 
 $(plugin "Elite")
 
-instance Module EliteModule () where
+instance Module EliteModule where
     moduleCmds _   = ["elite", "leet", "l33t", "1337"]
     moduleHelp _ _ = "elite <phrase>. Translate English to elitespeak"
     process_ _ _ args = ios $

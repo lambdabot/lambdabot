@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses, TypeSynonymInstances, FlexibleInstances #-}
+{-# LANGUAGE TemplateHaskell, TypeFamilies #-}
 -- Copyright (c) 2004 Thomas Jaeger
 -- Copyright (c) 2005-6 Don Stewart - http://www.cse.unsw.edu.au/~dons
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
@@ -139,7 +139,9 @@ instance Binary UserStatus where
 -- reboots anymore :/
 --
 
-instance Module SeenModule SeenState where
+instance Module SeenModule where
+    type ModuleState SeenModule = SeenState
+    
     moduleHelp _ "seen"  = "seen <user>. Report if a user has been seen by the bot"
     moduleHelp _ "users" = "users [chan]. Report the maximum number of users seen in a channel, and active users in the last 30 minutes"
     moduleCmds _         = ["users","seen"]

@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses, TypeSynonymInstances, FlexibleInstances #-}
+{-# LANGUAGE TemplateHaskell, TypeFamilies #-}
 -- Plugin.Source
 -- Display source for specified identifiers
 module Plugin.Source (theModule) where
@@ -13,7 +13,9 @@ $(plugin "Source")
 
 type Env = M.Map ByteString ByteString
 
-instance Module SourceModule Env where
+instance Module SourceModule where
+    type ModuleState SourceModule = Env
+    
     moduleCmds _     = ["src"]
     moduleHelp _ _   = help
 

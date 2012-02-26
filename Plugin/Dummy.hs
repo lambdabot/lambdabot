@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses #-}
+{-# LANGUAGE TemplateHaskell #-}
 -- | Simple template module
 -- Contains many constant bot commands.
 module Plugin.Dummy (theModule) where
@@ -12,7 +12,7 @@ import qualified Data.ByteString.Char8 as P
 
 $(plugin "Dummy")
 
-instance Module DummyModule () where
+instance Module DummyModule where
 
   moduleCmds   _ = "eval" : "choose" : map fst dummylst
 

@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses, TypeSynonymInstances, FlexibleInstances #-}
+{-# LANGUAGE TemplateHaskell, TypeFamilies #-}
 -- | Support for more(1) buffering
 module Plugin.More (theModule) where
 
@@ -11,7 +11,9 @@ $(plugin "More")
 type MoreState = GlobalPrivate () [String]
 
 -- the @more state is handled centrally
-instance Module MoreModule MoreState where
+instance Module MoreModule where
+    type ModuleState MoreModule = MoreState
+    
     moduleHelp _ _              = "@more. Return more output from the bot buffer."
     moduleCmds   _              = ["more"]
     moduleDefState _            = return $ mkGlobalPrivate 20 ()

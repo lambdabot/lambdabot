@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses, TypeSynonymInstances, FlexibleInstances #-}
+{-# LANGUAGE TemplateHaskell, TypeFamilies #-}
 -- | Karma
 module Plugin.Karma (theModule) where
 
@@ -13,7 +13,9 @@ $(plugin "Karma")
 type KarmaState = M.Map Msg.Nick Integer
 type Karma m a = ModuleT KarmaState m a
 
-instance Module KarmaModule KarmaState where
+instance Module KarmaModule where
+    
+    type ModuleState KarmaModule = KarmaState
 
     moduleCmds _ = ["karma", "karma+", "karma-", "karma-all"]
     moduleHelp _ "karma"     = "karma <polynick>. Return a person's karma value"

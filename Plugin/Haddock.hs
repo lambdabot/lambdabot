@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses, TypeSynonymInstances, FlexibleInstances #-}
+{-# LANGUAGE TemplateHaskell, TypeFamilies #-}
 -- | Hackish Haddock module.
 module Plugin.Haddock (theModule) where
 
@@ -12,7 +12,9 @@ $(plugin "Haddock")
 
 type HaddockState = M.Map ByteString [ByteString]
 
-instance Module HaddockModule HaddockState where
+instance Module HaddockModule where
+    type ModuleState HaddockModule = HaddockState
+    
     moduleCmds      _ = ["index"]
     moduleHelp    _ _ = "index <ident>. Returns the Haskell modules in which <ident> is defined"
     moduleDefState  _ = return M.empty

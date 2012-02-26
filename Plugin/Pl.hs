@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses, TypeSynonymInstances, FlexibleInstances #-}
+{-# LANGUAGE TemplateHaskell, TypeFamilies #-}
 
 -- | Pointfree programming fun
 --
@@ -36,7 +36,8 @@ $(plugin "Pl")
 
 type Pl = ModuleLB PlState
 
-instance Module PlModule PlState where
+instance Module PlModule where
+    type ModuleState PlModule = PlState
 
     moduleCmds _   = ["pointless","pl-resume","pl"]
 

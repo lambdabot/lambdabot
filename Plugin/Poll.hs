@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses, TypeSynonymInstances, FlexibleInstances #-}
+{-# LANGUAGE TemplateHaskell, TypeFamilies #-}
 -- | Module: Vote
 -- | Support for voting
 -- |
@@ -47,7 +47,9 @@ voteSerial = Serial (Just . showPacked) (Just . readPacked)
 
 ------------------------------------------------------------------------
 
-instance Module VoteModule VoteState where
+instance Module VoteModule where
+    type ModuleState VoteModule = VoteState
+    
     moduleCmds     _ = ["poll-list"
                        ,"poll-show"
                        ,"poll-add"

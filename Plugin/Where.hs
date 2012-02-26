@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses, TypeSynonymInstances, FlexibleInstances #-}
+{-# LANGUAGE TemplateHaskell, TypeFamilies #-}
 
 -- |
 -- Module    : Where
@@ -21,7 +21,8 @@ type WhereState         = M.Map P.ByteString P.ByteString
 type WhereWriter        = WhereState -> LB ()
 -- type Where m a          = ModuleT WhereState m a
 
-instance Module WhereModule WhereState where
+instance Module WhereModule where
+  type ModuleState WhereModule = WhereState
 
   moduleCmds _ = ["where", "url", "what", "where+" ]
   moduleHelp _ s = case s of

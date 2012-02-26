@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses, TypeSynonymInstances, FlexibleInstances #-}
+{-# LANGUAGE TemplateHaskell, TypeFamilies #-}
 {- Leave a message with lambdabot, the faithful secretary
 
 > 17:11 < davidhouse> @tell dmhouse foo
@@ -72,7 +72,9 @@ type Telling a   = ModuleT NoticeBoard LB a
 
 $(plugin "Tell")
 
-instance Module TellModule NoticeBoard where
+instance Module TellModule where
+    type ModuleState TellModule = NoticeBoard
+    
     moduleCmds      _ = ["tell", "ask", "messages", "messages-loud", "messages?", "clear-messages"]
     modulePrivs     _ = ["print-notices", "purge-notices"]
     moduleHelp      _ = fromJust . flip lookup help
