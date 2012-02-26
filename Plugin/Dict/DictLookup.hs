@@ -19,7 +19,7 @@ module Plugin.Dict.DictLookup ( simpleDictLookup, QueryConfig(..), LookupResult)
 
 import Data.List
 import System.IO
-import Control.OldException (handle)
+import Control.Exception (SomeException, handle)
 import Network
 
 data QueryConfig    = QC { host :: String, port :: Int }
@@ -30,7 +30,7 @@ type LookupResult   = Either String String -- Left <error> | Right <result>
 
 simpleDictLookup :: QueryConfig -> DictName -> String -> IO LookupResult
 simpleDictLookup config dictnm query =
-    handle (\e -> (return $ Left (show e))) $ do
+    handle (\e -> (return $ Left (show (e :: SomeException)))) $ do
         conn <- openDictConnection config
         result <- queryDict conn dictnm query
         closeDictConnection conn

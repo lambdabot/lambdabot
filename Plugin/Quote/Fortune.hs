@@ -1,4 +1,4 @@
-{-# LANGUAGE CPP #-}
+{-# LANGUAGE CPP, ScopedTypeVariables #-}
 
 -- | Fortune.hs, quote the fortune file
 module Plugin.Quote.Fortune where
@@ -10,7 +10,8 @@ import qualified Lambdabot.Util hiding (stdGetRandItem)
 import Data.List
 import Control.Monad
 import System.Directory
-import qualified Control.OldException as C (catch)
+import Control.Exception (SomeException, catch)
+import Prelude hiding (catch)
 
 #ifndef mingw32_HOST_OS
 --
@@ -23,8 +24,8 @@ import System.Posix (isRegularFile, getFileStatus)
 --   configured 'fortunePath' directory.
 filelist :: IO [String]
 filelist = do
-    filelist'<- C.catch (getDirectoryContents $ fortunePath config)
-                        (\_ -> return [])
+    filelist'<- catch (getDirectoryContents $ fortunePath config)
+                      (\(_ :: SomeException) -> return [])
     let files = filter (not . isSuffixOf ".dat") filelist'
     join (return (filterM isFile (map (fortunePath config ++) files)))
 
@@ -35,8 +36,8 @@ fileRandom = filelist >>= stdGetRandItem
 -- | Parse a file of fortunes into a list of the fortunes in the file.
 fortunesParse :: FilePath -> IO [String]
 fortunesParse filename = do
-    rawfs <- C.catch (readFile filename)
-                     (\_ -> return "Couldn't find fortune file")
+    rawfs <- catch (readFile filename)
+                   (\(_ :: SomeException) -> return "Couldn't find fortune file")
     return $ split "%\n" rawfs
 
 -- | Given a FilePath of a fortune file, select and return a random fortune from

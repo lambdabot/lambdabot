@@ -1,6 +1,6 @@
 {-# LANGUAGE CPP, ExistentialQuantification, FlexibleContexts,
   FunctionalDependencies, GeneralizedNewtypeDeriving, MultiParamTypeClasses,
-  PatternGuards, RankNTypes, TypeOperators #-}
+  PatternGuards, RankNTypes, TypeOperators, ScopedTypeVariables #-}
 -- | The guts of lambdabot.
 --
 -- The LB/Lambdabot monad
@@ -69,7 +69,7 @@ import Data.ByteString (ByteString)
 
 import Control.Concurrent (myThreadId, newEmptyMVar, newMVar, readMVar, putMVar,
                            takeMVar, threadDelay, MVar, ThreadId)
-import Control.OldException
+import Control.Exception
 import Control.Monad.Error (MonadError (..))
 import Control.Monad.Reader
 import Control.Monad.State
@@ -214,13 +214,13 @@ instance MonadState IRCRWState LB where
 -- so throwError and catchError "just work"
 instance MonadError IRCError LB where
   throwError (IRCRaised e)    = io $ throwIO e
-  throwError (SignalCaught e) = io $ evaluate (throwDyn $ SignalException e)
+  throwError (SignalCaught e) = io $ evaluate (throw $ SignalException e)
   m `catchError` h = lbIO $ \conv -> (conv m
-              `catchDyn` \(SignalException e) -> conv $ h $ SignalCaught e)
+              `catch` \(SignalException e) -> conv $ h $ SignalCaught e)
               `catch` \e -> conv $ h $ IRCRaised e
 
 -- A type for handling both Haskell exceptions and external signals
-data IRCError = IRCRaised Exception | SignalCaught Signal
+data IRCError = IRCRaised SomeException | SignalCaught Signal
 
 instance Show IRCError where
     show (IRCRaised    e) = show e
@@ -269,7 +269,7 @@ runIrc evcmds initialise ld plugins = withSocketsDo $ do
     -- clean up and go home
     case r of
         Left er -> do putStrLn "exception:"
-                      print er
+                      print (er :: SomeException)
                       exitWith (ExitFailure 1) -- won't happen.  exitImmediately cleans it all up
         Right _ -> exitWith ExitSuccess
 
@@ -494,10 +494,10 @@ writeGlobalState mod name = case moduleSerialize mod of
 readGlobalState :: Module m s => m -> String -> IO (Maybe s)
 readGlobalState mod name
     | Just ser <- moduleSerialize mod  = do
-        state <- Just `fmap` P.readFile (toFilename name) `catch` \_ -> return Nothing
+        state <- Just `fmap` P.readFile (toFilename name) `catch` \(_ :: SomeException) -> return Nothing
         catch (evaluate $ maybe Nothing (Just $!) (deserialize ser =<< state)) -- Monad Maybe)
               (\e -> do hPutStrLn stderr $ "Error parsing state file for: "
-                                        ++ name ++ ": " ++ show e
+                                        ++ name ++ ": " ++ show (e :: SomeException)
                         hPutStrLn stderr $ "Try removing: "++ show (toFilename name)
                         return Nothing) -- proceed regardless
     | otherwise = return Nothing

@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses, PatternGuards #-}
+{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses, PatternGuards, ViewPatterns #-}
 -- Copyright (c) 2005 Don Stewart - http://www.cse.unsw.edu.au/~dons
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
 
@@ -11,7 +11,7 @@ import Message
 
 import Control.Monad.State
 import Control.Arrow (first)
-import Control.OldException (Exception(NoMethodError))
+import Control.Exception (NoMethodError(..), fromException)
 
 $(plugin "Compose")
 
@@ -57,7 +57,7 @@ lookupP (a,b) cmd = withModule ircCommands cmd
         bindModule1 $ \str -> catchError
                     (process m a b cmd str)
                     (\ex -> case (ex :: IRCError) of
-                                (IRCRaised (NoMethodError _)) -> process_ m cmd str
+                                (IRCRaised (fromException -> Just (NoMethodError _))) -> process_ m cmd str
                                 _ -> throwError ex))
 
 

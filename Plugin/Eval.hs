@@ -16,7 +16,7 @@ import System.Directory
 import System.Exit
 import Codec.Binary.UTF8.String (decodeString)
 import qualified Data.ByteString.Char8 as P
-import Control.OldException (try)
+import Control.Exception (try, SomeException)
 
 $(plugin "Plugs")
 
@@ -123,8 +123,8 @@ comp src = do
                              ,"-Werror"
                              ,".L.hs"] Nothing
     -- cleanup, 'try' because in case of error the files are not generated
-    try $ removeFile ".L.hi"
-    try $ removeFile ".L.o"
+    try (removeFile ".L.hi") :: IO (Either SomeException ())
+    try (removeFile ".L.o")  :: IO (Either SomeException ())
 
     case (munge o', munge e') of
         ([],[]) | c /= ExitSuccess -> return "Error."

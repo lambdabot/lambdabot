@@ -1,9 +1,9 @@
-{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses #-}
+{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses, ViewPatterns #-}
 -- | Provide help for plugins
 module Plugin.Help (theModule) where
 
 import Plugin
-import Control.OldException (Exception(..), evaluate)
+import Control.Exception (NoMethodError(..), fromException, evaluate)
 
 $(plugin "Help")
 
@@ -33,8 +33,9 @@ doHelp cmd rest =
         (\md -> do
             s <- catchError (liftIO $ evaluate $ moduleHelp md arg) $ \e ->
                 case e of
-                    IRCRaised (NoMethodError _) -> return "This command is unknown."
-                    _                           -> throwError e
+                    IRCRaised (fromException -> Just (NoMethodError _)) 
+                        -> return "This command is unknown."
+                    _   -> throwError e
             return [s])
 
     where (arg:_) = words rest

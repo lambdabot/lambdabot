@@ -5,7 +5,8 @@ module Plugin.IRC (theModule) where
 
 import Control.Concurrent( forkIO, newQSem, waitQSem, threadDelay, signalQSem,
                            newEmptyMVar, putMVar, takeMVar, MVar )
-import Control.OldException
+import Control.Exception
+import Prelude hiding (catch)
 import IRCBase
 import LMain( received )
 import Message
@@ -130,7 +131,7 @@ readerLoop tag nickn sock = do
 
 sendMsg :: String -> Handle -> MVar () -> IrcMessage -> IO ()
 sendMsg tag sock mv msg =
-    catchJust ioErrors (do takeMVar mv
-                           P.hPut sock $ P.pack $ encodeMessage msg "\r\n")
-                  (\err -> do hPutStrLn stderr $ "irc[" ++ tag ++ "] error: " ++ show err
-                              hClose sock)
+    catch (do takeMVar mv
+              P.hPut sock $ P.pack $ encodeMessage msg "\r\n")
+          (\err -> do hPutStrLn stderr $ "irc[" ++ tag ++ "] error: " ++ show (err :: IOError)
+                      hClose sock)

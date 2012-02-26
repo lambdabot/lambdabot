@@ -20,7 +20,7 @@ import Test.QuickCheck
 
 import Lambdabot.Process
 import System.Directory
-import qualified Control.OldException as E
+import qualified Control.Exception as E
 
 type Location = (String, Int)
 

@@ -14,7 +14,7 @@ import Control.Monad.State( get, gets, put )
 import Control.Concurrent( forkIO )
 import Control.Concurrent.MVar( readMVar )
 import Lambdabot.Error( finallyError )
-import Control.OldException ( evaluate )
+import Control.Exception ( evaluate )
 
 import Config
 

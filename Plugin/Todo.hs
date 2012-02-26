@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses, PatternGuards, ScopedTypeVariables, PatternSignatures, TypeSynonymInstances, FlexibleInstances #-}
+{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses, PatternGuards, ScopedTypeVariables, TypeSynonymInstances, FlexibleInstances #-}
 -- | A todo list
 --
 -- (c) 2005 Samuel Bronson

@@ -1,5 +1,4 @@
-{-# OPTIONS_GHC -fglasgow-exts #-} -- fix this later
-{-# LANGUAGE FlexibleInstances, PatternGuards #-}
+{-# LANGUAGE FlexibleInstances, PatternGuards, ScopedTypeVariables #-}
 
 -- | This marvellous module contributed by Thomas J\344ger
 module Plugin.Pl.RuleLib

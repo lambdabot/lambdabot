@@ -10,12 +10,15 @@
 -- Here's where we do that.
 module Lambdabot.Signals where
 
-#ifdef mingw32_HOST_OS
 import Data.Typeable
+import Control.Exception (Exception)
 import Control.Monad.Error
+
+#ifdef mingw32_HOST_OS
 
 type Signal = String
 newtype SignalException = SignalException Signal deriving Typeable
+instance Exception SignalException
 
 ircSignalMessage :: Signal -> [Char]
 ircSignalMessage s = s
@@ -27,18 +30,14 @@ withIrcSignalCatch m = m
 import Lambdabot.Error
 import Lambdabot.Util
 
-import Data.Typeable
-
 import Control.Concurrent (myThreadId, newEmptyMVar, putMVar, MVar, ThreadId)
-import Control.OldException (throwDynTo)
-import Control.Monad.Error
+import Control.Exception (throwTo)
 
 import System.IO.Unsafe
 import System.Posix.Signals
 
--- A new type for the SignalException, must be Typeable so we can make a
--- dynamic exception out of it.
-newtype SignalException = SignalException Signal deriving Typeable
+newtype SignalException = SignalException Signal deriving (Show, Typeable)
+instance Exception SignalException
 
 --
 -- A bit of sugar for installing a new handler
@@ -99,7 +98,7 @@ ircSignalHandler threadid s
   = CatchOnce $ do
         putMVar catchLock ()
         releaseSignals
-        throwDynTo threadid $ SignalException s
+        throwTo threadid $ SignalException s
 
 --
 -- | Release all signal handlers
