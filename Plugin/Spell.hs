@@ -33,10 +33,10 @@ instance Module SpellModule where
         if alive then liftIO $ spellingNazi txt
                  else return []
 
-on :: ModuleUnit Bool
+on :: Spell ()
 on  = writeMS True
 
-off :: ModuleUnit Bool
+off :: Spell ()
 off = writeMS False
 
 binary :: String

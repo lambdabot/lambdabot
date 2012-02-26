@@ -20,7 +20,7 @@ import Plugin
 
 import Language.Haskell.Parser
 import Language.Haskell.Syntax hiding (Module)
-import Language.Haskell.Pretty
+import Language.Haskell.Pretty hiding (Pretty)
 
 $(plugin "Pretty")
 
@@ -33,7 +33,7 @@ instance Module PrettyModule where
 
 ------------------------------------------------------------------------
 
-prettyCmd :: String -> ModuleLB (String -> IO String)
+prettyCmd :: String -> Pretty [String]
 prettyCmd rest =
     let code = dropWhile (`elem` " \t>") rest
         modPrefix1 = "module Main where "

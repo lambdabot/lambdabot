@@ -57,7 +57,7 @@ privcmds = M.fromList [
 defaultHelp :: String
 defaultHelp = "system : irc management"
 
-doSystem :: Message.Message a => a -> Message.Nick -> [Char] -> [Char] -> ModuleLB (ClockTime, TimeDiff)
+doSystem :: Message.Message a => a -> Message.Nick -> [Char] -> [Char] -> System [String]
 doSystem msg target cmd rest = get >>= \s -> case cmd of
   "listchans"   -> return [pprKeys (ircChannels s)]
   "listmodules" -> return [pprKeys (ircModules s) ]
@@ -125,7 +125,7 @@ listModule s = withModule ircModules s fromCommand printProvides
         (return $ "No module \""++s++"\" loaded") printProvides
 
     -- ghc now needs a type annotation here
-    printProvides :: (forall mod. Module mod => mod -> ModuleT (ModuleState mod) LB String)
+    printProvides :: (forall mod. Module mod => mod -> ModuleT mod LB String)
     printProvides m = do
         let cmds = moduleCmds m
         privs <- gets ircPrivCommands

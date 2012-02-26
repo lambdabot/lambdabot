@@ -11,7 +11,6 @@ import Text.Printf
 $(plugin "Karma")
 
 type KarmaState = M.Map Msg.Nick Integer
-type Karma m a = ModuleT KarmaState m a
 
 instance Module KarmaModule where
     
@@ -64,7 +63,7 @@ instance Module KarmaModule where
 
 ------------------------------------------------------------------------
 
-tellKarma :: Msg.Message m => m -> Msg.Nick -> E.Polynick -> Karma LB [String]
+tellKarma :: Msg.Message m => m -> Msg.Nick -> E.Polynick -> Karma [String]
 tellKarma msg sender nick = do
     lookup' <- lift E.lookupMononickMap
     karma <- (sum . map snd . lookup' nick) `fmap` readMS
@@ -72,13 +71,13 @@ tellKarma msg sender nick = do
                    ," a karma of "
                    ,show karma]]
 
-listKarma :: Karma LB [String]
+listKarma :: Karma [String]
 listKarma = do
     ks <- M.toList `fmap` readMS
     let ks' = sortBy (\(_,e) (_,e') -> e' `compare` e) ks
     return $ (:[]) . unlines $ map (\(k,e) -> printf " %-20s %4d" (show k) e :: String) ks'
 
-changeKarma :: Msg.Message m => m -> Integer -> Msg.Nick -> Msg.Nick -> Karma LB [String]
+changeKarma :: Msg.Message m => m -> Integer -> Msg.Nick -> Msg.Nick -> Karma [String]
 changeKarma msg km sender nick
   | map toLower (Msg.nName nick) == "java" && km == 1 = changeKarma msg (-km) (Msg.lambdabotName msg) sender
   | sender == nick = return ["You can't change your own karma, silly."]

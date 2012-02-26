@@ -37,7 +37,7 @@ instance Module TodoModule where
         where sender = Message.packNick $ Message.nick msg
 
 -- | Print todo list
-getTodo :: Message.Message m => m -> TodoState -> String -> ModuleLB TodoState
+getTodo :: Message.Message m => m -> TodoState -> String -> Todo [String]
 getTodo msg todoList [] = return [formatTodo msg todoList]
 getTodo _ _ _           = error "@todo has no args, try @todo-add or @list todo"
 
@@ -50,13 +50,13 @@ formatTodo msg todoList =
                 zip [0..] todoList
 
 -- | Add new entry to list
-addTodo :: P.ByteString -> String -> ModuleLB TodoState
+addTodo :: P.ByteString -> String -> Todo [String]
 addTodo sender rest = do
     modifyMS (++[(P.pack rest, sender)])
     return ["Entry added to the todo list"]
 
 -- | Delete an entry from the list
-delTodo :: String -> ModuleLB TodoState
+delTodo :: String -> Todo [String]
 delTodo rest
     | Just n <- readM rest = withMS $ \ls write -> case () of
       _ | null ls -> return ["Todo list is empty"]

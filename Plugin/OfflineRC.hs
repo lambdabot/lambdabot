@@ -31,12 +31,10 @@ addHistory _ = return ()
 
 $(plugin "OfflineRC")
 
--- We need to track the number of active sourcings so that we can
--- unregister the server (-> allow the bot to quit) when it is not
--- being used.
-type OfflineRC = ModuleT Integer LB
-
 instance Module OfflineRCModule where
+    -- We need to track the number of active sourcings so that we can
+    -- unregister the server (-> allow the bot to quit) when it is not
+    -- being used.
     type ModuleState OfflineRCModule = Integer
     
     modulePrivs  _         = ["offline", "rc"]
@@ -59,13 +57,13 @@ instance Module OfflineRCModule where
                                 lift $ liftLB forkIO act
                                 return []
 
-onInit :: ModuleT Integer LB ()
+onInit :: OfflineRC ()
 onInit = do st <- get
             put (st { ircOnStartupCmds = [] })
             let cmds = ircOnStartupCmds st
             lockRC >> finallyError (mapM_ feed cmds) unlockRC
 
-feed :: String -> ModuleT Integer LB ()
+feed :: String -> OfflineRC ()
 feed msg = let msg' = case msg of '>':xs -> cmdPrefix ++ "run " ++ xs
                                   '!':xs -> xs
                                   _      -> cmdPrefix ++ dropWhile (== ' ') msg

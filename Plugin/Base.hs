@@ -24,7 +24,6 @@ commands  = commandPrefixes config
 $(plugin "Base")
 
 type BaseState = GlobalPrivate () ()
-type Base a = ModuleT BaseState LB a
 
 instance Module BaseModule where
     type ModuleState BaseModule = BaseState

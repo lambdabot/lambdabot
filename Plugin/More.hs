@@ -26,7 +26,7 @@ instance Module MoreModule where
             Just ls -> do mapM_ (lift . ircPrivmsg' target) =<< moreFilter target ls
                           return []       -- special
 
-moreFilter :: Nick -> [String] -> ModuleLB MoreState
+moreFilter :: Nick -> [String] -> More [String]
 moreFilter target msglines = do
     let (morelines, thislines) = case drop (maxLines+2) msglines of
           [] -> ([],msglines)

@@ -85,7 +85,7 @@ help = "quote <nick>\nremember <nick> <quote>\n" ++
 -- use by @quote
 
 -- error handling!
-runRemember :: String -> ModuleLB Quotes
+runRemember :: String -> Quote [String]
 runRemember str
     | null rest = return ["Incorrect arguments to quote"]
     | otherwise = withMS $ \fm writer -> do
@@ -99,7 +99,7 @@ runRemember str
         q         = tail rest
 
 -- @forget, to remove a quote
-runForget :: String -> ModuleLB Quotes
+runForget :: String -> Quote [String]
 runForget str
     | null rest = return ["Incorrect arguments to quote"]
     | otherwise = withMS $ \fm writer -> do
@@ -116,7 +116,7 @@ runForget str
 --
 --  the @quote command, takes a user nm to choose a random quote from
 --
-runQuote :: String -> ModuleLB Quotes
+runQuote :: String -> Quote [String]
 runQuote str = do
     st <- readMS
     io (search (P.pack nm) (P.pack pat) st)

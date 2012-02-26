@@ -66,7 +66,6 @@ data StopWatch = Stopped !TimeDiff
 type SeenState = (MaxMap, SeenMap)
 type SeenMap   = M.Map Nick UserStatus
 type MaxMap    = M.Map String Int
-type Seen m a  = ModuleT SeenState m a
 
 ------------------------------------------------------------------------
 
@@ -397,7 +396,7 @@ unUserMode nick = G.Nick (G.nTag nick) (dropWhile (`elem` "@+") $ G.nName nick)
 withSeenFM :: G.Message a
            => (a -> SeenMap -> ClockTime -> Nick -> Either String SeenMap)
            -> a
-           -> Seen LB ()
+           -> Seen ()
 
 withSeenFM f msg = do
     let nick = G.packNick . lcNick . G.nick $ msg

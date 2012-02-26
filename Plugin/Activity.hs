@@ -35,7 +35,7 @@ instance Module ActivityModule where
       where obscure nm | cmd == "activity-full" || isPrefixOf "#" (Msg.nName nm) = nm
                        | otherwise = Msg.readNick msg "private"
 
-activityFilter :: Msg.Nick -> [String] -> ModuleLB ActivityState
+activityFilter :: Msg.Nick -> [String] -> ModuleLB ActivityModule
 activityFilter target lns = do io $ evaluate $ foldr seq () $ map (foldr seq ()) $ lns
                                withMS $ \ st wr -> do
                                  now <- io getClockTime

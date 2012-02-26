@@ -68,7 +68,6 @@ data Note        = Note { noteSender   :: Nick,
 --   messages themselves)
 type NoticeBoard = M.Map Nick (Maybe ClockTime, [Note])
 -- | A nicer synonym for the Tell monad.
-type Telling a   = ModuleT NoticeBoard LB a
 
 $(plugin "Tell")
 
@@ -163,7 +162,7 @@ showNote msg time note = res
                            (showNick msg $ noteSender note) action ago (noteContents note)
 
 -- | Is it less than a day since we last reminded this nick they've got messages?
-needToRemind :: Nick -> Telling Bool
+needToRemind :: Nick -> Tell Bool
 needToRemind n = do
   st  <- readMS
   now <- io getClockTime
@@ -175,7 +174,7 @@ needToRemind n = do
              Nothing                 -> True
 
 -- | Add a note to the NoticeBoard
-writeDown :: Nick -> Nick -> String -> NoteType -> Telling ()
+writeDown :: Nick -> Nick -> String -> NoteType -> Tell ()
 writeDown to from what ntype = do
   time <- io getClockTime
   let note = Note { noteSender   = from,
@@ -186,7 +185,7 @@ writeDown to from what ntype = do
                          to (Nothing, [note]))
 
 -- | Return a user's notes, or Nothing if they don't have any
-getMessages :: Message m => m -> Nick -> Telling (Maybe [String])
+getMessages :: Message m => m -> Nick -> Tell (Maybe [String])
 getMessages msg n = do
   st   <- readMS
   time <- io getClockTime
@@ -198,14 +197,14 @@ getMessages msg n = do
     Nothing -> return Nothing
 
 -- | Clear a user's messages.
-clearMessages :: Nick -> Telling ()
+clearMessages :: Nick -> Tell ()
 clearMessages n = modifyMS (M.delete n)
 
 -- * Handlers
 --
 
 -- | Execute a @tell or @ask command.
-doTell :: Message m => String -> m -> NoteType -> Telling [String]
+doTell :: Message m => String -> m -> NoteType -> Tell [String]
 doTell args msg ntype = do
   let args'     = words args
       recipient = readNick msg (head args')
@@ -218,7 +217,7 @@ doTell args msg ntype = do
   return [unEither res]
 
 -- | Remind a user that they have messages.
-doRemind :: Message m => m -> Nick -> Telling [String]
+doRemind :: Message m => m -> Nick -> Tell [String]
 doRemind msg sender = do
   ms  <- getMessages msg sender
   now <- io getClockTime

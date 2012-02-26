@@ -34,8 +34,6 @@ type PlState = GlobalPrivate () (Int, TopLevel)
 
 $(plugin "Pl")
 
-type Pl = ModuleLB PlState
-
 instance Module PlModule where
     type ModuleState PlModule = PlState
 
@@ -52,7 +50,7 @@ instance Module PlModule where
 
 ------------------------------------------------------------------------
 
-res :: Nick -> Pl
+res :: Nick -> Pl [String]
 res target = do
   d <- readPS target
   case d of
@@ -60,12 +58,12 @@ res target = do
     Just d' -> optimizeTopLevel target d'
 
 -- | Convert a string to pointfree form
-pf :: Nick -> String -> Pl
+pf :: Nick -> String -> Pl [String]
 pf target inp = case parsePF inp of
   Right d  -> optimizeTopLevel target (firstTimeout, mapTopLevel transform d)
   Left err -> return [err]
 
-optimizeTopLevel :: Nick -> (Int, TopLevel) -> Pl
+optimizeTopLevel :: Nick -> (Int, TopLevel) -> Pl [String]
 optimizeTopLevel target (to, d) = do
   let (e,decl) = getExpr d
   (e', finished) <- io $ optimizeIO to e

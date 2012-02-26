@@ -95,7 +95,7 @@ ircSignOn svr nickn ircname = do
 -- We have a main loop which reads offline commands, and synchronously
 -- interprets them.
 
-online :: String -> String -> PortID -> String -> String -> ModuleT () LB ()
+online :: String -> String -> PortID -> String -> String -> IRC ()
 online tag hostn portnum nickn ui = do
   sock <- io $ connectTo hostn portnum
   io $ hSetBuffering sock NoBuffering

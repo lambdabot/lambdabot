@@ -32,7 +32,7 @@ instance Module DiceModule where
 ----------------------------------------------------------------
 -- the IRC shim stuff
 
-doDice :: Message a => a -> String -> Bool -> ModuleLB ()
+doDice :: Message a => a -> String -> Bool -> Dice [String]
 doDice msg text printErrs = do
     result <- io (rollEm text)
     return $ case result of

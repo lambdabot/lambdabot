@@ -89,11 +89,12 @@ ios80 to what = list . io $ what >>= return . lim . encodeString . spaceOut . re
                      if null t then b else take (n-3) b ++ "..."
 
 plugin :: String -> Q [Dec]
-plugin n = sequence [typedec, fundec]
+plugin n = sequence [typedec, fundec, modtypedec]
  where
     fundec = funD themod [clause [] (normalB ([| MODULE $(conE mod) |]) ) []]
     -- typedec = newtypeD (cxt []) mod [] (normalC mod [strictType notStrict [t|()|]]) []
     typedec = dataD (cxt []) mod [] [normalC mod []] []
+    modtypedec = tySynD (mkName n) [] ([t| ModuleT  |] `appT` conT mod `appT` [t| LB|])
     themod = mkName "theModule"
     mod = mkName $ n ++ "Module"
 

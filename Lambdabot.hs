@@ -138,7 +138,7 @@ data IRCRWState = IRCRWState {
 -- When a message is recieved, the chat module is expected to call
 -- `LMain.received'.  This is not ideal.
 
-addServer :: String -> (IRC.IrcMessage -> LB ()) -> ModuleT s LB ()
+addServer :: String -> (IRC.IrcMessage -> LB ()) -> ModuleT mod LB ()
 addServer tag sendf = do
     s <- get
     let svrs = ircServerMap s
@@ -381,10 +381,10 @@ class Module m where
     modulePrivs     :: m -> [String]
 
     -- | Initialize the module. The default implementation does nothing.
-    moduleInit      :: m -> ModuleT (ModuleState m) LB ()
+    moduleInit      :: m -> ModuleUnit m
 
     -- | Finalize the module. The default implementation does nothing.
-    moduleExit      :: m -> ModuleT (ModuleState m) LB ()
+    moduleExit      :: m -> ModuleUnit m
 
     -- | Process a command a user sent, the resulting string is draw in
     -- some fashion. If the `process' function doesn't exist, we catch
@@ -398,7 +398,7 @@ class Module m where
         -> Msg.Nick                         -- ^ target
         -> String                           -- ^ command
         -> String                           -- ^ the arguments to the command
-        -> ModuleLB (ModuleState m)         -- ^ maybe output
+        -> ModuleLB m                       -- ^ maybe output
 
     -- | Process contextual input. A plugin that implements 'contextual'
     -- is able to respond to text not part of a normal command.
@@ -407,7 +407,7 @@ class Module m where
         -> a                                -- ^ the message
         -> Msg.Nick                         -- ^ target
         -> String                           -- ^ the text
-        -> ModuleLB (ModuleState m)         -- ^ maybe output
+        -> ModuleLB m                       -- ^ maybe output
 
     -- | Like process, but uncommonly used args are ignored
     -- Lambdabot will attempt to run process first, and then fall back
@@ -415,13 +415,13 @@ class Module m where
     --
     process_ :: m                           -- ^ phantom
              -> String -> String            -- ^ command, args
-             -> ModuleLB (ModuleState m)    -- ^ maybe output
+             -> ModuleLB m                  -- ^ maybe output
 
     -- A bytestring version
     --
     fprocess_ :: m                        -- ^ phantom
               -> ByteString -> ByteString -- ^ command, args
-              -> ModuleF (ModuleState m)  -- ^ maybe output
+              -> ModuleF m                -- ^ maybe output
 
 ------------------------------------------------------------------------
 
@@ -447,36 +447,36 @@ data ModuleRef = forall m s. Module m => ModuleRef m (MVar (ModuleState m)) Stri
 -- | This transformer encodes the additional information a module might
 --   need to access its name or its state.
 --
-newtype ModuleT s m a = ModuleT { moduleT :: ReaderT (MVar s, String) m a }
+newtype ModuleT mod m a = ModuleT { moduleT :: ReaderT (MVar (ModuleState mod), String) m a }
     deriving (Functor, Monad, MonadTrans, MonadIO, MonadError e, MonadState t)
 
-getRef :: Monad m => ModuleT s m (MVar s)
+getRef :: Monad m => ModuleT mod m (MVar (ModuleState mod))
 getRef  = ModuleT $ ask >>= return . fst
 
-getName :: Monad m => ModuleT s m String
+getName :: Monad m => ModuleT mod m String
 getName = ModuleT $ ask >>= return . snd
 
 -- | bind an action to the current module so it can be run from the plain
 --   `LB' monad.
-bindModule0 :: ModuleT s LB a -> ModuleT s LB (LB a)
+bindModule0 :: ModuleT mod LB a -> ModuleT mod LB (LB a)
 bindModule0 act = bindModule1 (const act) >>= return . ($ ())
 
 -- | variant of `bindModule0' for monad actions with one argument
-bindModule1 :: (a -> ModuleT s LB b) -> ModuleT s LB (a -> LB b)
+bindModule1 :: (a -> ModuleT mod LB b) -> ModuleT mod LB (a -> LB b)
 bindModule1 act = ModuleT $
     ask >>= \st -> return (\val -> runReaderT (moduleT $ act val) st)
 
 -- | variant of `bindModule0' for monad actions with two arguments
-bindModule2 :: (a -> b -> ModuleT s LB c) -> ModuleT s LB (a -> b -> LB c)
+bindModule2 :: (a -> b -> ModuleT mod LB c) -> ModuleT mod LB (a -> b -> LB c)
 bindModule2 act = bindModule1 (uncurry act) >>= return . curry
 
--- | A nicer synonym for some ModuleT stuffs
-type ModuleLB s = ModuleT s LB [String]
+-- | A nicer synonym for some ModuleT modtuffs
+type ModuleLB mod = ModuleT mod LB [String]
 
 -- | And for packed output
-type ModuleF  s = ModuleT s LB [ByteString]
+type ModuleF  mod = ModuleT mod LB [ByteString]
 
-type ModuleUnit s = ModuleT s LB ()
+type ModuleUnit mod = ModuleT mod LB ()
 
 -- ---------------------------------------------------------------------
 --
@@ -484,7 +484,7 @@ type ModuleUnit s = ModuleT s LB ()
 --
 
 -- | Peristence: write the global state out
-writeGlobalState :: Module m => m -> String -> ModuleT (ModuleState m) LB ()
+writeGlobalState :: Module m => m -> String -> ModuleUnit m
 writeGlobalState mod name = case moduleSerialize mod of
   Nothing  -> return ()
   Just ser -> do
@@ -577,7 +577,7 @@ ircUnload mod = do
 
 ------------------------------------------------------------------------
 
-ircSignalConnect :: String -> Callback -> ModuleT s LB ()
+ircSignalConnect :: String -> Callback -> ModuleT mod LB ()
 ircSignalConnect str f = do
     s <- get
     let cbs = ircCallbacks s
@@ -586,7 +586,7 @@ ircSignalConnect str f = do
         Nothing -> put (s { ircCallbacks = M.insert str [(name,f)]    cbs})
         Just fs -> put (s { ircCallbacks = M.insert str ((name,f):fs) cbs})
 
-ircInstallOutputFilter :: OutputFilter -> ModuleT s LB ()
+ircInstallOutputFilter :: OutputFilter -> ModuleT mod LB ()
 ircInstallOutputFilter f = do
     name <- getName
     modify $ \s ->
@@ -665,7 +665,7 @@ withModule :: (Ord k)
            => (IRCRWState -> Map k ModuleRef)
            -> k
            -> LB a
-           -> (forall mod. Module mod => mod -> ModuleT (ModuleState mod) LB a)
+           -> (forall mod. Module mod => mod -> ModuleT mod LB a)
            -> LB a
 
 withModule dict modname def f = do
@@ -678,7 +678,7 @@ withModule dict modname def f = do
       _                           -> def
 
 -- | Interpret a function in the context of all modules
-withAllModules :: (forall mod. Module mod => mod -> ModuleT (ModuleState mod) LB a) -> LB [a]
+withAllModules :: (forall mod. Module mod => mod -> ModuleT mod LB a) -> LB [a]
 withAllModules f = do
     mods <- gets $ M.elems . ircModules :: LB [ModuleRef]
     (`mapM` mods) $ \(ModuleRef m ref name) -> do

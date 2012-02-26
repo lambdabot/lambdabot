@@ -1,4 +1,4 @@
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE ScopedTypeVariables, TypeFamilies #-}
 -- | Support for the LB (LambdaBot) monad
 module LBState (
         -- ** Functions to access the module's state
@@ -34,28 +34,28 @@ import Message (Nick)
 -- will cause a dead-lock. However, all other possibilies to access the state
 -- that came to my mind had even more serious deficiencies such as being prone
 -- to race conditions or semantic obscurities.
-withMS :: (s -> (s -> LB ()) -> LB a) -> ModuleT s LB a
+withMS :: (ModuleState mod -> (ModuleState mod -> LB ()) -> LB a) -> ModuleT mod LB a
 withMS f = do
     ref <- getRef
     lift . lbIO $ \conv -> withMWriter ref $ \x writer ->
         conv $ f x (liftIO . writer)
 
 -- | Read the module's private state.
-readMS :: ModuleT s LB s
+readMS :: ModuleT mod LB (ModuleState mod)
 readMS = getRef >>= liftIO . readMVar
 
 -- | Produces a with-function. Needs a better name.
-accessorMS :: (s -> (t, t -> s)) ->
-  (t -> (t -> LB ()) -> LB a) -> ModuleT s LB a
+accessorMS :: (ModuleState mod -> (t, t -> ModuleState mod)) ->
+  (t -> (t -> LB ()) -> LB a) -> ModuleT mod LB a
 accessorMS decompose f = withMS $ \s writer ->
   let (t,k) = decompose s in f t (writer . k)
 
 -- | Modify the module's private state.
-modifyMS :: (s -> s) -> ModuleT s LB ()
+modifyMS :: (ModuleState mod -> ModuleState mod) -> ModuleT mod LB ()
 modifyMS f = getRef >>= liftIO . flip modifyMVar_ (return . f)
 
 -- | Write the module's private state. Try to use withMS instead.
-writeMS :: s -> ModuleT s LB ()
+writeMS :: ModuleState mod -> ModuleT mod LB ()
 writeMS (x :: s) = modifyMS . const $ x     -- need to help out 6.5
 
 -- | This datatype allows modules to conviently maintain both global
@@ -80,23 +80,26 @@ mkGlobalPrivate ms g = GP {
 
 -- Needs a better interface. The with-functions are hardly useful.
 -- | Writes private state. For now, it locks everything.
-withPS :: Nick  -- ^ The target
+withPS :: ModuleState mod ~ GlobalPrivate g p
+  => Nick  -- ^ The target
   -> (Maybe p -> (Maybe p -> LB ()) -> LB a)
     -- ^ @Just x@ writes x in the user's private state, @Nothing@ removes it.
-  -> ModuleT (GlobalPrivate g p) LB a
+  -> ModuleT mod LB a
 withPS who f = do
   mvar <- accessPS return id who
   lift . lbIO $ \conv -> withMWriter mvar $ \x writer ->
       conv $ f x (liftIO . writer)
 
 -- | Reads private state.
-readPS :: Nick -> ModuleT (GlobalPrivate g p) LB (Maybe p)
+readPS :: ModuleState mod ~ GlobalPrivate g p
+  => Nick -> ModuleT mod LB (Maybe p)
 readPS = accessPS (liftIO . readMVar) (\_ -> return Nothing)
 
 -- | Reads private state, executes one of the actions success and failure
 -- which take an MVar and an action producing a @Nothing@ MVar, respectively.
-accessPS :: (MVar (Maybe p) -> LB a) -> (LB (MVar (Maybe p)) -> LB a) -> Nick
-  -> ModuleT (GlobalPrivate g p) LB a
+accessPS :: ModuleState mod ~ GlobalPrivate g p
+  => (MVar (Maybe p) -> LB a) -> (LB (MVar (Maybe p)) -> LB a) -> Nick
+  -> ModuleT mod LB a
 accessPS success failure who = withMS $ \state writer ->
   case lookup who $ private state of
     Just mvar -> do
@@ -111,20 +114,24 @@ accessPS success failure who = withMS $ \state writer ->
       return mvar
 
 -- | Writes global state. Locks everything
-withGS :: (g -> (g -> LB ()) -> LB ()) -> ModuleT (GlobalPrivate g p) LB ()
+withGS :: ModuleState mod ~ GlobalPrivate g p
+  => (g -> (g -> LB ()) -> LB ()) -> ModuleT mod LB ()
 withGS f = withMS $ \state writer ->
   f (global state) $ \g -> writer $ state { global = g }
 
 -- | Reads global state.
-readGS :: ModuleT (GlobalPrivate g p) LB g
+readGS :: ModuleState mod ~ GlobalPrivate g p
+  => ModuleT mod LB g
 readGS = global `fmap` readMS
 
 
 -- The old interface, as we don't wanna be too fancy right now.
-writePS :: Nick -> Maybe p -> ModuleT (GlobalPrivate g p) LB ()
+writePS :: ModuleState mod ~ GlobalPrivate g p
+  => Nick -> Maybe p -> ModuleT mod LB ()
 writePS who x = withPS who (\_ writer -> writer x)
 
-writeGS :: g -> ModuleT (GlobalPrivate g p) LB ()
+writeGS :: ModuleState mod ~ GlobalPrivate g p
+  => g -> ModuleT mod LB ()
 writeGS g = withGS (\_ writer -> writer g)
 
 -- | run an IO action in another thread, with a timeout, lifted into LB
