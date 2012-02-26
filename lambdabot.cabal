@@ -1,74 +1,99 @@
-Name:                lambdabot
-Version:             4.2.3.3
-License:             GPL
-License-file:        LICENSE
-Author:              Don Stewart
-Maintainer:          Cale Gibbard <cgibbard@gmail.com>
-Category:            Development, Web
-Synopsis:            Lambdabot is a development tool and advanced IRC bot
-Description:         Lambdabot is an IRC bot written over several years by
-                     those on the #haskell IRC channel.
-                     .
-                     It operates as a command line tool, embedded in an editor,
-                     embedded in GHCi, via internet relay chat and on the web.
-Homepage:            http://haskell.org/haskellwiki/Lambdabot
+name:                   lambdabot
+version:                4.2.3.3
+license:                GPL
+license-file:           LICENSE
+author:                 Don Stewart
+maintainer:             Cale Gibbard <cgibbard@gmail.com>
+category:               Development, Web
+synopsis:               Lambdabot is a development tool and advanced IRC bot
+description:            Lambdabot is an IRC bot written over several years by
+                        those on the #haskell IRC channel.
+                        .
+                        It operates as a command line tool, embedded in an editor,
+                        embedded in GHCi, via internet relay chat and on the web.
+homepage:               http://haskell.org/haskellwiki/Lambdabot
 
-build-type:          Simple
-cabal-version:       >= 1.6
-tested-with:         GHC==6.12.1
+build-type:             Simple
+cabal-version:          >= 1.6
+tested-with:            GHC==7.4.1
 
-extra-source-files: src/Modules.hs-boot, src/Plugin/Hello.hs, src/Modules.hs
-data-files:         State/djinn, State/url, State/haddock, State/source,
-                    State/L.hs, State/seen, State/state, State/Pristine.hs,
-                    State/poll, State/quote, State/todo, State/vixen,
-                    State/fresh, State/tell, State/system, State/where,
-                    State/karma,
-                    -- Needed for @type
-                    State/imports.h,
-                    online.rc, online2.rc
+extra-source-files:     src/*.hs,
+                        src/*.hs-boot,
+                        src/Plugin/*.hs,
+                        src/Plugin/Dict/*.hs,
+                        src/Plugin/Dummy/*.hs,
+                        src/Plugin/Free/*.hs,
+                        src/Plugin/Pl/*.hs,
+                        src/Plugin/Quote/*.hs
+
+data-files:             online.rc,
+                        online2.rc,
+                        State/djinn,
+                        State/fresh,
+                        State/haddock,
+                        State/imports.h,
+                        State/karma,
+                        State/L.hs,
+                        State/poll,
+                        State/Pristine.hs,
+                        State/quote,
+                        State/seen,
+                        State/source,
+                        State/system,
+                        State/tell,
+                        State/todo,
+                        State/url,
+                        State/vixen,
+                        State/where
 
 source-repository head
-  type:     darcs
-  location: http://code.haskell.org/lambdabot
+  type:                 darcs
+  location:             http://code.haskell.org/lambdabot
 
-Library
-    build-depends: base == 4.*, mtl>2, bytestring, unix, filepath
-    hs-source-dirs:      src
-    exposed-modules: Config, IRCBase, File,
-                     LBState, LMain, Lambdabot, Message,
-                     NickEq, Plugin, Plugin.Activity, Plugin.BF,
-                     Plugin.Base, Plugin.Check, Plugin.Code, Plugin.Compose,
-                     Plugin.DarcsPatchWatch, Plugin.Dice, Plugin.Dict, Plugin.Dict.DictLookup, Plugin.Djinn,
-                     Plugin.Dummy, Plugin.Dummy.DocAssocs, Plugin.Dynamic, Plugin.Elite, Plugin.Eval,
-                     Plugin.Filter, Plugin.Free, Plugin.Free.Expr,
-                     Plugin.Free.FreeTheorem, Plugin.Free.Parse, Plugin.Free.Test, Plugin.Free.Theorem, Plugin.Free.Type,
-                     Plugin.Free.Util, Plugin.Fresh, Plugin.Haddock, Plugin.Help,
-                     Plugin.Hoogle, Plugin.IRC, Plugin.Instances, Plugin.Karma, Plugin.Localtime,
-                     Plugin.Log, Plugin.More, Plugin.OEIS, Plugin.OfflineRC,
-                     Plugin.Pl, Plugin.Pl.Common, Plugin.Pl.Names, Plugin.Pl.Optimize, Plugin.Pl.Parser,
-                     Plugin.Pl.PrettyPrinter, Plugin.Pl.RuleLib, Plugin.Pl.Rules, Plugin.Pl.Transform,
-                     Plugin.Pointful, Plugin.Poll, Plugin.Pretty, Plugin.Quote, Plugin.Quote.Fortune,
-                     Plugin.Quote.Text, Plugin.Search, Plugin.Seen, Plugin.Slap
-                     Plugin.Source, Plugin.Spell, Plugin.System, Plugin.Tell,
-                     Plugin.Ticker, Plugin.Todo, Plugin.Topic, Plugin.Type, Plugin.UnMtl,
-                     Plugin.Undo, Plugin.Unlambda, Plugin.Url, Plugin.Version, Plugin.Vixen,
-                     Plugin.Where, Shared
-    ghc-options: -fno-warn-missing-methods
-    buildable:   False
+executable lambdabot
+  hs-source-dirs:       src
+  main-is:              Main.hs
 
-Executable          lambdabot
-    Build-depends:       base == 4.*, containers, directory, pretty, parsec, old-time, random, array, network, syb,
-                         unix, mtl>2, bytestring, regex-compat, binary>0.2, haskell-src, haskell-src-exts>=0.4.8,
-                         oeis>=0.2, lambdabot-utils, show>=0.3, utf8-string, template-haskell, filepath, tagsoup, HTTP,
-                         dice,
-                         -- runtime dependencies - for eval etc.
-                         brainfuck, unlambda, template-haskell, numbers, logict>=0.4.2, IOSpec, vector-space, MonadRandom,
-                         data-memocombinators, arrows
-
-    hs-source-dirs:      src
-    Main-is:             Main.hs
-    -- For a faster build, use -Onot
-    ghc-options:         -funbox-strict-fields -fno-warn-incomplete-patterns
-                         -fno-warn-missing-methods -fno-warn-orphans
-                         -- Apparently needed to work around zombie & IRC connection issues
-                         -threaded
+  ghc-options:          -threaded
+                        -fno-warn-incomplete-patterns
+                        -fno-warn-missing-methods
+                        -fno-warn-orphans
+                        -funbox-strict-fields
+  build-depends:        base == 4.*,
+                        array,
+                        binary>0.2,
+                        bytestring,
+                        containers,
+                        dice,
+                        directory,
+                        filepath,
+                        haskell-src,
+                        haskell-src-exts>=0.4.8,
+                        HTTP,
+                        lambdabot-utils,
+                        mtl>2,
+                        network,
+                        oeis>=0.2,
+                        old-time,
+                        parsec,
+                        pretty,
+                        random,
+                        regex-compat,
+                        show>=0.3,
+                        syb,
+                        tagsoup,
+                        template-haskell,
+                        unix,
+                        utf8-string,
+                        
+                        -- runtime dependencies - for eval etc.
+                        arrows,
+                        brainfuck,
+                        data-memocombinators,
+                        IOSpec,
+                        logict>=0.4.2,
+                        MonadRandom,
+                        numbers,
+                        template-haskell,
+                        unlambda,
+                        vector-space
