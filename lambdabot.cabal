@@ -19,6 +19,7 @@ tested-with:            GHC==7.4.1
 
 extra-source-files:     src/*.hs,
                         src/*.hs-boot,
+                        src/Lambdabot/*.hs
                         src/Plugin/*.hs,
                         src/Plugin/Dict/*.hs,
                         src/Plugin/Dummy/*.hs,
@@ -70,21 +71,23 @@ executable lambdabot
                         haskell-src,
                         haskell-src-exts>=0.4.8,
                         HTTP,
-                        lambdabot-utils,
                         mtl>2,
                         network,
                         oeis>=0.2,
                         old-time,
                         parsec,
                         pretty,
+                        process,
                         random,
                         regex-compat,
+                        regex-posix,
                         show>=0.3,
                         syb,
                         tagsoup,
                         template-haskell,
                         unix,
                         utf8-string,
+                        zlib,
                         
                         -- runtime dependencies - for eval etc.
                         arrows,
