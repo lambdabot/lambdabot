@@ -17,7 +17,7 @@ build-type:          Simple
 cabal-version:       >= 1.6
 tested-with:         GHC==6.12.1
 
-extra-source-files: Modules.hs-boot, State/imports.h, Plugin/Hello.hs, Modules.hs
+extra-source-files: src/Modules.hs-boot, src/Plugin/Hello.hs, src/Modules.hs
 data-files:         State/djinn, State/url, State/haddock, State/source,
                     State/L.hs, State/seen, State/state, State/Pristine.hs,
                     State/poll, State/quote, State/todo, State/vixen,
@@ -33,6 +33,7 @@ source-repository head
 
 Library
     build-depends: base == 4.*, mtl>2, bytestring, unix, filepath
+    hs-source-dirs:      src
     exposed-modules: Config, IRCBase, File,
                      LBState, LMain, Lambdabot, Message,
                      NickEq, Plugin, Plugin.Activity, Plugin.BF,
@@ -64,10 +65,10 @@ Executable          lambdabot
                          brainfuck, unlambda, template-haskell, numbers, logict>=0.4.2, IOSpec, vector-space, MonadRandom,
                          data-memocombinators, arrows
 
+    hs-source-dirs:      src
     Main-is:             Main.hs
     -- For a faster build, use -Onot
     ghc-options:         -funbox-strict-fields -fno-warn-incomplete-patterns
                          -fno-warn-missing-methods -fno-warn-orphans
                          -- Apparently needed to work around zombie & IRC connection issues
                          -threaded
-    include-dirs:        .
