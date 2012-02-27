@@ -7,7 +7,7 @@ import Plugin
 import Lambdabot.Util
 import qualified Data.Map as M
 import qualified Data.ByteString.Char8 as P
-import Data.ByteString.Char8 (pack,ByteString)
+import Data.ByteString.Char8 (pack,unpack,ByteString)
 
 $(plugin "Source")
 
@@ -27,11 +27,11 @@ instance Module SourceModule where
             splat []   = []
             splat s    = a : splat (tail b) where (a,b) = break P.null s
 
-    fprocess_ _ _ key = readMS >>= \env -> case fetch key env of
-        _ | M.null env -> box $ pack "No source in the environment yet"
-        _ | P.null key -> box $ pack help
-        Nothing        -> box . P.pack . ("Source not found. " ++) =<< io (random insult)
-        Just s         -> box s
+    process_ _ _ key = readMS >>= \env -> case fetch (pack key) env of
+        _ | M.null env -> box "No source in the environment yet"
+        _ |   null key -> box help
+        Nothing        -> box . ("Source not found. " ++) =<< io (random insult)
+        Just s         -> box (unpack s)
 
 fetch :: ByteString -> M.Map ByteString ByteString -> Maybe ByteString
 fetch x m = M.lookup x m `mplus`

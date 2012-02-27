@@ -237,22 +237,15 @@ doPRIVMSG' myname msg target
                           else catchIrc
 
                             (do mstrs <- catchError
-                                 (Right `fmap` fprocess_ m fcmd frest)
-                                 (\ex -> case (ex :: IRCError) of -- dispatch
-                                   (IRCRaised (fromException -> Just (NoMethodError _))) ->
-                                      catchError
-                                        (Left `fmap` process m msg towhere cmd' rest)
-                                        (\ey -> case (ey :: IRCError) of -- dispatch
-                                            (IRCRaised (fromException -> Just (NoMethodError _))) ->
-                                                Left `fmap` process_ m cmd' rest
-                                            _ -> throwError ey)
-                                   _ -> throwError ex)
+                                    -- try to call 'process', if it fails call 'process_'
+                                    (process m msg towhere cmd' rest)
+                                    (\ey -> case (ey :: IRCError) of -- dispatch
+                                        (IRCRaised (fromException -> Just (NoMethodError _))) ->
+                                            process_ m cmd' rest
+                                        _ -> throwError ey)
 
-                                -- send off our strings/bytestrings
-                                case mstrs of
-                                    Right ps -> lift $ mapM_ (ircPrivmsgF towhere) ps
-
-                                    Left  ms -> lift $ mapM_ (ircPrivmsg towhere) ms)
+                                -- send off our strings
+                                lift $ mapM_ (ircPrivmsg towhere) mstrs)
 
                             (lift . ircPrivmsg towhere .
                                 (("Plugin `" ++ name' ++ "' failed with: ") ++) . show))

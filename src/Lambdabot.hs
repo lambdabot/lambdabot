@@ -417,12 +417,6 @@ class Module m where
              -> String -> String            -- ^ command, args
              -> ModuleLB m                  -- ^ maybe output
 
-    -- A bytestring version
-    --
-    fprocess_ :: m                        -- ^ phantom
-              -> ByteString -> ByteString -- ^ command, args
-              -> ModuleF m                -- ^ maybe output
-
 ------------------------------------------------------------------------
 
     contextual _ _ _ _ = return []

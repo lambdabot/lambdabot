@@ -6,7 +6,7 @@ import Plugin
 
 import qualified Data.Map as M
 import qualified Data.ByteString.Char8 as P
-import Data.ByteString.Char8 (ByteString,pack)
+import Data.ByteString.Char8 (ByteString,pack,unpack)
 
 $(plugin "Haddock")
 
@@ -19,12 +19,14 @@ instance Module HaddockModule where
     moduleHelp    _ _ = "index <ident>. Returns the Haskell modules in which <ident> is defined"
     moduleDefState  _ = return M.empty
     moduleSerialize _ = Just (readOnly readPacked)
-    fprocess_ _ _ k = readMS >>= \m -> box $ maybe
-        (pack "bzzt")
-        (P.intercalate (pack ", "))
+    process_ _ _ k'   = readMS >>= \m -> box $ maybe
+        ("bzzt")
+        (intercalate (", ") . map unpack)
         (M.lookup (stripPs k) m)
 
         where
+          k = pack k'
+          
           -- make \@index ($) work.
           stripPs :: ByteString -> ByteString
           stripPs = fst . P.spanEnd (==')') . snd . P.span (=='(')
