@@ -21,4 +21,4 @@ instance Module PointfulModule where
 
     moduleDefState _ = return $ ()
 
-    process _ _ _ _ rest = return (lines $ pointful rest)
+    process_ _ _ rest = return (lines $ pointful rest)
