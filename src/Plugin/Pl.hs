@@ -37,16 +37,23 @@ $(plugin "Pl")
 instance Module PlModule where
     type ModuleState PlModule = PlState
 
-    moduleCmds _   = ["pointless","pl-resume","pl"]
-
-    moduleHelp _ "pl-resume" = "pl-resume. Resume a suspended pointless transformation."
-    moduleHelp _ _           = "pointless <expr>. Play with pointfree code."
+    moduleCmds _ = 
+        [ (command "pointless")
+            { aliases = ["pl"]
+            , help = say "pointless <expr>. Play with pointfree code."
+            , process = \rest -> do
+                target <- getTarget
+                lift (pf target rest) >>= mapM_ say
+            }
+        , (command "pl-resume")
+            { help = say "pl-resume. Resume a suspended pointless transformation."
+            , process = \_ -> do
+                target <- getTarget
+                lift (res target) >>= mapM_ say
+            }
+        ]
 
     moduleDefState _ = return $ mkGlobalPrivate 15 ()
-
-    process _ _ target "pointless" rest = pf target rest
-    process _ _ target "pl"        rest = pf target rest
-    process _ _ target "pl-resume" _    = res target
 
 ------------------------------------------------------------------------
 

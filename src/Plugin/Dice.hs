@@ -7,7 +7,7 @@ module Plugin.Dice (theModule) where
 
 import Plugin
 
-import Lambdabot.Message
+import Lambdabot.Message (nick, nName)
 
 import Control.Monad                    (replicateM,foldM)
 import System.Random                    (Random, randomRIO)
@@ -23,17 +23,22 @@ import Text.Printf
 $(plugin "Dice")
 
 instance Module DiceModule where
-    moduleCmds   _               = ["dice", "roll"]
-    moduleHelp   _ cmd           = cmd ++ " <expr>. Throw random dice. <expr> is of the form 3d6+2."
-    process      _ msg _ _  text = doDice msg text True
-    contextual   _ msg _    text = doDice msg text False
-
+    moduleCmds _ =
+        [ (command "dice")
+            { aliases = ["roll"]
+            , help = say "@dice <expr>. Throw random dice. <expr> is of the form 3d6+2."
+            , process = \args -> do
+                user <- showNick =<< getSender
+                doDice True user args >>= mapM_ say
+            }
+        ]
+    contextual _ msg _ = doDice False (nName $ nick msg)
 
 ----------------------------------------------------------------
 -- the IRC shim stuff
 
-doDice :: Message a => a -> String -> Bool -> Dice [String]
-doDice msg text printErrs = do
+doDice :: MonadIO m => Bool -> String -> String -> m [String]
+doDice printErrs user text = do
     result <- io (rollEm text)
     return $ case result of
         Left err    -> if printErrs
@@ -43,7 +48,6 @@ doDice msg text printErrs = do
             [brk 75 (user ++ ": " ++ str)]
     
     where
-        user = nName $ nick $ msg
         trimError = concat . intersperse ": " . tail . lines . show
         brk n s | length s <= n = s
                 | otherwise     = take (n-3) s ++ "..."

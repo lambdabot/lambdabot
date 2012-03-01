@@ -21,16 +21,28 @@ import Control.Exception (try, SomeException)
 $(plugin "Plugs")
 
 instance Module PlugsModule where
-    moduleCmds   _             = ["run","let","undefine"]
-    moduleHelp _ "let"         = "let <x> = <e>. Add a binding"
-    moduleHelp _ "undefine"    = "undefine. Reset evaluator local bindings"
-    moduleHelp _ _             = "run <expr>. You have Haskell, 3 seconds and no IO. Go nuts!"
-    process _ _ to "run" s     = ios80 to (plugs s)
-    process _ _ to "let" s     = ios80 to (define s)
-    process _ _ _ "undefine" _ = do l <- io $ findFile "L.hs"
-                                    p <- io $ findFile "Pristine.hs"
-                                    io $ copyFile p l
-                                    return ["Undefined."]
+    moduleCmds _ =
+        [ (command "run")
+            { help = say "run <expr>. You have Haskell, 3 seconds and no IO. Go nuts!"
+            , process = \s -> do
+                to <- getTarget
+                ios80 to (plugs s) >>= mapM_ say
+            }
+        , (command "let")
+            { help = say "let <x> = <e>. Add a binding"
+            , process = \s -> do
+                to <- getTarget
+                ios80 to (define s) >>= mapM_ say
+            }
+        , (command "undefine")
+            { help = say "undefine. Reset evaluator local bindings"
+            , process = \s -> do
+                l <- io $ findFile "L.hs"
+                p <- io $ findFile "Pristine.hs"
+                io $ copyFile p l
+                say "Undefined."
+            }
+        ]
 
     contextual _ _ to txt
         | isEval txt = ios80 to . plugs . dropPrefix $ txt

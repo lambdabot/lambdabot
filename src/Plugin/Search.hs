@@ -44,13 +44,21 @@ googleUri = makeUri "www.google.com" "/search"
 -- wikipediaUri = makeUri "en.wikipedia.org" "/wiki/Special:Search"
 
 instance Module SearchModule where
-    moduleHelp _ s      = case s of
-         "google"    -> "google <expr>. Search google and show url of first hit"
-         -- "wikipedia" -> "wikipedia <expr>. Search wikipedia and show url of first hit"
-         "gsite"     -> "gsite <site> <expr>. Search <site> for <expr> using google"
-         "gwiki"     -> "gwiki <expr>. Search (new) haskell.org wiki for <expr> using google."
-    moduleCmds _ = map fst engines
-    process_ _ s e = lift $ searchCmd s (dropSpace e)
+    moduleCmds _ = 
+        [ (command name)
+            { help = say (moduleHelp name)
+            , process = \e -> do
+                s <- getCmdName
+                lift (lift (searchCmd s (dropSpace e))) >>= mapM_ say
+            }
+        | name <- map fst engines
+        ]
+
+moduleHelp s = case s of
+    "google"    -> "google <expr>. Search google and show url of first hit"
+    -- "wikipedia" -> "wikipedia <expr>. Search wikipedia and show url of first hit"
+    "gsite"     -> "gsite <site> <expr>. Search <site> for <expr> using google"
+    "gwiki"     -> "gwiki <expr>. Search (new) haskell.org wiki for <expr> using google."
 
 ------------------------------------------------------------------------
 

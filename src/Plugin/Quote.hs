@@ -17,66 +17,91 @@ type Quotes = M.Map Key [P.ByteString]
 instance Module QuoteModule where
     type ModuleState QuoteModule = Quotes
     
-    moduleCmds           _ = ["quote", "remember", "forget", "ghc", "fortune"
-                             ,"yow","arr","yarr","keal","b52s","brain","palomer"
-                             ,"girl19", "v", "yhjulwwiefzojcbxybbruweejw"
-                             , "protontorpedo", "nixon", "farber"]
-
-    moduleHelp _ "forget"  = "forget nick quote.  Delete a quote"
-    moduleHelp _ "fortune" = "fortune. Provide a random fortune"
-    moduleHelp _ "yow"     = "yow. The zippy man."
-    moduleHelp _ "arr"     = "arr. Talk to a pirate"
-    moduleHelp _ "yarr"    = "yarr. Talk to a pirate"
-    moduleHelp _ "keal"    = "keal. Talk like Keal"
-    moduleHelp _ "ghc"     = "ghc. Choice quotes from GHC."
-    moduleHelp _ "b52s"    = "b52s. Anyone noticed the b52s sound a lot like zippy?"
-    moduleHelp _ "brain"   = "brain. Pinky and the Brain"
-    moduleHelp _ "palomer" = "palomer. Sound a bit like palomer on a good day."
-    moduleHelp _ "protontorpedo" = "protontorpedo is silly"
-    moduleHelp _ "girl19"  = "girl19 wonders what \"discriminating hackers\" are."
-    moduleHelp _ "v"       = "let v = show v in v"
-    moduleHelp _ "yhjulwwiefzojcbxybbruweejw"
-                           = "V RETURNS!"
-    moduleHelp _ "farber"  = "Farberisms in the style of David Farber."
-    moduleHelp _ "nixon"   = "Richad Nixon's finest."
-
-    moduleHelp _ _         = help -- required
+    moduleCmds _ =
+        [ (command "quote")
+            { help = say genericHelp
+            , process = runQuote . dropSpace
+            }
+        , (command "remember")
+            { help = say genericHelp
+            , process = runRemember . dropSpace
+            }
+        , (command "forget")
+            { help = say "forget nick quote.  Delete a quote"
+            , process = runForget . dropSpace
+            }
+        , (command "ghc")
+            { help = say "ghc. Choice quotes from GHC."
+            , process = runQuote . ("ghc " ++) . dropSpace
+            }
+        , (command "fortune")
+            { help = say "fortune. Provide a random fortune"
+            , process = const (runit (randFortune Nothing))
+            }
+        , (command "yow")
+            { help = say "yow. The zippy man."
+            , process = const (runit (randFortune (Just "zippy")))
+            }
+        , (command "arr")
+            { help = say "arr. Talk to a pirate"
+            , process = const (rand arrList)
+            }
+        , (command "yarr")
+            { help = say "yarr. Talk to a pirate"
+            , process = const (rand yarrList)
+            }
+        , (command "keal")
+            { help = say "keal. Talk like Keal"
+            , process = const (rand kealList)
+            }
+        , (command "b52s")
+            { help = say "b52s. Anyone noticed the b52s sound a lot like zippy?"
+            , process = const (rand b52s)
+            }
+        , (command "brain")
+            { help = say "brain. Pinky and the Brain"
+            , process = \s -> rand (if "pondering" `isInfixOf` s then brainPondering else brain)
+            }
+        , (command "palomer")
+            { help = say "palomer. Sound a bit like palomer on a good day."
+            , process = const (rand palomer)
+            }
+        , (command "girl19")
+            { help = say "girl19 wonders what \"discriminating hackers\" are."
+            , process = const (rand girl19)
+            }
+        , (command "v")
+            { aliases = ["yhjulwwiefzojcbxybbruweejw"]
+            , help = getCmdName >>= \v -> case v of
+                "v" -> say "let v = show v in v"
+                _   -> say "V RETURNS!"
+            , process = const (rand notoriousV)
+            }
+        , (command "protontorpedo")
+            { help = say "protontorpedo is silly"
+            , process = const (rand protontorpedo)
+            }
+        , (command "nixon")
+            { help = say "Richad Nixon's finest."
+            , process = const (rand nixonList)
+            }
+        , (command "farber")
+            { help = say "Farberisms in the style of David Farber."
+            , process = const (rand farberList)
+            }
+        ]
 
     moduleSerialize _       = Just mapListPackedSerial
     moduleDefState  _       = return M.empty
 
-    process_ _ cmd s = case cmd of
-          "forget"        -> runForget   (dropSpace s)
-          "remember"      -> runRemember (dropSpace s)
-          "quote"         -> runQuote    (dropSpace s)
-          "ghc"           -> runQuote    ("ghc " ++ dropSpace s)
-          "fortune"       -> runit (randFortune Nothing)
-          "yow"           -> runit (randFortune (Just "zippy"))
+runit :: IO String -> Cmd Quote ()
+runit k = io k >>= say
 
-          "keal"          -> rand kealList
-          "b52s"          -> rand b52s
-          "brain"         -> rand (if "pondering" `isInfixOf` s then brainPondering else brain)
-          "palomer"       -> rand palomer
-          "girl19"        -> rand girl19
-          "protontorpedo" -> rand protontorpedo
-          "v"             -> rand notoriousV
-          "yhjulwwiefzojcbxybbruweejw"
-                          -> rand notoriousV
+rand :: [String] -> Cmd Quote ()
+rand = runit . randomElem
 
-          -- See, you've got to understand the subtle distinction in pirate
-          -- talk between arr and yarr! arr is something you say as an
-          -- afermative where as yarr! is more like a greeting. (Or something)
-          "arr"           -> rand arrList
-          "yarr"          -> rand yarrList
-          "farber"        -> rand farberList
-          "nixon"         -> rand nixonList
-
-        where
-           runit k = return `fmap` io k
-           rand = runit . randomElem
-
-help :: String
-help = "quote <nick>\nremember <nick> <quote>\n" ++
+genericHelp :: String
+genericHelp = "quote <nick>\nremember <nick> <quote>\n" ++
        "Quote somebody, a random person, or save a memorable quote"
 
 ------------------------------------------------------------------------
@@ -85,30 +110,30 @@ help = "quote <nick>\nremember <nick> <quote>\n" ++
 -- use by @quote
 
 -- error handling!
-runRemember :: String -> Quote [String]
+runRemember :: String -> Cmd Quote ()
 runRemember str
-    | null rest = return ["Incorrect arguments to quote"]
-    | otherwise = withMS $ \fm writer -> do
+    | null rest = say "Incorrect arguments to quote"
+    | otherwise = mapM_ say =<< lift (withMS $ \fm writer -> do
         let ss  = fromMaybe [] (M.lookup (P.pack nm) fm)
             fm' = M.insert (P.pack nm) (P.pack q : ss) fm
         writer fm'
         r <- random confirmation
-        box r
+        box r)
     where
         (nm,rest) = break isSpace str
         q         = tail rest
 
 -- @forget, to remove a quote
-runForget :: String -> Quote [String]
+runForget :: String -> Cmd Quote ()
 runForget str
-    | null rest = return ["Incorrect arguments to quote"]
-    | otherwise = withMS $ \fm writer -> do
+    | null rest = say "Incorrect arguments to quote"
+    | otherwise = mapM_ say =<< lift (withMS $ \fm writer -> do
         let ss  = fromMaybe [] (M.lookup (P.pack nm) fm)
             fm' = M.insert (P.pack nm) (delete (P.pack q) ss) fm
         writer fm'
         if P.pack q `elem` ss
             then return ["Done."]
-            else return ["No match."]
+            else return ["No match."])
     where
         (nm,rest) = break isSpace str
         q         = tail rest
@@ -116,10 +141,10 @@ runForget str
 --
 --  the @quote command, takes a user nm to choose a random quote from
 --
-runQuote :: String -> Quote [String]
-runQuote str = do
+runQuote :: String -> Cmd Quote ()
+runQuote str = mapM_ say =<< lift (do
     st <- readMS
-    io (search (P.pack nm) (P.pack pat) st)
+    io (search (P.pack nm) (P.pack pat) st))
   where (nm, p) = break isSpace str
         pat     = if null p then p else tail p
 

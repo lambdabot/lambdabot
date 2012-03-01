@@ -15,25 +15,36 @@ $(plugin "Activity")
 
 type ActivityState = [(ClockTime,Msg.Nick)]
 
+helpStr = "activity seconds. Find out where/how much the bot is being used"
+
 instance Module ActivityModule where
     type ModuleState ActivityModule = ActivityState
     
-    moduleHelp _ _              = "activity seconds. Find out where/how much the bot is being used"
-    moduleCmds   _              = ["activity"]
-    modulePrivs  _              = ["activity-full"]
+    moduleCmds _ = 
+        [ (command "activity") 
+            { help = say helpStr
+            , process = activity False
+            }
+        , (command "activity-full")
+            { help = say helpStr
+            , privileged = True
+            , process = activity True
+            }
+        ]
     moduleDefState _            = return []
     moduleInit   _              = bindModule2 activityFilter >>=
                                       ircInstallOutputFilter
-    process      _ msg _ cmd rest = do
-        TOD secs ps <- io getClockTime
-        let cutoff = TOD (secs - (fromMaybe 90 $ readM rest)) ps
-        users <- (map (obscure . snd) . takeWhile ((> cutoff) . fst)) `fmap` readMS
-        let agg_users = reverse . sort . map (length &&& head) . group . sort $ users
-        let fmt_agg = concatWith " " . (:) (show (length users) ++ "*total") .
-                      map (\(n,u) -> show n ++ "*" ++ Msg.showNick msg u) $ agg_users
-        return [fmt_agg]
-      where obscure nm | cmd == "activity-full" || isPrefixOf "#" (Msg.nName nm) = nm
-                       | otherwise = Msg.readNick msg "private"
+
+activity full args = do
+    TOD secs ps <- io getClockTime
+    let cutoff = TOD (secs - (fromMaybe 90 $ readM args)) ps
+    users <- mapM (obscure . snd) . takeWhile ((> cutoff) . fst) =<< lift readMS
+    let agg_users = reverse . sort . map (length &&& head) . group . sort $ users
+    fmt_agg <- fmap (concatWith " " . (:) (show (length users) ++ "*total"))
+                    (mapM (\(n,u) -> do u' <- showNick u; return (show n ++ "*" ++ u')) $ agg_users)
+    say fmt_agg
+  where obscure nm | full || isPrefixOf "#" (Msg.nName nm) = return nm
+                   | otherwise = readNick "private"
 
 activityFilter :: Msg.Nick -> [String] -> ModuleLB ActivityModule
 activityFilter target lns = do io $ evaluate $ foldr seq () $ map (foldr seq ()) $ lns

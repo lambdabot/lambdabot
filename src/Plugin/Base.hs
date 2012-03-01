@@ -4,9 +4,10 @@ module Plugin.Base (theModule) where
 
 import Plugin
 
+import Lambdabot.Command (runCommand, cmdName)
 import Lambdabot.IRC (IrcMessage, timeReply, errShowMsg)
 -- import Lambdabot.Message (getTopic, nick, joinChannel, body, fullName, channels)
-import Lambdabot.Message (getTopic, nick, server, body, Nick(..), lambdabotName, showNick, readNick)
+import Lambdabot.Message as Msg (getTopic, nick, server, body, Nick(..), lambdabotName, showNick, readNick)
 
 import qualified Data.Map as M   (insert, delete)
 
@@ -152,7 +153,7 @@ doPRIVMSG msg = do
       else mapM_ (doPRIVMSG' (lambdabotName msg) msg) targets
   where
     alltargets = head (body msg)
-    targets = map (readNick msg) $ split "," alltargets
+    targets = map (Msg.readNick msg) $ split "," alltargets
 --  where
 --    ppr now = concat [ timeStamp now, " ", "<", (nick msg), " ", (fullName msg), " #"
 --                     , (concat . intersperse ","  $ channels msg) ,  "> "
@@ -167,8 +168,8 @@ doPRIVMSG' myname msg target
     = let (cmd, params) = breakOnGlue " " text
       in doPersonalMsg cmd (dropWhile (== ' ') params)
 
-  | flip any ":," $ \c -> (showNick msg myname ++ [c]) `isPrefixOf` text
-    = let Just wholeCmd = maybeCommand (showNick msg myname) text
+  | flip any ":," $ \c -> (Msg.showNick msg myname ++ [c]) `isPrefixOf` text
+    = let Just wholeCmd = maybeCommand (Msg.showNick msg myname) text
           (cmd, params) = breakOnGlue " " wholeCmd
       in doPublicMsg cmd (dropWhile (==' ') params)
 
@@ -232,18 +233,20 @@ doPRIVMSG' myname msg target
                         let illegal = disabledCommands config
                         ok      <- liftM2 (||) (return $ cmd' `notElem` (privs ++ illegal))
                                                (lift $ checkPrivs msg)
+                        let Just theCmd = lookupCmd m cmd'
                         if not ok
                           then lift $ ircPrivmsg towhere "Not enough privileges"
                           else catchIrc
 
-                            (do mstrs <- catchError
-                                    -- try to call 'process', if it fails call 'process_'
-                                    (process m msg towhere cmd' rest)
-                                    (\ey -> case (ey :: IRCError) of -- dispatch
-                                        (IRCRaised (fromException -> Just (NoMethodError _))) ->
-                                            process_ m cmd' rest
-                                        _ -> throwError ey)
-
+                            (do mstrs <- runCommand theCmd msg towhere cmd' rest
+                                 -- catchError
+                                 --    -- try to call 'process', if it fails call 'process_'
+                                 --    (process m msg towhere cmd' rest)
+                                 --    (\ey -> case (ey :: IRCError) of -- dispatch
+                                 --        (IRCRaised (fromException -> Just (NoMethodError _))) ->
+                                 --            process_ m cmd' rest
+                                 --        _ -> throwError ey)
+                                 -- 
                                 -- send off our strings
                                 lift $ mapM_ (ircPrivmsg towhere) mstrs)
 

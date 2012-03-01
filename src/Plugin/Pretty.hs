@@ -27,13 +27,16 @@ $(plugin "Pretty")
 instance Module PrettyModule where
     type ModuleState PrettyModule = String -> IO String
     
-    moduleCmds _   = ["pretty"]
-    moduleHelp _ _ = "pretty <expr>. Display haskell code in a pretty-printed manner"
-    process_ _ _ r = prettyCmd r
+    moduleCmds _ =
+        [ (command "pretty")
+            { help = say "pretty <expr>. Display haskell code in a pretty-printed manner"
+            , process = prettyCmd
+            }
+        ]
 
 ------------------------------------------------------------------------
 
-prettyCmd :: String -> Pretty [String]
+prettyCmd :: String -> Cmd Pretty ()
 prettyCmd rest =
     let code = dropWhile (`elem` " \t>") rest
         modPrefix1 = "module Main where "
@@ -44,7 +47,7 @@ prettyCmd rest =
             (_, ParseOk a)          -> doPretty a
             (ParseFailed loc msg,_) -> let (SrcLoc _ _ col) = loc in
                    (show msg ++ " at column " ++ show (col - prefLen1)) : []
-    in return result -- XXX will this work? No, spaces are compressed.
+    in mapM_ say result -- XXX will this work? No, spaces are compressed.
 
 -- | calculates "desired" indentation and return pretty-printed declarations
 -- the indentation calculations are still pretty much rough guesswork.

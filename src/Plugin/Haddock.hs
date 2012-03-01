@@ -15,19 +15,19 @@ type HaddockState = M.Map ByteString [ByteString]
 instance Module HaddockModule where
     type ModuleState HaddockModule = HaddockState
     
-    moduleCmds      _ = ["index"]
-    moduleHelp    _ _ = "index <ident>. Returns the Haskell modules in which <ident> is defined"
+    moduleCmds _ =
+        [ (command "index")
+            { help = say "index <ident>. Returns the Haskell modules in which <ident> is defined"
+            , process = \k -> do
+                m <- lift readMS
+                say $ maybe "bzzt"
+                    (intercalate (", ") . map unpack)
+                    (M.lookup (stripPs (pack k)) m)
+            }
+        ]
     moduleDefState  _ = return M.empty
     moduleSerialize _ = Just (readOnly readPacked)
-    process_ _ _ k'   = readMS >>= \m -> box $ maybe
-        ("bzzt")
-        (intercalate (", ") . map unpack)
-        (M.lookup (stripPs k) m)
 
-        where
-          k = pack k'
-          
-          -- make \@index ($) work.
-          stripPs :: ByteString -> ByteString
-          stripPs = fst . P.spanEnd (==')') . snd . P.span (=='(')
-
+-- make \@index ($) work.
+stripPs :: ByteString -> ByteString
+stripPs = fst . P.spanEnd (==')') . snd . P.span (=='(')

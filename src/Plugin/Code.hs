@@ -19,12 +19,12 @@ instance Module CodeModule where
   moduleDefState _ = io $ getSourceFiles $
         fptoolsPath config </> "libraries" </> "base"
 
-  moduleHelp _ _ = "code. Print random line of code from $fptools"
-  moduleCmds   _ = ["code"]
-
-  process_ _ "code" _ = do
-        fs <- readMS
-        (file,line) <- liftIO $ do
+  moduleCmds _ =
+      [ (command "code")
+          { help = say "code. Print random line of code from $fptools"
+          , process = const $ do
+                fs <- lift readMS
+                (file,line) <- io $ do
                     f    <- stdGetRandItem fs
                     h    <- openFile f ReadMode
                     s    <- hGetContents h
@@ -32,8 +32,10 @@ instance Module CodeModule where
                     hClose h
                     return (f, (dropSpace . expandTab $ l))
 
-        -- dump raw output
-        return [basename file ++ ": " ++ line]
+                -- dump raw output
+                say (basename file ++ ": " ++ line)
+          }
+      ]
 
 --
 -- work out our list of potential source files

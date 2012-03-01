@@ -12,18 +12,36 @@ $(plugin "Url")
 instance Module UrlModule where
     type ModuleState UrlModule = Bool
     
-    moduleHelp  _ "url-title"     = "url-title <url>. Fetch the page title."
-    moduleCmds  _                 = ["url-title", "tiny-url"]
-    modulePrivs _                 = ["url-on", "url-off"]
+    moduleCmds _ =
+        [ (command "url-title")
+            { help = say "url-title <url>. Fetch the page title."
+            , process = (mapM_ say =<<) . lift . lift 
+                . maybe (return ["Url not valid."]) fetchTitle
+                . containsUrl
+            }
+        , (command "tiny-url")
+            { help = say "tiny-url <url>. Shorten <url>."
+            , process = (mapM_ say =<<) . lift . lift 
+                . maybe (return ["Url not valid."]) fetchTiny 
+                . containsUrl
+            }
+        , (command "url-on")
+            { privileged = True
+            , help = say "url-on: enable automatic URL summaries"
+            , process = const $ do
+                lift (writeMS True)
+                say "Url enabled"
+            }
+        , (command "url-off")
+            { privileged = True
+            , help = say "url-off: disable automatic URL summaries"
+            , process = const $ do
+                lift (writeMS False)
+                say "Url disabled"
+            }
+        ]
     moduleDefState _              = return True -- url on
     moduleSerialize _             = Just stdSerial
-
-    process_    _ "url-title" txt = lift $ maybe (return ["Url not valid."])
-                                      fetchTitle (containsUrl txt)
-    process_    _ "tiny-url"  txt = lift $ maybe (return ["Url not valid."])
-                                      fetchTiny  (containsUrl txt)
-    process_    _ "url-on"    _   = writeMS True  >> return ["Url enabled"]
-    process_    _ "url-off"   _   = writeMS False >> return ["Url disabled"]
 
     contextual  _ _ _ text        = do
       alive <- readMS

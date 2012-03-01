@@ -11,24 +11,31 @@ $(plugin "Dict")
 -- | This is the module handler.  Here we process commands from users.
 
 instance Module DictModule where
-    moduleHelp _ _ = getHelp []
-    moduleCmds _   = "dict" : "dict-help" : dictNames
+    moduleCmds _ =
+        [ (command "dict")
+            { aliases = "dict-help" : dictNames
+            , help = getHelp []
+            , process = \args -> do
+                cmd <- getCmdName
+                process_ cmd args
+            }
+        ]
 
-    process_ _ "dict"      _    = return [quickHelp]
-    process_ _ "dict-help" rest = return [getHelp (words rest)]
-    process_ _ cmd         rest = do
-        let s = parseTerms rest
-        results <- mapM doLookup s
-        return $ case results of
-            [] -> []
-            _  -> [concat results]
-      where
-        doLookup w = io $ do
-            result <- lookupFn w
-            return $ either ("Error: " ++) id result
+process_ "dict"      _    = say quickHelp
+process_ "dict-help" rest = getHelp (words rest)
+process_ cmd         rest = do
+    let s = parseTerms rest
+    results <- mapM doLookup s
+    case results of
+        [] -> return ()
+        _  -> say (concat results)
+  where
+    doLookup w = io $ do
+        result <- lookupFn w
+        return $ either ("Error: " ++) id result
 
-        lookupFn = uncurry Dict.simpleDictLookup . fst $
-                   fromJust (lookup cmd dictTable)
+    lookupFn = uncurry Dict.simpleDictLookup . fst $
+               fromJust (lookup cmd dictTable)
 
 -- | Configuration.
 
@@ -71,12 +78,13 @@ quickHelp = unlines [ "Supported dictionary-lookup commands:"
                     , "Use \"dict-help [cmd...]\" for more."
                     ]
 
-getHelp :: [String] -> String
-getHelp []    = "I perform dictionary lookups via the following "
-              ++ show (length dictNames) ++ " commands:\n"
-              ++ (getHelp dictNames)
+getHelp :: [String] -> Cmd Dict ()
+getHelp []    = do
+    say ("I perform dictionary lookups via the following "
+          ++ show (length dictNames) ++ " commands:\n")
+    getHelp dictNames
 
-getHelp dicts = unlines . map gH $ dicts
+getHelp dicts = mapM_ say . map gH $ dicts
     where
     gH dict | Just (_, descr) <- lookup dict dictTable
             = pad dict ++ " " ++ descr

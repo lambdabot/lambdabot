@@ -53,7 +53,8 @@ import qualified Data.Map as M
 import Text.Printf (printf)
 
 import Lambdabot.AltTime
-import Lambdabot.Message
+import Lambdabot.Message (Message, Nick, nick, lambdabotName)
+import qualified Lambdabot.Message as Msg
 import Plugin
 
 -- | Was it @tell or @ask that was the original command?
@@ -74,53 +75,63 @@ $(plugin "Tell")
 instance Module TellModule where
     type ModuleState TellModule = NoticeBoard
     
-    moduleCmds      _ = ["tell", "ask", "messages", "messages-loud", "messages?", "clear-messages"]
-    modulePrivs     _ = ["print-notices", "purge-notices"]
-    moduleHelp      _ = fromJust . flip lookup help
+    moduleCmds _ =
+        [ (command "tell")
+            { help = say "tell <nick> <message>. When <nick> shows activity, tell them <message>."
+            , process = \args -> withMsg $ \msg ->
+                lift (doTell args msg Tell) >>= mapM_ say
+            }
+        , (command "ask")
+            { help = say "ask <nick> <message>. When <nick> shows activity, ask them <message>."
+            , process = \args -> withMsg $ \msg ->
+                lift (doTell args msg Ask) >>= mapM_ say
+            }
+        , (command "messages")
+            { help = say "messages. Check your messages."
+            , process = \args -> withMsg $ \msg ->
+                lift (doMessages msg False) >>= mapM_ say
+            }
+        , (command "messages-loud")
+            { help = say "messages. Check your messages."
+            , process = \args -> withMsg $ \msg ->
+                lift (doMessages msg True) >>= mapM_ say
+            }
+        , (command "messages?")
+            { help = say "messages?. Tells you whether you have any messages"
+            , process = const $ withMsg $ \msg -> do
+                  sender <- getSender
+                  ms <- lift (getMessages msg sender)
+                  case ms of
+                    Just _ -> lift (doRemind msg sender) >>= mapM_ say
+                    Nothing   -> say "Sorry, no messages today."
+            }
+        , (command "clear-messages")
+            { help = say "clear-messages. Clears your messages."
+            , process = const $ do
+                sender <- getSender
+                lift (clearMessages sender)
+                say "Messages cleared."
+            }
+        , (command "print-notices")
+            { privileged = True
+            , help = say "print-notices. Print the current map of notes."
+            , process = const ((say . show) =<< lift readMS)
+            }
+        , (command "purge-notices")
+            { privileged = True
+            , help = say $
+                "purge-notices [<nick> [<nick> [<nick> ...]]]]. "
+                ++ "Clear all notes for specified nicks, or all notices if you don't "
+                ++ "specify a nick."
+            , process = \args -> withMsg $ \msg -> do
+                lift $ case words args of
+                  [] -> writeMS M.empty
+                  ns -> mapM_ (clearMessages . Msg.readNick msg) ns
+                say "Messages purged."
+            }
+        ]
     moduleDefState  _ = return M.empty
     moduleSerialize _ = Just mapSerial
-
-    -- | Debug output the NoticeBoard
-    process _ _ _ "print-notices" _ = liftM ((:[]) . show) readMS
-
-    -- | Clear notes.
-    process _ msg _ "purge-notices" args = do
-        case words args of
-          [] -> writeMS M.empty
-          ns -> mapM_ (clearMessages . readNick msg) ns
-        return ["Messages purged."]
-
-    -- | Clear a user's notes
-    process _ msg _ "clear-messages" _ =
-      clearMessages (nick msg) >> return ["Messages cleared."]
-
-    -- | Check whether a user has any messages
-    process _ msg _ "messages?" _  = do
-      let sender = nick msg
-      ms <- getMessages msg sender
-      case ms of
-        Just _ -> doRemind msg sender
-        Nothing   -> return ["Sorry, no messages today."]
-
-    -- | Write down a note
-    process _ msg _ "tell" args = doTell args msg Tell
-
-    -- | Really just a synonym for "@tell", but phrases it as a question instead.
-    process _ msg _ "ask" args = doTell args msg Ask
-
-    -- | Give a user their messages
-    process _ msg _ "messages" _ =
-      do msgs <- getMessages msg $ nick msg
-         let res = fromMaybe ["You don't have any new messages."] msgs
-         clearMessages (nick msg)
-         lift (ircPrivmsg (nick msg) (unlines res))
-         return []
-
-    process _ msg _ "messages-loud" _ =
-      do msgs <- getMessages msg $ nick msg
-         let res = fromMaybe ["You don't have any new messages."] msgs
-         clearMessages (nick msg)
-         return res
 
     -- | Hook onto contextual. Grab nicks of incoming messages, and tell them
     --   if they have any messages, if it's less than a day since we last did so.
@@ -131,25 +142,6 @@ instance Module TellModule where
          then doRemind msg sender
          else return []
 
--- | Lookup table for documentation
-help :: [(String, String)]
-help = [("tell",
-         "tell <nick> <message>. When <nick> shows activity, tell them " ++
-           "<message>."),
-        ("ask",
-         "ask <nick> <message>. When <nick> shows activity, ask them " ++
-           "<message>."),
-        ("messages",
-         "messages. Check your messages."),
-        ("messages?",
-         "messages?. Tells you whether you have any messages"),
-        ("clear-messages",
-         "clear-messages. Clears your messages."),
-        ("print-notices", "print-notices. Print the current map of notes."),
-        ("purge-notices", "purge-notices [<nick> [<nick> [<nick> ...]]]]. " ++
-          "Clear all notes for specified nicks, or all notices if you don't "
-          ++ "specify a nick.")]
-
 -- | Take a note and the current time, then display it
 showNote :: Message m => m -> ClockTime -> Note -> String
 showNote msg time note = res
@@ -159,7 +151,7 @@ showNote msg time note = res
                            pr -> pr
           action       = case noteType note of Tell -> "said"; Ask -> "asked"
           res          = printf "%s %s %s ago: %s"
-                           (showNick msg $ noteSender note) action ago (noteContents note)
+                           (Msg.showNick msg $ noteSender note) action ago (noteContents note)
 
 -- | Is it less than a day since we last reminded this nick they've got messages?
 needToRemind :: Nick -> Tell Bool
@@ -203,11 +195,21 @@ clearMessages n = modifyMS (M.delete n)
 -- * Handlers
 --
 
+-- | Give a user their messages
+doMessages :: Message m => m -> Bool -> Tell [String]
+doMessages msg loud = do
+    msgs <- getMessages msg $ nick msg
+    let res = fromMaybe ["You don't have any new messages."] msgs
+    clearMessages (nick msg)
+    if loud
+        then return res
+        else lift (ircPrivmsg (nick msg) (unlines res)) >> return []
+
 -- | Execute a @tell or @ask command.
 doTell :: Message m => String -> m -> NoteType -> Tell [String]
 doTell args msg ntype = do
   let args'     = words args
-      recipient = readNick msg (head args')
+      recipient = Msg.readNick msg (head args')
       sender    = nick msg
       rest      = unwords $ tail args'
       res | sender    == recipient   = Left "You can tell yourself!"
@@ -228,6 +230,6 @@ doRemind msg sender = do
                      if length msgs > 1
                        then ("messages", "them") else ("message", "it")
                in lift (ircPrivmsg sender (printf "You have %d new %s. '/msg %s @messages' to read %s."
-                          (length msgs) messages (showNick msg $ lambdabotName msg) pronoun
+                          (length msgs) messages (Msg.showNick msg $ lambdabotName msg) pronoun
                    :: String)) >> return []
              Nothing -> return []

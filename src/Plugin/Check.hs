@@ -12,9 +12,16 @@ import Lambdabot.Parser
 $(plugin "Check")
 
 instance Module CheckModule where
-    moduleCmds   _     = ["check"]
-    moduleHelp _ _     = "check <expr>\nYou have QuickCheck and 3 seconds. Prove something."
-    process _ _ to _ s = ios80 to (check s)
+    moduleCmds _ =
+        [ (command "check")
+            { help = do
+                say "check <expr>"
+                say "You have QuickCheck and 3 seconds. Prove something."
+            , process = \s -> do
+                to <- getTarget
+                ios80 to (check s) >>= mapM_ say
+            }
+        ]
 
 check :: String -> IO String
 check src = 

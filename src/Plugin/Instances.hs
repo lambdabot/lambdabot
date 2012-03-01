@@ -30,18 +30,18 @@ type ModuleName = String
 $(plugin "Instances")
 
 instance Module InstancesModule where
-    moduleCmds _ = map fst help
-    moduleHelp _ = fromJust . flip lookup help
-    process_ _ "instances"           cls  = lift $ fetchInstances cls
-    process_ _ "instances-importing" args = lift $ fetchInstancesImporting args
-
--- | Lookup table for the help for this module
-help :: [(String, String)]
-help = [("instances",
-          "instances <typeclass>. Fetch the instances of a typeclass."),
-        ("instances-importing",
-          "instances-importing [<module> [<module> [<module...]]] <typeclass>. " ++
-          "Fetch the instances of a typeclass, importing specified modules first.")]
+    moduleCmds _ = 
+        [ (command "instances")
+            { help = say "instances <typeclass>. Fetch the instances of a typeclass."
+            , process = \cls -> lift (lift (fetchInstances cls)) >>= mapM_ say
+            }
+        , (command "instances-importing")
+            { help = say $
+                "instances-importing [<module> [<module> [<module...]]] <typeclass>. " ++
+                "Fetch the instances of a typeclass, importing specified modules first."
+            , process = \args -> lift (lift (fetchInstancesImporting args)) >>= mapM_ say
+            }
+        ]
 
 -- | Nice little combinator used to throw away error messages from an Either
 --   and just keep a Maybe indicating the success of the computation.

@@ -10,7 +10,11 @@ import Plugin.Type (query_ghci)
 $(plugin "Free")
 
 instance Module FreeModule where
-    moduleCmds _  = ["free"]
-    moduleHelp _ _= "free <ident>. Generate theorems for free"
-    process_ _ _ xs = do result <- freeTheoremStr (liftM unlines . lift . query_ghci ":t") xs
-                         return . (:[]) . concat . intersperse " " . lines $ result
+    moduleCmds _ = 
+        [ (command "free")
+            { help = say "free <ident>. Generate theorems for free"
+            , process = \xs -> do
+                result <- lift (freeTheoremStr (liftM unlines . lift . query_ghci ":t") xs)
+                say . unwords . lines $ result
+            }
+        ]

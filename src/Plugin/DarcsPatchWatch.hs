@@ -17,7 +17,7 @@ import Control.Monad       ( when )
 
 import System.Directory
 import System.Time
-import Lambdabot.Message
+import Lambdabot.Message (Nick(..))
 
 $(plugin "DarcsPatchWatch")
 
@@ -85,7 +85,7 @@ data DarcsPatchWatchState = DarcsPatchWatchState
                           , dpw_repos     :: Repos }
 
 -- DPW is our monadic state transformer.
-type DPW a = ModuleT DarcsPatchWatchState LB a
+type DPW = DarcsPatchWatch
 
 -- Serialize and unserialize DarcsPatchWatch state.
 stateSerial :: Serial DarcsPatchWatchState
@@ -116,13 +116,20 @@ withRepos = accessorMS $ \s -> (dpw_repos s, \t -> s { dpw_repos = t })
 instance Module DarcsPatchWatchModule where
     type ModuleState DarcsPatchWatchModule = DarcsPatchWatchState
 
-    moduleCmds  _ = ["repos", "repo-add", "repo-del"]
-
-    moduleHelp    _ s = case s of
-        "repos"        -> "repos. List all registered darcs repositories"
-        "repo-add"     -> "repo-add <path>. Add a repository"
-        "repo-del"     -> "repo-del <path>. Delete a repository"
-        _              -> "Watch darcs repositories. Provides: repos, repo-add, repo-del"
+    moduleCmds _ =
+        [ (command "repos")
+            { help = say "repos. List all registered darcs repositories"
+            , process = printRepos
+            }
+        , (command "repo-add")
+            { help = say "repo-add <path>. Add a repository"
+            , process = addRepo
+            }
+        , (command "repo-del")
+            { help = say "repo-del <path>. Delete a repository"
+            , process = delRepo
+            }
+        ]
 
     moduleSerialize _ = Just stateSerial
     moduleDefState  _ = return (DarcsPatchWatchState Nothing [])
@@ -136,25 +143,19 @@ instance Module DarcsPatchWatchModule where
              Nothing  -> return ()
              Just tid -> io (killThread tid)
 
-    process_ _ cmd rest = case cmd of
-                         "repos"       -> printRepos rest
-                         "repo-add"    -> addRepo rest
-                         "repo-del"    -> delRepo rest
-
-
 --
 -- Configuration commands
 --
-printRepos :: String -> DPW [String]
-printRepos [] = getRepos >>= return . (:[]) . showRepos
+printRepos :: String -> Cmd DPW ()
+printRepos [] = lift getRepos >>= say . showRepos
 printRepos _  = error "@todo given arguments, try @todo-add or @list todo"
 
-addRepo :: String -> DPW [String]
-addRepo rest | null (dropSpace rest) = return ["argument required"]
+addRepo :: String -> Cmd DPW ()
+addRepo rest | null (dropSpace rest) = say "argument required"
 addRepo rest = do
-   x <- lift $ mkRepo rest
+   x <- io $ mkRepo rest
    case x of
-     Right r -> withRepos $ \repos setRepos -> case () of {_
+     Right r -> (mapM_ say =<<) $ lift $ withRepos $ \repos setRepos -> case () of {_
             | length repos >= maxNumberOfRepos ->
                 return ["maximum number of repositories reached!"]
             | r `elem` repos ->
@@ -164,15 +165,15 @@ addRepo rest = do
                    return ["repository " ++ showRepo r ++ " added"]
             }
 
-     Left s  -> return ["cannot add invalid repository: " ++ s]
+     Left s  -> say ("cannot add invalid repository: " ++ s)
 
-delRepo :: String -> DPW [String]
-delRepo rest | null (dropSpace rest) = return ["argument required"]
+delRepo :: String -> Cmd DPW ()
+delRepo rest | null (dropSpace rest) = say "argument required"
 delRepo rest = do
-   x <- lift $ mkRepo rest
+   x <- io $ mkRepo rest
    case x of
-     Left s -> return ["cannot delete invalid repository: " ++ s]
-     Right r -> withRepos $ \repos setRepos -> case findRepo r repos of
+     Left s -> say ("cannot delete invalid repository: " ++ s)
+     Right r -> (mapM_ say =<<) $ lift $ withRepos $ \repos setRepos -> case findRepo r repos of
                  Nothing ->
                    return ["no repository registered with path " ++ repo_location r]
                  Just realRepo ->
@@ -184,19 +185,17 @@ delRepo rest = do
       findRepo _ []     = Nothing
       findRepo x (y:ys) = if cmpRepos x y then Just y else findRepo x ys
 
-mkRepo :: String -> LB (Either String Repo)
+mkRepo :: String -> IO (Either String Repo)
 mkRepo pref_ =
-    do x <- io $ do let pth  = mkInventoryPath pref_
-                        pref = dropSpace pref_
-                    perms <- getPermissions pth
-                    return (Right (pref, perms))
-                      `catch` (\e -> return $ Left (show e))
-       case x of
-         Left e -> return $ Left e
-         Right (pref, perms)
-             | readable perms -> return $ Right $ Repo pref Nothing 0
-             | otherwise ->
-                 return $ Left ("repository's inventory file not readable")
+    do
+        let pth  = mkInventoryPath pref_
+            pref = dropSpace pref_
+        perms <- getPermissions pth
+        if readable perms
+            then return $ Right $ Repo pref Nothing 0
+            else return $ Left ("repository's inventory file not readable")
+    `catch` (\e -> return $ Left (show (e :: SomeException)))
+                 
 
 
 --

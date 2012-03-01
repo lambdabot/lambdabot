@@ -4,34 +4,41 @@ module Plugin.Help (theModule) where
 
 import Plugin
 import Control.Exception (NoMethodError(..), fromException, evaluate)
+import qualified Lambdabot.Command as Cmd
 
 $(plugin "Help")
 
 instance Module HelpModule where
-    moduleHelp _ _ = "help <command>. Ask for help for <command>. Try 'list' for all commands"
-    moduleCmds   _ = ["help"]
-    process_ _ cmd rest = lift $ doHelp cmd rest
+    moduleCmds   _ =
+        [ (command "help")
+            { help = say "help <command>. Ask for help for <command>. Try 'list' for all commands"
+            , process = \args -> withMsg $ \msg -> do
+                tgt <- getTarget
+                lift (lift (doHelp msg tgt args)) >>= mapM_ say
+            }
+        ]
 
-doHelp :: String -> [Char] -> LB [String]
-doHelp cmd [] = doHelp cmd "help"
+moduleHelp m cmd msg tgt = fmap unlines (Cmd.execCmd (help theCmd) msg tgt cmd)
+    where Just theCmd = lookupCmd m cmd
 
 --
 -- If a target is a command, find the associated help, otherwise if it's
 -- a module, return a list of commands that module implements.
 --
-doHelp cmd rest =
+doHelp msg tgt [] = doHelp msg tgt "help"
+doHelp msg tgt rest =
     withModule ircCommands arg                  -- see if it is a command
         (withModule ircModules arg              -- else maybe it's a module name
-            (doHelp cmd "help")                 -- else give up
+            (doHelp msg tgt "help")             -- else give up
             (\md -> do -- its a module
-                let ss = moduleCmds md
+                let ss = moduleCmds md >>= Cmd.cmdNames
                 let s | null ss   = arg ++ " is a module."
                       | otherwise = arg ++ " provides: " ++ showClean ss
                 return [s]))
 
         -- so it's a valid command, try to find its help
         (\md -> do
-            s <- catchError (liftIO $ evaluate $ moduleHelp md arg) $ \e ->
+            s <- catchError (moduleHelp md arg msg tgt) $ \e ->
                 case e of
                     IRCRaised (fromException -> Just (NoMethodError _)) 
                         -> return "This command is unknown."

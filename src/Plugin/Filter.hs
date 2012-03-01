@@ -10,30 +10,39 @@ import Plugin
 $(plugin "Filter")
 
 instance Module FilterModule where
-        moduleCmds _   = ["austro","b1ff","brooklyn","chef","cockney","drawl","dubya","fudd","funetak","jethro","jive","kraut","pansy","pirate","postmodern","redneck","valspeak","warez"]
-        moduleHelp _ "austro" = "austro <phrase>. Talk like Ahhhnold"
-        moduleHelp _ "b1ff" = "b1ff <phrase>. B1ff of usenet yore"
-        moduleHelp _ "brooklyn" = "brooklyn <phrase>. Yo"
-        moduleHelp _ "chef" = "chef <phrase>. Bork bork bork"
-        moduleHelp _ "cockney" = "cockney <phrase>. Londoner accent"
-        moduleHelp _ "drawl" = "drawl <phrase>. Southern drawl"
-        moduleHelp _ "dubya" = "dubya <phrase>. Presidential filter"
-        moduleHelp _ "fudd" = "fudd <phrase>. Fudd, Elmer"
-        moduleHelp _ "funetak" = "funetak <phrase>. Southern drawl"
-        moduleHelp _ "jethro" = "jethro <phrase>. Now listen to a story 'bout a man named Jed..."
-        moduleHelp _ "jive" = "jive <phrase>. Slap ma fro"
-        moduleHelp _ "kraut" = "kraut <phrase>. German accent"
-        moduleHelp _ "pansy" = "pansy <phrase>. Effeminate male"
-        moduleHelp _ "pirate" = "pirate <phrase>. Talk like a pirate"
-        moduleHelp _ "postmodern" = "postmodern <phrase>. Feminazi"
-        moduleHelp _ "redneck" = "redneck <phrase>. Deep south"
-        moduleHelp _ "valspeak" = "valley <phrase>. Like, ya know?"
-        moduleHelp _ "warez" = "warez <phrase>. H4x0r"
-        process_ _ f s = do
-                let usage = ["usage: " ++ f ++ " <phrase>"]
-                case words s of
-                        [] -> return usage
-                        t -> io (runFilter f (unwords t))
+        moduleCmds _ = 
+            [ (command name)
+                { help = say descr
+                , process = \s -> do
+                    f <- getCmdName
+                    let usage = "usage: " ++ f ++ " <phrase>"
+                    case words s of
+                            [] -> say usage
+                            t -> io (runFilter f (unwords t)) >>= mapM_ say
+                }
+            | (name, descr) <- filters
+            ]
+
+filters = 
+    [ ("austro",     "austro <phrase>. Talk like Ahhhnold")
+    , ("b1ff",       "b1ff <phrase>. B1ff of usenet yore")
+    , ("brooklyn",   "brooklyn <phrase>. Yo")
+    , ("chef",       "chef <phrase>. Bork bork bork")
+    , ("cockney",    "cockney <phrase>. Londoner accent")
+    , ("drawl",      "drawl <phrase>. Southern drawl")
+    , ("dubya",      "dubya <phrase>. Presidential filter")
+    , ("fudd",       "fudd <phrase>. Fudd, Elmer")
+    , ("funetak",    "funetak <phrase>. Southern drawl")
+    , ("jethro",     "jethro <phrase>. Now listen to a story 'bout a man named Jed...")
+    , ("jive",       "jive <phrase>. Slap ma fro")
+    , ("kraut",      "kraut <phrase>. German accent")
+    , ("pansy",      "pansy <phrase>. Effeminate male")
+    , ("pirate",     "pirate <phrase>. Talk like a pirate")
+    , ("postmodern", "postmodern <phrase>. Feminazi")
+    , ("redneck",    "redneck <phrase>. Deep south")
+    , ("valspeak",   "valley <phrase>. Like, ya know?")
+    , ("warez",      "warez <phrase>. H4x0r")
+    ]
 
 pathTo :: String -> String
 pathTo f = "/usr/local/bin/" ++ f

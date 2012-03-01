@@ -24,12 +24,16 @@ import qualified Text.Regex as R
 $(plugin "Type")
 
 instance Module TypeModule where
-     moduleCmds        _  = ["type", "kind"]
-     moduleHelp _ "kind"  = "kind <type>. Return the kind of a type"
-     moduleHelp _ _       = "type <expr>. Return the type of a value"
-     process_ _ s expr = lift $ flip query_ghci expr $ case s of
-                                                    "type" -> ":t"
-                                                    "kind" -> ":k"
+     moduleCmds _ = 
+        [ (command "type")
+            { help = say "type <expr>. Return the type of a value"
+            , process = (mapM_ say =<<) . lift . runit ":t"
+            }
+        , (command "kind")
+            { help = say "kind <type>. Return the kind of a type"
+            , process = (mapM_ say =<<) . lift . runit ":k"
+            }
+        ]
 
      contextual  _ _ _ text = case () of
         _| ":t " `isPrefixOf` text -> lift $ query_ghci ":t" expr
@@ -37,11 +41,13 @@ instance Module TypeModule where
          | otherwise               -> return []
          where expr = drop 3 text
 
+runit s expr = lift $ flip query_ghci expr s
+
 --     In accordance with the KISS principle, the plan is to delegate all
 --     the hard work! To get the type of foo, pipe
 
-command :: [Char] -> [Char] -> [Char]
-command cmd foo = cmd ++ " " ++ foo
+theCommand :: [Char] -> [Char] -> [Char]
+theCommand cmd foo = cmd ++ " " ++ foo
 
 --     into hugs and send any line matching
 
@@ -124,7 +130,7 @@ query_ghci' cmd expr = do
        l <- findFile "L.hs"
        let context = ":load "++l++"\n" ++ concatMap ((":m + " ++) . (++"\n")) imports
        (output, errors, _) <- popen (ghci config) ["-v0","-fglasgow-exts","-XNoTemplateHaskell","-iState","-iscripts","-XNoMonomorphismRestriction"]
-                                       (Just (context ++ command cmd (stripComments expr)))
+                                       (Just (context ++ theCommand cmd (stripComments expr)))
        let ls = extract_signatures output
        return $ case ls of
                   Nothing -> unlines . take 3 . filter (not . null) . map cleanRE2 .

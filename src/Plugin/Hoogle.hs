@@ -16,21 +16,26 @@ instance Module HoogleModule where
     type ModuleState HoogleModule = HoogleState
     
     moduleDefState _ = return []
-    moduleCmds   _ = ["hoogle", "hoogle+"]
-    moduleHelp _ _ = "hoogle <expr>. Haskell API Search for either names, or types."
-
-    process_ _ "hoogle" s = do
-        o <- io (hoogle s)
-        let (this,that) = splitAt 3 o
-        writeMS that
-        return [unlines this]
-
-    process_ _ "hoogle+" _ = do
-        this <- withMS $ \st write -> do
-                        let (this,that) = splitAt 3 st
-                        write that
-                        return this
-        return [unlines this]
+    moduleCmds _ = 
+        [ (command "hoogle")
+            { help = say "hoogle <expr>. Haskell API Search for either names, or types."
+            , process = \s -> do
+                o <- io (hoogle s)
+                let (this,that) = splitAt 3 o
+                lift (writeMS that)
+                mapM_ say this
+            }
+        , (command "hoogle+")
+            -- TODO: what does this really do?  give it a proper help msg
+            { help = say "hoogle <expr>. Haskell API Search for either names, or types."
+            , process = \s -> do
+                this <- lift $ withMS $ \st write -> do
+                                let (this,that) = splitAt 3 st
+                                write that
+                                return this
+                mapM_ say this
+            }
+        ]
 
 ------------------------------------------------------------------------
 

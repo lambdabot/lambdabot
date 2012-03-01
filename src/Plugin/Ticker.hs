@@ -12,12 +12,16 @@ import Text.Printf
 $(plugin "Ticker")
 
 instance Module TickerModule where
-    moduleCmds      _     = ["ticker", "bid"]
-    moduleHelp _ s        = case s of
-         "ticker" -> "ticker symbols.  Look up quotes for symbols"
-         "bid"    -> "bid symbols.  Sum up the bid and ask prices for symbols."
-    process_ _ "ticker" e = lift $ tickerCmd e
-    process_ _ "bid"    e = lift $ bidsCmd e
+    moduleCmds _ = 
+        [ (command "ticker")
+            { help = say "ticker symbols.  Look up quotes for symbols"
+            , process = (mapM_ say =<<) . lift . lift . tickerCmd
+            }
+        , (command "bid")
+            { help = say "bid symbols.  Sum up the bid and ask prices for symbols."
+            , process = (mapM_ say =<<) . lift . lift . bidsCmd
+            }
+        ]
 
 ------------------------------------------------------------------------
 

@@ -24,22 +24,34 @@ type WhereWriter        = WhereState -> LB ()
 instance Module WhereModule where
   type ModuleState WhereModule = WhereState
 
-  moduleCmds _ = ["where", "url", "what", "where+" ]
-  moduleHelp _ s = case s of
-    "where"    -> "where <key>. Return element associated with key"
-    "what"     -> "what <key>. Return element associated with key"
-    "url"      -> "url <key>. Return element associated with key"
-
-    "where+"   -> "where+ <key> <elem>. Define an association"
-
+  moduleCmds _ = 
+        [ (command "where")
+            { help = say "where <key>. Return element associated with key"
+            , process = doCmd "where"
+            }
+        , (command "url")
+            { help = say "url <key>. Return element associated with key"
+            , process = doCmd "url"
+            }
+        , (command "what")
+            { help = say "what <key>. Return element associated with key"
+            , process = doCmd "what"
+            }
+        , (command "where+")
+            { help = say "where+ <key> <elem>. Define an association" 
+            , process = doCmd "where+"
+            }
+        ]
+  
   moduleDefState  _ = return M.empty
   moduleSerialize _ = Just mapPackedSerial
 
-  process_ _ cmd rest = list $ withMS $ \factFM writer ->
-        case words rest of
-            []         -> return "@where <key>, return element associated with key"
-            (fact:dat) -> processCommand factFM writer
-                                (lowerCaseString fact) cmd (unwords dat)
+doCmd :: String -> String -> Cmd Where ()
+doCmd cmd rest = (say =<<) . lift . withMS $ \factFM writer ->
+    case words rest of
+        []         -> return "@where <key>, return element associated with key"
+        (fact:dat) -> processCommand factFM writer
+                            (lowerCaseString fact) cmd (unwords dat)
 
 ------------------------------------------------------------------------
 

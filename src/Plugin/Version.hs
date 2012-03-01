@@ -12,9 +12,13 @@ import Data.Version (showVersion)
 $(plugin "Version")
 
 instance Module VersionModule where
-    moduleCmds   _ = ["version"]
-    moduleHelp _ _ = "version/source. Report the version " ++
-                     "and darcs repo of this bot"
-    process_ _ _ _ = ios . return $ concat
-                [ "lambdabot ", showVersion version, "\n"
-                , "darcs get http://code.haskell.org/lambdabot" ]
+    moduleCmds _ =
+        [ (command "version")
+            { help = say $
+                "version/source. Report the version " ++
+                "and darcs repo of this bot"
+            , process = const $ do
+                say $ "lambdabot " ++ showVersion version
+                say "darcs get http://code.haskell.org/lambdabot" 
+            }
+        ]

@@ -11,7 +11,7 @@
 module Plugin.Log (theModule) where
 
 import Plugin
-import qualified Message as Msg
+import qualified Lambdabot.Message as Msg
 
 import Control.Monad (when)
 import qualified Data.Map as M
@@ -23,7 +23,7 @@ import System.Directory (createDirectoryIfMissing)
 
 type Channel = Msg.Nick
 
-newtype LogModule = LogModule ()
+plugin "Log"
 
 type DateStamp = (Int, Month, Int)
 data ChanState = CS { chanHandle  :: Handle,
@@ -31,17 +31,12 @@ data ChanState = CS { chanHandle  :: Handle,
                deriving (Show, Eq)
 type LogState = M.Map Channel ChanState
 
-type Log a = ModuleT LogState LB a
-
 data Event =
     Said Msg.Nick ClockTime String
     | Joined Msg.Nick String ClockTime
     | Parted Msg.Nick String ClockTime -- covers quitting as well
     | Renick Msg.Nick String ClockTime Msg.Nick
     deriving (Eq)
-
-theModule :: MODULE
-theModule = MODULE $ LogModule ()
 
 instance Show Event where
     show (Said nick ct what)       = timeStamp ct ++ " <" ++ Msg.nName nick ++ "> " ++ what
@@ -59,21 +54,6 @@ instance Show Event where
 numLastLines :: Int
 numLastLines = 10
 
--- | Command -> Help lookup
-commands :: [(String,String)]
-commands = []
-
-{-
-commands = [("last",
-             "@last <channel> [<count>] [<user>] The last <count> (default 10) "
-               ++ "posts to channel <channel>."),
-            ("log-email",
-             "@log-email <email> [<start-date>] Email the log to the given "
-               ++ "address (default to todays)"),
-            ("print-logs",
-             "print the current internal state")]
--}
-
 -- | CTCP command -> logger function lookup
 loggers :: Msg.Message m => [(String, m -> ClockTime -> Event)]
 loggers = [("PRIVMSG", msgCB ),
@@ -84,8 +64,6 @@ loggers = [("PRIVMSG", msgCB ),
 instance Module LogModule where
    type ModuleState LogModule = LogState
    
-   moduleHelp   _ s = fromJust $ lookup s commands
-   moduleCmds     _ = map fst commands
    moduleDefState _ = return M.empty
    moduleExit     _ = cleanLogState
 
@@ -106,9 +84,6 @@ instance Module LogModule where
            doLog f m hdl ct = do
              let event = f m ct
              logString hdl (show event)
-
--- process _ _ _ "last" rest = showHistory rest
--- process _ _ _ "print-logs" _ = fmap ((:[]) . show) readMS
 
 -- * The @last command
 --
@@ -151,7 +126,8 @@ cleanLogState =
 
 -- | Fetch a channel from the internal map. Uses LB's fail if not found.
 getChannel :: Channel -> Log ChanState
-getChannel c = (readMS >>=) . M.lookup $ c
+getChannel c = (readMS >>=) . mLookup $ c
+    where mLookup k = maybe (fail "getChannel: not found") return . M.lookup k
 
 getDate :: Channel -> Log DateStamp
 getDate c = fmap chanDate . getChannel $ c

@@ -50,38 +50,52 @@ voteSerial = Serial (Just . showPacked) (Just . readPacked)
 instance Module VoteModule where
     type ModuleState VoteModule = VoteState
     
-    moduleCmds     _ = ["poll-list"
-                       ,"poll-show"
-                       ,"poll-add"
-                       ,"choice-add"
-                       ,"vote"
-                       ,"poll-result"
-                       ,"poll-close"
-                       ,"poll-remove"]
---
-   -- todo, should @vote foo automagically add foo as a possibility?
-    moduleHelp   _ s = case s of
-        "poll-list"     -> "poll-list                   Shows all current polls"
-        "poll-show"     -> "poll-show <poll>            Shows all choices for some poll"
-        "poll-add"      -> "poll-add <name>             Adds a new poll, with no candidates"
-        "choice-add"    -> "choice-add <poll> <choice>  Adds a new choice to the given poll"
-        "vote"          -> "vote <poll> <choice>        Vote for <choice> in <poll>"
-        "poll-result"   -> "poll-result <poll>          Show result for given poll"
-        "poll-close"    -> "poll-close <poll>           Closes a poll"
-        "poll-remove"   -> "poll-remove <poll>          Removes a poll"
+    moduleCmds _ =
+        [ (command "poll-list")
+            { help = say "poll-list                   Shows all current polls"
+            , process = \_ -> do
+                result <- lift $ withMS $ \factFM writer -> processCommand factFM writer "poll-list" []
+                say result
+            }
+        , (command "poll-show")
+            { help = say "poll-show <poll>            Shows all choices for some poll"
+            , process = process_ "poll-show"
+            }
+        , (command "poll-add")
+            { help = say "poll-add <name>             Adds a new poll, with no candidates"
+            , process = process_ "poll-add"
+            }
+        , (command "choice-add")
+            { help = say "choice-add <poll> <choice>  Adds a new choice to the given poll"
+            , process = process_ "choice-add"
+            }
+        , (command "vote")
+            -- todo, should @vote foo automagically add foo as a possibility?
+            { help = say "vote <poll> <choice>        Vote for <choice> in <poll>"
+            , process = process_ "vote"
+            }
+        , (command "poll-result")
+            { help = say "poll-result <poll>          Show result for given poll"
+            , process = process_ "poll-result"
+            }
+        , (command "poll-close")
+            { help = say "poll-close <poll>           Closes a poll"
+            , process = process_ "poll-close"
+            }
+        , (command "poll-remove")
+            { help = say "poll-remove <poll>          Removes a poll"
+            , process = process_ "poll-remove"
+            }
+        ]
 
     moduleDefState _  = return M.empty
     moduleSerialize _ = Just voteSerial
 
-    process_ _ "poll-list" _ = do
-        result <- withMS $ \factFM writer -> processCommand factFM writer "poll-list" []
-        return [result]
+process_ _ [] = say "Missing argument. Check @help <vote-cmd> for info."
 
-    process_ _ _ [] = return ["Missing argument. Check @help <vote-cmd> for info."]
-
-    process_ _ cmd dat = do
-        result <- withMS $ \factFM writer -> processCommand factFM writer cmd (words dat)
-        return [result]
+process_ cmd dat = do
+    result <- lift $ withMS $ \factFM writer -> processCommand factFM writer cmd (words dat)
+    say result
 
 ------------------------------------------------------------------------
 

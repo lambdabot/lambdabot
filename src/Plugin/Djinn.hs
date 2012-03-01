@@ -23,23 +23,52 @@ type Decl = String
 instance Module DjinnModule where
         type ModuleState DjinnModule = DjinnEnv
 
-        moduleHelp _ s = case s of
-            "djinn"     -> "djinn <type>.\nGenerates Haskell code from a type.\n" ++
-                           "http://darcs.augustsson.net/Darcs/Djinn"
-            "djinn-add" -> "djinn-add <expr>.\nDefine a new function type or type synonym"
-            "djinn-del" -> "djinn-del <ident>.\nRemove a symbol from the environment"
-            "djinn-clr" -> "djinn-clr.\nReset the djinn environment"
-            "djinn-env" -> "djinn-env.\nShow the current djinn environment"
-            "djinn-names" -> "djinn-names.\nShow the current djinn environment, compactly."
-            "djinn-ver" -> "djinn-ver.\nShow current djinn version"
-
-        moduleCmds      _ = ["djinn"
-                            ,"djinn-add"
-                            ,"djinn-del"
-                            ,"djinn-env"
-                            ,"djinn-names"
-                            ,"djinn-clr"
-                            ,"djinn-ver"]
+        moduleCmds _ =
+            [ (command "djinn")
+                { help = mapM_ say
+                    [ "djinn <type>."
+                    , "Generates Haskell code from a type."
+                    , "http://darcs.augustsson.net/Darcs/Djinn"
+                    ]
+                , process = rejectingCmds djinnCmd
+                }
+            , (command "djinn-add")
+                { help = do
+                    say "djinn-add <expr>."
+                    say "Define a new function type or type synonym"
+                , process = rejectingCmds djinnAddCmd
+                }
+            , (command "djinn-del")
+                { help = do
+                    say "djinn-del <ident>."
+                    say "Remove a symbol from the environment"
+                , process = rejectingCmds djinnDelCmd
+                }
+            , (command "djinn-env")
+                { help = do
+                    say "djinn-env."
+                    say "Show the current djinn environment"
+                , process = const djinnEnvCmd
+                }
+            , (command "djinn-names")
+                { help = do
+                    say "djinn-names."
+                    say "Show the current djinn environment, compactly."
+                , process = const djinnNamesCmd
+                }
+            , (command "djinn-clr")
+                { help = do
+                    say "djinn-clr."
+                    say "Reset the djinn environment"
+                , process = const djinnClrCmd
+                }
+            , (command "djinn-ver")
+                { help = do
+                    say "djinn-ver."
+                    say "Show current djinn version"
+                , process = const djinnVerCmd
+                }
+            ]
 
         moduleSerialize _ = Nothing -- Just listSerial
 
@@ -48,67 +77,69 @@ instance Module DjinnModule where
                 st <- io $ getDjinnEnv ([],[]) -- get the prelude
                 return (either (const []) snd{-!-} st, [])
 
-        -- rule out attempts to do IO, if these get into the env,
-        -- they'll be executed by djinn
-        process_ _ _ s | cmd  `matches'` s = end
-          where end  = return ["Invalid command"]
-                cmd  = regex' "^ *:"
+-- check the args, reject them if they start with a colon (ignoring whitespace)
+rejectingCmds action args
+    | take 1 (dropWhile isSpace args) == ":"
+                = say "Invalid command"
+    | otherwise = action args
 
-        -- Normal commands
-        process_ _ "djinn" s = do
-                (_,env) <- readMS
-                e       <- io $ djinn env $ ":set +sorted" <$> "f ?" <+> dropForall s
-                return $ either id (parse . lines) e
-            where
-              dropForall t
-                  | Just (_, _, x, _) <- R.matchRegexAll re t = x
-                  | otherwise = t
-              re = regex' "^forall [[:alnum:][:space:]]+\\."
-              parse :: [String] -> [String]
-              parse x = if length x < 2
-                        then ["No output from Djinn; installed?"]
-                        else tail x
+-- Normal commands
+djinnCmd s = do
+        (_,env) <- lift readMS
+        e       <- io $ djinn env $ ":set +sorted" <$> "f ?" <+> dropForall s
+        mapM_ say $ either id (parse . lines) e
+    where
+      dropForall t
+          | Just (_, _, x, _) <- R.matchRegexAll re t = x
+          | otherwise = t
+      re = regex' "^forall [[:alnum:][:space:]]+\\."
+      parse :: [String] -> [String]
+      parse x = if length x < 2
+                then ["No output from Djinn; installed?"]
+                else tail x
 
-        -- Augment environment. Have it checked by djinn.
-        process_ _ "djinn-add"  s = do
-            (p,st)  <- readMS
-            est     <- io $ getDjinnEnv $ (p, dropSpace s : st)
-            case est of
-                Left e     -> return [head e]
-                Right st'' -> modifyMS (const st'') >> return []
+-- Augment environment. Have it checked by djinn.
+djinnAddCmd s = do
+    (p,st)  <- lift readMS
+    est     <- io $ getDjinnEnv $ (p, dropSpace s : st)
+    case est of
+        Left e     -> say (head e)
+        Right st'' -> lift (modifyMS (const st''))
 
-        -- Display the environment
-        process_ _ "djinn-env"  _ = do
-            (prelude,st) <- readMS
-            return $ prelude ++ st
+-- Display the environment
+djinnEnvCmd :: Cmd Djinn ()
+djinnEnvCmd = do
+    (prelude,st) <- lift readMS
+    mapM_ say $ prelude ++ st
 
-        -- Display the environment's names (quarter-baked)
-        process_ _ "djinn-names"  _ = do
-            (prelude,st) <- readMS
-            let names = concat $ intersperse " " $ concatMap extractNames $ prelude ++ st
-            return [names]
-          where extractNames = filter (isUpper . head) . unfoldr (\x -> case x of _:_ -> listToMaybe (lex x); _ -> Nothing)
+-- Display the environment's names (quarter-baked)
+djinnNamesCmd :: Cmd Djinn ()
+djinnNamesCmd = do
+    (prelude,st) <- lift readMS
+    let names = concat $ intersperse " " $ concatMap extractNames $ prelude ++ st
+    say names
+  where extractNames = filter (isUpper . head) . unfoldr (\x -> case x of _:_ -> listToMaybe (lex x); _ -> Nothing)
 
-        -- Reset the env
-        process_ _ "djinn-clr" _ = modifyMS (flip (,) [] . fst) >> return []
+-- Reset the env
+djinnClrCmd :: Cmd Djinn ()
+djinnClrCmd = lift (modifyMS (flip (,) [] . fst))
 
-        -- Remove sym from environment. We let djinn do the hard work of
-        -- looking up the symbols.
-        process_ _ "djinn-del" s =  do
-            (_,env) <- readMS
-            eenv <- io $ djinn env $ ":delete" <+> dropSpace s <$> ":environment"
-            case eenv of
-                Left e     -> return [head e]
-                Right env' -> do
-                    modifyMS $ \(prel,_) ->
-                        (prel,filter (\p -> p `notElem` prel) . nub . lines $ env')
-                    return []
+-- Remove sym from environment. We let djinn do the hard work of
+-- looking up the symbols.
+djinnDelCmd s =  do
+    (_,env) <- lift readMS
+    eenv <- io $ djinn env $ ":delete" <+> dropSpace s <$> ":environment"
+    case eenv of
+        Left e     -> say (head e)
+        Right env' -> lift $ do
+            modifyMS $ \(prel,_) ->
+                (prel,filter (\p -> p `notElem` prel) . nub . lines $ env')
 
-        -- Version number
-        process_ _ "djinn-ver"  _ = do
-            (out,_,_) <- io $ popen binary [] (Just ":q")
-            let v = dropNL . clean_ . drop 18 . head . lines $ out
-            return [v]
+-- Version number
+djinnVerCmd :: Cmd Djinn ()
+djinnVerCmd = do
+    (out,_,_) <- io $ popen binary [] (Just ":q")
+    say . dropNL . clean_ . drop 18 . head . lines $ out
 
 ------------------------------------------------------------------------
 

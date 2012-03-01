@@ -7,7 +7,7 @@
 -- Generic server connection,disconnection
 -- The module typeclass, type and operations on modules
 module Lambdabot (
-        MODULE(..), Module(..),
+        MODULE(..), Module(..), lookupCmd,
         ModuleT, ModuleLB, ModuleUnit, Mode(..),
 
         IRCRState(..), IRCRWState(..), IRCError(..),
@@ -35,6 +35,7 @@ module Lambdabot (
 
 import Lambdabot.File (findFile)
 
+import qualified Lambdabot.Command as Cmd
 import qualified Lambdabot.Message as Msg
 import qualified Lambdabot.Shared  as S
 import qualified Lambdabot.IRC as IRC (IrcMessage, quit, privmsg)
@@ -348,8 +349,7 @@ flushModuleState = do
 ------------------------------------------------------------------------
 
 -- | The Module type class.
--- Minimal complete definition: @moduleHelp@, @moduleCmds@, and
--- either @process@ or @process_@
+-- Minimal complete definition: @moduleCmds@
 class Module m where
     type ModuleState m
     type ModuleState m = ()
@@ -372,33 +372,13 @@ class Module m where
     moduleSticky    :: m -> Bool
 
     -- | The commands the module listenes to.
-    moduleCmds      :: m -> [String]
-
-    -- | This method should return a help string for every command it defines.
-    moduleHelp      :: m -> String -> String
-
-    -- | The privileged commands the module listenes to.
-    modulePrivs     :: m -> [String]
+    moduleCmds      :: m -> [Cmd.Command (ModuleT m LB)]
 
     -- | Initialize the module. The default implementation does nothing.
     moduleInit      :: m -> ModuleUnit m
 
     -- | Finalize the module. The default implementation does nothing.
     moduleExit      :: m -> ModuleUnit m
-
-    -- | Process a command a user sent, the resulting string is draw in
-    -- some fashion. If the `process' function doesn't exist, we catch
-    -- an exception when we try to call it, and instead call `process_'
-    -- which is guaranteed to at least have a default instance.
-    -- This magic (well, for Haskell) occurs in Base.hs
-    --
-    process :: Msg.Message a
-        => m                                -- ^ phantom     (required)
-        -> a                                -- ^ the message (uneeded by most?)
-        -> Msg.Nick                         -- ^ target
-        -> String                           -- ^ command
-        -> String                           -- ^ the arguments to the command
-        -> ModuleLB m                       -- ^ maybe output
 
     -- | Process contextual input. A plugin that implements 'contextual'
     -- is able to respond to text not part of a normal command.
@@ -409,27 +389,19 @@ class Module m where
         -> String                           -- ^ the text
         -> ModuleLB m                       -- ^ maybe output
 
-    -- | Like process, but uncommonly used args are ignored
-    -- Lambdabot will attempt to run process first, and then fall back
-    -- to process_, which in turn has a default instance.
-    --
-    process_ :: m                           -- ^ phantom
-             -> String -> String            -- ^ command, args
-             -> ModuleLB m                  -- ^ maybe output
-
 ------------------------------------------------------------------------
 
     contextual _ _ _ _ = return []
-    process_ _ _ _     = return []
 
-    moduleHelp m _     = concat (map ('@':) (moduleCmds m))
-    modulePrivs _      = []
     moduleCmds      _  = []
     moduleExit _       = return ()
     moduleInit _       = return ()
     moduleSticky _     = False
     moduleSerialize _  = Nothing
     moduleDefState  _  = return $ error "state not initialized"
+
+lookupCmd m cmd = lookup cmd [ (nm, c) | c <- moduleCmds m, nm <- Cmd.cmdNames c ]
+modulePrivs m = filter Cmd.privileged (moduleCmds m)
 
 -- | An existential type holding a module, used to represent modules on
 -- the value level, for manipluation at runtime by the dynamic linker.
@@ -525,8 +497,8 @@ ircInstallModule (MODULE mod) modname = do
             cmdmap = ircCommands s
         put $ s {
           ircModules = M.insert modname modref modmap,
-          ircCommands = addList [ (cmd,modref) | cmd <- cmds++privs ] cmdmap,
-          ircPrivCommands = ircPrivCommands s ++ privs
+          ircCommands = addList [ (name,modref) | cmd <- cmds++privs, name <- Cmd.cmdNames cmd ] cmdmap,
+          ircPrivCommands = ircPrivCommands s ++ concatMap Cmd.cmdNames privs
         }
         io $ hPutStr stderr "." >> hFlush stderr
 

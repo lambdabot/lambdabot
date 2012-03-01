@@ -8,10 +8,15 @@ import qualified Lambdabot.Message as Msg (nick, showNick)
 $(plugin "Quote")
 
 instance Module QuoteModule where
-    moduleCmds _           = ["slap", "smack"]
-    moduleHelp _ _         = "slap <nick>. Slap someone amusingly."
-    process _ msg _ _ rest = ios $ slapRandom (if rest == "me" then sender else rest)
-       where sender = Msg.showNick msg $ Msg.nick msg
+    moduleCmds _ = 
+        [ (command "slap")
+            { aliases = ["smack"]
+            , help = say "slap <nick>. Slap someone amusingly."
+            , process = \rest -> do
+                sender <- getSender >>= showNick
+                ios (slapRandom (if rest == "me" then sender else rest)) >>= mapM_ say
+            }
+        ]
 
 ------------------------------------------------------------------------
 

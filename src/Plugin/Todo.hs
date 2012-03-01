@@ -16,25 +16,28 @@ type TodoState = [(P.ByteString, P.ByteString)]
 instance Module TodoModule where
     type ModuleState TodoModule = TodoState
     
-    moduleCmds  _ = ["todo", "todo-add"]
-    modulePrivs _ = ["todo-delete"]
-    moduleHelp _ s = case s of
-        "todo"        -> "todo. List todo entries"
-        "todo-add"    -> "todo-add <idea>. Add a todo entry"
-        "todo-delete" -> "todo-delete <n>. Delete a todo entry (for admins)"
-        _ -> "Keep a todo list. Provides @todo, @todo-add, @todo-delete"
+    moduleCmds _ =
+        [ (command "todo")
+            { help = say "todo. List todo entries"
+            , process = \args -> withMsg $ \msg -> do
+                todoList <- lift readMS
+                lift (getTodo msg todoList args) >>= mapM_ say
+            }
+        , (command "todo-add")
+            { help = say "todo-add <idea>. Add a todo entry"
+            , process = \args -> withMsg $ \msg -> do
+                let sender = Msg.packNick $ Msg.nick msg
+                lift (addTodo sender args) >>= mapM_ say
+            }
+        , (command "todo-delete")
+            { privileged = True
+            , help = say "todo-delete <n>. Delete a todo entry (for admins)"
+            , process = \args -> lift (delTodo args) >>= mapM_ say
+            }
+        ]
 
     moduleDefState  _ = return ([] :: TodoState)
     moduleSerialize _ = Just assocListPackedSerial
-
-    process _ msg _ cmd rest = do
-       todoList <- readMS
-       case cmd of
-           "todo"        -> getTodo msg todoList rest
-           "todo-add"    -> addTodo sender rest
-           "todo-delete" -> delTodo rest
-
-        where sender = Msg.packNick $ Msg.nick msg
 
 -- | Print todo list
 getTodo :: Msg.Message m => m -> TodoState -> String -> Todo [String]
@@ -46,7 +49,7 @@ formatTodo :: Msg.Message m => m -> [(P.ByteString, P.ByteString)] -> String
 formatTodo _ [] = "Nothing to do!"
 formatTodo msg todoList =
     unlines $ map (\(n::Int, (idea, nick_)) -> concat $
-            [ show n,". ",showNick msg $ unpackNick nick_,": ",P.unpack idea ]) $
+            [ show n,". ",Msg.showNick msg $ unpackNick nick_,": ",P.unpack idea ]) $
                 zip [0..] todoList
 
 -- | Add new entry to list

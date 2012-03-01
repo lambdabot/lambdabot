@@ -14,46 +14,53 @@ $(plugin "Dummy")
 
 instance Module DummyModule where
 
-  moduleCmds   _ = "eval" : "choose" : map fst dummylst
-
-  moduleHelp _ s = case s of
-        "dummy"       -> "dummy. Print a string constant"
-        "bug"         -> "bug. Submit a bug to GHC's trac"
-        "eval"        -> "eval. Do nothing (perversely)"
-
-        "id"          -> "id <arg>. The identity plugin"
-        "read"        -> "read \"<foo>\". Print <foo>"
-        "show"        -> "show <foo>. Print \"<foo>\""
-        "wiki"        -> "wiki <page>. URLs of Haskell wiki pages"
-        "oldwiki"     -> "oldwiki <page>. URLs of the old hawiki pages"
-        "paste"       -> "paste. Paste page url"
-
-        "docs"        -> "docs <lib>. Lookup the url for this library's documentation"
-        "source"      -> "source <lib>. Lookup the url of fptools libraries"
-        "fptools"     -> "fptools <lib>. Lookup url of ghc base library modules"
-
-        "learn"       -> "learn. The learning page url"
-        "eurohaskell" -> "eurohaskell. Historical"
-        "map"         -> "map. #haskell user map"
-        "botsnack"    -> "botsnack. Feeds the bot a snack"
-        "get-shapr"   -> "get-shapr. Summon shapr instantly"
-        "shootout"    -> "shootout. The debian language shootout"
-        "faq"         -> "faq. Answer frequently asked questions about Haskell"
-        "choose"      -> "choose. Lambdabot featuring AI power"
-        "googleit"    -> "letmegooglethatforyou."
-
-  process_ _ "eval"   _    = return []
-  process_ _ "choose" []   = return ["Choose between what?"]
-  process_ _ "choose" xs   = fmap return . io . randomElem . lines $ xs
-  process_ _ cmd      rest = case lookup cmd dummylst of
-    Nothing -> error "Dummy: invalid command"
-    Just f  -> return $ lines $ f rest
+  moduleCmds _
+      = (command "eval")
+           { help = say "eval. Do nothing (perversely)"
+           , process = const (return ()) 
+           }
+      : (command "choose")
+          { help = say "choose. Lambdabot featuring AI power"
+          , process = \args ->
+              if null args then say "Choose between what?"
+                  else say =<< (io . randomElem . words $ args)
+          }
+      : [ (command cmd)
+              { help = say (dummyHelp cmd)
+              , process = mapM_ say . lines . op
+              }
+        | (cmd, op) <- dummylst
+        ]
 
   contextual _ _ _ "lisppaste2: url" = return [pastebinMsg]
   contextual _ _ _ _                 = return []
 
 pastebinMsg :: String
 pastebinMsg = "Haskell pastebin: http://hpaste.org/"
+
+dummyHelp s = case s of
+    "dummy"       -> "dummy. Print a string constant"
+    "bug"         -> "bug. Submit a bug to GHC's trac"
+
+    "id"          -> "id <arg>. The identity plugin"
+    "read"        -> "read \"<foo>\". Print <foo>"
+    "show"        -> "show <foo>. Print \"<foo>\""
+    "wiki"        -> "wiki <page>. URLs of Haskell wiki pages"
+    "oldwiki"     -> "oldwiki <page>. URLs of the old hawiki pages"
+    "paste"       -> "paste. Paste page url"
+
+    "docs"        -> "docs <lib>. Lookup the url for this library's documentation"
+    "source"      -> "source <lib>. Lookup the url of fptools libraries"
+    "fptools"     -> "fptools <lib>. Lookup url of ghc base library modules"
+
+    "learn"       -> "learn. The learning page url"
+    "eurohaskell" -> "eurohaskell. Historical"
+    "map"         -> "map. #haskell user map"
+    "botsnack"    -> "botsnack. Feeds the bot a snack"
+    "get-shapr"   -> "get-shapr. Summon shapr instantly"
+    "shootout"    -> "shootout. The debian language shootout"
+    "faq"         -> "faq. Answer frequently asked questions about Haskell"
+    "googleit"    -> "letmegooglethatforyou."
 
 dummylst :: [(String, String -> String)]
 dummylst =

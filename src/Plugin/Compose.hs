@@ -7,7 +7,8 @@
 module Plugin.Compose (theModule) where
 
 import Plugin
-import Lambdabot.Message
+import Lambdabot.Command
+import qualified Lambdabot.Message as Msg
 
 import Control.Monad.State
 import Control.Arrow (first)
@@ -16,28 +17,36 @@ import Control.Exception (NoMethodError(..), fromException)
 $(plugin "Compose")
 
 instance Module ComposeModule where
-    moduleCmds _   = [".", "compose", "@", "?"]
-    moduleHelp _ c = unlines $
-                       if c `elem` ["@","?"]
-                        then [c++" [args]."
-                             ,c++" executes plugin invocations in its arguments, parentheses can be used."
-                             ," The commands are right associative."
-                             ," For example:    "++c++" "++c++"pl "++c++"undo code"
-                             ," is the same as: "++c++" ("++c++"pl ("++c++"undo code))"]
-                        else [". <cmd1> <cmd2> [args]."
-                             ,". [or compose] is the composition of two plugins"
-                             ," The following semantics are used: . f g xs == g xs >>= f"]
-
-    process    _ a b c args
-        | c `elem` ["@","?"] = lift $ evalBracket (a,b) args
-
-    process    _ a b _ args = lift $ case split " " args of
-        (f:g:xs) -> do
-            f' <- lookupP (a,b) f
-            g' <- lookupP (a,b) g
-            compose f' g' (concat $ intersperse " " xs)
-
-        _ -> return ["Not enough arguments to @."]
+    moduleCmds _   = 
+        [ (command "@")
+            { aliases = ["?"]
+            , help = do
+                c <- getCmdName
+                let cc = c++c
+                mapM_ say
+                     [ cc++" [args]."
+                     , cc++" executes plugin invocations in its arguments, parentheses can be used."
+                     , " The commands are right associative."
+                     , " For example:    "++cc++" "++c++"pl "++c++"undo code"
+                     , " is the same as: "++cc++" ("++c++"pl ("++c++"undo code))"
+                     ]
+            , process = evalBracket
+            }
+        , (command ".")
+            { aliases = ["compose"]
+            , help = mapM_ say
+                [ ". <cmd1> <cmd2> [args]."
+                , ". [or compose] is the composition of two plugins"
+                , " The following semantics are used: . f g xs == g xs >>= f"
+                ]
+            , process = \args -> case split " " args of
+                (f:g:xs) -> do
+                    f' <- lookupP f
+                    g' <- lookupP g
+                    lift (lift $ compose f' g' (concat $ intersperse " " xs)) >>= mapM_ say
+                _ -> say "Not enough arguments to @."
+            }
+        ]
 
 
 -- | Compose two plugin functions
@@ -48,25 +57,25 @@ compose f g xs = g xs >>= f . unlines
 -- | Lookup the `process' method we're after, and apply it to the dummy args
 -- Fall back to process_ if there's no process.
 --
-lookupP :: Message a => (a, Nick) -> String -> LB (String -> LB [String])
-lookupP (a,b) cmd = withModule ircCommands cmd
-    (error $ "Unknown command: " ++ show cmd)
-    (\m -> do
-        privs <- gets ircPrivCommands -- no priv commands can be composed
-        when (cmd `elem` privs) $ error "Privledged commands cannot be composed"
-        bindModule1 $ \str -> catchError
-                    (process m a b cmd str)
-                    (\ex -> case (ex :: IRCError) of
-                                (IRCRaised (fromException -> Just (NoMethodError _))) -> process_ m cmd str
-                                _ -> throwError ex))
+lookupP :: String -> Cmd Compose (String -> LB [String])
+lookupP cmd = withMsg $ \a -> do
+    b <- getTarget
+    lift $ lift $ withModule ircCommands cmd
+        (error $ "Unknown command: " ++ show cmd)
+        (\m -> do
+            privs <- gets ircPrivCommands -- no priv commands can be composed
+            let Just theCmd = lookupCmd m cmd
+            when (privileged theCmd) $ error "Privileged commands cannot be composed"
+            bindModule1 (runCommand theCmd a b cmd))
 
 
 ------------------------------------------------------------------------
 
 -- | More interesting composition/evaluation
 -- @@ @f x y (@g y z)
-evalBracket :: Message a => (a, Nick) -> String -> LB [String]
-evalBracket a args = liftM (map addSpace . concat') $ mapM (evalExpr a) $ fst $ parseBracket 0 True args
+evalBracket :: String -> Cmd Compose ()
+evalBracket args = 
+    mapM_ say =<< (liftM (map addSpace . concat') $ mapM evalExpr $ fst $ parseBracket 0 True args)
  where concat' ([x]:[y]:xs) = concat' ([x++y]:xs)
        concat' xs           = concat xs
 
@@ -74,17 +83,17 @@ evalBracket a args = liftM (map addSpace . concat') $ mapM (evalExpr a) $ fst $ 
        addSpace (' ':xs) = ' ':xs
        addSpace xs       = ' ':xs
 
-evalExpr :: Message a => (a, Nick) -> Expr -> LB [String]
-evalExpr _ (Arg s) = return [s]
-evalExpr a (Command c args) = do
-     args' <- mapM (evalExpr a) args
+evalExpr :: Expr -> Cmd Compose [String]
+evalExpr (Arg s) = return [s]
+evalExpr (Cmd c args) = do
+     args' <- mapM evalExpr args
      let arg = concat $ concat $ map (intersperse " ") args'
-     cmd <- lookupP a c
-     cmd arg
+     cmd <- lookupP c
+     lift (lift (cmd arg))
 
 ------------------------------------------------------------------------
 
-data Expr = Command String [Expr]
+data Expr = Cmd String [Expr]
           | Arg String
     deriving Show
 
@@ -116,11 +125,11 @@ parseCommand, parseInlineCommand :: Int -> String -> ([Expr],String)
 parseCommand n xs = let (cmd, ys) = break (`elem` " )") xs
                         (args,zs) = parseBracket 1 True (dropWhile (==' ') ys)
                         (rest,ws) = parseBracket n True zs
-                    in  (Command cmd args:rest, ws)
+                    in  (Cmd cmd args:rest, ws)
 
 parseInlineCommand n xs = let (cmd, ys) = break (`elem` " )") xs
                               (rest,zs) = parseBracket n True (dropWhile (==' ') ys)
-                          in  (Command cmd rest:[], zs)
+                          in  (Cmd cmd rest:[], zs)
 
 parseString :: Char -> String -> (String, String)
 parseString _     []          = ([],[])

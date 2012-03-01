@@ -15,14 +15,16 @@ import Control.Monad.State
 $(plugin "Elite")
 
 instance Module EliteModule where
-    moduleCmds _   = ["elite", "leet", "l33t", "1337"]
-    moduleHelp _ _ = "elite <phrase>. Translate English to elitespeak"
-    process_ _ _ args = ios $
-        case words args of
-             [] -> return "Say again?"
-             wds -> do let instr = map toLower (unwords wds)
-                       transWords <- translate instr
-                       return transWords
+    moduleCmds _ = 
+        [ (command "elite")
+            { aliases = ["leet", "l33t", "1337"]
+            , help = say "elite <phrase>. Translate English to elitespeak"
+            , process = \args -> case words args of
+                 [] -> say "Say again?"
+                 wds -> do let instr = map toLower (unwords wds)
+                           say =<< translate instr
+            }
+        ]
 
 translate :: MonadIO m => String -> m String
 translate []  = return []

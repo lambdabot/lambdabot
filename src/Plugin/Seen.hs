@@ -141,49 +141,53 @@ instance Binary UserStatus where
 instance Module SeenModule where
     type ModuleState SeenModule = SeenState
     
-    moduleHelp _ "seen"  = "seen <user>. Report if a user has been seen by the bot"
-    moduleHelp _ "users" = "users [chan]. Report the maximum number of users seen in a channel, and active users in the last 30 minutes"
-    moduleCmds _         = ["users","seen"]
+    moduleCmds _ = 
+        [ (command "users")
+            { help = say "users [chan]. Report the maximum number of users seen in a channel, and active users in the last 30 minutes"
+            , process = \rest -> withMsg $ \msg -> do
+                -- first step towards tracking the maximum number of users
+                chan <- getTarget
+                (m, seenFM) <- lift readMS
+                s <- io getClockTime
+                let who = G.packNick $ lcNick $ if null rest then chan else G.readNick msg rest
+                    now = length [ () | (_,Present _ chans) <- M.toList seenFM
+                                      , who `elem` chans ]
+
+                    n = case M.lookup (P.unpack who) m of Nothing -> 1; Just n' -> n'
+
+                    active = length [() | (_,st@(Present _ chans)) <- M.toList seenFM
+                                        , who `elem` chans && isActive st ]
+
+                    isActive (Present (Just (ct,_td)) _cs) = recent ct
+                    isActive _                             = False
+
+                    recent t = normalizeTimeDiff (diffClockTimes s t) < gap_minutes
+                    gap_minutes = TimeDiff 0 0 0 0 30 0 0 -- 30 minutes
+
+                say $! concat
+                    [ "Maximum users seen in ", G.showNick msg $ G.unpackNick who, ": "
+                    , show n
+                    , ", currently: ", show now
+                    , printf " (%0.1f%%)" (100 * (fromIntegral now    / fromIntegral n) :: Double)
+                    , ", active: ", show active
+                    , printf " (%0.1f%%)" (100 * (fromIntegral active / fromIntegral now) :: Double)
+                    ]
+                
+            }
+        , (command "seen") 
+            { help = say "seen <user>. Report if a user has been seen by the bot"
+            , process = \rest -> withMsg $ \msg -> do
+                target <- getTarget
+                (_,seenFM) <- lift readMS
+                now        <- io getClockTime
+                let (txt,safe) = first unlines (getAnswer msg rest seenFM now)
+                if safe || not ("#" `isPrefixOf` G.nName target)
+                    then say txt
+                    else lift $ lift $ ircPrivmsg (G.nick msg) txt
+                
+            }
+        ]
     moduleDefState _     = return (M.empty,M.empty)
-
-    -- first step towards tracking the maximum number of users
-    process _ msg chan "users" rest = do
-         (m, seenFM) <- readMS
-         s <- io getClockTime
-         let who = G.packNick $ lcNick $ if null rest then chan else G.readNick msg rest
-             now = length [ () | (_,Present _ chans) <- M.toList seenFM
-                               , who `elem` chans ]
-
-             n = case M.lookup (P.unpack who) m of Nothing -> 1; Just n' -> n'
-
-             active = length [() | (_,st@(Present _ chans)) <- M.toList seenFM
-                                 , who `elem` chans && isActive st ]
-
-             isActive (Present (Just (ct,_td)) _cs) = recent ct
-             isActive _                             = False
-
-             recent t = normalizeTimeDiff (diffClockTimes s t) < gap_minutes
-             gap_minutes = TimeDiff 0 0 0 0 30 0 0 -- 30 minutes
-
-         return $!
-           [concat
-              [ "Maximum users seen in ", G.showNick msg $ G.unpackNick who, ": "
-              , show n
-              , ", currently: ", show now
-              , printf " (%0.1f%%)" (100 * (fromIntegral now    / fromIntegral n) :: Double)
-              , ", active: ", show active
-              , printf " (%0.1f%%)" (100 * (fromIntegral active / fromIntegral now) :: Double)
-              ]
-            ]
-
-    process _ msg target _      rest = do
-         (_,seenFM) <- readMS
-         now        <- io getClockTime
-         let (txt,safe) = first unlines (getAnswer msg rest seenFM now)
-         if safe || not ("#" `isPrefixOf` G.nName target)
-             then return [txt]
-             else do lift $ ircPrivmsg (G.nick msg) txt
-                     return []
 
     moduleInit _        = do
       wSFM <- bindModule2 withSeenFM

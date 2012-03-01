@@ -12,9 +12,14 @@ import Plugin
 $(plugin "Unlambda")
 
 instance Module UnlambdaModule where
-    moduleCmds   _     = ["unlambda"]
-    moduleHelp _ _     = "unlambda <expr>. Evaluate an unlambda expression"
-    process _ _ to _ s = ios80 to (unlambda s)
+    moduleCmds _ = 
+        [ (command "unlambda")
+            { help = say "unlambda <expr>. Evaluate an unlambda expression"
+            , process = \s -> do
+                to <- getTarget
+                ios80 to (unlambda s) >>= mapM_ say
+            }
+        ]
 
 binary :: String
 binary = "unlambda"

@@ -11,9 +11,12 @@ import Plugin
 $(plugin "BF")
 
 instance Module BFModule where
-    moduleCmds   _     = ["bf"]
-    moduleHelp _ _     = "bf <expr>. Evaluate a brainf*ck expression"
-    process _ _ to _ s = ios80 to (bf s)
+    moduleCmds   _     = 
+        [ (command "bf")
+            { help = say "bf <expr>. Evaluate a brainf*ck expression"
+            , process = \s -> getTarget >>= \to -> ios80 to (bf s) >>= mapM_ say
+            }
+        ]
 
 binary :: String
 binary = "bf"

@@ -11,6 +11,7 @@ module Plugin (
         ios, box, list, ios80, plugin, modules,
 
         module Lambdabot,
+        module Lambdabot.Command,
         module Lambdabot.State,
         module Config,
 
@@ -32,6 +33,7 @@ module Plugin (
     ) where
 
 import Lambdabot
+import Lambdabot.Command hiding (runCommand, execCmd)
 import Lambdabot.State
 import Config
 

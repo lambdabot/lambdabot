@@ -10,15 +10,15 @@ type PfState = ()
 
 $(plugin "Pointful")
 
---type Pf = ModuleLB PfState
-
 instance Module PointfulModule where
     type ModuleState PointfulModule = PfState
 
-    moduleCmds _ = ["pointful","pointy","repoint","unpointless","unpl","unpf"]
-
-    moduleHelp _ _ = "pointful <expr>. Make code pointier."
+    moduleCmds _ =
+        [ (command "pointful")
+            { aliases = ["pointy","repoint","unpointless","unpl","unpf"]
+            , help = say "pointful <expr>. Make code pointier."
+            , process = mapM_ say . lines . pointful
+            }
+        ]
 
     moduleDefState _ = return $ ()
-
-    process_ _ _ rest = return (lines $ pointful rest)

@@ -15,14 +15,16 @@ import Control.Monad (guard)
 $(plugin "Undo")
 
 instance Module UndoModule where
-    moduleCmds   _ = ["undo", "do"]
-    moduleHelp _ "undo" = "undo <expr>\nTranslate do notation to Monad operators."
-    moduleHelp _ "do" = "do <expr>\nTranslate Monad operators to do notation."
-    process_ _ cmd args = ios $ return $ transform f args
-     where f = case cmd of
-                "undo" -> undo
-                "do" -> do'
-                _      -> error "unknown command"
+    moduleCmds _ =
+        [ (command "undo")
+            { help = say "undo <expr>\nTranslate do notation to Monad operators."
+            , process = say . transform undo
+            }
+        , (command "do")
+            { help = say "do <expr>\nTranslate Monad operators to do notation."
+            , process = say . transform do'
+            }
+        ]
 
 findVar :: Data a => a -> String
 findVar e = head $ do

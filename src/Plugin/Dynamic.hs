@@ -11,20 +11,38 @@ import Control.Monad.State
 
 $(plugin "Dynamic")
 
+modHelp = "An interface to dynamic linker"
+
 instance Module DynamicModule where
 
     moduleSticky _ = True
-    moduleHelp _ _ = "An interface to dynamic linker"
-    modulePrivs  _ = ["dynamic-load","dynamic-unload","dynamic-reload"]
+    moduleCmds _ =
+        [ (command "dynamic-load")
+            { privileged = True
+            , help = say modHelp
+            , process = \rest -> do
+                lift (lift (load rest))
+                say "module loaded"
+            }
+        , (command "dynamic-unload")
+            { privileged = True
+            , help = say modHelp
+            , process = \rest -> do
+                lift (lift (unload rest))
+                say "module unloaded"
+            }
+        , (command "dynamic-reload")
+            { privileged = True
+            , help = say modHelp
+            , process = \rest -> do
+                lift (lift (unload rest >> load rest))
+                say "module reloaded"
+            }
+        ]
 
     moduleInit   _ = lift $ do
         plugins <- gets ircPlugins
         mapM_ (\p -> load p >> liftIO (putChar '!' >> hFlush stdout)) plugins
-
-    process_ _ s rest = case s of
-        "dynamic-load"      -> lift (load rest)                >> return ["module loaded"]
-        "dynamic-unload"    -> lift (unload rest)              >> return ["module unloaded"]
-        "dynamic-reload"    -> lift (unload rest >> load rest) >> return ["module reloaded"]
 
 --
 -- | Load value "theModule" from each plugin, given simple name of a

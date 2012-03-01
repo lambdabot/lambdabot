@@ -9,7 +9,7 @@ import Control.Exception
 import Prelude hiding (catch)
 import Lambdabot.IRC
 import LMain( received )
-import Lambdabot.Message
+import Lambdabot.Message hiding ( command )
 import Network( connectTo, PortID(..) )
 import Plugin
 import System.IO (hGetLine, hPutStr, hPutStrLn, hSetBuffering, BufferMode(NoBuffering), stderr, hClose)
@@ -18,14 +18,18 @@ import qualified Data.ByteString.Char8 as P
 $(plugin "IRC")
 
 instance Module IRCModule where
-    modulePrivs  _         = ["irc-connect"]
-    moduleHelp _ _         = "irc-connect tag host portnum nickname userinfo.  connect to an irc server"
-    process_ _ "irc-connect" rest =
-        case (split " " rest) of
-          tag:hostn:portn:nickn:uix -> do pn <- (PortNumber . fromInteger) `fmap` readM portn
-                                          online tag hostn pn nickn (concatWith " " uix)
-                                          return []
-          _                         -> return ["Not enough parameters!"]
+    moduleCmds _ = 
+        [ (command "irc-connect")
+            { privileged = True
+            , help = say "irc-connect tag host portnum nickname userinfo.  connect to an irc server"
+            , process = \rest ->
+                case (split " " rest) of
+                    tag:hostn:portn:nickn:uix -> do
+                        pn <- (PortNumber . fromInteger) `fmap` readM portn
+                        lift (online tag hostn pn nickn (concatWith " " uix))
+                    _ -> say "Not enough parameters!"
+            }
+        ]
 
 ----------------------------------------------------------------------
 -- Encoding and decoding of messages

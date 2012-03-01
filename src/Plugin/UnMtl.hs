@@ -22,10 +22,12 @@ import Plugin as P
 $(plugin "UnMtl")
 
 instance P.Module UnMtlModule where
-    moduleCmds   _ = ["unmtl"]
-    moduleHelp _ _ = "unroll mtl monads"
-    process_ _ _ mtl =
-        return $ [ either ("err: "++) prettyPrintInLine (mtlParser mtl) ]
+    moduleCmds _ = 
+        [ (command "unmtl")
+            { help = say "unroll mtl monads"
+            , process = say . either ("err: "++) prettyPrintInLine . mtlParser
+            }
+        ]
 
 -----------------------------------------------------------
 -- 'PType' wrapper type

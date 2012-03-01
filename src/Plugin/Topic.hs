@@ -7,7 +7,7 @@
 module Plugin.Topic (theModule) where
 
 import Plugin
-import Lambdabot.Message as Msg (Message, setTopic, Nick, nName, readNick)
+import Lambdabot.Message as Msg (Message, setTopic, Nick, nName)
 import qualified Data.Map as M
 
 import Control.Monad.State (gets)
@@ -51,21 +51,25 @@ commands = M.fromList [(alias, cmd) | cmd <- cmds, alias <- commandAliases cmd]
             ]
 
 instance Module TopicModule where
-  moduleHelp _ s = case words s of
-    [cmd] -> "@" ++ s ++ " -- " ++ commandHelp (commands M.! cmd)
-    _     -> "Are you typing with your feet?"
+  moduleCmds _ =
+    [ (command name)
+        { help = say helpStr
+        , process = \args -> do
+            tgt <- getTarget
+            (chan, rest) <- case splitFirstWord args of
+                    (c@('#':_), r)  -> do
+                        c' <- readNick c
+                        return (Just c', r)
+                    _               -> case nName tgt of
+                        ('#':_)         -> return (Just tgt, args)
+                        _               -> return (Nothing, args)
 
-  moduleCmds   _ = M.keys commands
-
-  process _ msg tgt cmd args = case chan of
-    Just chan   -> lift (invokeCommand (commands M.! cmd) chan rest)
-    Nothing     -> return ["What channel?"]
-    
-    where (chan, rest) = case splitFirstWord args of
-            (c@('#':_), r)  -> (Just (readNick msg c), r)
-            _               -> case nName tgt of
-                ('#':_)         -> (Just tgt, args)
-                _               -> (Nothing, args)
+            case chan of
+                Just chan -> lift (lift (invoke chan rest)) >>= mapM_ say
+                Nothing -> say "What channel?"
+        }
+    | (name, TopicCommand _ helpStr invoke)<- M.toList commands
+    ]
 
 ------------------------------------------------------------------------
 -- Topic action implementations

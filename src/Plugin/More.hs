@@ -14,17 +14,20 @@ type MoreState = GlobalPrivate () [String]
 instance Module MoreModule where
     type ModuleState MoreModule = MoreState
     
-    moduleHelp _ _              = "@more. Return more output from the bot buffer."
-    moduleCmds   _              = ["more"]
+    moduleCmds _ = 
+        [ (command "more")
+            { help = say "@more. Return more output from the bot buffer."
+            , process = \_ -> do
+                target <- getTarget
+                morestate <- lift (readPS target)
+                lift $ case morestate of
+                    Nothing -> return ()
+                    Just ls -> mapM_ (lift . ircPrivmsg' target) =<< moreFilter target ls
+            }
+        ]
     moduleDefState _            = return $ mkGlobalPrivate 20 ()
     moduleInit   _              = bindModule2 moreFilter >>=
                                       ircInstallOutputFilter
-    process      _ _ target _ _ = do
-        morestate <- readPS target
-        case morestate of
-            Nothing -> return []
-            Just ls -> do mapM_ (lift . ircPrivmsg' target) =<< moreFilter target ls
-                          return []       -- special
 
 moreFilter :: Nick -> [String] -> More [String]
 moreFilter target msglines = do

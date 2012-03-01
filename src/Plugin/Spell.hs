@@ -11,27 +11,46 @@ import qualified Text.Regex as R
 
 $(plugin "Spell")
 
+helpStr = "spell <word>. Show spelling of word"
+
 instance Module SpellModule where
     type ModuleState SpellModule = Bool
     
-    moduleCmds   _   = ["spell", "spell-all"]
-    modulePrivs  _   = ["nazi-on", "nazi-off"]
-    moduleHelp _ _   = "spell <word>. Show spelling of word"
+    moduleCmds _ =
+        [ (command "spell")
+            { help = say helpStr
+            , process = doSpell
+            }
+        , (command "spell-all")
+            { help = say helpStr
+            , process = spellAll
+            }
+        , (command "nazi-on")
+            { privileged = True
+            , help = say helpStr
+            , process = const (nazi True)
+            }
+        , (command "nazi-off")
+            { privileged = True
+            , help = say helpStr
+            , process = const (nazi False)
+            }
+        ]
     moduleDefState _ = return False
-
-    process_ _ "spell" [] = box "No word to spell."
-    process_ _ "spell" s  = (return . showClean . take 5) `fmap` liftIO (spell s)
-
-    process_ _ "spell-all" [] = box "No phrase to spell."
-    process_ _ "spell-all" s  = liftIO (spellingNazi s)
-
-    process_ _ "nazi-on"  _ = on  >> box "Spelling nazi engaged."
-    process_ _ "nazi-off" _ = off >> box "Spelling nazi disengaged."
 
     contextual _ _ _ txt      = do
         alive <- readMS
         if alive then liftIO $ spellingNazi txt
                  else return []
+
+doSpell [] = say "No word to spell."
+doSpell s  = (say . showClean . take 5) =<< (io (spell s))
+
+spellAll [] = say "No phrase to spell."
+spellAll s  = liftIO (spellingNazi s) >>= mapM_ say
+
+nazi True  = lift on  >> say "Spelling nazi engaged."
+nazi False = lift off >> say "Spelling nazi disengaged."
 
 on :: Spell ()
 on  = writeMS True

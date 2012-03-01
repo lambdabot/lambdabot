@@ -24,24 +24,36 @@ $(plugin "Vixen")
 instance Module VixenModule where
     type ModuleState VixenModule = (Bool, String -> IO String)
     
-    moduleCmds   _   = ["vixen"]
-    modulePrivs  _   = ["vixen-on", "vixen-off"] -- could be noisy
-    moduleHelp _ _   = "vixen <phrase>. Sergeant Curry's lonely hearts club"
-
+    moduleCmds _ = 
+        [ (command "vixen")
+            { help = say "vixen <phrase>. Sergeant Curry's lonely hearts club"
+            , process = \txt -> lift readMS >>= (ios . ($ txt) . snd) >>= mapM_ say
+            }
+        , (command "vixen-on")
+            { privileged = True
+            , help = do
+                me <- showNick =<< getLambdabotName
+                say ("vixen-on: turn " ++ me ++ " into a chatterbot")
+            , process = const $ do
+                lift $ modifyMS $ \(_,r) -> (True, r)
+                say "What's this channel about?"
+            }
+        , (command "vixen-off")
+            { privileged = True
+            , help = do
+                me <- showNick =<< getLambdabotName
+                say ("vixen-off: shut " ++ me ++ "up")
+            , process = const $ do
+                lift $ modifyMS $ \(_,r) -> (False, r)
+                say "Bye!"
+            }
+        ]
+    
     -- if vixen-chat is on, we can just respond to anything
     contextual _ _ _ txt      = do
         (alive, k) <- readMS
         if alive then ios (k txt)
                  else return []
-
-    process_ _ "vixen-on"  _ =
-        withMS $ \(_,r) k -> do k (True, r)
-                                return ["What's this channel about?"]
-    process_ _ "vixen-off" _ =
-        withMS $ \(_,r) k -> do k (False, r)
-                                return ["Bye!"]
-
-    process_ _ _ txt = readMS >>= ios . ($ txt) . snd
 
     moduleDefState _ = return (False, const (return "<undefined>"))
 

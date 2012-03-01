@@ -10,8 +10,14 @@ import Math.OEIS
 $(plugin "OEIS")
 
 instance Module OEISModule where
-    moduleCmds   _     = ["oeis", "sequence"]
-    moduleHelp _ _     = "oeis <sequence>. Look up a sequence in the Online Encyclopedia of Integer Sequences"
-    process _ _ to _ a = do s <- liftIO $ lookupOEIS a
-                            out <- mapM (ios80 to) (map return s)
-                            return $ concat out
+    moduleCmds _ =
+        [ (command "oeis")
+            { aliases = ["sequence"]
+            , help = say "oeis <sequence>. Look up a sequence in the Online Encyclopedia of Integer Sequences"
+            , process = \a -> do
+                to <- getTarget
+                s <- io $ lookupOEIS a
+                out <- mapM (ios80 to) (map return s)
+                mapM_ say $ concat out
+            }
+        ]

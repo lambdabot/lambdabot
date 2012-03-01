@@ -5,7 +5,7 @@ module Plugin.System (theModule) where
 import Plugin
 import Lambdabot.AltTime
 import qualified Lambdabot.Message as Msg (Message, Nick, joinChannel, partChannel, server, readNick)
-import qualified Data.Map as M       (Map,keys,fromList,lookup,union,insert,delete)
+import qualified Data.Map as M       (Map,assocs,keys,fromList,lookup,union,insert,delete)
 
 import Control.Monad.State      (MonadState(get, put), gets)
 
@@ -15,10 +15,20 @@ instance Module SystemModule where
     -- State is time current instance started and longest recorded uptime
     type ModuleState SystemModule = (ClockTime, TimeDiff)
     
-    moduleCmds   _   = M.keys syscmds
-    modulePrivs  _   = M.keys privcmds
-    moduleHelp _ s   = fromMaybe defaultHelp (M.lookup s $ syscmds `M.union` privcmds)
-    process      _   = doSystem
+    moduleCmds _ = 
+        [ (command name)
+            { help = say helpStr
+            , process = doSystem name
+            }
+        | (name, helpStr) <- M.assocs syscmds
+        ] ++
+        [ (command name) 
+            { privileged = True
+            , help = say helpStr
+            , process = doSystem name
+            }
+        | (name, helpStr) <- M.assocs privcmds
+        ]
     moduleDefState _ = flip (,) noTimeDiff `fmap` io getClockTime
     moduleSerialize  = const $ Just stdSerial
     moduleInit _     = do (_, d) <- readMS
@@ -58,8 +68,13 @@ privcmds = M.fromList [
 defaultHelp :: String
 defaultHelp = "system : irc management"
 
-doSystem :: Msg.Message a => a -> Msg.Nick -> [Char] -> [Char] -> System [String]
-doSystem msg target cmd rest = get >>= \s -> case cmd of
+doSystem :: String -> String -> Cmd System ()
+doSystem cmd rest = withMsg $ \msg -> do
+    target <- getTarget
+    lift (doSystem' msg target cmd rest) >>= mapM_ say
+
+doSystem' :: Msg.Message a => a -> Msg.Nick -> [Char] -> [Char] -> System [String]
+doSystem' msg target cmd rest = get >>= \s -> case cmd of
   "listchans"   -> return [pprKeys (ircChannels s)]
   "listmodules" -> return [pprKeys (ircModules s) ]
   "listservers" -> return [pprKeys (ircServerMap s)]
@@ -129,10 +144,9 @@ listModule s = withModule ircModules s fromCommand printProvides
     printProvides :: (forall mod. Module mod => mod -> ModuleT mod LB String)
     printProvides m = do
         let cmds = moduleCmds m
-        privs <- gets ircPrivCommands
-        let cmds' = cmds \\ privs -- don't display privledged commands
+        let cmds' = filter (not . privileged) cmds
         name' <- getName
         return . concat $ if null cmds'
                           then [name', " has no visible commands"]
-                          else [name', " provides: ", showClean cmds']
+                          else [name', " provides: ", showClean (concatMap cmdNames cmds')]
 

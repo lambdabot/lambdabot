@@ -16,31 +16,32 @@ instance Module KarmaModule where
     
     type ModuleState KarmaModule = KarmaState
 
-    moduleCmds _ = ["karma", "karma+", "karma-", "karma-all"]
-    moduleHelp _ "karma"     = "karma <polynick>. Return a person's karma value"
-    moduleHelp _ "karma+"    = "karma+ <nick>. Increment someone's karma"
-    moduleHelp _ "karma-"    = "karma- <nick>. Decrement someone's karma"
-    moduleHelp _ "karma-all" = "karma-all. List all karma"
+    moduleCmds _ =
+        [ (command "karma")
+            { help = say "karma <polynick>. Return a person's karma value"
+            , process = \rest -> withMsg $ \msg -> do
+                sender <- getSender
+                tellKarma sender $ case words rest of
+                    []       -> E.mononickToPolynick sender
+                    (nick:_) -> E.readPolynick msg nick
+
+            }
+        , (command "karma+")
+            { help = say "karma+ <nick>. Increment someone's karma"
+            , process = doCmd 1
+            }
+        , (command "karma-")
+            { help = say "karma- <nick>. Decrement someone's karma"
+            , process = doCmd (-1)
+            }
+        , (command "karma-all")
+            { help = say "karma-all. List all karma"
+            , process = const listKarma
+            }
+        ]
 
     moduleDefState  _ = return $ M.empty
     moduleSerialize _ = Just mapSerial
-
-    process      _ _ _ "karma-all" _ = listKarma
-    process      _ msg _ "karma" rest = tellKarma msg sender nick'
-        where sender = Msg.nick msg
-              nick' = case words rest of
-                        []       -> E.mononickToPolynick sender
-                        (nick:_) -> E.readPolynick msg nick
-    process      _ msg _ cmd rest =
-        case words rest of
-          []       -> return [ "usage @karma(+|-) nick" ]
-          (nick:_) -> do
-              let nick' = Msg.readNick msg nick
-              case cmd of
-                 "karma+"    -> changeKarma msg 1    sender nick'
-                 "karma-"    -> changeKarma msg (-1) sender nick'
-                 _        -> error "KarmaModule: can't happen"
-        where sender = Msg.nick msg
 
     -- ^nick++($| )
     contextual   _ msg _ text = do
@@ -61,21 +62,31 @@ instance Module KarmaModule where
         -- More special cases, to ignore Perl code.
         badPrefixes = ["$", "@", "%"]
 
+
+doCmd dk rest = withMsg $ \msg -> do
+    sender <- getSender
+    case words rest of
+      []       -> say "usage @karma(+|-) nick"
+      (nick:_) -> do
+          nick' <- readNick nick
+          lift (changeKarma msg dk sender nick') >>= mapM_ say
+
 ------------------------------------------------------------------------
 
-tellKarma :: Msg.Message m => m -> Msg.Nick -> E.Polynick -> Karma [String]
-tellKarma msg sender nick = do
-    lookup' <- lift E.lookupMononickMap
-    karma <- (sum . map snd . lookup' nick) `fmap` readMS
-    return [concat [if E.mononickToPolynick sender == nick then "You have" else E.showPolynick msg nick ++ " has"
+tellKarma :: Msg.Nick -> E.Polynick -> Cmd Karma ()
+tellKarma sender nick = do
+    lookup' <- lift (lift E.lookupMononickMap)
+    karma <- (sum . map snd . lookup' nick) `fmap` lift readMS
+    nickStr <- withMsg (return . flip E.showPolynick nick)
+    say $ concat [if E.mononickToPolynick sender == nick then "You have" else nickStr ++ " has"
                    ," a karma of "
-                   ,show karma]]
+                   ,show karma]
 
-listKarma :: Karma [String]
+listKarma :: Cmd Karma ()
 listKarma = do
-    ks <- M.toList `fmap` readMS
+    ks <- M.toList `fmap` lift readMS
     let ks' = sortBy (\(_,e) (_,e') -> e' `compare` e) ks
-    return $ (:[]) . unlines $ map (\(k,e) -> printf " %-20s %4d" (show k) e :: String) ks'
+    mapM_ (\(k,e) -> say (printf " %-20s %4d" (show k) e)) ks'
 
 changeKarma :: Msg.Message m => m -> Integer -> Msg.Nick -> Msg.Nick -> Karma [String]
 changeKarma msg km sender nick

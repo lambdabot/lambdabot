@@ -37,25 +37,34 @@ instance Module OfflineRCModule where
     -- being used.
     type ModuleState OfflineRCModule = Integer
     
-    modulePrivs  _         = ["offline", "rc"]
-    moduleHelp _ "offline" = "offline. Start a repl"
-    moduleHelp _ "rc"      = "rc name. Read a file of commands (asynchonously). FIXME: better name."
+    moduleCmds _ = 
+        [ (command "offline")
+            { privileged = True
+            , help = say "offline. Start a repl"
+            , process = const . lift $ do
+                act <- bindModule0 $ finallyError replLoop unlockRC
+                lockRC
+                lift $ liftLB forkIO act
+                return ()
+            }
+        , (command "rc")
+            { privileged = True
+            , help = say "rc name. Read a file of commands (asynchonously). FIXME: better name."
+            , process = \fn -> lift $ do
+                txt <- io $ readFile fn
+                io $ evaluate $ foldr seq () txt
+                act <- bindModule0 $ finallyError (mapM_ feed $ lines txt) unlockRC
+                lockRC
+                lift $ liftLB forkIO act
+                return ()
+            }
+        ]
     moduleInit      _      = do act <- bindModule0 onInit
                                 lift $ liftLB forkIO $ do mv <- asks ircInitDoneMVar
                                                           io $ readMVar mv
                                                           act
                                 return ()
     moduleDefState _       = return 0
-    process_ _ "offline" _ = do act <- bindModule0 $ finallyError replLoop unlockRC
-                                lockRC
-                                lift $ liftLB forkIO act
-                                return []
-    process_ _ "rc" fn     = do txt <- io $ readFile fn
-                                io $ evaluate $ foldr seq () txt
-                                act <- bindModule0 $ finallyError (mapM_ feed $ lines txt) unlockRC
-                                lockRC
-                                lift $ liftLB forkIO act
-                                return []
 
 onInit :: OfflineRC ()
 onInit = do st <- get
