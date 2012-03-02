@@ -4,7 +4,7 @@
 -- | String and other utilities
 module Lambdabot.Util (
         concatWith,
-        split, split2,
+        split,
         breakOnGlue,
         clean,
         dropSpace,
@@ -84,17 +84,6 @@ split glue xs = split' xs
     split' xs' = piece : split' (dropGlue rest)
         where (piece, rest) = breakOnGlue glue xs'
     dropGlue = drop (length glue)
-
--- a variant?
-split2 :: Char -> Int -> String -> [String]
-split2 c i s =
-        let fn 0 t = t:[]
-            fn j t = let (xs,ys) = break (== c) t
-                     in case ys of
-                        [] -> xs:[]
-                        _  -> xs: fn (j-1) (tail ys)
-        in fn (i-1) s
-
 
 -- | Break off the first piece of a list held together by glue,
 --   leaving the glue attached to the remainder of the list.  Example:
