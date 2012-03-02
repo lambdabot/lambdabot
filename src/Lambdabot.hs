@@ -145,25 +145,20 @@ initState ld plugins evcmds = IRCRWState {
 
 -- Actually, this isn't a loop anymore.  FIXME: better name.
 mainLoop :: LB ()
-mainLoop = do
-
-    catchIrc
-       (do asks ircInitDoneMVar >>= io . flip putMVar ()
-           asks ircQuitMVar >>= io . takeMVar
-           fail "don't write to the quitMVar!")
-       (\e -> do -- catch anything, print informative message, and clean up
-            io $ hPutStrLn stderr $
-                       (case e of
-                            IRCRaised ex   -> "Exception: " ++ show ex
-                            SignalCaught s -> "Signal: " ++ ircSignalMessage s)
-        --  withDebug "Running exit handlers"    runExitHandlers
-        --  withDebug "Writing persistent state" flushModuleState
-            runExitHandlers >> flushModuleState
-
-      -- this kills profiling output:
-            io $ exitImmediately (ExitFailure 1))
-
-      --    throwError e)
+mainLoop = catchIrc
+   (do asks ircInitDoneMVar >>= io . flip putMVar ()
+       asks ircQuitMVar >>= io . takeMVar
+       fail "don't write to the quitMVar!")
+   (\e -> do -- catch anything, print informative message, and clean up
+        io $ hPutStrLn stderr $ case e of
+            IRCRaised ex   -> "Exception: " ++ show ex
+            SignalCaught s -> "Signal: " ++ ircSignalMessage s
+        
+        runExitHandlers
+        flushModuleState
+        
+        -- this kills profiling output:
+        io $ exitImmediately (ExitFailure 1))
 
 -- | run 'exit' handler on modules
 runExitHandlers:: LB ()
