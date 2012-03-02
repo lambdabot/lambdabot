@@ -19,15 +19,11 @@ instance Module PlugsModule where
     moduleCmds _ =
         [ (command "run")
             { help = say "run <expr>. You have Haskell, 3 seconds and no IO. Go nuts!"
-            , process = \s -> do
-                to <- getTarget
-                ios80 to (plugs s) >>= mapM_ say
+            , process = ios80 . plugs
             }
         , (command "let")
             { help = say "let <x> = <e>. Add a binding"
-            , process = \s -> do
-                to <- getTarget
-                ios80 to (define s) >>= mapM_ say
+            , process = ios80 . define
             }
         , (command "undefine")
             { help = say "undefine. Reset evaluator local bindings"
@@ -40,9 +36,7 @@ instance Module PlugsModule where
         ]
 
     contextual _ txt
-        | isEval txt = do
-            to <- getTarget
-            (ios80 to . plugs . dropPrefix $ txt) >>= mapM_ say
+        | isEval txt = ios80 (plugs (dropPrefix txt))
         | otherwise  = return ()
 
 binary :: String

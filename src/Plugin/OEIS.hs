@@ -14,10 +14,6 @@ instance Module OEISModule where
         [ (command "oeis")
             { aliases = ["sequence"]
             , help = say "oeis <sequence>. Look up a sequence in the Online Encyclopedia of Integer Sequences"
-            , process = \a -> do
-                to <- getTarget
-                s <- io $ lookupOEIS a
-                out <- mapM (ios80 to) (map return s)
-                mapM_ say $ concat out
+            , process = ios80 . fmap concat . lookupOEIS
             }
         ]

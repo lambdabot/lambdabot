@@ -14,7 +14,7 @@ instance Module BFModule where
     moduleCmds   _     = 
         [ (command "bf")
             { help = say "bf <expr>. Evaluate a brainf*ck expression"
-            , process = \s -> getTarget >>= \to -> ios80 to (bf s) >>= mapM_ say
+            , process = ios80 . bf
             }
         ]
 

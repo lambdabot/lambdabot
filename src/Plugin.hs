@@ -70,15 +70,17 @@ box = return . return
 
 -- | convenience, similar to ios but also cut output to channel to 80 characters
 -- usage:  @process _ _ to _ s = ios80 to (plugs s)@
-ios80 :: (Functor m, MonadIO m) => Nick -> IO String -> m [String]
-ios80 to what = list . io $ what >>= return . lim . encodeString . spaceOut . removeControl . decodeString
-    where lim = case nName to of
-                    ('#':_) -> abbr 80 -- message to channel: be nice
-                    _       -> id      -- private message: get everything
-          spaceOut = unlines . map (' ':) . lines
-          removeControl = filter (\x -> isSpace x || not (isControl x))
-          abbr n s = let (b, t) = splitAt n s in
-                     if null t then b else take (n-3) b ++ "..."
+ios80 :: (Functor m, MonadIO m) => IO String -> Cmd m ()
+ios80 action = do
+    to <- getTarget
+    let lim = case nName to of
+                  ('#':_) -> abbr 80 -- message to channel: be nice
+                  _       -> id      -- private message: get everything
+        spaceOut = unlines . map (' ':) . lines
+        removeControl = filter (\x -> isSpace x || not (isControl x))
+        abbr n s = let (b, t) = splitAt n s in
+                   if null t then b else take (n-3) b ++ "..."
+    (say =<<) . io $ fmap (lim . encodeString . spaceOut . removeControl . decodeString) action 
 
 plugin :: String -> Q [Dec]
 plugin n = sequence [typedec, fundec, modtypedec]

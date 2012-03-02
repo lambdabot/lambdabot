@@ -17,9 +17,7 @@ instance Module CheckModule where
             { help = do
                 say "check <expr>"
                 say "You have QuickCheck and 3 seconds. Prove something."
-            , process = \s -> do
-                to <- getTarget
-                ios80 to (check s) >>= mapM_ say
+            , process = ios80 . check
             }
         ]
 
