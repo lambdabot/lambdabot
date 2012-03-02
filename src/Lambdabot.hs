@@ -6,7 +6,7 @@
 -- The module typeclass, type and operations on modules
 module Lambdabot (
         MODULE(..), Module(..), lookupCmd,
-        ModuleT, ModuleLB, ModuleUnit, Mode(..),
+        ModuleT, ModuleUnit, Mode(..),
 
         IRCRState(..), IRCRWState(..), IRCError(..),
 

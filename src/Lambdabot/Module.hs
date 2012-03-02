@@ -5,7 +5,7 @@
 {-# LANGUAGE TypeFamilies #-}
 module Lambdabot.Module
     ( MODULE(..), Module(..), modulePrivs, lookupCmd
-    , ModuleT(..), ModuleLB, ModuleUnit
+    , ModuleT(..), ModuleUnit
     
     , ModuleRef(..)
     
@@ -112,9 +112,6 @@ bindModule1 act = ModuleT $
 -- | variant of `bindModule0' for monad actions with two arguments
 bindModule2 :: (a -> b -> ModuleT mod LB c) -> ModuleT mod LB (a -> b -> LB c)
 bindModule2 act = bindModule1 (uncurry act) >>= return . curry
-
--- | A nicer synonym for some ModuleT modtuffs
-type ModuleLB mod = ModuleT mod LB [String]
 
 -- | And for packed output
 type ModuleF  mod = ModuleT mod LB [ByteString]

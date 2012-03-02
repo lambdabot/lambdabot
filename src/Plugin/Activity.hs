@@ -47,7 +47,7 @@ activity full args = do
     
     say fmt_agg
 
-activityFilter :: Msg.Nick -> [String] -> ModuleLB ActivityModule
+activityFilter :: Msg.Nick -> [String] -> Activity [String]
 activityFilter target lns = do
     io $ evaluate $ foldr seq () $ map (foldr seq ()) $ lns
     withMS $ \ st wr -> do
