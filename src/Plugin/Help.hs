@@ -3,7 +3,7 @@
 module Plugin.Help (theModule) where
 
 import Plugin
-import Control.Exception (NoMethodError(..), fromException, evaluate)
+import Control.Exception (NoMethodError(..), fromException)
 import qualified Lambdabot.Command as Cmd
 
 $(plugin "Help")

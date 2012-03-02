@@ -5,7 +5,6 @@
 module Plugin.OfflineRC (theModule) where
 
 import Plugin
-import System.IO( hPutStrLn, hFlush, stdout )
 
 import LMain( received )
 import Lambdabot.IRC
@@ -15,8 +14,6 @@ import Control.Concurrent( forkIO )
 import Control.Concurrent.MVar( readMVar )
 import Lambdabot.Error( finallyError )
 import Control.Exception ( evaluate )
-
-import Config
 
 -- Work around the lack of readline on windows
 readline :: String -> IO (Maybe String)

@@ -74,9 +74,6 @@ import Control.Exception
 import Control.Monad.Error (MonadError (..))
 import Control.Monad.Reader
 import Control.Monad.State
-import Control.Monad.Trans      ( liftIO )
-
-import GHC.Err
 
 #ifdef mingw32_HOST_OS
 -- compatability shim

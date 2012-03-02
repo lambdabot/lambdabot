@@ -7,10 +7,7 @@
 
 module Plugin.Vixen where
 
--- import Data.Int (for code to read old state data)
 import Data.Binary
-import Data.Binary.Put
-import Data.Binary.Get
 
 import Control.Arrow ((***))
 import System.Directory

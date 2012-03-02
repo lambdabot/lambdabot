@@ -5,9 +5,9 @@ module Plugin.System (theModule) where
 import Plugin
 import Lambdabot.AltTime
 import qualified Lambdabot.Message as Msg (Message, Nick, joinChannel, partChannel, server, readNick)
-import qualified Data.Map as M       (Map,assocs,keys,fromList,lookup,union,insert,delete)
+import qualified Data.Map as M       (Map,assocs,keys,fromList,insert,delete)
 
-import Control.Monad.State      (MonadState(get, put), gets)
+import Control.Monad.State      (MonadState(get, put))
 
 $(plugin "System")
 

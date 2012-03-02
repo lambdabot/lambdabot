@@ -10,7 +10,6 @@ import Plugin
 import qualified Text.Regex as R
 
 import Control.Arrow
-import Control.Monad.State
 
 $(plugin "Elite")
 

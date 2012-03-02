@@ -11,7 +11,6 @@
 module Plugin.Where (theModule) where
 
 import Plugin
-import Lambdabot.Util (confirmation)
 import qualified Data.ByteString.Char8 as P
 import qualified Data.Map as M
 
@@ -19,7 +18,6 @@ $(plugin "Where")
 
 type WhereState         = M.Map P.ByteString P.ByteString
 type WhereWriter        = WhereState -> LB ()
--- type Where m a          = ModuleT WhereState m a
 
 instance Module WhereModule where
   type ModuleState WhereModule = WhereState

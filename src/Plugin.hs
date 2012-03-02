@@ -53,15 +53,6 @@ import Data.Either
 import System.IO
 
 import Control.Monad.Error
-import Control.Monad.Trans
-
-import Codec.Binary.UTF8.String
-
-import Language.Haskell.TH
-
-import Codec.Binary.UTF8.String
-
-import Language.Haskell.TH
 
 import Codec.Binary.UTF8.String
 

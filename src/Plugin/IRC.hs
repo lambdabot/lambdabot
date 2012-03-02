@@ -12,7 +12,6 @@ import LMain( received )
 import Lambdabot.Message hiding ( command )
 import Network( connectTo, PortID(..) )
 import Plugin
-import System.IO (hGetLine, hPutStr, hPutStrLn, hSetBuffering, BufferMode(NoBuffering), stderr, hClose)
 import qualified Data.ByteString.Char8 as P
 
 $(plugin "IRC")

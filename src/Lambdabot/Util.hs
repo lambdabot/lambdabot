@@ -58,7 +58,6 @@ import Control.Exception        (bracket)
 -- getStdRandom has a bug, see safeGetStdRandom below.
 import System.Random hiding (split,random,getStdRandom)
 
-import System.IO
 import qualified System.Time as T
 
 ------------------------------------------------------------------------

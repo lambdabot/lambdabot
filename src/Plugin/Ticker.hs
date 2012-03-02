@@ -4,7 +4,6 @@
 module Plugin.Ticker (theModule) where
 
 import Plugin hiding((<$>))
-import Data.Either
 import Control.Applicative ((<$>))
 -- import Control.Arrow (second)
 import Text.Printf

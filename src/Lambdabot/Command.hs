@@ -20,7 +20,6 @@ import Control.Applicative
 import Control.Monad.Identity
 import Control.Monad.Reader
 import Control.Monad.Writer
-import Control.Monad.Trans
 import Lambdabot.Message (Message, Nick)
 import qualified Lambdabot.Message as Msg
 

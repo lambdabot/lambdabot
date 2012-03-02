@@ -18,7 +18,6 @@ import Lambdabot.Util            (withMWriter, timeout)
 
 import Control.Concurrent (forkIO, readMVar, modifyMVar_, newMVar, MVar, ThreadId)
 import Control.Monad.Reader
-import Control.Monad.Trans (liftIO)
 
 import Lambdabot.Message (Nick)
 

@@ -8,9 +8,6 @@
 module Plugin.Djinn (theModule) where
 
 import Plugin
-import Data.Char
-import Data.List
-import Data.Maybe
 
 import qualified Text.Regex as R
 

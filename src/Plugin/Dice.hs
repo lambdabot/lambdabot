@@ -9,16 +9,7 @@ import Plugin
 
 import Lambdabot.Message (nick, nName)
 
-import Control.Monad                    (replicateM,foldM)
-import System.Random                    (Random, randomRIO)
-import Text.ParserCombinators.Parsec
-import Text.ParserCombinators.Parsec.Expr
-import Text.ParserCombinators.Parsec.Token
-import Text.ParserCombinators.Parsec.Language
-
-import Data.Ratio
 import Data.Random.Dice (rollEm)
-import Text.Printf
 
 $(plugin "Dice")
 

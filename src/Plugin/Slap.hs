@@ -3,7 +3,6 @@
 module Plugin.Slap (theModule) where
 
 import Plugin
-import qualified Lambdabot.Message as Msg (nick, showNick)
 
 $(plugin "Quote")
 

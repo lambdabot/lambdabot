@@ -10,7 +10,6 @@ import Lambdabot.Parser
 import Language.Haskell.Syntax hiding (Module)
 import Data.Generics
 import qualified Data.Set as Set
-import Control.Monad (guard)
 
 $(plugin "Undo")
 

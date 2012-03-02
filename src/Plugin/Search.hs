@@ -12,7 +12,6 @@ import Plugin
 import Network.HTTP
 import Text.HTML.TagSoup
 import Text.HTML.TagSoup.Match (anyAttr, tagOpen)
-import Data.Maybe (listToMaybe)
 
 $(plugin "Search")
 

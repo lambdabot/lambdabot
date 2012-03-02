@@ -8,10 +8,8 @@ module Plugin.Eval where
 
 import Lambdabot.File (findFile)
 import Plugin
-import Lambdabot.Parser
 import Language.Haskell.Exts.Parser
 import qualified Language.Haskell.Exts.Syntax as Hs
-import qualified Text.Regex as R
 import System.Directory
 import System.Exit
 import Codec.Binary.UTF8.String (decodeString)

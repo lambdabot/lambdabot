@@ -3,7 +3,6 @@
 module Plugin.Url (theModule) where
 
 import Plugin
-import Network.URI
 
 import qualified Text.Regex as R -- legacy
 

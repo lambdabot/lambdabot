@@ -3,7 +3,6 @@
 module Modules (modulesInfo) where
 
 import Plugin
-import Data.List (nub)
 
 -- to add a new plugin, one must first add a qualified import here, and also
 -- add a string in the list below

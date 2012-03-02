@@ -8,7 +8,6 @@ import System.Exit
 import System.IO
 import System.Process
 import Control.Concurrent       (forkIO, newEmptyMVar, putMVar, takeMVar, killThread)
-import Control.Monad
 import qualified Control.Exception as E
 
 run :: FilePath -> String -> (String -> String) -> IO String

@@ -12,7 +12,6 @@ import Lambdabot.File (findFile)
 import Plugin
 import Lambdabot.AltTime
 import Lambdabot.Error         (tryError)
-import Lambdabot.Util          (lowerCaseString)
 
 import qualified Lambdabot.Message as G (Message, names, channels, nick, packNick, unpackNick, Nick(..), body, lambdabotName, showNick, readNick)
 
@@ -20,11 +19,8 @@ import qualified Data.Map as M
 import qualified Data.ByteString.Char8 as P
 import qualified Data.ByteString.Lazy as L
 
-import System.Directory
-
 import System.Time (normalizeTimeDiff) -- or export from AltTime.hs?
 
-import Control.Monad       (unless, zipWithM_)
 import Control.Arrow       (first)
 import Text.Printf
 
