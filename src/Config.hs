@@ -31,10 +31,6 @@ data Config = Config {
 
         -- | what prefixes to use for Haskell evalution
         evalPrefixes :: [String],
-        
-        -- | eval can rely on Safe Haskell (so no filtering will be done; 
-        -- any code the user offers will be passed to the compiler!)
-        evalUsesSafeHaskell :: Bool,
 
         -- | Particular commands we'd like to disable
         -- (to disable whole plugins, remove them from Modules.hs)
@@ -59,7 +55,6 @@ config = Config {
         commandPrefixes         = ["@","?"],
 
         evalPrefixes            = [">"],
-        evalUsesSafeHaskell     = True,
 
         disabledCommands        = []
 

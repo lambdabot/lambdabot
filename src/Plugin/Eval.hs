@@ -8,11 +8,8 @@ module Plugin.Eval (theModule, plugs, exts) where
 
 import Lambdabot.File (findFile)
 import Plugin
-import Language.Haskell.Exts.Parser
-import qualified Language.Haskell.Exts.Syntax as Hs
 import System.Directory
 import System.Exit
-import Codec.Binary.UTF8.String (decodeString)
 import qualified Data.ByteString.Char8 as P
 import Control.Exception (try, SomeException)
 
@@ -51,20 +48,14 @@ instance Module PlugsModule where
 binary :: String
 binary = "mueval"
 
-exts 
-    | evalUsesSafeHaskell config = 
-        [] -- if using safe haskell, L.hs can turn on its own exts
-    | otherwise = 
-        [ "BangPatterns"
-        , "NoMonomorphismRestriction"
-        , "MultiParamTypeClasses"
-        , "ViewPatterns"
-        ]
+-- extensions to enable for the interpreted expression
+-- (and probably also L.hs if it doesn't already have these set)
+exts :: [String]
+exts = []
 
 args :: String -> String -> [String]
 args load src = concat
-    [ ["-E" | not (evalUsesSafeHaskell config)]
-    , map ("-X" ++) exts
+    [ map ("-X" ++) exts
     , ["--no-imports", "-l", load]
     , ["--expression=" ++ src]
     , ["+RTS", "-N2", "-RTS"]
@@ -94,36 +85,9 @@ plugs src = do
 ------------------------------------------------------------------------
 -- define a new binding
 
-define :: String -> IO String
-define src
-    | evalUsesSafeHaskell config = comp src
-    | otherwise = case parseModule (decodeString src ++ "\n") of -- extra \n so comments are parsed correctly
-        (ParseOk (Hs.Module _ _ _ _ (Just [Hs.EVar (Hs.UnQual (Hs.Ident "main"))]) [] ds))
-            | all okay ds -> comp src
-        (ParseFailed _ e) -> return $ " " ++ e
-        _                 -> return "Invalid declaration"
- where
-    okay (Hs.TypeSig      {}) = True
-    okay (Hs.FunBind      {}) = True
-    okay (Hs.PatBind      {}) = True
-    okay (Hs.InfixDecl    {}) = True
-    okay (Hs.TypeDecl     {}) = True
-    okay (Hs.DataDecl     {}) = True
-    okay (Hs.ClassDecl    {}) = True
-    okay (Hs.InstDecl     _ _ hsQName _ _) 
-        = case hsQName of
-                Hs.Qual _ (Hs.Ident "Typeable")     -> False
-                Hs.UnQual (Hs.Ident "Typeable")     -> False
-                Hs.Qual _ (Hs.Ident "Data")         -> False
-                Hs.UnQual (Hs.Ident "Data")         -> False
-                Hs.Qual _ (Hs.Ident "Ix")           -> False
-                Hs.UnQual (Hs.Ident "Ix")           -> False
-                _                               -> True
-    okay _                   = False
-
 -- It parses. then add it to a temporary L.hs and typecheck
-comp :: String -> IO String
-comp src = do
+define :: String -> IO String
+define src = do
     l <- findFile "L.hs"
     -- Note we copy to .L.hs, not L.hs. This hides the temporary files as dot-files
     copyFile l ".L.hs"
