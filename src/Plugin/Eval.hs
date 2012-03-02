@@ -103,7 +103,9 @@ define src = do
     try (removeFile ".L.o")  :: IO (Either SomeException ())
 
     case (munge o', munge e') of
-        ([],[]) | c /= ExitSuccess -> return "Error."
+        ([],[]) | c /= ExitSuccess -> do
+                    removeFile ".L.hs"
+                    return "Error."
                 | otherwise -> do
                     renameFile ".L.hs" l
                     return "Defined."
