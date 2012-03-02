@@ -16,7 +16,7 @@ import Codec.Binary.UTF8.String (decodeString)
 import qualified Data.ByteString.Char8 as P
 import Control.Exception (try, SomeException)
 
-$(plugin "Plugs")
+plugin "Plugs"
 
 instance Module PlugsModule where
     moduleCmds _ =

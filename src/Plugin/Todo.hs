@@ -8,7 +8,7 @@ import Plugin
 import Lambdabot.Message as Msg (Message, nick, packNick, unpackNick, showNick)
 import qualified Data.ByteString.Char8 as P
 
-$(plugin "Todo")
+plugin "Todo"
 
 -- A list of key/elem pairs with an ordering determined by its position in the list
 type TodoState = [(P.ByteString, P.ByteString)]

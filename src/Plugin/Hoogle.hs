@@ -8,7 +8,7 @@ module Plugin.Hoogle (theModule) where
 
 import Plugin
 
-$(plugin "Hoogle")
+plugin "Hoogle"
 
 type HoogleState = [String]
 

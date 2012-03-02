@@ -4,7 +4,7 @@ module Plugin.Slap (theModule) where
 
 import Plugin
 
-$(plugin "Quote")
+plugin "Quote"
 
 instance Module QuoteModule where
     moduleCmds _ = 

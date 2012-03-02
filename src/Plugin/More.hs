@@ -6,7 +6,7 @@ import Plugin
 
 import Lambdabot.Message( Nick )
 
-$(plugin "More")
+plugin "More"
 
 type MoreState = GlobalPrivate () [String]
 

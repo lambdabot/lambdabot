@@ -7,7 +7,7 @@ import Plugin
 
 import Math.OEIS
 
-$(plugin "OEIS")
+plugin "OEIS"
 
 instance Module OEISModule where
     moduleCmds _ =

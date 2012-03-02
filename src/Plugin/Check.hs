@@ -9,7 +9,7 @@ import Plugin
 import Plugin.Eval (plugs)
 import Lambdabot.Parser
 
-$(plugin "Check")
+plugin "Check"
 
 instance Module CheckModule where
     moduleCmds _ =

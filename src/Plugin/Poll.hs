@@ -12,7 +12,7 @@ import Plugin hiding (choice)
 import qualified Data.ByteString.Char8 as P
 import qualified Data.Map as M
 
-$(plugin "Vote")
+plugin "Vote"
 
 newPoll :: Poll
 newPoll = (True,[])

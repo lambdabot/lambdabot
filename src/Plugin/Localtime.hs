@@ -9,7 +9,7 @@ import Plugin
 import qualified Data.Map as M
 import Lambdabot.Message (Nick, nName)
 
-$(plugin "Localtime")
+plugin "Localtime"
 
 type TimeMap = M.Map Nick  -- the person who's time we requested
                     [Nick] -- a list of targets waiting on this time

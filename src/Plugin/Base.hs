@@ -19,7 +19,7 @@ import qualified Text.Regex as R
 commands :: [String]
 commands  = commandPrefixes config
 
-$(plugin "Base")
+plugin "Base"
 
 instance Module BaseModule where
     type ModuleState BaseModule = GlobalPrivate () ()

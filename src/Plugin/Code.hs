@@ -11,7 +11,7 @@ module Plugin.Code where
 import Plugin
 import Text.Regex
 
-$(plugin "Code")
+plugin "Code"
 
 instance Module CodeModule where
     type ModuleState CodeModule = [FilePath]

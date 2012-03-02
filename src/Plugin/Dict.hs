@@ -6,7 +6,7 @@ module Plugin.Dict (theModule) where
 import Plugin
 import qualified Plugin.Dict.DictLookup as Dict
 
-$(plugin "Dict")
+plugin "Dict"
 
 -- | This is the module handler.  Here we process commands from users.
 

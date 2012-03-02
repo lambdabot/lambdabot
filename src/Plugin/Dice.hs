@@ -9,7 +9,7 @@ import Plugin
 
 import Data.Random.Dice (rollEm)
 
-$(plugin "Dice")
+plugin "Dice"
 
 instance Module DiceModule where
     moduleCmds _ =

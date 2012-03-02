@@ -7,7 +7,7 @@ import Plugin
 import Plugin.Free.FreeTheorem
 import Plugin.Type (query_ghci)
 
-$(plugin "Free")
+plugin "Free"
 
 instance Module FreeModule where
     moduleCmds _ = 

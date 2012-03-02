@@ -22,7 +22,7 @@ import Language.Haskell.Parser
 import Language.Haskell.Syntax hiding (Module)
 import Language.Haskell.Pretty hiding (Pretty)
 
-$(plugin "Pretty")
+plugin "Pretty"
 
 instance Module PrettyModule where
     type ModuleState PrettyModule = String -> IO String

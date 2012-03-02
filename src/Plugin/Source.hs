@@ -8,7 +8,7 @@ import qualified Data.Map as M
 import qualified Data.ByteString.Char8 as P
 import Data.ByteString.Char8 (pack,unpack,ByteString)
 
-$(plugin "Source")
+plugin "Source"
 
 type Env = M.Map ByteString ByteString
 

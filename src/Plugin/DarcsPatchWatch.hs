@@ -19,7 +19,7 @@ import System.Directory
 import System.Time
 import Lambdabot.Message (Nick(..))
 
-$(plugin "DarcsPatchWatch")
+plugin "DarcsPatchWatch"
 
 
 --

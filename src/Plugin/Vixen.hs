@@ -16,7 +16,7 @@ import qualified Data.ByteString.Char8 as P
 import Lambdabot.File (findFile)
 import Plugin
 
-$(plugin "Vixen")
+plugin "Vixen"
 
 instance Module VixenModule where
     type ModuleState VixenModule = (Bool, String -> IO String)

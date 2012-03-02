@@ -27,7 +27,7 @@ type Instance   = String
 type ClassName  = String
 type ModuleName = String
 
-$(plugin "Instances")
+plugin "Instances"
 
 instance Module InstancesModule where
     moduleCmds _ = 

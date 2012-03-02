@@ -14,7 +14,7 @@ import Network( connectTo, PortID(..) )
 import Plugin
 import qualified Data.ByteString.Char8 as P
 
-$(plugin "IRC")
+plugin "IRC"
 
 instance Module IRCModule where
     moduleCmds _ = 

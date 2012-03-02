@@ -8,7 +8,7 @@ import qualified Lambdabot.NickEq as E
 import qualified Data.Map as M
 import Text.Printf
 
-$(plugin "Karma")
+plugin "Karma"
 
 type KarmaState = M.Map Msg.Nick Integer
 

@@ -26,7 +26,7 @@ addHistory :: String -> IO ()
 addHistory _ = return ()
 
 
-$(plugin "OfflineRC")
+plugin "OfflineRC"
 
 instance Module OfflineRCModule where
     -- We need to track the number of active sourcings so that we can

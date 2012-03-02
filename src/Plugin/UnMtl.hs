@@ -19,7 +19,7 @@ import Lambdabot.Parser (prettyPrintInLine)
 
 import Plugin as P
 
-$(plugin "UnMtl")
+plugin "UnMtl"
 
 instance P.Module UnMtlModule where
     moduleCmds _ = 

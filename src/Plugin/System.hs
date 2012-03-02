@@ -9,7 +9,7 @@ import qualified Data.Map as M       (Map,assocs,keys,fromList,insert,delete)
 
 import Control.Monad.State      (MonadState(get, put))
 
-$(plugin "System")
+plugin "System"
 
 instance Module SystemModule where
     -- State is time current instance started and longest recorded uptime

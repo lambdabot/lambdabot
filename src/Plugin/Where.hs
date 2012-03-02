@@ -14,7 +14,7 @@ import Plugin
 import qualified Data.ByteString.Char8 as P
 import qualified Data.Map as M
 
-$(plugin "Where")
+plugin "Where"
 
 type WhereState         = M.Map P.ByteString P.ByteString
 type WhereWriter        = WhereState -> LB ()

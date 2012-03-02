@@ -9,7 +9,7 @@ module Plugin.Unlambda (theModule) where
 
 import Plugin
 
-$(plugin "Unlambda")
+plugin "Unlambda"
 
 instance Module UnlambdaModule where
     moduleCmds _ = 

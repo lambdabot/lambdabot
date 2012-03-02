@@ -24,7 +24,7 @@ import System.Time (normalizeTimeDiff) -- or export from AltTime.hs?
 import Control.Arrow       (first)
 import Text.Printf
 
-$(plugin "Seen")
+plugin "Seen"
 
 -- Try using packed strings?
 

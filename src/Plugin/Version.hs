@@ -9,7 +9,7 @@ import Plugin
 import Paths_lambdabot (version)
 import Data.Version (showVersion)
 
-$(plugin "Version")
+plugin "Version"
 
 instance Module VersionModule where
     moduleCmds _ =

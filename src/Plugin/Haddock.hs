@@ -8,7 +8,7 @@ import qualified Data.Map as M
 import qualified Data.ByteString.Char8 as P
 import Data.ByteString.Char8 (ByteString,pack,unpack)
 
-$(plugin "Haddock")
+plugin "Haddock"
 
 type HaddockState = M.Map ByteString [ByteString]
 

@@ -12,7 +12,7 @@ import Lambdabot.Command
 import Control.Monad.State
 import Control.Arrow (first)
 
-$(plugin "Compose")
+plugin "Compose"
 
 instance Module ComposeModule where
     moduleCmds _   = 

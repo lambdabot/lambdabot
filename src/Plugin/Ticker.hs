@@ -8,7 +8,7 @@ import Control.Applicative ((<$>))
 -- import Control.Arrow (second)
 import Text.Printf
 
-$(plugin "Ticker")
+plugin "Ticker"
 
 instance Module TickerModule where
     moduleCmds _ = 

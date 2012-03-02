@@ -32,7 +32,7 @@ maxTimeout   = 15000000 -- 15 seconds
 
 type PlState = GlobalPrivate () (Int, TopLevel)
 
-$(plugin "Pl")
+plugin "Pl"
 
 instance Module PlModule where
     type ModuleState PlModule = PlState

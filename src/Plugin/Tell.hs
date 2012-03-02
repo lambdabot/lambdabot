@@ -70,7 +70,7 @@ data Note        = Note { noteSender   :: Nick,
 type NoticeBoard = M.Map Nick (Maybe ClockTime, [Note])
 -- | A nicer synonym for the Tell monad.
 
-$(plugin "Tell")
+plugin "Tell"
 
 instance Module TellModule where
     type ModuleState TellModule = NoticeBoard

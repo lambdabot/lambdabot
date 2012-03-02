@@ -6,7 +6,7 @@ module Plugin.Hello where
 
 import Plugin
 
-$(plugin "Hello")
+plugin "Hello"
 
 instance Module HelloModule where
     moduleCmds _ =

@@ -6,7 +6,7 @@ import Plugin
 
 import qualified Text.Regex as R -- legacy
 
-$(plugin "Url")
+plugin "Url"
 
 instance Module UrlModule where
     type ModuleState UrlModule = Bool

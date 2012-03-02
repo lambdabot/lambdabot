@@ -8,7 +8,7 @@ module Plugin.BF (theModule) where
 
 import Plugin
 
-$(plugin "BF")
+plugin "BF"
 
 instance Module BFModule where
     moduleCmds   _     = 

@@ -8,7 +8,7 @@ import Lambdabot.Pointful
 
 type PfState = ()
 
-$(plugin "Pointful")
+plugin "Pointful"
 
 instance Module PointfulModule where
     type ModuleState PointfulModule = PfState

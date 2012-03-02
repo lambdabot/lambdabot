@@ -7,7 +7,7 @@ module Plugin.Filter where
 
 import Plugin
 
-$(plugin "Filter")
+plugin "Filter"
 
 instance Module FilterModule where
         moduleCmds _ = 

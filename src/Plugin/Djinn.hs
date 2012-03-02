@@ -11,7 +11,7 @@ import Plugin
 
 import qualified Text.Regex as R
 
-$(plugin "Djinn")
+plugin "Djinn"
 
 -- | We can accumulate an interesting environment
 type DjinnEnv = ([Decl] {- prelude -}, [Decl])

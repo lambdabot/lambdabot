@@ -7,7 +7,7 @@ import Plugin
 import Control.Concurrent (forkIO, ThreadID)
 import Lambdabot.Message
 
-$(plugin "Paste")
+plugin "Paste"
 
 announceTarget = "#haskell" -- hmm :/
 

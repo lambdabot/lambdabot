@@ -9,7 +9,7 @@ import Plugin.Quote.Text
 import qualified Data.Map as M
 import qualified Data.ByteString.Char8 as P
 
-$(plugin "Quote")
+plugin "Quote"
 
 type Key    = P.ByteString
 type Quotes = M.Map Key [P.ByteString]

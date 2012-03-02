@@ -10,7 +10,7 @@ import Plugin.Dummy.DocAssocs (docAssocs)
 import qualified Data.Map as M
 import qualified Data.ByteString.Char8 as P
 
-$(plugin "Dummy")
+plugin "Dummy"
 
 instance Module DummyModule where
 

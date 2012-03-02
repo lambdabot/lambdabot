@@ -13,7 +13,7 @@ import Network.HTTP
 import Text.HTML.TagSoup
 import Text.HTML.TagSoup.Match (anyAttr, tagOpen)
 
-$(plugin "Search")
+plugin "Search"
 
 engines :: [(String, (URI, String -> String, [Header]))]
 engines =

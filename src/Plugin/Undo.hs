@@ -11,7 +11,7 @@ import Language.Haskell.Syntax hiding (Module)
 import Data.Generics
 import qualified Data.Set as Set
 
-$(plugin "Undo")
+plugin "Undo"
 
 instance Module UndoModule where
     moduleCmds _ =

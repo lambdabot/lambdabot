@@ -12,7 +12,7 @@ import qualified Data.Map as M
 
 import Control.Monad.State (gets)
 
-$(plugin "Topic")
+plugin "Topic"
 
 type TopicAction = Nick -> String -> LB [String]
 data TopicCommand = TopicCommand

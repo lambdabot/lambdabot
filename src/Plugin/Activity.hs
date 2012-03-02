@@ -10,7 +10,7 @@ import Control.Exception (evaluate)
 
 import System.Time
 
-$(plugin "Activity")
+plugin "Activity"
 
 type ActivityState = [(ClockTime,Msg.Nick)]
 

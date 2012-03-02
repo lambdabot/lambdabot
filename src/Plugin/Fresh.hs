@@ -6,7 +6,7 @@ module Plugin.Fresh (theModule) where
 
 import Plugin
 
-$(plugin "Fresh")
+plugin "Fresh"
 
 instance Module FreshModule where
     type ModuleState FreshModule = Integer

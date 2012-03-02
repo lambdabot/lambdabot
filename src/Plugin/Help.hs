@@ -6,7 +6,7 @@ import Plugin
 import Control.Exception (NoMethodError(..), fromException)
 import qualified Lambdabot.Command as Cmd
 
-$(plugin "Help")
+plugin "Help"
 
 instance Module HelpModule where
     moduleCmds   _ =

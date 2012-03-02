@@ -9,7 +9,7 @@ module Plugin.Spell where
 import Plugin
 import qualified Text.Regex as R
 
-$(plugin "Spell")
+plugin "Spell"
 
 helpStr = "spell <word>. Show spelling of word"
 

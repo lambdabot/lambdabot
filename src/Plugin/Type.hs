@@ -21,7 +21,7 @@ import Lambdabot.File
 import Plugin
 import qualified Text.Regex as R
 
-$(plugin "Type")
+plugin "Type"
 
 instance Module TypeModule where
      moduleCmds _ = 

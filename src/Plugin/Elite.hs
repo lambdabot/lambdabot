@@ -11,7 +11,7 @@ import qualified Text.Regex as R
 
 import Control.Arrow
 
-$(plugin "Elite")
+plugin "Elite"
 
 instance Module EliteModule where
     moduleCmds _ = 

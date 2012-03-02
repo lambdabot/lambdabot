@@ -9,7 +9,7 @@ module Plugin.Dynamic (theModule) where
 import Plugin
 import Control.Monad.State
 
-$(plugin "Dynamic")
+plugin "Dynamic"
 
 modHelp = "An interface to dynamic linker"
 
