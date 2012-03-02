@@ -3,9 +3,8 @@
 -- | Pull quotes down from yahoo.
 module Plugin.Ticker (theModule) where
 
-import Plugin hiding((<$>))
+import Plugin
 import Control.Applicative ((<$>))
--- import Control.Arrow (second)
 import Text.Printf
 
 plugin "Ticker"

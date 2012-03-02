@@ -86,42 +86,42 @@ dummylst =
     ,("oldwiki",     ("http://www.haskell.org/hawiki/" ++))
 
     ,("docs",        \x -> if null x
-                            then docPrefix <> "index.html"
+                            then docPrefix </> "index.html"
                             else lookupPackage docPrefix '-' "html" x)
 
-    ,("source",     lookupPackage "http://darcs.haskell.org/packages/" '/' "hs")
+    ,("source",     lookupPackage "http://darcs.haskell.org/packages" '/' "hs")
 
-    ,("fptools",    lookupPackage "http://darcs.haskell.org/packages/" '/' "hs")
+    ,("fptools",    lookupPackage "http://darcs.haskell.org/packages" '/' "hs")
     ,("hackage",    lookupHackage)
     ,("googleit",   lookupGoogle)
     ]
 
 lookupWiki :: String -> String
-lookupWiki page = "http://www.haskell.org/haskellwiki/" ++ spacesToUnderscores page
+lookupWiki page = "http://www.haskell.org/haskellwiki" </> spacesToUnderscores page
   where spacesToUnderscores = map (\c -> if c == ' ' then '_' else c)
 
 lookupHackage :: String -> String
 lookupHackage "" = "http://hackage.haskell.org"
-lookupHackage xs = "http://hackage.haskell.org/package/" ++ xs
+lookupHackage xs = "http://hackage.haskell.org/package" </> xs
 
 googlePrefix :: String
 googlePrefix = "http://letmegooglethatforyou.com"
 
 lookupGoogle :: String -> String
 lookupGoogle "" = googlePrefix
-lookupGoogle xs = googlePrefix ++ "/?q=" ++ quote xs
+lookupGoogle xs = googlePrefix </> "?q=" ++ quote xs
  where
     quote = map (\x -> if x == ' ' then '+' else x)
 
 docPrefix :: String
-docPrefix = "http://haskell.org/ghc/docs/latest/html/libraries/"
+docPrefix = "http://haskell.org/ghc/docs/latest/html/libraries"
 
 lookupPackage :: String -> Char -> String -> String -> String
 lookupPackage begin sep end x'
  = case M.lookup (P.pack x) docAssocs of
         Nothing -> x ++ " not available"
         Just m  -> begin
-                    <> P.unpack m
+                    </> P.unpack m
                     </> map (choice (=='.') (const sep) id) x
                     <.> end
  where x = dropSpace x'

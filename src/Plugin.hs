@@ -27,6 +27,7 @@ module Plugin (
         module Data.Maybe,
         module Data.Either,
         module System.IO,
+        module System.FilePath,
 
         module Control.Monad.Error
 
@@ -51,6 +52,7 @@ import Data.Maybe
 import Data.Either
 
 import System.IO
+import System.FilePath ((</>), (<.>))
 
 import Control.Monad.Error
 

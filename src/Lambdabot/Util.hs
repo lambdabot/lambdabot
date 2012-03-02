@@ -30,7 +30,6 @@ module Lambdabot.Util (
         choice,
         arePrefixesWithSpaceOf, arePrefixesOf,
 
-        (</>), (<.>), (<+>), (<>), (<$>),
         basename, dirname, dropSuffix, joinPath,
 
         addList, mapMaybeMap, insertUpd,
@@ -380,31 +379,6 @@ timeout n a = parIO (Just `fmap` a) (threadDelay n >> return Nothing)
 ------------------------------------------------------------------------
 
 -- some filename manipulation stuff
-
---
--- | </>, <.> : join two path components
---
-infixr 6 </>
-infixr 6 <.>
-infixr 6 <+>
-infixr 6 <>
-infixr 6 <$>
-
-(</>), (<.>), (<+>), (<>), (<$>) :: FilePath -> FilePath -> FilePath
-[] </> b = b
-a  </> b = a ++ "/" ++ b
-
-[] <.> b = b
-a  <.> b = a ++ "." ++ b
-
-[] <+> b = b
-a  <+> b = a ++ " " ++ b
-
-[] <> b = b
-a  <> b = a ++ b
-
-[] <$> b = b
-a  <$> b = a ++ "\n" ++ b
 
 basename :: FilePath -> FilePath
 basename = reverse . takeWhile ('/' /=) . reverse

@@ -83,7 +83,7 @@ rejectingCmds action args
 -- Normal commands
 djinnCmd s = do
         (_,env) <- lift readMS
-        e       <- io $ djinn env $ ":set +sorted" <$> "f ?" <+> dropForall s
+        e       <- io $ djinn env $ ":set +sorted\nf ? " ++ dropForall s
         mapM_ say $ either id (parse . lines) e
     where
       dropForall t
@@ -125,7 +125,7 @@ djinnClrCmd = lift (modifyMS (flip (,) [] . fst))
 -- looking up the symbols.
 djinnDelCmd s =  do
     (_,env) <- lift readMS
-    eenv <- io $ djinn env $ ":delete" <+> dropSpace s <$> ":environment"
+    eenv <- io $ djinn env $ ":delete " ++ dropSpace s ++ "\n:environment"
     case eenv of
         Left e     -> say (head e)
         Right env' -> lift $ do
@@ -158,7 +158,7 @@ getDjinnEnv (prel,env') = do
 djinn :: [Decl] -> String -> IO (Either [String] String)
 djinn env' src = do
     let env = concat . intersperse "\n" $ env'
-    (out,_,_) <- popen binary [] (Just (env <$> src <$> ":q"))
+    (out,_,_) <- popen binary [] (Just (unlines [env, src, ":q"]))
     let safeInit [] = []
         safeInit xs = init xs
         o = dropNL . clean_ . unlines . safeInit . drop 2 . lines $ out
