@@ -1,4 +1,4 @@
-module Main where
+module UnitTestsMain where
 
 import TestFramework
 import Tests
@@ -6,6 +6,7 @@ import Tests
 allTests = TestList
     [ dummyPlugin
     , wherePlugin
+    , sourcePlugin
     ]
 
 main = runTestTT allTests

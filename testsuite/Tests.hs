@@ -1,3 +1,4 @@
+{-# LANGUAGE TemplateHaskell #-}
 module Tests where
 
 import Control.Monad
@@ -12,7 +13,7 @@ run f = mapM_ (const f) [1..n]
 --
 -- Test the dummy plugin
 --
-$(tests "dummyPlugin" [d|
+tests "dummyPlugin" [d|
 
  testDummy = lb "dummy" "dummy"
  testEval  = lb "eval"  ""
@@ -23,28 +24,28 @@ $(tests "dummyPlugin" [d|
 
  testBug = lb "bug" "http://hackage.haskell.org/trac/ghc/newticket?type=bug"
 
- |])
+ |]
 
 ------------------------------------------------------------------------
 --
 -- Test the Where plugin
 --
 
-$(tests "wherePlugin" [d|
+tests "wherePlugin" [d|
     testWhere   = lb "where ghc" "http://haskell.org/ghc"
     testWhat    = lb "where ghc" "http://haskell.org/ghc"
     testUrl     = lb "where ghc" "http://haskell.org/ghc"
- |] )
+ |]
 
 ------------------------------------------------------------------------
 --
 -- Test the Source plugin
 --
 
-$(tests "sourcePlugin" [d|
+tests "sourcePlugin" [d|
     testSource  = lb "source foldr" $ unlines
         [ "foldr k z xs = go xs"
         ,"    where go []     = z"
         ,"          go (y:ys) = y `k` go ys"]
 
- |] )
+ |]

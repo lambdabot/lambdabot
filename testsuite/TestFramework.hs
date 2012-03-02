@@ -1,4 +1,6 @@
+{-# LANGUAGE TemplateHaskell #-}
 module TestFramework (
+  lb,
 
   assert_, assertEqual_, assertEqual2_, assertNotNull_, assertNull_,
   assertSeqEqual_,
@@ -11,7 +13,7 @@ module TestFramework (
 ) where
 
 import Data.Char
-import IO ( stderr )
+import System.IO ( stderr )
 import Data.List ( (\\) )
 import Language.Haskell.TH
 import qualified Test.HUnit as HU
@@ -32,6 +34,9 @@ assert_ loc False = HU.assertFailure ("assert failed at " ++ showLoc loc)
 assert_ loc True = return ()
 
 -- lb
+lb :: String -> String -> HU.Assertion
+lb = assertLambdabot_ ("<lb>", 0)
+
 assertLambdabot_ :: Location -> String -> String -> HU.Assertion
 assertLambdabot_ loc src expected = do
     actual <- echo src
@@ -170,12 +175,12 @@ runTestTT :: HU.Test -> IO HU.Counts
 runTestTT t = do (counts, 0) <- runTestText (HU.putTextToHandle stderr True) t
                  return counts
 
-lambdabot     = "./lambdabot"
-lambdabotHome = ".."
+lambdabot     = "dist/build/lambdabot/lambdabot"
+lambdabotHome = "."
 
 -- run the lambdabot
 echo :: String -> IO String
-echo cmd = E.handle (\e -> return (show e)) $ do
+echo cmd = E.handle (\e -> return (show (e :: E.SomeException))) $ do
     p <- getCurrentDirectory
     setCurrentDirectory lambdabotHome
     let s = cmd ++ "\n"
@@ -194,15 +199,7 @@ echo cmd = E.handle (\e -> return (show e)) $ do
         return ( scrub out )
 
 random :: Arbitrary a => IO a
-random = do
-    g <- getStdGen
-    return $ generate 1000 g (arbitrary :: Arbitrary a => Gen a)
+random = fmap head (sample' arbitrary)
 
 io80 :: IO String -> IO String
 io80 f = take 80 `fmap` f
-
-instance Arbitrary Char where
-    -- filters ctrl chars, and chops lines too remember!
-    arbitrary     = elements $ ['a'..'z'] ++ ['A' .. 'Z'] ++ ['0' .. '9']
-    coarbitrary c = variant (ord c `rem` 4)
-
