@@ -58,9 +58,13 @@ instance Module QuoteModule where
             { help = say "b52s. Anyone noticed the b52s sound a lot like zippy?"
             , process = const (rand b52s)
             }
+        , (command "pinky")
+            { help = say "pinky. Pinky and the Brain"
+            , process = \s -> rand (if "pondering" `isInfixOf` s then pinkyPondering else pinky)
+            }
         , (command "brain")
             { help = say "brain. Pinky and the Brain"
-            , process = \s -> rand (if "pondering" `isInfixOf` s then brainPondering else brain)
+            , process = const (rand brain)
             }
         , (command "palomer")
             { help = say "palomer. Sound a bit like palomer on a good day."

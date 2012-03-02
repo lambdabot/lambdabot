@@ -201,23 +201,26 @@ b52s =
 --
 -- Quotes from the pinky and the brain cartoon
 --
-brain :: [String]
-brain =
+pinky :: [String]
+pinky =
     [("Gee, Brain, what are we going to do tonight?\n"  ++
       "The same thing we do every night, Pinky. Try to take over the world!")
     , "Narf!"
     , "Zort!"
     , "Poit!"
     , "Troz!"
-    , "It must be inordinately taxing to be such a boob."
+    ,("Brain! Brain! You aren't going to leave me!!!???" ++
+      "You know what happened to Jerry Lewis after Dean Martin left him!!!")
+    ] ++ pinkyPondering
+brain :: [String]
+brain =
+    [ "It must be inordinately taxing to be such a boob."
     , "Promise me something, Pinky. Never breed."
     , "Pinky, I am in considerable pain."
     , "Here we are, Pinky--at the dawn of time!"
     ,("Now, Pinky, if by any chance you are captured during this mission, \n" ++
       "remember you are Gunther Heindriksen from Appenzell. You moved to Grindelwald\n" ++
       "to drive the cog train to Murren.  Can you repeat that?")
-    ,("Brain! Brain! You aren't going to leave me!!!???" ++
-      "You know what happened to Jerry Lewis after Dean Martin left him!!!")
     , "They've turned into giant Swiss leaderhosen-clad dancing yodelers. Talk about unpredictable!"
     , "Be quiet Pinky, or I shall have to hurt you."
     , "If I could reach you I would hurt you."
@@ -229,9 +232,9 @@ brain =
     ,("Has it ever occurred to you, Pinklet, that your scarf is\n" ++
       "constricting the bloodflow to your head?")
     , "Are you pondering what I'm pondering?"
-    ] ++ brainPondering
-brainPondering :: [String]
-brainPondering =
+    ]
+pinkyPondering :: [String]
+pinkyPondering =
     [ "But where are we going to find a duck and a hose at this hour?"
     , "But where will we find an open tattoo parlor at this time of night?"
     , "Uh... yeah, Brain, but where are we going to find rubber pants our size?"
