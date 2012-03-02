@@ -5,7 +5,7 @@
 {-# LANGUAGE TypeFamilies #-}
 module Lambdabot.Module
     ( MODULE(..), Module(..), modulePrivs, lookupCmd
-    , ModuleT(..), ModuleUnit
+    , ModuleT(..)
     
     , ModuleRef(..)
     
@@ -54,10 +54,10 @@ class Module m where
     moduleCmds      :: m -> [Cmd.Command (ModuleT m LB)]
 
     -- | Initialize the module. The default implementation does nothing.
-    moduleInit      :: m -> ModuleUnit m
+    moduleInit      :: m -> ModuleT m LB ()
 
     -- | Finalize the module. The default implementation does nothing.
-    moduleExit      :: m -> ModuleUnit m
+    moduleExit      :: m -> ModuleT m LB ()
 
     -- | Process contextual input. A plugin that implements 'contextual'
     -- is able to respond to text not part of a normal command.
@@ -115,6 +115,4 @@ bindModule2 act = bindModule1 (uncurry act) >>= return . curry
 
 -- | And for packed output
 type ModuleF  mod = ModuleT mod LB [ByteString]
-
-type ModuleUnit mod = ModuleT mod LB ()
 

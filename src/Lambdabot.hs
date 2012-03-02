@@ -6,7 +6,7 @@
 -- The module typeclass, type and operations on modules
 module Lambdabot (
         MODULE(..), Module(..), lookupCmd,
-        ModuleT, ModuleUnit, Mode(..),
+        ModuleT, Mode(..),
 
         IRCRState(..), IRCRWState(..), IRCError(..),
 
@@ -176,7 +176,7 @@ flushModuleState = do
 --
 
 -- | Peristence: write the global state out
-writeGlobalState :: Module m => m -> String -> ModuleUnit m
+writeGlobalState :: Module m => m -> String -> ModuleT m LB ()
 writeGlobalState mod name = case moduleSerialize mod of
   Nothing  -> return ()
   Just ser -> do
