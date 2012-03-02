@@ -11,9 +11,8 @@ import Data.Binary
 import Lambdabot.File (findFile)
 import Plugin
 import Lambdabot.AltTime
-import Lambdabot.Error         (tryError)
 
-import qualified Lambdabot.Message as G (Message, names, channels, nick, packNick, unpackNick, Nick(..), body, lambdabotName, showNick, readNick)
+import qualified Lambdabot.Message as G (Message, channels, nick, packNick, unpackNick, Nick(..), body, lambdabotName, showNick, readNick)
 
 import qualified Data.Map as M
 import qualified Data.ByteString.Char8 as P
