@@ -28,7 +28,6 @@ import Control.Monad.Trans (MonadTrans(..), MonadIO(..))
 ------------------------------------------------------------------------
 
 -- | The Module type class.
--- Minimal complete definition: @moduleCmds@
 class Module m where
     type ModuleState m
     type ModuleState m = ()
