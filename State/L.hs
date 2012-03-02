@@ -1,5 +1,34 @@
 {-# LANGUAGE Safe #-}
-{-# LANGUAGE ImplicitParams, ScopedTypeVariables, UnboxedTuples, TypeSynonymInstances, StandaloneDeriving, DeriveDataTypeable, DeriveFunctor, DeriveFoldable, DeriveTraversable, DeriveGeneric, FlexibleContexts, FlexibleInstances, ConstrainedClassMethods, MultiParamTypeClasses, FunctionalDependencies, MagicHash, PolymorphicComponents, ExistentialQuantification, UnicodeSyntax, PostfixOperators, PatternGuards, LiberalTypeSynonyms, RankNTypes, TypeOperators, DoRec, ParallelListComp, EmptyDataDecls, KindSignatures #-}
+
+{-# LANGUAGE ConstrainedClassMethods #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveFoldable #-}
+{-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveTraversable #-}
+{-# LANGUAGE DoRec #-}
+{-# LANGUAGE EmptyDataDecls #-}
+{-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE ImplicitParams #-}
+{-# LANGUAGE KindSignatures #-}
+{-# LANGUAGE LiberalTypeSynonyms #-}
+{-# LANGUAGE MagicHash #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE PackageImports #-}
+{-# LANGUAGE ParallelListComp #-}
+{-# LANGUAGE PatternGuards #-}
+{-# LANGUAGE PolymorphicComponents #-}
+{-# LANGUAGE PostfixOperators #-}
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE UnboxedTuples #-}
+{-# LANGUAGE UnicodeSyntax #-}
 module L where
 import Control.Applicative
 import Control.Arrow
