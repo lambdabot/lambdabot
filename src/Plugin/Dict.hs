@@ -8,63 +8,46 @@ import qualified Plugin.Dict.DictLookup as Dict
 
 plugin "Dict"
 
--- | This is the module handler.  Here we process commands from users.
-
 instance Module DictModule where
     moduleCmds _ =
-        [ (command "dict")
-            { aliases = "dict-help" : dictNames
-            , help = getHelp []
-            , process = \args -> do
-                cmd <- getCmdName
-                process_ cmd args
+        [ (command "dict-help")
+            { help = getHelp []
+            , process = getHelp . words
             }
+        ] ++
+        [ (command name)
+            { help = getHelp [name]
+            , process = \args -> case parseTerms args of
+                [] -> getHelp [name]
+                s  -> mapM_ (say . fmtResult <=< doLookup) s
+            }
+        | (name, (srv, db, descr)) <- dictTable
+        , let doLookup  = io . Dict.simpleDictLookup srv db
+              fmtResult = either ("Error: " ++) id
         ]
-
-process_ "dict"      _    = say quickHelp
-process_ "dict-help" rest = getHelp (words rest)
-process_ cmd         rest = do
-    let s = parseTerms rest
-    results <- mapM doLookup s
-    case results of
-        [] -> return ()
-        _  -> say (concat results)
-  where
-    doLookup w = io $ do
-        result <- lookupFn w
-        return $ either ("Error: " ++) id result
-
-    lookupFn = uncurry Dict.simpleDictLookup . fst $
-               fromJust (lookup cmd dictTable)
 
 -- | Configuration.
 
-dictTable :: [(String, ((Dict.QueryConfig, String), String))]
+dictTable :: [(String, (Dict.QueryConfig, String, String))]
 dictTable =
-    -- @command   ((server  , database),    description)
-    [ ("all-dicts",((dict_org, "*")       , "Query all databases on dict.org"))
-    , ("elements", ((dict_org, "elements"), "Elements database"))
-    , ("web1913" , ((dict_org, "web1913"),
-          "Webster's Revised Unabridged Dictionary (1913)"))
-    , ("wn"      , ((dict_org, "wn"),       "WordNet (r) 1.7"))
-    , ("gazetteer",((dict_org, "gazetteer"),"U.S. Gazetteer (1990)"))
-    , ("jargon"  , ((dict_org, "jargon"),   "Jargon File"))
-    , ("foldoc"  , ((dict_org, "foldoc"),
-          "The Free On-line Dictionary of Computing"))
-    , ("easton"  , ((dict_org, "easton"),   "Easton's 1897 Bible Dictionary"))
-    , ("hitchcock",((dict_org, "hitchcock"),
-          "Hitchcock's Bible Names Dictionary (late 1800's)"))
-    , ("devils"  , ((dict_org, "devils"),   "The Devil's Dictionary"))
-    , ("world02" , ((dict_org, "world02"),  "CIA World Factbook 2002"))
-    , ("vera"    , ((dict_org, "vera"),
-           "V.E.R.A.: Virtual Entity of Relevant Acronyms"))
---  , ("prelude" , ((moertel_com, "prelude"), "Haskell Standard Prelude"))
-    , ("lojban"  , ((lojban_org, "lojban"), "Search lojban.org"))
+    -- @command     (server  , database,       description)
+    [ ("all-dicts", (dict_org, "*"       ,     "Query all databases on dict.org"))
+    , ("bouvier"  , (dict_org, "bouvier",      "Bouvier's Law Dictionary"))
+    , ("cide"     , (dict_org, "gcide",        "The Collaborative International Dictionary of English"))
+    , ("devils"   , (dict_org, "devil",        "The Devil's Dictionary"))
+    , ("easton"   , (dict_org, "easton",       "Easton's 1897 Bible Dictionary"))
+    , ("elements" , (dict_org, "elements",     "Elements database"))
+    , ("foldoc"   , (dict_org, "foldoc",       "The Free On-line Dictionary of Computing"))
+    , ("gazetteer", (dict_org, "gaz2k-places", "U.S. Gazetteer (2000)"))
+    , ("hitchcock", (dict_org, "hitchcock",    "Hitchcock's Bible Names Dictionary (late 1800's)"))
+    , ("jargon"   , (dict_org, "jargon",       "Jargon File"))
+    , ("thesaurus", (dict_org, "moby-thes",    "Moby Thesaurus II"))
+    , ("vera"     , (dict_org, "vera",         "V.E.R.A.: Virtual Entity of Relevant Acronyms"))
+    , ("wn"       , (dict_org, "wn",           "WordNet (r) 1.7"))
+    , ("world02"  , (dict_org, "world02",      "CIA World Factbook 2002"))
     ]
     where
     dict_org    = Dict.QC "dict.org" 2628
---  moertel_com = Dict.QC "dict.moertel.com" 2628
-    lojban_org  = Dict.QC "lojban.org" 2628
 
 dictNames :: [String]
 dictNames = sort (map fst dictTable)
@@ -72,21 +55,15 @@ dictNames = sort (map fst dictTable)
 
 -- | Print out help.
 
-quickHelp :: String
-quickHelp = unlines [ "Supported dictionary-lookup commands:"
-                    , "  " ++ concatWith " " dictNames
-                    , "Use \"dict-help [cmd...]\" for more."
-                    ]
-
 getHelp :: [String] -> Cmd Dict ()
 getHelp []    = do
     say ("I perform dictionary lookups via the following "
           ++ show (length dictNames) ++ " commands:\n")
     getHelp dictNames
 
-getHelp dicts = mapM_ say . map gH $ dicts
+getHelp dicts = mapM_ (say . gH) dicts
     where
-    gH dict | Just (_, descr) <- lookup dict dictTable
+    gH dict | Just (_, _, descr) <- lookup dict dictTable
             = pad dict ++ " " ++ descr
 
             | otherwise
