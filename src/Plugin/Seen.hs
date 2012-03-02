@@ -26,8 +26,6 @@ import Text.Printf
 
 plugin "Seen"
 
--- Try using packed strings?
-
 -- | The type of channels
 type Channel = P.ByteString
 
@@ -64,16 +62,6 @@ type SeenMap   = M.Map Nick UserStatus
 type MaxMap    = M.Map String Int
 
 ------------------------------------------------------------------------
-
--- ok, since this module generates quite a lot of state, what we'll do
--- is use Binary to pack this value, since Read is sooo slow and exe (as
--- my gf says :)
-
-{-
-instance Binary (M.Map Nick UserStatus) where
-    put_ bh m = put_ bh (M.toList m)
-    get bh    = do x <- get bh ; return (M.fromList x)
--}
 
 instance Binary StopWatch where
     put (Stopped td) = putWord8 0 >> put td
@@ -128,14 +116,9 @@ instance Binary UserStatus where
 
             _ -> error "Seen.UserStatus.get"
 
-------------------------------------------------------------------------
---
--- something's broken. doesn't seem to correctly keep the seen data over
--- reboots anymore :/
---
-
 instance Module SeenModule where
     type ModuleState SeenModule = SeenState
+    moduleDefState  _ = return (M.empty,M.empty)
     
     moduleCmds _ = 
         [ (command "users")
@@ -183,7 +166,6 @@ instance Module SeenModule where
                 
             }
         ]
-    moduleDefState _     = return (M.empty,M.empty)
 
     moduleInit _        = do
       wSFM <- bindModule2 withSeenFM
@@ -191,11 +173,9 @@ instance Module SeenModule where
         ["JOIN", "PART", "QUIT", "NICK", "353",      "PRIVMSG"] $ map wSFM
         [joinCB, partCB, quitCB, nickCB, joinChanCB, msgCB]
 
-      -- This magically causes the 353 callback to be invoked :)
-      -- this is broken...
-      lift $ tryError $ send . G.names "freenode" . map G.nName =<< ircGetChannels
-
       -- and suck in our state. We read directly from the handle, to avoid copying
+      -- TODO: implement serialization using the "moduleSerialize" interface
+      -- ... can't do that using Binary because it has no error handling.
 
       c <- io $ findFile "seen"
       s <- io $ P.readFile c
