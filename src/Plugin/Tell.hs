@@ -53,8 +53,7 @@ import qualified Data.Map as M
 import Text.Printf (printf)
 
 import Lambdabot.AltTime
-import Lambdabot.Message (Message, Nick, nick, lambdabotName)
-import qualified Lambdabot.Message as Msg
+import Lambdabot.Message (Nick)
 import Plugin
 
 -- | Was it @tell or @ask that was the original command?
@@ -78,31 +77,27 @@ instance Module TellModule where
     moduleCmds _ =
         [ (command "tell")
             { help = say "tell <nick> <message>. When <nick> shows activity, tell them <message>."
-            , process = \args -> withMsg $ \msg ->
-                lift (doTell args msg Tell) >>= mapM_ say
+            , process = doTell Tell . words
             }
         , (command "ask")
             { help = say "ask <nick> <message>. When <nick> shows activity, ask them <message>."
-            , process = \args -> withMsg $ \msg ->
-                lift (doTell args msg Ask) >>= mapM_ say
+            , process = doTell Ask . words
             }
         , (command "messages")
-            { help = say "messages. Check your messages."
-            , process = \args -> withMsg $ \msg ->
-                lift (doMessages msg False) >>= mapM_ say
+            { help = say "messages. Check your messages, responding in private."
+            , process = const (doMessages False)
             }
         , (command "messages-loud")
-            { help = say "messages. Check your messages."
-            , process = \args -> withMsg $ \msg ->
-                lift (doMessages msg True) >>= mapM_ say
+            { help = say "messages. Check your messages, responding in public."
+            , process = const (doMessages True)
             }
         , (command "messages?")
             { help = say "messages?. Tells you whether you have any messages"
-            , process = const $ withMsg $ \msg -> do
+            , process = const $ do
                   sender <- getSender
-                  ms <- lift (getMessages msg sender)
+                  ms <- lift (getMessages sender)
                   case ms of
-                    Just _ -> lift (doRemind msg sender) >>= mapM_ say
+                    Just _ -> doRemind sender
                     Nothing   -> say "Sorry, no messages today."
             }
         , (command "clear-messages")
@@ -123,10 +118,11 @@ instance Module TellModule where
                 "purge-notices [<nick> [<nick> [<nick> ...]]]]. "
                 ++ "Clear all notes for specified nicks, or all notices if you don't "
                 ++ "specify a nick."
-            , process = \args -> withMsg $ \msg -> do
-                lift $ case words args of
-                  [] -> writeMS M.empty
-                  ns -> mapM_ (clearMessages . Msg.readNick msg) ns
+            , process = \args -> do
+                users <- mapM readNick (words args)
+                lift $ if null users
+                    then writeMS M.empty
+                    else mapM_ clearMessages users
                 say "Messages purged."
             }
         ]
@@ -136,22 +132,22 @@ instance Module TellModule where
     -- | Hook onto contextual. Grab nicks of incoming messages, and tell them
     --   if they have any messages, if it's less than a day since we last did so.
     contextual _ _ = do
-      sender <- getSender
-      remp <- lift (needToRemind sender)
-      if remp
-         then withMsg (lift . flip doRemind sender) >>= mapM_ say
-         else return ()
+        sender <- getSender
+        remp <- lift (needToRemind sender)
+        if remp
+            then doRemind sender
+            else return ()
 
 -- | Take a note and the current time, then display it
-showNote :: Message m => m -> ClockTime -> Note -> String
-showNote msg time note = res
-    where diff         = time `diffClockTimes` noteTime note
-          ago          = case timeDiffPretty diff of
-                           [] -> "less than a minute"
-                           pr -> pr
-          action       = case noteType note of Tell -> "said"; Ask -> "asked"
-          res          = printf "%s %s %s ago: %s"
-                           (Msg.showNick msg $ noteSender note) action ago (noteContents note)
+showNote :: ClockTime -> Note -> Cmd Tell String
+showNote time note = do
+    sender <- showNick (noteSender note)
+    let diff    = time `diffClockTimes` noteTime note
+        ago     = case timeDiffPretty diff of
+                    [] -> "less than a minute"
+                    pr -> pr
+        action  = case noteType note of Tell -> "said"; Ask -> "asked"
+    return $ printf "%s %s %s ago: %s" sender action ago (noteContents note)
 
 -- | Is it less than a day since we last reminded this nick they've got messages?
 needToRemind :: Nick -> Tell Bool
@@ -177,16 +173,8 @@ writeDown to from what ntype = do
                          to (Nothing, [note]))
 
 -- | Return a user's notes, or Nothing if they don't have any
-getMessages :: Message m => m -> Nick -> Tell (Maybe [String])
-getMessages msg n = do
-  st   <- readMS
-  time <- io getClockTime
-  case M.lookup n st of
-    Just (_, msgs) -> do
-      -- update the last time we told this person they had messages
-      writeMS $ M.insert n (Just time, msgs) st
-      return . Just $ map (showNote msg time) msgs
-    Nothing -> return Nothing
+getMessages :: Nick -> Tell (Maybe [Note])
+getMessages n = fmap (fmap snd . M.lookup n) readMS
 
 -- | Clear a user's messages.
 clearMessages :: Nick -> Tell ()
@@ -196,40 +184,53 @@ clearMessages n = modifyMS (M.delete n)
 --
 
 -- | Give a user their messages
-doMessages :: Message m => m -> Bool -> Tell [String]
-doMessages msg loud = do
-    msgs <- getMessages msg $ nick msg
-    let res = fromMaybe ["You don't have any new messages."] msgs
-    clearMessages (nick msg)
-    if loud
-        then return res
-        else lift (ircPrivmsg (nick msg) (unlines res)) >> return []
+doMessages :: Bool -> Cmd Tell ()
+doMessages loud = do
+    sender <- getSender
+    msgs <- lift (getMessages sender)
+    lift (clearMessages sender)
+    
+    let tellNote = if loud
+            then say
+            else lift . lift . ircPrivmsg sender
+    
+    case msgs of
+        Nothing -> say "You don't have any messages"
+        Just msgs -> do
+            time <- io getClockTime
+            mapM_ (showNote time >=> tellNote) msgs
+
+verb Ask = "ask"
+verb Tell= "tell"
 
 -- | Execute a @tell or @ask command.
-doTell :: Message m => String -> m -> NoteType -> Tell [String]
-doTell args msg ntype = do
-  let args'     = words args
-      recipient = Msg.readNick msg (head args')
-      sender    = nick msg
-      rest      = unwords $ tail args'
-      res | sender    == recipient   = Left "You can tell yourself!"
-          | recipient == lambdabotName msg = Left "Nice try ;)"
-          | otherwise                = Right "Consider it noted."
-  when (isRight res) (writeDown recipient sender rest ntype)
-  return [unEither res]
+doTell :: NoteType -> [String] -> Cmd Tell ()
+doTell ntype []         = say ("Who should I " ++ verb ntype ++ "?")
+doTell ntype (who:args) = do
+    recipient <- readNick who
+    sender <- getSender
+    me <- getLambdabotName
+    let rest = unwords $ tail args
+        res | sender    == recipient   = Left ("You can " ++ verb ntype ++ " yourself!")
+            | recipient == me          = Left "Nice try ;)"
+            | null args                = Left ("What should I " ++ verb ntype ++ " " ++ who ++ "?")
+            | otherwise                = Right "Consider it noted."
+    when (isRight res) (lift (writeDown recipient sender rest ntype))
+    say (unEither res)
 
 -- | Remind a user that they have messages.
-doRemind :: Message m => m -> Nick -> Tell [String]
-doRemind msg sender = do
-  ms  <- getMessages msg sender
-  now <- io getClockTime
-  modifyMS (M.update (Just . first (const $ Just now)) sender)
-  case ms of
-             Just msgs ->
-               let (messages, pronoun) =
-                     if length msgs > 1
-                       then ("messages", "them") else ("message", "it")
-               in lift (ircPrivmsg sender (printf "You have %d new %s. '/msg %s @messages' to read %s."
-                          (length msgs) messages (Msg.showNick msg $ lambdabotName msg) pronoun
-                   :: String)) >> return []
-             Nothing -> return []
+doRemind :: Nick -> Cmd Tell ()
+doRemind sender = do
+    ms  <- lift (getMessages sender)
+    now <- io getClockTime
+    lift (modifyMS (M.update (Just . first (const $ Just now)) sender))
+    case ms of
+        Just msgs -> do
+           me <- showNick =<< getLambdabotName
+           let (messages, pronoun)
+                   | length msgs > 1   = ("messages", "them")
+                   | otherwise         = ("message", "it")
+               msg = printf "You have %d new %s. '/msg %s @messages' to read %s."
+                       (length msgs) messages me pronoun
+           lift (lift (ircPrivmsg sender msg))
+        Nothing -> return ()
