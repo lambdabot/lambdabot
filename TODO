@@ -13,19 +13,11 @@ Dons:
         pretty . pl
         djinn . hoogle
 
-Cruft removal:
-    * remove scripts/{FT, djinn} in favor of djinn, and ftshell
-      found on Hackage.  Update each of the lambdabot plugins to call these new
-      executables
-    * remove Lib/OEIS (requires changes in the oeis package)
-    * remove scripts/SmallCheck in favor of the Hackage version
-
 To do:
     * Better error reporting when connections fail at startup
     * fsbot-style factoid parsing,
     * real hostmask matching
     * refactor utility functions out of the modules ex. gets(\s -> lookupFM ...)
-    * @fact-to ircnick key for sending factoids via privmsg
     * multiple servers
     * factor out an IRC library
     * send alternate nickname?
