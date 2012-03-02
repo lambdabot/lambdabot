@@ -16,7 +16,7 @@
 --
 --     Well, what do you know, this plugin enables lambdabot to automate
 --     that lookup for you and your fellow lambda hackers.
-module Plugin.Type where
+module Plugin.Type (theModule, query_ghci) where
 import Lambdabot.File
 import Plugin
 import Plugin.Eval (exts)

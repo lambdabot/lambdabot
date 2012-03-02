@@ -3,7 +3,7 @@
 -- Copyright (c) 2006 Spencer Janssen
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
 
-module Plugin.Undo where
+module Plugin.Undo (theModule) where
 
 import Plugin
 import Lambdabot.Parser

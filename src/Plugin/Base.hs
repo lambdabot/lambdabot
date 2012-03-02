@@ -12,7 +12,6 @@ import qualified Data.Map as M   (insert, delete)
 
 import Control.Monad.State  (MonadState(..), gets)
 
-import qualified Data.ByteString.Char8 as P
 import qualified Text.Regex as R
 
 -- valid command prefixes
@@ -194,9 +193,6 @@ doPRIVMSG' myname msg target
                   _ -> docmd cmd         -- no prefix, edit distance too far
         where
             e = 3   -- edit distance cut off. Seems reasonable for small words
-
-            fcmd  = P.pack cmd      -- TODO
-            frest = P.pack rest
 
             docmd cmd' = do
               act <- bindModule0 . withPS towhere $ \_ _ -> do

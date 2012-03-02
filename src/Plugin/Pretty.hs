@@ -14,7 +14,7 @@ example:
 
 (c) Johannes Ahlmann, 2005-12-13, released under GPL 2 -}
 
-module Plugin.Pretty where
+module Plugin.Pretty (theModule) where
 
 import Plugin
 

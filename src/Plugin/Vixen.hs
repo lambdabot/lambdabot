@@ -5,7 +5,7 @@
 -- (c) Mark Wotton
 -- Serialisation (c) 2007 Don Stewart
 
-module Plugin.Vixen where
+module Plugin.Vixen (theModule) where
 
 import Data.Binary
 
@@ -95,7 +95,6 @@ instance Binary WTree where
             0 -> liftM Leaf get
             1 -> liftM Node get
 
-type Choice  = [(P.ByteString, WTree)]
 type RChoice = [(Regex, WTree)] -- compiled choices
 
 {- Sample of how to rescue data in the old 32-bit Binary format

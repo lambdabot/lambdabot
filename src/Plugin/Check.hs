@@ -3,7 +3,7 @@
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
 
 -- | Test a property with QuickCheck
-module Plugin.Check where
+module Plugin.Check (theModule) where
 
 import Plugin
 import Plugin.Eval (plugs)

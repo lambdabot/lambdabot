@@ -65,9 +65,6 @@ privcmds = M.fromList [
 
 ------------------------------------------------------------------------
 
-defaultHelp :: String
-defaultHelp = "system : irc management"
-
 doSystem :: String -> String -> Cmd System ()
 doSystem cmd rest = withMsg $ \msg -> do
     target <- getTarget

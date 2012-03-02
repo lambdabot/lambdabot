@@ -3,7 +3,7 @@
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
 
 -- | Lambdabot version information
-module Plugin.Version where
+module Plugin.Version (theModule) where
 
 import Plugin
 import Paths_lambdabot (version)

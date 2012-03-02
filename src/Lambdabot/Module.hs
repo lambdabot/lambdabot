@@ -17,8 +17,6 @@ import qualified Lambdabot.Command as Cmd
 import {-# SOURCE #-} Lambdabot.Monad (LB)
 import Lambdabot.Serial
 
-import Data.ByteString (ByteString)
-
 import Control.Concurrent (MVar)
 import Control.Monad.Error (MonadError(..))
 import Control.Monad.Reader (MonadReader(..), ReaderT(..))
@@ -111,7 +109,3 @@ bindModule1 act = ModuleT $
 -- | variant of `bindModule0' for monad actions with two arguments
 bindModule2 :: (a -> b -> ModuleT mod LB c) -> ModuleT mod LB (a -> b -> LB c)
 bindModule2 act = bindModule1 (uncurry act) >>= return . curry
-
--- | And for packed output
-type ModuleF  mod = ModuleT mod LB [ByteString]
-

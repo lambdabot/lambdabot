@@ -4,7 +4,7 @@
 --
 -- | Interface to /aspell/, an open source spelling checker, from a
 -- suggestion by Kai Engelhardt. Requires you to install aspell.
-module Plugin.Spell where
+module Plugin.Spell (theModule) where
 
 import Plugin
 import qualified Text.Regex as R

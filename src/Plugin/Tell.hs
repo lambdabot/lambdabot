@@ -46,7 +46,7 @@
 >                  hack away!
 -}
 
-module Plugin.Tell where
+module Plugin.Tell (theModule) where
 
 import Control.Arrow (first)
 import qualified Data.Map as M

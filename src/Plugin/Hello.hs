@@ -2,7 +2,7 @@
 --
 -- | Hello world plugin
 --
-module Plugin.Hello where
+module Plugin.Hello (theModule) where
 
 import Plugin
 

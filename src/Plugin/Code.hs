@@ -6,7 +6,7 @@
 -- grab a random line of code from a directory full of .hs code
 --
 
-module Plugin.Code where
+module Plugin.Code (theModule) where
 
 import Plugin
 import Text.Regex

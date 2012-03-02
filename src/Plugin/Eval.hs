@@ -4,7 +4,7 @@
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
 
 -- | A Haskell evaluator for the pure part, using plugs
-module Plugin.Eval where
+module Plugin.Eval (theModule, plugs, exts) where
 
 import Lambdabot.File (findFile)
 import Plugin

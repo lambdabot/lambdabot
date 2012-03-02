@@ -17,7 +17,7 @@
 > Int
 -}
 
-module Plugin.Instances where
+module Plugin.Instances (theModule) where
 
 import Text.ParserCombinators.Parsec
 

@@ -13,7 +13,6 @@ import Prelude hiding ( catch )
 
 import Control.Concurrent (forkIO, killThread, modifyMVar_, readMVar, threadDelay, MVar, ThreadId)
 import Control.Exception
-import Control.Monad       ( when )
 
 import System.Directory
 import System.Time

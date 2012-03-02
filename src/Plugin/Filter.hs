@@ -3,7 +3,7 @@
 -- needs: http://www.hyperrealm.com/main.php?s=talkfilters
 -- Edward Kmett 2006
 
-module Plugin.Filter where
+module Plugin.Filter (theModule) where
 
 import Plugin
 

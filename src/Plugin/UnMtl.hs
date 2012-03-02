@@ -9,7 +9,7 @@
 --
 ----------------------------------------------------------------------
 
-module Plugin.UnMtl where
+module Plugin.UnMtl (theModule) where
 
 import Control.Monad.Error ()
 
@@ -174,10 +174,7 @@ mtlParser' t = return t
 
 -----------------------------------------------------------
 -- Examples
-
-ex1 :: String
-ex1 = "ContT ByteString (StateT s IO) a"
-ex2 :: String
-ex2 = "StateT s (ContT ByteString IO) a"
-ex3 :: String
-ex3 = "ErrorT ByteString (WriterT String (State s)) a"
+-- 
+-- ContT ByteString (StateT s IO) a
+-- StateT s (ContT ByteString IO) a
+-- ErrorT ByteString (WriterT String (State s)) a

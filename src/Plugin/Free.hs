@@ -1,7 +1,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 -- | Free theorems plugin
 -- Andrew Bromage, 2006
-module Plugin.Free where
+module Plugin.Free (theModule) where
 
 import Plugin
 import Plugin.Free.FreeTheorem
