@@ -1,6 +1,4 @@
-{-# LANGUAGE CPP, ExistentialQuantification, FlexibleContexts,
-  TypeFamilies, GeneralizedNewtypeDeriving, MultiParamTypeClasses,
-  PatternGuards, RankNTypes, TypeOperators, ScopedTypeVariables #-}
+{-# LANGUAGE CPP, PatternGuards, RankNTypes, ScopedTypeVariables #-}
 -- | The guts of lambdabot.
 --
 -- The LB/Lambdabot monad
@@ -40,6 +38,8 @@ import qualified Lambdabot.Message as Msg
 import qualified Lambdabot.Shared  as S
 import qualified Lambdabot.IRC as IRC (IrcMessage, quit, privmsg)
 
+import Lambdabot.Monad
+import Lambdabot.Module
 import Lambdabot.Signals
 import Lambdabot.Util
 import Lambdabot.Serial
@@ -53,14 +53,11 @@ import System.IO
 import System.IO.Unsafe
 
 #ifndef mingw32_HOST_OS
-import System.Posix.Signals
-
 -- n.b comment this out for prof
 import System.Posix.Process     ( exitImmediately )
 #endif
 
 import Data.Char
-import Data.IORef               (newIORef, IORef, readIORef, writeIORef)
 import Data.List                (isSuffixOf, inits, tails)
 import Data.Maybe               (isJust)
 import Data.Map (Map)
@@ -69,9 +66,8 @@ import qualified Data.ByteString.Char8 as P
 import Data.ByteString (ByteString)
 
 import Control.Concurrent (myThreadId, newEmptyMVar, newMVar, readMVar, putMVar,
-                           takeMVar, threadDelay, MVar, ThreadId)
+                           takeMVar, threadDelay)
 import Control.Exception
-import Control.Monad.Error (MonadError (..))
 import Control.Monad.Reader
 import Control.Monad.State
 
@@ -80,170 +76,6 @@ import Control.Monad.State
 exitImmediately :: ExitCode -> IO a
 exitImmediately = exitWith
 #endif
-
-------------------------------------------------------------------------
---
--- Lambdabot state
---
-
--- | Global read-only state.
-data IRCRState
-  = IRCRState {
-        ircMainThread  :: ThreadId,
-        ircInitDoneMVar:: MVar (),
-        ircQuitMVar    :: MVar ()
-        -- ^This is a mildly annoying hack.  In order to prevent the program
-        -- from closing immediately, we have to keep the main thread alive, but
-        -- the obvious infinite-MVar-wait technique doesn't work - the garbage
-        -- collector helpfully notices that the MVar is dead, kills the main
-        -- thread (which will never wake up, so why keep it around), thus
-        -- terminating the program.  Behold the infinite wisdom that is the
-        -- Glasgow FP group.
-  }
-
-type Callback = IRC.IrcMessage -> LB ()
-
-type OutputFilter = Msg.Nick -> [String] -> LB [String]
-
--- | Global read\/write state.
-data IRCRWState = IRCRWState {
-        ircServerMap       :: Map String (String, IRC.IrcMessage -> LB ()),
-        ircPrivilegedUsers :: Map Msg.Nick Bool,
-        ircIgnoredUsers    :: Map Msg.Nick Bool,
-
-        ircChannels        :: Map ChanName String,
-            -- ^ maps channel names to topics
-
-        ircModules         :: Map String ModuleRef,
-        ircCallbacks       :: Map String [(String,Callback)],
-        ircOutputFilters   :: [(String,OutputFilter)],
-            -- ^ Output filters, invoked from right to left
-
-        ircCommands        :: Map String ModuleRef,
-        ircPrivCommands    :: [String],
-        ircStayConnected   :: !Bool,
-        ircDynLoad         :: S.DynLoad,
-        ircOnStartupCmds   :: [String],
-        ircPlugins         :: [String]
-    }
-
--- The virtual chat system.
---
--- The virtual chat system sits between the chat drivers and the rest of
--- Lambdabot.  It provides a mapping between the String server "tags" and
--- functions which are able to handle sending messages.
---
--- When a message is recieved, the chat module is expected to call
--- `LMain.received'.  This is not ideal.
-
-addServer :: String -> (IRC.IrcMessage -> LB ()) -> ModuleT mod LB ()
-addServer tag sendf = do
-    s <- get
-    let svrs = ircServerMap s
-    name <- getName
-    case M.lookup tag svrs of
-        Nothing -> put (s { ircServerMap = M.insert tag (name,sendf) svrs})
-        Just _ -> fail $ "attempted to create two servers named " ++ tag
-
--- This is a crutch until all the servers are pluginized.
-addServer' :: String -> (IRC.IrcMessage -> LB ()) -> LB ()
-addServer' tag sendf = do
-    s <- get
-    let svrs = ircServerMap s
-    case M.lookup tag svrs of
-        Nothing -> put (s { ircServerMap = M.insert tag ("<core>",sendf) svrs})
-        Just _ -> fail $ "attempted to create two servers named " ++ tag
-
-remServer :: String -> LB ()
-remServer tag = do
-    s <- get
-    let svrs = ircServerMap s
-    case M.lookup tag svrs of
-        Just _ -> do let svrs' = M.delete tag svrs
-                     main <- asks ircMainThread
-                     when (M.null svrs') $ io $ throwTo main (ErrorCall "all servers detached")
-                     put (s { ircServerMap = svrs' })
-        Nothing -> fail $ "attempted to delete nonexistent servers named " ++ tag
-
-send :: IRC.IrcMessage -> LB ()
-send msg = do
-    s <- gets ircServerMap
-    case M.lookup (Msg.server msg) s of
-        Just (_, sendf) -> sendf msg
-        Nothing -> io $ hPutStrLn stderr $ "sending message to bogus server: " ++ show msg
-
-newtype ChanName = ChanName { getCN :: Msg.Nick } -- should be abstract, always lowercase
-  deriving (Eq, Ord)
-
-instance Show ChanName where show (ChanName x) = show x
-
--- | only use the "smart constructor":
-mkCN :: Msg.Nick -> ChanName
-mkCN = ChanName . liftM2 Msg.Nick Msg.nTag (map toLower . Msg.nName)
-
--- ---------------------------------------------------------------------
---
--- The LB (LambdaBot) monad
---
-
--- | The IRC Monad. The reader transformer holds information about the
---   connection to the IRC server.
---
--- instances Monad, Functor, MonadIO, MonadState, MonadError
-
-
-newtype LB a = LB { runLB :: ReaderT (IRCRState,IORef IRCRWState) IO a }
-    deriving (Monad,Functor,MonadIO)
-
--- Actually, this isn't a reader anymore
-instance MonadReader IRCRState LB where
-    ask   = LB $ asks fst
-    local = error "You are not supposed to call local"
-
-instance MonadState IRCRWState LB where
-    get = LB $ do
-        ref <- asks snd
-        lift $ readIORef ref
-    put x = LB $ do
-        ref <- asks snd
-        lift $ writeIORef ref x
-
--- And now a MonadError instance to map IRCErrors to MonadError in LB,
--- so throwError and catchError "just work"
-instance MonadError IRCError LB where
-  throwError (IRCRaised e)    = io $ throwIO e
-  throwError (SignalCaught e) = io $ evaluate (throw $ SignalException e)
-  m `catchError` h = lbIO $ \conv -> (conv m
-              `catch` \(SignalException e) -> conv $ h $ SignalCaught e)
-              `catch` \e -> conv $ h $ IRCRaised e
-
--- A type for handling both Haskell exceptions and external signals
-data IRCError = IRCRaised SomeException | SignalCaught Signal
-
-instance Show IRCError where
-    show (IRCRaised    e) = show e
-    show (SignalCaught s) = show s
-
--- lbIO return :: LB (LB a -> IO a)
--- CPS to work around predicativiy of haskell's type system.
-lbIO :: ((forall a. LB a -> IO a) -> IO b) -> LB b
-lbIO k = LB . ReaderT $ \r -> k (\(LB m) -> m `runReaderT` r)
-
--- | run a computation in the LB monad
-evalLB :: LB a -> IRCRState -> IRCRWState -> IO a
-evalLB (LB lb) rs rws = do
-    ref  <- newIORef rws
-    lb `runReaderT` (rs,ref)
-
--- May wish to add more things to the things caught, or restructure things
--- a bit. Can't just catch everything - in particular EOFs from the socket
--- loops get thrown to this thread and we musn't just ignore them.
-handleIrc :: MonadError IRCError m => (IRCError -> m ()) -> m () -> m ()
-handleIrc handler m = catchError m handler
-
--- Like handleIrc, but with arguments reversed
-catchIrc :: MonadError IRCError m => m () -> (IRCError -> m ()) -> m ()
-catchIrc = flip handleIrc
 
 ------------------------------------------------------------------------
 --
@@ -342,102 +174,6 @@ flushModuleState :: LB ()
 flushModuleState = do
     withAllModules (\m -> getName >>= writeGlobalState m)
     return ()
-
-------------------------------------------------------------------------
-
--- | The Module type class.
--- Minimal complete definition: @moduleCmds@
-class Module m where
-    type ModuleState m
-    type ModuleState m = ()
-    
-    -- | If the module wants its state to be saved, this function should
-    --   return a Serial.
-    --
-    --   The default implementation returns Nothing.
-    moduleSerialize :: m -> Maybe (Serial (ModuleState m))
-
-    -- | If the module maintains state, this method specifies the default state
-    --   (for example in case the state can't be read from a state).
-    --
-    --   The default implementation returns an error and assumes the state is
-    --   never accessed.
-    moduleDefState  :: m -> LB (ModuleState m)
-
-    -- | Is the module sticky? Sticky modules (as well as static ones) can't be
-    --   unloaded. By default, modules are not sticky.
-    moduleSticky    :: m -> Bool
-
-    -- | The commands the module listenes to.
-    moduleCmds      :: m -> [Cmd.Command (ModuleT m LB)]
-
-    -- | Initialize the module. The default implementation does nothing.
-    moduleInit      :: m -> ModuleUnit m
-
-    -- | Finalize the module. The default implementation does nothing.
-    moduleExit      :: m -> ModuleUnit m
-
-    -- | Process contextual input. A plugin that implements 'contextual'
-    -- is able to respond to text not part of a normal command.
-    contextual
-        :: m                                -- ^ phantom     (required)
-        -> String                           -- ^ the text
-        -> Cmd.Cmd (ModuleT m LB) ()        -- ^ the action
-
-------------------------------------------------------------------------
-
-    contextual _ _ = return ()
-
-    moduleCmds      _  = []
-    moduleExit _       = return ()
-    moduleInit _       = return ()
-    moduleSticky _     = False
-    moduleSerialize _  = Nothing
-    moduleDefState  _  = return $ error "state not initialized"
-
-lookupCmd m cmd = lookup cmd [ (nm, c) | c <- moduleCmds m, nm <- Cmd.cmdNames c ]
-modulePrivs m = filter Cmd.privileged (moduleCmds m)
-
--- | An existential type holding a module, used to represent modules on
--- the value level, for manipluation at runtime by the dynamic linker.
-data MODULE = forall m. Module m => MODULE m
-
-data ModuleRef = forall m s. Module m => ModuleRef m (MVar (ModuleState m)) String
-
---
--- | This transformer encodes the additional information a module might
---   need to access its name or its state.
---
-newtype ModuleT mod m a = ModuleT { moduleT :: ReaderT (MVar (ModuleState mod), String) m a }
-    deriving (Functor, Monad, MonadTrans, MonadIO, MonadError e, MonadState t)
-
-getRef :: Monad m => ModuleT mod m (MVar (ModuleState mod))
-getRef  = ModuleT $ ask >>= return . fst
-
-getName :: Monad m => ModuleT mod m String
-getName = ModuleT $ ask >>= return . snd
-
--- | bind an action to the current module so it can be run from the plain
---   `LB' monad.
-bindModule0 :: ModuleT mod LB a -> ModuleT mod LB (LB a)
-bindModule0 act = bindModule1 (const act) >>= return . ($ ())
-
--- | variant of `bindModule0' for monad actions with one argument
-bindModule1 :: (a -> ModuleT mod LB b) -> ModuleT mod LB (a -> LB b)
-bindModule1 act = ModuleT $
-    ask >>= \st -> return (\val -> runReaderT (moduleT $ act val) st)
-
--- | variant of `bindModule0' for monad actions with two arguments
-bindModule2 :: (a -> b -> ModuleT mod LB c) -> ModuleT mod LB (a -> b -> LB c)
-bindModule2 act = bindModule1 (uncurry act) >>= return . curry
-
--- | A nicer synonym for some ModuleT modtuffs
-type ModuleLB mod = ModuleT mod LB [String]
-
--- | And for packed output
-type ModuleF  mod = ModuleT mod LB [ByteString]
-
-type ModuleUnit mod = ModuleT mod LB ()
 
 -- ---------------------------------------------------------------------
 --
