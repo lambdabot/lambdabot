@@ -42,18 +42,18 @@ instance Module UrlModule where
     moduleDefState _              = return True -- url on
     moduleSerialize _             = Just stdSerial
 
-    contextual  _ _ _ text        = do
-      alive <- readMS
+    contextual _ text = do
+      alive <- lift readMS
       if alive && (not $ areSubstringsOf ignoredStrings text)
         then case containsUrl text of
-               Nothing  -> return []
+               Nothing  -> return ()
                Just url
                  | length url > 60 -> do
-                     title <- lift $ fetchTitle url
-                     tiny  <- lift $ fetchTiny url
-                     return $ zipWith' cat title tiny
-                 | otherwise -> lift $ fetchTitle url
-        else return []
+                     title <- lift (lift (fetchTitle url))
+                     tiny  <- lift (lift (fetchTiny  url))
+                     mapM_ say $ zipWith' cat title tiny
+                 | otherwise -> lift (lift (fetchTitle url)) >>= mapM_ say
+        else return ()
       where cat x y = x ++ ", " ++ y
             zipWith' _ [] ys = ys
             zipWith' _ xs [] = xs

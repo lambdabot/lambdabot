@@ -47,10 +47,10 @@ instance Module VixenModule where
         ]
     
     -- if vixen-chat is on, we can just respond to anything
-    contextual _ _ _ txt      = do
-        (alive, k) <- readMS
-        if alive then ios (k txt)
-                 else return []
+    contextual _ txt = do
+        (alive, k) <- lift readMS
+        if alive then ios (k txt) >>= mapM_ say
+                 else return ()
 
     moduleDefState _ = return (False, const (return "<undefined>"))
 

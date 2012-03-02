@@ -38,10 +38,10 @@ instance Module SpellModule where
         ]
     moduleDefState _ = return False
 
-    contextual _ _ _ txt      = do
-        alive <- readMS
-        if alive then liftIO $ spellingNazi txt
-                 else return []
+    contextual _ txt = do
+        alive <- lift readMS
+        if alive then io (spellingNazi txt) >>= mapM_ say
+                 else return ()
 
 doSpell [] = say "No word to spell."
 doSpell s  = (say . showClean . take 5) =<< (io (spell s))

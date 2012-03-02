@@ -3,7 +3,7 @@
 module Plugin.Karma (theModule) where
 
 import Plugin
-import qualified Lambdabot.Message as Msg (nick, Nick, Message, showNick, readNick, lambdabotName, nName)
+import qualified Lambdabot.Message as Msg (Nick, Message, showNick, readNick, lambdabotName, nName)
 import qualified Lambdabot.NickEq as E
 import qualified Data.Map as M
 import Text.Printf
@@ -44,24 +44,23 @@ instance Module KarmaModule where
     moduleSerialize _ = Just mapSerial
 
     -- ^nick++($| )
-    contextual   _ msg _ text = do
-        mapM_ (changeKarma msg (-1) sender) decs
-        mapM_ (changeKarma msg   1  sender) incs
-        return []
-      where
-        sender      = Msg.nick msg
-        ws          = words text
-        decs        = match "--"
-        incs        = match "++"
-        match m     = map (Msg.readNick msg) . filter okay . map (reverse . drop 2)
-                    . filter (isPrefixOf m) . map reverse $ ws
-        okay x      = not (elem x badNicks || any (`isPrefixOf` x) badPrefixes)
-        -- Special cases.  Ignore the null nick.  C must also be ignored
-        -- because C++ and C-- are languages.
-        badNicks    = ["", "C", "c", "notepad"]
-        -- More special cases, to ignore Perl code.
-        badPrefixes = ["$", "@", "%"]
-
+    contextual _ text = withMsg $ \msg -> do
+        sender <- getSender
+        
+        let ws          = words text
+            decs        = match "--"
+            incs        = match "++"
+            match m     = map (Msg.readNick msg) . filter okay . map (reverse . drop 2)
+                        . filter (isPrefixOf m) . map reverse $ ws
+            okay x      = not (elem x badNicks || any (`isPrefixOf` x) badPrefixes)
+            -- Special cases.  Ignore the null nick.  C must also be ignored
+            -- because C++ and C-- are languages.
+            badNicks    = ["", "C", "c", "notepad"]
+            -- More special cases, to ignore Perl code.
+            badPrefixes = ["$", "@", "%"]
+        
+        mapM_ (lift . changeKarma msg (-1) sender) decs
+        mapM_ (lift . changeKarma msg   1  sender) incs
 
 doCmd dk rest = withMsg $ \msg -> do
     sender <- getSender

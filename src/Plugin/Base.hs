@@ -4,7 +4,7 @@ module Plugin.Base (theModule) where
 
 import Plugin
 
-import Lambdabot.Command (runCommand)
+import Lambdabot.Command (runCommand, execCmd)
 import Lambdabot.IRC (IrcMessage, timeReply, errShowMsg)
 import Lambdabot.Message as Msg (getTopic, nick, server, body, Nick(..), lambdabotName, showNick, readNick)
 
@@ -234,7 +234,7 @@ doPRIVMSG' myname msg target
     doContextualMsg r = lift $ do
         withAllModules ( \m -> do
             act <- bindModule0 ( do
-                            ms <- contextual m msg target r
+                            ms <- execCmd (contextual m r) msg target "contextual"
                             lift $ mapM_ (ircPrivmsg target) ms
                    )
             name' <- getName

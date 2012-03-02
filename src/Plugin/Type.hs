@@ -27,21 +27,21 @@ instance Module TypeModule where
      moduleCmds _ = 
         [ (command "type")
             { help = say "type <expr>. Return the type of a value"
-            , process = (mapM_ say =<<) . lift . runit ":t"
+            , process = runit ":t"
             }
         , (command "kind")
             { help = say "kind <type>. Return the kind of a type"
-            , process = (mapM_ say =<<) . lift . runit ":k"
+            , process = runit ":k"
             }
         ]
 
-     contextual  _ _ _ text = case () of
-        _| ":t " `isPrefixOf` text -> lift $ query_ghci ":t" expr
-         | ":k " `isPrefixOf` text -> lift $ query_ghci ":k" expr
-         | otherwise               -> return []
+     contextual _ text = case () of
+        _| ":t " `isPrefixOf` text -> runit ":t" expr
+         | ":k " `isPrefixOf` text -> runit ":k" expr
+         | otherwise               -> return ()
          where expr = drop 3 text
 
-runit s expr = lift $ flip query_ghci expr s
+runit s expr = lift (lift (query_ghci s expr)) >>= mapM_ say
 
 --     In accordance with the KISS principle, the plan is to delegate all
 --     the hard work! To get the type of foo, pipe

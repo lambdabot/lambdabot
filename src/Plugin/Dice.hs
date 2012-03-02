@@ -7,8 +7,6 @@ module Plugin.Dice (theModule) where
 
 import Plugin
 
-import Lambdabot.Message (nick, nName)
-
 import Data.Random.Dice (rollEm)
 
 $(plugin "Dice")
@@ -18,25 +16,24 @@ instance Module DiceModule where
         [ (command "dice")
             { aliases = ["roll"]
             , help = say "@dice <expr>. Throw random dice. <expr> is of the form 3d6+2."
-            , process = \args -> do
-                user <- showNick =<< getSender
-                doDice True user args >>= mapM_ say
+            , process = doDice True
             }
         ]
-    contextual _ msg _ = doDice False (nName $ nick msg)
+    contextual _ = doDice False
 
 ----------------------------------------------------------------
 -- the IRC shim stuff
 
-doDice :: MonadIO m => Bool -> String -> String -> m [String]
-doDice printErrs user text = do
+doDice :: MonadIO m => Bool -> String -> Cmd m ()
+doDice printErrs text = do
+    user <- showNick =<< getSender
     result <- io (rollEm text)
-    return $ case result of
+    case result of
         Left err    -> if printErrs
-            then [trimError err]
-            else []
+            then say (trimError err)
+            else return ()
         Right str   -> 
-            [brk 75 (user ++ ": " ++ str)]
+            say (brk 75 (user ++ ": " ++ str))
     
     where
         trimError = concat . intersperse ": " . tail . lines . show

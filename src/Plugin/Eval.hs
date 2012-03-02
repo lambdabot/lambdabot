@@ -42,9 +42,11 @@ instance Module PlugsModule where
             }
         ]
 
-    contextual _ _ to txt
-        | isEval txt = ios80 to . plugs . dropPrefix $ txt
-        | otherwise  = return []
+    contextual _ txt
+        | isEval txt = do
+            to <- getTarget
+            (ios80 to . plugs . dropPrefix $ txt) >>= mapM_ say
+        | otherwise  = return ()
 
 binary :: String
 binary = "mueval"

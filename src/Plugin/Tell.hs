@@ -135,12 +135,12 @@ instance Module TellModule where
 
     -- | Hook onto contextual. Grab nicks of incoming messages, and tell them
     --   if they have any messages, if it's less than a day since we last did so.
-    contextual _ msg _ _ = do
-      let sender = nick msg
-      remp <- needToRemind sender
+    contextual _ _ = do
+      sender <- getSender
+      remp <- lift (needToRemind sender)
       if remp
-         then doRemind msg sender
-         else return []
+         then withMsg (lift . flip doRemind sender) >>= mapM_ say
+         else return ()
 
 -- | Take a note and the current time, then display it
 showNote :: Message m => m -> ClockTime -> Note -> String
