@@ -1,4 +1,4 @@
-{-# LANGUAGE CPP, PatternGuards, RankNTypes, ScopedTypeVariables #-}
+{-# LANGUAGE CPP, RankNTypes, ScopedTypeVariables #-}
 -- | The guts of lambdabot.
 --
 -- The LB/Lambdabot monad
@@ -187,15 +187,15 @@ writeGlobalState mod name = case moduleSerialize mod of
 
 -- | Read it in
 readGlobalState :: Module m => m -> String -> IO (Maybe (ModuleState m))
-readGlobalState mod name
-    | Just ser <- moduleSerialize mod  = do
+readGlobalState mod name = case moduleSerialize mod of
+    Just ser -> do
         state <- Just `fmap` P.readFile (toFilename name) `catch` \(_ :: SomeException) -> return Nothing
         catch (evaluate $ maybe Nothing (Just $!) (deserialize ser =<< state)) -- Monad Maybe)
               (\e -> do hPutStrLn stderr $ "Error parsing state file for: "
                                         ++ name ++ ": " ++ show (e :: SomeException)
                         hPutStrLn stderr $ "Try removing: "++ show (toFilename name)
                         return Nothing) -- proceed regardless
-    | otherwise = return Nothing
+    Nothing -> return Nothing
 
 -- | helper
 toFilename :: String -> String
