@@ -19,6 +19,7 @@
 module Plugin.Type where
 import Lambdabot.File
 import Plugin
+import Plugin.Eval (exts)
 import qualified Text.Regex as R
 
 plugin "Type"
@@ -115,94 +116,20 @@ extract_signatures output
 --
 --     With this the command handler can be easily defined using popen:
 --
--- TODO, bring more modules into scope.
---
 query_ghci' :: String -> String -> IO String
 query_ghci' cmd expr = do
-       importHeader <- findFile "imports.h"
-       imports <- fmap (map (unwords . drop 1 . words)
-                        . filter (null
-                                  . intersect ["as","hiding","qualified"]
-                                  . words)
-                        . filter (isPrefixOf "import")
-                        . lines)
-                       (readFile importHeader)
-       l <- findFile "L.hs"
-       let context = ":load "++l++"\n" ++ concatMap ((":m + " ++) . (++"\n")) imports
-       (output, errors, _) <- popen (ghci config) ["-v0","-fglasgow-exts","-XNoTemplateHaskell","-iState","-iscripts","-XNoMonomorphismRestriction"]
-                                       (Just (context ++ theCommand cmd (stripComments expr)))
-       let ls = extract_signatures output
-       return $ case ls of
-                  Nothing -> unlines . take 3 . filter (not . null) . map cleanRE2 .
-                             lines . expandTab . cleanRE . filter (/='\r') $ errors -- "bzzt"
-                  Just t -> t
+    l <- findFile "L.hs"
+    let context = ":load "++l++"\n:m *L\n" -- using -fforce-recomp to make sure we get *L in scope instead of just L
+        extFlags = ["-X" ++ ext | ext <- exts]
+    (output, errors, _) <- popen (ghci config)
+        ("-v0":"-fforce-recomp":"-iState":extFlags)
+        (Just (context ++ theCommand cmd (stripComments expr)))
+    let ls = extract_signatures output
+    return $ case ls of
+               Nothing -> unlines . take 3 . filter (not . null) . map cleanRE2 .
+                          lines . expandTab . cleanRE . filter (/='\r') $ errors -- "bzzt"
+               Just t -> t
   where
-     {-
-     context = ":l L\n" ++ (concatMap (\m -> ":m + "++m++"\n") $
-                    prehier ++ datas ++ qualifieds ++ controls ++ other ++ extras)
-
-     other      =
-        ["Text.Printf"
-        ,"Text.PrettyPrint.HughesPJ"]
-
-     prehier    = ["Numeric"]
-
-     qualifieds = []
-
-     datas   = map ("Data." ++)
-        ["Array"
-        ,"Bits"
-        ,"Bool"
-        ,"Char"
-        ,"Complex"
-        ,"Dynamic"
-        ,"Either"
-        ,"Eq"
-        ,"Fixed"
-    --  ,"Foldable"
-    --  ,"Function"
-    --  ,"Generics"
-        ,"Graph"
-        ,"Int"
-    --  ,"IntMap"
-    --  ,"IntSet"
-        ,"Ix"
-        ,"List"
-    --  ,"Map"
-        ,"Maybe"
-        ,"Monoid"
-        ,"Ord"
-        ,"Ratio"
-    --  ,"Set"
-        ,"Tree"
-        ,"Tuple"
-        ,"Typeable"
-        ,"Word"
-        ]
-     extras   = [] -- ["L"]
-
-     controls = map ("Control." ++)
-        ["Monad"
-        ,"Monad.Cont"
-        ,"Monad.Error"
-        ,"Monad.Identity"
-        ,"Monad.List"
-        ,"Monad.RWS"
-        ,"Monad.Reader"
-        ,"Monad.State"
-        ,"Monad.Trans"
-        ,"Monad.Writer"
-        ,"Monad.Fix"
-        ,"Monad.Instances"
-        ,"Applicative"
-        ,"Arrow"
-    --  ,"Arrow.Transformer"
-    --  ,"Arrow.Transformer.All"
-    --  ,"Arrow.Operations"
-        ,"Parallel"
-        ,"Parallel.Strategies"
-        ]
-     -}
 
      cleanRE, cleanRE2 :: String -> String
      cleanRE s
