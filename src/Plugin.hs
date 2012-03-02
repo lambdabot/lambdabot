@@ -74,12 +74,10 @@ ios80 :: (Functor m, MonadIO m) => IO String -> Cmd m ()
 ios80 action = do
     to <- getTarget
     let lim = case nName to of
-                  ('#':_) -> abbr 80 -- message to channel: be nice
-                  _       -> id      -- private message: get everything
+                  ('#':_) -> limitStr 80 -- message to channel: be nice
+                  _       -> id          -- private message: get everything
         spaceOut = unlines . map (' ':) . lines
         removeControl = filter (\x -> isSpace x || not (isControl x))
-        abbr n s = let (b, t) = splitAt n s in
-                   if null t then b else take (n-3) b ++ "..."
     (say =<<) . io $ fmap (lim . encodeString . spaceOut . removeControl . decodeString) action 
 
 plugin :: String -> Q [Dec]

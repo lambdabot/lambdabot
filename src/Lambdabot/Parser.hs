@@ -12,6 +12,7 @@ import Language.Haskell.Pretty
 import Language.Haskell.Syntax
 
 import Lambdabot.FixPrecedence
+import Lambdabot.Util (limitStr)
 
 parseExpr :: String -> Either String HsExp
 parseExpr s
@@ -71,8 +72,7 @@ showParseError msg col s = " " ++ msg
                             (True, _) -> " at end of input" -- on the next line, which has no prefix
                             (_,[]   ) -> " at end of input"
                             (_,ctx  ) -> let ctx' = takeWhile (/= ' ') ctx
-                                         in " at \"" ++ (take 5 ctx')
-                                         ++ (if length ctx' > 5 then "..." else "")
+                                         in " at \"" ++ limitStr 8 ctx'
                                          ++ "\" (column " ++ show col ++ ")"
 
 -- Not really parsing

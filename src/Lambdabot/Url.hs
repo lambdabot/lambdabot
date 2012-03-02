@@ -14,6 +14,7 @@ module Lambdabot.Url (
 import Data.List
 import Data.Maybe
 import Lambdabot.MiniHTTP
+import Lambdabot.Util (limitStr)
 
 import Control.Monad.Reader
 import Text.HTML.TagSoup.Match
@@ -45,11 +46,7 @@ urlPageTitle url = do
     title <- rawPageTitle url
     return $ maybe Nothing prettyTitle title
     where
-      limitLength s
-          | length s > maxTitleLength = (take maxTitleLength s) ++ " ..."
-          | otherwise                 = s
-
-      prettyTitle = Just . (urlTitlePrompt ++) . limitLength
+      prettyTitle = Just . (urlTitlePrompt ++) . limitStr maxTitleLength
 
 -- | Fetches a page title for the specified URL.  This function should
 -- only be used by other plugins if and only if the result is not to

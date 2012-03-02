@@ -19,6 +19,7 @@ module Lambdabot.Util (
         lowerCaseString, upperCaseString,
         upperize, lowerize,
         quote, timeStamp,
+        limitStr,
         listToStr, showWidth,
         listToMaybeWith, listToMaybeAll,
         getRandItem, stdGetRandItem, randomElem,
@@ -180,6 +181,12 @@ upperize (c:cs) = toUpper c:cs
 --   the string itself.
 quote  :: String -> String
 quote x = "\"" ++ x ++ "\""
+
+-- | Truncate a string to the specified length, putting ellipses at the
+-- end if necessary.
+limitStr :: Int -> String -> String
+limitStr n s = let (b, t) = splitAt n s in
+           if null t then b else take (n-3) b ++ "..."
 
 -- | Form a list of terms using a single conjunction. Example:
 --
