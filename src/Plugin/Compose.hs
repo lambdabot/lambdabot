@@ -8,11 +8,9 @@ module Plugin.Compose (theModule) where
 
 import Plugin
 import Lambdabot.Command
-import qualified Lambdabot.Message as Msg
 
 import Control.Monad.State
 import Control.Arrow (first)
-import Control.Exception (NoMethodError(..), fromException)
 
 $(plugin "Compose")
 
@@ -24,12 +22,12 @@ instance Module ComposeModule where
                 c <- getCmdName
                 let cc = c++c
                 mapM_ say
-                     [ cc++" [args]."
-                     , cc++" executes plugin invocations in its arguments, parentheses can be used."
-                     , " The commands are right associative."
-                     , " For example:    "++cc++" "++c++"pl "++c++"undo code"
-                     , " is the same as: "++cc++" ("++c++"pl ("++c++"undo code))"
-                     ]
+                    [ cc++" [args]."
+                    , cc++" executes plugin invocations in its arguments, parentheses can be used."
+                    , " The commands are right associative."
+                    , " For example:    "++cc++" "++c++"pl "++c++"undo code"
+                    , " is the same as: "++cc++" ("++c++"pl ("++c++"undo code))"
+                    ]
             , process = evalBracket
             }
         , (command ".")
