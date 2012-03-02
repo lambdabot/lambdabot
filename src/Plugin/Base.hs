@@ -4,16 +4,13 @@ module Plugin.Base (theModule) where
 
 import Plugin
 
-import Lambdabot.Command (runCommand, cmdName)
+import Lambdabot.Command (runCommand)
 import Lambdabot.IRC (IrcMessage, timeReply, errShowMsg)
--- import Lambdabot.Message (getTopic, nick, joinChannel, body, fullName, channels)
 import Lambdabot.Message as Msg (getTopic, nick, server, body, Nick(..), lambdabotName, showNick, readNick)
 
 import qualified Data.Map as M   (insert, delete)
 
-import Control.Monad.State  (MonadState(..), when, gets)
-
-import Control.Exception (NoMethodError(..), fromException)
+import Control.Monad.State  (MonadState(..), gets)
 
 import qualified Data.ByteString.Char8 as P
 import qualified Text.Regex as R
@@ -24,10 +21,8 @@ commands  = commandPrefixes config
 
 $(plugin "Base")
 
-type BaseState = GlobalPrivate () ()
-
 instance Module BaseModule where
-    type ModuleState BaseModule = BaseState
+    type ModuleState BaseModule = GlobalPrivate () ()
     
     moduleDefState  _ = return $ mkGlobalPrivate 20 ()
     moduleInit _ = do
@@ -67,33 +62,19 @@ instance Module BaseModule where
 
 doIGNORE :: Callback
 doIGNORE msg = debugStrLn $ show msg
- --   = debugStrLn $ "IGNORING> <" ++ msgPrefix msg ++
---      "> [" ++ msgCommand msg ++ "] " ++ show (body msg)
-
 
 doPING :: Callback
-doPING msg
-    = debugStrLn $ errShowMsg msg
+doPING msg = debugStrLn $ errShowMsg msg
 
 -- If this is a "TIME" then we need to pass it over to the localtime plugin
 -- otherwise, dump it to stdout
 doNOTICE :: IrcMessage -> Base ()
-doNOTICE msg =
-  if isCTCPTimeReply
-     then do
-        -- bind implicit params to Localtime module. boo on implict params :/
-  --    withModule ircModules
-  --               "Localtime"
-  --               (error "Plugin/Base: no Localtime plugin? So I can't handle CTCP time messges")
-  --               (\_ -> doPRIVMSG (timeReply msg))
-
-          -- need to say which module to run the privmsg in
-
-          doPRIVMSG (timeReply msg)
-
-     else debugStrLn $ "NOTICE: " ++ show (body msg)
+doNOTICE msg
+    | isCTCPTimeReply   = doPRIVMSG (timeReply msg)
+        -- ^ TODO: need to say which module to run the privmsg in
+    | otherwise         = debugStrLn $ "NOTICE: " ++ show (body msg)
     where
-      isCTCPTimeReply = ":\SOHTIME" `isPrefixOf` (last (body msg))
+        isCTCPTimeReply = ":\SOHTIME" `isPrefixOf` (last (body msg))
 
 doJOIN :: Callback
 doJOIN msg | lambdabotName msg /= nick msg = doIGNORE msg
@@ -145,19 +126,13 @@ doRPL_TOPIC msg -- nearly the same as doTOPIC but has our nick on the front of b
 
 doPRIVMSG :: IrcMessage -> Base ()
 doPRIVMSG msg = do
---  now <- io getClockTime
---  io $ appendFile (File.findFile "log") $ ppr now
     ignored <- lift $ checkIgnore msg
     if ignored
-      then lift $ doIGNORE msg
-      else mapM_ (doPRIVMSG' (lambdabotName msg) msg) targets
-  where
-    alltargets = head (body msg)
-    targets = map (Msg.readNick msg) $ split "," alltargets
---  where
---    ppr now = concat [ timeStamp now, " ", "<", (nick msg), " ", (fullName msg), " #"
---                     , (concat . intersperse ","  $ channels msg) ,  "> "
---                     , (tail . concat . intersperse " " . tail) (body msg), "\n"]
+        then lift $ doIGNORE msg
+        else mapM_ (doPRIVMSG' (lambdabotName msg) msg) targets
+    where
+        alltargets = head (body msg)
+        targets = map (Msg.readNick msg) $ split "," alltargets
 
 --
 -- | What does the bot respond to?
@@ -239,14 +214,6 @@ doPRIVMSG' myname msg target
                           else catchIrc
 
                             (do mstrs <- runCommand theCmd msg towhere cmd' rest
-                                 -- catchError
-                                 --    -- try to call 'process', if it fails call 'process_'
-                                 --    (process m msg towhere cmd' rest)
-                                 --    (\ey -> case (ey :: IRCError) of -- dispatch
-                                 --        (IRCRaised (fromException -> Just (NoMethodError _))) ->
-                                 --            process_ m cmd' rest
-                                 --        _ -> throwError ey)
-                                 -- 
                                 -- send off our strings
                                 lift $ mapM_ (ircPrivmsg towhere) mstrs)
 
