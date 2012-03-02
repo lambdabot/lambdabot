@@ -67,7 +67,6 @@ data Note        = Note { noteSender   :: Nick,
 -- | The state. A map of (times we last told this nick they've got messages, the
 --   messages themselves)
 type NoticeBoard = M.Map Nick (Maybe ClockTime, [Note])
--- | A nicer synonym for the Tell monad.
 
 plugin "Tell"
 
