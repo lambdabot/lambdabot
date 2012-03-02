@@ -53,7 +53,6 @@ compose f g xs = g xs >>= f . unlines
 
 ------------------------------------------------------------------------
 -- | Lookup the `process' method we're after, and apply it to the dummy args
--- Fall back to process_ if there's no process.
 --
 lookupP :: String -> Cmd Compose (String -> LB [String])
 lookupP cmd = withMsg $ \a -> do
