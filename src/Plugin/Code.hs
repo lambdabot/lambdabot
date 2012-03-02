@@ -14,15 +14,15 @@ import Text.Regex
 $(plugin "Code")
 
 instance Module CodeModule where
-  type ModuleState CodeModule = [FilePath]
+    type ModuleState CodeModule = [FilePath]
 
-  moduleDefState _ = io $ getSourceFiles $
+    moduleDefState _ = io $ getSourceFiles $
         fptoolsPath config </> "libraries" </> "base"
 
-  moduleCmds _ =
-      [ (command "code")
-          { help = say "code. Print random line of code from $fptools"
-          , process = const $ do
+    moduleCmds _ =
+        [ (command "code")
+            { help = say "code. Print random line of code from $fptools"
+            , process = const $ do
                 fs <- lift readMS
                 (file,line) <- io $ do
                     f    <- stdGetRandItem fs
@@ -31,11 +31,11 @@ instance Module CodeModule where
                     l    <- getRandSrcOf (lines s) 1000 -- number of times to try
                     hClose h
                     return (f, (dropSpace . expandTab $ l))
-
+                
                 -- dump raw output
                 say (basename file ++ ": " ++ line)
-          }
-      ]
+            }
+        ]
 
 --
 -- work out our list of potential source files
