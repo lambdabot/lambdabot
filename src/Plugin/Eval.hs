@@ -23,7 +23,8 @@ instance Module PlugsModule where
             , process = ios80 . plugs
             }
         , (command "let")
-            { help = say "let <x> = <e>. Add a binding"
+            { aliases = ["define"] -- because @define always gets "corrected" to @undefine
+            , help = say "let <x> = <e>. Add a binding"
             , process = ios80 . define
             }
         , (command "undefine")
