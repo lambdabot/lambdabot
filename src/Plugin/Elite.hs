@@ -21,68 +21,66 @@ instance Module EliteModule where
             , process = \args -> case words args of
                  [] -> say "Say again?"
                  wds -> do let instr = map toLower (unwords wds)
-                           say =<< translate instr
+                           say =<< io (translateLine instr)
+                           
             }
         ]
 
-translate :: MonadIO m => String -> m String
+translateLine = fmap (dropWhile isSpace) . translate . (' ':)
+-- extra space allows whole-word patterns to match at start
+
+translate :: String -> IO String
 translate []  = return []
-translate str = case alts of
-                  [] -> do rest <- translate (tail str)
-                           return (head str : rest)
-                  _ -> do (subst,rest) <- liftIO $ stdGetRandItem alts
-                          translatedRest <- translate rest
-                          return (subst ++ translatedRest)
-  where alts = (map (\ (Just (_,_,rest,_),subst) -> (subst,rest)) $
-                filter isJustEmpty $
-                map (\ (re, subst) -> (R.matchRegexAll re str,subst)) $
-                ruleList)
-               ++ [([toUpper $ head str],tail str)
-                  ,([head str],tail str)
-                  ]
+translate str@(hd:tl) = do
+    let alts = [ (subst match,rest)
+               | (re, subst) <- ruleList
+               , ([], match, rest, _) <- maybeToList (R.matchRegexAll re str)
+               ]
+    (subst,rest) <- stdGetRandItem alts
+    liftM (subst ++) (translate rest)
 
-isJustEmpty :: (Maybe([a],b,c,d),e) -> Bool
-isJustEmpty (Just ([],_,_,_),_) = True
-isJustEmpty (_,_)                = False
-
-ruleList :: [(Regex,String)]
+ruleList :: [(Regex, String -> String)]
 ruleList = map (first regex')
-           [("a","4")
-           ,("b","8")
-           ,(" be "," b ")
-           ,("c","(")
-           ,("ck","xx")
-           ,("cks ","x ")
-           ,("cks ","x0rs ")
-           ,("cks ","x0rz ")
-           ,(" cool "," kewl ")
-           ,("e","3")
-           ,("elite","1337")
-           ,("elite","leet")
-           ,("f","ph")
-           ,(" for "," 4 ")
-           ,("g","9")
-           ,("h","|-|")
-           ,("k","x")
-           ,("l","|")
-           ,("l","1")
-           ,("m","/\\/\\")
-           ,("o","0")
-           ,("ph","f")
-           ,("s","z")
-           ,("s","$")
-           ,("s","5")
-           ,("s ","z0rz ")
-           ,("t","7")
-           ,("t","+")
-           ,(" to "," 2 ")
-           ,(" to "," too ")
-           ,(" too "," to ")
-           ,("v","\\/")
-           ,("w","\\/\\/")
-           ,(" you "," u ")
-           ,(" you "," yu ")
-           ,(" you "," joo ")
-           ,("z","s")
-           ]
+    [ (".",     id            )
+    , (".",     map toUpper   )
+    , ("a",     const "4"     )
+    , ("b",     const "8"     )
+    , (" be ",  const " b "   )
+    , ("c",     const "("     )
+    , ("ck",    const "xx"    )
+    , ("cks ",  const "x "    )
+    , ("cks ",  const "x0rs " )
+    , ("cks ",  const "x0rz " )
+    , (" cool ",const " kewl ")
+    , ("e",     const "3"     )
+    , ("elite", const "1337"  )
+    , ("elite", const "leet"  )
+    , ("f",     const "ph"    )
+    , (" for ", const " 4 "   )
+    , ("g",     const "9"     )
+    , ("h",     const "|-|"   )
+    , ("k",     const "x"     )
+    , ("l",     const "|"     )
+    , ("l",     const "1"     )
+    , ("m",     const "/\\/\\")
+    , ("o",     const "0"     )
+    , ("ph",    const "f"     )
+    , ("s",     const "z"     )
+    , ("s",     const "$"     )
+    , ("s",     const "5"     )
+    , ("s ",    const "z0rz " )
+    , ("t",     const "7"     )
+    , ("t",     const "+"     )
+    , (" the ", const " teh " )
+    , (" to ",  const " 2 "   )
+    , (" to ",  const " too " )
+    , (" to ",  const " tu "  )
+    , (" too ", const " to "  )
+    , ("v",     const "\\/"   )
+    , ("w",     const "\\/\\/")
+    , (" you ", const " u "   )
+    , (" you ", const " yu "  )
+    , (" you ", const " joo " )
+    , ("z",     const "s"     )
+    ]
 
