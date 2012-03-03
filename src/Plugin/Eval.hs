@@ -80,6 +80,7 @@ plugs src = do
 -- define a new binding
 
 define :: String -> IO String
+define [] = return "Define what?"
 define src = case Hs.parseModule src of
     Hs.ParseOk srcModule -> do
         l <- findFile "L.hs"
