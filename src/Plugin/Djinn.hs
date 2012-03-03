@@ -18,61 +18,60 @@ type DjinnEnv = ([Decl] {- prelude -}, [Decl])
 type Decl = String
 
 instance Module DjinnModule where
-        type ModuleState DjinnModule = DjinnEnv
+    type ModuleState DjinnModule = DjinnEnv
+    moduleSerialize _ = Nothing
 
-        moduleCmds _ =
-            [ (command "djinn")
-                { help = mapM_ say
-                    [ "djinn <type>."
-                    , "Generates Haskell code from a type."
-                    , "http://darcs.augustsson.net/Darcs/Djinn"
-                    ]
-                , process = rejectingCmds djinnCmd
-                }
-            , (command "djinn-add")
-                { help = do
-                    say "djinn-add <expr>."
-                    say "Define a new function type or type synonym"
-                , process = rejectingCmds djinnAddCmd
-                }
-            , (command "djinn-del")
-                { help = do
-                    say "djinn-del <ident>."
-                    say "Remove a symbol from the environment"
-                , process = rejectingCmds djinnDelCmd
-                }
-            , (command "djinn-env")
-                { help = do
-                    say "djinn-env."
-                    say "Show the current djinn environment"
-                , process = const djinnEnvCmd
-                }
-            , (command "djinn-names")
-                { help = do
-                    say "djinn-names."
-                    say "Show the current djinn environment, compactly."
-                , process = const djinnNamesCmd
-                }
-            , (command "djinn-clr")
-                { help = do
-                    say "djinn-clr."
-                    say "Reset the djinn environment"
-                , process = const djinnClrCmd
-                }
-            , (command "djinn-ver")
-                { help = do
-                    say "djinn-ver."
-                    say "Show current djinn version"
-                , process = const djinnVerCmd
-                }
-            ]
+    -- this means djinn better be visible at boot time
+    moduleDefState  _ = do
+        st <- io $ getDjinnEnv ([],[]) -- get the prelude
+        return (either (const []) snd{-!-} st, [])
 
-        moduleSerialize _ = Nothing -- Just listSerial
-
-        -- this means djinn better be visible at boot time
-        moduleDefState  _ = do
-                st <- io $ getDjinnEnv ([],[]) -- get the prelude
-                return (either (const []) snd{-!-} st, [])
+    moduleCmds _ =
+        [ (command "djinn")
+            { help = mapM_ say
+                [ "djinn <type>."
+                , "Generates Haskell code from a type."
+                , "http://darcs.augustsson.net/Darcs/Djinn"
+                ]
+            , process = rejectingCmds djinnCmd
+            }
+        , (command "djinn-add")
+            { help = do
+                say "djinn-add <expr>."
+                say "Define a new function type or type synonym"
+            , process = rejectingCmds djinnAddCmd
+            }
+        , (command "djinn-del")
+            { help = do
+                say "djinn-del <ident>."
+                say "Remove a symbol from the environment"
+            , process = rejectingCmds djinnDelCmd
+            }
+        , (command "djinn-env")
+            { help = do
+                say "djinn-env."
+                say "Show the current djinn environment"
+            , process = const djinnEnvCmd
+            }
+        , (command "djinn-names")
+            { help = do
+                say "djinn-names."
+                say "Show the current djinn environment, compactly."
+            , process = const djinnNamesCmd
+            }
+        , (command "djinn-clr")
+            { help = do
+                say "djinn-clr."
+                say "Reset the djinn environment"
+            , process = const djinnClrCmd
+            }
+        , (command "djinn-ver")
+            { help = do
+                say "djinn-ver."
+                say "Show current djinn version"
+            , process = const djinnVerCmd
+            }
+        ]
 
 -- check the args, reject them if they start with a colon (ignoring whitespace)
 rejectingCmds action args
