@@ -19,11 +19,11 @@ instance Module DictModule where
             { help = getHelp [name]
             , process = \args -> case parseTerms args of
                 [] -> getHelp [name]
-                s  -> mapM_ (say . fmtResult <=< doLookup) s
+                s  -> mapM_ (doLookup >=> sayResult) s
             }
         | (name, (srv, db, descr)) <- dictTable
         , let doLookup  = io . Dict.simpleDictLookup srv db
-              fmtResult = either ("Error: " ++) id
+              sayResult = say . either ("Error: " ++) id
         ]
 
 -- | Configuration.
