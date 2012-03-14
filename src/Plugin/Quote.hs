@@ -100,10 +100,7 @@ instance Module QuoteModule where
     moduleDefState  _       = return M.empty
 
 fortune :: [FilePath] -> Cmd Quote ()
-fortune xs = io (expandFortunes xs >>= randomElem >>= randomFortune) >>= say
-
-expandFortunes [] = defaultFortuneFiles Normal
-expandFortunes fs = mapM (resolveFortuneFile All) fs
+fortune xs = io (resolveFortuneFiles All xs >>= randomFortune) >>= say
 
 genericHelp :: String
 genericHelp = "quote <nick>\nremember <nick> <quote>\n" ++
