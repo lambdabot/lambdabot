@@ -4,7 +4,6 @@ module Plugin.Quote (theModule) where
 
 import Plugin
 import Plugin.Quote.Fortune      (randFortune)
-import Plugin.Quote.Text
 
 import qualified Data.Map as M
 import qualified Data.ByteString.Char8 as P
@@ -36,73 +35,72 @@ instance Module QuoteModule where
             }
         , (command "fortune")
             { help = say "fortune. Provide a random fortune"
-            , process = const (runit (randFortune Nothing))
+            , process = const (fortune [])
             }
         , (command "yow")
             { help = say "yow. The zippy man."
-            , process = const (runit (randFortune (Just "zippy")))
+            , process = const (fortune ["fortune-mod/zippy"])
             }
         , (command "arr")
             { help = say "arr. Talk to a pirate"
-            , process = const (rand arrList)
+            , process = const (fortune ["lambdabot/arr"])
             }
         , (command "yarr")
-            { help = say "yarr. Talk to a pirate"
-            , process = const (rand yarrList)
+            { help = say "yarr. Talk to a scurvy pirate"
+            , process = const (fortune ["lambdabot/arr", "off/lambdabot/yarr"])
             }
         , (command "keal")
             { help = say "keal. Talk like Keal"
-            , process = const (rand kealList)
+            , process = const (fortune ["lambdabot/keal"])
             }
         , (command "b52s")
             { help = say "b52s. Anyone noticed the b52s sound a lot like zippy?"
-            , process = const (rand b52s)
+            , process = const (fortune ["lambdabot/b52s"])
             }
         , (command "pinky")
             { help = say "pinky. Pinky and the Brain"
-            , process = \s -> rand (if "pondering" `isInfixOf` s then pinkyPondering else pinky)
+            , process = \s -> fortune $ if "pondering" `isInfixOf` s
+                then ["lambdabot/pinky-pondering"] 
+                else ["lambdabot/pinky-pondering", "lambdabot/pinky"]
             }
         , (command "brain")
             { help = say "brain. Pinky and the Brain"
-            , process = const (rand brain)
+            , process = const (fortune ["lambdabot/brain"])
             }
         , (command "palomer")
             { help = say "palomer. Sound a bit like palomer on a good day."
-            , process = const (rand palomer)
+            , process = const (fortune ["lambdabot/palomer"])
             }
         , (command "girl19")
             { help = say "girl19 wonders what \"discriminating hackers\" are."
-            , process = const (rand girl19)
+            , process = const (fortune ["lambdabot/girl19"])
             }
         , (command "v")
             { aliases = ["yhjulwwiefzojcbxybbruweejw"]
             , help = getCmdName >>= \v -> case v of
                 "v" -> say "let v = show v in v"
                 _   -> say "V RETURNS!"
-            , process = const (rand notoriousV)
+            , process = const (fortune ["lambdabot/notoriousV"])
             }
         , (command "protontorpedo")
             { help = say "protontorpedo is silly"
-            , process = const (rand protontorpedo)
+            , process = const (fortune ["lambdabot/protontorpedo"])
             }
         , (command "nixon")
             { help = say "Richad Nixon's finest."
-            , process = const (rand nixonList)
+            , process = const (fortune ["off/lambdabot/nixon"])
             }
         , (command "farber")
             { help = say "Farberisms in the style of David Farber."
-            , process = const (rand farberList)
+            , process = const (fortune ["lambdabot/farber"])
             }
         ]
 
     moduleSerialize _       = Just mapListPackedSerial
     moduleDefState  _       = return M.empty
 
-runit :: IO String -> Cmd Quote ()
-runit k = io k >>= say
-
-rand :: [String] -> Cmd Quote ()
-rand = runit . randomElem
+fortune :: [FilePath] -> Cmd Quote ()
+fortune xs = io (randFortune xs) >>= say
 
 genericHelp :: String
 genericHelp = "quote <nick>\nremember <nick> <quote>\n" ++

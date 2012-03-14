@@ -14,11 +14,6 @@ data Config = Config {
         proxy     :: Maybe ([Char], Integer), -- ^ A proxy given as
                                               --   a pair of host and port.
 
-        -- | The 'path' component is a string to the location where the fortune files
-        --   are located. On some systems, this is "\/usr\/share\/games\/fortunes", on others
-        --   this is "\/usr\/share\/games\/fortune". Alter this to suit your configuration
-        fortunePath :: FilePath,
-
         -- | Path to the top of "\$fptools", used by "\@code"
         fptoolsPath :: FilePath,
 
@@ -46,7 +41,6 @@ config = Config {
         textwidth               = 350,
         proxy                   = Nothing, -- Just ("www-proxy",3128),
 
-        fortunePath             = "/deepbondi/fortune/",
         fptoolsPath             = "/home/susie/fptools",
 
         ghci                    = "ghci",
