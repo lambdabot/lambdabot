@@ -88,7 +88,6 @@ executable lambdabot
                         syb,
                         tagsoup,
                         template-haskell,
-                        text,
                         unix,
                         utf8-string,
                         zlib,

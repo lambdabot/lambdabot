@@ -3,8 +3,8 @@
 module Plugin.Quote (theModule) where
 
 import Plugin
-import Plugin.Quote.Fortune      (randFortune)
 
+import Data.Fortune
 import qualified Data.Map as M
 import qualified Data.ByteString.Char8 as P
 
@@ -31,7 +31,7 @@ instance Module QuoteModule where
             }
         , (command "ghc")
             { help = say "ghc. Choice quotes from GHC."
-            , process = runQuote . ("ghc " ++) . dropSpace
+            , process = const (fortune ["ghc"])
             }
         , (command "fortune")
             { help = say "fortune. Provide a random fortune"
@@ -39,60 +39,60 @@ instance Module QuoteModule where
             }
         , (command "yow")
             { help = say "yow. The zippy man."
-            , process = const (fortune ["fortune-mod/zippy"])
+            , process = const (fortune ["zippy"])
             }
         , (command "arr")
             { help = say "arr. Talk to a pirate"
-            , process = const (fortune ["lambdabot/arr"])
+            , process = const (fortune ["arr"])
             }
         , (command "yarr")
             { help = say "yarr. Talk to a scurvy pirate"
-            , process = const (fortune ["lambdabot/arr", "off/lambdabot/yarr"])
+            , process = const (fortune ["arr", "yarr"])
             }
         , (command "keal")
             { help = say "keal. Talk like Keal"
-            , process = const (fortune ["lambdabot/keal"])
+            , process = const (fortune ["keal"])
             }
         , (command "b52s")
             { help = say "b52s. Anyone noticed the b52s sound a lot like zippy?"
-            , process = const (fortune ["lambdabot/b52s"])
+            , process = const (fortune ["b52s"])
             }
         , (command "pinky")
             { help = say "pinky. Pinky and the Brain"
             , process = \s -> fortune $ if "pondering" `isInfixOf` s
-                then ["lambdabot/pinky-pondering"] 
-                else ["lambdabot/pinky-pondering", "lambdabot/pinky"]
+                then ["pinky-pondering"] 
+                else ["pinky-pondering", "pinky"]
             }
         , (command "brain")
             { help = say "brain. Pinky and the Brain"
-            , process = const (fortune ["lambdabot/brain"])
+            , process = const (fortune ["brain"])
             }
         , (command "palomer")
             { help = say "palomer. Sound a bit like palomer on a good day."
-            , process = const (fortune ["lambdabot/palomer"])
+            , process = const (fortune ["palomer"])
             }
         , (command "girl19")
             { help = say "girl19 wonders what \"discriminating hackers\" are."
-            , process = const (fortune ["lambdabot/girl19"])
+            , process = const (fortune ["girl19"])
             }
         , (command "v")
             { aliases = ["yhjulwwiefzojcbxybbruweejw"]
             , help = getCmdName >>= \v -> case v of
                 "v" -> say "let v = show v in v"
                 _   -> say "V RETURNS!"
-            , process = const (fortune ["lambdabot/notoriousV"])
+            , process = const (fortune ["notoriousV"])
             }
         , (command "protontorpedo")
             { help = say "protontorpedo is silly"
-            , process = const (fortune ["lambdabot/protontorpedo"])
+            , process = const (fortune ["protontorpedo"])
             }
         , (command "nixon")
-            { help = say "Richad Nixon's finest."
-            , process = const (fortune ["off/lambdabot/nixon"])
+            { help = say "Richard Nixon's finest."
+            , process = const (fortune ["nixon"])
             }
         , (command "farber")
             { help = say "Farberisms in the style of David Farber."
-            , process = const (fortune ["lambdabot/farber"])
+            , process = const (fortune ["farber"])
             }
         ]
 
@@ -100,7 +100,10 @@ instance Module QuoteModule where
     moduleDefState  _       = return M.empty
 
 fortune :: [FilePath] -> Cmd Quote ()
-fortune xs = io (randFortune xs) >>= say
+fortune xs = io (expandFortunes xs >>= randomElem >>= randomFortune) >>= say
+
+expandFortunes [] = defaultFortuneFiles Normal
+expandFortunes fs = mapM (resolveFortuneFile All) fs
 
 genericHelp :: String
 genericHelp = "quote <nick>\nremember <nick> <quote>\n" ++
