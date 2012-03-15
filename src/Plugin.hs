@@ -60,9 +60,9 @@ import Codec.Binary.UTF8.String
 
 import Language.Haskell.TH
 
--- | convenience, we often want to perform some io, get a string, and box it.
-ios  :: (Functor m, MonadIO m) => IO a -> m [a]
-ios  = list . io
+-- | convenience, we often want to perform some io, get a string, and say it.
+ios  :: (MonadIO m) => IO String -> Cmd m ()
+ios x = io x >>= say
 
 list :: (Functor m, Monad m) => m a -> m [a]
 list = (return `fmap`)

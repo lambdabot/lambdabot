@@ -15,6 +15,8 @@ type Quotes = M.Map Key [P.ByteString]
 
 instance Module QuoteModule where
     type ModuleState QuoteModule = Quotes
+    moduleSerialize _ = Just mapListPackedSerial
+    moduleDefState  _ = return M.empty
     
     moduleCmds _ =
         [ (command "quote")
@@ -96,9 +98,6 @@ instance Module QuoteModule where
             }
         ]
 
-    moduleSerialize _       = Just mapListPackedSerial
-    moduleDefState  _       = return M.empty
-
 fortune :: [FilePath] -> Cmd Quote ()
 fortune xs = io (resolveFortuneFiles All xs >>= randomFortune) >>= say
 
@@ -115,51 +114,52 @@ genericHelp = "quote <nick>\nremember <nick> <quote>\n" ++
 runRemember :: String -> Cmd Quote ()
 runRemember str
     | null rest = say "Incorrect arguments to quote"
-    | otherwise = mapM_ say =<< lift (withMS $ \fm writer -> do
-        let ss  = fromMaybe [] (M.lookup (P.pack nm) fm)
-            fm' = M.insert (P.pack nm) (P.pack q : ss) fm
-        writer fm'
-        r <- random confirmation
-        box r)
+    | otherwise = do
+        withMS $ \fm writer -> do
+            let ss  = fromMaybe [] (M.lookup (P.pack nm) fm)
+                fm' = M.insert (P.pack nm) (P.pack q : ss) fm
+            writer fm'
+        say =<< random confirmation
     where
         (nm,rest) = break isSpace str
-        q         = tail rest
+        q         = drop 1 rest
 
 -- @forget, to remove a quote
 runForget :: String -> Cmd Quote ()
 runForget str
     | null rest = say "Incorrect arguments to quote"
-    | otherwise = mapM_ say =<< lift (withMS $ \fm writer -> do
-        let ss  = fromMaybe [] (M.lookup (P.pack nm) fm)
-            fm' = M.insert (P.pack nm) (delete (P.pack q) ss) fm
-        writer fm'
-        if P.pack q `elem` ss
-            then return ["Done."]
-            else return ["No match."])
+    | otherwise = do
+        ss <- withMS $ \fm writer -> do
+            let ss  = fromMaybe [] (M.lookup (P.pack nm) fm)
+                fm' = M.insert (P.pack nm) (delete (P.pack q) ss) fm
+            writer fm'
+            return ss
+        say $ if P.pack q `elem` ss
+            then "Done."
+            else "No match."
     where
         (nm,rest) = break isSpace str
-        q         = tail rest
+        q         = drop 1 rest
 
 --
 --  the @quote command, takes a user nm to choose a random quote from
 --
 runQuote :: String -> Cmd Quote ()
-runQuote str = mapM_ say =<< lift (do
-    st <- readMS
-    io (search (P.pack nm) (P.pack pat) st))
+runQuote str = 
+    say =<< io . search (P.pack nm) (P.pack pat) =<< readMS
   where (nm, p) = break isSpace str
-        pat     = if null p then p else tail p
+        pat     = drop 1 p
 
-search :: Key -> P.ByteString -> Quotes -> IO [String]
+search :: Key -> P.ByteString -> Quotes -> IO String
 search key pat db
-    | M.null db          = box "No quotes yet."
+    | M.null db          = return "No quotes yet."
 
     | P.null key         = do
         (key', qs) <- random (M.toList db) -- quote a random person
-        box . display key' =<< random qs
+        fmap (display key') (random qs)
 
     | P.null pat, Just qs <- mquotes =
-        box . display key  =<< random qs
+        fmap (display key) (random qs)
 
     | P.null pat         = match key allquotes
 
@@ -167,7 +167,7 @@ search key pat db
 
     | otherwise          = do
         r <- random insult
-        box $ "No quotes for this person. " ++ r
+        return $ "No quotes for this person. " ++ r
 
   where
     mquotes   = M.lookup key db
@@ -186,9 +186,9 @@ search key pat db
         let rs = filter (matches re . snd) ss
         if null rs
             then do r <- random insult
-                    box $ "No quotes match. " ++ r
+                    return $ "No quotes match. " ++ r
             else do (who, saying) <- random rs
-                    box $ P.unpack who ++ " says: " ++ P.unpack saying
+                    return $ P.unpack who ++ " says: " ++ P.unpack saying
 
     display k msg = (if P.null k then "  " else who ++ " says: ") ++ saying
           where saying = P.unpack msg

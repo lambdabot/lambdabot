@@ -14,28 +14,28 @@ instance Module UrlModule where
     moduleCmds _ =
         [ (command "url-title")
             { help = say "url-title <url>. Fetch the page title."
-            , process = (mapM_ say =<<) . lift . lift 
-                . maybe (return ["Url not valid."]) fetchTitle
+            , process = 
+                  maybe (say "Url not valid.") (mbSay <=< fetchTitle)
                 . containsUrl
             }
         , (command "tiny-url")
             { help = say "tiny-url <url>. Shorten <url>."
-            , process = (mapM_ say =<<) . lift . lift 
-                . maybe (return ["Url not valid."]) fetchTiny 
+            , process = 
+                  maybe (say "Url not valid.") (mbSay <=< fetchTiny)
                 . containsUrl
             }
         , (command "url-on")
             { privileged = True
             , help = say "url-on: enable automatic URL summaries"
             , process = const $ do
-                lift (writeMS True)
+                writeMS True
                 say "Url enabled"
             }
         , (command "url-off")
             { privileged = True
             , help = say "url-off: disable automatic URL summaries"
             , process = const $ do
-                lift (writeMS False)
+                writeMS False
                 say "Url disabled"
             }
         ]
@@ -49,35 +49,31 @@ instance Module UrlModule where
                Nothing  -> return ()
                Just url
                  | length url > 60 -> do
-                     title <- lift (lift (fetchTitle url))
-                     tiny  <- lift (lift (fetchTiny  url))
-                     mapM_ say $ zipWith' cat title tiny
-                 | otherwise -> lift (lift (fetchTitle url)) >>= mapM_ say
+                     title <- fetchTitle url
+                     tiny  <- fetchTiny  url
+                     say (intercalate ", " (catMaybes [title, tiny]))
+                 | otherwise -> mbSay =<< fetchTitle url
         else return ()
-      where cat x y = x ++ ", " ++ y
-            zipWith' _ [] ys = ys
-            zipWith' _ xs [] = xs
-            zipWith' f (x:xs) (y:ys) = f x y : zipWith' f xs ys
+
+mbSay = maybe (return ()) say
 
 ------------------------------------------------------------------------
 
 -- | Fetch the title of the specified URL.
-fetchTitle :: String -> LB [String]
-fetchTitle url = do
-    title <- io $ runWebReq (urlPageTitle url) (proxy config)
-    return $ maybe [] return title
+fetchTitle :: MonadIO m => String -> m (Maybe String)
+fetchTitle url = io $ runWebReq (urlPageTitle url) (proxy config)
 
 -- | base url for fetching tiny urls
 tinyurl :: String
 tinyurl = "http://tinyurl.com/api-create.php?url="
 
 -- | Fetch the title of the specified URL.
-fetchTiny :: String -> LB [String]
+fetchTiny :: MonadIO m => String -> m (Maybe String)
 fetchTiny url
     | Just uri <- parseURI (tinyurl ++ url) = do
         tiny <- io $ runWebReq (getHtmlPage uri) (proxy config)
-        return $ maybe [] return $ findTiny $ foldl' cat "" tiny
-    | otherwise = return $ maybe [] return $ Just url
+        return $ findTiny $ foldl' cat "" tiny
+    | otherwise = return $ Just url
     where cat x y = x ++ " " ++ y
 
 -- | Tries to find the start of a tinyurl

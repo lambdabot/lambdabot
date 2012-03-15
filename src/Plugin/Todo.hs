@@ -5,7 +5,7 @@
 module Plugin.Todo (theModule) where
 
 import Plugin
-import Lambdabot.Message as Msg (Message, nick, packNick, unpackNick, showNick)
+import Lambdabot.Message as Msg (Message, packNick, unpackNick, showNick)
 import qualified Data.ByteString.Char8 as P
 
 plugin "Todo"
@@ -20,19 +20,17 @@ instance Module TodoModule where
         [ (command "todo")
             { help = say "todo. List todo entries"
             , process = \args -> withMsg $ \msg -> do
-                todoList <- lift readMS
-                lift (getTodo msg todoList args) >>= mapM_ say
+                todoList <- readMS
+                getTodo msg todoList args
             }
         , (command "todo-add")
             { help = say "todo-add <idea>. Add a todo entry"
-            , process = \args -> withMsg $ \msg -> do
-                let sender = Msg.packNick $ Msg.nick msg
-                lift (addTodo sender args) >>= mapM_ say
+            , process = addTodo
             }
         , (command "todo-delete")
             { privileged = True
             , help = say "todo-delete <n>. Delete a todo entry (for admins)"
-            , process = \args -> lift (delTodo args) >>= mapM_ say
+            , process = delTodo
             }
         ]
 
@@ -40,9 +38,9 @@ instance Module TodoModule where
     moduleSerialize _ = Just assocListPackedSerial
 
 -- | Print todo list
-getTodo :: Msg.Message m => m -> TodoState -> String -> Todo [String]
-getTodo msg todoList [] = return [formatTodo msg todoList]
-getTodo _ _ _           = error "@todo has no args, try @todo-add or @list todo"
+getTodo :: Msg.Message m => m -> TodoState -> String -> Cmd Todo ()
+getTodo msg todoList [] = say (formatTodo msg todoList)
+getTodo _ _ _           = say "@todo has no args, try @todo-add or @list todo"
 
 -- | Pretty print todo list
 formatTodo :: Msg.Message m => m -> [(P.ByteString, P.ByteString)] -> String
@@ -53,22 +51,23 @@ formatTodo msg todoList =
                 zip [0..] todoList
 
 -- | Add new entry to list
-addTodo :: P.ByteString -> String -> Todo [String]
-addTodo sender rest = do
+addTodo :: String -> Cmd Todo ()
+addTodo rest = do
+    sender <- fmap Msg.packNick getSender
     modifyMS (++[(P.pack rest, sender)])
-    return ["Entry added to the todo list"]
+    say "Entry added to the todo list"
 
 -- | Delete an entry from the list
-delTodo :: String -> Todo [String]
+delTodo :: String -> Cmd Todo ()
 delTodo rest
-    | Just n <- readM rest = withMS $ \ls write -> case () of
-      _ | null ls -> return ["Todo list is empty"]
-        | n > length ls - 1 || n < 0
-        -> return [show n ++ " is out of range"]
+    | Just n <- readM rest = say =<< withMS (\ls write -> case () of
+          _ | null ls -> return "Todo list is empty"
+            | n > length ls - 1 || n < 0
+            -> return (show n ++ " is out of range")
+    
+            | otherwise -> do
+                write (map snd . filter ((/= n) . fst) . zip [0..] $ ls)
+                let (a,_) = ls !! n
+                return ("Removed: " ++ P.unpack a))
 
-        | otherwise -> do
-            write (map snd . filter ((/= n) . fst) . zip [0..] $ ls)
-            let (a,_) = ls !! n
-            return ["Removed: " ++ P.unpack a]
-
-    | otherwise = return ["Syntax error. @todo <n>, where n :: Int"]
+    | otherwise = say "Syntax error. @todo <n>, where n :: Int"

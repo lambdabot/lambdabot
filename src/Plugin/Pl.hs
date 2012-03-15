@@ -19,8 +19,6 @@ import Plugin.Pl.PrettyPrinter   (Expr)
 import Plugin.Pl.Transform       (transform)
 import Plugin.Pl.Optimize        (optimize)
 
-import Lambdabot.Message( Nick )
-
 import Control.Concurrent.Chan    (Chan, newChan, isEmptyChan, readChan, writeList2Chan)
 import Control.Exception (unblock)
 -- firstTimeout is the timeout when the expression is simplified for the first
@@ -41,15 +39,11 @@ instance Module PlModule where
         [ (command "pointless")
             { aliases = ["pl"]
             , help = say "pointless <expr>. Play with pointfree code."
-            , process = \rest -> do
-                target <- getTarget
-                lift (pf target rest) >>= mapM_ say
+            , process = pf
             }
         , (command "pl-resume")
             { help = say "pl-resume. Resume a suspended pointless transformation."
-            , process = \_ -> do
-                target <- getTarget
-                lift (res target) >>= mapM_ say
+            , process = const res
             }
         ]
 
@@ -57,29 +51,32 @@ instance Module PlModule where
 
 ------------------------------------------------------------------------
 
-res :: Nick -> Pl [String]
-res target = do
-  d <- readPS target
+res :: Cmd Pl ()
+res = do
+  d <- readPS =<< getTarget
   case d of
-    Nothing -> return ["pointless: sorry, nothing to resume."]
-    Just d' -> optimizeTopLevel target d'
+    Just d' -> optimizeTopLevel d'
+    Nothing -> say "pointless: sorry, nothing to resume."
 
 -- | Convert a string to pointfree form
-pf :: Nick -> String -> Pl [String]
-pf target inp = case parsePF inp of
-  Right d  -> optimizeTopLevel target (firstTimeout, mapTopLevel transform d)
-  Left err -> return [err]
+pf :: String -> Cmd Pl ()
+pf inp = do
+    case parsePF inp of
+        Right d  -> optimizeTopLevel (firstTimeout, mapTopLevel transform d)
+        Left err -> say err
 
-optimizeTopLevel :: Nick -> (Int, TopLevel) -> Pl [String]
-optimizeTopLevel target (to, d) = do
-  let (e,decl) = getExpr d
-  (e', finished) <- io $ optimizeIO to e
-  extra <- if finished
-           then do writePS target Nothing
-                   return []
-           else do writePS target $ Just (min (2*to) maxTimeout, decl e')
-                   return ["optimization suspended, use @pl-resume to continue."]
-  return $ (show $ decl e') : extra
+optimizeTopLevel :: (Int, TopLevel) -> Cmd Pl ()
+optimizeTopLevel (to, d) = do
+    target <- getTarget
+    let (e,decl) = getExpr d
+    (e', finished) <- io $ optimizeIO to e
+    let eDecl = decl e'
+    say (show eDecl)
+    if finished
+        then writePS target Nothing
+        else do
+            writePS target $ Just (min (2*to) maxTimeout, eDecl)
+            say "optimization suspended, use @pl-resume to continue."
 
 ------------------------------------------------------------------------
 

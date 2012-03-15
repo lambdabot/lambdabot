@@ -20,9 +20,11 @@ type WhereState         = M.Map P.ByteString P.ByteString
 type WhereWriter        = WhereState -> LB ()
 
 instance Module WhereModule where
-  type ModuleState WhereModule = WhereState
-
-  moduleCmds _ = 
+    type ModuleState WhereModule = WhereState
+    moduleDefState  _ = return M.empty
+    moduleSerialize _ = Just mapPackedSerial
+    
+    moduleCmds _ = 
         [ (command "where")
             { help = say "where <key>. Return element associated with key"
             , process = doCmd "where"
@@ -40,12 +42,9 @@ instance Module WhereModule where
             , process = doCmd "where+"
             }
         ]
-  
-  moduleDefState  _ = return M.empty
-  moduleSerialize _ = Just mapPackedSerial
 
 doCmd :: String -> String -> Cmd Where ()
-doCmd cmd rest = (say =<<) . lift . withMS $ \factFM writer ->
+doCmd cmd rest = (say =<<) . withMS $ \factFM writer ->
     case words rest of
         []         -> return "@where <key>, return element associated with key"
         (fact:dat) -> processCommand factFM writer

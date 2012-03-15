@@ -14,46 +14,45 @@ import Control.Monad.State (gets)
 
 plugin "Topic"
 
-type TopicAction = Nick -> String -> LB [String]
+type TopicAction = Nick -> String -> Cmd Topic ()
 data TopicCommand = TopicCommand
     { commandAliases    :: [String]
     , commandHelp       :: String
     , invokeCommand     :: TopicAction
     }
 
-commands :: M.Map String TopicCommand
-commands = M.fromList [(alias, cmd) | cmd <- cmds, alias <- commandAliases cmd]
-    where cmds =
-            [ TopicCommand ["set-topic"]
-              "Set the topic of the channel, without using all that listy stuff"
-              (installTopic)
-            , TopicCommand ["get-topic"]
-              "Recite the topic of the channel"
-              (reciteTopic)
-              
-            , TopicCommand ["unshift-topic", "queue-topic"]
-              "Add a new topic item to the front of the topic list"
-              (alterListTopic (:))
-            , TopicCommand ["shift-topic"]
-              "Remove a topic item from the front of the topic list"
-              (alterListTopic (const tail))
-              
-            , TopicCommand ["push-topic"]
-              "Add a new topic item to the end of the topic stack"
-              (alterListTopic (\arg -> (++ [arg])))
-            , TopicCommand ["pop-topic", "dequeue-topic"]
-              "Pop an item from the end of the topic stack"
-              (alterListTopic (const init))
-              
-            , TopicCommand ["clear-topic"]
-              "Empty the topic stack"
-              (alterListTopic (\_ _ -> []))
-            ]
+commands = 
+    [ TopicCommand ["set-topic"]
+      "Set the topic of the channel, without using all that listy stuff"
+      (installTopic)
+    , TopicCommand ["get-topic"]
+      "Recite the topic of the channel"
+      (reciteTopic)
+      
+    , TopicCommand ["unshift-topic", "queue-topic"]
+      "Add a new topic item to the front of the topic list"
+      (alterListTopic (:))
+    , TopicCommand ["shift-topic"]
+      "Remove a topic item from the front of the topic list"
+      (alterListTopic (const tail))
+      
+    , TopicCommand ["push-topic"]
+      "Add a new topic item to the end of the topic stack"
+      (alterListTopic (\arg -> (++ [arg])))
+    , TopicCommand ["pop-topic", "dequeue-topic"]
+      "Pop an item from the end of the topic stack"
+      (alterListTopic (const init))
+      
+    , TopicCommand ["clear-topic"]
+      "Empty the topic stack"
+      (alterListTopic (\_ _ -> []))
+    ]
 
 instance Module TopicModule where
   moduleCmds _ =
     [ (command name)
         { help = say helpStr
+        , aliases = aliases
         , process = \args -> do
             tgt <- getTarget
             (chan, rest) <- case splitFirstWord args of
@@ -65,30 +64,28 @@ instance Module TopicModule where
                         _               -> return (Nothing, args)
 
             case chan of
-                Just chan -> lift (lift (invoke chan rest)) >>= mapM_ say
+                Just chan -> invoke chan rest
                 Nothing -> say "What channel?"
         }
-    | (name, TopicCommand _ helpStr invoke)<- M.toList commands
+    | TopicCommand (name:aliases) helpStr invoke <- commands
     ]
 
 ------------------------------------------------------------------------
 -- Topic action implementations
 
 installTopic :: TopicAction
-installTopic chan topic = withTopic chan $ \_oldTopic -> do
-    send (Msg.setTopic chan topic)
-    return []
+installTopic chan topic = withTopic chan $ \_ -> do
+    lb (send (Msg.setTopic chan topic))
 
 reciteTopic :: TopicAction
 reciteTopic chan ""       = withTopic chan $ \topic -> do
-    return [nName chan ++ ": " ++ topic]
-reciteTopic _ ('#':_)     = return ["One channel at a time.  Jeepers!"]
-reciteTopic _ _           = return ["I don't know what all that extra stuff is about."]
+    say (nName chan ++ ": " ++ topic)
+reciteTopic _ ('#':_)     = say "One channel at a time.  Jeepers!"
+reciteTopic _ _           = say "I don't know what all that extra stuff is about."
 
 alterTopic :: (String -> String -> String) -> TopicAction
 alterTopic f chan args = withTopic chan $ \oldTopic -> do
-    send (Msg.setTopic chan (f args oldTopic))
-    return []
+    lb (send (Msg.setTopic chan (f args oldTopic)))
 
 alterListTopic :: (String -> [String] -> [String]) -> TopicAction
 alterListTopic f = alterTopic $ \args topic -> show $ case reads topic of
@@ -97,19 +94,14 @@ alterListTopic f = alterTopic $ \args topic -> show $ case reads topic of
 
 ------------------------------------------------------------------------
 
--- | 'lookupTopic' Takes a channel and a modifier function f. It then
---   proceeds to look up the channel topic for the channel given, returning
---   Just t or Nothing to the modifier function which can then decide what
---   to do with the topic
-lookupTopic :: Nick                          -- ^ Channel
-            -> (Maybe String -> LB [String]) -- ^ Modifier function
-            -> LB [String]
-lookupTopic chan f = gets (\s -> M.lookup (mkCN chan) (ircChannels s)) >>= f
+lookupTopic :: Nick -> LB (Maybe String)
+lookupTopic chan = gets (\s -> M.lookup (mkCN chan) (ircChannels s))
 
 -- | 'withTopic' is like 'lookupTopic' except that it ditches the Maybe in
 --   favor of just yelling at the user when things don't work out as planned.
-withTopic :: Nick -> (String -> LB [String]) -> LB [String]
-withTopic chan f = lookupTopic chan $ \maybetopic ->
+withTopic :: Nick -> (String -> Cmd Topic ()) -> Cmd Topic ()
+withTopic chan f = do
+    maybetopic <- lb (lookupTopic chan)
     case maybetopic of
         Just t  -> f t
-        Nothing -> return ["I don't know that channel."]
+        Nothing -> say "I don't know that channel."

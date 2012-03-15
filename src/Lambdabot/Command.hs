@@ -1,4 +1,4 @@
-{-# LANGUAGE ExistentialQuantification, RankNTypes #-}
+{-# LANGUAGE ExistentialQuantification, RankNTypes, TypeFamilies #-}
 module Lambdabot.Command 
     ( Command(..)
     , cmdNames
@@ -22,6 +22,8 @@ import Control.Monad.Reader
 import Control.Monad.Writer
 import Lambdabot.Message (Message, Nick)
 import qualified Lambdabot.Message as Msg
+import {-# SOURCE #-} Lambdabot.Monad
+import Lambdabot.State
 
 data CmdArgs = forall a. Message a => CmdArgs
     { message   :: a
@@ -42,7 +44,12 @@ instance Monad m => Monad (Cmd m) where
 instance MonadTrans Cmd where
     lift = Cmd . lift . lift
 instance MonadIO m => MonadIO (Cmd m) where
-    liftIO = Cmd . liftIO
+    liftIO = lift . liftIO
+instance MonadLB m => MonadLB (Cmd m) where
+    lb = lift . lb
+instance MonadLBState m => MonadLBState (Cmd m) where
+    type LBState (Cmd m) = LBState m
+    withMS = lift . withMS
 
 data Command m = Command
     { cmdName       :: String
@@ -77,7 +84,8 @@ getCmdName :: Monad m => Cmd m String
 getCmdName = Cmd (asks invokedAs)
 
 say :: Monad m => String -> Cmd m ()
-say = Cmd . tell . return
+say [] = return ()
+say it = Cmd (tell [it])
 
 withMsg :: Monad m => (forall a. Message a => a -> Cmd m t) -> Cmd m t
 withMsg f = Cmd ask >>= f'

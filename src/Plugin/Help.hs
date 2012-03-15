@@ -14,7 +14,7 @@ instance Module HelpModule where
             { help = say "help <command>. Ask for help for <command>. Try 'list' for all commands"
             , process = \args -> withMsg $ \msg -> do
                 tgt <- getTarget
-                lift (lift (doHelp msg tgt args)) >>= mapM_ say
+                lb (doHelp msg tgt args) >>= mapM_ say
             }
         ]
 

@@ -68,14 +68,14 @@ doCmd dk rest = withMsg $ \msg -> do
       []       -> say "usage @karma(+|-) nick"
       (nick:_) -> do
           nick' <- readNick nick
-          lift (changeKarma msg dk sender nick') >>= mapM_ say
+          lift (changeKarma msg dk sender nick') >>= say
 
 ------------------------------------------------------------------------
 
 tellKarma :: Msg.Nick -> E.Polynick -> Cmd Karma ()
 tellKarma sender nick = do
-    lookup' <- lift (lift E.lookupMononickMap)
-    karma <- (sum . map snd . lookup' nick) `fmap` lift readMS
+    lookup' <- lb E.lookupMononickMap
+    karma <- (sum . map snd . lookup' nick) `fmap` readMS
     nickStr <- withMsg (return . flip E.showPolynick nick)
     say $ concat [if E.mononickToPolynick sender == nick then "You have" else nickStr ++ " has"
                    ," a karma of "
@@ -83,18 +83,18 @@ tellKarma sender nick = do
 
 listKarma :: Cmd Karma ()
 listKarma = do
-    ks <- M.toList `fmap` lift readMS
+    ks <- M.toList `fmap` readMS
     let ks' = sortBy (\(_,e) (_,e') -> e' `compare` e) ks
     mapM_ (\(k,e) -> say (printf " %-20s %4d" (show k) e)) ks'
 
-changeKarma :: Msg.Message m => m -> Integer -> Msg.Nick -> Msg.Nick -> Karma [String]
+changeKarma :: Msg.Message m => m -> Integer -> Msg.Nick -> Msg.Nick -> Karma String
 changeKarma msg km sender nick
   | map toLower (Msg.nName nick) == "java" && km == 1 = changeKarma msg (-km) (Msg.lambdabotName msg) sender
-  | sender == nick = return ["You can't change your own karma, silly."]
+  | sender == nick = return "You can't change your own karma, silly."
   | otherwise      = withMS $ \fm write -> do
       let fm' = M.insertWith (+) nick km fm
       let karma = fromMaybe 0 $ M.lookup nick fm'
       write fm'
-      return [fmt (Msg.showNick msg nick) km (show karma)]
+      return (fmt (Msg.showNick msg nick) km (show karma))
           where fmt n v k | v < 0     = n ++ "'s karma lowered to " ++ k ++ "."
                           | otherwise = n ++ "'s karma raised to " ++ k ++ "."

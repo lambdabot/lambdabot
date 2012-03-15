@@ -40,10 +40,10 @@ doLocalTime rawWho = do
     whoToPing <- readNick $ fst $ break (== ' ') rawWho
     me <- getLambdabotName
     if whoToPing /= me
-        then lift $ do 
+        then do 
             modifyMS $ \st -> M.insertWith (++) whoToPing [whoAsked] st
             -- this is a CTCP time call, which returns a NOTICE
-            lift $ ircPrivmsg' whoToPing ("\^ATIME\^A")     -- has to be raw
+            lb $ ircPrivmsg' whoToPing ("\^ATIME\^A")     -- has to be raw
         else say "I live on the internet, do you expect me to have a local time?"
 
 -- the Base module caught the NOTICE TIME, mapped it to a PRIVMGS, and here it is :)
@@ -52,11 +52,11 @@ doReply text = do
         time = drop 1 time'
     whoGotPinged <- readNick whoGotPinged'
     
-    targets <- lift $ withMS $ \st set -> do
+    targets <- withMS $ \st set -> do
         case M.lookup whoGotPinged st of
             Nothing -> return []
             Just xs -> do set (M.insert whoGotPinged [] st) -- clear the callback state
                           return xs
     whoGotPinged'' <- showNick whoGotPinged
     let txt = "Local time for " ++ whoGotPinged'' ++ " is " ++ time
-    lift $ lift $ flip mapM_ targets $ flip ircPrivmsg' txt
+    lb $ flip mapM_ targets $ flip ircPrivmsg' txt

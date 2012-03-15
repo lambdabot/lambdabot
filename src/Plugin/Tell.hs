@@ -93,9 +93,9 @@ instance Module TellModule where
         , (command "messages?")
             { help = say "messages?. Tells you whether you have any messages"
             , process = const $ do
-                  sender <- getSender
-                  ms <- lift (getMessages sender)
-                  case ms of
+                sender <- getSender
+                ms <- getMessages sender
+                case ms of
                     Just _ -> doRemind sender
                     Nothing   -> say "Sorry, no messages today."
             }
@@ -103,13 +103,13 @@ instance Module TellModule where
             { help = say "clear-messages. Clears your messages."
             , process = const $ do
                 sender <- getSender
-                lift (clearMessages sender)
+                clearMessages sender
                 say "Messages cleared."
             }
         , (command "print-notices")
             { privileged = True
             , help = say "print-notices. Print the current map of notes."
-            , process = const ((say . show) =<< lift readMS)
+            , process = const ((say . show) =<< readMS)
             }
         , (command "purge-notices")
             { privileged = True
@@ -119,7 +119,7 @@ instance Module TellModule where
                 ++ "specify a nick."
             , process = \args -> do
                 users <- mapM readNick (words args)
-                lift $ if null users
+                if null users
                     then writeMS M.empty
                     else mapM_ clearMessages users
                 say "Messages purged."
@@ -132,7 +132,7 @@ instance Module TellModule where
     --   if they have any messages, if it's less than a day since we last did so.
     contextual _ _ = do
         sender <- getSender
-        remp <- lift (needToRemind sender)
+        remp <- needToRemind sender
         if remp
             then doRemind sender
             else return ()
@@ -149,7 +149,7 @@ showNote time note = do
     return $ printf "%s %s %s ago: %s" sender action ago (noteContents note)
 
 -- | Is it less than a day since we last reminded this nick they've got messages?
-needToRemind :: Nick -> Tell Bool
+needToRemind :: Nick -> Cmd Tell Bool
 needToRemind n = do
   st  <- readMS
   now <- io getClockTime
@@ -161,7 +161,7 @@ needToRemind n = do
              Nothing                 -> True
 
 -- | Add a note to the NoticeBoard
-writeDown :: Nick -> Nick -> String -> NoteType -> Tell ()
+writeDown :: Nick -> Nick -> String -> NoteType -> Cmd Tell ()
 writeDown to from what ntype = do
   time <- io getClockTime
   let note = Note { noteSender   = from,
@@ -172,12 +172,12 @@ writeDown to from what ntype = do
                          to (Nothing, [note]))
 
 -- | Return a user's notes, or Nothing if they don't have any
-getMessages :: Nick -> Tell (Maybe [Note])
-getMessages n = fmap (fmap snd . M.lookup n) readMS
+getMessages :: Nick -> Cmd Tell (Maybe [Note])
+getMessages sender = fmap (fmap snd . M.lookup sender) readMS
 
 -- | Clear a user's messages.
-clearMessages :: Nick -> Tell ()
-clearMessages n = modifyMS (M.delete n)
+clearMessages :: Nick -> Cmd Tell ()
+clearMessages sender = modifyMS (M.delete sender)
 
 -- * Handlers
 --
@@ -186,12 +186,12 @@ clearMessages n = modifyMS (M.delete n)
 doMessages :: Bool -> Cmd Tell ()
 doMessages loud = do
     sender <- getSender
-    msgs <- lift (getMessages sender)
-    lift (clearMessages sender)
+    msgs <- getMessages sender
+    clearMessages sender
     
     let tellNote = if loud
             then say
-            else lift . lift . ircPrivmsg sender
+            else lb . ircPrivmsg sender
     
     case msgs of
         Nothing -> say "You don't have any messages"
@@ -214,15 +214,15 @@ doTell ntype (who:args) = do
             | recipient == me          = Left "Nice try ;)"
             | null args                = Left ("What should I " ++ verb ntype ++ " " ++ who ++ "?")
             | otherwise                = Right "Consider it noted."
-    when (isRight res) (lift (writeDown recipient sender rest ntype))
+    when (isRight res) (writeDown recipient sender rest ntype)
     say (unEither res)
 
 -- | Remind a user that they have messages.
 doRemind :: Nick -> Cmd Tell ()
 doRemind sender = do
-    ms  <- lift (getMessages sender)
+    ms  <- getMessages sender
     now <- io getClockTime
-    lift (modifyMS (M.update (Just . first (const $ Just now)) sender))
+    modifyMS (M.update (Just . first (const $ Just now)) sender)
     case ms of
         Just msgs -> do
            me <- showNick =<< getLambdabotName
@@ -231,5 +231,5 @@ doRemind sender = do
                    | otherwise         = ("message", "it")
                msg = printf "You have %d new %s. '/msg %s @messages' to read %s."
                        (length msgs) messages me pronoun
-           lift (lift (ircPrivmsg sender msg))
+           lb (ircPrivmsg sender msg)
         Nothing -> return ()

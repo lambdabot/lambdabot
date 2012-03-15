@@ -6,22 +6,20 @@
 -- | Keep track of IRC users.
 module Plugin.Seen (theModule) where
 
-import Data.Binary
-
-import Lambdabot.File (findFile)
 import Plugin
 import Lambdabot.AltTime
-
+import Lambdabot.File (findFile)
 import qualified Lambdabot.Message as G (Message, channels, nick, packNick, unpackNick, Nick(..), body, lambdabotName, showNick, readNick)
 
+import Control.Applicative
+import Control.Arrow (first)
+import Data.Binary
 import qualified Data.Map as M
 import qualified Data.ByteString.Char8 as P
 import qualified Data.ByteString.Lazy as L
-
 import System.Time (normalizeTimeDiff) -- or export from AltTime.hs?
-
-import Control.Arrow       (first)
 import Text.Printf
+
 
 plugin "Seen"
 
@@ -66,54 +64,23 @@ instance Binary StopWatch where
     put (Stopped td) = putWord8 0 >> put td
     put (Running ct) = putWord8 1 >> put ct
 
-    get = do
-        h <- getWord8
-        case h of
-            0 -> liftM Stopped get
-            1 -> liftM Running get
-            _ -> error "Seen.StopWatch.get"
+    get = getWord8 >>= \h -> case h of
+        0 -> Stopped <$> get
+        1 -> Running <$> get
+        _ -> error "Seen.StopWatch.get"
 
 instance Binary UserStatus where
-    put (Present spoke chans) = do
-        putWord8 0
-        put spoke
-        put chans
-    put (NotPresent ct sw chans) = do
-        putWord8 1
-        put ct
-        put sw
-        put chans
-    put (WasPresent ct sw spoke chans) = do
-        putWord8 2
-        put ct
-        put sw
-        put spoke
-        put chans
-    put (NewNick n) = putWord8 3 >> put n
+    put (Present sp ch)          = putWord8 0 >> put sp >> put ch
+    put (NotPresent ct sw ch)    = putWord8 1 >> put ct >> put sw >> put ch
+    put (WasPresent ct sw sp ch) = putWord8 2 >> put ct >> put sw >> put sp >> put ch
+    put (NewNick n)              = putWord8 3 >> put n
 
-    get = do
-        h <- getWord8
-        case h of
-            0 -> do
-                x <- get
-                y <- get
-                return (Present x y)
-            1 -> do
-                x <- get
-                y <- get
-                z <- get
-                return (NotPresent x y z)
-            2 -> do
-                x <- get
-                y <- get
-                z <- get
-                a <- get
-                return (WasPresent x y z a)
-            3 -> do
-                x <- get
-                return (NewNick x)
-
-            _ -> error "Seen.UserStatus.get"
+    get = getWord8 >>= \h -> case h of
+        0 -> Present    <$> get <*> get
+        1 -> NotPresent <$> get <*> get <*> get
+        2 -> WasPresent <$> get <*> get <*> get <*> get
+        3 -> NewNick    <$> get
+        _ -> error "Seen.UserStatus.get"
 
 instance Module SeenModule where
     type ModuleState SeenModule = SeenState
@@ -125,7 +92,7 @@ instance Module SeenModule where
             , process = \rest -> withMsg $ \msg -> do
                 -- first step towards tracking the maximum number of users
                 chan <- getTarget
-                (m, seenFM) <- lift readMS
+                (m, seenFM) <- readMS
                 s <- io getClockTime
                 let who = G.packNick $ lcNick $ if null rest then chan else G.readNick msg rest
                     now = length [ () | (_,Present _ chans) <- M.toList seenFM
@@ -156,12 +123,12 @@ instance Module SeenModule where
             { help = say "seen <user>. Report if a user has been seen by the bot"
             , process = \rest -> withMsg $ \msg -> do
                 target <- getTarget
-                (_,seenFM) <- lift readMS
+                (_,seenFM) <- readMS
                 now        <- io getClockTime
                 let (txt,safe) = first unlines (getAnswer msg rest seenFM now)
                 if safe || not ("#" `isPrefixOf` G.nName target)
                     then say txt
-                    else lift $ lift $ ircPrivmsg (G.nick msg) txt
+                    else lb (ircPrivmsg (G.nick msg) txt)
                 
             }
         ]
@@ -184,8 +151,8 @@ instance Module SeenModule where
     moduleExit _ = do
       chans <- lift $ ircGetChannels
       unless (null chans) $ do
-            ct    <- io getClockTime
-            modifyMS $ \(n,m) -> (n, botPart ct (map G.packNick chans) m)
+          ct    <- io getClockTime
+          modifyMS $ \(n,m) -> (n, botPart ct (map G.packNick chans) m)
 
         -- and write out our state:
       withMS $ \s _ -> io ( findFile "seen" >>= \ c -> encodeFile c s)

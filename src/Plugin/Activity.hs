@@ -40,7 +40,7 @@ activity full args = do
     
     TOD secs ps <- io getClockTime
     let cutoff = TOD (secs - (fromMaybe 90 $ readM args)) ps
-    users <- mapM (obscure . snd) . takeWhile ((> cutoff) . fst) =<< lift readMS
+    users <- mapM (obscure . snd) . takeWhile ((> cutoff) . fst) =<< readMS
     let agg_users = reverse . sort . map (length &&& head) . group . sort $ users
     fmt_agg <- fmap (concatWith " " . (:) (show (length users) ++ "*total"))
                     (mapM (\(n,u) -> do u' <- showNick u; return (show n ++ "*" ++ u')) $ agg_users)

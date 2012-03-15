@@ -18,7 +18,7 @@ instance Module SourceModule where
     moduleCmds _ = 
         [ (command "src")
             { help = say helpStr
-            , process = \key -> lift readMS >>= \env -> case fetch (pack key) env of
+            , process = \key -> readMS >>= \env -> case fetch (pack key) env of
                 _ | M.null env -> say "No source in the environment yet"
                 _ |   null key -> say helpStr
                 Nothing        -> say . ("Source not found. " ++) =<< io (random insult)

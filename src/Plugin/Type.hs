@@ -42,7 +42,7 @@ instance Module TypeModule where
          | otherwise               -> return ()
          where expr = drop 3 text
 
-runit s expr = lift (lift (query_ghci s expr)) >>= mapM_ say
+runit s expr = query_ghci s expr >>= say
 
 --     In accordance with the KISS principle, the plan is to delegate all
 --     the hard work! To get the type of foo, pipe
@@ -116,8 +116,8 @@ extract_signatures output
 --
 --     With this the command handler can be easily defined using popen:
 --
-query_ghci' :: String -> String -> IO String
-query_ghci' cmd expr = do
+query_ghci :: MonadIO m => String -> String -> m String
+query_ghci cmd expr = io $ do
     l <- findFile "L.hs"
     let context = ":load "++l++"\n:m *L\n" -- using -fforce-recomp to make sure we get *L in scope instead of just L
         extFlags = ["-X" ++ ext | ext <- exts]
@@ -141,6 +141,3 @@ query_ghci' cmd expr = do
         | otherwise      = s
      ghci_msg = R.mkRegex "<interactive>:[^:]*:[^:]*: ?"
      notfound = R.mkRegex "Failed to load interface"
-
-query_ghci :: String -> String -> LB [String]
-query_ghci y z = ios (query_ghci' y z)

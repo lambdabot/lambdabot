@@ -10,7 +10,7 @@ module Lambdabot (
 
         IRCRState(..), IRCRWState(..), IRCError(..),
 
-        LB(..), lbIO,
+        LB(..), MonadLB(..), lbIO,
 
         withModule, withAllModules, getDictKeys,
 
@@ -29,6 +29,8 @@ module Lambdabot (
         ircLoad, ircUnload,
 
         checkPrivs, checkIgnore, mkCN, handleIrc, catchIrc, runIrc,
+        
+        forkLB, liftLB
   ) where
 
 import Lambdabot.File (findFile)

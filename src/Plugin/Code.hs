@@ -23,7 +23,7 @@ instance Module CodeModule where
         [ (command "code")
             { help = say "code. Print random line of code from $fptools"
             , process = const $ do
-                fs <- lift readMS
+                fs <- readMS
                 (file,line) <- io $ do
                     f    <- stdGetRandItem fs
                     h    <- openFile f ReadMode

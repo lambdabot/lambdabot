@@ -9,7 +9,6 @@ module Plugin.Compose (theModule) where
 import Plugin
 import Lambdabot.Command
 
-import Control.Monad.State
 import Control.Arrow (first)
 
 plugin "Compose"
@@ -41,7 +40,7 @@ instance Module ComposeModule where
                 (f:g:xs) -> do
                     f' <- lookupP f
                     g' <- lookupP g
-                    lift (lift $ compose f' g' (concat $ intersperse " " xs)) >>= mapM_ say
+                    lb (compose f' g' (concat $ intersperse " " xs)) >>= mapM_ say
                 _ -> say "Not enough arguments to @."
             }
         ]
@@ -57,10 +56,9 @@ compose f g xs = g xs >>= f . unlines
 lookupP :: String -> Cmd Compose (String -> LB [String])
 lookupP cmd = withMsg $ \a -> do
     b <- getTarget
-    lift $ lift $ withModule ircCommands cmd
+    lb $ withModule ircCommands cmd
         (error $ "Unknown command: " ++ show cmd)
         (\m -> do
-            privs <- gets ircPrivCommands -- no priv commands can be composed
             let Just theCmd = lookupCmd m cmd
             when (privileged theCmd) $ error "Privileged commands cannot be composed"
             bindModule1 (runCommand theCmd a b cmd))
@@ -71,8 +69,9 @@ lookupP cmd = withMsg $ \a -> do
 -- | More interesting composition/evaluation
 -- @@ @f x y (@g y z)
 evalBracket :: String -> Cmd Compose ()
-evalBracket args = 
-    mapM_ say =<< (liftM (map addSpace . concat') $ mapM evalExpr $ fst $ parseBracket 0 True args)
+evalBracket args = do
+    xs <- mapM evalExpr (fst (parseBracket 0 True args))
+    mapM_ (say . addSpace) (concat' xs)
  where concat' ([x]:[y]:xs) = concat' ([x++y]:xs)
        concat' xs           = concat xs
 

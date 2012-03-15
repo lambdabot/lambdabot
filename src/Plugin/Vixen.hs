@@ -24,7 +24,7 @@ instance Module VixenModule where
     moduleCmds _ = 
         [ (command "vixen")
             { help = say "vixen <phrase>. Sergeant Curry's lonely hearts club"
-            , process = \txt -> lift readMS >>= (ios . ($ txt) . snd) >>= mapM_ say
+            , process = \txt -> readMS >>= (ios . ($ txt) . snd)
             }
         , (command "vixen-on")
             { privileged = True
@@ -32,7 +32,7 @@ instance Module VixenModule where
                 me <- showNick =<< getLambdabotName
                 say ("vixen-on: turn " ++ me ++ " into a chatterbot")
             , process = const $ do
-                lift $ modifyMS $ \(_,r) -> (True, r)
+                modifyMS $ \(_,r) -> (True, r)
                 say "What's this channel about?"
             }
         , (command "vixen-off")
@@ -41,15 +41,15 @@ instance Module VixenModule where
                 me <- showNick =<< getLambdabotName
                 say ("vixen-off: shut " ++ me ++ "up")
             , process = const $ do
-                lift $ modifyMS $ \(_,r) -> (False, r)
+                modifyMS $ \(_,r) -> (False, r)
                 say "Bye!"
             }
         ]
     
     -- if vixen-chat is on, we can just respond to anything
     contextual _ txt = do
-        (alive, k) <- lift readMS
-        if alive then ios (k txt) >>= mapM_ say
+        (alive, k) <- readMS
+        if alive then ios (k txt)
                  else return ()
 
     moduleDefState _ = return (False, const (return "<undefined>"))
@@ -96,29 +96,3 @@ instance Binary WTree where
             1 -> liftM Node get
 
 type RChoice = [(Regex, WTree)] -- compiled choices
-
-{- Sample of how to rescue data in the old 32-bit Binary format
-
-newtype OldChoice = OC { unOC :: Choice }
-                    deriving Show
-instance Binary OldChoice where
-    get = do liftM OC (getList (getPair getBS getWTree))
-        where
-          getList :: (Get a) -> Get [a]
-          getList getA = do
-            n <- liftM fromIntegral (get :: Get Int32)
-            replicateM n getA
-
-          getShort :: Get Int
-          getShort = liftM fromIntegral (get :: Get Int32)
-
-          getPair = liftM2 (,)
-
-          getBS   = getShort >>= getByteString
-
-          getWTree = do
-            tag <- getWord8
-            case tag of
-              0 -> liftM Leaf getBS
-              1 -> liftM Node (getList getWTree)
--}

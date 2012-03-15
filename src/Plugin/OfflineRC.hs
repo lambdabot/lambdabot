@@ -33,6 +33,14 @@ instance Module OfflineRCModule where
     -- unregister the server (-> allow the bot to quit) when it is not
     -- being used.
     type ModuleState OfflineRCModule = Integer
+    moduleDefState _ = return 0
+    moduleInit _ = do
+        act <- bindModule0 onInit
+        lift $ liftLB forkIO $ do
+            mv <- asks ircInitDoneMVar
+            io $ readMVar mv
+            act
+        return ()
     
     moduleCmds _ = 
         [ (command "offline")
@@ -56,18 +64,14 @@ instance Module OfflineRCModule where
                 return ()
             }
         ]
-    moduleInit      _      = do act <- bindModule0 onInit
-                                lift $ liftLB forkIO $ do mv <- asks ircInitDoneMVar
-                                                          io $ readMVar mv
-                                                          act
-                                return ()
-    moduleDefState _       = return 0
 
 onInit :: OfflineRC ()
-onInit = do st <- get
-            put (st { ircOnStartupCmds = [] })
-            let cmds = ircOnStartupCmds st
-            lockRC >> finallyError (mapM_ feed cmds) unlockRC
+onInit = do 
+    st <- get
+    put st { ircOnStartupCmds = [] }
+    let cmds = ircOnStartupCmds st
+    lockRC
+    finallyError (mapM_ feed cmds) unlockRC
 
 feed :: String -> OfflineRC ()
 feed msg = let msg' = case msg of '>':xs -> cmdPrefix ++ "run " ++ xs
@@ -83,27 +87,32 @@ feed msg = let msg' = case msg of '>':xs -> cmdPrefix ++ "run " ++ xs
 
 handleMsg :: IrcMessage -> LB ()
 handleMsg msg = liftIO $ do
-                  let str = case (tail . msgParams) msg of
-                              []    -> []
-                              (x:_) -> tail x
-                  hPutStrLn stdout str
-                  hFlush stdout
+    let str = case (tail . msgParams) msg of
+            []    -> []
+            (x:_) -> tail x
+    hPutStrLn stdout str
+    hFlush stdout
 
 replLoop :: OfflineRC ()
-replLoop = do line <- io $ readline "lambdabot> "
-              s' <- case line of Nothing -> fail "<eof>"
-                                 Just x -> return $ dropWhile isSpace x
-              when (not $ null s') (do io (addHistory s')
-                                       feed s')
-              continue <- gets ircStayConnected
-              when continue replLoop
+replLoop = do
+    line <- io $ readline "lambdabot> "
+    s' <- case line of Nothing -> fail "<eof>"
+                       Just x -> return $ dropWhile isSpace x
+    when (not $ null s') $ do
+        io (addHistory s')
+        feed s'
+    continue <- gets ircStayConnected
+    when continue replLoop
 
 
 lockRC :: OfflineRC ()
-lockRC = do add <- bindModule0 $ addServer "offlinerc" handleMsg
-            withMS $ \ cur writ -> do when (cur == 0) $ add
-                                      writ (cur + 1)
+lockRC = do
+    add <- bindModule0 $ addServer "offlinerc" handleMsg
+    withMS $ \ cur writ -> do
+        when (cur == 0) $ add
+        writ (cur + 1)
 
 unlockRC :: OfflineRC ()
-unlockRC = withMS $ \ cur writ -> do when (cur == 1) $ remServer "offlinerc"
-                                     writ (cur - 1)
+unlockRC = withMS $ \ cur writ -> do
+    when (cur == 1) $ remServer "offlinerc"
+    writ (cur - 1)

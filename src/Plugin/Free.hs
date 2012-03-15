@@ -14,7 +14,7 @@ instance Module FreeModule where
         [ (command "free")
             { help = say "free <ident>. Generate theorems for free"
             , process = \xs -> do
-                result <- lift (freeTheoremStr (liftM unlines . lift . query_ghci ":t") xs)
+                result <- freeTheoremStr (query_ghci ":t") xs
                 say . unwords . lines $ result
             }
         ]

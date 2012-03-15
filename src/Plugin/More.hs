@@ -19,10 +19,13 @@ instance Module MoreModule where
             { help = say "@more. Return more output from the bot buffer."
             , process = \_ -> do
                 target <- getTarget
-                morestate <- lift (readPS target)
-                lift $ case morestate of
+                morestate <- readPS target
+                -- TODO: test theory that we can just "say" morestate; 
+                --       it should end up going through the moreFilter as needed
+                case morestate of
                     Nothing -> return ()
-                    Just ls -> mapM_ (lift . ircPrivmsg' target) =<< moreFilter target ls
+                    Just ls -> lift (moreFilter target ls)
+                        >>= mapM_ (lb . ircPrivmsg' target)
             }
         ]
     moduleDefState _            = return $ mkGlobalPrivate 20 ()

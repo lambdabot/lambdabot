@@ -12,8 +12,8 @@ instance Module QuoteModule where
             { aliases = ["smack"]
             , help = say "slap <nick>. Slap someone amusingly."
             , process = \rest -> do
-                sender <- getSender >>= showNick
-                ios (slapRandom (if rest == "me" then sender else rest)) >>= mapM_ say
+                sender <- showNick =<< getSender
+                io (slapRandom (if rest == "me" then sender else rest)) >>= say
             }
         ]
 

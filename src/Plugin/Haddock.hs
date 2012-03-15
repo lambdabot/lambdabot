@@ -19,7 +19,7 @@ instance Module HaddockModule where
         [ (command "index")
             { help = say "index <ident>. Returns the Haskell modules in which <ident> is defined"
             , process = \k -> do
-                m <- lift readMS
+                m <- readMS
                 say $ maybe "bzzt"
                     (intercalate (", ") . map unpack)
                     (M.lookup (stripPs (pack k)) m)

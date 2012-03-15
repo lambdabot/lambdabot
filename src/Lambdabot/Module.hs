@@ -14,8 +14,10 @@ module Lambdabot.Module
 
 import qualified Lambdabot.Command as Cmd
 
-import {-# SOURCE #-} Lambdabot.Monad (LB)
+import {-# SOURCE #-} Lambdabot.Monad (LB, MonadLB(..), lbIO)
 import Lambdabot.Serial
+import Lambdabot.State
+import Lambdabot.Util (withMWriter)
 
 import Control.Concurrent (MVar)
 import Control.Monad.Error (MonadError(..))
@@ -89,6 +91,15 @@ data ModuleRef = forall m s. Module m => ModuleRef m (MVar (ModuleState m)) Stri
 --
 newtype ModuleT mod m a = ModuleT { moduleT :: ReaderT (MVar (ModuleState mod), String) m a }
     deriving (Functor, Monad, MonadTrans, MonadIO, MonadError e, MonadState t)
+
+instance MonadLB m => MonadLB      (ModuleT mod m) where lb = lift . lb
+instance MonadLB m => MonadLBState (ModuleT mod m) where
+    type LBState (ModuleT mod m) = ModuleState mod
+    withMS f = do
+        ref <- getRef
+        lbIO $ \conv -> withMWriter ref $ \x writer ->
+            conv $ f x (liftIO . writer)
+
 
 getRef :: Monad m => ModuleT mod m (MVar (ModuleState mod))
 getRef  = ModuleT $ ask >>= return . fst

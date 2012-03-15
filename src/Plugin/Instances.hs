@@ -33,13 +33,13 @@ instance Module InstancesModule where
     moduleCmds _ = 
         [ (command "instances")
             { help = say "instances <typeclass>. Fetch the instances of a typeclass."
-            , process = \cls -> lift (lift (fetchInstances cls)) >>= mapM_ say
+            , process = \cls -> io (fetchInstances cls) >>= say
             }
         , (command "instances-importing")
             { help = say $
                 "instances-importing [<module> [<module> [<module...]]] <typeclass>. " ++
                 "Fetch the instances of a typeclass, importing specified modules first."
-            , process = \args -> lift (lift (fetchInstancesImporting args)) >>= mapM_ say
+            , process = \args -> io (fetchInstancesImporting args) >>= say
             }
         ]
 
@@ -108,15 +108,14 @@ stdMdls = controls
 
 -- | Main processing function for \@instances. Takes a class name and
 --   return a list of lines to output (which will actually only be one).
-fetchInstances :: ClassName -> LB [String]
-fetchInstances cls =  do
-    ios (fetchInstances' cls stdMdls)
+fetchInstances :: ClassName -> IO String
+fetchInstances cls = fetchInstances' cls stdMdls
 
 -- | Main processing function for \@instances-importing. Takes the args, which
 --   are words'd. The all but the last argument are taken to be the modules to
 --   import, and the last is the typeclass whose instances we want to print.
-fetchInstancesImporting :: String -> LB [String]
-fetchInstancesImporting args = ios (fetchInstances' cls mdls)
+fetchInstancesImporting :: String -> IO String
+fetchInstancesImporting args = fetchInstances' cls mdls
     where args' = words args
           cls   = last args'
           mdls  = nub $ init args' ++ stdMdls

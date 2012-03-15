@@ -54,7 +54,7 @@ instance Module VoteModule where
         [ (command "poll-list")
             { help = say "poll-list                   Shows all current polls"
             , process = \_ -> do
-                result <- lift $ withMS $ \factFM writer -> processCommand factFM writer "poll-list" []
+                result <- withMS $ \factFM writer -> processCommand factFM writer "poll-list" []
                 say result
             }
         , (command "poll-show")
@@ -91,10 +91,10 @@ instance Module VoteModule where
     moduleDefState _  = return M.empty
     moduleSerialize _ = Just voteSerial
 
-process_ _ [] = say "Missing argument. Check @help <vote-cmd> for info."
+process_ cmd [] = say ("Missing argument. Check @help " ++ cmd ++ " for info.")
 
 process_ cmd dat = do
-    result <- lift $ withMS $ \factFM writer -> processCommand factFM writer cmd (words dat)
+    result <- withMS $ \fm writer -> processCommand fm writer cmd (words dat)
     say result
 
 ------------------------------------------------------------------------

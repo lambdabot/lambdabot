@@ -27,11 +27,11 @@ instance Module UndoModule where
 
 findVar :: Data a => a -> String
 findVar e = head $ do
-                    i <- [0 ..]
-                    x <- ['a' .. 'z']
-                    let xi = x : replicate i '\''
-                    guard $ not $ Set.member xi s
-                    return xi
+    i <- [0 ..]
+    x <- ['a' .. 'z']
+    let xi = x : replicate i '\''
+    guard $ not $ Set.member xi s
+    return xi
  where s = Set.fromList $ listify (const True :: String -> Bool) e
 
 transform :: (String -> HsExp -> HsExp) -> String -> String

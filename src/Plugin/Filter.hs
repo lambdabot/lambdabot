@@ -18,7 +18,7 @@ instance Module FilterModule where
                     let usage = "usage: " ++ f ++ " <phrase>"
                     case words s of
                             [] -> say usage
-                            t -> io (runFilter f (unwords t)) >>= mapM_ say
+                            t -> ios80 (runFilter f (unwords t))
                 }
             | (name, descr) <- filters
             ]
@@ -47,9 +47,9 @@ filters =
 pathTo :: String -> String
 pathTo f = "/usr/local/bin/" ++ f
 
-runFilter :: String -> String -> IO [String]
+runFilter :: String -> String -> IO String
 runFilter f s = do
         (out,_,_) <- popen (pathTo f) [] (Just s)
         return $ result out
-    where result [] = ["Couldn't run the filter."]
-          result xs = filter (not . all (==' ')) . lines $ xs
+    where result [] = "Couldn't run the filter."
+          result xs = unlines . filter (not . all (==' ')) . lines $ xs

@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -fno-warn-unused-binds #-}
 {-# LANGUAGE TemplateHaskell, TypeFamilies #-}
 
 -- Copyright (c) 2004 Thomas Jaeger
@@ -13,10 +12,8 @@ module Plugin.Log (theModule) where
 import Plugin
 import qualified Lambdabot.Message as Msg
 
-import Control.Monad (when)
 import qualified Data.Map as M
 import System.Time
-import Lambdabot.Util ( timeStamp )
 import System.Directory (createDirectoryIfMissing)
 
 -- ------------------------------------------------------------------------
@@ -50,10 +47,6 @@ instance Show Event where
 -- * Dispatchers and Module instance declaration
 --
 
--- | Default number of lines to show with @last.
-numLastLines :: Int
-numLastLines = 10
-
 -- | CTCP command -> logger function lookup
 loggers :: Msg.Message m => [(String, m -> ClockTime -> Event)]
 loggers = [("PRIVMSG", msgCB ),
@@ -67,39 +60,19 @@ instance Module LogModule where
    moduleDefState _ = return M.empty
    moduleExit     _ = cleanLogState
 
-   contextual _ msg _ _ = do
+   contextual _ _ = withMsg $ \msg -> do
      case lookup (Msg.command msg) loggers of
        Just f -> do
          now <- io getClockTime
          -- map over the channels this message was directed to, adding to each
          -- of their log files.
-         mapM_ (withValidLog (doLog f msg) now) (Msg.channels msg)
+         lift (mapM_ (withValidLog (doLog f msg) now) (Msg.channels msg))
        Nothing -> return ()
-     return []
+     return ()
 
-     where -- notMe m = (lowerCaseString $ name config)
-           --             /= (lowerCaseString . head $ Msg.channels m)
-           --             -- We don't log /msgs to the lambdabot
-
-           doLog f m hdl ct = do
+     where doLog f m hdl ct = do
              let event = f m ct
              logString hdl (show event)
-
--- * The @last command
---
-
--- | Filter all the nicks by one person
--- FIXME --- maybe we should take into consideration nick changes?
-filterNick :: Msg.Nick -> [Event] -> [Event]
-filterNick who = filter filterOneNick
-    where
-    filterOneNick (Said who' _ _)      = who == who'
-    filterOneNick (Joined who' _ _)    = who == who'
-    filterOneNick (Parted who' _ _)    = who == who'
-    filterOneNick (Renick old _ _ new) = who == old || who == new
-
--- * Event -> String helpers
---
 
 -- * Logging helpers
 --

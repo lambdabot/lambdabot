@@ -81,7 +81,7 @@ rejectingCmds action args
 
 -- Normal commands
 djinnCmd s = do
-        (_,env) <- lift readMS
+        (_,env) <- readMS
         e       <- io $ djinn env $ ":set +sorted\nf ? " ++ dropForall s
         mapM_ say $ either id (parse . lines) e
     where
@@ -96,40 +96,39 @@ djinnCmd s = do
 
 -- Augment environment. Have it checked by djinn.
 djinnAddCmd s = do
-    (p,st)  <- lift readMS
+    (p,st)  <- readMS
     est     <- io $ getDjinnEnv $ (p, dropSpace s : st)
     case est of
         Left e     -> say (head e)
-        Right st'' -> lift (modifyMS (const st''))
+        Right st'' -> writeMS st''
 
 -- Display the environment
 djinnEnvCmd :: Cmd Djinn ()
 djinnEnvCmd = do
-    (prelude,st) <- lift readMS
+    (prelude,st) <- readMS
     mapM_ say $ prelude ++ st
 
 -- Display the environment's names (quarter-baked)
 djinnNamesCmd :: Cmd Djinn ()
 djinnNamesCmd = do
-    (prelude,st) <- lift readMS
+    (prelude,st) <- readMS
     let names = concat $ intersperse " " $ concatMap extractNames $ prelude ++ st
     say names
   where extractNames = filter (isUpper . head) . unfoldr (\x -> case x of _:_ -> listToMaybe (lex x); _ -> Nothing)
 
 -- Reset the env
 djinnClrCmd :: Cmd Djinn ()
-djinnClrCmd = lift (modifyMS (flip (,) [] . fst))
+djinnClrCmd = modifyMS (flip (,) [] . fst)
 
 -- Remove sym from environment. We let djinn do the hard work of
 -- looking up the symbols.
 djinnDelCmd s =  do
-    (_,env) <- lift readMS
+    (_,env) <- readMS
     eenv <- io $ djinn env $ ":delete " ++ dropSpace s ++ "\n:environment"
     case eenv of
         Left e     -> say (head e)
-        Right env' -> lift $ do
-            modifyMS $ \(prel,_) ->
-                (prel,filter (\p -> p `notElem` prel) . nub . lines $ env')
+        Right env' -> modifyMS $ \(prel,_) ->
+            (prel,filter (`notElem` prel) . nub . lines $ env')
 
 -- Version number
 djinnVerCmd :: Cmd Djinn ()

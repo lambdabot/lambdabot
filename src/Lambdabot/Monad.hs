@@ -8,11 +8,13 @@ module Lambdabot.Monad
     , Callback, OutputFilter
     , ChanName, mkCN, getCN
     
-    , LB(..), lbIO, evalLB
+    , LB(..), MonadLB(..), lbIO, evalLB
     
     , send, addServer, remServer, addServer'
     
     , handleIrc, catchIrc
+    
+    , forkLB, liftLB
     ) where
 
 import           Lambdabot.IRC (IrcMessage)
@@ -35,7 +37,7 @@ import Data.IORef               (newIORef, IORef, readIORef, writeIORef)
 import Data.Map (Map)
 import qualified Data.Map as M hiding (Map)
 
-import Control.Concurrent (MVar, ThreadId)
+import Control.Concurrent (forkIO, MVar, ThreadId)
 import Control.Exception
 import Control.Monad.Error (MonadError (..))
 import Control.Monad.Reader
@@ -159,6 +161,11 @@ send msg = do
 newtype LB a = LB { runLB :: ReaderT (IRCRState,IORef IRCRWState) IO a }
     deriving (Monad,Functor,MonadIO)
 
+class Monad m => MonadLB m where
+    lb :: LB a -> m a
+
+instance MonadLB LB where lb = id
+
 -- Actually, this isn't a reader anymore
 instance MonadReader IRCRState LB where
     ask   = LB $ asks fst
@@ -190,8 +197,11 @@ instance Show IRCError where
 
 -- lbIO return :: LB (LB a -> IO a)
 -- CPS to work around predicativiy of haskell's type system.
-lbIO :: ((forall a. LB a -> IO a) -> IO b) -> LB b
-lbIO k = LB . ReaderT $ \r -> k (\(LB m) -> m `runReaderT` r)
+lbIO :: MonadLB m => ((forall a. LB a -> IO a) -> IO b) -> m b
+lbIO k = lb $ do
+    r <- LB ask
+    let doLB m = runReaderT (runLB m) r
+    io (k doLB)
 
 -- | run a computation in the LB monad
 evalLB :: LB a -> IRCRState -> IRCRWState -> IO a
@@ -208,3 +218,14 @@ handleIrc handler m = catchError m handler
 -- Like handleIrc, but with arguments reversed
 catchIrc :: MonadError IRCError m => m () -> (IRCError -> m ()) -> m ()
 catchIrc = flip handleIrc
+
+-- | run an IO action in another thread, with a timeout, lifted into LB
+forkLB :: LB a -> LB ThreadId
+forkLB f = (`liftLB` f) $ \g -> do
+            forkIO $ do
+                timeout (15 * 1000 * 1000) g
+                return ()
+
+-- | lift an io transformer into LB
+liftLB :: (IO a -> IO b) -> LB a -> LB b
+liftLB f = LB . mapReaderT f . runLB -- lbIO (\conv -> f (conv lb))

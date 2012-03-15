@@ -13,24 +13,24 @@ instance Module TickerModule where
     moduleCmds _ = 
         [ (command "ticker")
             { help = say "ticker symbols.  Look up quotes for symbols"
-            , process = (mapM_ say =<<) . lift . lift . tickerCmd
+            , process = tickerCmd
             }
         , (command "bid")
             { help = say "bid symbols.  Sum up the bid and ask prices for symbols."
-            , process = (mapM_ say =<<) . lift . lift . bidsCmd
+            , process = bidsCmd
             }
         ]
 
 ------------------------------------------------------------------------
 
 -- Fetch several ticker quotes and report them.
-tickerCmd :: String -> LB [String]
-tickerCmd []        = return ["Empty ticker."]
+tickerCmd :: String -> Cmd Ticker ()
+tickerCmd []        = say "Empty ticker."
 tickerCmd tickers = do
     quotes <- io $ fetchPage "GET" $ tickerUrl $ words tickers
     case [x | Just x <- map extractQuote quotes] of
-      []       -> return ["No Result Found."]
-      xs       -> return xs
+      []       -> say "No Result Found."
+      xs       -> mapM_ say xs
 
 -- fetch: s symbol, l1 price, c change with percent, d1 date, t1 time.
 tickerUrl :: [String] -> String
@@ -52,11 +52,11 @@ extractQuote = getQuote . csv
         getQuote _ = Nothing
 
 -- Fetch quotes for tickers and sum their bid/ask prices.
-bidsCmd :: String -> LB [String]
+bidsCmd :: String -> Cmd Ticker ()
 bidsCmd tickers =
     case words tickers of
-        [] -> return [printf "Invalid argument '%s'" tickers]
-        xs -> io $ (:[]) <$> calcBids xs
+        [] -> say (printf "Invalid argument '%s'" tickers)
+        xs -> io (calcBids xs) >>= say
 
 -- fetch: b bid, a ask
 bidsUrl :: [String] -> String

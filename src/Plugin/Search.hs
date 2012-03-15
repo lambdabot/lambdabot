@@ -48,7 +48,7 @@ instance Module SearchModule where
             { help = say (moduleHelp name)
             , process = \e -> do
                 s <- getCmdName
-                lift (lift (searchCmd s (dropSpace e))) >>= mapM_ say
+                lb (searchCmd s (dropSpace e)) >>= mapM_ say
             }
         | name <- map fst engines
         ]
