@@ -72,7 +72,7 @@ spellingNazi :: String -> IO [String]
 spellingNazi lin = fmap (take 1 . concat) (mapM correct (words lin))
     where correct word = do
             var <- take 5 `fmap` spell word
-            return $ if null var || any (equating' lowerCaseString word) var
+            return $ if null var || any (equating' (map toLower) word) var
                 then []
                 else ["Did you mean " ++ listToStr "or" var ++ "?"]
           equating' f x y = f x == f y

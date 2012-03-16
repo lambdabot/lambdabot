@@ -17,10 +17,11 @@ module Lambdabot.NickEq ( Polynick, nickMatches, readPolynick, showPolynick, loo
 
 import Lambdabot.Message( Nick, readNick, showNick )
 import Lambdabot
-import Lambdabot.Util (concatWith, split)
-import Data.Maybe (mapMaybe)
+import Lambdabot.Util (split)
 
+import Data.List (intercalate)
 import qualified Data.Map as M
+import Data.Maybe (mapMaybe)
 
 data Polynick = Polynick [Nick] deriving (Eq) -- for now
 
@@ -37,7 +38,7 @@ readPolynick m = Polynick . map (readNick m) . split "|"
 
 -- | Format a polynick.
 showPolynick :: Message a => a -> Polynick -> String
-showPolynick m (Polynick n) = concatWith "|" $ map (showNick m) n
+showPolynick m (Polynick n) = intercalate "|" $ map (showNick m) n
 
 -- | Convert a regular mononick into a polynick.
 mononickToPolynick :: Nick -> Polynick

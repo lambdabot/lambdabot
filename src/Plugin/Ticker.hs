@@ -35,7 +35,7 @@ tickerCmd tickers = do
 -- fetch: s symbol, l1 price, c change with percent, d1 date, t1 time.
 tickerUrl :: [String] -> String
 tickerUrl tickers =  "http://download.finance.yahoo.com/d/quotes.csv?f=sl1cd1t1&e=.csv&s=" ++ ts
-    where ts = concatWith "+" $ map urlEncode tickers
+    where ts = intercalate "+" $ map urlEncode tickers
 
 -- $ curl "http://download.finance.yahoo.com/d/quotes.csv?f=sl1cd1t1&e=.csv&s=C"
 -- "C",23.19,"-0.45 - -1.90%","5/13/2008","1:32pm"
@@ -61,7 +61,7 @@ bidsCmd tickers =
 -- fetch: b bid, a ask
 bidsUrl :: [String] -> String
 bidsUrl tickers = "http://download.finance.yahoo.com/d/quotes.csv?f=ba&e=.csv&s=" ++ ts
-    where ts = concatWith "+" $ map urlEncode tickers
+    where ts = intercalate "+" $ map urlEncode tickers
 
 getBidAsks :: [String] -> IO [Maybe (Float, Float)]
 getBidAsks tickers = do

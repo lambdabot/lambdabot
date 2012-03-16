@@ -70,7 +70,7 @@ vixen k key = P.unpack `fmap` randomW (k key)
 
 randomW :: WTree -> IO P.ByteString
 randomW (Leaf a)  = return a
-randomW (Node ls) = randomElem ls >>= randomW
+randomW (Node ls) = random ls >>= randomW
 
 mkResponses :: RChoice -> String -> WTree
 mkResponses choices them = (\((_,wtree):_) -> wtree) $

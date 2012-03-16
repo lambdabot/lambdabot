@@ -27,7 +27,7 @@ instance Module IRCModule where
                 case (split " " rest) of
                     tag:hostn:portn:nickn:uix -> do
                         pn <- (PortNumber . fromInteger) `fmap` readM portn
-                        lift (online tag hostn pn nickn (concatWith " " uix))
+                        lift (online tag hostn pn nickn (intercalate " " uix))
                     _ -> say "Not enough parameters!"
             }
         ]

@@ -9,6 +9,8 @@ module Config where
 --   join upon successful connection, etc.
 --
 data Config = Config {
+        verbose :: Bool,
+        
         proxy     :: Maybe ([Char], Integer), -- ^ A proxy given as
                                               --   a pair of host and port.
 
@@ -32,6 +34,8 @@ data Config = Config {
 --
 config :: Config
 config = Config {
+        verbose                 = False,
+        
         proxy                   = Nothing, -- Just ("www-proxy",3128),
 
         ghci                    = "ghci",

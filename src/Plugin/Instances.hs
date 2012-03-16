@@ -130,7 +130,7 @@ fetchInstances' cls mdls = do
   let is = getInstances out cls
   return $ if null is
              then err
-             else concatWith ", " is
+             else intercalate ", " is
   where cxt     = ":l State/L\n" ++
 		  ":m + " ++ unwords mdls
         command = ":i " ++ cls

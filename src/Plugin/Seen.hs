@@ -159,7 +159,7 @@ instance Module SeenModule where
       withMS $ \s _ -> io ( findFile "seen" >>= \ c -> encodeFile c s)
 
 lcNick :: Nick -> Nick
-lcNick (Nick svr nck) = Nick svr (lowerCaseString nck)
+lcNick (Nick svr nck) = Nick svr (map toLower nck)
 
 ------------------------------------------------------------------------
 getAnswer :: G.Message a => a -> String -> SeenMap -> ClockTime -> ([String], Bool)
@@ -350,7 +350,7 @@ withSeenFM f msg = do
     withMS $ \(maxUsers,state) writer -> do
       ct <- io getClockTime
       case f msg state ct nick of
-          Left _         -> return () -- debugStrLn $ "SeenModule> " ++ err
+          Left _         -> return ()
           Right newstate -> do
 
                 let curUsers = length $! [ () | (_,Present _ chans) <- M.toList state

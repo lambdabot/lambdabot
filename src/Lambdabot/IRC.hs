@@ -14,9 +14,9 @@ module Lambdabot.IRC
 
 import Lambdabot.Message
 import Lambdabot.Util (split, breakOnGlue, clean)
-import Lambdabot.Util (concatWith)
 
 import Data.Char (chr,isSpace)
+import Data.List (intercalate)
 
 import Control.Monad (liftM2)
 
@@ -35,7 +35,7 @@ instance Message IrcMessage where
     nick                = liftM2 Nick ircMsgServer (fst . breakOnGlue "!" . ircMsgPrefix)
     server              = ircMsgServer
     fullName            = snd . breakOnGlue "!" . ircMsgPrefix
-    names svr chans     = mkMessage svr "NAMES" [concatWith "," chans]
+    names svr chans     = mkMessage svr "NAMES" [intercalate "," chans]
     channels msg        = 
       let cstr = head $ ircMsgParams msg
         in map (Nick (server msg)) $

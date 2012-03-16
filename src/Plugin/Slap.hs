@@ -21,7 +21,7 @@ instance Module SlapModule where
 
 -- | Return a random arr-quote
 slapRandom :: String -> IO String
-slapRandom = (randomElem slapList `ap`) . return
+slapRandom = (random slapList `ap`) . return
 
 slapList :: [String -> String]
 slapList =

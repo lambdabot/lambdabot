@@ -42,7 +42,7 @@ activity full args = do
     let cutoff = TOD (secs - (fromMaybe 90 $ readM args)) ps
     users <- mapM (obscure . snd) . takeWhile ((> cutoff) . fst) =<< readMS
     let agg_users = reverse . sort . map (length &&& head) . group . sort $ users
-    fmt_agg <- fmap (concatWith " " . (:) (show (length users) ++ "*total"))
+    fmt_agg <- fmap (intercalate " " . (:) (show (length users) ++ "*total"))
                     (mapM (\(n,u) -> do u' <- showNick u; return (show n ++ "*" ++ u')) $ agg_users)
     
     say fmt_agg

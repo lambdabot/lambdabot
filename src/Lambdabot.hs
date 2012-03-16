@@ -62,7 +62,6 @@ import Data.List                (isSuffixOf, inits, tails)
 import Data.Maybe               (isJust)
 import qualified Data.Map as M
 import qualified Data.ByteString.Char8 as P
-import Data.ByteString (ByteString)
 
 import Control.Concurrent (myThreadId, newEmptyMVar, newMVar, readMVar, putMVar,
                            takeMVar, threadDelay)
@@ -378,9 +377,9 @@ mlines = (mbreak =<<) . lines
 checkRecip :: OutputFilter
 checkRecip who msg
 --  FIXME: this doesn't work with plugin protocols :(
---  | who == Config.name Config.config                   = return []
-    | "bot" `isSuffixOf` lowerCaseString (Msg.nName who) = return []
-    | otherwise                                          = return msg
+--  | who == Config.name Config.config                  = return []
+    | "bot" `isSuffixOf` map toLower (Msg.nName who)    = return []
+    | otherwise                                         = return msg
 
 -- | Divide the lines' indent by two
 {-

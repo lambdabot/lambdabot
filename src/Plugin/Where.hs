@@ -48,7 +48,7 @@ doCmd cmd rest = (say =<<) . withMS $ \factFM writer ->
     case words rest of
         []         -> return "@where <key>, return element associated with key"
         (fact:dat) -> processCommand factFM writer
-                            (lowerCaseString fact) cmd (unwords dat)
+                            (map toLower fact) cmd (unwords dat)
 
 ------------------------------------------------------------------------
 

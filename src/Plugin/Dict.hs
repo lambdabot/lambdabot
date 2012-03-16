@@ -91,8 +91,8 @@ parseTerms = pW . words
     where
     pW []  = []
     pW (w@(f:_):ws)
-        | f `elem` "'\"" = concatWith " " qws : pW ws'
-        | last w == '\\' = let (w':rest) = pW ws in concatWith " " [w, w'] : rest
+        | f `elem` "'\"" = intercalate " " qws : pW ws'
+        | last w == '\\' = let (w':rest) = pW ws in intercalate " " [w, w'] : rest
         | otherwise      = w : pW ws
         where
         (qws, ws') = case break isCloseQuotedWord (w:ws) of

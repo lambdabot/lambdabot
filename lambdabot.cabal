@@ -81,7 +81,7 @@ executable lambdabot
                         parsec,
                         pretty,
                         process,
-                        random,
+                        random-fu,
                         regex-compat,
                         regex-posix,
                         show >= 0.3,

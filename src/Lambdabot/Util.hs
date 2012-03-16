@@ -3,26 +3,21 @@
 
 -- | String and other utilities
 module Lambdabot.Util (
-        concatWith,
         split,
         breakOnGlue,
         clean,
         dropSpace,
         dropSpaceEnd,
         dropNL,
-        snoc,
         after,
         splitFirstWord,
         firstWord,
         debugStr,
         debugStrLn,
-        lowerCaseString, upperCaseString,
-        upperize, lowerize,
-        quote, timeStamp,
+        timeStamp,
         limitStr,
         listToStr, showWidth,
         listToMaybeWith, listToMaybeAll,
-        getRandItem, stdGetRandItem, randomElem,
         showClean,
         expandTab,
         closest, closests,
@@ -30,9 +25,7 @@ module Lambdabot.Util (
         choice,
         arePrefixesWithSpaceOf, arePrefixesOf,
 
-        basename, dirname, dropSuffix, joinPath,
-
-        addList, mapMaybeMap, insertUpd,
+        addList, insertUpd,
 
         pprKeys,
 
@@ -43,9 +36,12 @@ module Lambdabot.Util (
         random, insult, confirmation
     ) where
 
-import Data.List                (intersperse, isPrefixOf)
-import Data.Char                (isSpace, toLower, toUpper)
+import Config
+
+import Data.List                (intercalate, isPrefixOf, stripPrefix)
+import Data.Char                (isSpace)
 import Data.Maybe
+import Data.Random
 import Control.Monad.State      (MonadIO(..))
 
 import qualified Data.Map as M
@@ -55,21 +51,9 @@ import Control.Concurrent       (MVar, newEmptyMVar, takeMVar, tryPutMVar, putMV
                                  forkIO, killThread, threadDelay)
 import Control.Exception        (bracket)
 
--- getStdRandom has a bug, see safeGetStdRandom below.
-import System.Random hiding (split,random,getStdRandom)
-
 import qualified System.Time as T
 
 ------------------------------------------------------------------------
-
--- | 'concatWith' joins lists with the given glue elements. Example:
---
--- > concatWith ", " ["one","two","three"] ===> "one, two, three"
-concatWith  :: [a]   -- ^ Glue to join with
-            -> [[a]] -- ^ Elements to glue together
-            -> [a]   -- ^ Result: glued-together list
-
-concatWith glue xs = (concat . intersperse glue) xs
 
 -- | Split a list into pieces that were held together by glue.  Example:
 --
@@ -99,14 +83,6 @@ breakOnGlue glue rest@(x:xs)
         where (piece, rest') = breakOnGlue glue xs
 {-# INLINE breakOnGlue #-}
 
--- | Reverse cons. Add an element to the back of a list. Example:
---
--- > snoc 3 [2, 1] ===> [2, 1, 3]
-snoc :: a -- ^ Element to be added
-     -> [a] -- ^ List to add to
-     -> [a] -- ^ Result: List ++ [Element]
-snoc x xs = xs ++ [x]
-
 -- | 'after' takes 2 strings, called the prefix and data. A necessary
 --   precondition is that
 --
@@ -120,11 +96,9 @@ after :: String -- ^ Prefix string
       -> String -- ^ Data string
       -> String -- ^ Result: Data string with Prefix string and excess whitespace
                 --     removed
-after [] ys     = dropWhile isSpace ys
-after (_:_) [] = error "after: (:) [] case"
-after (x:xs) (y:ys)
-  | x == y    = after xs ys
-  | otherwise = error "after: /= case"
+after prefix str = case stripPrefix prefix str of
+    Nothing   -> error "after: /= case"
+    Just rest -> dropWhile isSpace rest
 
 -- | Break a String into it's first word, and the rest of the string. Example:
 --
@@ -145,41 +119,14 @@ firstWord = takeWhile (not . isSpace)
 --   it outputs the String given. Else, it is a no-op.
 
 debugStr :: (MonadIO m) => String -> m ()
-debugStr = liftIO . putStr
+debugStr 
+    | verbose config  = liftIO . putStr
+    | otherwise       = const (return ())
 
 -- | 'debugStrLn' is a version of 'debugStr' that adds a newline to the end
 --   of the string outputted.
 debugStrLn :: (MonadIO m) => [Char] -> m ()
 debugStrLn x = debugStr (x ++ "\n")
-
--- | 'lowerCaseString' transforms the string given to lower case.
---
--- > Example: lowerCaseString "MiXeDCaSe" ===> "mixedcase"
-lowerCaseString :: String -> String
-lowerCaseString = map toLower
-
--- | 'upperCaseString' transforms the string given to upper case.
---
--- > Example: upperCaseString "MiXeDcaSe" ===> "MIXEDCASE"
-upperCaseString :: String -> String
-upperCaseString = map toUpper
-
--- | 'lowerize' forces the first char of a string to be lowercase.
---   if the string is empty, the empty string is returned.
-lowerize :: String -> String
-lowerize [] = []
-lowerize (c:cs) = toLower c:cs
-
--- | 'upperize' forces the first char of a string to be uppercase.
---   if the string is empty, the empty string is returned.
-upperize :: String -> String
-upperize [] = []
-upperize (c:cs) = toUpper c:cs
-
--- | 'quote' puts a string into quotes but does not escape quotes in
---   the string itself.
-quote  :: String -> String
-quote x = "\"" ++ x ++ "\""
 
 -- | Truncate a string to the specified length, putting ellipses at the
 -- end if necessary.
@@ -210,41 +157,9 @@ listToMaybeAll = listToMaybeWith id
 
 ------------------------------------------------------------------------
 
--- | getStdRandom has a bug when 'f' returns bottom, we strictly evaluate the
--- new generator before calling setStdGen.
-safeGetStdRandom :: (StdGen -> (a,StdGen)) -> IO a
-safeGetStdRandom f = do
-    g <- getStdGen
-    let (x, g') = f g
-    setStdGen $! g'
-    return x
-
--- | 'getRandItem' takes as input a list and a random number generator. It
---   then returns a random element from the list, paired with the altered
---   state of the RNG
-getRandItem :: (RandomGen g) =>
-               [a] -- ^ The list to pick a random item from
-            -> g   -- ^ The RNG to use
-            -> (a, g) -- ^ A pair of the item, and the new RNG seed
-getRandItem [] g       = (error "getRandItem: empty list", g)
-getRandItem mylist rng = (mylist !! index,newRng)
-                         where
-                         llen = length mylist
-                         (index, newRng) = randomR (0,llen - 1) rng
-
--- | 'stdGetRandItem' is the specialization of 'getRandItem' to the standard
---   RNG embedded within the IO monad. The advantage of using this is that
---   you use the Operating Systems provided RNG instead of rolling your own
---   and the state of the RNG is hidden, so one don't need to pass it
---   explicitly.
-stdGetRandItem :: [a] -> IO a
-stdGetRandItem = safeGetStdRandom . getRandItem
-
-randomElem :: [a] -> IO a
-randomElem = stdGetRandItem
-
+-- | Pick a random element of the list.
 random :: MonadIO m => [a] -> m a
-random = liftIO . randomElem
+random = io . sample . randomElement
 
 ------------------------------------------------------------------------
 
@@ -269,7 +184,7 @@ clean x | x == '\CR' = []
 
 -- | show a list without heavyweight formatting
 showClean :: (Show a) => [a] -> String
-showClean = concatWith " " . map (init . tail . show)
+showClean = intercalate " " . map (init . tail . show)
 
 dropNL :: [Char] -> [Char]
 dropNL = reverse . dropWhile (== '\n') . reverse
@@ -326,30 +241,6 @@ lvn' _ _ _ _  _  = error "levenshtein, ran out of numbers"
 dif :: Char -> Char -> Int
 dif = (fromEnum .) . (/=)
 
-{-
---
--- naive implementation, O(2^n)
--- Too slow after around d = 8
---
--- V. I. Levenshtein. Binary codes capable of correcting deletions,
--- insertions and reversals. Doklady Akademii Nauk SSSR 163(4) p845-848,
--- 1965
---
--- A Guided Tour to Approximate String Matching, G. Navarro
---
-levenshtein :: (Eq a) => [a] -> [a] -> Int
-levenshtein [] [] = 0
-levenshtein s  [] = length s
-levenshtein [] s  = length s
-levenshtein (s:ss) (t:ts)   =
-    min3 (eq + (levenshtein  ss ts))
-         (1  + (levenshtein (ss++[s]) ts))
-         (1  + (levenshtein  ss (ts++[t])))
-        where
-          eq         = fromEnum (s /= t)
-          min3 a b c = min c (min a b)
--}
-
 ------------------------------------------------------------------------
 
 -- | Thread-safe modification of an MVar.
@@ -380,44 +271,15 @@ timeout n a = parIO (Just `fmap` a) (threadDelay n >> return Nothing)
 
 ------------------------------------------------------------------------
 
--- some filename manipulation stuff
-
-basename :: FilePath -> FilePath
-basename = reverse . takeWhile ('/' /=) . reverse
-
-dirname :: FilePath -> FilePath
-dirname p  =
-    case reverse $ dropWhile (/= '/') $ reverse p of
-        [] -> "."
-        p' -> p'
-
-dropSuffix :: FilePath -> FilePath
-dropSuffix = reverse . tail . dropWhile ('.' /=) . reverse
-
-joinPath :: FilePath -> FilePath -> FilePath
-joinPath p q =
-    case reverse p of
-      '/':_ -> p ++ q
-      []    -> q
-      _     -> p ++ "/" ++ q
-
 {-# INLINE choice #-}
-choice :: (r -> Bool) -> (r -> a) -> (r -> a) -> (r -> a)
-choice p f g x = if p x then f x else g x
-
--- Generalizations:
--- choice :: ArrowChoice (~>) => r ~> Bool -> r ~> a -> r ~> a -> r ~> a
--- choice :: Monad m => m Bool -> m a -> m a -> m a
+choice :: Monad m => m Bool -> m a -> m a -> m a
+choice p f g = p >>= \b -> if b then f else g
 
 ------------------------------------------------------------------------
 
 addList :: (Ord k) => [(k,a)] -> M.Map k a -> M.Map k a
 addList l m = M.union (M.fromList l) m
 {-# INLINE addList #-}
-
--- | Data.Maybe.mapMaybe for Maps
-mapMaybeMap :: Ord k => (a -> Maybe b) -> M.Map k a -> M.Map k b
-mapMaybeMap f = fmap fromJust . M.filter isJust . fmap f
 
 -- | This makes way more sense than @insertWith@ because we don't need to
 --   remember the order of arguments of @f@.
@@ -446,7 +308,7 @@ io = liftIO
 
 
 arePrefixesWithSpaceOf :: [String] -> String -> Bool
-arePrefixesWithSpaceOf els str = any (flip isPrefixOf str) $ map (++" ") els
+arePrefixesWithSpaceOf = arePrefixesOf . map (++ " ")
 
 arePrefixesOf :: [String] -> String -> Bool
 arePrefixesOf = flip (any . flip isPrefixOf)

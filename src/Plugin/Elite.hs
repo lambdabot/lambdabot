@@ -36,7 +36,7 @@ translate str@(hd:tl) = do
                | (re, subst) <- ruleList
                , ([], match, rest, _) <- maybeToList (R.matchRegexAll re str)
                ]
-    (subst,rest) <- stdGetRandItem alts
+    (subst,rest) <- random alts
     liftM (subst ++) (translate rest)
 
 ruleList :: [(Regex, String -> String)]

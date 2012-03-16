@@ -23,7 +23,7 @@ instance Module DummyModule where
           { help = say "choose. Lambdabot featuring AI power"
           , process = \args ->
               if null args then say "Choose between what?"
-                  else say =<< (io . randomElem . words $ args)
+                  else say =<< (io . random . words $ args)
           }
       : [ (command cmd)
               { help = say (dummyHelp cmd)
