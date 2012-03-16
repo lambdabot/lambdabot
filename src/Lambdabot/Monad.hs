@@ -81,7 +81,7 @@ data IRCRWState = IRCRWState {
         ircOutputFilters   :: [(String,OutputFilter)],
             -- ^ Output filters, invoked from right to left
 
-        ircCommands        :: Map String ModuleRef,
+        ircCommands        :: Map String CommandRef,
         ircPrivCommands    :: [String],
         ircStayConnected   :: !Bool,
         ircDynLoad         :: S.DynLoad,

@@ -5,14 +5,14 @@
 -- Generic server connection,disconnection
 -- The module typeclass, type and operations on modules
 module Lambdabot (
-        MODULE(..), Module(..), lookupCmd,
+        MODULE(..), Module(..),
         ModuleT, Mode(..),
 
         IRCRState(..), IRCRWState(..), IRCError(..),
 
         LB(..), MonadLB(..), lbIO,
 
-        withModule, withAllModules, getDictKeys,
+        withModule, withCommand, withAllModules, getDictKeys,
 
         getRef, getName, bindModule0, bindModule1, bindModule2,
 
@@ -214,6 +214,7 @@ ircInstallModule (MODULE (mod :: m)) modname = do
     ref        <- io $ newMVar state
     
     let modref = ModuleRef mod ref modname
+        cmdref cmd = CommandRef mod ref cmd modname
     
     flip runReaderT (ref, modname) . moduleT $ do
         moduleInit :: ModuleT m LB ()
@@ -224,7 +225,7 @@ ircInstallModule (MODULE (mod :: m)) modname = do
             cmdmap = ircCommands s
         put $ s {
           ircModules = M.insert modname modref modmap,
-          ircCommands = addList [ (name,modref) | cmd <- cmds, name <- Cmd.cmdNames cmd ] cmdmap,
+          ircCommands = addList [ (name,cmdref cmd) | cmd <- cmds, name <- Cmd.cmdNames cmd ] cmdmap,
           ircPrivCommands = ircPrivCommands s ++ concatMap Cmd.cmdNames (filter Cmd.privileged cmds)
         }
         io $ hPutStr stderr "." >> hFlush stderr
@@ -233,7 +234,7 @@ ircInstallModule (MODULE (mod :: m)) modname = do
 -- | Unregister a module's entry in the irc state
 --
 ircUnloadModule :: String -> LB ()
-ircUnloadModule modname = withModule ircModules modname (error "module not loaded") (\m -> do
+ircUnloadModule modname = withModule modname (error "module not loaded") (\m -> do
     when (moduleSticky m) $ error "module is sticky"
     moduleExit
     writeGlobalState m modname
@@ -243,7 +244,7 @@ ircUnloadModule modname = withModule ircModules modname (error "module not loade
         cbs    = ircCallbacks s
         svrs   = ircServerMap s
         ofs    = ircOutputFilters s
-    put $ s { ircCommands      = M.filter (\(ModuleRef _ _ name) -> name /= modname) cmdmap }
+    put $ s { ircCommands      = M.filter (\(CommandRef _ _ _ name) -> name /= modname) cmdmap }
             { ircModules       = M.delete modname modmap }
             { ircCallbacks     = filter ((/=modname) . fst) `fmap` cbs }
             { ircServerMap     = M.filter ((/=modname) . fst) svrs }
@@ -354,20 +355,34 @@ rawPrivmsgF who (Just s) | P.null s  = ircPrivmsg' who (Just " ")
 -- action for the case that the lookup fails, action if the lookup
 -- succeeds.
 --
-withModule :: (Ord k)
-           => (IRCRWState -> Map k ModuleRef)
-           -> k
+withModule :: String
            -> LB a
            -> (forall mod. Module mod => mod -> ModuleT mod LB a)
            -> LB a
 
-withModule dict modname def f = do
-    maybemod <- gets (M.lookup modname . dict)
+withModule modname def f = do
+    maybemod <- gets (M.lookup modname . ircModules)
     case maybemod of
       -- TODO stick this ref stuff in a monad instead. more portable in
       -- the long run.
       Just (ModuleRef m ref name) -> do
           runReaderT (moduleT $ f m) (ref, name)
+      _                           -> def
+
+withCommand :: String
+            -> LB a
+            -> (forall mod. Module mod => mod 
+                                       -> Cmd.Command (ModuleT mod LB)
+                                       -> ModuleT mod LB a)
+            -> LB a
+
+withCommand cmdname def f = do
+    maybecmd <- gets (M.lookup cmdname . ircCommands)
+    case maybecmd of
+      -- TODO stick this ref stuff in a monad instead. more portable in
+      -- the long run.
+      Just (CommandRef m ref cmd name) -> do
+          runReaderT (moduleT $ f m cmd) (ref, name)
       _                           -> def
 
 -- | Interpret a function in the context of all modules

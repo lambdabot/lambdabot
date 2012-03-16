@@ -4,10 +4,10 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies #-}
 module Lambdabot.Module
-    ( MODULE(..), Module(..), lookupCmd
+    ( MODULE(..), Module(..)
     , ModuleT(..)
     
-    , ModuleRef(..)
+    , ModuleRef(..), CommandRef(..)
     
     , getRef, getName, bindModule0, bindModule1, bindModule2
     ) where
@@ -76,15 +76,15 @@ class Module m where
     moduleSerialize _  = Nothing
     moduleDefState  _  = return $ error "state not initialized"
 
-lookupCmd cmd = do
-    cmds <- moduleCmds
-    return $! lookup cmd [ (nm, c) | c <- cmds, nm <- Cmd.cmdNames c ]
-
 -- | An existential type holding a module, used to represent modules on
 -- the value level, for manipluation at runtime by the dynamic linker.
 data MODULE = forall m. Module m => MODULE m
 
-data ModuleRef = forall m s. Module m => ModuleRef m (MVar (ModuleState m)) String
+data ModuleRef = forall m s. 
+    Module m => ModuleRef m (MVar (ModuleState m)) String
+
+data CommandRef = forall m s.
+    Module m => CommandRef m (MVar (ModuleState m)) (Cmd.Command (ModuleT m LB)) String
 
 --
 -- | This transformer encodes the additional information a module might

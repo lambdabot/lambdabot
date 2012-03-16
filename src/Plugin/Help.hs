@@ -18,9 +18,8 @@ instance Module HelpModule where
             }
         ]
 
-moduleHelp m cmd msg tgt = do
-    Just theCmd <- lookupCmd cmd
-    fmap unlines (Cmd.execCmd (help theCmd) msg tgt cmd)
+moduleHelp theCmd msg tgt cmd =
+    Cmd.execCmd (help theCmd) msg tgt cmd
 
 --
 -- If a target is a command, find the associated help, otherwise if it's
@@ -28,8 +27,8 @@ moduleHelp m cmd msg tgt = do
 --
 doHelp msg tgt [] = doHelp msg tgt "help"
 doHelp msg tgt rest =
-    withModule ircCommands arg                  -- see if it is a command
-        (withModule ircModules arg              -- else maybe it's a module name
+    withCommand arg                  -- see if it is a command
+        (withModule arg              -- else maybe it's a module name
             (doHelp msg tgt "help")             -- else give up
             (\md -> do -- its a module
                 cmds <- moduleCmds
@@ -39,12 +38,6 @@ doHelp msg tgt rest =
                 return [s]))
 
         -- so it's a valid command, try to find its help
-        (\md -> do
-            s <- catchError (moduleHelp md arg msg tgt) $ \e ->
-                case e of
-                    IRCRaised (fromException -> Just (NoMethodError _)) 
-                        -> return "This command is unknown."
-                    _   -> throwError e
-            return [s])
+        (\md theCmd -> moduleHelp theCmd msg tgt arg)
 
     where (arg:_) = words rest

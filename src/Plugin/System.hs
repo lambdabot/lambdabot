@@ -76,8 +76,10 @@ doSystem' msg target cmd rest = get >>= \s -> case cmd of
   "listmodules" -> return [pprKeys (ircModules s) ]
   "listservers" -> return [pprKeys (ircServerMap s)]
   "listall"     -> lift listAll
-  "list"| null rest -> return ["http://code.haskell.org/lambdabot/COMMANDS"]
-        | otherwise -> lift $ listModule rest >>= return . (:[])
+  "list"| null rest         -> return ["What module?  (\"modules\" to list modules, \"all\" to list all commands)"]
+        | rest == "all"     -> lift listAll
+        | rest == "modules" -> return [pprKeys (ircModules s) ]
+        | otherwise         -> lift $ listModule rest >>= return . (:[])
 
   ------------------------------------------------------------------------
 
@@ -132,10 +134,10 @@ listAll :: LB [String]
 listAll = get >>= mapM listModule . M.keys . ircModules
 
 listModule :: String -> LB String
-listModule s = withModule ircModules s fromCommand printProvides
+listModule s = withModule s fromCommand printProvides
   where
-    fromCommand = withModule ircCommands s
-        (return $ "No module \""++s++"\" loaded") printProvides
+    fromCommand = withCommand s
+        (return $ "No module \""++s++"\" loaded") (const . printProvides)
 
     -- ghc now needs a type annotation here
     printProvides :: (forall mod. Module mod => mod -> ModuleT mod LB String)

@@ -56,10 +56,9 @@ compose f g xs = g xs >>= f . unlines
 lookupP :: String -> Cmd Compose (String -> LB [String])
 lookupP cmd = withMsg $ \a -> do
     b <- getTarget
-    lb $ withModule ircCommands cmd
+    lb $ withCommand cmd
         (error $ "Unknown command: " ++ show cmd)
-        (\m -> do
-            Just theCmd <- lookupCmd cmd
+        (\m theCmd -> do
             when (privileged theCmd) $ error "Privileged commands cannot be composed"
             bindModule1 (runCommand theCmd a b cmd))
 

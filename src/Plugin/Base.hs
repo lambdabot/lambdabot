@@ -10,7 +10,7 @@ import Lambdabot.Message as Msg (getTopic, nick, server, body, Nick(..), lambdab
 
 import qualified Data.Map as M   (insert, delete)
 
-import Control.Monad.State  (MonadState(..), gets)
+import Control.Monad.State  (MonadState(..))
 
 import qualified Text.Regex as R
 
@@ -196,15 +196,15 @@ doPRIVMSG' myname msg target
 
             docmd cmd' = do
               act <- bindModule0 . withPS towhere $ \_ _ -> do
-                withModule ircCommands cmd'   -- Important.
+                withCommand cmd'   -- Important.
                     (ircPrivmsg towhere "Unknown command, try @list")
-                    (\m -> do
+                    (\m theCmd -> do
                         name'   <- getName
-                        privs   <- gets ircPrivCommands
-                        let illegal = disabledCommands config
-                        ok      <- liftM2 (||) (return $ cmd' `notElem` (privs ++ illegal))
-                                               (lift $ checkPrivs msg)
-                        Just theCmd <- lookupCmd cmd'
+                        
+                        hasPrivs <- lb (checkPrivs msg)
+                        let ok =  (cmd' `notElem` disabledCommands config)
+                               && (not (privileged theCmd) || hasPrivs)
+                        
                         if not ok
                           then lift $ ircPrivmsg towhere "Not enough privileges"
                           else catchIrc
