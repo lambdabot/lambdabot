@@ -95,7 +95,7 @@ go _ _      = []   -- unterminated
 extract_signatures :: String -> Maybe String
 extract_signatures output
         = fmap reverse . removeExp . reverse .
-          unwords . map (dropWhile isSpace . expandTab) .
+          unwords . map (dropWhile isSpace . expandTab 8) .
           mapMaybe ((>>= last') . R.matchRegex signature_regex) .
           lines $ output
         where
@@ -127,7 +127,7 @@ query_ghci cmd expr = io $ do
     let ls = extract_signatures output
     return $ case ls of
                Nothing -> unlines . take 3 . filter (not . null) . map cleanRE2 .
-                          lines . expandTab . cleanRE . filter (/='\r') $ errors -- "bzzt"
+                          lines . expandTab 8 . cleanRE . filter (/='\r') $ errors -- "bzzt"
                Just t -> t
   where
 

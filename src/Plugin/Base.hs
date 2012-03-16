@@ -211,7 +211,7 @@ doPRIVMSG' myname msg target
 
                             (do mstrs <- runCommand theCmd msg towhere cmd' rest
                                 -- send off our strings
-                                lift $ mapM_ (ircPrivmsg towhere) mstrs)
+                                lift $ mapM_ (ircPrivmsg towhere . expandTab 8) mstrs)
 
                             (lift . ircPrivmsg towhere .
                                 (("Plugin `" ++ name' ++ "' failed with: ") ++) . show))

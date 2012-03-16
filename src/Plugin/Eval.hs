@@ -147,7 +147,7 @@ comp src = do
         (_ ,ee) -> return ee
 
 munge :: String -> String
-munge = expandTab . dropWhile (=='\n') . dropNL
+munge = expandTab 8 . dropWhile (=='\n') . dropNL
 
 ------------------------------
 -- reset all bindings

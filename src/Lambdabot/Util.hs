@@ -275,10 +275,12 @@ dropNL :: [Char] -> [Char]
 dropNL = reverse . dropWhile (== '\n') . reverse
 
 -- | untab an string
-expandTab :: String -> String
-expandTab []        = []
-expandTab ('\t':xs) = ' ':' ':' ':' ':' ':' ':' ':' ':expandTab xs
-expandTab (x:xs)    = x : expandTab xs
+expandTab :: Int -> String -> String
+expandTab w = go 0
+  where
+    go i []         = []
+    go i ('\t':xs)  = replicate (w - i `mod` w) ' ' ++ go 0 xs
+    go i (x:xs)     = x : go (i+1) xs
 
 ------------------------------------------------------------------------
 
