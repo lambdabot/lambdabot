@@ -14,7 +14,7 @@ import qualified Data.Set as Set
 plugin "Undo"
 
 instance Module UndoModule where
-    moduleCmds _ =
+    moduleCmds = return
         [ (command "undo")
             { help = say "undo <expr>\nTranslate do notation to Monad operators."
             , process = say . transform undo

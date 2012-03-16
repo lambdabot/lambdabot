@@ -14,8 +14,8 @@ plugin "Dummy"
 
 instance Module DummyModule where
 
-  moduleCmds _
-      = (command "eval")
+  moduleCmds = return
+      $ (command "eval")
            { help = say "eval. Do nothing (perversely)"
            , process = const (return ()) 
            }

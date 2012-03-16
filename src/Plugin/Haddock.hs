@@ -15,7 +15,7 @@ type HaddockState = M.Map ByteString [ByteString]
 instance Module HaddockModule where
     type ModuleState HaddockModule = HaddockState
     
-    moduleCmds _ =
+    moduleCmds = return
         [ (command "index")
             { help = say "index <ident>. Returns the Haskell modules in which <ident> is defined"
             , process = \k -> do

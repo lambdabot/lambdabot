@@ -12,7 +12,7 @@ import Plugin
 plugin "Unlambda"
 
 instance Module UnlambdaModule where
-    moduleCmds _ = 
+    moduleCmds = return
         [ (command "unlambda")
             { help = say "unlambda <expr>. Evaluate an unlambda expression"
             , process = ios80 . unlambda

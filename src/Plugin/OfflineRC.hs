@@ -34,7 +34,7 @@ instance Module OfflineRCModule where
     -- being used.
     type ModuleState OfflineRCModule = Integer
     moduleDefState _ = return 0
-    moduleInit _ = do
+    moduleInit = do
         act <- bindModule0 onInit
         lift $ liftLB forkIO $ do
             mv <- asks ircInitDoneMVar
@@ -42,7 +42,7 @@ instance Module OfflineRCModule where
             act
         return ()
     
-    moduleCmds _ = 
+    moduleCmds = return
         [ (command "offline")
             { privileged = True
             , help = say "offline. Start a repl"

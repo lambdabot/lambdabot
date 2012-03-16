@@ -11,7 +11,7 @@ import Plugin
 plugin "BF"
 
 instance Module BFModule where
-    moduleCmds   _     = 
+    moduleCmds = return
         [ (command "bf")
             { help = say "bf <expr>. Evaluate a brainf*ck expression"
             , process = ios80 . bf

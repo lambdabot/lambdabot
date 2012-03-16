@@ -25,7 +25,7 @@ import qualified Text.Regex as R
 plugin "Type"
 
 instance Module TypeModule where
-     moduleCmds _ = 
+     moduleCmds = return 
         [ (command "type")
             { help = say "type <expr>. Return the type of a value"
             , process = runit ":t"

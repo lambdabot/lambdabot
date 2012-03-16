@@ -4,7 +4,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies #-}
 module Lambdabot.Module
-    ( MODULE(..), Module(..), modulePrivs, lookupCmd
+    ( MODULE(..), Module(..), lookupCmd
     , ModuleT(..)
     
     , ModuleRef(..)
@@ -50,13 +50,13 @@ class Module m where
     moduleSticky    :: m -> Bool
 
     -- | The commands the module listenes to.
-    moduleCmds      :: m -> [Cmd.Command (ModuleT m LB)]
+    moduleCmds      :: ModuleT m LB [Cmd.Command (ModuleT m LB)]
 
     -- | Initialize the module. The default implementation does nothing.
-    moduleInit      :: m -> ModuleT m LB ()
+    moduleInit      :: ModuleT m LB ()
 
     -- | Finalize the module. The default implementation does nothing.
-    moduleExit      :: m -> ModuleT m LB ()
+    moduleExit      :: ModuleT m LB ()
 
     -- | Process contextual input. A plugin that implements 'contextual'
     -- is able to respond to text not part of a normal command.
@@ -69,15 +69,16 @@ class Module m where
 
     contextual _ _ = return ()
 
-    moduleCmds      _  = []
-    moduleExit _       = return ()
-    moduleInit _       = return ()
+    moduleCmds         = return []
+    moduleExit         = return ()
+    moduleInit         = return ()
     moduleSticky _     = False
     moduleSerialize _  = Nothing
     moduleDefState  _  = return $ error "state not initialized"
 
-lookupCmd m cmd = lookup cmd [ (nm, c) | c <- moduleCmds m, nm <- Cmd.cmdNames c ]
-modulePrivs m = filter Cmd.privileged (moduleCmds m)
+lookupCmd cmd = do
+    cmds <- moduleCmds
+    return $! lookup cmd [ (nm, c) | c <- cmds, nm <- Cmd.cmdNames c ]
 
 -- | An existential type holding a module, used to represent modules on
 -- the value level, for manipluation at runtime by the dynamic linker.

@@ -12,7 +12,7 @@ import Data.Version (showVersion)
 plugin "Version"
 
 instance Module VersionModule where
-    moduleCmds _ =
+    moduleCmds = return
         [ (command "version")
             { help = say $
                 "version/source. Report the version " ++

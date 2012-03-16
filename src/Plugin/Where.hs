@@ -24,7 +24,7 @@ instance Module WhereModule where
     moduleDefState  _ = return M.empty
     moduleSerialize _ = Just mapPackedSerial
     
-    moduleCmds _ = 
+    moduleCmds = return
         [ (command "where")
             { help = say "where <key>. Return element associated with key"
             , process = doCmd "where"

@@ -10,7 +10,7 @@ import Plugin.Type (query_ghci)
 plugin "Free"
 
 instance Module FreeModule where
-    moduleCmds _ = 
+    moduleCmds = return
         [ (command "free")
             { help = say "free <ident>. Generate theorems for free"
             , process = \xs -> do

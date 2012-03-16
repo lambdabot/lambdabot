@@ -16,7 +16,7 @@ instance Module HoogleModule where
     type ModuleState HoogleModule = HoogleState
     
     moduleDefState _ = return []
-    moduleCmds _ = 
+    moduleCmds = return
         [ (command "hoogle")
             { help = say "hoogle <expr>. Haskell API Search for either names, or types."
             , process = \s -> do

@@ -22,7 +22,7 @@ import Plugin as P
 plugin "UnMtl"
 
 instance P.Module UnMtlModule where
-    moduleCmds _ = 
+    moduleCmds = return
         [ (command "unmtl")
             { help = say "unroll mtl monads"
             , process = say . either ("err: "++) prettyPrintInLine . mtlParser

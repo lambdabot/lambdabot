@@ -9,7 +9,7 @@ import Plugin
 plugin "Hello"
 
 instance Module HelloModule where
-    moduleCmds _ =
+    moduleCmds = return
         [ (command "hello")
             { aliases = ["goodbye"]
             , help = say "hello/goodbye <arg>. Simplest possible plugin"

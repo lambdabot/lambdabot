@@ -50,7 +50,7 @@ voteSerial = Serial (Just . showPacked) (Just . readPacked)
 instance Module VoteModule where
     type ModuleState VoteModule = VoteState
     
-    moduleCmds _ =
+    moduleCmds = return
         [ (command "poll-list")
             { help = say "poll-list                   Shows all current polls"
             , process = \_ -> do

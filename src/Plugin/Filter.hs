@@ -1,29 +1,43 @@
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TemplateHaskell, TypeFamilies #-}
 -- | GNU Talk Filters
 -- needs: http://www.hyperrealm.com/main.php?s=talkfilters
 -- Edward Kmett 2006
 
 module Plugin.Filter (theModule) where
 
+import Control.Applicative
 import Plugin
+import Data.Maybe
+import System.Directory (findExecutable)
 
 plugin "Filter"
 
 instance Module FilterModule where
-        moduleCmds _ = 
+    type ModuleState FilterModule = [(String, String, String)]
+        -- ^ map from filter name to executable path
+    moduleDefState _ = catMaybes <$> sequence
+        [ do
+            mbPath <- io (findExecutable name)
+            return $! do
+                path <- mbPath
+                Just (name, path, descr)
+        | (name, descr) <- filters
+        ]
+        
+    moduleCmds = do
+        activeFilters <- readMS
+        return
             [ (command name)
                 { help = say descr
                 , process = \s -> do
-                    f <- getCmdName
-                    let usage = "usage: " ++ f ++ " <phrase>"
                     case words s of
-                            [] -> say usage
-                            t -> ios80 (runFilter f (unwords t))
+                            [] -> say ("usage: " ++ name ++ " <phrase>")
+                            t -> ios80 (runFilter path (unwords t))
                 }
-            | (name, descr) <- filters
+            | (name, path, descr) <- activeFilters
             ]
 
-filters = 
+filters =
     [ ("austro",     "austro <phrase>. Talk like Ahhhnold")
     , ("b1ff",       "b1ff <phrase>. B1ff of usenet yore")
     , ("brooklyn",   "brooklyn <phrase>. Yo")
@@ -44,12 +58,9 @@ filters =
     , ("warez",      "warez <phrase>. H4x0r")
     ]
 
-pathTo :: String -> String
-pathTo f = "/usr/local/bin/" ++ f
-
 runFilter :: String -> String -> IO String
 runFilter f s = do
-        (out,_,_) <- popen (pathTo f) [] (Just s)
-        return $ result out
+    (out,_,_) <- popen f [] (Just s)
+    return $ result out
     where result [] = "Couldn't run the filter."
           result xs = unlines . filter (not . all (==' ')) . lines $ xs

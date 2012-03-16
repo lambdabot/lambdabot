@@ -30,7 +30,7 @@ type ModuleName = String
 plugin "Instances"
 
 instance Module InstancesModule where
-    moduleCmds _ = 
+    moduleCmds = return
         [ (command "instances")
             { help = say "instances <typeclass>. Fetch the instances of a typeclass."
             , process = \cls -> io (fetchInstances cls) >>= say

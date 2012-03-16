@@ -19,9 +19,9 @@ helpStr = "activity seconds. Find out where/how much the bot is being used"
 instance Module ActivityModule where
     type ModuleState ActivityModule = ActivityState
     moduleDefState _ = return []
-    moduleInit _ = bindModule2 activityFilter >>= ircInstallOutputFilter
+    moduleInit = bindModule2 activityFilter >>= ircInstallOutputFilter
     
-    moduleCmds _ = 
+    moduleCmds = return
         [ (command "activity") 
             { help = say helpStr
             , process = activity False

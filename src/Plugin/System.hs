@@ -15,7 +15,7 @@ instance Module SystemModule where
     -- State is time current instance started and longest recorded uptime
     type ModuleState SystemModule = (ClockTime, TimeDiff)
     
-    moduleCmds _ = 
+    moduleCmds = return $
         [ (command name)
             { help = say helpStr
             , process = doSystem name
@@ -31,10 +31,10 @@ instance Module SystemModule where
         ]
     moduleDefState _ = flip (,) noTimeDiff `fmap` io getClockTime
     moduleSerialize  = const $ Just stdSerial
-    moduleInit _     = do (_, d) <- readMS
+    moduleInit       = do (_, d) <- readMS
                           t      <- liftIO getClockTime
                           writeMS (t, d)
-    moduleExit _     = do (initial, d) <- readMS
+    moduleExit       = do (initial, d) <- readMS
                           now          <- liftIO getClockTime
                           writeMS (initial, max d (diffClockTimes now initial))
 
@@ -140,7 +140,7 @@ listModule s = withModule ircModules s fromCommand printProvides
     -- ghc now needs a type annotation here
     printProvides :: (forall mod. Module mod => mod -> ModuleT mod LB String)
     printProvides m = do
-        let cmds = moduleCmds m
+        cmds <- moduleCmds
         let cmds' = filter (not . privileged) cmds
         name' <- getName
         return . concat $ if null cmds'

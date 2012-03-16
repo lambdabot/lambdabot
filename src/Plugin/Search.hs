@@ -43,7 +43,7 @@ googleUri = makeUri "www.google.com" "/search"
 -- wikipediaUri = makeUri "en.wikipedia.org" "/wiki/Special:Search"
 
 instance Module SearchModule where
-    moduleCmds _ = 
+    moduleCmds = return
         [ (command name)
             { help = say (moduleHelp name)
             , process = \e -> do

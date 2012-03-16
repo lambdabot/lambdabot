@@ -3,8 +3,8 @@
 -- Copyright (c) 2004-6 Donald Bruce Stewart - http://www.cse.unsw.edu.au/~dons
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
 
--- | A Haskell evaluator for the pure part, using plugs
-module Plugin.Eval (theModule, plugs, exts) where
+-- | A Haskell evaluator for the pure part, using mueval
+module Plugin.Eval (theModule, eval, exts) where
 
 import Lambdabot.File (findFile)
 import Plugin
@@ -14,13 +14,13 @@ import System.Directory
 import System.Exit
 import Control.Exception (try, SomeException)
 
-plugin "Plugs"
+plugin "Eval"
 
-instance Module PlugsModule where
-    moduleCmds _ =
+instance Module EvalModule where
+    moduleCmds = return
         [ (command "run")
             { help = say "run <expr>. You have Haskell, 3 seconds and no IO. Go nuts!"
-            , process = ios80 . plugs
+            , process = ios80 . eval
             }
         , (command "let")
             { aliases = ["define"] -- because @define always gets "corrected" to @undefine
@@ -36,7 +36,7 @@ instance Module PlugsModule where
         ]
 
     contextual _ txt
-        | isEval txt = ios80 (plugs (dropPrefix txt))
+        | isEval txt = ios80 (eval (dropPrefix txt))
         | otherwise  = return ()
 
 binary :: String
@@ -61,8 +61,8 @@ isEval = ((evalPrefixes config) `arePrefixesWithSpaceOf`)
 dropPrefix :: String -> String
 dropPrefix = dropWhile (' ' ==) . drop 2
 
-plugs :: String -> IO String
-plugs src = do
+eval :: String -> IO String
+eval src = do
             load <- findFile "L.hs"
             (out,err,_) <- popen binary (args load src) Nothing
             case (out,err) of

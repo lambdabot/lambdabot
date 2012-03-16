@@ -16,7 +16,7 @@ helpStr = "spell <word>. Show spelling of word"
 instance Module SpellModule where
     type ModuleState SpellModule = Bool
     
-    moduleCmds _ =
+    moduleCmds = return
         [ (command "spell")
             { help = say helpStr
             , process = doSpell

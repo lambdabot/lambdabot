@@ -11,7 +11,7 @@ plugin "Url"
 instance Module UrlModule where
     type ModuleState UrlModule = Bool
     
-    moduleCmds _ =
+    moduleCmds = return
         [ (command "url-title")
             { help = say "url-title <url>. Fetch the page title."
             , process = 

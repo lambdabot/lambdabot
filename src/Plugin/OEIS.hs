@@ -10,7 +10,7 @@ import Math.OEIS
 plugin "OEIS"
 
 instance Module OEISModule where
-    moduleCmds _ =
+    moduleCmds = return
         [ (command "oeis")
             { aliases = ["sequence"]
             , help = say "oeis <sequence>. Look up a sequence in the Online Encyclopedia of Integer Sequences"

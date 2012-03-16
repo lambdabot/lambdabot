@@ -73,7 +73,7 @@ plugin "Tell"
 instance Module TellModule where
     type ModuleState TellModule = NoticeBoard
     
-    moduleCmds _ =
+    moduleCmds = return
         [ (command "tell")
             { help = say "tell <nick> <message>. When <nick> shows activity, tell them <message>."
             , process = doTell Tell . words

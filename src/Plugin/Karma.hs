@@ -16,7 +16,7 @@ instance Module KarmaModule where
     
     type ModuleState KarmaModule = KarmaState
 
-    moduleCmds _ =
+    moduleCmds = return
         [ (command "karma")
             { help = say "karma <polynick>. Return a person's karma value"
             , process = \rest -> withMsg $ \msg -> do

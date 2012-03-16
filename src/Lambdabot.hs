@@ -164,7 +164,7 @@ mainLoop = catchIrc
 
 -- | run 'exit' handler on modules
 runExitHandlers:: LB ()
-runExitHandlers = withAllModules moduleExit >> return ()
+runExitHandlers = withAllModules (const moduleExit) >> return ()
 
 -- | flush state of modules
 flushModuleState :: LB ()
@@ -208,25 +208,24 @@ toFilename = unsafePerformIO . findFile
 -- | Register a module in the irc state
 --
 ircInstallModule :: MODULE -> String -> LB ()
-ircInstallModule (MODULE mod) modname = do
+ircInstallModule (MODULE (mod :: m)) modname = do
     savedState <- io $ readGlobalState mod modname
     state      <- maybe (moduleDefState mod) return savedState
     ref        <- io $ newMVar state
-
+    
     let modref = ModuleRef mod ref modname
-
+    
     flip runReaderT (ref, modname) . moduleT $ do
-        moduleInit mod
-        let cmds  = moduleCmds mod
-            privs = modulePrivs mod
-
+        moduleInit :: ModuleT m LB ()
+        cmds  <- moduleCmds
+        
         s <- get
         let modmap = ircModules s
             cmdmap = ircCommands s
         put $ s {
           ircModules = M.insert modname modref modmap,
-          ircCommands = addList [ (name,modref) | cmd <- cmds++privs, name <- Cmd.cmdNames cmd ] cmdmap,
-          ircPrivCommands = ircPrivCommands s ++ concatMap Cmd.cmdNames privs
+          ircCommands = addList [ (name,modref) | cmd <- cmds, name <- Cmd.cmdNames cmd ] cmdmap,
+          ircPrivCommands = ircPrivCommands s ++ concatMap Cmd.cmdNames (filter Cmd.privileged cmds)
         }
         io $ hPutStr stderr "." >> hFlush stderr
 
@@ -236,7 +235,7 @@ ircInstallModule (MODULE mod) modname = do
 ircUnloadModule :: String -> LB ()
 ircUnloadModule modname = withModule ircModules modname (error "module not loaded") (\m -> do
     when (moduleSticky m) $ error "module is sticky"
-    moduleExit m
+    moduleExit
     writeGlobalState m modname
     s <- get
     let modmap = ircModules s

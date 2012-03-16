@@ -24,7 +24,7 @@ instance Module BaseModule where
     type ModuleState BaseModule = GlobalPrivate () ()
     
     moduleDefState  _ = return $ mkGlobalPrivate 20 ()
-    moduleInit _ = do
+    moduleInit = do
              ircSignalConnect "PING"    doPING
              bindModule1 doNOTICE >>= ircSignalConnect "NOTICE"
              ircSignalConnect "PART"    doPART
@@ -204,7 +204,7 @@ doPRIVMSG' myname msg target
                         let illegal = disabledCommands config
                         ok      <- liftM2 (||) (return $ cmd' `notElem` (privs ++ illegal))
                                                (lift $ checkPrivs msg)
-                        let Just theCmd = lookupCmd m cmd'
+                        Just theCmd <- lookupCmd cmd'
                         if not ok
                           then lift $ ircPrivmsg towhere "Not enough privileges"
                           else catchIrc

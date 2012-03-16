@@ -9,7 +9,7 @@ import qualified Plugin.Dict.DictLookup as Dict
 plugin "Dict"
 
 instance Module DictModule where
-    moduleCmds _ =
+    moduleCmds = return $
         [ (command "dict-help")
             { help = getHelp []
             , process = getHelp . words

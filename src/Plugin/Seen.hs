@@ -86,7 +86,7 @@ instance Module SeenModule where
     type ModuleState SeenModule = SeenState
     moduleDefState  _ = return (M.empty,M.empty)
     
-    moduleCmds _ = 
+    moduleCmds = return
         [ (command "users")
             { help = say "users [chan]. Report the maximum number of users seen in a channel, and active users in the last 30 minutes"
             , process = \rest -> withMsg $ \msg -> do
@@ -133,7 +133,7 @@ instance Module SeenModule where
             }
         ]
 
-    moduleInit _        = do
+    moduleInit = do
       wSFM <- bindModule2 withSeenFM
       zipWithM_ ircSignalConnect
         ["JOIN", "PART", "QUIT", "NICK", "353",      "PRIVMSG"] $ map wSFM
@@ -148,7 +148,7 @@ instance Module SeenModule where
       let ls = L.fromChunks [s]
       return (decode ls) >>= writeMS
 
-    moduleExit _ = do
+    moduleExit = do
       chans <- lift $ ircGetChannels
       unless (null chans) $ do
           ct    <- io getClockTime

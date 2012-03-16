@@ -26,7 +26,7 @@ instance Module DjinnModule where
         st <- io $ getDjinnEnv ([],[]) -- get the prelude
         return (either (const []) snd{-!-} st, [])
 
-    moduleCmds _ =
+    moduleCmds = return
         [ (command "djinn")
             { help = mapM_ say
                 [ "djinn <type>."

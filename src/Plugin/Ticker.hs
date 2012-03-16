@@ -10,7 +10,7 @@ import Text.Printf
 plugin "Ticker"
 
 instance Module TickerModule where
-    moduleCmds _ = 
+    moduleCmds = return
         [ (command "ticker")
             { help = say "ticker symbols.  Look up quotes for symbols"
             , process = tickerCmd

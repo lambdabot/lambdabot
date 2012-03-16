@@ -4,10 +4,10 @@ module Plugin.Slap (theModule) where
 
 import Plugin
 
-plugin "Quote"
+plugin "Slap"
 
-instance Module QuoteModule where
-    moduleCmds _ = 
+instance Module SlapModule where
+    moduleCmds = return
         [ (command "slap")
             { aliases = ["smack"]
             , help = say "slap <nick>. Slap someone amusingly."

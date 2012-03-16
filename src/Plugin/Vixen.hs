@@ -21,7 +21,7 @@ plugin "Vixen"
 instance Module VixenModule where
     type ModuleState VixenModule = (Bool, String -> IO String)
     
-    moduleCmds _ = 
+    moduleCmds = return
         [ (command "vixen")
             { help = say "vixen <phrase>. Sergeant Curry's lonely hearts club"
             , process = \txt -> readMS >>= (ios . ($ txt) . snd)
@@ -56,7 +56,7 @@ instance Module VixenModule where
 
     -- suck in our (read only) regex state from disk
     -- compile it, and stick it in the plugin state
-    moduleInit _     = do
+    moduleInit = do
       b <- io $ doesFileExist =<< findFile "vixen"
       when b $ do
           s <- io $ do st <- decodeFile =<< findFile "vixen"

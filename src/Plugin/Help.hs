@@ -9,7 +9,7 @@ import qualified Lambdabot.Command as Cmd
 plugin "Help"
 
 instance Module HelpModule where
-    moduleCmds   _ =
+    moduleCmds = return
         [ (command "help")
             { help = say "help <command>. Ask for help for <command>. Try 'list' for all commands"
             , process = \args -> withMsg $ \msg -> do
@@ -18,8 +18,9 @@ instance Module HelpModule where
             }
         ]
 
-moduleHelp m cmd msg tgt = fmap unlines (Cmd.execCmd (help theCmd) msg tgt cmd)
-    where Just theCmd = lookupCmd m cmd
+moduleHelp m cmd msg tgt = do
+    Just theCmd <- lookupCmd cmd
+    fmap unlines (Cmd.execCmd (help theCmd) msg tgt cmd)
 
 --
 -- If a target is a command, find the associated help, otherwise if it's
@@ -31,7 +32,8 @@ doHelp msg tgt rest =
         (withModule ircModules arg              -- else maybe it's a module name
             (doHelp msg tgt "help")             -- else give up
             (\md -> do -- its a module
-                let ss = moduleCmds md >>= Cmd.cmdNames
+                cmds <- moduleCmds
+                let ss = cmds >>= Cmd.cmdNames
                 let s | null ss   = arg ++ " is a module."
                       | otherwise = arg ++ " provides: " ++ showClean ss
                 return [s]))

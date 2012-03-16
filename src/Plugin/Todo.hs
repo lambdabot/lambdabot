@@ -16,7 +16,7 @@ type TodoState = [(P.ByteString, P.ByteString)]
 instance Module TodoModule where
     type ModuleState TodoModule = TodoState
     
-    moduleCmds _ =
+    moduleCmds = return
         [ (command "todo")
             { help = say "todo. List todo entries"
             , process = \args -> withMsg $ \msg -> do

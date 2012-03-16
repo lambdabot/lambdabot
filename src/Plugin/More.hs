@@ -13,8 +13,12 @@ type MoreState = GlobalPrivate () [String]
 -- the @more state is handled centrally
 instance Module MoreModule where
     type ModuleState MoreModule = MoreState
+    moduleDefState _ = return $ mkGlobalPrivate 20 ()
+    moduleInit
+        =   bindModule2 moreFilter
+        >>= ircInstallOutputFilter
     
-    moduleCmds _ = 
+    moduleCmds = return
         [ (command "more")
             { help = say "@more. Return more output from the bot buffer."
             , process = \_ -> do
@@ -28,9 +32,6 @@ instance Module MoreModule where
                         >>= mapM_ (lb . ircPrivmsg' target)
             }
         ]
-    moduleDefState _            = return $ mkGlobalPrivate 20 ()
-    moduleInit   _              = bindModule2 moreFilter >>=
-                                      ircInstallOutputFilter
 
 moreFilter :: Nick -> [String] -> More [String]
 moreFilter target msglines = do

@@ -13,7 +13,7 @@ plugin "Pointful"
 instance Module PointfulModule where
     type ModuleState PointfulModule = PfState
 
-    moduleCmds _ =
+    moduleCmds = return
         [ (command "pointful")
             { aliases = ["pointy","repoint","unpointless","unpl","unpf"]
             , help = say "pointful <expr>. Make code pointier."

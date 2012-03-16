@@ -19,7 +19,7 @@ instance Module CodeModule where
     moduleDefState _ = io $ getSourceFiles $
         fptoolsPath config </> "libraries" </> "base"
 
-    moduleCmds _ =
+    moduleCmds = return
         [ (command "code")
             { help = say "code. Print random line of code from $fptools"
             , process = const $ do

@@ -14,7 +14,7 @@ import Control.Arrow (first)
 plugin "Compose"
 
 instance Module ComposeModule where
-    moduleCmds _   = 
+    moduleCmds = return 
         [ (command "@")
             { aliases = ["?"]
             , help = do
@@ -59,7 +59,7 @@ lookupP cmd = withMsg $ \a -> do
     lb $ withModule ircCommands cmd
         (error $ "Unknown command: " ++ show cmd)
         (\m -> do
-            let Just theCmd = lookupCmd m cmd
+            Just theCmd <- lookupCmd cmd
             when (privileged theCmd) $ error "Privileged commands cannot be composed"
             bindModule1 (runCommand theCmd a b cmd))
 

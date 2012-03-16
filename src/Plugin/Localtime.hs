@@ -18,7 +18,7 @@ instance Module LocaltimeModule where
   type ModuleState LocaltimeModule = TimeMap
   moduleDefState _    = return M.empty
 
-  moduleCmds _ = 
+  moduleCmds = return
       [ (command "time")
           { aliases = ["localtime"]
           , help = say "time <user>. Print a user's local time. User's client must support ctcp pings."

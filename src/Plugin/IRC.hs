@@ -17,7 +17,7 @@ import qualified Data.ByteString.Char8 as P
 plugin "IRC"
 
 instance Module IRCModule where
-    moduleCmds _ = 
+    moduleCmds = return
         [ (command "irc-connect")
             { privileged = True
             , help = say "irc-connect tag host portnum nickname userinfo.  connect to an irc server"

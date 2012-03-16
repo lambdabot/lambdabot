@@ -15,7 +15,7 @@ type Env = M.Map ByteString ByteString
 instance Module SourceModule where
     type ModuleState SourceModule = Env
     
-    moduleCmds _ = 
+    moduleCmds = return
         [ (command "src")
             { help = say helpStr
             , process = \key -> readMS >>= \env -> case fetch (pack key) env of

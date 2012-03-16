@@ -18,7 +18,7 @@ instance Module QuoteModule where
     moduleSerialize _ = Just mapListPackedSerial
     moduleDefState  _ = return M.empty
     
-    moduleCmds _ =
+    moduleCmds = return
         [ (command "quote")
             { help = say genericHelp
             , process = runQuote . dropSpace

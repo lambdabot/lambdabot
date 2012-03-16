@@ -14,7 +14,7 @@ import Control.Arrow
 plugin "Elite"
 
 instance Module EliteModule where
-    moduleCmds _ = 
+    moduleCmds = return
         [ (command "elite")
             { aliases = ["leet", "l33t", "1337"]
             , help = say "elite <phrase>. Translate English to elitespeak"

@@ -17,6 +17,7 @@ import qualified Plugin.Djinn
 import qualified Plugin.Dummy
 import qualified Plugin.Elite
 import qualified Plugin.Eval
+import qualified Plugin.Filter
 import qualified Plugin.Free
 import qualified Plugin.Fresh
 import qualified Plugin.Haddock
@@ -72,6 +73,7 @@ modulesInfo = $(modules $ nub
                     , "Dummy"
                     , "Elite"
                     , "Eval"
+                    , "Filter"
                     , "Free"
                     , "Fresh"
                     , "Haddock"

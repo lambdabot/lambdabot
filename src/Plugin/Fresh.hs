@@ -11,7 +11,7 @@ plugin "Fresh"
 instance Module FreshModule where
     type ModuleState FreshModule = Integer
     
-    moduleCmds _ =
+    moduleCmds = return
         [ (command "freshname")
             { help = say "freshname. Return a unique Haskell project name."
             , process = \_ -> lift fresh >>= say

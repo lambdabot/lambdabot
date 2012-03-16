@@ -49,7 +49,7 @@ commands =
     ]
 
 instance Module TopicModule where
-  moduleCmds _ =
+  moduleCmds = return
     [ (command name)
         { help = say helpStr
         , aliases = aliases

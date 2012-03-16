@@ -6,13 +6,13 @@
 module Plugin.Check (theModule) where
 
 import Plugin
-import Plugin.Eval (plugs)
+import Plugin.Eval (eval)
 import Lambdabot.Parser
 
 plugin "Check"
 
 instance Module CheckModule where
-    moduleCmds _ =
+    moduleCmds = return
         [ (command "check")
             { help = do
                 say "check <expr>"
@@ -25,4 +25,4 @@ check :: String -> IO String
 check src = 
     case parseExpr src of
         Left e  -> return e
-        Right _ -> plugs ("myquickcheck (" ++ src ++ ") `seq` hsep[]")
+        Right _ -> eval ("myquickcheck (" ++ src ++ ") `seq` hsep[]")

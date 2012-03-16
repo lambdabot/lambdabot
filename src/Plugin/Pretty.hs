@@ -27,7 +27,7 @@ plugin "Pretty"
 instance Module PrettyModule where
     type ModuleState PrettyModule = String -> IO String
     
-    moduleCmds _ =
+    moduleCmds = return
         [ (command "pretty")
             { help = say "pretty <expr>. Display haskell code in a pretty-printed manner"
             , process = prettyCmd

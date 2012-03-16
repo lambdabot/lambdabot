@@ -12,7 +12,7 @@ import Data.Random.Dice (rollEm)
 plugin "Dice"
 
 instance Module DiceModule where
-    moduleCmds _ =
+    moduleCmds = return
         [ (command "dice")
             { aliases = ["roll"]
             , help = say "@dice <expr>. Throw random dice. <expr> is of the form 3d6+2."

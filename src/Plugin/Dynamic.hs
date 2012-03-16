@@ -16,7 +16,7 @@ modHelp = "An interface to dynamic linker"
 instance Module DynamicModule where
 
     moduleSticky _ = True
-    moduleCmds _ =
+    moduleCmds = return
         [ (command "dynamic-load")
             { privileged = True
             , help = say modHelp

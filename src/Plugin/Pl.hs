@@ -34,8 +34,9 @@ plugin "Pl"
 
 instance Module PlModule where
     type ModuleState PlModule = PlState
-
-    moduleCmds _ = 
+    moduleDefState _ = return $ mkGlobalPrivate 15 ()
+    
+    moduleCmds = return
         [ (command "pointless")
             { aliases = ["pl"]
             , help = say "pointless <expr>. Play with pointfree code."
@@ -46,8 +47,6 @@ instance Module PlModule where
             , process = const res
             }
         ]
-
-    moduleDefState _ = return $ mkGlobalPrivate 15 ()
 
 ------------------------------------------------------------------------
 
