@@ -3,7 +3,7 @@
 module Plugin.Activity (theModule) where
 
 import Plugin
-import qualified Lambdabot.Message as Msg
+import Lambdabot
 
 import Control.Arrow ((&&&))
 import Control.Exception (evaluate)
@@ -12,7 +12,7 @@ import System.Time
 
 plugin "Activity"
 
-type ActivityState = [(ClockTime,Msg.Nick)]
+type ActivityState = [(ClockTime,Nick)]
 
 helpStr = "activity seconds. Find out where/how much the bot is being used"
 
@@ -35,7 +35,7 @@ instance Module ActivityModule where
 
 activity full args = do
     let obscure nm
-            | full || isPrefixOf "#" (Msg.nName nm) = return nm
+            | full || isPrefixOf "#" (nName nm) = return nm
             | otherwise = readNick "private"
     
     TOD secs ps <- io getClockTime
@@ -47,7 +47,7 @@ activity full args = do
     
     say fmt_agg
 
-activityFilter :: Msg.Nick -> [String] -> Activity [String]
+activityFilter :: Nick -> [String] -> Activity [String]
 activityFilter target lns = do
     io $ evaluate $ foldr seq () $ map (foldr seq ()) $ lns
     withMS $ \ st wr -> do

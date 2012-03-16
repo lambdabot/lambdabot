@@ -6,8 +6,8 @@
 -- | A Haskell evaluator for the pure part, using mueval
 module Plugin.Eval (theModule, eval, exts) where
 
-import Lambdabot.File (findFile)
 import Plugin
+
 import Data.Ord
 import qualified Language.Haskell.Exts as Hs
 import System.Directory

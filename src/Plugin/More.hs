@@ -3,8 +3,7 @@
 module Plugin.More (theModule) where
 
 import Plugin
-
-import Lambdabot.Message( Nick )
+import Lambdabot
 
 plugin "More"
 

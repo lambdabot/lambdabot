@@ -3,6 +3,8 @@
 module Plugin.System (theModule) where
 
 import Plugin
+import Lambdabot
+
 import Lambdabot.AltTime
 import qualified Lambdabot.Message as Msg (Message, Nick, joinChannel, partChannel, server, readNick)
 import qualified Data.Map as M       (Map,assocs,keys,fromList,insert,delete)
@@ -144,7 +146,7 @@ listModule s = withModule s fromCommand printProvides
     printProvides m = do
         cmds <- moduleCmds
         let cmds' = filter (not . privileged) cmds
-        name' <- getName
+        name' <- getModuleName
         return . concat $ if null cmds'
                           then [name', " has no visible commands"]
                           else [name', " provides: ", showClean (concatMap cmdNames cmds')]

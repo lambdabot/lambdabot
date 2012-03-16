@@ -5,9 +5,9 @@
 module Plugin.OfflineRC (theModule) where
 
 import Plugin
+import Lambdabot
 
 import LMain( received )
-import Lambdabot.IRC
 import Control.Monad.Reader( asks )
 import Control.Monad.State( get, gets, put )
 import Control.Concurrent( forkIO )
@@ -78,16 +78,16 @@ feed msg = let msg' = case msg of '>':xs -> cmdPrefix ++ "run " ++ xs
                                   '!':xs -> xs
                                   _      -> cmdPrefix ++ dropWhile (== ' ') msg
            in lift . (>> return ()) . liftLB (timeout (15 * 1000 * 1000)) . received $
-              IrcMessage { msgServer = "offlinerc"
-                         , msgLBName = "offline"
-                         , msgPrefix = "null!n=user@null"
-                         , msgCommand = "PRIVMSG"
-                         , msgParams = ["offline", ":" ++ msg' ] }
+              IrcMessage { ircMsgServer = "offlinerc"
+                         , ircMsgLBName = "offline"
+                         , ircMsgPrefix = "null!n=user@null"
+                         , ircMsgCommand = "PRIVMSG"
+                         , ircMsgParams = ["offline", ":" ++ msg' ] }
    where cmdPrefix = head (commandPrefixes config)
 
 handleMsg :: IrcMessage -> LB ()
 handleMsg msg = liftIO $ do
-    let str = case (tail . msgParams) msg of
+    let str = case (tail . ircMsgParams) msg of
             []    -> []
             (x:_) -> tail x
     hPutStrLn stdout str

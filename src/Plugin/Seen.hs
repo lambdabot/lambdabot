@@ -7,9 +7,10 @@
 module Plugin.Seen (theModule) where
 
 import Plugin
+import Lambdabot
+
 import Lambdabot.AltTime
-import Lambdabot.File (findFile)
-import qualified Lambdabot.Message as G (Message, channels, nick, packNick, unpackNick, Nick(..), body, lambdabotName, showNick, readNick)
+import qualified Lambdabot.Message as G (Message, channels, nick, packNick, unpackNick, body, lambdabotName, showNick, readNick)
 
 import Control.Applicative
 import Control.Arrow (first)
@@ -27,7 +28,7 @@ plugin "Seen"
 type Channel = P.ByteString
 
 -- | The type of nicknames
-type Nick = P.ByteString
+type PackedNick = P.ByteString
 
 -- | We last heard the user speak at ClockTime; since then we have missed
 --   TimeDiff of him because we were absent.
@@ -46,7 +47,7 @@ data UserStatus
           --   records the time and Channel the channel this happened in.
           --   We also save the reliablility of our information and the
           --   time we last heard the user speak.
-        | NewNick !Nick
+        | NewNick !PackedNick
           -- ^ The user changed nick to something new.
     deriving (Show, Read)
 
@@ -55,7 +56,7 @@ data StopWatch = Stopped !TimeDiff
         deriving (Show,Read)
 
 type SeenState = (MaxMap, SeenMap)
-type SeenMap   = M.Map Nick UserStatus
+type SeenMap   = M.Map PackedNick UserStatus
 type MaxMap    = M.Map String Int
 
 ------------------------------------------------------------------------
@@ -126,7 +127,7 @@ instance Module SeenModule where
                 (_,seenFM) <- readMS
                 now        <- io getClockTime
                 let (txt,safe) = first unlines (getAnswer msg rest seenFM now)
-                if safe || not ("#" `isPrefixOf` G.nName target)
+                if safe || not ("#" `isPrefixOf` nName target)
                     then say txt
                     else lb (ircPrivmsg (G.nick msg) txt)
                 
@@ -157,8 +158,8 @@ instance Module SeenModule where
         -- and write out our state:
       withMS $ \s _ -> io ( findFile "seen" >>= \ c -> encodeFile c s)
 
-lcNick :: G.Nick -> G.Nick
-lcNick (G.Nick svr nck) = G.Nick svr (lowerCaseString nck)
+lcNick :: Nick -> Nick
+lcNick (Nick svr nck) = Nick svr (lowerCaseString nck)
 
 ------------------------------------------------------------------------
 getAnswer :: G.Message a => a -> String -> SeenMap -> ClockTime -> ([String], Bool)
@@ -179,7 +180,7 @@ getAnswer msg rest seenFM now
                 (["Yes, I'm here. I'm in " ++ listToStr "and" (map upAndShow cs)], True)
             _ -> error "I'm here, but not here. And very confused!"
 
-  | head (G.nName pnick) == '#' =
+  | head (nName pnick) == '#' =
        let people  = map fst $ filter inChan $ M.toList seenFM
            inChan (_nick,state) = case state of
                (Present (Just _) cs)
@@ -257,7 +258,7 @@ msgChans msg = map (G.packNick . lcNick) $ G.channels msg
 -- | Callback for when somebody joins. If it is not the bot that joins, record
 --   that we have a new user in our state tree and that we have never seen the
 --   user speaking.
-joinCB :: G.Message a => a -> SeenMap -> ClockTime -> Nick -> Either String SeenMap
+joinCB :: G.Message a => a -> SeenMap -> ClockTime -> PackedNick -> Either String SeenMap
 joinCB msg fm _ct nick
   | nick == (G.packNick $ G.lambdabotName msg) = Right fm
   | otherwise = Right $! insertUpd (updateJ Nothing chans) nick newInfo fm
@@ -276,7 +277,7 @@ botPart ct cs fm = fmap botPart' fm where
     botPart' us = us
 
 -- | when somebody parts
-partCB :: G.Message a => a -> SeenMap -> ClockTime -> Nick -> Either String SeenMap
+partCB :: G.Message a => a -> SeenMap -> ClockTime -> PackedNick -> Either String SeenMap
 partCB msg fm ct nick
   | nick == (G.packNick $ G.lambdabotName msg) = Right $ botPart ct (msgChans msg) fm
   | otherwise      = case M.lookup nick fm of
@@ -291,13 +292,13 @@ partCB msg fm ct nick
       _ -> Left "someone who isn't known parted"
 
 -- | when somebody quits
-quitCB :: G.Message a => a -> SeenMap -> ClockTime -> Nick -> Either String SeenMap
+quitCB :: G.Message a => a -> SeenMap -> ClockTime -> PackedNick -> Either String SeenMap
 quitCB _ fm ct nick = case M.lookup nick fm of
     Just (Present _ct xs) -> Right $! M.insert nick (NotPresent ct zeroWatch xs) fm
     _ -> Left "someone who isn't known has quit"
 
 -- | when somebody changes his\/her name
-nickCB :: G.Message a => a -> SeenMap -> ClockTime -> Nick -> Either String SeenMap
+nickCB :: G.Message a => a -> SeenMap -> ClockTime -> PackedNick -> Either String SeenMap
 nickCB msg fm _ nick = case M.lookup nick fm of
    Just status -> let fm' = M.insert nick (NewNick lcnewnick) fm
                   in  Right $! M.insert lcnewnick status fm'
@@ -308,7 +309,7 @@ nickCB msg fm _ nick = case M.lookup nick fm of
 
 -- use IRC.IRC.channels?
 -- | when the bot join a channel
-joinChanCB :: G.Message a => a -> SeenMap -> ClockTime -> Nick -> Either String SeenMap
+joinChanCB :: G.Message a => a -> SeenMap -> ClockTime -> PackedNick -> Either String SeenMap
 joinChanCB msg fm now _nick
     = Right $ fmap (updateNP now chan) $ foldl insertNick fm chanUsers
   where
@@ -321,7 +322,7 @@ joinChanCB msg fm now _nick
                                     fm'
 
 -- | when somebody speaks, update their clocktime
-msgCB :: G.Message a => a -> SeenMap -> ClockTime -> Nick -> Either String SeenMap
+msgCB :: G.Message a => a -> SeenMap -> ClockTime -> PackedNick -> Either String SeenMap
 msgCB _ fm ct nick =
   case M.lookup nick fm of
     Just (Present _ xs) -> Right $!
@@ -329,8 +330,8 @@ msgCB _ fm ct nick =
     _ -> Left "someone who isn't here msg us"
 
 -- misc. functions
-unUserMode :: G.Nick -> G.Nick
-unUserMode nick = G.Nick (G.nTag nick) (dropWhile (`elem` "@+") $ G.nName nick)
+unUserMode :: Nick -> Nick
+unUserMode nick = Nick (nTag nick) (dropWhile (`elem` "@+") $ nName nick)
 
 -- | Callbacks are only allowed to use a limited knowledge of the world.
 -- 'withSeenFM' is (up to trivial isomorphism) a monad morphism from the
@@ -340,7 +341,7 @@ unUserMode nick = G.Nick (G.nTag nick) (dropWhile (`elem` "@+") $ G.nName nick)
 --   'ReaderT IRC.Message (Seen IRC)'
 -- monad.
 withSeenFM :: G.Message a
-           => (a -> SeenMap -> ClockTime -> Nick -> Either String SeenMap)
+           => (a -> SeenMap -> ClockTime -> PackedNick -> Either String SeenMap)
            -> a
            -> Seen ()
 

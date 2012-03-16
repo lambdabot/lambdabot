@@ -5,7 +5,6 @@
 module Plugin.Todo (theModule) where
 
 import Plugin
-import Lambdabot.Message as Msg (Message, packNick, unpackNick, showNick)
 import qualified Data.ByteString.Char8 as P
 
 plugin "Todo"
@@ -15,13 +14,13 @@ type TodoState = [(P.ByteString, P.ByteString)]
 
 instance Module TodoModule where
     type ModuleState TodoModule = TodoState
+    moduleDefState  _ = return ([] :: TodoState)
+    moduleSerialize _ = Just assocListPackedSerial
     
     moduleCmds = return
         [ (command "todo")
             { help = say "todo. List todo entries"
-            , process = \args -> withMsg $ \msg -> do
-                todoList <- readMS
-                getTodo msg todoList args
+            , process = getTodo
             }
         , (command "todo-add")
             { help = say "todo-add <idea>. Add a todo entry"
@@ -34,26 +33,25 @@ instance Module TodoModule where
             }
         ]
 
-    moduleDefState  _ = return ([] :: TodoState)
-    moduleSerialize _ = Just assocListPackedSerial
-
 -- | Print todo list
-getTodo :: Msg.Message m => m -> TodoState -> String -> Cmd Todo ()
-getTodo msg todoList [] = say (formatTodo msg todoList)
-getTodo _ _ _           = say "@todo has no args, try @todo-add or @list todo"
+getTodo :: String -> Cmd Todo ()
+getTodo [] = readMS >>= sayTodo
+getTodo _  = say "@todo has no args, try @todo-add or @list todo"
 
 -- | Pretty print todo list
-formatTodo :: Msg.Message m => m -> [(P.ByteString, P.ByteString)] -> String
-formatTodo _ [] = "Nothing to do!"
-formatTodo msg todoList =
-    unlines $ map (\(n::Int, (idea, nick_)) -> concat $
-            [ show n,". ",Msg.showNick msg $ unpackNick nick_,": ",P.unpack idea ]) $
-                zip [0..] todoList
+sayTodo :: [(P.ByteString, P.ByteString)] -> Cmd Todo ()
+sayTodo [] = say "Nothing to do!"
+sayTodo todoList = say . unlines =<< zipWithM fmtTodoItem [0..] todoList
+    where
+        fmtTodoItem n (idea, nick_) = do
+            nick <- showNick (unpackNick nick_)
+            return $ concat $
+                [ show n,". ", nick ,": ",P.unpack idea ]
 
 -- | Add new entry to list
 addTodo :: String -> Cmd Todo ()
 addTodo rest = do
-    sender <- fmap Msg.packNick getSender
+    sender <- fmap packNick getSender
     modifyMS (++[(P.pack rest, sender)])
     say "Entry added to the todo list"
 

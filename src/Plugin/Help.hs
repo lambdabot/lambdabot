@@ -3,8 +3,7 @@
 module Plugin.Help (theModule) where
 
 import Plugin
-import Control.Exception (NoMethodError(..), fromException)
-import qualified Lambdabot.Command as Cmd
+import Lambdabot
 
 plugin "Help"
 
@@ -19,7 +18,7 @@ instance Module HelpModule where
         ]
 
 moduleHelp theCmd msg tgt cmd =
-    Cmd.execCmd (help theCmd) msg tgt cmd
+    execCmd (help theCmd) msg tgt cmd
 
 --
 -- If a target is a command, find the associated help, otherwise if it's
@@ -32,7 +31,7 @@ doHelp msg tgt rest =
             (doHelp msg tgt "help")             -- else give up
             (\md -> do -- its a module
                 cmds <- moduleCmds
-                let ss = cmds >>= Cmd.cmdNames
+                let ss = cmds >>= cmdNames
                 let s | null ss   = arg ++ " is a module."
                       | otherwise = arg ++ " provides: " ++ showClean ss
                 return [s]))

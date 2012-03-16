@@ -8,36 +8,44 @@
 -- Simplifies import lists, and abstracts over common patterns
 --
 module Plugin (
-        ios, box, list, ios80, plugin, modules,
-
-        module Lambdabot,
+        Module(..), ModuleT, plugin, modules,
+        
+        getModuleName,
+        bindModule0, bindModule1, bindModule2, 
+        
+        LB, lb, ios, ios80,
+        
+        Nick(..), packNick, unpackNick, ircPrivmsg,
+        
+        module Config,
         module Lambdabot.Command,
         module Lambdabot.State,
-        module Config,
-
-        module Lambdabot.Util,
-        module Lambdabot.Serial,
-        module Lambdabot.Process,
+        
+        module Lambdabot.File,
         module Lambdabot.MiniHTTP,
-        module Lambdabot.Url,
+        module Lambdabot.Process,
         module Lambdabot.Regex,
-
-        module Data.List,
+        module Lambdabot.Serial,
+        module Lambdabot.Url,
+        module Lambdabot.Util,
+        
         module Data.Char,
-        module Data.Maybe,
         module Data.Either,
-        module System.IO,
+        module Data.List,
+        module Data.Maybe,
         module System.FilePath,
-
+        module System.IO,
+        
         module Control.Monad.Error
-
     ) where
 
+import Config
 import Lambdabot
+import Lambdabot.Module
 import Lambdabot.Command hiding (runCommand, execCmd)
 import Lambdabot.State
-import Config
 
+import Lambdabot.File (findFile)
 import Lambdabot.Message
 import Lambdabot.MiniHTTP
 import Lambdabot.Process
@@ -63,12 +71,6 @@ import Language.Haskell.TH
 -- | convenience, we often want to perform some io, get a string, and say it.
 ios  :: (MonadIO m) => IO String -> Cmd m ()
 ios x = io x >>= say
-
-list :: (Functor m, Monad m) => m a -> m [a]
-list = (return `fmap`)
-
-box :: (Functor m, Monad m) => a -> m [a]
-box = return . return
 
 -- | convenience, similar to ios but also cut output to channel to 80 characters
 -- usage:  @process _ _ to _ s = ios80 to (plugs s)@

@@ -3,10 +3,8 @@
 module Plugin.Base (theModule) where
 
 import Plugin
-
-import Lambdabot.Command (runCommand, execCmd)
-import Lambdabot.IRC (IrcMessage, timeReply, errShowMsg)
-import Lambdabot.Message as Msg (getTopic, nick, server, body, Nick(..), lambdabotName, showNick, readNick)
+import Lambdabot
+import qualified Lambdabot.Message as Msg (readNick, showNick)
 
 import qualified Data.Map as M   (insert, delete)
 
@@ -199,7 +197,7 @@ doPRIVMSG' myname msg target
                 withCommand cmd'   -- Important.
                     (ircPrivmsg towhere "Unknown command, try @list")
                     (\m theCmd -> do
-                        name'   <- getName
+                        name'   <- getModuleName
                         
                         hasPrivs <- lb (checkPrivs msg)
                         let ok =  (cmd' `notElem` disabledCommands config)
@@ -233,7 +231,7 @@ doPRIVMSG' myname msg target
                             ms <- execCmd (contextual m r) msg target "contextual"
                             lift $ mapM_ (ircPrivmsg target) ms
                    )
-            name' <- getName
+            name' <- getModuleName
             lift $ catchIrc act (debugStrLn . (name' ++) .
                 (" module failed in contextual handler: " ++) . show)
             )

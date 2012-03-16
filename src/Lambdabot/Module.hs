@@ -9,7 +9,7 @@ module Lambdabot.Module
     
     , ModuleRef(..), CommandRef(..)
     
-    , getRef, getName, bindModule0, bindModule1, bindModule2
+    , getRef, getModuleName, bindModule0, bindModule1, bindModule2
     ) where
 
 import qualified Lambdabot.Command as Cmd
@@ -105,8 +105,8 @@ instance MonadLB m => MonadLBState (ModuleT mod m) where
 getRef :: Monad m => ModuleT mod m (MVar (ModuleState mod))
 getRef  = ModuleT $ ask >>= return . fst
 
-getName :: Monad m => ModuleT mod m String
-getName = ModuleT $ ask >>= return . snd
+getModuleName :: Monad m => ModuleT mod m String
+getModuleName = ModuleT $ ask >>= return . snd
 
 -- | bind an action to the current module so it can be run from the plain
 --   `LB' monad.

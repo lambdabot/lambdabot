@@ -15,8 +15,11 @@ module Lambdabot.Monad
     , handleIrc, catchIrc
     
     , forkLB, liftLB
+    
+    , withModule, withCommand, withAllModules, getDictKeys
     ) where
 
+import           Lambdabot.Command
 import           Lambdabot.IRC (IrcMessage)
 import           Lambdabot.Module
 import qualified Lambdabot.Message as Msg
@@ -82,7 +85,6 @@ data IRCRWState = IRCRWState {
             -- ^ Output filters, invoked from right to left
 
         ircCommands        :: Map String CommandRef,
-        ircPrivCommands    :: [String],
         ircStayConnected   :: !Bool,
         ircDynLoad         :: S.DynLoad,
         ircOnStartupCmds   :: [String],
@@ -114,7 +116,7 @@ addServer :: String -> (IrcMessage -> LB ()) -> ModuleT mod LB ()
 addServer tag sendf = do
     s <- get
     let svrs = ircServerMap s
-    name <- getName
+    name <- getModuleName
     case M.lookup tag svrs of
         Nothing -> put (s { ircServerMap = M.insert tag (name,sendf) svrs})
         Just _ -> fail $ "attempted to create two servers named " ++ tag
@@ -229,3 +231,53 @@ forkLB f = (`liftLB` f) $ \g -> do
 -- | lift an io transformer into LB
 liftLB :: (IO a -> IO b) -> LB a -> LB b
 liftLB f = LB . mapReaderT f . runLB -- lbIO (\conv -> f (conv lb))
+
+------------------------------------------------------------------------
+-- Module handling
+
+-- | Interpret an expression in the context of a module.
+-- Arguments are which map to use (@ircModules@ and @ircCommands@ are
+-- the only sensible arguments here), the name of the module\/command,
+-- action for the case that the lookup fails, action if the lookup
+-- succeeds.
+--
+withModule :: String
+           -> LB a
+           -> (forall mod. Module mod => mod -> ModuleT mod LB a)
+           -> LB a
+
+withModule modname def f = do
+    maybemod <- gets (M.lookup modname . ircModules)
+    case maybemod of
+      -- TODO stick this ref stuff in a monad instead. more portable in
+      -- the long run.
+      Just (ModuleRef m ref name) -> do
+          runReaderT (moduleT $ f m) (ref, name)
+      _                           -> def
+
+withCommand :: String
+            -> LB a
+            -> (forall mod. Module mod => mod 
+                                       -> Command (ModuleT mod LB)
+                                       -> ModuleT mod LB a)
+            -> LB a
+
+withCommand cmdname def f = do
+    maybecmd <- gets (M.lookup cmdname . ircCommands)
+    case maybecmd of
+      -- TODO stick this ref stuff in a monad instead. more portable in
+      -- the long run.
+      Just (CommandRef m ref cmd name) -> do
+          runReaderT (moduleT $ f m cmd) (ref, name)
+      _                           -> def
+
+-- | Interpret a function in the context of all modules
+withAllModules :: (forall mod. Module mod => mod -> ModuleT mod LB a) -> LB [a]
+withAllModules f = do
+    mods <- gets $ M.elems . ircModules :: LB [ModuleRef]
+    (`mapM` mods) $ \(ModuleRef m ref name) -> do
+        runReaderT (moduleT $ f m) (ref, name)
+
+getDictKeys :: (MonadState s m) => (s -> Map k a) -> m [k]
+getDictKeys dict = gets (M.keys . dict)
+

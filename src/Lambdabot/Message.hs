@@ -45,7 +45,7 @@ class Show a => Message a where
     body :: a -> [String]
 
     -- TODO: too IRC-specific
-    command :: a -> String
+    msgCommand :: a -> String
 
     -- TODO: there must be a better way of handling this ...
     lambdabotName :: a -> Nick

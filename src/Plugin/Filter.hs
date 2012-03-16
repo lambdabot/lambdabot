@@ -7,7 +7,6 @@ module Plugin.Filter (theModule) where
 
 import Control.Applicative
 import Plugin
-import Data.Maybe
 import System.Directory (findExecutable)
 
 plugin "Filter"

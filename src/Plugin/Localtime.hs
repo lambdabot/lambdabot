@@ -6,8 +6,8 @@
 module Plugin.Localtime (theModule) where
 
 import Plugin
+import Lambdabot (ircPrivmsg')
 import qualified Data.Map as M
-import Lambdabot.Message (Nick, nName)
 
 plugin "Localtime"
 

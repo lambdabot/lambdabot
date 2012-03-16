@@ -7,7 +7,8 @@
 module Plugin.Topic (theModule) where
 
 import Plugin
-import Lambdabot.Message as Msg (Message, setTopic, Nick, nName)
+import Lambdabot
+
 import qualified Data.Map as M
 
 import Control.Monad.State (gets)
@@ -16,9 +17,9 @@ plugin "Topic"
 
 type TopicAction = Nick -> String -> Cmd Topic ()
 data TopicCommand = TopicCommand
-    { commandAliases    :: [String]
-    , commandHelp       :: String
-    , invokeCommand     :: TopicAction
+    { _commandAliases    :: [String]
+    , _commandHelp       :: String
+    , _invokeCommand     :: TopicAction
     }
 
 commands = 
@@ -75,7 +76,7 @@ instance Module TopicModule where
 
 installTopic :: TopicAction
 installTopic chan topic = withTopic chan $ \_ -> do
-    lb (send (Msg.setTopic chan topic))
+    lb (send (setTopic chan topic))
 
 reciteTopic :: TopicAction
 reciteTopic chan ""       = withTopic chan $ \topic -> do
@@ -85,7 +86,7 @@ reciteTopic _ _           = say "I don't know what all that extra stuff is about
 
 alterTopic :: (String -> String -> String) -> TopicAction
 alterTopic f chan args = withTopic chan $ \oldTopic -> do
-    lb (send (Msg.setTopic chan (f args oldTopic)))
+    lb (send (setTopic chan (f args oldTopic)))
 
 alterListTopic :: (String -> [String] -> [String]) -> TopicAction
 alterListTopic f = alterTopic $ \args topic -> show $ case reads topic of

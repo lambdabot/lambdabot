@@ -26,7 +26,7 @@ import {-# SOURCE #-} Lambdabot.Monad
 import Lambdabot.State
 
 data CmdArgs = forall a. Message a => CmdArgs
-    { message   :: a
+    { _message  :: a
     , target    :: Nick
     , invokedAs :: String
     }

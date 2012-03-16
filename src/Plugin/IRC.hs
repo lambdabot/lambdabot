@@ -3,16 +3,18 @@
 
 module Plugin.IRC (theModule) where
 
+import Plugin
+import Lambdabot
+import Lambdabot.IRC
+import LMain( received )
+
+import Prelude hiding (catch)
+
 import Control.Concurrent( forkIO, newQSem, waitQSem, threadDelay, signalQSem,
                            newEmptyMVar, putMVar, takeMVar, MVar )
 import Control.Exception
-import Prelude hiding (catch)
-import Lambdabot.IRC
-import LMain( received )
-import Lambdabot.Message hiding ( command )
-import Network( connectTo, PortID(..) )
-import Plugin
 import qualified Data.ByteString.Char8 as P
+import Network( connectTo, PortID(..) )
 
 plugin "IRC"
 
@@ -39,8 +41,8 @@ instance Module IRCModule where
 --   on the outgoing stream socket.
 encodeMessage :: IrcMessage -> String -> String
 encodeMessage msg
-  = encodePrefix (msgPrefix msg) . encodeCommand (msgCommand msg)
-          . encodeParams (msgParams msg)
+  = encodePrefix (ircMsgPrefix msg) . encodeCommand (ircMsgCommand msg)
+          . encodeParams (ircMsgParams msg)
   where
     encodePrefix [] = id
     encodePrefix prefix = showChar ':' . showString prefix . showChar ' '
@@ -57,8 +59,8 @@ decodeMessage svr lbn line =
     let (prefix, rest1) = decodePrefix (,) line
         (cmd, rest2)    = decodeCmd (,) rest1
         params          = decodeParams rest2
-    in IrcMessage { msgServer = svr, msgLBName = lbn, msgPrefix = prefix,
-                    msgCommand = cmd, msgParams = params }
+    in IrcMessage { ircMsgServer = svr, ircMsgLBName = lbn, ircMsgPrefix = prefix,
+                    ircMsgCommand = cmd, ircMsgParams = params }
   where
     decodePrefix k (':':cs) = decodePrefix' k cs
       where decodePrefix' j ""       = j "" ""

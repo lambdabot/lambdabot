@@ -5,46 +5,44 @@
 -- Generic server connection,disconnection
 -- The module typeclass, type and operations on modules
 module Lambdabot (
-        MODULE(..), Module(..),
-        ModuleT, Mode(..),
-
-        IRCRState(..), IRCRWState(..), IRCError(..),
-
-        LB(..), MonadLB(..), lbIO,
-
+        Module(..), ModuleT, Mode(..),
+        
+        IRCRState(..), IRCRWState(..),
+        LB(..), MonadLB(..),
+        forkLB, liftLB,
+        
         withModule, withCommand, withAllModules, getDictKeys,
-
-        getRef, getName, bindModule0, bindModule1, bindModule2,
-
-        send, addServer, remServer, addServer',
-        ircPrivmsg, ircPrivmsg', -- not generally used
-        ircPrivmsgF,
-
+        
+        Command(..), runCommand, 
+        Cmd, execCmd,
+        
+        Msg.Message(..), IrcMessage(..), timeReply, errShowMsg,
+        send, addServer, remServer, 
+        ircPrivmsg, ircPrivmsg',
+        
         ircQuit, ircReconnect,
         ircGetChannels,
         ircSignalConnect, Callback, ircInstallOutputFilter, OutputFilter,
         ircInstallModule, ircUnloadModule,
         flushModuleState,
-
-        ircLoad, ircUnload,
-
-        checkPrivs, checkIgnore, mkCN, handleIrc, catchIrc, runIrc,
         
-        forkLB, liftLB
+        ircLoad, ircUnload,
+        
+        checkPrivs, checkIgnore, mkCN, handleIrc, catchIrc, runIrc
   ) where
 
 import Lambdabot.File (findFile)
 
-import qualified Lambdabot.Command as Cmd
 import qualified Lambdabot.Message as Msg
 import qualified Lambdabot.Shared  as S
-import qualified Lambdabot.IRC as IRC (IrcMessage, quit, privmsg)
 
-import Lambdabot.Monad
+import Lambdabot.Command
+import Lambdabot.IRC
 import Lambdabot.Module
+import Lambdabot.Monad
+import Lambdabot.Serial
 import Lambdabot.Signals
 import Lambdabot.Util
-import Lambdabot.Serial
 
 import Prelude hiding           (mod, catch)
 
@@ -62,8 +60,7 @@ import System.Posix.Process     ( exitImmediately )
 import Data.Char
 import Data.List                (isSuffixOf, inits, tails)
 import Data.Maybe               (isJust)
-import Data.Map (Map)
-import qualified Data.Map as M hiding (Map)
+import qualified Data.Map as M
 import qualified Data.ByteString.Char8 as P
 import Data.ByteString (ByteString)
 
@@ -138,7 +135,6 @@ initState ld plugins evcmds = IRCRWState {
         --  ([],reduceIndent),
             ([],checkRecip) ],
         ircCommands        = M.empty,
-        ircPrivCommands    = [],
         ircStayConnected   = True,
         ircDynLoad         = ld,
         ircPlugins         = plugins,
@@ -169,7 +165,7 @@ runExitHandlers = withAllModules (const moduleExit) >> return ()
 -- | flush state of modules
 flushModuleState :: LB ()
 flushModuleState = do
-    withAllModules (\m -> getName >>= writeGlobalState m)
+    withAllModules (\m -> getModuleName >>= writeGlobalState m)
     return ()
 
 -- ---------------------------------------------------------------------
@@ -225,8 +221,7 @@ ircInstallModule (MODULE (mod :: m)) modname = do
             cmdmap = ircCommands s
         put $ s {
           ircModules = M.insert modname modref modmap,
-          ircCommands = addList [ (name,cmdref cmd) | cmd <- cmds, name <- Cmd.cmdNames cmd ] cmdmap,
-          ircPrivCommands = ircPrivCommands s ++ concatMap Cmd.cmdNames (filter Cmd.privileged cmds)
+          ircCommands = addList [ (name,cmdref cmd) | cmd <- cmds, name <- cmdNames cmd ] cmdmap
         }
         io $ hPutStr stderr "." >> hFlush stderr
 
@@ -275,25 +270,25 @@ ircSignalConnect :: String -> Callback -> ModuleT mod LB ()
 ircSignalConnect str f = do
     s <- get
     let cbs = ircCallbacks s
-    name <- getName
+    name <- getModuleName
     case M.lookup str cbs of -- TODO
         Nothing -> put (s { ircCallbacks = M.insert str [(name,f)]    cbs})
         Just fs -> put (s { ircCallbacks = M.insert str ((name,f):fs) cbs})
 
 ircInstallOutputFilter :: OutputFilter -> ModuleT mod LB ()
 ircInstallOutputFilter f = do
-    name <- getName
+    name <- getModuleName
     modify $ \s ->
         s { ircOutputFilters = (name, f): ircOutputFilters s }
 
 -- | Checks if the given user has admin permissions and excecute the action
 --   only in this case.
-checkPrivs :: IRC.IrcMessage -> LB Bool
+checkPrivs :: IrcMessage -> LB Bool
 checkPrivs msg = gets (isJust . M.lookup (Msg.nick msg) . ircPrivilegedUsers)
 
 -- | Checks if the given user is being ignored.
 --   Privileged users can't be ignored.
-checkIgnore :: IRC.IrcMessage -> LB Bool
+checkIgnore :: IrcMessage -> LB Bool
 checkIgnore msg = liftM2 (&&) (liftM not (checkPrivs msg))
                   (gets (isJust . M.lookup (Msg.nick msg) . ircIgnoredUsers))
 
@@ -309,13 +304,13 @@ ircGetChannels = (map getCN . M.keys) `fmap` gets ircChannels
 ircQuit :: String -> String -> LB ()
 ircQuit svr msg = do
     modify $ \state -> state { ircStayConnected = False }
-    send  $ IRC.quit svr msg
+    send  $ quit svr msg
     liftIO $ threadDelay 1000
     io $ hPutStrLn stderr "Quit"
 
 ircReconnect :: String -> String -> LB ()
 ircReconnect svr msg = do
-    send $ IRC.quit svr msg
+    send $ quit svr msg
     liftIO $ threadDelay 1000
 
 -- | Send a message to a channel\/user. If the message is too long, the rest
@@ -332,68 +327,7 @@ ircPrivmsg who msg = do
 -- A raw send version
 ircPrivmsg' :: Msg.Nick -> String -> LB ()
 ircPrivmsg' who ""  = ircPrivmsg' who " "
-ircPrivmsg' who msg = send $ IRC.privmsg who msg
-
-----------------------------------------------------------------------------------
-
-ircPrivmsgF :: Msg.Nick -> ByteString -> LB ()
-ircPrivmsgF who s= ircPrivmsg who (P.unpack s) -- TODO
-
-{-
-rawPrivmsgF :: String -> Maybe ByteString -> LB ()
-rawPrivmsgF _   Nothing  = send Nothing
-rawPrivmsgF who (Just s) | P.null s  = ircPrivmsg' who (Just " ")
-                         | otherwise = send . Just $ IRC.privmsgF who msg
--}
-
-------------------------------------------------------------------------
--- Module handling
-
--- | Interpret an expression in the context of a module.
--- Arguments are which map to use (@ircModules@ and @ircCommands@ are
--- the only sensible arguments here), the name of the module\/command,
--- action for the case that the lookup fails, action if the lookup
--- succeeds.
---
-withModule :: String
-           -> LB a
-           -> (forall mod. Module mod => mod -> ModuleT mod LB a)
-           -> LB a
-
-withModule modname def f = do
-    maybemod <- gets (M.lookup modname . ircModules)
-    case maybemod of
-      -- TODO stick this ref stuff in a monad instead. more portable in
-      -- the long run.
-      Just (ModuleRef m ref name) -> do
-          runReaderT (moduleT $ f m) (ref, name)
-      _                           -> def
-
-withCommand :: String
-            -> LB a
-            -> (forall mod. Module mod => mod 
-                                       -> Cmd.Command (ModuleT mod LB)
-                                       -> ModuleT mod LB a)
-            -> LB a
-
-withCommand cmdname def f = do
-    maybecmd <- gets (M.lookup cmdname . ircCommands)
-    case maybecmd of
-      -- TODO stick this ref stuff in a monad instead. more portable in
-      -- the long run.
-      Just (CommandRef m ref cmd name) -> do
-          runReaderT (moduleT $ f m cmd) (ref, name)
-      _                           -> def
-
--- | Interpret a function in the context of all modules
-withAllModules :: (forall mod. Module mod => mod -> ModuleT mod LB a) -> LB [a]
-withAllModules f = do
-    mods <- gets $ M.elems . ircModules :: LB [ModuleRef]
-    (`mapM` mods) $ \(ModuleRef m ref name) -> do
-        runReaderT (moduleT $ f m) (ref, name)
-
-getDictKeys :: (MonadState s m) => (s -> Map k a) -> m [k]
-getDictKeys dict = gets (M.keys . dict)
+ircPrivmsg' who msg = send $ privmsg who msg
 
 ------------------------------------------------------------------------
 

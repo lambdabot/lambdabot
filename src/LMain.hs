@@ -2,8 +2,6 @@ module LMain where
 
 import Lambdabot.Shared
 import Lambdabot
-import Lambdabot.Message
-import Lambdabot.IRC
 
 import Lambdabot.Util( listToMaybeAll )
 
@@ -35,7 +33,7 @@ main' dyn (loadStaticModules, pl) = do
 
 received :: IrcMessage -> LB ()
 received msg = do s   <- get
-                  case M.lookup (command msg) (ircCallbacks s) of
+                  case M.lookup (msgCommand msg) (ircCallbacks s) of
                     Just cbs -> allCallbacks (map snd cbs) msg
                     _        -> return ()
 

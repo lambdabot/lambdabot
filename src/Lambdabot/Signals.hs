@@ -27,7 +27,7 @@ withIrcSignalCatch :: (MonadError e m,MonadIO m) => m () -> m ()
 withIrcSignalCatch m = m
 
 #else
-import Lambdabot.Error
+import Lambdabot.Error (bracketError)
 import Lambdabot.Util
 
 import Control.Concurrent (myThreadId, newEmptyMVar, putMVar, MVar, ThreadId)
