@@ -20,11 +20,11 @@ instance Module QuoteModule where
     
     moduleCmds = return
         [ (command "quote")
-            { help = say genericHelp
+            { help = say "quote <nick>: Quote <nick> or a random person if no nick is given"
             , process = runQuote . dropSpace
             }
         , (command "remember")
-            { help = say genericHelp
+            { help = say "remember <nick> <quote>: Remember that <nick> said <quote>."
             , process = runRemember . dropSpace
             }
         , (command "forget")
@@ -100,10 +100,6 @@ instance Module QuoteModule where
 
 fortune :: [FilePath] -> Cmd Quote ()
 fortune xs = io (resolveFortuneFiles All xs >>= randomFortune) >>= say
-
-genericHelp :: String
-genericHelp = "quote <nick>\nremember <nick> <quote>\n" ++
-       "Quote somebody, a random person, or save a memorable quote"
 
 ------------------------------------------------------------------------
 
