@@ -11,17 +11,23 @@ instance Module SlapModule where
         [ (command "slap")
             { aliases = ["smack"]
             , help = say "slap <nick>. Slap someone amusingly."
-            , process = \rest -> do
-                sender <- showNick =<< getSender
-                io (slapRandom (if rest == "me" then sender else rest)) >>= say
+            , process = slap
             }
         ]
 
 ------------------------------------------------------------------------
 
--- | Return a random arr-quote
-slapRandom :: String -> IO String
-slapRandom = (random slapList `ap`) . return
+slap "me" = do
+    target <- showNick =<< getSender
+    slapRandom target
+slap "yourself" = do
+    target <- showNick =<< getLambdabotName
+    slapRandom target
+slap target = 
+    slapRandom target
+
+slapRandom :: String -> Cmd Slap ()
+slapRandom tgt = say . ($ tgt) =<< random slapList
 
 slapList :: [String -> String]
 slapList =
