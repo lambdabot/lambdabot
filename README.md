@@ -61,10 +61,10 @@ Bug reports, patches, new modules etc, contact:
 REPOSITORY
 ==========
 
-There is currently no public repository.  I'll probably convert to a git repo and put it up on github eventually though.
+    git clone https://github.com/mokus0/lambdabot
 
 CONTRIBUTING
 ============
 
-Use 'darcs send' to submit patches to mokus. Add yourself to the AUTHORS
+Send pull requests to mokus0 on github. Add yourself to the AUTHORS
 file if you haven't already.
