@@ -19,6 +19,8 @@ Lambdabot can be installed system-wide or per user, but currently the lambdabot 
 
 Your best bet is currently to read the code and see what it does, and decide for yourself whether that's what you want.
 
+WARNING: uses Safe Haskell for @eval, etc., does not turn on -fpackage-trust, so make sure that you don't have any packages installed that are incorrectly marked "Trustworthy".
+
 OFFLINE MODE
 ------------
 
