@@ -18,9 +18,8 @@ module Plugin.Pretty (theModule) where
 
 import Plugin
 
-import Language.Haskell.Parser
-import Language.Haskell.Syntax hiding (Module)
-import Language.Haskell.Pretty hiding (Pretty)
+import qualified Language.Haskell.Exts as Hs
+import Language.Haskell.Exts hiding (Module, Pretty)
 
 plugin "Pretty"
 
@@ -52,17 +51,17 @@ prettyCmd rest =
 -- | calculates "desired" indentation and return pretty-printed declarations
 -- the indentation calculations are still pretty much rough guesswork.
 -- i'll have to figure out a way to do some _reliable_ pretty-printing!
-doPretty :: HsModule -> [String]
-doPretty (HsModule _ _ _ _ decls) =
+doPretty :: Hs.Module -> [String]
+doPretty (Hs.Module _ _ _ _ _ _ decls) =
     let defaultLen = 4
-        declLen (HsFunBind mtches)   = maximum $ map matchLen mtches
-        declLen (HsPatBind _ pat _ _) = patLen pat
+        declLen (FunBind mtches)   = maximum $ map matchLen mtches
+        declLen (PatBind _ pat _ _ _) = patLen pat
         declLen _  = defaultLen
-        patLen (HsPVar nm) = nameLen nm
+        patLen (PVar nm) = nameLen nm
         patLen  _  = defaultLen
-        nameLen (HsIdent s)  = length s + 1
+        nameLen (Ident s)  = length s + 1
         nameLen _  = defaultLen
-        matchLen (HsMatch _ nm pats _ _) =
+        matchLen (Match _ nm pats _ _ _) =
             let l = (nameLen nm + sum (map patLen pats) + 1)
             in if l > 16 then defaultLen else l
         makeMode decl = defaultMode {
@@ -75,7 +74,7 @@ doPretty (HsModule _ _ _ _ decls) =
             caseIndent   = 4,
             onsideIndent = 0
         }
-        prettyDecl (HsPatBind _ (HsPVar (HsIdent "__expr__")) (HsUnGuardedRhs e) []) -- pretty printing an expression
+        prettyDecl (PatBind _ (PVar (Ident "__expr__")) _ (UnGuardedRhs e) (BDecls [])) -- pretty printing an expression
                      = prettyPrintWithMode (makeModeExp e) e
         prettyDecl d = prettyPrintWithMode (makeMode d) d
     -- FIXME: prefixing with hashes is done, because i didn't find a way

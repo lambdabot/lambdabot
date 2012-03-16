@@ -13,8 +13,7 @@ module Plugin.UnMtl (theModule) where
 
 import Control.Monad.Error ()
 
-import Language.Haskell.Syntax
-import Language.Haskell.Parser
+import Language.Haskell.Exts hiding (tuple, var)
 import Lambdabot.Parser (prettyPrintInLine)
 
 import Plugin as P
@@ -38,7 +37,7 @@ data PMonad a = PMonad
        , pFun    :: Maybe (PType -> PType) -- A type function
        }
 
-type PType = PMonad HsType
+type PType = PMonad Type
 
 -- A monad instance so we get things like liftM and sequence for free
 instance Monad PMonad where
@@ -51,12 +50,12 @@ instance Monad PMonad where
 
 type P = PType
 
-lift0 :: P                            -> HsType -> P
-lift1 :: (P -> P)                     -> HsType -> P
-lift2 :: (P -> P -> P)                -> HsType -> P
-lift3 :: (P -> P -> P -> P)           -> HsType -> P
-lift4 :: (P -> P -> P -> P -> P)      -> HsType -> P
-lift5 :: (P -> P -> P -> P -> P -> P) -> HsType -> P
+lift0 :: P                            -> Type -> P
+lift1 :: (P -> P)                     -> Type -> P
+lift2 :: (P -> P -> P)                -> Type -> P
+lift3 :: (P -> P -> P -> P)           -> Type -> P
+lift4 :: (P -> P -> P -> P -> P)      -> Type -> P
+lift5 :: (P -> P -> P -> P -> P -> P) -> Type -> P
 
 lift0 f _ = f
 lift1 f n = mkPfun n (lift0 . f)
@@ -65,9 +64,9 @@ lift3 f n = mkPfun n (lift2 . f)
 lift4 f n = mkPfun n (lift3 . f)
 lift5 f n = mkPfun n (lift4 . f)
 
-mkPfun :: HsType -> (PType -> HsType -> PType) -> PType
+mkPfun :: Type -> (PType -> Type -> PType) -> PType
 mkPfun n cont = PMonad n (Just msg) (Just fun)
-  where fun p = cont p (HsTyApp n (pResult p))
+  where fun p = cont p (TyApp n (pResult p))
         msg = "`" ++ prettyPrintInLine n ++ "' is not applied to enough arguments" ++ full fun ['A'..'Z'] "/\\"
         full p (x:xs) l = case p (con [x]) of
                    PMonad{pFun    = Just p'} -> full p' xs l'
@@ -85,35 +84,35 @@ infixl 6 $$
 (-->) :: PType -> PType -> PType
 a --> b = liftM2 cu a b
 
-cu :: HsType -> HsType -> HsType
-cu (HsTyTuple xs) y = foldr HsTyFun y xs
-cu a b = HsTyFun a b
+cu :: Type -> Type -> Type
+cu (TyTuple _ xs) y = foldr TyFun y xs
+cu a b = TyFun a b
 
 -- Type application:
 --   If we have a type function, use that
---   Otherwise use HsTyApp, but check for stupid errors
+--   Otherwise use TyApp, but check for stupid errors
 ($$) :: PType -> PType -> PType
 ($$) PMonad{ pFun=Just f } x = f x
 ($$) f x = PMonad
-         { pResult = HsTyApp (pResult f) (pResult x)
+         { pResult = TyApp (pResult f) (pResult x)
          , pError  = pError f `mplus` -- ignore errors in x, the type constructor f might have a higher kind and ignore x
                       if isFunction (pResult f) then Nothing else
                             Just $ "`" ++ prettyPrintInLine (pResult f) ++ "' is not a type function."
          , pFun    = Nothing
          }
   where
-    isFunction (HsTyFun _ _) = False
-    isFunction (HsTyTuple _) = False
+    isFunction (TyFun _ _) = False
+    isFunction (TyTuple _ _) = False
     isFunction _             = True
 
 con, var :: String -> PType
-con = return . HsTyCon . UnQual . HsIdent
-var = return . HsTyVar . HsIdent
+con = return . TyCon . UnQual . Ident
+var = return . TyVar . Ident
 
 tuple :: [PType] -> PType
-tuple = liftM (HsTyTuple . concatMap unpack) . sequence
+tuple = liftM (TyTuple Boxed . concatMap unpack) . sequence
     where
-    unpack (HsTyTuple xs) = xs
+    unpack (TyTuple _ xs) = xs
     unpack x = [x]
 
 -- a bit of a hack
@@ -124,7 +123,7 @@ forall_ x f = var ("forall "++x++".") $$ f (var x)
 -- Definitions from the MTL library
 
 -- MTL types (plus MaybeT)
-types :: [(String, HsType -> PType)]
+types :: [(String, Type -> PType)]
 types =
     [ ("Cont",     lift2 $ \r       a -> (a -->      r) -->      r)
     , ("ContT",    lift3 $ \r     m a -> (a --> m $$ r) --> m $$ r)
@@ -151,11 +150,11 @@ types =
 --------------------------------------------------
 -- Parsing of types
 
-mtlParser :: String -> Either String HsType
+mtlParser :: String -> Either String Type
 mtlParser input = do
-    HsModule _ _ _ _ decls <- liftE $ parseModule ("type X = "++input++"\n")
+    Module _ _ _ _ _ _ decls <- liftE $ parseModule ("type X = "++input++"\n")
     hsType <- case decls of
-        (HsTypeDecl _ _ _ hsType:_) -> return hsType
+        (TypeDecl _ _ _ hsType:_) -> return hsType
         _ -> fail "No parse?"
     let result = mtlParser' hsType
     case pError result of
@@ -165,11 +164,11 @@ mtlParser input = do
     liftE (ParseOk a) = return a
     liftE (ParseFailed _src str) = fail str
 
-mtlParser' :: HsType -> PType
-mtlParser' t@(HsTyCon (UnQual (HsIdent v))) = case lookup v types of
+mtlParser' :: Type -> PType
+mtlParser' t@(TyCon (UnQual (Ident v))) = case lookup v types of
      Just pt -> pt t
      Nothing -> return t
-mtlParser' (HsTyApp a b) = mtlParser' a $$ mtlParser' b
+mtlParser' (TyApp a b) = mtlParser' a $$ mtlParser' b
 mtlParser' t = return t
 
 -----------------------------------------------------------

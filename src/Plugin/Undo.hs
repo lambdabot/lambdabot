@@ -6,8 +6,8 @@
 module Plugin.Undo (theModule) where
 
 import Plugin
-import Lambdabot.Parser
-import Language.Haskell.Syntax hiding (Module)
+import Lambdabot.Parser (withParsed)
+import Language.Haskell.Exts.Syntax hiding (Module)
 import Data.Generics
 import qualified Data.Set as Set
 
@@ -34,91 +34,91 @@ findVar e = head $ do
     return xi
  where s = Set.fromList $ listify (const True :: String -> Bool) e
 
-transform :: (String -> HsExp -> HsExp) -> String -> String
+transform :: (String -> Exp -> Exp) -> String -> String
 transform f = withParsed $ \e -> everywhere (mkT . f . findVar $ e) e
 
-undo :: String -> HsExp -> HsExp
-undo v (HsDo stms) = f stms
+undo :: String -> Exp -> Exp
+undo v (Do stms) = f stms
  where
-    f [HsQualifier e]          = e
-    f (HsQualifier e     : xs) = infixed e ">>" $ f xs
-    f (HsLetStmt   ds    : xs) = HsLet ds $ f xs
-    f (HsGenerator s p e : xs)
-        | irrefutable p = infixed e ">>=" $ HsLambda s [p] $ f xs
+    f [Qualifier e]          = e
+    f (Qualifier e     : xs) = infixed e ">>" $ f xs
+    f (LetStmt   ds    : xs) = Let ds $ f xs
+    f (Generator s p e : xs)
+        | irrefutable p = infixed e ">>=" $ Lambda s [p] $ f xs
         | otherwise     = infixed e ">>=" $
-                            HsLambda s [pvar v] $
-                                HsCase (var v)
+                            Lambda s [pvar v] $
+                                Case (var v)
                                     [ alt p (f xs)
-                                    , alt HsPWildCard $
-                                        HsApp
+                                    , alt PWildCard $
+                                        App
                                             (var "fail")
-                                            (HsLit $ HsString "")
+                                            (Lit $ String "")
                                     ]
-        where alt pat x = HsAlt s pat (HsUnGuardedAlt x) []
-undo v (HsListComp e stms) = f stms
+        where alt pat x = Alt s pat (UnGuardedAlt x) (BDecls [])
+undo v (ListComp e stms) = f stms
  where
-    f []                       = HsList [e]
-    f (HsQualifier g     : xs) = HsIf g (f xs) nil
-    f (HsLetStmt   ds    : xs) = HsLet ds $ f xs
-    f (HsGenerator s p l : xs)
-        | irrefutable p = concatMap' $ HsLambda s [p] $ f xs
+    f []                                = List [e]
+    f (QualStmt (Qualifier g    ) : xs) = If g (f xs) nil
+    f (QualStmt (LetStmt   ds   ) : xs) = Let ds $ f xs
+    f (QualStmt (Generator s p l) : xs)
+        | irrefutable p = concatMap' $ Lambda s [p] $ f xs
         | otherwise     = concatMap' $
-                            HsLambda s [pvar v] $
-                                HsCase (var v)
+                            Lambda s [pvar v] $
+                                Case (var v)
                                     [ alt p (f xs)
-                                    , alt HsPWildCard nil
+                                    , alt PWildCard nil
                                     ]
-        where alt pat x = HsAlt s pat (HsUnGuardedAlt x) []
-              concatMap' fun = HsApp (HsApp (var "concatMap") (HsParen fun)) l
+        where alt pat x = Alt s pat (UnGuardedAlt x) (BDecls [])
+              concatMap' fun = App (App (var "concatMap") (Paren fun)) l
 undo _ x           = x
 
-irrefutable :: HsPat -> Bool
-irrefutable (HsPVar _)     = True
-irrefutable (HsPIrrPat _)  = True
-irrefutable HsPWildCard    = True
-irrefutable (HsPAsPat _ p) = irrefutable p
-irrefutable (HsPParen p)   = irrefutable p
-irrefutable (HsPTuple ps)  = all irrefutable ps
+irrefutable :: Pat -> Bool
+irrefutable (PVar _)     = True
+irrefutable (PIrrPat _)  = True
+irrefutable PWildCard    = True
+irrefutable (PAsPat _ p) = irrefutable p
+irrefutable (PParen p)   = irrefutable p
+irrefutable (PTuple ps)  = all irrefutable ps
 irrefutable _              = False
 
-infixed :: HsExp -> String -> HsExp -> HsExp
-infixed l o r = HsInfixApp l (HsQVarOp $ UnQual $ HsSymbol o) r
+infixed :: Exp -> String -> Exp -> Exp
+infixed l o r = InfixApp l (QVarOp $ UnQual $ Symbol o) r
 
-nil :: HsExp
-nil = HsVar list_tycon_name
+nil :: Exp
+nil = Var list_tycon_name
 
-var :: String -> HsExp
-var = HsVar . UnQual . HsIdent
+var :: String -> Exp
+var = Var . UnQual . Ident
 
-pvar :: String -> HsPat
-pvar = HsPVar . HsIdent
+pvar :: String -> Pat
+pvar = PVar . Ident
 
-do' :: String -> HsExp -> HsExp
-do' _ (HsLet ds (HsDo s)) = HsDo (HsLetStmt ds : s)
-do' v e@(HsInfixApp l (HsQVarOp (UnQual (HsSymbol op))) r) =
+do' :: String -> Exp -> Exp
+do' _ (Let ds (Do s)) = Do (LetStmt ds : s)
+do' v e@(InfixApp l (QVarOp (UnQual (Symbol op))) r) =
      case op of
          ">>=" ->
              case r of
-                 (HsLambda loc [p] (HsDo stms)) -> HsDo (HsGenerator loc p l : stms)
-                 (HsLambda loc [HsPVar v1] (HsCase (HsVar (UnQual v2))
-                                            [ HsAlt _ p (HsUnGuardedAlt s) []
-                                            , HsAlt _ HsPWildCard (HsUnGuardedAlt (HsApp (HsVar (UnQual (HsIdent "fail"))) _)) []
+                 (Lambda loc [p] (Do stms)) -> Do (Generator loc p l : stms)
+                 (Lambda loc [PVar v1] (Case (Var (UnQual v2))
+                                            [ Alt _ p (UnGuardedAlt s) (BDecls [])
+                                            , Alt _ PWildCard (UnGuardedAlt (App (Var (UnQual (Ident "fail"))) _)) (BDecls [])
                                             ]))
                            | v1 == v2           -> case s of
-                                                       HsDo stms -> HsDo (HsGenerator loc p l : stms)
-                                                       _         -> HsDo [HsGenerator loc p l, HsQualifier s]
-                 (HsLambda loc [p] s)           -> HsDo [HsGenerator loc p l, HsQualifier s]
-                 _ -> HsDo [ HsGenerator undefined (pvar v) l
-                           , HsQualifier . app r $ var v]
+                                                       Do stms -> Do (Generator loc p l : stms)
+                                                       _         -> Do [Generator loc p l, Qualifier s]
+                 (Lambda loc [p] s)           -> Do [Generator loc p l, Qualifier s]
+                 _ -> Do [ Generator undefined (pvar v) l
+                           , Qualifier . app r $ var v]
          ">>" ->
              case r of
-                 (HsDo stms) -> HsDo (HsQualifier l : stms)
-                 _           -> HsDo [HsQualifier l, HsQualifier r]
+                 (Do stms) -> Do (Qualifier l : stms)
+                 _           -> Do [Qualifier l, Qualifier r]
          _    -> e
 do' _ x = x
 
 -- | 'app' is a smart constructor that inserts parens when the first argument
 -- is an infix application.
-app :: HsExp -> HsExp -> HsExp
-app e@(HsInfixApp {}) f = HsApp (HsParen e) f
-app e                 f = HsApp e f
+app :: Exp -> Exp -> Exp
+app e@(InfixApp {}) f = App (Paren e) f
+app e                 f = App e f

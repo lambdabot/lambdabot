@@ -70,7 +70,6 @@ executable lambdabot
                         dice,
                         directory,
                         filepath,
-                        haskell-src,
                         haskell-src-exts >= 0.4.8,
                         HTTP,
                         misfortune,

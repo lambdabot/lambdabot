@@ -7,7 +7,7 @@ module Plugin.Check (theModule) where
 
 import Plugin
 import Plugin.Eval (eval)
-import Lambdabot.Parser
+import qualified Language.Haskell.Exts as Hs
 
 plugin "Check"
 
@@ -23,6 +23,6 @@ instance Module CheckModule where
 
 check :: String -> IO String
 check src = 
-    case parseExpr src of
-        Left e  -> return e
-        Right _ -> eval ("myquickcheck (" ++ src ++ ") `seq` hsep[]")
+    case Hs.parseExp src of
+        Hs.ParseFailed l e  -> return (Hs.prettyPrint l ++ ':' : e)
+        Hs.ParseOk{}        -> eval ("myquickcheck (" ++ src ++ ") `seq` hsep[]")
