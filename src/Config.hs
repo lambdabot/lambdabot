@@ -14,9 +14,6 @@ data Config = Config {
         proxy     :: Maybe ([Char], Integer), -- ^ A proxy given as
                                               --   a pair of host and port.
 
-        -- | Path to the top of "\$fptools", used by "\@code"
-        fptoolsPath :: FilePath,
-
         -- | which ghci to use (in "\@type")
         ghci        :: FilePath,
         outputDir   :: FilePath,
@@ -40,8 +37,6 @@ config = Config {
         verbose                 = True,
         textwidth               = 350,
         proxy                   = Nothing, -- Just ("www-proxy",3128),
-
-        fptoolsPath             = "/home/susie/fptools",
 
         ghci                    = "ghci",
         outputDir               = "State/",
