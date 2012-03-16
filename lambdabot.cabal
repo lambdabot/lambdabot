@@ -49,8 +49,8 @@ data-files:             online.rc,
                         State/where
 
 source-repository head
-  type:                 darcs
-  location:             http://code.haskell.org/lambdabot
+  type:                 git
+  location:             https://github.com/mokus0/lambdabot
 
 executable lambdabot
   hs-source-dirs:       src
