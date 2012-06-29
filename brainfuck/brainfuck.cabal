@@ -17,8 +17,8 @@ Cabal-Version:       >= 1.6
 tested-with:         GHC==6.12.1
 
 source-repository head
-  type:     darcs
-  location: http://code.haskell.org/lambdabot
+  type:                 git
+  location:             https://github.com/mokus0/lambdabot.git
 
 executable              bf
    main-is:             Main.hs

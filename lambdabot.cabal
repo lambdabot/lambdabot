@@ -50,7 +50,7 @@ data-files:             online.rc,
 
 source-repository head
   type:                 git
-  location:             https://github.com/mokus0/lambdabot
+  location:             https://github.com/mokus0/lambdabot.git
 
 executable lambdabot
   hs-source-dirs:       src
