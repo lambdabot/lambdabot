@@ -1,4 +1,6 @@
 {-# LANGUAGE CPP, RankNTypes, ScopedTypeVariables #-}
+{-# LANGUAGE GADTs #-}
+{-# LANGUAGE TemplateHaskell #-}
 -- | The guts of lambdabot.
 --
 -- The LB/Lambdabot monad
@@ -62,6 +64,7 @@ import Data.List                (isSuffixOf, inits, tails)
 import Data.Maybe               (isJust)
 import qualified Data.Map as M
 import qualified Data.ByteString.Char8 as P
+import Data.Random.Source
 
 import Control.Concurrent (myThreadId, newEmptyMVar, newMVar, readMVar, putMVar,
                            takeMVar, threadDelay)
@@ -389,3 +392,15 @@ reduceIndent _ msg = return $ map redLine msg
         redLine (' ':' ':xs)        = ' ':redLine xs
         redLine xs                  = xs
 -}
+
+monadRandom [d|
+
+    instance MonadRandom LB where
+        getRandomWord8          = LB (lift getRandomWord8)
+        getRandomWord16         = LB (lift getRandomWord16)
+        getRandomWord32         = LB (lift getRandomWord32)
+        getRandomWord64         = LB (lift getRandomWord64)
+        getRandomDouble         = LB (lift getRandomDouble)
+        getRandomNByteInteger n = LB (lift (getRandomNByteInteger n))
+
+ |]
