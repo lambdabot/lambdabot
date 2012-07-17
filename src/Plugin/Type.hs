@@ -25,7 +25,7 @@ import qualified Text.Regex as R
 plugin "Type"
 
 instance Module TypeModule where
-     moduleCmds = return 
+    moduleCmds = return 
         [ (command "type")
             { help = say "type <expr>. Return the type of a value"
             , process = runit ":t"
@@ -36,11 +36,11 @@ instance Module TypeModule where
             }
         ]
 
-     contextual text = case () of
-        _| ":t " `isPrefixOf` text -> runit ":t" expr
-         | ":k " `isPrefixOf` text -> runit ":k" expr
-         | otherwise               -> return ()
-         where expr = drop 3 text
+    contextual text = case prefix of
+        ":t " -> runit ":t" expr
+        ":k " -> runit ":k" expr
+        _     -> return ()
+        where (prefix, expr) = splitAt 3 text
 
 runit s expr = query_ghci s expr >>= say
 
@@ -50,7 +50,7 @@ runit s expr = query_ghci s expr >>= say
 theCommand :: [Char] -> [Char] -> [Char]
 theCommand cmd foo = cmd ++ " " ++ foo
 
---     into hugs and send any line matching
+--     into GHCi and send any line matching
 
 signature_regex :: Regex
 signature_regex
