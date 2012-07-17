@@ -46,7 +46,7 @@ instance Module VixenModule where
         ]
     
     -- if vixen-chat is on, we can just respond to anything
-    contextual _ txt = do
+    contextual txt = do
         (alive, k) <- readMS
         if alive then ios (k txt)
                  else return ()

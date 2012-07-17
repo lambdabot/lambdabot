@@ -228,7 +228,7 @@ doPRIVMSG' myname msg target
     doContextualMsg r = lift $ do
         withAllModules ( \m -> do
             act <- bindModule0 ( do
-                            ms <- execCmd (contextual m r) msg target "contextual"
+                            ms <- execCmd (contextual r) msg target "contextual"
                             lift $ mapM_ (ircPrivmsg target) ms
                    )
             name' <- getModuleName

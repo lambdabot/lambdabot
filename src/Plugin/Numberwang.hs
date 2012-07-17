@@ -19,7 +19,7 @@ instance Module NumberwangModule where
             , process = doNumberwang True . length . words
             }
         ]
-    contextual _ = doNumberwang False . length . numbers
+    contextual = doNumberwang False . length . numbers
 
 numbers :: RealFrac t => String -> [t]
 numbers [] = []

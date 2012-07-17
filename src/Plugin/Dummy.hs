@@ -32,8 +32,8 @@ instance Module DummyModule where
         | (cmd, op) <- dummylst
         ]
 
-  contextual _ "lisppaste2: url" = say pastebinMsg
-  contextual _ _                 = return ()
+  contextual "lisppaste2: url"  = say pastebinMsg
+  contextual _                  = return ()
 
 pastebinMsg :: String
 pastebinMsg = "Haskell pastebin: http://hpaste.org/"

@@ -129,7 +129,7 @@ instance Module TellModule where
 
     -- | Hook onto contextual. Grab nicks of incoming messages, and tell them
     --   if they have any messages, if it's less than a day since we last did so.
-    contextual _ _ = do
+    contextual _ = do
         sender <- getSender
         remp <- needToRemind sender
         if remp

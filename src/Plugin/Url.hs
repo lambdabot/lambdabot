@@ -42,7 +42,7 @@ instance Module UrlModule where
     moduleDefState _              = return True -- url on
     moduleSerialize _             = Just stdSerial
 
-    contextual _ text = do
+    contextual text = do
       alive <- lift readMS
       if alive && (not $ areSubstringsOf ignoredStrings text)
         then case containsUrl text of

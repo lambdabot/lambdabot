@@ -36,7 +36,7 @@ instance Module TypeModule where
             }
         ]
 
-     contextual _ text = case () of
+     contextual text = case () of
         _| ":t " `isPrefixOf` text -> runit ":t" expr
          | ":k " `isPrefixOf` text -> runit ":k" expr
          | otherwise               -> return ()

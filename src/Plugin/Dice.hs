@@ -19,7 +19,7 @@ instance Module DiceModule where
             , process = doDice True
             }
         ]
-    contextual _ = doDice False
+    contextual = doDice False
 
 ----------------------------------------------------------------
 -- the IRC shim stuff

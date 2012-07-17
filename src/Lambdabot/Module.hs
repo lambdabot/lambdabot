@@ -61,14 +61,12 @@ class Module m where
     -- | Process contextual input. A plugin that implements 'contextual'
     -- is able to respond to text not part of a normal command.
     contextual
-        :: m                                -- ^ phantom     (required)
-        -> String                           -- ^ the text
+        :: String                           -- ^ the text
         -> Cmd.Cmd (ModuleT m LB) ()        -- ^ the action
 
 ------------------------------------------------------------------------
 
-    contextual _ _ = return ()
-
+    contextual _       = return ()
     moduleCmds         = return []
     moduleExit         = return ()
     moduleInit         = return ()

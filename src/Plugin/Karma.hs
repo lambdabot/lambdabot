@@ -43,7 +43,7 @@ instance Module KarmaModule where
     moduleSerialize _ = Just mapSerial
 
     -- ^nick++($| )
-    contextual _ text = withMsg $ \msg -> do
+    contextual text = withMsg $ \msg -> do
         sender <- getSender
         
         let ws          = words text

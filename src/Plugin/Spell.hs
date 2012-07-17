@@ -38,7 +38,7 @@ instance Module SpellModule where
         ]
     moduleDefState _ = return False
 
-    contextual _ txt = do
+    contextual txt = do
         alive <- readMS
         if alive then io (spellingNazi txt) >>= mapM_ say
                  else return ()

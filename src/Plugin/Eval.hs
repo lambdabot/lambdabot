@@ -35,7 +35,7 @@ instance Module EvalModule where
             }
         ]
 
-    contextual _ txt
+    contextual txt
         | isEval txt = ios80 (eval (dropPrefix txt))
         | otherwise  = return ()
 
