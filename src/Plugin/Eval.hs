@@ -29,9 +29,12 @@ instance Module EvalModule where
             }
         , (command "undefine")
             { help = say "undefine. Reset evaluator local bindings"
-            , process = \s -> do
-                io reset
-                say "Undefined."
+            , process = \s -> 
+                if null s
+                    then do
+                        io reset
+                        say "Undefined."
+                    else say "There's currently no way to undefine just one thing.  Say @undefine (with no extra words) to undefine everything."
             }
         ]
 
