@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, TypeFamilies, PatternGuards, ViewPatterns #-}
+{-# LANGUAGE PatternGuards #-}
 -- | Lambdabot base module. Controls message send and receive
 module Plugin.Base (theModule) where
 
@@ -16,13 +16,12 @@ import qualified Text.Regex as R
 commands :: [String]
 commands  = commandPrefixes config
 
-plugin "Base"
+type BaseState = GlobalPrivate () ()
+type Base = ModuleT BaseState LB
 
-instance Module BaseModule where
-    type ModuleState BaseModule = GlobalPrivate () ()
-    
-    moduleDefState  _ = return $ mkGlobalPrivate 20 ()
-    moduleInit = do
+theModule = newModule
+    { moduleDefState = return $ mkGlobalPrivate 20 ()
+    , moduleInit = do
              ircSignalConnect "PING"    doPING
              bindModule1 doNOTICE >>= ircSignalConnect "NOTICE"
              ircSignalConnect "PART"    doPART
@@ -56,6 +55,7 @@ instance Module BaseModule where
              ircSignalConnect "372"     doRPL_MOTD
              ircSignalConnect "375"     doRPL_MOTDSTART
              ircSignalConnect "376"     doRPL_ENDOFMOTD -}
+    }
 
 doIGNORE :: Callback
 doIGNORE msg = debugStrLn $ show msg
@@ -228,7 +228,7 @@ doPRIVMSG' myname msg target
     doContextualMsg r = lift $ do
         withAllModules ( \m -> do
             act <- bindModule0 ( do
-                            ms <- execCmd (contextual r) msg target "contextual"
+                            ms <- execCmd (contextual m r) msg target "contextual"
                             lift $ mapM_ (ircPrivmsg target) ms
                    )
             name' <- getModuleName

@@ -1,4 +1,3 @@
-{-# LANGUAGE TemplateHaskell, TypeFamilies #-}
 -- Plugin.Source
 -- Display source for specified identifiers
 module Plugin.Source (theModule) where
@@ -8,14 +7,10 @@ import qualified Data.Map as M
 import qualified Data.ByteString.Char8 as P
 import Data.ByteString.Char8 (pack,unpack,ByteString)
 
-plugin "Source"
-
 type Env = M.Map ByteString ByteString
 
-instance Module SourceModule where
-    type ModuleState SourceModule = Env
-    
-    moduleCmds = return
+theModule = newModule
+    { moduleCmds = return
         [ (command "src")
             { help = say helpStr
             , process = \key -> readMS >>= \env -> case fetch (pack key) env of
@@ -28,13 +23,14 @@ instance Module SourceModule where
 
     -- all the hard work is done to build the src map.
     -- uses a slighly custom Map format
-    moduleSerialize _= Just . readOnly $ M.fromList . map pair . splat . P.lines
+    , moduleSerialize = Just . readOnly $ M.fromList . map pair . splat . P.lines
+    }
         where
             pair (a:b) = (a, P.unlines b)
             splat []   = []
             splat s    = a : splat (tail b) where (a,b) = break P.null s
 
-fetch :: ByteString -> M.Map ByteString ByteString -> Maybe ByteString
+fetch :: ByteString -> Env -> Maybe ByteString
 fetch x m = M.lookup x m `mplus`
             M.lookup (P.concat [P.singleton '(', x, P.singleton ')']) m
 

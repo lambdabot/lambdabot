@@ -1,5 +1,3 @@
-
-{-# LANGUAGE TemplateHaskell, PatternGuards #-}
 -- Copyright (c) 2004-6 Donald Bruce Stewart - http://www.cse.unsw.edu.au/~dons
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
 
@@ -14,10 +12,8 @@ import System.Directory
 import System.Exit
 import Control.Exception (try, SomeException)
 
-plugin "Eval"
-
-instance Module EvalModule where
-    moduleCmds = return
+theModule = newModule
+    { moduleCmds = return
         [ (command "run")
             { help = say "run <expr>. You have Haskell, 3 seconds and no IO. Go nuts!"
             , process = ios80 . eval
@@ -35,9 +31,10 @@ instance Module EvalModule where
             }
         ]
 
-    contextual txt
-        | isEval txt = ios80 (eval (dropPrefix txt))
-        | otherwise  = return ()
+    , contextual = \txt ->
+        when (isEval txt)
+            (ios80 (eval (dropPrefix txt)))
+    }
 
 binary :: String
 binary = "mueval"

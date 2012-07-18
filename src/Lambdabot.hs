@@ -1,5 +1,6 @@
-{-# LANGUAGE CPP, RankNTypes, ScopedTypeVariables #-}
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE GADTs #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TemplateHaskell #-}
 -- | The guts of lambdabot.
 --
@@ -162,7 +163,7 @@ mainLoop = catchIrc
 
 -- | run 'exit' handler on modules
 runExitHandlers:: LB ()
-runExitHandlers = withAllModules (const moduleExit) >> return ()
+runExitHandlers = withAllModules moduleExit >> return ()
 
 -- | flush state of modules
 flushModuleState :: LB ()
@@ -176,7 +177,7 @@ flushModuleState = do
 --
 
 -- | Peristence: write the global state out
-writeGlobalState :: Module m => m -> String -> ModuleT m LB ()
+writeGlobalState :: Module st -> String -> ModuleT st LB ()
 writeGlobalState mod name = case moduleSerialize mod of
   Nothing  -> return ()
   Just ser -> do
@@ -186,7 +187,7 @@ writeGlobalState mod name = case moduleSerialize mod of
         Just out -> io $ P.writeFile (toFilename name) out
 
 -- | Read it in
-readGlobalState :: Module m => m -> String -> IO (Maybe (ModuleState m))
+readGlobalState :: Module st -> String -> IO (Maybe st)
 readGlobalState mod name = case moduleSerialize mod of
     Just ser -> do
         state <- Just `fmap` P.readFile (toFilename name) `catch` \(_ :: SomeException) -> return Nothing
@@ -206,17 +207,17 @@ toFilename = unsafePerformIO . findFile
 -- | Register a module in the irc state
 --
 ircInstallModule :: MODULE -> String -> LB ()
-ircInstallModule (MODULE (mod :: m)) modname = do
-    savedState <- io $ readGlobalState mod modname
-    state      <- maybe (moduleDefState mod) return savedState
+ircInstallModule (MODULE m) modname = do
+    savedState <- io $ readGlobalState m modname
+    state      <- maybe (moduleDefState m) return savedState
     ref        <- io $ newMVar state
     
-    let modref = ModuleRef mod ref modname
-        cmdref cmd = CommandRef mod ref cmd modname
+    let modref = ModuleRef m ref modname
+        cmdref cmd = CommandRef m ref cmd modname
     
     flip runReaderT (ref, modname) . moduleT $ do
-        moduleInit :: ModuleT m LB ()
-        cmds  <- moduleCmds
+        moduleInit m
+        cmds  <- moduleCmds m
         
         s <- get
         let modmap = ircModules s
@@ -233,7 +234,7 @@ ircInstallModule (MODULE (mod :: m)) modname = do
 ircUnloadModule :: String -> LB ()
 ircUnloadModule modname = withModule modname (error "module not loaded") (\m -> do
     when (moduleSticky m) $ error "module is sticky"
-    moduleExit
+    moduleExit m
     writeGlobalState m modname
     s <- get
     let modmap = ircModules s

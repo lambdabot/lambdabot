@@ -1,4 +1,3 @@
-{-# LANGUAGE TemplateHaskell, TypeFamilies #-}
 {- Leave a message with lambdabot, the faithful secretary
 
 > 17:11 < davidhouse> @tell dmhouse foo
@@ -67,12 +66,10 @@ data Note        = Note { noteSender   :: Nick,
 --   messages themselves)
 type NoticeBoard = M.Map Nick (Maybe ClockTime, [Note])
 
-plugin "Tell"
+type Tell = ModuleT NoticeBoard LB
 
-instance Module TellModule where
-    type ModuleState TellModule = NoticeBoard
-    
-    moduleCmds = return
+theModule = newModule
+    { moduleCmds = return
         [ (command "tell")
             { help = say "tell <nick> <message>. When <nick> shows activity, tell them <message>."
             , process = doTell Tell . words
@@ -124,17 +121,18 @@ instance Module TellModule where
                 say "Messages purged."
             }
         ]
-    moduleDefState  _ = return M.empty
-    moduleSerialize _ = Just mapSerial
+    , moduleDefState  = return M.empty
+    , moduleSerialize = Just mapSerial
 
     -- | Hook onto contextual. Grab nicks of incoming messages, and tell them
     --   if they have any messages, if it's less than a day since we last did so.
-    contextual _ = do
+    , contextual = const $ do
         sender <- getSender
         remp <- needToRemind sender
         if remp
             then doRemind sender
             else return ()
+    }
 
 -- | Take a note and the current time, then display it
 showNote :: ClockTime -> Note -> Cmd Tell String

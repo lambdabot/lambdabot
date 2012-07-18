@@ -1,4 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
 -- | The Topic plugin is an interface for messing with the channel topic.
 --   It can alter the topic in various ways and keep track of the changes.
 --   The advantage of having the bot maintain the topic is that we get an
@@ -13,7 +12,7 @@ import qualified Data.Map as M
 
 import Control.Monad.State (gets)
 
-plugin "Topic"
+type Topic = ModuleT () LB
 
 type TopicAction = Nick -> String -> Cmd Topic ()
 data TopicCommand = TopicCommand
@@ -49,27 +48,28 @@ commands =
       (alterListTopic (\_ _ -> []))
     ]
 
-instance Module TopicModule where
-  moduleCmds = return
-    [ (command name)
-        { help = say helpStr
-        , aliases = aliases
-        , process = \args -> do
-            tgt <- getTarget
-            (chan, rest) <- case splitFirstWord args of
-                    (c@('#':_), r)  -> do
-                        c' <- readNick c
-                        return (Just c', r)
-                    _               -> case nName tgt of
-                        ('#':_)         -> return (Just tgt, args)
-                        _               -> return (Nothing, args)
-
-            case chan of
-                Just chan -> invoke chan rest
-                Nothing -> say "What channel?"
-        }
-    | TopicCommand (name:aliases) helpStr invoke <- commands
-    ]
+theModule = newModule
+    { moduleCmds = return
+        [ (command name)
+            { help = say helpStr
+            , aliases = aliases
+            , process = \args -> do
+                tgt <- getTarget
+                (chan, rest) <- case splitFirstWord args of
+                        (c@('#':_), r)  -> do
+                            c' <- readNick c
+                            return (Just c', r)
+                        _               -> case nName tgt of
+                            ('#':_)         -> return (Just tgt, args)
+                            _               -> return (Nothing, args)
+    
+                case chan of
+                    Just chan -> invoke chan rest
+                    Nothing -> say "What channel?"
+            }
+        | TopicCommand (name:aliases) helpStr invoke <- commands
+        ]
+    }
 
 ------------------------------------------------------------------------
 -- Topic action implementations

@@ -1,4 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
 -- Copyright (c) 2004-06 Don Stewart - http://www.cse.unsw.edu.au/~dons
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
 --
@@ -9,14 +8,11 @@ module Plugin.Dynamic (theModule) where
 import Plugin
 import Control.Monad.State
 
-plugin "Dynamic"
-
 modHelp = "An interface to dynamic linker"
 
-instance Module DynamicModule where
-
-    moduleSticky _ = True
-    moduleCmds = return
+theModule = newModule
+    { moduleSticky = True
+    , moduleCmds = return
         [ (command "dynamic-load")
             { privileged = True
             , help = say modHelp
@@ -40,9 +36,10 @@ instance Module DynamicModule where
             }
         ]
 
-    moduleInit   _ = lift $ do
+    , moduleInit = lift $ do
         plugins <- gets ircPlugins
         mapM_ (\p -> load p >> liftIO (putChar '!' >> hFlush stdout)) plugins
+    }
 
 --
 -- | Load value "theModule" from each plugin, given simple name of a

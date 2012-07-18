@@ -1,4 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
 -- (c) Josef Svenningsson, 2005
 -- Licence: No licence, public domain
 
@@ -11,10 +10,8 @@ import qualified Text.Regex as R
 
 import Control.Arrow
 
-plugin "Elite"
-
-instance Module EliteModule where
-    moduleCmds = return
+theModule = newModule
+    { moduleCmds = return
         [ (command "elite")
             { aliases = ["leet", "l33t", "1337"]
             , help = say "elite <phrase>. Translate English to elitespeak"
@@ -25,6 +22,7 @@ instance Module EliteModule where
                            
             }
         ]
+    }
 
 translateLine = fmap (dropWhile isSpace) . translate . (' ':)
 -- extra space allows whole-word patterns to match at start

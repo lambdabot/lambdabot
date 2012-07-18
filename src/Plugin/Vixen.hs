@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell, TypeFamilies #-}
-
 -- | Talk to hot chixxors.
 
 -- (c) Mark Wotton
@@ -15,12 +13,8 @@ import qualified Data.ByteString.Char8 as P
 
 import Plugin
 
-plugin "Vixen"
-
-instance Module VixenModule where
-    type ModuleState VixenModule = (Bool, String -> IO String)
-    
-    moduleCmds = return
+theModule = newModule
+    { moduleCmds = return
         [ (command "vixen")
             { help = say "vixen <phrase>. Sergeant Curry's lonely hearts club"
             , process = \txt -> readMS >>= (ios . ($ txt) . snd)
@@ -46,22 +40,23 @@ instance Module VixenModule where
         ]
     
     -- if vixen-chat is on, we can just respond to anything
-    contextual txt = do
+    , contextual = \txt -> do
         (alive, k) <- readMS
         if alive then ios (k txt)
                  else return ()
 
-    moduleDefState _ = return (False, const (return "<undefined>"))
+    , moduleDefState = return (False, const (return "<undefined>"))
 
     -- suck in our (read only) regex state from disk
     -- compile it, and stick it in the plugin state
-    moduleInit = do
+    , moduleInit = do
       b <- io $ doesFileExist =<< findFile "vixen"
       when b $ do
           s <- io $ do st <- decodeFile =<< findFile "vixen"
                        let compiled = map (regex *** id) st
                        return (vixen (mkResponses compiled))
           modifyMS $ \(v,_) -> (v, s)
+    }
 
 ------------------------------------------------------------------------
 

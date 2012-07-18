@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, PatternGuards #-}
+{-# LANGUAGE PatternGuards #-}
 -- |   The Type Module - another progressive plugin for lambdabot
 --
 -- pesco hamburg 2003-04-05
@@ -22,10 +22,8 @@ import Plugin
 import Plugin.Eval (exts)
 import qualified Text.Regex as R
 
-plugin "Type"
-
-instance Module TypeModule where
-    moduleCmds = return 
+theModule = newModule
+    { moduleCmds = return 
         [ (command "type")
             { help = say "type <expr>. Return the type of a value"
             , process = runit ":t"
@@ -36,11 +34,13 @@ instance Module TypeModule where
             }
         ]
 
-    contextual text = case prefix of
-        ":t " -> runit ":t" expr
-        ":k " -> runit ":k" expr
-        _     -> return ()
-        where (prefix, expr) = splitAt 3 text
+    , contextual = \text ->
+        let (prefix, expr) = splitAt 3 text
+        in case prefix of
+            ":t " -> runit ":t" expr
+            ":k " -> runit ":k" expr
+            _     -> return ()
+    }
 
 runit s expr = query_ghci s expr >>= say
 

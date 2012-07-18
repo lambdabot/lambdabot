@@ -1,4 +1,3 @@
-{-# LANGUAGE TemplateHaskell, TypeFamilies #-}
 -- | Logging an IRC channel..
 module Plugin.Activity (theModule) where
 
@@ -10,18 +9,16 @@ import Control.Exception (evaluate)
 
 import System.Time
 
-plugin "Activity"
-
 type ActivityState = [(ClockTime,Nick)]
+type Activity       = ModuleT ActivityState LB
 
 helpStr = "activity seconds. Find out where/how much the bot is being used"
 
-instance Module ActivityModule where
-    type ModuleState ActivityModule = ActivityState
-    moduleDefState _ = return []
-    moduleInit = bindModule2 activityFilter >>= ircInstallOutputFilter
+theModule = newModule
+    { moduleDefState = return []
+    , moduleInit = bindModule2 activityFilter >>= ircInstallOutputFilter
     
-    moduleCmds = return
+    , moduleCmds = return
         [ (command "activity") 
             { help = say helpStr
             , process = activity False
@@ -32,7 +29,9 @@ instance Module ActivityModule where
             , process = activity True
             }
         ]
+    }
 
+activity :: Bool -> String -> Cmd Activity ()
 activity full args = do
     let obscure nm
             | full || isPrefixOf "#" (nName nm) = return nm

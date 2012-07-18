@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell, TypeFamilies #-}
-
 {- | Pretty-Printing echo
 
 example:
@@ -21,17 +19,16 @@ import Plugin
 import qualified Language.Haskell.Exts as Hs
 import Language.Haskell.Exts hiding (Module, Pretty)
 
-plugin "Pretty"
+type Pretty = ModuleT () LB
 
-instance Module PrettyModule where
-    type ModuleState PrettyModule = String -> IO String
-    
-    moduleCmds = return
+theModule = newModule
+    { moduleCmds = return
         [ (command "pretty")
             { help = say "pretty <expr>. Display haskell code in a pretty-printed manner"
             , process = prettyCmd
             }
         ]
+    }
 
 ------------------------------------------------------------------------
 

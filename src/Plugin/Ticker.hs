@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 -- | Pull quotes down from yahoo.
 module Plugin.Ticker (theModule) where
 
@@ -7,10 +5,10 @@ import Plugin
 import Control.Applicative ((<$>))
 import Text.Printf
 
-plugin "Ticker"
+type Ticker = ModuleT () LB
 
-instance Module TickerModule where
-    moduleCmds = return
+theModule = newModule
+    { moduleCmds = return
         [ (command "ticker")
             { help = say "ticker symbols.  Look up quotes for symbols"
             , process = tickerCmd
@@ -20,6 +18,7 @@ instance Module TickerModule where
             , process = bidsCmd
             }
         ]
+    }
 
 ------------------------------------------------------------------------
 

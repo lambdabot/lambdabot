@@ -1,4 +1,3 @@
-{-# LANGUAGE TemplateHaskell, TypeFamilies #-}
 -- | GNU Talk Filters
 -- needs: http://www.hyperrealm.com/main.php?s=talkfilters
 -- Edward Kmett 2006
@@ -9,12 +8,10 @@ import Control.Applicative
 import Plugin
 import System.Directory (findExecutable)
 
-plugin "Filter"
+-- State consists of a map from filter name to executable path
 
-instance Module FilterModule where
-    type ModuleState FilterModule = [(String, String, String)]
-        -- ^ map from filter name to executable path
-    moduleDefState _ = catMaybes <$> sequence
+theModule = newModule
+    { moduleDefState = catMaybes <$> sequence
         [ do
             mbPath <- io (findExecutable name)
             return $! do
@@ -23,7 +20,7 @@ instance Module FilterModule where
         | (name, descr) <- filters
         ]
         
-    moduleCmds = do
+    , moduleCmds = do
         activeFilters <- readMS
         return
             [ (command name)
@@ -35,6 +32,7 @@ instance Module FilterModule where
                 }
             | (name, path, descr) <- activeFilters
             ]
+    }
 
 filters =
     [ ("austro",     "austro <phrase>. Talk like Ahhhnold")

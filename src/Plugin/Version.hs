@@ -1,4 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
 -- Copyright (c) 2005-6 Don Stewart - http://www.cse.unsw.edu.au/~dons
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
 
@@ -9,10 +8,8 @@ import Plugin
 import Paths_lambdabot (version)
 import Data.Version (showVersion)
 
-plugin "Version"
-
-instance Module VersionModule where
-    moduleCmds = return
+theModule = newModule
+    { moduleCmds = return
         [ (command "version")
             { help = say $
                 "version/source. Report the version " ++
@@ -22,3 +19,4 @@ instance Module VersionModule where
                 say "darcs get http://code.haskell.org/lambdabot" 
             }
         ]
+    }

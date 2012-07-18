@@ -1,4 +1,3 @@
-{-# LANGUAGE TemplateHaskell, TypeFamilies #-}
 -- Copyright (c) 2004 Thomas Jaeger
 -- Copyright (c) 2005-6 Don Stewart - http://www.cse.unsw.edu.au/~dons
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
@@ -21,8 +20,6 @@ import qualified Data.ByteString.Lazy as L
 import System.Time (normalizeTimeDiff) -- or export from AltTime.hs?
 import Text.Printf
 
-
-plugin "Seen"
 
 -- | The type of channels
 type Channel = P.ByteString
@@ -59,6 +56,8 @@ type SeenState = (MaxMap, SeenMap)
 type SeenMap   = M.Map PackedNick UserStatus
 type MaxMap    = M.Map String Int
 
+type Seen = ModuleT SeenState LB
+
 ------------------------------------------------------------------------
 
 instance Binary StopWatch where
@@ -83,11 +82,10 @@ instance Binary UserStatus where
         3 -> NewNick    <$> get
         _ -> error "Seen.UserStatus.get"
 
-instance Module SeenModule where
-    type ModuleState SeenModule = SeenState
-    moduleDefState  _ = return (M.empty,M.empty)
+theModule = newModule
+    { moduleDefState = return (M.empty,M.empty)
     
-    moduleCmds = return
+    , moduleCmds = return
         [ (command "users")
             { help = say "users [chan]. Report the maximum number of users seen in a channel, and active users in the last 30 minutes"
             , process = \rest -> withMsg $ \msg -> do
@@ -134,7 +132,7 @@ instance Module SeenModule where
             }
         ]
 
-    moduleInit = do
+    , moduleInit = do
       wSFM <- bindModule2 withSeenFM
       zipWithM_ ircSignalConnect
         ["JOIN", "PART", "QUIT", "NICK", "353",      "PRIVMSG"] $ map wSFM
@@ -149,7 +147,7 @@ instance Module SeenModule where
       let ls = L.fromChunks [s]
       return (decode ls) >>= writeMS
 
-    moduleExit = do
+    , moduleExit = do
       chans <- lift $ ircGetChannels
       unless (null chans) $ do
           ct    <- io getClockTime
@@ -157,6 +155,7 @@ instance Module SeenModule where
 
         -- and write out our state:
       withMS $ \s _ -> io ( findFile "seen" >>= \ c -> encodeFile c s)
+    }
 
 lcNick :: Nick -> Nick
 lcNick (Nick svr nck) = Nick svr (map toLower nck)

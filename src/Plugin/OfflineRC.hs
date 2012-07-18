@@ -1,4 +1,3 @@
-{-# LANGUAGE TemplateHaskell, CPP, TypeFamilies #-}
 -- | Offline mode / RC file / -e support module.  Handles spooling lists
 -- of commands (from readline, files, or the command line) into the vchat
 -- layer.
@@ -25,16 +24,15 @@ readline p = do
 addHistory :: String -> IO ()
 addHistory _ = return ()
 
+-- We need to track the number of active sourcings so that we can
+-- unregister the server (-> allow the bot to quit) when it is not
+-- being used.
+type OfflineRCState = Integer
+type OfflineRC = ModuleT OfflineRCState LB
 
-plugin "OfflineRC"
-
-instance Module OfflineRCModule where
-    -- We need to track the number of active sourcings so that we can
-    -- unregister the server (-> allow the bot to quit) when it is not
-    -- being used.
-    type ModuleState OfflineRCModule = Integer
-    moduleDefState _ = return 0
-    moduleInit = do
+theModule = newModule
+    { moduleDefState = return 0
+    , moduleInit = do
         act <- bindModule0 onInit
         lift $ liftLB forkIO $ do
             mv <- asks ircInitDoneMVar
@@ -42,7 +40,7 @@ instance Module OfflineRCModule where
             act
         return ()
     
-    moduleCmds = return
+    , moduleCmds = return
         [ (command "offline")
             { privileged = True
             , help = say "offline. Start a repl"
@@ -64,6 +62,7 @@ instance Module OfflineRCModule where
                 return ()
             }
         ]
+    }
 
 onInit :: OfflineRC ()
 onInit = do 

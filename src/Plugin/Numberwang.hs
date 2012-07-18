@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE TypeFamilies #-}
 module Plugin.Numberwang where
 
 import Data.Random
@@ -7,19 +5,17 @@ import Data.Random.Distribution.Poisson
 import Numeric
 import Plugin
 
-plugin "Numberwang"
-
-instance Module NumberwangModule where
-    type ModuleState NumberwangModule = Int
-    moduleDefState _ = resetState
+theModule = newModule
+    { moduleDefState = resetState
     
-    moduleCmds = return
+    , moduleCmds = return
         [ (command "numberwang")
             { help = say "@numberwang <number>: Determines if it is Numberwang."
             , process = doNumberwang True . length . words
             }
         ]
-    contextual = doNumberwang False . length . numbers
+    , contextual = doNumberwang False . length . numbers
+    }
 
 numbers :: RealFrac t => String -> [t]
 numbers [] = []

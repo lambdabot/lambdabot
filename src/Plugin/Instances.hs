@@ -1,4 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
 {- | A module to output the instances of a typeclass.
      Some sample input\/output:
 
@@ -27,10 +26,8 @@ type Instance   = String
 type ClassName  = String
 type ModuleName = String
 
-plugin "Instances"
-
-instance Module InstancesModule where
-    moduleCmds = return
+theModule = newModule
+    { moduleCmds = return
         [ (command "instances")
             { help = say "instances <typeclass>. Fetch the instances of a typeclass."
             , process = \cls -> io (fetchInstances cls) >>= say
@@ -42,6 +39,7 @@ instance Module InstancesModule where
             , process = \args -> io (fetchInstancesImporting args) >>= say
             }
         ]
+    }
 
 -- | Nice little combinator used to throw away error messages from an Either
 --   and just keep a Maybe indicating the success of the computation.

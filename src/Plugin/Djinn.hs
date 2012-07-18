@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, TypeFamilies, PatternGuards #-}
+{-# LANGUAGE PatternGuards #-}
 -- Copyright (c) 2005 Donald Bruce Stewart - http://www.cse.unsw.edu.au/~dons
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
 
@@ -11,22 +11,20 @@ import Plugin
 
 import qualified Text.Regex as R
 
-plugin "Djinn"
-
 -- | We can accumulate an interesting environment
 type DjinnEnv = ([Decl] {- prelude -}, [Decl])
+type Djinn = ModuleT DjinnEnv LB
 type Decl = String
 
-instance Module DjinnModule where
-    type ModuleState DjinnModule = DjinnEnv
-    moduleSerialize _ = Nothing
+theModule = newModule
+    { moduleSerialize = Nothing
 
     -- this means djinn better be visible at boot time
-    moduleDefState  _ = do
+    , moduleDefState = do
         st <- io $ getDjinnEnv ([],[]) -- get the prelude
         return (either (const []) snd{-!-} st, [])
 
-    moduleCmds = return
+    , moduleCmds = return
         [ (command "djinn")
             { help = mapM_ say
                 [ "djinn <type>."
@@ -72,6 +70,7 @@ instance Module DjinnModule where
             , process = const djinnVerCmd
             }
         ]
+    }
 
 -- check the args, reject them if they start with a colon (ignoring whitespace)
 rejectingCmds action args

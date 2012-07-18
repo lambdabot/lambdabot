@@ -1,23 +1,20 @@
-{-# LANGUAGE TemplateHaskell, TypeFamilies #-}
 -- | Support for more(1) buffering
 module Plugin.More (theModule) where
 
 import Plugin
 import Lambdabot
 
-plugin "More"
-
 type MoreState = GlobalPrivate () [String]
+type More = ModuleT MoreState LB
 
 -- the @more state is handled centrally
-instance Module MoreModule where
-    type ModuleState MoreModule = MoreState
-    moduleDefState _ = return $ mkGlobalPrivate 20 ()
-    moduleInit
+theModule = newModule
+    { moduleDefState = return $ mkGlobalPrivate 20 ()
+    , moduleInit
         =   bindModule2 moreFilter
         >>= ircInstallOutputFilter
     
-    moduleCmds = return
+    , moduleCmds = return
         [ (command "more")
             { help = say "@more. Return more output from the bot buffer."
             , process = \_ -> do
@@ -31,6 +28,7 @@ instance Module MoreModule where
                         >>= mapM_ (lb . ircPrivmsg' target)
             }
         ]
+    }
 
 moreFilter :: Nick -> [String] -> More [String]
 moreFilter target msglines = do

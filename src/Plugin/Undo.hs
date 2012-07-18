@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 -- Copyright (c) 2006 Spencer Janssen
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
 
@@ -11,10 +9,8 @@ import Language.Haskell.Exts.Syntax hiding (Module)
 import Data.Generics
 import qualified Data.Set as Set
 
-plugin "Undo"
-
-instance Module UndoModule where
-    moduleCmds = return
+theModule = newModule
+    { moduleCmds = return
         [ (command "undo")
             { help = say "undo <expr>\nTranslate do notation to Monad operators."
             , process = say . transform undo
@@ -24,6 +20,7 @@ instance Module UndoModule where
             , process = say . transform do'
             }
         ]
+    }
 
 findVar :: Data a => a -> String
 findVar e = head $ do

@@ -1,4 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
 -- Copyright (c) 6 DonStewart - http://www.cse.unsw.edu.au/~dons
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
 
@@ -9,10 +8,8 @@ import Plugin
 import Plugin.Eval (eval)
 import qualified Language.Haskell.Exts as Hs
 
-plugin "Check"
-
-instance Module CheckModule where
-    moduleCmds = return
+theModule = newModule
+    { moduleCmds = return
         [ (command "check")
             { help = do
                 say "check <expr>"
@@ -20,6 +17,7 @@ instance Module CheckModule where
             , process = ios80 . check
             }
         ]
+    }
 
 check :: String -> IO String
 check src = 

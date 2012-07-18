@@ -1,4 +1,3 @@
-{-# LANGUAGE TemplateHaskell, TypeFamilies #-}
 -- | Karma
 module Plugin.Karma (theModule) where
 
@@ -7,15 +6,11 @@ import qualified Lambdabot.NickEq as E
 import qualified Data.Map as M
 import Text.Printf
 
-plugin "Karma"
-
 type KarmaState = M.Map Nick Integer
+type Karma = ModuleT KarmaState LB
 
-instance Module KarmaModule where
-    
-    type ModuleState KarmaModule = KarmaState
-
-    moduleCmds = return
+theModule = newModule
+    { moduleCmds = return
         [ (command "karma")
             { help = say "karma <polynick>. Return a person's karma value"
             , process = \rest -> withMsg $ \msg -> do
@@ -39,11 +34,11 @@ instance Module KarmaModule where
             }
         ]
 
-    moduleDefState  _ = return $ M.empty
-    moduleSerialize _ = Just mapSerial
+    , moduleDefState  = return $ M.empty
+    , moduleSerialize = Just mapSerial
 
     -- ^nick++($| )
-    contextual text = withMsg $ \msg -> do
+    , contextual = \text -> withMsg $ \msg -> do
         sender <- getSender
         
         let ws          = words text
@@ -60,6 +55,7 @@ instance Module KarmaModule where
         
         mapM_ (changeKarma (-1) sender) =<< decs
         mapM_ (changeKarma   1  sender) =<< incs
+    }
 
 doCmd dk rest = do
     sender <- getSender
