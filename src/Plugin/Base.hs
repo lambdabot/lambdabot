@@ -4,6 +4,7 @@ module Plugin.Base (theModule) where
 
 import Plugin
 import Lambdabot
+import Lambdabot.IRC
 import qualified Lambdabot.Message as Msg (readNick, showNick)
 
 import qualified Data.Map as M   (insert, delete)
@@ -69,9 +70,10 @@ doNOTICE :: IrcMessage -> Base ()
 doNOTICE msg
     | isCTCPTimeReply   = doPRIVMSG (timeReply msg)
         -- ^ TODO: need to say which module to run the privmsg in
-    | otherwise         = debugStrLn $ "NOTICE: " ++ show (body msg)
+    | otherwise         = debugStrLn $ "NOTICE: " ++ show body
     where
-        isCTCPTimeReply = ":\SOHTIME" `isPrefixOf` (last (body msg))
+        body = ircMsgParams msg
+        isCTCPTimeReply = ":\SOHTIME" `isPrefixOf` (last body)
 
 doJOIN :: Callback
 doJOIN msg | lambdabotName msg /= nick msg = doIGNORE msg
@@ -79,7 +81,7 @@ doJOIN msg | lambdabotName msg /= nick msg = doIGNORE msg
   = do s <- get
        put (s { ircChannels = M.insert  (mkCN loc) "[currently unknown]" (ircChannels s)}) -- the empty topic causes problems
        send $ getTopic loc -- initialize topic
-   where (_, aloc) = breakOnGlue ":" (head (body msg))
+   where (_, aloc) = breakOnGlue ":" (head (ircMsgParams msg))
          loc       = case aloc of
                         [] -> Nick "freenode" "weird#"
                         _  -> Nick (server msg) (tail aloc)
@@ -87,7 +89,8 @@ doJOIN msg | lambdabotName msg /= nick msg = doIGNORE msg
 doPART :: Callback
 doPART msg
   = when (lambdabotName msg == nick msg) $ do
-        let loc = Nick (server msg) (head (body msg))
+        let body = ircMsgParams msg
+            loc = Nick (server msg) (head body)
         s <- get
         put (s { ircChannels = M.delete (mkCN loc) (ircChannels s) })
 
@@ -102,9 +105,9 @@ doMODE msg
 
 doTOPIC :: Callback
 doTOPIC msg
-    = do let loc = Nick (server msg) ((head (body msg)))
+    = do let loc = Nick (server msg) (head (ircMsgParams msg))
          s <- get
-         put (s { ircChannels = M.insert (mkCN loc) (tail $ head $ tail $ body msg) (ircChannels s)})
+         put (s { ircChannels = M.insert (mkCN loc) (tail $ head $ tail $ ircMsgParams msg) (ircChannels s)})
 
 doRPL_WELCOME :: Callback
 doRPL_WELCOME = doIGNORE
@@ -117,9 +120,10 @@ doRPL_BOUNCE _msg = debugStrLn "BOUNCE!"
 
 doRPL_TOPIC :: Callback
 doRPL_TOPIC msg -- nearly the same as doTOPIC but has our nick on the front of body
-    = do let loc = Nick (server msg) ((body msg) !! 1)
+    = do let body = ircMsgParams msg
+             loc = Nick (server msg) (body !! 1)
          s <- get
-         put (s { ircChannels = M.insert (mkCN loc) (tail $ last $ body msg) (ircChannels s) })
+         put (s { ircChannels = M.insert (mkCN loc) (tail $ last body) (ircChannels s) })
 
 doPRIVMSG :: IrcMessage -> Base ()
 doPRIVMSG msg = do
@@ -128,7 +132,7 @@ doPRIVMSG msg = do
         then lift $ doIGNORE msg
         else mapM_ (doPRIVMSG' (lambdabotName msg) msg) targets
     where
-        alltargets = head (body msg)
+        alltargets = head (ircMsgParams msg)
         targets = map (Msg.readNick msg) $ split "," alltargets
 
 --
@@ -156,7 +160,7 @@ doPRIVMSG' myname msg target
   | otherwise =  doContextualMsg text
 
   where
-    text = tail (head (tail (body msg)))
+    text = tail (head (tail (ircMsgParams msg)))
     who = nick msg
 
     doPersonalMsg s r

@@ -19,7 +19,8 @@ module Lambdabot (
         Command(..), runCommand, 
         Cmd, execCmd,
         
-        Msg.Message(..), IrcMessage(..), timeReply, errShowMsg,
+        Msg.Message(..),
+        IrcMessage(..), timeReply, errShowMsg,
         send, addServer, remServer, 
         ircPrivmsg, ircPrivmsg',
         

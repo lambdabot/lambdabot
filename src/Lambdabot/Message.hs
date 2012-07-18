@@ -1,7 +1,15 @@
 --
 -- Provides interface to messages, message pipes
 --
-module Lambdabot.Message(Message(..), Nick(..), showNick, readNick, Pipe, packNick, unpackNick) where
+module Lambdabot.Message
+    ( Message(..)
+    , Nick(..)
+    , showNick
+    , readNick
+    , Pipe
+    , packNick
+    , unpackNick
+    ) where
 
 import Lambdabot.Util(dropSpace)
 
@@ -11,7 +19,7 @@ import Data.Char (toUpper)
 
 import Control.Arrow (first)
 
--- TODO: probably remove "Show a" later
+-- TODO: probably remove "Show a" later (used only to implement @echo)
 class Show a => Message a where
     -- | extracts the tag of the server involved in a given message
     server      :: a -> String
@@ -22,30 +30,8 @@ class Show a => Message a where
     -- | 'fullName' extracts the full user name involved in a given message.
     fullName    :: a -> String
 
-    -- | 'names' builds a NAMES message from a list of channels.
-    names       :: String -> [String] -> a
-
     -- | 'channels' extracts the channels a Message operate on.
     channels    :: a -> [Nick]
-
-    -- | 'join' creates a join message. String given is the location (channel) to join
-    joinChannel :: Nick -> a
-
-    -- | 'part' parts the channel given.
-    partChannel :: Nick -> a
-
-    -- | 'getTopic' Returns the topic for a channel, given as a String
-    getTopic    :: Nick -> a
-
-    -- | 'setTopic' takes a channel and a topic. It then returns the message
-    --   which sets the channels topic.
-    setTopic :: Nick -> String -> a
-
-    -- TODO: recheck this. It's usage heavily relies on the fact that message comes from IRC
-    body :: a -> [String]
-
-    -- TODO: too IRC-specific
-    msgCommand :: a -> String
 
     -- TODO: there must be a better way of handling this ...
     lambdabotName :: a -> Nick
