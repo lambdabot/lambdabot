@@ -8,6 +8,7 @@ module Plugin.Topic (theModule) where
 
 import Plugin
 import Lambdabot
+import Lambdabot.IRC
 
 import qualified Data.Map as M
 

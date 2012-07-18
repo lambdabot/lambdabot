@@ -10,7 +10,7 @@ import Plugin
 import Lambdabot
 
 import Lambdabot.AltTime
-import qualified Lambdabot.Message as G (Message, channels, nick, packNick, unpackNick, body, lambdabotName, showNick, readNick)
+import qualified Lambdabot.Message as G (Message, channels, nick, packNick, unpackNick, lambdabotName, showNick, readNick)
 
 import Control.Applicative
 import Control.Arrow (first)
@@ -298,22 +298,22 @@ quitCB _ fm ct nick = case M.lookup nick fm of
     _ -> Left "someone who isn't known has quit"
 
 -- | when somebody changes his\/her name
-nickCB :: G.Message a => a -> SeenMap -> ClockTime -> PackedNick -> Either String SeenMap
+nickCB :: IrcMessage -> SeenMap -> ClockTime -> PackedNick -> Either String SeenMap
 nickCB msg fm _ nick = case M.lookup nick fm of
    Just status -> let fm' = M.insert nick (NewNick lcnewnick) fm
                   in  Right $! M.insert lcnewnick status fm'
    _           -> Left "someone who isn't here changed nick"
    where
-   newnick = drop 1 $ head (G.body msg)
+   newnick = drop 1 $ head (ircMsgParams msg)
    lcnewnick = G.packNick $ lcNick $ G.readNick msg newnick
 
 -- use IRC.IRC.channels?
 -- | when the bot join a channel
-joinChanCB :: G.Message a => a -> SeenMap -> ClockTime -> PackedNick -> Either String SeenMap
+joinChanCB :: IrcMessage -> SeenMap -> ClockTime -> PackedNick -> Either String SeenMap
 joinChanCB msg fm now _nick
     = Right $ fmap (updateNP now chan) $ foldl insertNick fm chanUsers
   where
-    l = G.body msg
+    l = ircMsgParams msg
     chan = G.packNick $ lcNick $ G.readNick msg $ l !! 2
     chanUsers = map (G.packNick . lcNick . G.readNick msg) $ words (drop 1 (l !! 3)) -- remove ':'
     insertNick fm' u = insertUpd (updateJ (Just now) [chan])

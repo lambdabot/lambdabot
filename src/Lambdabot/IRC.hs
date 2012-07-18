@@ -4,6 +4,11 @@
 --
 module Lambdabot.IRC
     ( IrcMessage(..)
+    , joinChannel
+    , partChannel
+    , getTopic
+    , setTopic
+    , names
     , privmsg
     , quit
     , timeReply
@@ -35,18 +40,11 @@ instance Message IrcMessage where
     nick                = liftM2 Nick ircMsgServer (fst . breakOnGlue "!" . ircMsgPrefix)
     server              = ircMsgServer
     fullName            = snd . breakOnGlue "!" . ircMsgPrefix
-    names svr chans     = mkMessage svr "NAMES" [intercalate "," chans]
     channels msg        = 
       let cstr = head $ ircMsgParams msg
         in map (Nick (server msg)) $
            map (\(x:xs) -> if x == ':' then xs else x:xs) (split "," cstr)
                -- solves what seems to be an inconsistency in the parser
-    joinChannel loc     = mkMessage (nTag loc)  "JOIN"  [nName loc]
-    partChannel loc     = mkMessage (nTag loc)  "PART"  [nName loc]
-    getTopic chan       = mkMessage (nTag chan) "TOPIC" [nName chan]
-    setTopic chan topic = mkMessage (nTag chan) "TOPIC" [nName chan, ':' : topic]
-    body                = ircMsgParams
-    msgCommand          = ircMsgCommand
     lambdabotName msg   = Nick (server msg) (ircMsgLBName msg)
 
 -- | 'mkMessage' creates a new message from a server, a cmd, and a list of parameters.
@@ -62,6 +60,13 @@ mkMessage svr cmd params = IrcMessage
     , ircMsgParams = params
     , ircMsgLBName = "urk!<outputmessage>"
     }
+
+joinChannel loc     = mkMessage (nTag loc)  "JOIN"  [nName loc]
+partChannel loc     = mkMessage (nTag loc)  "PART"  [nName loc]
+getTopic chan       = mkMessage (nTag chan) "TOPIC" [nName chan]
+setTopic chan topic = mkMessage (nTag chan) "TOPIC" [nName chan, ':' : topic]
+
+names svr chans     = mkMessage svr "NAMES" [intercalate "," chans]
 
 -- | 'privmsg' creates a private message to the person designated.
 privmsg :: Nick -- ^ Who should recieve the message (nick)

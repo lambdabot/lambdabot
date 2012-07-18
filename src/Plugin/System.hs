@@ -6,7 +6,8 @@ import Plugin
 import Lambdabot
 
 import Lambdabot.AltTime
-import qualified Lambdabot.Message as Msg (Message, Nick, joinChannel, partChannel, server, readNick)
+import qualified Lambdabot.Message as Msg (Nick, server, readNick)
+import Lambdabot.IRC
 import qualified Data.Map as M       (Map,assocs,keys,fromList,insert,delete)
 
 import Control.Monad.State      (MonadState(get, put))
@@ -72,7 +73,7 @@ doSystem cmd rest = withMsg $ \msg -> do
     target <- getTarget
     lift (doSystem' msg target cmd rest) >>= mapM_ say
 
-doSystem' :: Msg.Message a => a -> Msg.Nick -> [Char] -> [Char] -> System [String]
+doSystem' :: Message a => a -> Msg.Nick -> [Char] -> [Char] -> System [String]
 doSystem' msg target cmd rest = get >>= \s -> case cmd of
   "listchans"   -> return [pprKeys (ircChannels s)]
   "listmodules" -> return [pprKeys (ircModules s) ]
@@ -87,9 +88,9 @@ doSystem' msg target cmd rest = get >>= \s -> case cmd of
 
   --TODO error handling
    -- system commands
-  "join"  -> lift $ send (Msg.joinChannel (Msg.readNick msg rest)) >> return []
-  "leave" -> lift $ send (Msg.partChannel (Msg.readNick msg rest)) >> return []
-  "part"  -> lift $ send (Msg.partChannel (Msg.readNick msg rest)) >> return []
+  "join"  -> lift $ send (joinChannel (Msg.readNick msg rest)) >> return []
+  "leave" -> lift $ send (partChannel (Msg.readNick msg rest)) >> return []
+  "part"  -> lift $ send (partChannel (Msg.readNick msg rest)) >> return []
 
    -- writes to another location:
   "msg"   -> lift $ ircPrivmsg (Msg.readNick msg tgt) txt' >> return []
