@@ -2,6 +2,7 @@
 {-# LANGUAGE TypeFamilies #-}
 module Plugin.Numberwang where
 
+import Control.Applicative
 import Data.Random
 import Data.Random.Distribution.Poisson
 import Numeric
@@ -9,9 +10,17 @@ import Plugin
 
 plugin "Numberwang"
 
+data NumberwangState = State
+    { nextCmd   :: !Int -- number of invocations of @numberwang before the next numberwang
+    , nextCon   :: !Int -- number of contextual occurrences of numbers before next numberwang
+    }
+
+cmdDist = poisson (3.5 :: Double)
+conDist = poisson (32  :: Double)
+
 instance Module NumberwangModule where
-    type ModuleState NumberwangModule = Int
-    moduleDefState _ = resetState
+    type ModuleState NumberwangModule = NumberwangState
+    moduleDefState _ = sample (State <$> cmdDist <*> conDist)
     
     moduleCmds = return
         [ (command "numberwang")
@@ -27,21 +36,23 @@ numbers cs = case readFloat cs of
     (n, rest):_ -> n : numbers rest
     _           -> numbers (tail cs)
 
-doNumberwang loudly n
-    | n <= 0    = when loudly $ say "What number?"
+doNumberwang cmd n
+    | n <= 0    = when cmd $ say "What number?"
     | otherwise = do
-        isNumberwang <- checkNumberwang n
+        isNumberwang <- checkNumberwang cmd 1
         if isNumberwang
             then say "That's Numberwang!"
-            else when loudly $ say "Sorry, that's not Numberwang."
+            else when cmd $ say "Sorry, that's not Numberwang."
 
-numberwangRate = 4.5 :: Double
-resetState = sample (poisson numberwangRate)
+withState True f = withMS $ \st setST ->
+    f (nextCmd st) (\n -> setST st {nextCmd = n}) cmdDist
+withState False f = withMS $ \st setST ->
+    f (nextCon st) (\n -> setST st {nextCon = n}) conDist
 
-checkNumberwang l = withMS $ \ n setN -> do
+checkNumberwang cmd l = withState cmd $ \ n setN nDist -> do
     if n <= l
         then do
-            setN =<< resetState
+            setN =<< sample nDist
             return True
         else do
             setN (n - l)
