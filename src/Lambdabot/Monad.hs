@@ -40,6 +40,7 @@ import Data.IORef               (newIORef, IORef, readIORef, writeIORef)
 import Data.Map (Map)
 import qualified Data.Map as M hiding (Map)
 
+import Control.Applicative
 import Control.Concurrent (forkIO, MVar, ThreadId)
 import Control.Exception
 import Control.Monad.Error (MonadError (..))
@@ -161,7 +162,7 @@ send msg = do
 
 
 newtype LB a = LB { runLB :: ReaderT (IRCRState,IORef IRCRWState) IO a }
-    deriving (Monad,Functor,MonadIO)
+    deriving (Functor, Applicative, Monad, MonadIO)
 
 class Monad m => MonadLB m where
     lb :: LB a -> m a
