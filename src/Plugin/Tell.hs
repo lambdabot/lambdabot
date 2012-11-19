@@ -208,7 +208,7 @@ doTell ntype (who:args) = do
     recipient <- readNick who
     sender <- getSender
     me <- getLambdabotName
-    let rest = unwords $ tail args
+    let rest = unwords args
         res | sender    == recipient   = Left ("You can " ++ verb ntype ++ " yourself!")
             | recipient == me          = Left "Nice try ;)"
             | null args                = Left ("What should I " ++ verb ntype ++ " " ++ who ++ "?")
