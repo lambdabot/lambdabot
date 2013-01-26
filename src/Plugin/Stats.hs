@@ -1,23 +1,23 @@
 {-# LANGUAGE ConstraintKinds #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE GADTs #-}
 module Plugin.Stats (theModule) where
 
 import Plugin
 import Lambdabot
 
-import Network.Metric
+import Network.StatsD
 
 host = "stats.thecave.lan"
-port = 8125
+port = "8125"
+prefix = ["lambdabot"]
 
-type Stats = ModuleT AnySink LB
+type Stats = ModuleT StatsD LB
 
 theModule = newModule
-    { moduleDefState = io (open Statsd "statsd" host port)
+    { moduleDefState = io (openStatsD host port prefix)
     , contextual = \_ -> do
-        chan <- getTarget
-        count "lambdabot.chat" (packNick chan) 1
+        chan <- showNick =<< getTarget
+        count ["chat", chan] 1
     }
 
 onJoin :: IrcMessage -> Stats ()
@@ -25,20 +25,12 @@ onJoin _ = return ()
 
 -- various helpers
 
-type StatsM m = (MonadIO m, MonadLBState m, Sink (LBState m))
+type StatsM m = (MonadIO m, MonadLBState m, LBState m ~ StatsD)
 
-stat :: (Measurable a, StatsM m) => a -> m ()
-stat x = do
+report :: StatsM m => [Stat] -> m ()
+report xs = do
     st <- readMS
-    io (push st x)
+    io (push st xs)
 
-metric ctor g b x = stat (ctor g b x)
-
-count :: StatsM m => Group -> Bucket -> Integer -> m ()
-count = metric Counter
-
-timer :: StatsM m => Group -> Bucket -> Double -> m ()
-timer = metric Timer
-
-gauge :: StatsM m => Group -> Bucket -> Double -> m ()
-gauge = metric Gauge
+count :: StatsM m => [String] -> Integer -> m ()
+count bucket val = report [stat bucket val "c" Nothing]
