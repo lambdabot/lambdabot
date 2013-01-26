@@ -15,9 +15,17 @@ type Stats = ModuleT StatsD LB
 
 theModule = newModule
     { moduleDefState = io (openStatsD host port prefix)
-    , contextual = \_ -> do
+    , contextual = \msg -> do
+        let n = length msg
+        
+        user <- showNick =<< getSender
         chan <- showNick =<< getTarget
-        count ["chat", chan] 1
+        
+        counts 
+            [ (["chat", grp, stat], val)
+            | grp <- [user, '#' : chan]
+            , (stat, val) <- [("lines", 1), ("chars", toInteger n) ]
+            ]
     }
 
 onJoin :: IrcMessage -> Stats ()
@@ -33,4 +41,7 @@ report xs = do
     io (push st xs)
 
 count :: StatsM m => [String] -> Integer -> m ()
-count bucket val = report [stat bucket val "c" Nothing]
+count bucket val = counts [(bucket, val)]
+
+counts :: StatsM m => [([String], Integer)] -> m ()
+counts xs = report [stat bucket val "c" Nothing | (bucket, val) <- xs]
