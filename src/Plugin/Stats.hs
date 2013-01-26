@@ -22,8 +22,8 @@ theModule = newModule
         chan <- showNick =<< getTarget
         
         counts 
-            [ (["chat", grp, stat], val)
-            | grp <- [user, '#' : chan]
+            [ (grp ++ [stat], val)
+            | grp <- [["user", user], ["channel", chan]]
             , (stat, val) <- [("lines", 1), ("chars", toInteger n) ]
             ]
     }
