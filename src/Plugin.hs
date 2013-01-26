@@ -45,7 +45,7 @@ import Lambdabot.Module
 import Lambdabot.Command hiding (runCommand, execCmd)
 import Lambdabot.State
 
-import Lambdabot.File (findFile)
+import Lambdabot.File (findLBFile)
 import Lambdabot.Message
 import Lambdabot.MiniHTTP
 import Lambdabot.Process

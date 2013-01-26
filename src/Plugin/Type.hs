@@ -118,7 +118,7 @@ extract_signatures output
 --
 query_ghci :: MonadIO m => String -> String -> m String
 query_ghci cmd expr = io $ do
-    l <- findFile "L.hs"
+    l <- findLBFile "L.hs"
     let context = ":load "++l++"\n:m *L\n" -- using -fforce-recomp to make sure we get *L in scope instead of just L
         extFlags = ["-X" ++ ext | ext <- exts]
     (output, errors, _) <- popen (ghci config)

@@ -35,7 +35,7 @@ module Lambdabot (
         checkPrivs, checkIgnore, mkCN, handleIrc, catchIrc, runIrc
   ) where
 
-import Lambdabot.File (findFile)
+import Lambdabot.File (findLBFile)
 
 import qualified Lambdabot.Message as Msg
 import qualified Lambdabot.Shared  as S
@@ -201,7 +201,7 @@ readGlobalState mod name = case moduleSerialize mod of
 
 -- | helper
 toFilename :: String -> String
-toFilename = unsafePerformIO . findFile
+toFilename = unsafePerformIO . findLBFile
 
 ------------------------------------------------------------------------
 --

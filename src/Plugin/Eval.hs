@@ -63,7 +63,7 @@ dropPrefix = dropWhile (' ' ==) . drop 2
 
 eval :: String -> IO String
 eval src = do
-            load <- findFile "L.hs"
+            load <- findLBFile "L.hs"
             (out,err,_) <- popen binary (args load src) Nothing
             case (out,err) of
                 ([],[]) -> return "Terminated\n"
@@ -83,7 +83,7 @@ define :: String -> IO String
 define [] = return "Define what?"
 define src = case Hs.parseModule src of
     Hs.ParseOk srcModule -> do
-        l <- findFile "L.hs"
+        l <- findLBFile "L.hs"
         res <- Hs.parseFile l
         case res of
             Hs.ParseFailed loc err -> return (Hs.prettyPrint loc ++ ':' : err)
@@ -140,7 +140,7 @@ comp src = do
                     removeFile ".L.hs"
                     return "Error."
                 | otherwise -> do
-                    l <- findFile "L.hs"
+                    l <- findLBFile "L.hs"
                     renameFile ".L.hs" l
                     return "Defined."
         (ee,[]) -> return ee
@@ -154,6 +154,6 @@ munge = expandTab 8 . dropWhile (=='\n') . dropNL
 
 reset :: IO ()
 reset = do
-    l <- findFile "L.hs"
-    p <- findFile "Pristine.hs"
+    l <- findLBFile "L.hs"
+    p <- findLBFile "Pristine.hs"
     copyFile p l

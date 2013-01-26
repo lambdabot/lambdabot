@@ -56,28 +56,31 @@ cpDataToHome f = do rofile <- getDataFileName (local </> f)
 -- Note that the return type is simple so we can just do a binding and stuff it
 -- into the conventional functions easily; unfortunately, this removes
 -- error-checking, as an error is now just \"\".
-findFile :: FilePath -> IO String
-findFile f = do first <- lookLocally f
-                case first of
-                  -- With any luck we can exit quickly
-                  Just a -> return a
-                  Nothing -> do second <- lookHome f
-                                case second of
-                                  -- OK, we didn't get lucky with local, so
-                                  -- hopefully it's in ~/.lambdabot
-                                  Just a -> return a
-                                  -- Uh oh. We didn't find it locally, nor did we
-                                  -- find it in ~/.lambdabot/State. So now we
-                                  -- need to make ~/.lambdabot/State and copy it in.
-                                  Nothing -> do exists <- isHome
-                                                when (not exists) mkdirL
-                                                cpDataToHome f
-                                                -- With the file copied/created,
-                                                -- a second attempt should work.
-                                                g <- lookHome f
-                                                case g of
-                                                  Just a -> return a
-                                                  Nothing -> 
-                                                      do home <- getHomeDirectory 
-                                                         fail $ "File.findFile: couldn't find file " 
-                                                                ++ f ++ " in " ++ home </> state
+findLBFile :: FilePath -> IO String
+findLBFile f = do
+    first <- lookLocally f
+    case first of
+        -- With any luck we can exit quickly
+        Just a -> return a
+        Nothing -> do
+            second <- lookHome f
+            case second of
+                -- OK, we didn't get lucky with local, so
+                -- hopefully it's in ~/.lambdabot
+                Just a -> return a
+                -- Uh oh. We didn't find it locally, nor did we
+                -- find it in ~/.lambdabot/State. So now we
+                -- need to make ~/.lambdabot/State and copy it in.
+                Nothing -> do
+                    exists <- isHome
+                    when (not exists) mkdirL
+                    cpDataToHome f
+                    -- With the file copied/created,
+                    -- a second attempt should work.
+                    g <- lookHome f
+                    case g of
+                        Just a -> return a
+                        Nothing -> do
+                            home <- getHomeDirectory 
+                            fail $ "File.findLBFile: couldn't find file " 
+                                ++ f ++ " in " ++ home </> state

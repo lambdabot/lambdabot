@@ -142,7 +142,7 @@ theModule = newModule
       -- TODO: implement serialization using the "moduleSerialize" interface
       -- ... can't do that using Binary because it has no error handling.
 
-      c <- io $ findFile "seen"
+      c <- io $ findLBFile "seen"
       s <- io $ P.readFile c
       let ls = L.fromChunks [s]
       return (decode ls) >>= writeMS
@@ -154,7 +154,7 @@ theModule = newModule
           modifyMS $ \(n,m) -> (n, botPart ct (map G.packNick chans) m)
 
         -- and write out our state:
-      withMS $ \s _ -> io ( findFile "seen" >>= \ c -> encodeFile c s)
+      withMS $ \s _ -> io ( findLBFile "seen" >>= \ c -> encodeFile c s)
     }
 
 lcNick :: Nick -> Nick
