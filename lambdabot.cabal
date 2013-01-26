@@ -76,6 +76,7 @@ executable lambdabot
                         misfortune,
                         mtl > 2,
                         network,
+                        network-metrics,
                         oeis >= 0.2,
                         old-time,
                         parsec,
