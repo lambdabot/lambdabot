@@ -28,7 +28,6 @@ import qualified Plugin.IRC
 import qualified Plugin.Karma
 import qualified Plugin.Localtime
 import qualified Plugin.More
-import qualified Plugin.Numberwang
 import qualified Plugin.OEIS
 import qualified Plugin.OfflineRC
 import qualified Plugin.Pl
@@ -86,7 +85,6 @@ modulesInfo = $(modules $ nub
                     , "Karma"
                     , "Localtime"
                     , "More"
-                    , "Numberwang"
                     , "OEIS"
                     , "Pl"
                     , "Pointful"
