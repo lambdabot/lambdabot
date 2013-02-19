@@ -1,14 +1,11 @@
-{-# LANGUAGE TemplateHaskell, ViewPatterns #-}
 -- | Provide help for plugins
 module Plugin.Help (theModule) where
 
 import Plugin
 import Lambdabot
 
-plugin "Help"
-
-instance Module HelpModule where
-    moduleCmds = return
+theModule = newModule
+    { moduleCmds = return
         [ (command "help")
             { help = say "help <command>. Ask for help for <command>. Try 'list' for all commands"
             , process = \args -> withMsg $ \msg -> do
@@ -16,6 +13,7 @@ instance Module HelpModule where
                 lb (doHelp msg tgt args) >>= mapM_ say
             }
         ]
+    }
 
 moduleHelp theCmd msg tgt cmd =
     execCmd (help theCmd) msg tgt cmd
@@ -30,7 +28,7 @@ doHelp msg tgt rest =
         (withModule arg              -- else maybe it's a module name
             (doHelp msg tgt "help")             -- else give up
             (\md -> do -- its a module
-                cmds <- moduleCmds
+                cmds <- moduleCmds md
                 let ss = cmds >>= cmdNames
                 let s | null ss   = arg ++ " is a module."
                       | otherwise = arg ++ " provides: " ++ showClean ss

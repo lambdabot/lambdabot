@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, PatternGuards #-}
+{-# LANGUAGE PatternGuards #-}
 -- | DICT (RFC 2229) Lookup Module for lambdabot IRC robot.
 -- Tom Moertel <tom@moertel.com>
 module Plugin.Dict (theModule) where
@@ -6,10 +6,10 @@ module Plugin.Dict (theModule) where
 import Plugin
 import qualified Plugin.Dict.DictLookup as Dict
 
-plugin "Dict"
+type Dict = ModuleT () LB
 
-instance Module DictModule where
-    moduleCmds = return $
+theModule = newModule
+    { moduleCmds = return $
         [ (command "dict-help")
             { help = getHelp []
             , process = getHelp . words
@@ -25,6 +25,7 @@ instance Module DictModule where
         , let doLookup  = io . Dict.simpleDictLookup srv db
               sayResult = say . either ("Error: " ++) id
         ]
+    }
 
 -- | Configuration.
 

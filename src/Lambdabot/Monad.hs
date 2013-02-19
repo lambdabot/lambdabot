@@ -244,7 +244,7 @@ liftLB f = LB . mapReaderT f . runLB -- lbIO (\conv -> f (conv lb))
 --
 withModule :: String
            -> LB a
-           -> (forall mod. Module mod => mod -> ModuleT mod LB a)
+           -> (forall st. Module st -> ModuleT st LB a)
            -> LB a
 
 withModule modname def f = do
@@ -258,9 +258,9 @@ withModule modname def f = do
 
 withCommand :: String
             -> LB a
-            -> (forall mod. Module mod => mod 
-                                       -> Command (ModuleT mod LB)
-                                       -> ModuleT mod LB a)
+            -> (forall st. Module st
+                        -> Command (ModuleT st LB)
+                        -> ModuleT st LB a)
             -> LB a
 
 withCommand cmdname def f = do
@@ -273,7 +273,7 @@ withCommand cmdname def f = do
       _                           -> def
 
 -- | Interpret a function in the context of all modules
-withAllModules :: (forall mod. Module mod => mod -> ModuleT mod LB a) -> LB [a]
+withAllModules :: (forall st. Module st -> ModuleT st LB a) -> LB [a]
 withAllModules f = do
     mods <- gets $ M.elems . ircModules :: LB [ModuleRef]
     (`mapM` mods) $ \(ModuleRef m ref name) -> do

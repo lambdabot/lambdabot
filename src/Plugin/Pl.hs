@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell, TypeFamilies #-}
-
 -- | Pointfree programming fun
 --
 -- A catalogue of refactorings is at:
@@ -29,14 +27,12 @@ firstTimeout =  3000000 --  3 seconds
 maxTimeout   = 15000000 -- 15 seconds
 
 type PlState = GlobalPrivate () (Int, TopLevel)
+type Pl = ModuleT PlState LB
 
-plugin "Pl"
-
-instance Module PlModule where
-    type ModuleState PlModule = PlState
-    moduleDefState _ = return $ mkGlobalPrivate 15 ()
+theModule = newModule
+    { moduleDefState = return $ mkGlobalPrivate 15 ()
     
-    moduleCmds = return
+    , moduleCmds = return
         [ (command "pointless")
             { aliases = ["pl"]
             , help = say "pointless <expr>. Play with pointfree code."
@@ -47,6 +43,7 @@ instance Module PlModule where
             , process = const res
             }
         ]
+    }
 
 ------------------------------------------------------------------------
 

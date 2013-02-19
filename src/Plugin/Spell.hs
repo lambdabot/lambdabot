@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, TypeFamilies, PatternGuards #-}
+{-# LANGUAGE PatternGuards #-}
 -- Copyright (c) 2004-6 Don Stewart - http://www.cse.unsw.edu.au/~dons
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
 --
@@ -9,14 +9,12 @@ module Plugin.Spell (theModule) where
 import Plugin
 import qualified Text.Regex as R
 
-plugin "Spell"
-
 helpStr = "spell <word>. Show spelling of word"
 
-instance Module SpellModule where
-    type ModuleState SpellModule = Bool
-    
-    moduleCmds = return
+type Spell = ModuleT Bool LB
+
+theModule = newModule
+    { moduleCmds = return
         [ (command "spell")
             { help = say helpStr
             , process = doSpell
@@ -36,12 +34,13 @@ instance Module SpellModule where
             , process = const (nazi False)
             }
         ]
-    moduleDefState _ = return False
+    , moduleDefState = return False
 
-    contextual txt = do
+    , contextual = \txt -> do
         alive <- readMS
         if alive then io (spellingNazi txt) >>= mapM_ say
                  else return ()
+    }
 
 doSpell [] = say "No word to spell."
 doSpell s  = (say . showClean . take 5) =<< (io (spell s))
@@ -137,6 +136,6 @@ data Dictionary
 
 -- path to the master dictionary
 instance Show Dictionary where
-    -- TODO: use findFile from File.hs. But does this module even work anymore?
+    -- TODO: use findLBFile from File.hs. But does this module even work anymore?
     showsPrec _ Lambdabot = showString "State/lambdabot"
 

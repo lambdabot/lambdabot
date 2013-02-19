@@ -1,4 +1,3 @@
-{-# LANGUAGE TemplateHaskell, TypeFamilies #-}
 -- | Module: Vote
 -- | Support for voting
 -- |
@@ -11,8 +10,6 @@ module Plugin.Poll (theModule) where
 import Plugin hiding (choice)
 import qualified Data.ByteString.Char8 as P
 import qualified Data.Map as M
-
-plugin "Vote"
 
 newPoll :: Poll
 newPoll = (True,[])
@@ -47,10 +44,8 @@ voteSerial = Serial (Just . showPacked) (Just . readPacked)
 
 ------------------------------------------------------------------------
 
-instance Module VoteModule where
-    type ModuleState VoteModule = VoteState
-    
-    moduleCmds = return
+theModule = newModule
+    { moduleCmds = return
         [ (command "poll-list")
             { help = say "poll-list                   Shows all current polls"
             , process = \_ -> do
@@ -88,8 +83,9 @@ instance Module VoteModule where
             }
         ]
 
-    moduleDefState _  = return M.empty
-    moduleSerialize _ = Just voteSerial
+    , moduleDefState  = return M.empty
+    , moduleSerialize = Just voteSerial
+    }
 
 process_ cmd [] = say ("Missing argument. Check @help " ++ cmd ++ " for info.")
 

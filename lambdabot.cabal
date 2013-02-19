@@ -29,6 +29,7 @@ extra-source-files:     lambdabot-trusted/lambdabot-trusted.cabal
                         src/Plugin/Free/*.hs,
                         src/Plugin/Pl/*.hs,
                         src/Plugin/Quote/*.hs
+                        src/Plugin/Seen/*.hs
 
 data-files:             online.rc,
                         online2.rc,
@@ -71,6 +72,7 @@ executable lambdabot
                         directory,
                         filepath,
                         haskell-src-exts >= 0.4.8,
+                        hstatsd,
                         HTTP,
                         misfortune,
                         mtl > 2,

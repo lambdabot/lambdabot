@@ -1,4 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
 -- | The plugin-level IRC interface.
 
 module Plugin.IRC (theModule) where
@@ -16,10 +15,10 @@ import Control.Exception
 import qualified Data.ByteString.Char8 as P
 import Network( connectTo, PortID(..) )
 
-plugin "IRC"
+type IRC = ModuleT () LB
 
-instance Module IRCModule where
-    moduleCmds = return
+theModule = newModule
+    { moduleCmds = return
         [ (command "irc-connect")
             { privileged = True
             , help = say "irc-connect tag host portnum nickname userinfo.  connect to an irc server"
@@ -31,6 +30,7 @@ instance Module IRCModule where
                     _ -> say "Not enough parameters!"
             }
         ]
+    }
 
 ----------------------------------------------------------------------
 -- Encoding and decoding of messages

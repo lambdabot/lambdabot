@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, TypeFamilies, PatternGuards, ScopedTypeVariables #-}
+{-# LANGUAGE PatternGuards #-}
 -- | A todo list
 --
 -- (c) 2005 Samuel Bronson
@@ -7,17 +7,15 @@ module Plugin.Todo (theModule) where
 import Plugin
 import qualified Data.ByteString.Char8 as P
 
-plugin "Todo"
-
 -- A list of key/elem pairs with an ordering determined by its position in the list
 type TodoState = [(P.ByteString, P.ByteString)]
+type Todo = ModuleT TodoState LB
 
-instance Module TodoModule where
-    type ModuleState TodoModule = TodoState
-    moduleDefState  _ = return ([] :: TodoState)
-    moduleSerialize _ = Just assocListPackedSerial
+theModule = newModule
+    { moduleDefState  = return ([] :: TodoState)
+    , moduleSerialize = Just assocListPackedSerial
     
-    moduleCmds = return
+    , moduleCmds = return
         [ (command "todo")
             { help = say "todo. List todo entries"
             , process = getTodo
@@ -32,6 +30,7 @@ instance Module TodoModule where
             , process = delTodo
             }
         ]
+    }
 
 -- | Print todo list
 getTodo :: String -> Cmd Todo ()

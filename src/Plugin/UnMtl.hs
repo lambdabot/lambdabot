@@ -1,4 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
 ----------------------------------------------------------------------
 -- |
 -- Module      : Plugin.UnMtl
@@ -13,20 +12,19 @@ module Plugin.UnMtl (theModule) where
 
 import Control.Monad.Error ()
 
-import Language.Haskell.Exts hiding (tuple, var)
+import Language.Haskell.Exts as Hs hiding (tuple, var)
 import Lambdabot.Parser (prettyPrintInLine)
 
 import Plugin as P
 
-plugin "UnMtl"
-
-instance P.Module UnMtlModule where
-    moduleCmds = return
+theModule = newModule
+    { moduleCmds = return
         [ (command "unmtl")
             { help = say "unroll mtl monads"
             , process = say . either ("err: "++) prettyPrintInLine . mtlParser
             }
         ]
+    }
 
 -----------------------------------------------------------
 -- 'PType' wrapper type
@@ -152,7 +150,7 @@ types =
 
 mtlParser :: String -> Either String Type
 mtlParser input = do
-    Module _ _ _ _ _ _ decls <- liftE $ parseModule ("type X = "++input++"\n")
+    Hs.Module _ _ _ _ _ _ decls <- liftE $ parseModule ("type X = "++input++"\n")
     hsType <- case decls of
         (TypeDecl _ _ _ hsType:_) -> return hsType
         _ -> fail "No parse?"

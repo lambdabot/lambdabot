@@ -8,7 +8,7 @@
 -- Simplifies import lists, and abstracts over common patterns
 --
 module Plugin (
-        Module(..), ModuleT, plugin, modules,
+        Module(..), ModuleT, newModule, modules,
         
         getModuleName,
         bindModule0, bindModule1, bindModule2, 
@@ -45,7 +45,7 @@ import Lambdabot.Module
 import Lambdabot.Command hiding (runCommand, execCmd)
 import Lambdabot.State
 
-import Lambdabot.File (findFile)
+import Lambdabot.File (findLBFile)
 import Lambdabot.Message
 import Lambdabot.MiniHTTP
 import Lambdabot.Process
@@ -84,16 +84,6 @@ ios80 action = do
         removeControl = filter (\x -> isSpace x || not (isControl x))
     (say =<<) . io $ fmap (lim . encodeString . spaceOut . removeControl . decodeString) action 
 
-plugin :: String -> Q [Dec]
-plugin n = sequence [typedec, fundec, modtypedec]
- where
-    fundec = funD themod [clause [] (normalB ([| MODULE $(conE mod) |]) ) []]
-    -- typedec = newtypeD (cxt []) mod [] (normalC mod [strictType notStrict [t|()|]]) []
-    typedec = dataD (cxt []) mod [] [normalC mod []] []
-    modtypedec = tySynD (mkName n) [] ([t| ModuleT  |] `appT` conT mod `appT` [t| LB|])
-    themod = mkName "theModule"
-    mod = mkName $ n ++ "Module"
-
 modules :: [String] -> Q Exp
 modules xs = [| ($install, $names) |]
  where
@@ -101,4 +91,4 @@ modules xs = [| ($install, $names) |]
     install = [| sequence_ $(listE $ map instalify xs) |]
     instalify x = let mod = varE $ mkName $ concat $ ["Plugin.", x, ".theModule"]
                       low = stringE $ map toLower x
-                  in [| ircInstallModule $mod $low |]
+                  in [| ircInstallModule (MODULE $mod) $low |]

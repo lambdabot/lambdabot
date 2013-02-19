@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, CPP, TypeFamilies, PatternGuards #-}
+{-# LANGUAGE CPP, PatternGuards #-}
 -- | Support for quotes
 module Plugin.Quote (theModule) where
 
@@ -8,17 +8,15 @@ import Data.Fortune
 import qualified Data.Map as M
 import qualified Data.ByteString.Char8 as P
 
-plugin "Quote"
-
 type Key    = P.ByteString
 type Quotes = M.Map Key [P.ByteString]
+type Quote  = ModuleT Quotes LB
 
-instance Module QuoteModule where
-    type ModuleState QuoteModule = Quotes
-    moduleSerialize _ = Just mapListPackedSerial
-    moduleDefState  _ = return M.empty
+theModule = newModule
+    { moduleSerialize = Just mapListPackedSerial
+    , moduleDefState  = return M.empty
     
-    moduleCmds = return
+    , moduleCmds = return
         [ (command "quote")
             { help = say "quote <nick>: Quote <nick> or a random person if no nick is given"
             , process = runQuote . dropSpace
@@ -97,6 +95,7 @@ instance Module QuoteModule where
             , process = const (fortune ["farber"])
             }
         ]
+    }
 
 fortune :: [FilePath] -> Cmd Quote ()
 fortune xs = io (resolveFortuneFiles All xs >>= randomFortune) >>= say

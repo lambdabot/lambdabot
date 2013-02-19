@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE TypeFamilies #-}
 module Plugin.Numberwang where
 
 import Control.Applicative
@@ -8,7 +6,6 @@ import Data.Random.Distribution.Poisson
 import Numeric
 import Plugin
 
-plugin "Numberwang"
 
 data NumberwangState = State
     { nextCmd   :: !Int -- number of invocations of @numberwang before the next numberwang
@@ -18,17 +15,16 @@ data NumberwangState = State
 cmdDist = poisson (3.5 :: Double)
 conDist = poisson (32  :: Double)
 
-instance Module NumberwangModule where
-    type ModuleState NumberwangModule = NumberwangState
-    moduleDefState _ = sample (State <$> cmdDist <*> conDist)
-    
-    moduleCmds = return
+theModule = newModule
+    { moduleDefState = sample (State <$> cmdDist <*> conDist)
+    , moduleCmds = return
         [ (command "numberwang")
             { help = say "@numberwang <number>: Determines if it is Numberwang."
             , process = doNumberwang True . length . words
             }
         ]
-    contextual = doNumberwang False . length . numbers
+    , contextual = doNumberwang False . length . numbers
+    }
 
 numbers :: RealFrac t => String -> [t]
 numbers [] = []

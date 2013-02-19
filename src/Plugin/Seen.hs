@@ -1,4 +1,3 @@
-{-# LANGUAGE TemplateHaskell, TypeFamilies #-}
 -- Copyright (c) 2004 Thomas Jaeger
 -- Copyright (c) 2005-6 Don Stewart - http://www.cse.unsw.edu.au/~dons
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
@@ -8,6 +7,8 @@ module Plugin.Seen (theModule) where
 
 import Plugin
 import Lambdabot
+
+import Plugin.Seen.StopWatch
 
 import Lambdabot.AltTime
 import qualified Lambdabot.Message as G (Message, channels, nick, packNick, unpackNick, lambdabotName, showNick, readNick)
@@ -20,9 +21,6 @@ import qualified Data.ByteString.Char8 as P
 import qualified Data.ByteString.Lazy as L
 import System.Time (normalizeTimeDiff) -- or export from AltTime.hs?
 import Text.Printf
-
-
-plugin "Seen"
 
 -- | The type of channels
 type Channel = P.ByteString
@@ -51,24 +49,13 @@ data UserStatus
           -- ^ The user changed nick to something new.
     deriving (Show, Read)
 
-data StopWatch = Stopped !TimeDiff
-               | Running !ClockTime
-        deriving (Show,Read)
-
 type SeenState = (MaxMap, SeenMap)
 type SeenMap   = M.Map PackedNick UserStatus
-type MaxMap    = M.Map String Int
+type MaxMap    = M.Map Channel Int
+
+type Seen = ModuleT SeenState LB
 
 ------------------------------------------------------------------------
-
-instance Binary StopWatch where
-    put (Stopped td) = putWord8 0 >> put td
-    put (Running ct) = putWord8 1 >> put ct
-
-    get = getWord8 >>= \h -> case h of
-        0 -> Stopped <$> get
-        1 -> Running <$> get
-        _ -> error "Seen.StopWatch.get"
 
 instance Binary UserStatus where
     put (Present sp ch)          = putWord8 0 >> put sp >> put ch
@@ -83,58 +70,21 @@ instance Binary UserStatus where
         3 -> NewNick    <$> get
         _ -> error "Seen.UserStatus.get"
 
-instance Module SeenModule where
-    type ModuleState SeenModule = SeenState
-    moduleDefState  _ = return (M.empty,M.empty)
+theModule = newModule
+    { moduleDefState = return (M.empty,M.empty)
     
-    moduleCmds = return
+    , moduleCmds = return
         [ (command "users")
             { help = say "users [chan]. Report the maximum number of users seen in a channel, and active users in the last 30 minutes"
-            , process = \rest -> withMsg $ \msg -> do
-                -- first step towards tracking the maximum number of users
-                chan <- getTarget
-                (m, seenFM) <- readMS
-                s <- io getClockTime
-                let who = G.packNick $ lcNick $ if null rest then chan else G.readNick msg rest
-                    now = length [ () | (_,Present _ chans) <- M.toList seenFM
-                                      , who `elem` chans ]
-
-                    n = case M.lookup (P.unpack who) m of Nothing -> 1; Just n' -> n'
-
-                    active = length [() | (_,st@(Present _ chans)) <- M.toList seenFM
-                                        , who `elem` chans && isActive st ]
-
-                    isActive (Present (Just (ct,_td)) _cs) = recent ct
-                    isActive _                             = False
-
-                    recent t = normalizeTimeDiff (diffClockTimes s t) < gap_minutes
-                    gap_minutes = TimeDiff 0 0 0 0 30 0 0 -- 30 minutes
-
-                say $! concat
-                    [ "Maximum users seen in ", G.showNick msg $ G.unpackNick who, ": "
-                    , show n
-                    , ", currently: ", show now
-                    , printf " (%0.1f%%)" (100 * (fromIntegral now    / fromIntegral n) :: Double)
-                    , ", active: ", show active
-                    , printf " (%0.1f%%)" (100 * (fromIntegral active / fromIntegral now) :: Double)
-                    ]
-                
+            , process = doUsers                
             }
         , (command "seen") 
             { help = say "seen <user>. Report if a user has been seen by the bot"
-            , process = \rest -> withMsg $ \msg -> do
-                target <- getTarget
-                (_,seenFM) <- readMS
-                now        <- io getClockTime
-                let (txt,safe) = first unlines (getAnswer msg rest seenFM now)
-                if safe || not ("#" `isPrefixOf` nName target)
-                    then say txt
-                    else lb (ircPrivmsg (G.nick msg) txt)
-                
+            , process = doSeen
             }
         ]
 
-    moduleInit = do
+    , moduleInit = do
       wSFM <- bindModule2 withSeenFM
       zipWithM_ ircSignalConnect
         ["JOIN", "PART", "QUIT", "NICK", "353",      "PRIVMSG"] $ map wSFM
@@ -144,24 +94,66 @@ instance Module SeenModule where
       -- TODO: implement serialization using the "moduleSerialize" interface
       -- ... can't do that using Binary because it has no error handling.
 
-      c <- io $ findFile "seen"
+      c <- io $ findLBFile "seen"
       s <- io $ P.readFile c
       let ls = L.fromChunks [s]
       return (decode ls) >>= writeMS
 
-    moduleExit = do
+    , moduleExit = do
       chans <- lift $ ircGetChannels
       unless (null chans) $ do
           ct    <- io getClockTime
           modifyMS $ \(n,m) -> (n, botPart ct (map G.packNick chans) m)
 
         -- and write out our state:
-      withMS $ \s _ -> io ( findFile "seen" >>= \ c -> encodeFile c s)
+      withMS $ \s _ -> io ( findLBFile "seen" >>= \ c -> encodeFile c s)
+    }
 
 lcNick :: Nick -> Nick
 lcNick (Nick svr nck) = Nick svr (map toLower nck)
 
 ------------------------------------------------------------------------
+
+doUsers :: String -> Cmd Seen ()
+doUsers rest = withMsg $ \msg -> do
+    -- first step towards tracking the maximum number of users
+    chan <- getTarget
+    (m, seenFM) <- readMS
+    s <- io getClockTime
+    let who = G.packNick $ lcNick $ if null rest then chan else G.readNick msg rest
+        now = length [ () | (_,Present _ chans) <- M.toList seenFM
+                          , who `elem` chans ]
+
+        n = case M.lookup who m of Nothing -> 1; Just n' -> n'
+
+        active = length [() | (_,st@(Present _ chans)) <- M.toList seenFM
+                            , who `elem` chans && isActive st ]
+
+        isActive (Present (Just (ct,_td)) _cs) = recent ct
+        isActive _                             = False
+
+        recent t = normalizeTimeDiff (diffClockTimes s t) < gap_minutes
+        gap_minutes = TimeDiff 0 0 0 0 30 0 0 -- 30 minutes
+
+    say $! concat
+        [ "Maximum users seen in ", G.showNick msg $ G.unpackNick who, ": "
+        , show n
+        , ", currently: ", show now
+        , printf " (%0.1f%%)" (100 * (fromIntegral now    / fromIntegral n) :: Double)
+        , ", active: ", show active
+        , printf " (%0.1f%%)" (100 * (fromIntegral active / fromIntegral now) :: Double)
+        ]
+
+doSeen :: String -> Cmd Seen ()
+doSeen rest = withMsg $ \msg -> do
+                target <- getTarget
+                (_,seenFM) <- readMS
+                now        <- io getClockTime
+                let (txt,safe) = first unlines (getAnswer msg rest seenFM now)
+                if safe || not ("#" `isPrefixOf` nName target)
+                    then say txt
+                    else lb (ircPrivmsg (G.nick msg) txt)
+
 getAnswer :: G.Message a => a -> String -> SeenMap -> ClockTime -> ([String], Bool)
 getAnswer msg rest seenFM now
   | null nick' =
@@ -266,7 +258,7 @@ joinCB msg fm _ct nick
         chans = msgChans msg
 
 botPart :: ClockTime -> [Channel] -> SeenMap -> SeenMap
-botPart ct cs fm = fmap botPart' fm where
+botPart ct cs = fmap botPart' where
     botPart' (Present mct xs) = case xs \\ cs of
         [] -> WasPresent ct (startWatch ct zeroWatch) mct cs
         ys -> Present mct ys
@@ -354,7 +346,7 @@ withSeenFM f msg = do
           Right newstate -> do
 
                 let curUsers = length $! [ () | (_,Present _ chans) <- M.toList state
-                                         , P.pack chan `elem` chans ]
+                                         , chan `elem` chans ]
 
                     newMax = case M.lookup chan maxUsers of
                         Nothing -> M.insert chan curUsers maxUsers
@@ -364,7 +356,7 @@ withSeenFM f msg = do
 
                 newMax `seq` newstate `seq` writer (newMax, newstate)
 
-    where chan = P.unpack . G.packNick . lcNick . head . G.channels $! msg
+    where chan = G.packNick . lcNick . head . G.channels $! msg
 
 -- | Update the user status.
 updateJ :: Maybe ClockTime -- ^ If the bot joined the channel, the time that
@@ -396,17 +388,3 @@ updateNP now _ (NotPresent ct missed c)
 updateNP now chan (WasPresent lastSeen missed _ cs)
   | head cs == chan = WasPresent lastSeen (stopWatch now missed) Nothing cs
 updateNP _ _ status = status
-
-------------------------------------------------------------------------
--- Stop watches mini-library --
-
-zeroWatch :: StopWatch
-zeroWatch = Stopped noTimeDiff
-
-startWatch :: ClockTime -> StopWatch -> StopWatch
-startWatch now (Stopped td) = Running $! td `addToClockTime` now
-startWatch _ alreadyStarted = alreadyStarted
-
-stopWatch :: ClockTime -> StopWatch -> StopWatch
-stopWatch now (Running t)  = Stopped $! t `diffClockTimes` now
-stopWatch _ alreadyStopped = alreadyStopped

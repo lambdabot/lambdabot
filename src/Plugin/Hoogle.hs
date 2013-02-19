@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell, TypeFamilies #-}
-
 -- Copyright (c) 2004-5 Don Stewart - http://www.cse.unsw.edu.au/~dons
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
 
@@ -8,15 +6,9 @@ module Plugin.Hoogle (theModule) where
 
 import Plugin
 
-plugin "Hoogle"
-
-type HoogleState = [String]
-
-instance Module HoogleModule where
-    type ModuleState HoogleModule = HoogleState
-    
-    moduleDefState _ = return []
-    moduleCmds = return
+theModule = newModule
+    { moduleDefState = return []
+    , moduleCmds = return
         [ (command "hoogle")
             { help = say "hoogle <expr>. Haskell API Search for either names, or types."
             , process = \s -> do
@@ -36,6 +28,7 @@ instance Module HoogleModule where
                 mapM_ say this
             }
         ]
+    }
 
 ------------------------------------------------------------------------
 

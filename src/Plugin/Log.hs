@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell, TypeFamilies #-}
-
 -- Copyright (c) 2004 Thomas Jaeger
 -- Copyright (c) 2005 Simon Winwood
 -- Copyright (c) 2005 Don Stewart

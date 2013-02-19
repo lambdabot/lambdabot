@@ -1,4 +1,3 @@
-{-# LANGUAGE TemplateHaskell, TypeFamilies, Rank2Types #-}
 -- | System module : IRC control functions
 module Plugin.System (theModule) where
 
@@ -12,13 +11,11 @@ import qualified Data.Map as M       (Map,assocs,keys,fromList,insert,delete)
 
 import Control.Monad.State      (MonadState(get, put))
 
-plugin "System"
+type SystemState = (ClockTime, TimeDiff)
+type System = ModuleT SystemState LB
 
-instance Module SystemModule where
-    -- State is time current instance started and longest recorded uptime
-    type ModuleState SystemModule = (ClockTime, TimeDiff)
-    
-    moduleCmds = return $
+theModule = newModule
+    { moduleCmds = return $
         [ (command name)
             { help = say helpStr
             , process = doSystem name
@@ -32,14 +29,18 @@ instance Module SystemModule where
             }
         | (name, helpStr) <- M.assocs privcmds
         ]
-    moduleDefState _ = flip (,) noTimeDiff `fmap` io getClockTime
-    moduleSerialize  = const $ Just stdSerial
-    moduleInit       = do (_, d) <- readMS
-                          t      <- liftIO getClockTime
-                          writeMS (t, d)
-    moduleExit       = do (initial, d) <- readMS
-                          now          <- liftIO getClockTime
-                          writeMS (initial, max d (diffClockTimes now initial))
+    , moduleDefState = flip (,) noTimeDiff `fmap` io getClockTime
+    , moduleSerialize  = Just stdSerial
+    
+    , moduleInit = do
+        (_, d) <- readMS
+        t      <- liftIO getClockTime
+        writeMS (t, d)
+    , moduleExit = do
+        (initial, d) <- readMS
+        now          <- liftIO getClockTime
+        writeMS (initial, max d (diffClockTimes now initial))
+    }
 
 ------------------------------------------------------------------------
 
@@ -143,9 +144,9 @@ listModule s = withModule s fromCommand printProvides
         (return $ "No module \""++s++"\" loaded") (const . printProvides)
 
     -- ghc now needs a type annotation here
-    printProvides :: (forall mod. Module mod => mod -> ModuleT mod LB String)
+    printProvides :: Module st -> ModuleT st LB String
     printProvides m = do
-        cmds <- moduleCmds
+        cmds <- moduleCmds m
         let cmds' = filter (not . privileged) cmds
         name' <- getModuleName
         return . concat $ if null cmds'

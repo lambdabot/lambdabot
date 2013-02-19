@@ -1,4 +1,3 @@
-{-# LANGUAGE TemplateHaskell, TypeFamilies #-}
 -- | Hackish Haddock module.
 module Plugin.Haddock (theModule) where
 
@@ -8,25 +7,27 @@ import qualified Data.Map as M
 import qualified Data.ByteString.Char8 as P
 import Data.ByteString.Char8 (ByteString,pack,unpack)
 
-plugin "Haddock"
-
 type HaddockState = M.Map ByteString [ByteString]
+type Haddock = ModuleT HaddockState LB
 
-instance Module HaddockModule where
-    type ModuleState HaddockModule = HaddockState
-    
-    moduleCmds = return
+theModule = newModule
+    { moduleCmds = return
         [ (command "index")
             { help = say "index <ident>. Returns the Haskell modules in which <ident> is defined"
-            , process = \k -> do
-                m <- readMS
-                say $ maybe "bzzt"
-                    (intercalate (", ") . map unpack)
-                    (M.lookup (stripPs (pack k)) m)
+            , process = doHaddock
             }
         ]
-    moduleDefState  _ = return M.empty
-    moduleSerialize _ = Just (readOnly readPacked)
+        
+    , moduleDefState  = return M.empty
+    , moduleSerialize = Just (readOnly readPacked)
+    }
+
+doHaddock :: String -> Cmd Haddock ()
+doHaddock k = do
+    m <- readMS
+    say $ maybe "bzzt"
+        (intercalate (", ") . map unpack)
+        (M.lookup (stripPs (pack k)) m)
 
 -- make \@index ($) work.
 stripPs :: ByteString -> ByteString

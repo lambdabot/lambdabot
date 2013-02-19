@@ -1,4 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
 -- | Simple template module
 -- Contains many constant bot commands.
 module Plugin.Dummy (theModule) where
@@ -10,30 +9,29 @@ import Plugin.Dummy.DocAssocs (docAssocs)
 import qualified Data.Map as M
 import qualified Data.ByteString.Char8 as P
 
-plugin "Dummy"
-
-instance Module DummyModule where
-
-  moduleCmds = return
-      $ (command "eval")
-           { help = say "eval. Do nothing (perversely)"
-           , process = const (return ()) 
-           }
-      : (command "choose")
-          { help = say "choose. Lambdabot featuring AI power"
-          , process = \args ->
-              if null args then say "Choose between what?"
-                  else say =<< (io . random . words $ args)
-          }
-      : [ (command cmd)
-              { help = say (dummyHelp cmd)
-              , process = mapM_ say . lines . op
-              }
-        | (cmd, op) <- dummylst
-        ]
-
-  contextual "lisppaste2: url"  = say pastebinMsg
-  contextual _                  = return ()
+theModule = newModule
+    { moduleCmds = return
+        $ (command "eval")
+            { help = say "eval. Do nothing (perversely)"
+            , process = const (return ()) 
+            }
+        : (command "choose")
+            { help = say "choose. Lambdabot featuring AI power"
+            , process = \args ->
+                if null args then say "Choose between what?"
+                    else say =<< (io . random . words $ args)
+            }
+        : [ (command cmd)
+            { help = say (dummyHelp cmd)
+            , process = mapM_ say . lines . op
+            }
+          | (cmd, op) <- dummylst
+          ]
+    
+    , contextual = \msg -> case msg of
+        "lisppaste2: url"  -> say pastebinMsg
+        _                  -> return ()
+    }
 
 pastebinMsg :: String
 pastebinMsg = "Haskell pastebin: http://hpaste.org/"

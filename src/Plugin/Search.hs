@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, ViewPatterns #-}
+{-# LANGUAGE ViewPatterns #-}
 -- | Search various things, Wikipedia and google for now.
 --
 -- (c) 2005 Samuel Bronson
@@ -12,8 +12,6 @@ import Plugin
 import Network.HTTP
 import Text.HTML.TagSoup
 import Text.HTML.TagSoup.Match (anyAttr, tagOpen)
-
-plugin "Search"
 
 engines :: [(String, (URI, String -> String, [Header]))]
 engines =
@@ -42,8 +40,8 @@ googleUri :: URI
 googleUri = makeUri "www.google.com" "/search"
 -- wikipediaUri = makeUri "en.wikipedia.org" "/wiki/Special:Search"
 
-instance Module SearchModule where
-    moduleCmds = return
+theModule = newModule
+    { moduleCmds = return
         [ (command name)
             { help = say (moduleHelp name)
             , process = \e -> do
@@ -52,6 +50,7 @@ instance Module SearchModule where
             }
         | name <- map fst engines
         ]
+    }
 
 moduleHelp s = case s of
     "google"    -> "google <expr>. Search google and show url of first hit"

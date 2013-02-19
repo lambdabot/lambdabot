@@ -1,4 +1,3 @@
-{-# LANGUAGE TemplateHaskell, TypeFamilies #-}
 -- Copyright (c) 2005 Don Stewart - http://www.cse.unsw.edu.au/~dons
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
 
@@ -9,26 +8,24 @@ import Plugin
 import Lambdabot (ircPrivmsg')
 import qualified Data.Map as M
 
-plugin "Localtime"
-
 type TimeMap = M.Map Nick  -- the person who's time we requested
                     [Nick] -- a list of targets waiting on this time
 
-instance Module LocaltimeModule where
-  type ModuleState LocaltimeModule = TimeMap
-  moduleDefState _    = return M.empty
+theModule = newModule
+    { moduleDefState = return M.empty
 
-  moduleCmds = return
-      [ (command "time")
-          { aliases = ["localtime"]
-          , help = say "time <user>. Print a user's local time. User's client must support ctcp pings."
-          , process = doLocalTime
-          }
-      , (command "localtime-reply")
-          { help = say "time <user>. Print a user's local time. User's client must support ctcp pings."
-          , process = doReply
-          }
-      ]
+    , moduleCmds = return
+        [ (command "time")
+            { aliases = ["localtime"]
+            , help = say "time <user>. Print a user's local time. User's client must support ctcp pings."
+            , process = doLocalTime
+            }
+        , (command "localtime-reply")
+            { help = say "time <user>. Print a user's local time. User's client must support ctcp pings."
+            , process = doReply
+            }
+        ]
+    } :: Module TimeMap
 
 -- record this person as a callback, for when we (asynchronously) get a result
 doLocalTime [] = do

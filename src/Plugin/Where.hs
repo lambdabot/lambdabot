@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell, TypeFamilies #-}
-
 -- |
 -- Module    : Where
 -- Copyright : 2003 Shae Erisson
@@ -14,17 +12,15 @@ import Plugin
 import qualified Data.ByteString.Char8 as P
 import qualified Data.Map as M
 
-plugin "Where"
-
 type WhereState         = M.Map P.ByteString P.ByteString
 type WhereWriter        = WhereState -> LB ()
+type Where              = ModuleT WhereState LB
 
-instance Module WhereModule where
-    type ModuleState WhereModule = WhereState
-    moduleDefState  _ = return M.empty
-    moduleSerialize _ = Just mapPackedSerial
+theModule = newModule
+    { moduleDefState  = return M.empty
+    , moduleSerialize = Just mapPackedSerial
     
-    moduleCmds = return
+    , moduleCmds = return
         [ (command "where")
             { help = say "where <key>. Return element associated with key"
             , process = doCmd "where"
@@ -42,6 +38,7 @@ instance Module WhereModule where
             , process = doCmd "where+"
             }
         ]
+    }
 
 doCmd :: String -> String -> Cmd Where ()
 doCmd cmd rest = (say =<<) . withMS $ \factFM writer ->

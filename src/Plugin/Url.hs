@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, TypeFamilies, PatternGuards #-}
+{-# LANGUAGE PatternGuards #-}
 -- | Fetch URL page titles of HTML links.
 module Plugin.Url (theModule) where
 
@@ -6,12 +6,8 @@ import Plugin
 
 import qualified Text.Regex as R -- legacy
 
-plugin "Url"
-
-instance Module UrlModule where
-    type ModuleState UrlModule = Bool
-    
-    moduleCmds = return
+theModule = newModule
+    { moduleCmds = return
         [ (command "url-title")
             { help = say "url-title <url>. Fetch the page title."
             , process = 
@@ -39,10 +35,10 @@ instance Module UrlModule where
                 say "Url disabled"
             }
         ]
-    moduleDefState _              = return True -- url on
-    moduleSerialize _             = Just stdSerial
+    , moduleDefState              = return True -- url on
+    , moduleSerialize             = Just stdSerial
 
-    contextual text = do
+    , contextual = \text -> do
       alive <- lift readMS
       if alive && (not $ areSubstringsOf ignoredStrings text)
         then case containsUrl text of
@@ -54,6 +50,7 @@ instance Module UrlModule where
                      say (intercalate ", " (catMaybes [title, tiny]))
                  | otherwise -> mbSay =<< fetchTitle url
         else return ()
+    }
 
 mbSay = maybe (return ()) say
 

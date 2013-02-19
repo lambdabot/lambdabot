@@ -1,5 +1,3 @@
-
-{-# LANGUAGE TemplateHaskell, PatternGuards #-}
 -- Copyright (c) 2004-6 Donald Bruce Stewart - http://www.cse.unsw.edu.au/~dons
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
 
@@ -14,10 +12,8 @@ import System.Directory
 import System.Exit
 import Control.Exception (try, SomeException)
 
-plugin "Eval"
-
-instance Module EvalModule where
-    moduleCmds = return
+theModule = newModule
+    { moduleCmds = return
         [ (command "run")
             { help = say "run <expr>. You have Haskell, 3 seconds and no IO. Go nuts!"
             , process = ios80 . eval
@@ -38,9 +34,10 @@ instance Module EvalModule where
             }
         ]
 
-    contextual txt
-        | isEval txt = ios80 (eval (dropPrefix txt))
-        | otherwise  = return ()
+    , contextual = \txt ->
+        when (isEval txt)
+            (ios80 (eval (dropPrefix txt)))
+    }
 
 binary :: String
 binary = "mueval"
@@ -66,7 +63,7 @@ dropPrefix = dropWhile (' ' ==) . drop 2
 
 eval :: String -> IO String
 eval src = do
-            load <- findFile "L.hs"
+            load <- findLBFile "L.hs"
             (out,err,_) <- popen binary (args load src) Nothing
             case (out,err) of
                 ([],[]) -> return "Terminated\n"
@@ -86,7 +83,7 @@ define :: String -> IO String
 define [] = return "Define what?"
 define src = case Hs.parseModule src of
     Hs.ParseOk srcModule -> do
-        l <- findFile "L.hs"
+        l <- findLBFile "L.hs"
         res <- Hs.parseFile l
         case res of
             Hs.ParseFailed loc err -> return (Hs.prettyPrint loc ++ ':' : err)
@@ -143,7 +140,7 @@ comp src = do
                     removeFile ".L.hs"
                     return "Error."
                 | otherwise -> do
-                    l <- findFile "L.hs"
+                    l <- findLBFile "L.hs"
                     renameFile ".L.hs" l
                     return "Defined."
         (ee,[]) -> return ee
@@ -157,6 +154,6 @@ munge = expandTab 8 . dropWhile (=='\n') . dropNL
 
 reset :: IO ()
 reset = do
-    l <- findFile "L.hs"
-    p <- findFile "Pristine.hs"
+    l <- findLBFile "L.hs"
+    p <- findLBFile "Pristine.hs"
     copyFile p l

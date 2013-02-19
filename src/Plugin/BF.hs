@@ -1,4 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
 -- Copyright (c) 2006 Jason Dagit - http://www.codersbase.com/
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
 
@@ -8,15 +7,14 @@ module Plugin.BF (theModule) where
 
 import Plugin
 
-plugin "BF"
-
-instance Module BFModule where
-    moduleCmds = return
+theModule = newModule
+    { moduleCmds = return
         [ (command "bf")
             { help = say "bf <expr>. Evaluate a brainf*ck expression"
             , process = ios80 . bf
             }
         ]
+    }
 
 binary :: String
 binary = "bf"

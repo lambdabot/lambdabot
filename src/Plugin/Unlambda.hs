@@ -1,4 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
 -- Copyright (c) 2006 Don Stewart - http://www.cse.unsw.edu.au/~dons
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
 --
@@ -9,15 +8,14 @@ module Plugin.Unlambda (theModule) where
 
 import Plugin
 
-plugin "Unlambda"
-
-instance Module UnlambdaModule where
-    moduleCmds = return
+theModule = newModule
+    { moduleCmds = return
         [ (command "unlambda")
             { help = say "unlambda <expr>. Evaluate an unlambda expression"
             , process = ios80 . unlambda
             }
         ]
+    }
 
 binary :: String
 binary = "unlambda"

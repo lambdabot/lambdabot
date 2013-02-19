@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, PatternGuards, ViewPatterns #-}
+{-# LANGUAGE PatternGuards #-}
 -- Copyright (c) 2005 Don Stewart - http://www.cse.unsw.edu.au/~dons
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
 
@@ -11,10 +11,10 @@ import Lambdabot
 
 import Control.Arrow (first)
 
-plugin "Compose"
+type Compose = ModuleT () LB
 
-instance Module ComposeModule where
-    moduleCmds = return 
+theModule = newModule
+    { moduleCmds = return 
         [ (command "@")
             { aliases = ["?"]
             , help = do
@@ -44,7 +44,7 @@ instance Module ComposeModule where
                 _ -> say "Not enough arguments to @."
             }
         ]
-
+    }
 
 -- | Compose two plugin functions
 compose :: (String -> LB [String]) -> (String -> LB [String]) -> (String -> LB [String])

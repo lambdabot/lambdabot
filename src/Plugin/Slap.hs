@@ -1,19 +1,19 @@
-{-# LANGUAGE TemplateHaskell #-}
 -- | Support for quotes
 module Plugin.Slap (theModule) where
 
 import Plugin
 
-plugin "Slap"
+type Slap = ModuleT () LB
 
-instance Module SlapModule where
-    moduleCmds = return
+theModule = newModule
+    { moduleCmds = return
         [ (command "slap")
             { aliases = ["smack"]
             , help = say "slap <nick>. Slap someone amusingly."
             , process = slap
             }
         ]
+    }
 
 ------------------------------------------------------------------------
 

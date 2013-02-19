@@ -1,22 +1,22 @@
-{-# LANGUAGE TemplateHaskell, TypeFamilies #-}
-
 -- | Haskell project name generation
 -- semi-joke
 module Plugin.Fresh (theModule) where
 
 import Plugin
 
-plugin "Fresh"
+type Fresh = ModuleT Integer LB
 
-instance Module FreshModule where
-    type ModuleState FreshModule = Integer
+theModule = newModule
+    { moduleDefState = return 0
+    , moduleSerialize = Just stdSerial
     
-    moduleCmds = return
+    , moduleCmds = return
         [ (command "freshname")
             { help = say "freshname. Return a unique Haskell project name."
             , process = \_ -> lift fresh >>= say
             }
         ]
+    }
 
 fresh :: Fresh String
 fresh = withMS $ \n f -> do
