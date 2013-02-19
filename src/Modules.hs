@@ -40,7 +40,6 @@ import qualified Plugin.Seen
 import qualified Plugin.Slap
 import qualified Plugin.Source
 import qualified Plugin.Spell
-import qualified Plugin.Stats
 import qualified Plugin.System
 import qualified Plugin.Tell
 import qualified Plugin.Ticker
@@ -96,7 +95,6 @@ modulesInfo = $(modules $ nub
                     , "Slap"
                     , "Source"
                     , "Spell"
-                    , "Stats"
                     , "Tell"
                     , "Ticker"
                     , "Todo"
