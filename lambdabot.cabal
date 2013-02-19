@@ -72,7 +72,6 @@ executable lambdabot
                         directory,
                         filepath,
                         haskell-src-exts >= 0.4.8,
-                        hstatsd,
                         HTTP,
                         misfortune,
                         mtl > 2,
