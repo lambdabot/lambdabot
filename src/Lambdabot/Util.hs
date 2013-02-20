@@ -40,7 +40,6 @@ import Config
 
 import Data.List                (intercalate, isPrefixOf, stripPrefix)
 import Data.Char                (isSpace)
-import Data.Maybe
 import Data.Random
 import Control.Monad.State      (MonadIO(..))
 
@@ -119,7 +118,7 @@ firstWord = takeWhile (not . isSpace)
 --   it outputs the String given. Else, it is a no-op.
 
 debugStr :: (MonadIO m) => String -> m ()
-debugStr 
+debugStr
     | verbose config  = liftIO . putStr
     | otherwise       = const (return ())
 
@@ -363,11 +362,11 @@ insult =
     "I've seen penguins that can type better than that.",
     "Have you considered trying to match wits with a rutabaga?",
     "You speak an infinite deal of nothing.",
-    
+
     -- other
     "Are you typing with your feet?",
     "Abort, Retry, Panic?",
-    
+
     -- More haskellish insults
     "You untyped fool!",
     "My brain just exploded",
