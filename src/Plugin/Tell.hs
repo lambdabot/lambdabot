@@ -123,9 +123,8 @@ theModule = newModule
         ]
     , moduleDefState  = return M.empty
     , moduleSerialize = Just mapSerial
-
-    -- | Hook onto contextual. Grab nicks of incoming messages, and tell them
-    --   if they have any messages, if it's less than a day since we last did so.
+    -- Hook onto contextual. Grab nicks of incoming messages, and tell them
+    -- if they have any messages, if it's less than a day since we last did so.
     , contextual = const $ do
         sender <- getSender
         remp <- needToRemind sender
@@ -185,11 +184,11 @@ doMessages loud = do
     sender <- getSender
     msgs <- getMessages sender
     clearMessages sender
-    
+
     let tellNote = if loud
             then say
             else lb . ircPrivmsg sender
-    
+
     case msgs of
         Nothing -> say "You don't have any messages"
         Just msgs -> do

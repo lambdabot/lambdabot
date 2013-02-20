@@ -37,10 +37,10 @@ theModule = newModule
     , moduleDefState  = return $ M.empty
     , moduleSerialize = Just mapSerial
 
-    -- ^nick++($| )
+    -- nick++($| )
     , contextual = \text -> withMsg $ \msg -> do
         sender <- getSender
-        
+
         let ws          = words text
             decs        = match "--"
             incs        = match "++"
@@ -52,7 +52,7 @@ theModule = newModule
             badNicks    = ["", "C", "c", "notepad"]
             -- More special cases, to ignore Perl code.
             badPrefixes = ["$", "@", "%"]
-        
+
         mapM_ (changeKarma (-1) sender) =<< decs
         mapM_ (changeKarma   1  sender) =<< incs
     }

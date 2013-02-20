@@ -69,7 +69,7 @@ doPING msg = debugStrLn $ errShowMsg msg
 doNOTICE :: IrcMessage -> Base ()
 doNOTICE msg
     | isCTCPTimeReply   = doPRIVMSG (timeReply msg)
-        -- ^ TODO: need to say which module to run the privmsg in
+        -- TODO: need to say which module to run the privmsg in
     | otherwise         = debugStrLn $ "NOTICE: " ++ show body
     where
         body = ircMsgParams msg
@@ -202,11 +202,11 @@ doPRIVMSG' myname msg target
                     (ircPrivmsg towhere "Unknown command, try @list")
                     (\m theCmd -> do
                         name'   <- getModuleName
-                        
+
                         hasPrivs <- lb (checkPrivs msg)
                         let ok =  (cmd' `notElem` disabledCommands config)
                                && (not (privileged theCmd) || hasPrivs)
-                        
+
                         if not ok
                           then lift $ ircPrivmsg towhere "Not enough privileges"
                           else catchIrc
