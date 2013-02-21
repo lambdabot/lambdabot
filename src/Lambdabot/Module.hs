@@ -4,9 +4,9 @@
 module Lambdabot.Module
     ( MODULE(..), Module(..), newModule
     , ModuleT(..)
-    
+
     , ModuleRef(..), CommandRef(..)
-    
+
     , getRef, getModuleName, bindModule0, bindModule1, bindModule2
     ) where
 
@@ -56,7 +56,7 @@ data Module st = Module {
         -- | Process contextual input. A plugin that implements 'contextual'
         -- is able to respond to text not part of a normal command.
         contextual
-            :: !(String                           -- ^ the text
+            :: !(String                           --  the text
              -> Cmd.Cmd (ModuleT st LB) ())       -- ^ the action
     }
 
@@ -77,7 +77,7 @@ newModule = Module
 -- the value level, for manipluation at runtime by the dynamic linker.
 data MODULE = forall st. MODULE !(Module st)
 
-data ModuleRef = forall st. 
+data ModuleRef = forall st.
     ModuleRef (Module st) (MVar st) String
 
 data CommandRef = forall st.
