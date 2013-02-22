@@ -41,7 +41,6 @@ dummyHelp s = case s of
     "bug"         -> "bug. Submit a bug to GHC's trac"
 
     "id"          -> "id <arg>. The identity plugin"
-    "read"        -> "read \"<foo>\". Print <foo>"
     "show"        -> "show <foo>. Print \"<foo>\""
     "wiki"        -> "wiki <page>. URLs of Haskell wiki pages"
     "oldwiki"     -> "oldwiki <page>. URLs of the old hawiki pages"
@@ -63,7 +62,6 @@ dummyHelp s = case s of
 dummylst :: [(String, String -> String)]
 dummylst =
     [("id",      (' ' :) . id)
-    ,("read",    (' ' :) . filter (/= '\n') . read)
     ,("show",       show)
 
     ,("dummy",      const "dummy")
