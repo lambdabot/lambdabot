@@ -9,7 +9,6 @@ module Lambdabot.Util (
         dropSpace,
         dropSpaceEnd,
         dropNL,
-        after,
         splitFirstWord,
         firstWord,
         debugStr,
@@ -37,7 +36,7 @@ module Lambdabot.Util (
 
 import Lambdabot.Config
 
-import Data.List                (intercalate, isPrefixOf, stripPrefix)
+import Data.List                (intercalate, isPrefixOf)
 import Data.Char                (isSpace)
 import Data.Random
 import Control.Monad.State      (MonadIO(..))
@@ -80,23 +79,6 @@ breakOnGlue glue rest@(x:xs)
     | otherwise = (x:piece, rest')
         where (piece, rest') = breakOnGlue glue xs
 {-# INLINE breakOnGlue #-}
-
--- | 'after' takes 2 strings, called the prefix and data. A necessary
---   precondition is that
---
---   > Data.List.isPrefixOf prefix data ===> True
---
---   'after' returns a string based on data, where the prefix has been
---   removed as well as any excess space characters. Example:
---
---   > after "This is" "This is a string" ===> "a string"
-after :: String -- ^ Prefix string
-      -> String -- ^ Data string
-      -> String -- ^ Result: Data string with Prefix string and excess whitespace
-                --     removed
-after prefix str = case stripPrefix prefix str of
-    Nothing   -> error "after: /= case"
-    Just rest -> dropWhile isSpace rest
 
 -- | Break a String into it's first word, and the rest of the string. Example:
 --
