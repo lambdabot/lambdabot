@@ -1,32 +1,26 @@
-module Lambdabot.Main where
+module Lambdabot.Main (main', received) where
 
 import Lambdabot.Shared
 import Lambdabot
 
-import Lambdabot.Util( listToMaybeAll )
-
+import Control.Applicative
+import Control.Monad.State (get, liftIO)
 import qualified Data.Map as M
-
 import System.Environment
 
-import Data.Maybe
-import Control.Monad.State (get, liftIO)
-
-data Args = Args { initcmds   :: [String] }
+parseArgs :: [String] -> Maybe [String]
+parseArgs ("-e" : cmd : x)  = (cmd :) <$> parseArgs x
+parseArgs []                = Just []
+parseArgs _                 = Nothing
 
 main' :: Maybe DynLoad -> (LB (), [String]) -> IO ()
-main' dyn (loadStaticModules, pl) = do
-    x    <- getArgs
-    let a = parseArgs x
-    case a of
-        Just args -> runIrc (fromMaybe ["offline"] $ listToMaybeAll $ initcmds args) loadStaticModules ld pl
-        _         -> putStrLn "Usage: lambdabot [-e 'cmd']*"
-
-    where ld = fromMaybe (error "no dynamic loading") dyn
-          parseArgs ("-e":cmd:x)       = parseArgs x >>$ \a -> a { initcmds = cmd : initcmds a }
-          parseArgs []                 = Just $ Args { initcmds = [] }
-          parseArgs _                  = Nothing
-          (>>$) = flip fmap
+main' Nothing _ = error "no dynamic loading"
+main' (Just ld) (loadStaticModules, pl) = do
+    args <- parseArgs <$> getArgs
+    
+    case args of
+        Just xs -> runIrc (if null xs then ["offline"] else xs) loadStaticModules ld pl
+        _       -> putStrLn "Usage: lambdabot [-e 'cmd']*"
 
 
 ------------------------------------------------------------------------

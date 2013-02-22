@@ -17,7 +17,6 @@ module Lambdabot.Util (
         timeStamp,
         limitStr,
         listToStr, showWidth,
-        listToMaybeWith, listToMaybeAll,
         showClean,
         expandTab,
         closest, closests,
@@ -143,16 +142,6 @@ listToStr conj (item:items) =
       listToStr' [y] = concat [" ", conj, " ", y]
       listToStr' (y:ys) = concat [", ", y, listToStr' ys]
   in  item ++ listToStr' items
-
--- | Like 'listToMaybe', but take a function to use in case of a non-null list.
---   I.e. @listToMaybe = listToMaybeWith head@
-listToMaybeWith :: ([a] -> b) -> [a] -> Maybe b
-listToMaybeWith _ [] = Nothing
-listToMaybeWith f xs = Just (f xs)
-
--- | @listToMaybeAll = listToMaybeWith id@
-listToMaybeAll :: [a] -> Maybe [a]
-listToMaybeAll = listToMaybeWith id
 
 ------------------------------------------------------------------------
 
