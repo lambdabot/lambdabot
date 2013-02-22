@@ -61,7 +61,7 @@ import Data.Typeable
 import Data.Word
 import Numeric
 import System.Random
-import Trusted {- from "lambdabot-trusted" package in lambdabot source tree -}
+import Lambdabot.Plugin.Eval.Trusted
 import Text.PrettyPrint.HughesPJ hiding (empty)
 import Text.Printf
 import qualified Data.ByteString as BS

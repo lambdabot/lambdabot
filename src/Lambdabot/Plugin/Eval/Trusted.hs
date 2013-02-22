@@ -1,9 +1,9 @@
 {-# LANGUAGE Trustworthy #-}
-module Trusted
+module Lambdabot.Plugin.Eval.Trusted
     ( module ShowQ
     , module Math.OEIS
     , module Test.QuickCheck
-    , module Trusted
+    , module Lambdabot.Plugin.Eval.Trusted
     ) where
 
 import ShowQ
