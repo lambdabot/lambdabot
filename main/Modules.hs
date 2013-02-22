@@ -2,57 +2,57 @@
 
 module Modules (modulesInfo) where
 
-import Plugin
+import Lambdabot.Plugin
 
 -- to add a new plugin, one must first add a qualified import here, and also
 -- add a string in the list below
-import qualified Plugin.Activity
-import qualified Plugin.Base
-import qualified Plugin.BF
-import qualified Plugin.Check
-import qualified Plugin.Compose
-import qualified Plugin.Dice
-import qualified Plugin.Dict
-import qualified Plugin.Djinn
-import qualified Plugin.Dummy
-import qualified Plugin.Elite
-import qualified Plugin.Eval
-import qualified Plugin.Filter
-import qualified Plugin.Free
-import qualified Plugin.Fresh
-import qualified Plugin.Haddock
-import qualified Plugin.Help
-import qualified Plugin.Hoogle
-import qualified Plugin.Instances
-import qualified Plugin.IRC
-import qualified Plugin.Karma
-import qualified Plugin.Localtime
-import qualified Plugin.More
-import qualified Plugin.OEIS
-import qualified Plugin.OfflineRC
-import qualified Plugin.Pl
-import qualified Plugin.Pointful
-import qualified Plugin.Poll
-import qualified Plugin.Pretty
-import qualified Plugin.Quote
-import qualified Plugin.Search
-import qualified Plugin.Seen
-import qualified Plugin.Slap
-import qualified Plugin.Source
-import qualified Plugin.Spell
-import qualified Plugin.System
-import qualified Plugin.Tell
-import qualified Plugin.Ticker
-import qualified Plugin.Todo
-import qualified Plugin.Topic
-import qualified Plugin.Type
-import qualified Plugin.Undo
-import qualified Plugin.Unlambda
-import qualified Plugin.UnMtl
-import qualified Plugin.Url
-import qualified Plugin.Version
-import qualified Plugin.Vixen
-import qualified Plugin.Where
+import qualified Lambdabot.Plugin.Activity
+import qualified Lambdabot.Plugin.Base
+import qualified Lambdabot.Plugin.BF
+import qualified Lambdabot.Plugin.Check
+import qualified Lambdabot.Plugin.Compose
+import qualified Lambdabot.Plugin.Dice
+import qualified Lambdabot.Plugin.Dict
+import qualified Lambdabot.Plugin.Djinn
+import qualified Lambdabot.Plugin.Dummy
+import qualified Lambdabot.Plugin.Elite
+import qualified Lambdabot.Plugin.Eval
+import qualified Lambdabot.Plugin.Filter
+import qualified Lambdabot.Plugin.Free
+import qualified Lambdabot.Plugin.Fresh
+import qualified Lambdabot.Plugin.Haddock
+import qualified Lambdabot.Plugin.Help
+import qualified Lambdabot.Plugin.Hoogle
+import qualified Lambdabot.Plugin.Instances
+import qualified Lambdabot.Plugin.IRC
+import qualified Lambdabot.Plugin.Karma
+import qualified Lambdabot.Plugin.Localtime
+import qualified Lambdabot.Plugin.More
+import qualified Lambdabot.Plugin.OEIS
+import qualified Lambdabot.Plugin.OfflineRC
+import qualified Lambdabot.Plugin.Pl
+import qualified Lambdabot.Plugin.Pointful
+import qualified Lambdabot.Plugin.Poll
+import qualified Lambdabot.Plugin.Pretty
+import qualified Lambdabot.Plugin.Quote
+import qualified Lambdabot.Plugin.Search
+import qualified Lambdabot.Plugin.Seen
+import qualified Lambdabot.Plugin.Slap
+import qualified Lambdabot.Plugin.Source
+import qualified Lambdabot.Plugin.Spell
+import qualified Lambdabot.Plugin.System
+import qualified Lambdabot.Plugin.Tell
+import qualified Lambdabot.Plugin.Ticker
+import qualified Lambdabot.Plugin.Todo
+import qualified Lambdabot.Plugin.Topic
+import qualified Lambdabot.Plugin.Type
+import qualified Lambdabot.Plugin.Undo
+import qualified Lambdabot.Plugin.Unlambda
+import qualified Lambdabot.Plugin.UnMtl
+import qualified Lambdabot.Plugin.Url
+import qualified Lambdabot.Plugin.Version
+import qualified Lambdabot.Plugin.Vixen
+import qualified Lambdabot.Plugin.Where
 
 modulesInfo :: (LB (), [String])
 modulesInfo = $(modules $ nub

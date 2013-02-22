@@ -113,7 +113,7 @@ getCN (ChanName n) = n
 -- functions which are able to handle sending messages.
 --
 -- When a message is recieved, the chat module is expected to call
--- `LMain.received'.  This is not ideal.
+-- `Lambdabot.Main.received'.  This is not ideal.
 
 addServer :: String -> (IrcMessage -> LB ()) -> ModuleT mod LB ()
 addServer tag sendf = do

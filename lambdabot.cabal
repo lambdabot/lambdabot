@@ -40,6 +40,7 @@ extra-source-files:     AUTHORS
                         lambdabot-trusted/src/*.hs
                         src/*.hs,
                         src/*.hs-boot
+                        src/Lambdabot/Plugin/Free/Test.hs
 
 data-files:             scripts/online.rc,
                         State/djinn,
@@ -69,18 +70,73 @@ library
                         -fno-warn-orphans
                         -funbox-strict-fields
                         -fwarn-unused-imports
+  
   exposed-modules:      Lambdabot
                         Lambdabot.AltTime
                         Lambdabot.Command
                         Lambdabot.Error
                         Lambdabot.File
                         Lambdabot.IRC
+                        Lambdabot.Main
                         Lambdabot.Message
                         Lambdabot.MiniHTTP
                         Lambdabot.Module
                         Lambdabot.Monad
                         Lambdabot.NickEq
                         Lambdabot.Parser
+                        Lambdabot.Plugin
+                        Lambdabot.Plugin.Activity
+                        Lambdabot.Plugin.Base
+                        Lambdabot.Plugin.BF
+                        Lambdabot.Plugin.Check
+                        Lambdabot.Plugin.Compose
+                        Lambdabot.Plugin.Dice
+                        Lambdabot.Plugin.Dict
+                        Lambdabot.Plugin.Djinn
+                        Lambdabot.Plugin.Dummy
+                        Lambdabot.Plugin.Dynamic
+                        Lambdabot.Plugin.Elite
+                        Lambdabot.Plugin.Eval
+                        Lambdabot.Plugin.Filter
+                        Lambdabot.Plugin.Free
+                        Lambdabot.Plugin.Fresh
+                        Lambdabot.Plugin.Haddock
+                        Lambdabot.Plugin.Hello
+                        Lambdabot.Plugin.Help
+                        Lambdabot.Plugin.Hoogle
+                        Lambdabot.Plugin.Instances
+                        Lambdabot.Plugin.IRC
+                        Lambdabot.Plugin.Karma
+                        Lambdabot.Plugin.Localtime
+                        Lambdabot.Plugin.Log
+                        Lambdabot.Plugin.More
+                        Lambdabot.Plugin.Numberwang
+                        Lambdabot.Plugin.OEIS
+                        Lambdabot.Plugin.OfflineRC
+                        Lambdabot.Plugin.Pl
+                        Lambdabot.Plugin.Pointful
+                        Lambdabot.Plugin.Poll
+                        Lambdabot.Plugin.Pretty
+                        Lambdabot.Plugin.Quote
+                        Lambdabot.Plugin.Search
+                        Lambdabot.Plugin.Seen
+                        Lambdabot.Plugin.Slap
+                        Lambdabot.Plugin.Source
+                        Lambdabot.Plugin.Spell
+                        Lambdabot.Plugin.Stats
+                        Lambdabot.Plugin.System
+                        Lambdabot.Plugin.Tell
+                        Lambdabot.Plugin.Ticker
+                        Lambdabot.Plugin.Todo
+                        Lambdabot.Plugin.Topic
+                        Lambdabot.Plugin.Type
+                        Lambdabot.Plugin.Undo
+                        Lambdabot.Plugin.Unlambda
+                        Lambdabot.Plugin.UnMtl
+                        Lambdabot.Plugin.Url
+                        Lambdabot.Plugin.Version
+                        Lambdabot.Plugin.Vixen
+                        Lambdabot.Plugin.Where
                         Lambdabot.Pointful
                         Lambdabot.Process
                         Lambdabot.Regex
@@ -90,81 +146,27 @@ library
                         Lambdabot.State
                         Lambdabot.Url
                         Lambdabot.Util
-                        LMain
+  
+  other-modules:        Lambdabot.Config
                         Paths_lambdabot
-                        Plugin
-                        Plugin.Activity
-                        Plugin.Base
-                        Plugin.BF
-                        Plugin.Check
-                        Plugin.Compose
-                        Plugin.Dice
-                        Plugin.Dict
-                        Plugin.Djinn
-                        Plugin.Dummy
-                        Plugin.Dynamic
-                        Plugin.Elite
-                        Plugin.Eval
-                        Plugin.Filter
-                        Plugin.Free
-                        Plugin.Fresh
-                        Plugin.Haddock
-                        Plugin.Hello
-                        Plugin.Help
-                        Plugin.Hoogle
-                        Plugin.Instances
-                        Plugin.IRC
-                        Plugin.Karma
-                        Plugin.Localtime
-                        Plugin.Log
-                        Plugin.More
-                        Plugin.Numberwang
-                        Plugin.OEIS
-                        Plugin.OfflineRC
-                        Plugin.Pl
-                        Plugin.Pointful
-                        Plugin.Poll
-                        Plugin.Pretty
-                        Plugin.Quote
-                        Plugin.Search
-                        Plugin.Seen
-                        Plugin.Slap
-                        Plugin.Source
-                        Plugin.Spell
-                        Plugin.Stats
-                        Plugin.System
-                        Plugin.Tell
-                        Plugin.Ticker
-                        Plugin.Todo
-                        Plugin.Topic
-                        Plugin.Type
-                        Plugin.Undo
-                        Plugin.Unlambda
-                        Plugin.UnMtl
-                        Plugin.Url
-                        Plugin.Version
-                        Plugin.Vixen
-                        Plugin.Where
-                        
-  other-modules:        Config
-                        Plugin.Dict.DictLookup
-                        Plugin.Dummy.DocAssocs
-                        Plugin.Free.Expr
-                        Plugin.Free.FreeTheorem
-                        Plugin.Free.Parse
-                        Plugin.Free.Test
-                        Plugin.Free.Theorem
-                        Plugin.Free.Type
-                        Plugin.Free.Util
-                        Plugin.Pl.Common
-                        Plugin.Pl.Names
-                        Plugin.Pl.Optimize
-                        Plugin.Pl.Parser
-                        Plugin.Pl.PrettyPrinter
-                        Plugin.Pl.RuleLib
-                        Plugin.Pl.Rules
-                        Plugin.Pl.Transform
-                        Plugin.Seen.StopWatch
+                        Lambdabot.Plugin.Dict.DictLookup
+                        Lambdabot.Plugin.Dummy.DocAssocs
+                        Lambdabot.Plugin.Free.Expr
+                        Lambdabot.Plugin.Free.FreeTheorem
+                        Lambdabot.Plugin.Free.Parse
+                        Lambdabot.Plugin.Free.Theorem
+                        Lambdabot.Plugin.Free.Type
+                        Lambdabot.Plugin.Free.Util
+                        Lambdabot.Plugin.Pl.Common
+                        Lambdabot.Plugin.Pl.Names
+                        Lambdabot.Plugin.Pl.Optimize
+                        Lambdabot.Plugin.Pl.Parser
+                        Lambdabot.Plugin.Pl.PrettyPrinter
+                        Lambdabot.Plugin.Pl.RuleLib
+                        Lambdabot.Plugin.Pl.Rules
+                        Lambdabot.Plugin.Pl.Transform
+                        Lambdabot.Plugin.Seen.StopWatch
+  
   build-depends:        array                >= 0.4.0.0    ,
                         base                 >= 4.4        ,
                         binary               >= 0.5.1.0    ,

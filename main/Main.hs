@@ -3,9 +3,10 @@
 --
 module Main where
 
-import LMain
-import Modules      (modulesInfo)
 import Lambdabot
+import Lambdabot.Main
+
+import Modules      (modulesInfo)
 
 import Data.Maybe
 import System.Posix.Signals

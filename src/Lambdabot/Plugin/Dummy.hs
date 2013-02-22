@@ -1,0 +1,125 @@
+-- | Simple template module
+-- Contains many constant bot commands.
+module Lambdabot.Plugin.Dummy (theModule) where
+
+import Lambdabot.Plugin
+
+import Lambdabot.Plugin.Dummy.DocAssocs (docAssocs)
+
+import qualified Data.Map as M
+import qualified Data.ByteString.Char8 as P
+
+theModule = newModule
+    { moduleCmds = return
+        $ (command "eval")
+            { help = say "eval. Do nothing (perversely)"
+            , process = const (return ()) 
+            }
+        : (command "choose")
+            { help = say "choose. Lambdabot featuring AI power"
+            , process = \args ->
+                if null args then say "Choose between what?"
+                    else say =<< (io . random . words $ args)
+            }
+        : [ (command cmd)
+            { help = say (dummyHelp cmd)
+            , process = mapM_ say . lines . op
+            }
+          | (cmd, op) <- dummylst
+          ]
+    
+    , contextual = \msg -> case msg of
+        "lisppaste2: url"  -> say pastebinMsg
+        _                  -> return ()
+    }
+
+pastebinMsg :: String
+pastebinMsg = "Haskell pastebin: http://hpaste.org/"
+
+dummyHelp s = case s of
+    "dummy"       -> "dummy. Print a string constant"
+    "bug"         -> "bug. Submit a bug to GHC's trac"
+
+    "id"          -> "id <arg>. The identity plugin"
+    "read"        -> "read \"<foo>\". Print <foo>"
+    "show"        -> "show <foo>. Print \"<foo>\""
+    "wiki"        -> "wiki <page>. URLs of Haskell wiki pages"
+    "oldwiki"     -> "oldwiki <page>. URLs of the old hawiki pages"
+    "paste"       -> "paste. Paste page url"
+
+    "docs"        -> "docs <lib>. Lookup the url for this library's documentation"
+    "source"      -> "source <lib>. Lookup the url of fptools libraries"
+    "fptools"     -> "fptools <lib>. Lookup url of ghc base library modules"
+
+    "learn"       -> "learn. The learning page url"
+    "eurohaskell" -> "eurohaskell. Historical"
+    "map"         -> "map. #haskell user map"
+    "botsnack"    -> "botsnack. Feeds the bot a snack"
+    "get-shapr"   -> "get-shapr. Summon shapr instantly"
+    "shootout"    -> "shootout. The debian language shootout"
+    "faq"         -> "faq. Answer frequently asked questions about Haskell"
+    "googleit"    -> "letmegooglethatforyou."
+
+dummylst :: [(String, String -> String)]
+dummylst =
+    [("id",      (' ' :) . id)
+    ,("read",    (' ' :) . filter (/= '\n') . read)
+    ,("show",       show)
+
+    ,("dummy",      const "dummy")
+    ,("bug",        const "http://hackage.haskell.org/trac/ghc/newticket?type=bug")
+    ,("get-shapr",  const "shapr!!")
+    ,("faq",        const "The answer is: Yes! Haskell can do that.")
+    ,("paste",      const pastebinMsg)
+    ,("learn",      const "http://www.haskell.org/learning.html")
+    ,("map",        const "http://www.haskell.org/hawiki/HaskellUserLocations")
+    ,("shootout",   const "http://shootout.alioth.debian.org/gp4/benchmark.php?test=all&lang=all")
+    ,("botsnack",   const ":)")
+    ,("thanks",     const "you are welcome")
+    ,("thx",        const "you are welcome")
+    ,("thank you",  const "you are welcome")
+    ,("ping",	    const "pong")
+
+    ,("wiki",       lookupWiki)
+    ,("oldwiki",     ("http://www.haskell.org/hawiki/" ++))
+
+    ,("docs",        \x -> if null x
+                            then docPrefix </> "index.html"
+                            else lookupPackage docPrefix '-' "html" x)
+
+    ,("source",     lookupPackage "http://darcs.haskell.org/packages" '/' "hs")
+
+    ,("fptools",    lookupPackage "http://darcs.haskell.org/packages" '/' "hs")
+    ,("hackage",    lookupHackage)
+    ,("googleit",   lookupGoogle)
+    ]
+
+lookupWiki :: String -> String
+lookupWiki page = "http://www.haskell.org/haskellwiki" </> spacesToUnderscores page
+  where spacesToUnderscores = map (\c -> if c == ' ' then '_' else c)
+
+lookupHackage :: String -> String
+lookupHackage "" = "http://hackage.haskell.org"
+lookupHackage xs = "http://hackage.haskell.org/package" </> xs
+
+googlePrefix :: String
+googlePrefix = "http://letmegooglethatforyou.com"
+
+lookupGoogle :: String -> String
+lookupGoogle "" = googlePrefix
+lookupGoogle xs = googlePrefix </> "?q=" ++ quote xs
+ where
+    quote = map (\x -> if x == ' ' then '+' else x)
+
+docPrefix :: String
+docPrefix = "http://haskell.org/ghc/docs/latest/html/libraries"
+
+lookupPackage :: String -> Char -> String -> String -> String
+lookupPackage begin sep end x'
+ = case M.lookup (P.pack x) docAssocs of
+        Nothing -> x ++ " not available"
+        Just m  -> begin
+                    </> P.unpack m
+                    </> map (choice (=='.') (const sep) id) x
+                    <.> end
+ where x = dropSpace x'

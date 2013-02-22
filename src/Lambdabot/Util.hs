@@ -36,7 +36,7 @@ module Lambdabot.Util (
         random, insult, confirmation
     ) where
 
-import Config
+import Lambdabot.Config
 
 import Data.List                (intercalate, isPrefixOf, stripPrefix)
 import Data.Char                (isSpace)
