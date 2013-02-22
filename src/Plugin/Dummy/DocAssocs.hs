@@ -22,8 +22,8 @@ parsec  :: P.ByteString
 parsec = P.pack "parsec"
 unix  :: P.ByteString
 unix   = P.pack "unix"
-readline :: P.ByteString
-readline = P.pack "readline"
+haskeline :: P.ByteString
+haskeline = P.pack "haskeline"
 network :: P.ByteString
 network  = P.pack "network"
 th :: P.ByteString
@@ -317,8 +317,7 @@ docAssocs = {-# SCC "Dummy.DocAssocs" #-} M.fromList [
   (P.pack "System.CPUTime", base),
   (P.pack "System.Cmd", base),
   (P.pack "System.Console.GetOpt", base),
-  (P.pack "System.Console.Readline", readline),
-  (P.pack "System.Console.SimpleLineEditor", readline),
+  (P.pack "System.Console.Haskeline", haskeline),
   (P.pack "System.Directory", base),
   (P.pack "System.Environment", base),
   (P.pack "System.Exit", base),

@@ -47,6 +47,8 @@ import Control.Monad.Error (MonadError (..))
 import Control.Monad.Reader
 import Control.Monad.State
 
+import System.Console.Haskeline.MonadException (MonadException)
+
 ------------------------------------------------------------------------
 --
 -- Lambdabot state
@@ -162,7 +164,7 @@ send msg = do
 
 
 newtype LB a = LB { runLB :: ReaderT (IRCRState,IORef IRCRWState) IO a }
-    deriving (Functor, Applicative, Monad, MonadIO)
+    deriving (Functor, Applicative, Monad, MonadIO, MonadException)
 
 class Monad m => MonadLB m where
     lb :: LB a -> m a

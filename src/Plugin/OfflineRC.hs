@@ -1,5 +1,5 @@
 -- | Offline mode / RC file / -e support module.  Handles spooling lists
--- of commands (from readline, files, or the command line) into the vchat
+-- of commands (from haskeline, files, or the command line) into the vchat
 -- layer.
 module Plugin.OfflineRC (theModule) where
 
@@ -13,16 +13,8 @@ import Control.Concurrent( forkIO )
 import Control.Concurrent.MVar( readMVar )
 import Lambdabot.Error( finallyError )
 import Control.Exception ( evaluate )
-
--- Work around the lack of readline on windows
-readline :: String -> IO (Maybe String)
-readline p = do
-    putStr p
-    hFlush stdout
-    liftM Just getLine
-
-addHistory :: String -> IO ()
-addHistory _ = return ()
+import System.Console.Haskeline
+import System.Console.Haskeline.History as Hist ( addHistory )
 
 -- We need to track the number of active sourcings so that we can
 -- unregister the server (-> allow the bot to quit) when it is not
@@ -45,7 +37,7 @@ theModule = newModule
             { privileged = True
             , help = say "offline. Start a repl"
             , process = const . lift $ do
-                act <- bindModule0 $ finallyError replLoop unlockRC
+                act <- bindModule0 $ finallyError (runInputT defaultSettings replLoop) unlockRC
                 lockRC
                 lift $ liftLB forkIO act
                 return ()
@@ -92,15 +84,15 @@ handleMsg msg = liftIO $ do
     hPutStrLn stdout str
     hFlush stdout
 
-replLoop :: OfflineRC ()
+replLoop :: InputT OfflineRC ()
 replLoop = do
-    line <- io $ readline "lambdabot> "
+    line <- getInputLine "lambdabot> "
     s' <- case line of Nothing -> fail "<eof>"
                        Just x -> return $ dropWhile isSpace x
     when (not $ null s') $ do
-        io (addHistory s')
-        feed s'
-    continue <- gets ircStayConnected
+        modifyHistory (addHistory s')
+        lift $ feed s'
+    continue <- lift (gets ircStayConnected)
     when continue replLoop
 
 

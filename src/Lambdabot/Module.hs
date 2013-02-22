@@ -22,6 +22,7 @@ import Control.Monad.Error (MonadError(..))
 import Control.Monad.Reader (MonadReader(..), ReaderT(..))
 import Control.Monad.State (MonadState(..))
 import Control.Monad.Trans (MonadTrans(..), MonadIO(..))
+import System.Console.Haskeline.MonadException (MonadException)
 
 ------------------------------------------------------------------------
 
@@ -88,7 +89,7 @@ data CommandRef = forall st.
 --   need to access its name or its state.
 --
 newtype ModuleT st m a = ModuleT { moduleT :: ReaderT (MVar st, String) m a }
-    deriving (Functor, Monad, MonadTrans, MonadIO, MonadError e, MonadState t)
+    deriving (Functor, Monad, MonadTrans, MonadIO, MonadError e, MonadState t, MonadException)
 
 instance MonadLB m => MonadLB      (ModuleT st m) where lb = lift . lb
 instance MonadLB m => MonadLBState (ModuleT st m) where
