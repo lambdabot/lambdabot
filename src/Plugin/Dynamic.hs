@@ -5,6 +5,7 @@
 --
 module Plugin.Dynamic (theModule) where
 
+import Lambdabot
 import Plugin
 import Control.Monad.State
 

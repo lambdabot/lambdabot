@@ -7,6 +7,7 @@
 --
 module Plugin.Log (theModule) where
 
+import Lambdabot
 import Plugin
 import qualified Lambdabot.Message as Msg
 
@@ -18,13 +19,12 @@ import System.Directory (createDirectoryIfMissing)
 
 type Channel = Msg.Nick
 
-plugin "Log"
-
 type DateStamp = (Int, Month, Int)
 data ChanState = CS { chanHandle  :: Handle,
                       chanDate    :: DateStamp }
                deriving (Show, Eq)
 type LogState = M.Map Channel ChanState
+type Log = ModuleT LogState LB
 
 data Event =
     Said Msg.Nick ClockTime String
@@ -45,32 +45,23 @@ instance Show Event where
 -- * Dispatchers and Module instance declaration
 --
 
--- | CTCP command -> logger function lookup
-loggers :: Msg.Message m => [(String, m -> ClockTime -> Event)]
-loggers = [("PRIVMSG", msgCB ),
-           ("JOIN",    joinCB),
-           ("PART",    partCB),
-           ("NICK",    nickCB)]
-
-instance Module LogModule where
-   type ModuleState LogModule = LogState
-   
-   moduleDefState _ = return M.empty
-   moduleExit     _ = cleanLogState
-
-   contextual _ _ = withMsg $ \msg -> do
-     case lookup (Msg.command msg) loggers of
-       Just f -> do
-         now <- io getClockTime
-         -- map over the channels this message was directed to, adding to each
-         -- of their log files.
-         lift (mapM_ (withValidLog (doLog f msg) now) (Msg.channels msg))
-       Nothing -> return ()
-     return ()
-
-     where doLog f m hdl ct = do
-             let event = f m ct
-             logString hdl (show event)
+theModule = newModule
+    { moduleDefState  = return M.empty
+    , moduleExit      = cleanLogState
+    , moduleInit      = do
+        let doLog f m hdl = logString hdl . show . f m
+            wrapCB f = bindModule1 $ \msg -> do
+                now <- io getClockTime
+                -- map over the channels this message was directed to, adding to each
+                -- of their log files.
+                mapM_ (withValidLog (doLog f msg) now) (channels msg)
+            connect signal cb = ircSignalConnect signal =<< wrapCB cb
+        
+        connect "PRIVMSG" msgCB
+        connect "JOIN"    joinCB
+        connect "PART"    partCB
+        connect "NICK"    nickCB
+    }
 
 -- * Logging helpers
 --
@@ -165,21 +156,21 @@ logString hdl str = io $ hPutStrLn hdl str >> hFlush hdl
 --
 
 -- | When somebody joins.
-joinCB :: Msg.Message a => a -> ClockTime -> Event
+joinCB :: IrcMessage -> ClockTime -> Event
 joinCB msg ct = Joined (Msg.nick msg) (Msg.fullName msg) ct
 
 -- | When somebody quits.
-partCB :: Msg.Message a => a -> ClockTime -> Event
+partCB :: IrcMessage -> ClockTime -> Event
 partCB msg ct = Parted (Msg.nick msg) (Msg.fullName msg) ct
 
 -- | When somebody changes his\/her name.
 -- FIXME:  We should only do this for channels that the user is currently on.
-nickCB :: Msg.Message a => a -> ClockTime -> Event
+nickCB :: IrcMessage -> ClockTime -> Event
 nickCB msg ct = Renick (Msg.nick msg) (Msg.fullName msg) ct
-                       (Msg.readNick msg $ drop 1 $ head $ Msg.body msg)
+                       (Msg.readNick msg $ drop 1 $ head $ ircMsgParams msg)
 
 -- | When somebody speaks.
-msgCB :: Msg.Message a => a -> ClockTime -> Event
+msgCB :: IrcMessage -> ClockTime -> Event
 msgCB msg ct = Said (Msg.nick msg) ct
-                    (tail . concat . tail $ Msg.body msg)
+                    (tail . concat . tail $ ircMsgParams msg)
                       -- each lines is :foo
