@@ -14,10 +14,10 @@ parseArgs []                = Just []
 parseArgs _                 = Nothing
 
 main' :: Maybe DynLoad -> (LB (), [String]) -> IO ()
-main' Nothing _ = error "no dynamic loading"
-main' (Just ld) (loadStaticModules, pl) = do
+main' dyn (loadStaticModules, pl) = do
     args <- parseArgs <$> getArgs
     
+    let ld = maybe (error "no dynamic loading") id dyn
     case args of
         Just xs -> runIrc (if null xs then ["offline"] else xs) loadStaticModules ld pl
         _       -> putStrLn "Usage: lambdabot [-e 'cmd']*"
