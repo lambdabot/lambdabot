@@ -15,6 +15,7 @@ import qualified Lambdabot.Message as G (Message, channels, nick, packNick, unpa
 
 import Control.Applicative
 import Control.Arrow (first)
+import Control.Exception
 import Data.Binary
 import qualified Data.Map as M
 import qualified Data.ByteString.Char8 as P
@@ -97,7 +98,18 @@ theModule = newModule
       c <- io $ findLBFile "seen"
       s <- io $ P.readFile c
       let ls = L.fromChunks [s]
-      return (decode ls) >>= writeMS
+      mbDecoded <- io . try . evaluate $ decode ls
+      case mbDecoded of
+        Left exc -> do
+          -- try reading the old format (slightly different type... oh, "binary"...)
+          mbOld <- io . try . evaluate $ decode ls
+          case mbOld of
+            Left exc2 -> do
+              let _ = exc2 :: SomeException
+              io $ hPutStrLn stderr ("WARNING: failed to read Seen module state: "  ++ show (exc :: SomeException))
+            Right (maxMap, seenMap) -> 
+              writeMS (M.mapKeys P.pack maxMap, seenMap)
+        Right decoded -> writeMS decoded
 
     , moduleExit = do
       chans <- lift $ ircGetChannels
