@@ -167,6 +167,7 @@ library
                         Lambdabot.Plugin.Pl.Rules
                         Lambdabot.Plugin.Pl.Transform
                         Lambdabot.Plugin.Seen.StopWatch
+                        Lambdabot.Plugin.Seen.UserStatus
   
   build-depends:        array                >= 0.4.0.0    ,
                         base                 >= 4.4        ,

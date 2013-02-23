@@ -9,11 +9,11 @@ import Lambdabot.Plugin
 import Lambdabot
 
 import Lambdabot.Plugin.Seen.StopWatch
+import Lambdabot.Plugin.Seen.UserStatus
 
 import Lambdabot.AltTime
 import qualified Lambdabot.Message as G (Message, channels, nick, packNick, unpackNick, lambdabotName, showNick, readNick)
 
-import Control.Applicative
 import Control.Arrow (first)
 import Control.Exception
 import Data.Binary
@@ -23,33 +23,6 @@ import qualified Data.ByteString.Lazy as L
 import System.Time (normalizeTimeDiff) -- or export from AltTime.hs?
 import Text.Printf
 
--- | The type of channels
-type Channel = P.ByteString
-
--- | The type of nicknames
-type PackedNick = P.ByteString
-
--- | We last heard the user speak at ClockTime; since then we have missed
---   TimeDiff of him because we were absent.
-type LastSpoke = Maybe (ClockTime, TimeDiff)
-
--- | 'UserStatus' keeps track of the status of a given Nick name.
-data UserStatus
-    = Present    !LastSpoke [Channel]
-        -- ^ Records when the nick last spoke and that the nick is currently
-        --   in [Channel].
-    | NotPresent !ClockTime !StopWatch [Channel]
-        -- ^ The nick is not present and was last seen at ClockTime in Channel.
-        --   The second argument records how much we've missed.
-    | WasPresent !ClockTime !StopWatch !LastSpoke [Channel]
-        -- ^ The bot parted a channel where the user was. The Clocktime
-        --   records the time and Channel the channel this happened in.
-        --   We also save the reliablility of our information and the
-        --   time we last heard the user speak.
-    | NewNick !PackedNick
-        -- ^ The user changed nick to something new.
-    deriving (Show, Read)
-
 type SeenState = (MaxMap, SeenMap)
 type SeenMap   = M.Map PackedNick UserStatus
 type MaxMap    = M.Map Channel Int
@@ -57,19 +30,6 @@ type MaxMap    = M.Map Channel Int
 type Seen = ModuleT SeenState LB
 
 ------------------------------------------------------------------------
-
-instance Binary UserStatus where
-    put (Present sp ch)          = putWord8 0 >> put sp >> put ch
-    put (NotPresent ct sw ch)    = putWord8 1 >> put ct >> put sw >> put ch
-    put (WasPresent ct sw sp ch) = putWord8 2 >> put ct >> put sw >> put sp >> put ch
-    put (NewNick n)              = putWord8 3 >> put n
-
-    get = getWord8 >>= \h -> case h of
-        0 -> Present    <$> get <*> get
-        1 -> NotPresent <$> get <*> get <*> get
-        2 -> WasPresent <$> get <*> get <*> get <*> get
-        3 -> NewNick    <$> get
-        _ -> error "Seen.UserStatus.get"
 
 theModule = newModule
     { moduleDefState = return (M.empty,M.empty)
@@ -256,19 +216,21 @@ getAnswer msg rest seenFM now
 
 -- | extract channels from message as packed, lower cased, strings.
 msgChans :: G.Message a => a -> [Channel]
-msgChans msg = map (G.packNick . lcNick) $ G.channels msg
+msgChans = map (G.packNick . lcNick) . G.channels
 
 -- | Callback for when somebody joins. If it is not the bot that joins, record
 --   that we have a new user in our state tree and that we have never seen the
 --   user speaking.
-joinCB :: G.Message a => a -> SeenMap -> ClockTime -> PackedNick -> Either String SeenMap
-joinCB msg fm _ct nick
-    | nick == (G.packNick $ G.lambdabotName msg) = Right fm
-    | otherwise = Right $! insertUpd (updateJ Nothing chans) nick newInfo fm
+joinCB :: IrcMessage -> ClockTime -> PackedNick -> SeenMap -> Either String SeenMap
+joinCB msg _ct nick fm
+    | nick == lbNick = Right fm
+    | otherwise      = Right $! insertUpd (updateJ Nothing chans) nick newInfo fm
     where 
+        lbNick  = G.packNick $ G.lambdabotName msg
         newInfo = Present Nothing chans
-        chans = msgChans msg
+        chans   = msgChans msg
 
+-- | Update the state to reflect the bot leaving channel(s)
 botPart :: ClockTime -> [Channel] -> SeenMap -> SeenMap
 botPart ct cs = fmap botPart'
     where
@@ -282,8 +244,8 @@ botPart ct cs = fmap botPart'
         botPart' us = us
 
 -- | when somebody parts
-partCB :: G.Message a => a -> SeenMap -> ClockTime -> PackedNick -> Either String SeenMap
-partCB msg fm ct nick
+partCB :: IrcMessage -> ClockTime -> PackedNick -> SeenMap -> Either String SeenMap
+partCB msg ct nick fm
     | nick == lbNick = Right $ botPart ct (msgChans msg) fm
     | otherwise      = case M.lookup nick fm of
         Just (Present mct xs) ->
@@ -294,14 +256,14 @@ partCB msg fm ct nick
     where lbNick = G.packNick $ G.lambdabotName msg
 
 -- | when somebody quits
-quitCB :: G.Message a => a -> SeenMap -> ClockTime -> PackedNick -> Either String SeenMap
-quitCB _ fm ct nick = case M.lookup nick fm of
+quitCB :: IrcMessage -> ClockTime -> PackedNick -> SeenMap -> Either String SeenMap
+quitCB _ ct nick fm = case M.lookup nick fm of
     Just (Present _ct xs) -> Right $! M.insert nick (NotPresent ct zeroWatch xs) fm
-    _ -> Left "someone who isn't known has quit"
+    _                     -> Left "someone who isn't known has quit"
 
 -- | when somebody changes his\/her name
-nickCB :: IrcMessage -> SeenMap -> ClockTime -> PackedNick -> Either String SeenMap
-nickCB msg fm _ nick = case M.lookup nick fm of
+nickCB :: IrcMessage -> ClockTime -> PackedNick -> SeenMap -> Either String SeenMap
+nickCB msg _ nick fm = case M.lookup nick fm of
     Just status -> Right $! M.insert lcnewnick status 
                           $ M.insert nick (NewNick lcnewnick) fm
     _           -> Left "someone who isn't here changed nick"
@@ -310,29 +272,26 @@ nickCB msg fm _ nick = case M.lookup nick fm of
         lcnewnick = G.packNick $ lcNick $ G.readNick msg newnick
 
 -- | when the bot joins a channel
-joinChanCB :: IrcMessage -> SeenMap -> ClockTime -> PackedNick -> Either String SeenMap
-joinChanCB msg fm now _nick
-    = Right $ fmap (updateNP now chan) $ foldl insertNick fm chanUsers
+joinChanCB :: IrcMessage -> ClockTime -> PackedNick -> SeenMap -> Either String SeenMap
+joinChanCB msg now _nick fm
+    = Right $! fmap (updateNP now chan) (foldl insertNick fm chanUsers)
     where
         l = ircMsgParams msg
         chan = G.packNick $ lcNick $ G.readNick msg $ l !! 2
         chanUsers = map (G.packNick . lcNick . G.readNick msg) $ words (drop 1 (l !! 3)) -- remove ':'
+        unUserMode nick = Nick (nTag nick) (dropWhile (`elem` "@+") $ nName nick)
         insertNick fm' u = insertUpd (updateJ (Just now) [chan])
             (G.packNick . unUserMode . lcNick . G.unpackNick $ u)
-            (Present Nothing [chan])
-            fm'
+            (Present Nothing [chan]) fm'
 
 -- | when somebody speaks, update their clocktime
-msgCB :: G.Message a => a -> SeenMap -> ClockTime -> PackedNick -> Either String SeenMap
-msgCB _ fm ct nick =
+msgCB :: IrcMessage -> ClockTime -> PackedNick -> SeenMap -> Either String SeenMap
+msgCB _ ct nick fm =
     case M.lookup nick fm of
         Just (Present _ xs) -> Right $!
             M.insert nick (Present (Just (ct, noTimeDiff)) xs) fm
         _ -> Left "someone who isn't here msg us"
 
--- misc. functions
-unUserMode :: Nick -> Nick
-unUserMode nick = Nick (nTag nick) (dropWhile (`elem` "@+") $ nName nick)
 
 -- | Callbacks are only allowed to use a limited knowledge of the world.
 -- 'withSeenFM' is (up to trivial isomorphism) a monad morphism from the
@@ -342,7 +301,7 @@ unUserMode nick = Nick (nTag nick) (dropWhile (`elem` "@+") $ nName nick)
 --   'ReaderT IRC.Message (Seen IRC)'
 -- monad.
 withSeenFM :: G.Message a
-           => (a -> SeenMap -> ClockTime -> PackedNick -> Either String SeenMap)
+           => (a -> ClockTime -> PackedNick -> SeenMap -> Either String SeenMap)
            -> (a -> Seen ())
 
 withSeenFM f msg = do
@@ -351,7 +310,7 @@ withSeenFM f msg = do
     
     withMS $ \(maxUsers,state) writer -> do
         ct <- io getClockTime
-        case f msg state ct nick of
+        case f msg ct nick state of
             Left _         -> return ()
             Right newstate -> do
                 let curUsers = length $! 
@@ -365,34 +324,3 @@ withSeenFM f msg = do
                             else maxUsers
                 
                 newMax `seq` newstate `seq` writer (newMax, newstate)
-
--- | Update the user status.
-updateJ :: Maybe ClockTime -- ^ If the bot joined the channel, the time that
-                           --   happened, i.e. now.
-    -> [Channel]           -- ^ The channels the user joined.
-    -> UserStatus          -- ^ The old status
-    -> UserStatus          -- ^ The new status
--- The user was present before, so he's present now.
-updateJ _ c (Present ct cs) = Present ct $ nub (c ++ cs)
--- The user was present when we left that channel and now we've come back.
--- We need to update the time we've missed.
-updateJ (Just now) cs (WasPresent lastSeen _ (Just (lastSpoke, missed)) channels)
-    | head channels `elem` cs
-    ---                 newMissed
-    --- |---------------------------------------|
-    --- |-------------------|                   |
-    ---        missed    lastSeen              now
-    = let newMissed = addToClockTime missed now `diffClockTimes` lastSeen
-       in newMissed `seq` Present (Just (lastSpoke, newMissed)) cs
--- Otherwise, we create a new record of the user.
-updateJ _ cs _ = Present Nothing cs
-
--- | Update a user who is not present. We just convert absolute missing time
---   into relative time (i.e. start the "watch").
-updateNP :: ClockTime -> Channel -> UserStatus -> UserStatus
-updateNP now _ (NotPresent ct missed c)
-    = NotPresent ct (stopWatch now missed) c
--- The user might be gone, thus it's meaningless when we last heard him speak.
-updateNP now chan (WasPresent lastSeen missed _ cs)
-    | head cs == chan = WasPresent lastSeen (stopWatch now missed) Nothing cs
-updateNP _ _ status = status
