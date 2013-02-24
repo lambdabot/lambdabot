@@ -16,7 +16,7 @@ main :: IO ()
 main = do
     -- when 'popen' is called on a non-existing executable, SIGPIPE is sent,
     -- causing lambdabot to exit:
-    installHandler sigPIPE Ignore Nothing
+    _ <- installHandler sigPIPE Ignore Nothing
     main' Nothing modulesInfo
 
 -- special online target for ghci use

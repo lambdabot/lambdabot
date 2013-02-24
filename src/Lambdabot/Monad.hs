@@ -7,15 +7,15 @@ module Lambdabot.Monad
     ( IRCRState(..), IRCRWState(..), IRCError(..)
     , Callback, OutputFilter
     , ChanName, mkCN, getCN
-    
+
     , LB(..), MonadLB(..), lbIO, evalLB
-    
+
     , send, addServer, remServer, addServer'
-    
+
     , handleIrc, catchIrc
-    
+
     , forkLB, liftLB
-    
+
     , withModule, withCommand, withAllModules, getDictKeys
     ) where
 
@@ -32,7 +32,7 @@ import Prelude hiding           (mod, catch)
 import System.IO
 
 #ifndef mingw32_HOST_OS
-import System.Posix.Signals
+import System.Posix.Signals (Signal)
 #endif
 
 import Data.Char
@@ -283,4 +283,3 @@ withAllModules f = do
 
 getDictKeys :: (MonadState s m) => (s -> Map k a) -> m [k]
 getDictKeys dict = gets (M.keys . dict)
-

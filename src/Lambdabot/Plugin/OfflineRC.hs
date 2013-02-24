@@ -14,7 +14,6 @@ import Control.Concurrent.MVar( readMVar )
 import Lambdabot.Error( finallyError )
 import Control.Exception ( evaluate )
 import System.Console.Haskeline
-import System.Console.Haskeline.History as Hist ( addHistory )
 
 -- We need to track the number of active sourcings so that we can
 -- unregister the server (-> allow the bot to quit) when it is not
@@ -31,7 +30,7 @@ theModule = newModule
             io $ readMVar mv
             act
         return ()
-    
+
     , moduleCmds = return
         [ (command "offline")
             { privileged = True
@@ -57,7 +56,7 @@ theModule = newModule
     }
 
 onInit :: OfflineRC ()
-onInit = do 
+onInit = do
     st <- get
     put st { ircOnStartupCmds = [] }
     let cmds = ircOnStartupCmds st
@@ -90,7 +89,6 @@ replLoop = do
     s' <- case line of Nothing -> fail "<eof>"
                        Just x -> return $ dropWhile isSpace x
     when (not $ null s') $ do
-        modifyHistory (addHistory s')
         lift $ feed s'
     continue <- lift (gets ircStayConnected)
     when continue replLoop
