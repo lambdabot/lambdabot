@@ -14,7 +14,6 @@ import Lambdabot.Plugin.Seen.UserStatus
 import Lambdabot.AltTime
 import qualified Lambdabot.Message as G (Message, channels, nick, packNick, unpackNick, lambdabotName, showNick, readNick)
 
-import Control.Arrow (first)
 import Control.Exception
 import Data.Binary
 import qualified Data.Map as M
@@ -104,25 +103,24 @@ doUsers rest = withMsg $ \msg -> do
         
         recent t = normalizeTimeDiff (diffClockTimes s t) < gap_minutes
         gap_minutes = TimeDiff 0 0 0 0 30 0 0 -- 30 minutes
+        
+        percent p q = 100 * (fromIntegral p / fromIntegral q) :: Double
+        
+        total   0 0 = "0"
+        total   p q = printf "%d (%0.1f%%)" p (percent p q)
     
-    say $! concat
-        [ "Maximum users seen in ", G.showNick msg $ G.unpackNick who, ": "
-        , show n
-        , ", currently: ", show now
-        , printf " (%0.1f%%)" (100 * (fromIntegral now    / fromIntegral n) :: Double)
-        , ", active: ", show active
-        , printf " (%0.1f%%)" (100 * (fromIntegral active / fromIntegral now) :: Double)
-        ]
+    say $! printf "Maximum users seen in %s: %d, currently: %s, active: %s" 
+        (G.showNick msg $ G.unpackNick who) n (total now n) (total active now)
 
 doSeen :: String -> Cmd Seen ()
 doSeen rest = withMsg $ \msg -> do
     target <- getTarget
     (_,seenFM) <- readMS
     now        <- io getClockTime
-    let (txt,safe) = first unlines (getAnswer msg rest seenFM now)
+    let (txt,safe) = (getAnswer msg rest seenFM now)
     if safe || not ("#" `isPrefixOf` nName target)
-        then say txt
-        else lb (ircPrivmsg (G.nick msg) txt)
+        then mapM_ say txt
+        else lb (ircPrivmsg (G.nick msg) (unlines txt))
 
 getAnswer :: G.Message a => a -> String -> SeenMap -> ClockTime -> ([String], Bool)
 getAnswer msg rest seenFM now
@@ -152,16 +150,16 @@ getAnswer msg rest seenFM now
             ++ (if null people then "nobody"    -- todo, how far back does this go?
                else listToStr "and" (map upAndShow people)) ++ "."], False)
 
-    | otherwise        = ((case M.lookup (G.packNick pnick) seenFM of
+    | otherwise        = (return $ concat (case M.lookup (G.packNick pnick) seenFM of
         Just (Present mct cs)            -> nickPresent mct (map upAndShow cs)
         Just (NotPresent ct td chans)    -> nickNotPresent ct td (map upAndShow chans)
         Just (WasPresent ct sw _ chans)  -> nickWasPresent ct sw (map upAndShow chans)
         Just (NewNick newnick)           -> nickIsNew newnick
-        _ -> ircMessage ["I haven't seen ", nick, "."]), True)
+        _ -> ["I haven't seen ", nick, "."]), True)
     where
         -- I guess the only way out of this spagetty hell are printf-style responses.
         upAndShow = G.showNick msg . G.unpackNick
-        nickPresent mct cs = ircMessage
+        nickPresent mct cs =
             [ if you then "You are" else nick ++ " is"
             , " in ", listToStr "and" cs, "."
             , case mct of
@@ -172,16 +170,16 @@ getAnswer msg rest seenFM now
                        (" Last spoke " ++ lastSpoke)
                     where lastSpoke = clockDifference ct
             ]
-        nickNotPresent ct missed chans = ircMessage 
+        nickNotPresent ct missed chans =
             [ "I saw ", nick, " leaving ", listToStr "and" chans, " "
             , clockDifference ct, prettyMissed missed ", and " ""
             ]
-        nickWasPresent ct sw chans = ircMessage 
+        nickWasPresent ct sw chans =
             [ "Last time I saw ", nick, " was when I left "
             , listToStr "and" chans , " ", clockDifference ct
             , prettyMissed sw ", and " ""
             ]
-        nickIsNew newnick = ircMessage
+        nickIsNew newnick =
             [ if you then "You have" else nick++" has"
             , " changed nick to ", us, "."
             ] ++ fst (getAnswer msg us seenFM now)
@@ -192,7 +190,6 @@ getAnswer msg rest seenFM now
                     Just _               -> pstr
                     Nothing              -> error "SeenModule.nickIsNew: Nothing"
         
-        ircMessage = return . concat
         nick' = firstWord rest
         you   = pnick == lcNick (G.nick msg)
         nick  = if you then "you" else nick'
