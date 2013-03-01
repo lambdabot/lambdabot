@@ -5,13 +5,14 @@
 
 module Lambdabot.Plugin.Vixen (theModule) where
 
-import Data.Binary
+import Lambdabot.Plugin
+import Lambdabot.Util.Regex
 
 import Control.Arrow ((***))
-import System.Directory
+import Data.Binary
 import qualified Data.ByteString.Char8 as P
+import System.Directory
 
-import Lambdabot.Plugin
 
 theModule = newModule
     { moduleCmds = return

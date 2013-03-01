@@ -2,7 +2,10 @@
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
 
 -- | A Posix.popen compatibility mapping.
-module Lambdabot.Util.Process (popen, run) where
+module Lambdabot.Util.Process
+    ( popen
+    , run
+    ) where
 
 import System.Exit
 import System.IO

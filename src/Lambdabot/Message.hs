@@ -6,7 +6,6 @@ module Lambdabot.Message
     , Nick(..)
     , showNick
     , readNick
-    , Pipe
     , packNick
     , unpackNick
     ) where
@@ -14,7 +13,6 @@ module Lambdabot.Message
 import Lambdabot.Util(dropSpace)
 
 import qualified Data.ByteString.Char8 as P
-import Control.Concurrent (Chan)
 import Data.Char (toUpper)
 
 import Control.Arrow (first)
@@ -94,5 +92,3 @@ packNick = P.pack . pckStr
 -- | Unpack a nickname packed by 'packNick'.
 unpackNick :: P.ByteString -> Nick
 unpackNick = upckStr "freenode" . P.unpack
-
-type Pipe a = Chan (Maybe a)

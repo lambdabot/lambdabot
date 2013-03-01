@@ -3,6 +3,7 @@
 module Lambdabot.Plugin.Quote (theModule) where
 
 import Lambdabot.Plugin
+import Lambdabot.Util.Regex
 
 import Data.Fortune
 import qualified Data.Map as M

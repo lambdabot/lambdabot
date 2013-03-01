@@ -1,14 +1,23 @@
 {-# LANGUAGE TypeFamilies #-}
 -- | Support for the LB (LambdaBot) monad
-module Lambdabot.State (
-        -- ** Functions to access the module's state
-        MonadLBState(..),
-        readMS, modifyMS, writeMS,
-        accessorMS,
-
-        -- ** Utility functions for modules that need state for each target.
-        GlobalPrivate(global), mkGlobalPrivate, withPS, readPS, withGS, readGS,
-        writePS, writeGS
+module Lambdabot.State
+    ( -- ** Functions to access the module's state
+      MonadLBState(..)
+    , readMS
+    , writeMS
+    , modifyMS
+    
+    -- ** Utility functions for modules that need state for each target.
+    , GlobalPrivate -- (global)
+    , mkGlobalPrivate
+    
+    , withPS
+    , readPS
+    , writePS
+    
+    , withGS
+    , readGS
+    , writeGS
   ) where
 
 import {-# SOURCE #-} Lambdabot.Monad
@@ -39,12 +48,6 @@ class MonadLB m => MonadLBState m where
 -- | Read the module's private state.
 readMS :: MonadLBState m => m (LBState m)
 readMS = withMS (\st _ -> return st)
-
--- | Produces a with-function. Needs a better name.
-accessorMS :: MonadLBState m => (LBState m -> (t, t -> LBState m)) ->
-  (t -> (t -> LB ()) -> LB a) -> m a
-accessorMS decompose f = withMS $ \s writer ->
-  let (t,k) = decompose s in f t (writer . k)
 
 -- | Modify the module's private state.
 modifyMS :: MonadLBState m => (LBState m -> LBState m) -> m ()

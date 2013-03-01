@@ -6,6 +6,7 @@
 module Lambdabot.Plugin.Elite (theModule) where
 
 import Lambdabot.Plugin
+import Lambdabot.Util.Regex
 import qualified Text.Regex as R
 
 import Control.Arrow

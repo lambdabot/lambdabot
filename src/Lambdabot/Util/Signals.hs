@@ -8,7 +8,11 @@
 -- handleIrc
 
 -- Here's where we do that.
-module Lambdabot.Util.Signals where
+module Lambdabot.Util.Signals
+    ( SignalException(..)
+    , ircSignalMessage
+    , withIrcSignalCatch
+    ) where
 
 import Data.Typeable
 import Control.Exception (Exception)

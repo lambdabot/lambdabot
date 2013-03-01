@@ -3,6 +3,8 @@
 module Lambdabot.Plugin.Url (theModule) where
 
 import Lambdabot.Plugin
+import Lambdabot.Util.MiniHTTP
+import Lambdabot.Util.Url
 
 import qualified Text.Regex as R -- legacy
 

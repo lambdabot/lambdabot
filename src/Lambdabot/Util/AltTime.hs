@@ -1,9 +1,15 @@
 -- | Time compatibility layer
-module Lambdabot.Util.AltTime (
-    ClockTime,
-    getClockTime, diffClockTimes, addToClockTime, timeDiffPretty,
-    module System.Time
-  ) where
+module Lambdabot.Util.AltTime 
+    ( ClockTime
+    , getClockTime
+    , diffClockTimes
+    , addToClockTime
+    , timeDiffPretty
+    
+    -- System.Time re-exports:
+    , TimeDiff(..)
+    , noTimeDiff
+    ) where
 
 import Control.Arrow (first)
 

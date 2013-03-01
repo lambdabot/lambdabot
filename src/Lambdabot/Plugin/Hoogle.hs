@@ -5,6 +5,7 @@
 module Lambdabot.Plugin.Hoogle (theModule) where
 
 import Lambdabot.Plugin
+import Lambdabot.Util.Process
 
 theModule = newModule
     { moduleDefState = return []

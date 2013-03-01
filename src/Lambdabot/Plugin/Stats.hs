@@ -3,7 +3,6 @@
 module Lambdabot.Plugin.Stats (theModule) where
 
 import Lambdabot.Plugin
-import Lambdabot
 
 import Network.StatsD
 
@@ -28,20 +27,12 @@ theModule = newModule
             ]
     }
 
-onJoin :: IrcMessage -> Stats ()
-onJoin _ = return ()
-
 -- various helpers
 
-type StatsM m = (MonadIO m, MonadLBState m, LBState m ~ StatsD)
-
-report :: StatsM m => [Stat] -> m ()
+report :: [Stat] -> Cmd Stats ()
 report xs = do
     st <- readMS
     io (push st xs)
 
-count :: StatsM m => [String] -> Integer -> m ()
-count bucket val = counts [(bucket, val)]
-
-counts :: StatsM m => [([String], Integer)] -> m ()
+counts :: [([String], Integer)] -> Cmd Stats ()
 counts xs = report [stat bucket val "c" Nothing | (bucket, val) <- xs]

@@ -7,36 +7,41 @@
 -- Syntactic sugar for developing plugins.
 -- Simplifies import lists, and abstracts over common patterns
 --
-module Lambdabot.Plugin (
-        Module(..), ModuleT, newModule, modules,
-        
-        getModuleName,
-        bindModule0, bindModule1, bindModule2, 
-        
-        LB, lb, ios, ios80,
-        
-        Nick(..), packNick, unpackNick, ircPrivmsg,
-        
-        module Lambdabot.Config,
-        module Lambdabot.Command,
-        module Lambdabot.State,
-        
-        module Lambdabot.File,
-        module Lambdabot.Util.MiniHTTP,
-        module Lambdabot.Util.Process,
-        module Lambdabot.Util.Regex,
-        module Lambdabot.Util.Serial,
-        module Lambdabot.Util.Url,
-        module Lambdabot.Util,
-        
-        module Data.Char,
-        module Data.Either,
-        module Data.List,
-        module Data.Maybe,
-        module System.FilePath,
-        module System.IO,
-        
-        module Control.Monad.Error
+module Lambdabot.Plugin
+    ( Module(..)
+    , ModuleT
+    , newModule
+    , modules
+    
+    , getModuleName
+    , bindModule0
+    , bindModule1
+    , bindModule2
+    
+    , LB
+    , lb
+    , ios
+    , ios80
+    
+    , Nick(..)
+    , packNick
+    , unpackNick
+    , ircPrivmsg
+    
+    , module Lambdabot.Config
+    , module Lambdabot.Command
+    , module Lambdabot.State
+    , module Lambdabot.File
+    , module Lambdabot.Util
+    , module Lambdabot.Util.Serial
+    
+    , module Control.Monad.Error
+    , module Data.Char
+    , module Data.Either
+    , module Data.List
+    , module Data.Maybe
+    , module System.FilePath
+    , module System.IO
     ) where
 
 import Lambdabot.Config
@@ -47,12 +52,8 @@ import Lambdabot.State
 
 import Lambdabot.File (findLBFile)
 import Lambdabot.Message
-import Lambdabot.Util.MiniHTTP
-import Lambdabot.Util.Process
-import Lambdabot.Util.Regex
-import Lambdabot.Util.Serial
-import Lambdabot.Util.Url
 import Lambdabot.Util
+import Lambdabot.Util.Serial
 
 import Data.List
 import Data.Char

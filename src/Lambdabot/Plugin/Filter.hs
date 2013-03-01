@@ -4,8 +4,10 @@
 
 module Lambdabot.Plugin.Filter (theModule) where
 
-import Control.Applicative
 import Lambdabot.Plugin
+import Lambdabot.Util.Process
+
+import Control.Applicative
 import System.Directory (findExecutable)
 
 -- State consists of a map from filter name to executable path

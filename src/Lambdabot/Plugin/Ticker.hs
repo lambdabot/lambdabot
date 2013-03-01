@@ -2,6 +2,8 @@
 module Lambdabot.Plugin.Ticker (theModule) where
 
 import Lambdabot.Plugin
+import Lambdabot.Util.MiniHTTP
+
 import Control.Applicative ((<$>))
 import Text.Printf
 

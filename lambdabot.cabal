@@ -70,6 +70,7 @@ library
                         -fno-warn-orphans
                         -funbox-strict-fields
                         -fwarn-unused-imports
+                        -fwarn-unused-binds
   
   exposed-modules:      Lambdabot
                         Lambdabot.Command
@@ -141,7 +142,6 @@ library
                         Lambdabot.Util.Error
                         Lambdabot.Util.MiniHTTP
                         Lambdabot.Util.Parser
-                        Lambdabot.Util.Pointful
                         Lambdabot.Util.Process
                         Lambdabot.Util.Regex
                         Lambdabot.Util.Serial

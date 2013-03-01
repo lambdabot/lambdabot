@@ -6,6 +6,7 @@ import Lambdabot.Plugin
 import Lambdabot
 import Lambdabot.IRC
 import qualified Lambdabot.Message as Msg (readNick, showNick)
+import Lambdabot.Util.Regex
 
 import qualified Data.Map as M   (insert, delete)
 

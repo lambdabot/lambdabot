@@ -2,19 +2,25 @@
 -- <http://homepages.paradise.net.nz/warrickg/haskell/http/>
 -- <http://www.dtek.chalmers.se/~d00bring/haskell-xml-rpc/http.html>
 
-module Lambdabot.Util.MiniHTTP (
-        Proxy,
-        mkPost,
-        readPage,
-        readNBytes,
-        urlEncode,
-        urlDecode,
-        module Network.URI
+module Lambdabot.Util.MiniHTTP 
+    ( Proxy
+    , readPage
+    , readNBytes
+    , urlEncode
+    
+    -- re-exports from Network.URI:
+    , URI(..)
+    , nullURI
+    , parseURI
+    
+    , URIAuth(..)
+    
+    , escapeURIString
     ) where
 
 import Control.Monad (liftM2)
 import Data.Bits  ((.&.))
-import Data.Char  (ord, chr, digitToInt, intToDigit)
+import Data.Char  (ord, intToDigit)
 import Data.Maybe (fromMaybe)
 import Network
 import Network.URI hiding (authority)
@@ -35,18 +41,6 @@ authPort uri = fromMaybe 80 (tryReadPort . uriPort =<< uriAuthority uri)
 
 
 type Proxy = Maybe (String, Integer)
-
--- HTTP specific stuff
-mkPost :: URI -> String -> [String]
-mkPost uri body = ["POST " ++ url ++ " HTTP/1.0",
-                   "Host: " ++ host,
-                   "Accept: */*",
-                   "Content-Type: application/x-www-form-urlencoded",
-                   "Content-Length: " ++ (show $ length body),
-                   ""]
-    where
-    url = show uri
-    host = authority uri
 
 hGetLines :: Handle -> IO [String]
 hGetLines h = do
@@ -91,13 +85,7 @@ readNBytes n proxy uri headers body = withSocketsDo $ do
                           else liftM2 (:) (hGetChar h) (hGetN (i-1) h)
 
 -- from HTTP.hs
-urlEncode, urlDecode :: String -> String
-
-urlDecode ('%':a:b:rest) = chr (16 * digitToInt a + digitToInt b)
-                         : urlDecode rest
-urlDecode (h:t) = h : urlDecode t
-urlDecode [] = []
-
+urlEncode :: String -> String
 urlEncode (h:t) =
     let str = if isReservedChar(ord h) then escape h else [h]
     in str ++ urlEncode t

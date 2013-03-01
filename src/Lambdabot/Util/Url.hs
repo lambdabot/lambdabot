@@ -2,13 +2,11 @@
 
 -- | URL Utility Functions
 
-module Lambdabot.Util.Url (
-    getHtmlPage,
-    getHeader,
-    rawPageTitle,
-    urlPageTitle,
-    urlTitlePrompt,
-    runWebReq
+module Lambdabot.Util.Url
+    ( getHtmlPage
+    , urlPageTitle
+    , urlTitlePrompt
+    , runWebReq
     ) where
 
 import Data.List

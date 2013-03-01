@@ -1,4 +1,7 @@
-module Lambdabot.Main (main', received) where
+module Lambdabot.Main
+    ( main'
+    , received
+    ) where
 
 import Lambdabot.Shared
 import Lambdabot

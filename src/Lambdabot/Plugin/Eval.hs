@@ -5,6 +5,7 @@
 module Lambdabot.Plugin.Eval (theModule, eval, exts) where
 
 import Lambdabot.Plugin
+import Lambdabot.Util.Process
 
 import Data.Ord
 import qualified Language.Haskell.Exts as Hs

@@ -8,18 +8,21 @@
 --
 -----------------------------------------------------------------------------
 
-module Lambdabot.Util.Regex (
-        -- ByteString interface
-        regex,      -- :: ByteString -> Regex
-        matches,    -- :: Regex -> ByteString -> Bool
+module Lambdabot.Util.Regex
+    ( -- ByteString interface
+      regex      -- :: ByteString -> Regex
+    , matches    -- :: Regex -> ByteString -> Bool
 
-        -- String interface
-        regex',     -- :: String -> Regex
-        matches',   -- :: Regex -> String -> Bool
+    -- String interface
+    , regex'     -- :: String -> Regex
+    , matches'   -- :: Regex -> String -> Bool
 
-        -- and the underlying module
-        module Text.Regex.Posix.ByteString
-
+    -- re-exports from Text.Regex.Posix.ByteString:
+    , Regex
+    , compile
+    , compExtended
+    , compIgnoreCase
+    , compNoSub
     ) where
 
 import Data.ByteString.Char8

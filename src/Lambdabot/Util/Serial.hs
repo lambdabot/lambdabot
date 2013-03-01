@@ -18,13 +18,17 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. -}
 
 -- | Serialisation
-module Lambdabot.Util.Serial (
-        Serial(..),
-        stdSerial, mapSerial, listSerial,
-        mapPackedSerial, assocListPackedSerial, mapListPackedSerial,
-        readM, Packable(..), {- instances of Packable -}
-        packedListSerial,
-        readOnly, gzip, gunzip
+module Lambdabot.Util.Serial
+    ( Serial(..)
+    
+    , stdSerial
+    , mapSerial
+    , mapPackedSerial
+    , assocListPackedSerial
+    , mapListPackedSerial
+    , readM
+    , Packable(..) {- instances of Packable -}
+    , readOnly
     ) where
 
 import Data.Maybe               (mapMaybe)
@@ -76,19 +80,6 @@ mapSerial = Serial {
         deserialize = Just . M.fromList . mapMaybe (readM . P.unpack) . P.lines
    }
 
--- | Serialize a list of 'a's. As for the 'mapSerializer', its output is line-wise.
-listSerial :: (Read a, Show a) => Serial [a]
-listSerial = Serial {
-        serialize   = Just .P.pack . unlines . map show,
-        deserialize = Just . mapMaybe (readM . P.unpack) . P.lines
-   }
-
-packedListSerial :: Serial [P.ByteString]
-packedListSerial = Serial {
-        serialize   = Just . P.unlines,
-        deserialize = Just . P.lines
-    }
-
 ------------------------------------------------------------------------
 
 -- | 'readM' behaves like read, but catches failure in a monad.
@@ -99,7 +90,6 @@ readM s = case [x | (x,t) <- {-# SCC "Serial.readM.reads" #-} reads s    -- bad!
         [x] -> return x
         []  -> fail "Serial.readM: no parse"
         _   -> fail "Serial.readM: ambiguous parse"
-
 
 class Packable t where
         readPacked :: ByteString -> t

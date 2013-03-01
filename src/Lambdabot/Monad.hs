@@ -4,19 +4,37 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE RankNTypes #-}
 module Lambdabot.Monad
-    ( IRCRState(..), IRCRWState(..), IRCError(..)
-    , Callback, OutputFilter
-    , ChanName, mkCN, getCN
-
-    , LB(..), MonadLB(..), lbIO, evalLB
-
-    , send, addServer, remServer, addServer'
-
-    , handleIrc, catchIrc
-
-    , forkLB, liftLB
-
-    , withModule, withCommand, withAllModules, getDictKeys
+    ( IRCRState(..)
+    , IRCRWState(..)
+    , IRCError(..)
+    
+    , Callback
+    , OutputFilter
+    
+    , ChanName
+    , mkCN
+    , getCN
+    
+    , LB(..)
+    , MonadLB(..)
+    , lbIO
+    , evalLB
+    
+    , send
+    , addServer
+    , remServer
+    -- , addServer'
+    
+    , handleIrc
+    , catchIrc
+    
+    , forkLB
+    , liftLB
+    
+    , withModule
+    , withCommand
+    , withAllModules
+    , getDictKeys
     ) where
 
 import           Lambdabot.Command
@@ -122,15 +140,6 @@ addServer tag sendf = do
     name <- getModuleName
     case M.lookup tag svrs of
         Nothing -> put (s { ircServerMap = M.insert tag (name,sendf) svrs})
-        Just _ -> fail $ "attempted to create two servers named " ++ tag
-
--- This is a crutch until all the servers are pluginized.
-addServer' :: String -> (IrcMessage -> LB ()) -> LB ()
-addServer' tag sendf = do
-    s <- get
-    let svrs = ircServerMap s
-    case M.lookup tag svrs of
-        Nothing -> put (s { ircServerMap = M.insert tag ("<core>",sendf) svrs})
         Just _ -> fail $ "attempted to create two servers named " ++ tag
 
 remServer :: String -> LB ()

@@ -17,9 +17,13 @@
 --     Well, what do you know, this plugin enables lambdabot to automate
 --     that lookup for you and your fellow lambda hackers.
 module Lambdabot.Plugin.Type (theModule, query_ghci) where
-import Lambdabot.File
+
 import Lambdabot.Plugin
+import Lambdabot.Util.Process
+import Lambdabot.Util.Regex
+
 import Lambdabot.Plugin.Eval (exts)
+
 import qualified Text.Regex as R
 
 theModule = newModule

@@ -21,6 +21,8 @@ module Lambdabot.Plugin.Instances (theModule) where
 import Text.ParserCombinators.Parsec
 
 import Lambdabot.Plugin
+import Lambdabot.Util.Process
+import Lambdabot.Util.Regex
 
 type Instance   = String
 type ClassName  = String

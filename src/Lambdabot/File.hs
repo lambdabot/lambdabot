@@ -1,6 +1,9 @@
-module Lambdabot.File where
+module Lambdabot.File
+    ( findLBFile
+    ) where
 
 import Control.Monad
+import Lambdabot.Config
 import System.Directory
 import System.FilePath
 import Paths_lambdabot (getDataFileName)
@@ -9,7 +12,7 @@ import Paths_lambdabot (getDataFileName)
 lambdabot, local, state :: FilePath
 lambdabot = ".lambdabot"
 state = lambdabot </> local
-local = "State"
+local = outputDir config
 
 maybeFileExists :: FilePath -> IO (Maybe FilePath)
 maybeFileExists path = 

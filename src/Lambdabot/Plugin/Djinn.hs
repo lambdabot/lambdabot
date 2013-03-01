@@ -8,6 +8,8 @@
 module Lambdabot.Plugin.Djinn (theModule) where
 
 import Lambdabot.Plugin
+import Lambdabot.Util.Process
+import Lambdabot.Util.Regex
 
 import qualified Text.Regex as R
 

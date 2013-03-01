@@ -8,7 +8,6 @@ module Lambdabot.IRC
     , partChannel
     , getTopic
     , setTopic
-    , names
     , privmsg
     , quit
     , timeReply
@@ -21,7 +20,6 @@ import Lambdabot.Message
 import Lambdabot.Util (split, breakOnGlue, clean)
 
 import Data.Char (chr,isSpace)
-import Data.List (intercalate)
 
 import Control.Monad (liftM2)
 
@@ -65,8 +63,6 @@ joinChannel loc     = mkMessage (nTag loc)  "JOIN"  [nName loc]
 partChannel loc     = mkMessage (nTag loc)  "PART"  [nName loc]
 getTopic chan       = mkMessage (nTag chan) "TOPIC" [nName chan]
 setTopic chan topic = mkMessage (nTag chan) "TOPIC" [nName chan, ':' : topic]
-
-names svr chans     = mkMessage svr "NAMES" [intercalate "," chans]
 
 -- | 'privmsg' creates a private message to the person designated.
 privmsg :: Nick -- ^ Who should recieve the message (nick)

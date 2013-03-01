@@ -2,12 +2,20 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE TypeFamilies #-}
 module Lambdabot.Module
-    ( MODULE(..), Module(..), newModule
+    ( MODULE(..)
+    , Module(..)
+    , newModule
+    
     , ModuleT(..)
 
-    , ModuleRef(..), CommandRef(..)
+    , ModuleRef(..)
+    , CommandRef(..)
 
-    , getRef, getModuleName, bindModule0, bindModule1, bindModule2
+    , getRef
+    , getModuleName
+    , bindModule0
+    , bindModule1
+    , bindModule2
     ) where
 
 import qualified Lambdabot.Command as Cmd

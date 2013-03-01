@@ -7,6 +7,8 @@
 module Lambdabot.Plugin.Unlambda (theModule) where
 
 import Lambdabot.Plugin
+import Lambdabot.Util.Process
+import Lambdabot.Util.Regex
 
 theModule = newModule
     { moduleCmds = return
