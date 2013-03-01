@@ -72,18 +72,14 @@ library
                         -fwarn-unused-imports
   
   exposed-modules:      Lambdabot
-                        Lambdabot.AltTime
                         Lambdabot.Command
-                        Lambdabot.Error
                         Lambdabot.File
                         Lambdabot.IRC
                         Lambdabot.Main
                         Lambdabot.Message
-                        Lambdabot.MiniHTTP
                         Lambdabot.Module
                         Lambdabot.Monad
                         Lambdabot.NickEq
-                        Lambdabot.Parser
                         Lambdabot.Plugin
                         Lambdabot.Plugin.Activity
                         Lambdabot.Plugin.Base
@@ -138,15 +134,19 @@ library
                         Lambdabot.Plugin.Version
                         Lambdabot.Plugin.Vixen
                         Lambdabot.Plugin.Where
-                        Lambdabot.Pointful
-                        Lambdabot.Process
-                        Lambdabot.Regex
-                        Lambdabot.Serial
                         Lambdabot.Shared
-                        Lambdabot.Signals
                         Lambdabot.State
-                        Lambdabot.Url
                         Lambdabot.Util
+                        Lambdabot.Util.AltTime
+                        Lambdabot.Util.Error
+                        Lambdabot.Util.MiniHTTP
+                        Lambdabot.Util.Parser
+                        Lambdabot.Util.Pointful
+                        Lambdabot.Util.Process
+                        Lambdabot.Util.Regex
+                        Lambdabot.Util.Serial
+                        Lambdabot.Util.Signals
+                        Lambdabot.Util.Url
   
   other-modules:        Lambdabot.Config
                         Paths_lambdabot

@@ -4,7 +4,7 @@
 module Lambdabot.Plugin.Undo (theModule) where
 
 import Lambdabot.Plugin
-import Lambdabot.Parser (withParsed)
+import Lambdabot.Util.Parser (withParsed)
 import Language.Haskell.Exts.Syntax hiding (Module)
 import Data.Generics
 import qualified Data.Set as Set

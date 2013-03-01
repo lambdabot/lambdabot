@@ -2,7 +2,7 @@
 
 -- | URL Utility Functions
 
-module Lambdabot.Url (
+module Lambdabot.Util.Url (
     getHtmlPage,
     getHeader,
     rawPageTitle,
@@ -13,7 +13,7 @@ module Lambdabot.Url (
 
 import Data.List
 import Data.Maybe
-import Lambdabot.MiniHTTP
+import Lambdabot.Util.MiniHTTP
 import Lambdabot.Util (limitStr)
 
 import Control.Monad.Reader

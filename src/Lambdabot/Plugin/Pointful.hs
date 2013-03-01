@@ -3,7 +3,7 @@ module Lambdabot.Plugin.Pointful (theModule) where
 
 import Lambdabot.Plugin
 
-import Lambdabot.Pointful
+import Lambdabot.Util.Pointful
 
 theModule = newModule
     { moduleCmds = return

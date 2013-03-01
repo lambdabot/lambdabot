@@ -11,7 +11,7 @@ import Lambdabot
 import Lambdabot.Plugin.Seen.StopWatch
 import Lambdabot.Plugin.Seen.UserStatus
 
-import Lambdabot.AltTime
+import Lambdabot.Util.AltTime
 import qualified Lambdabot.Message as G (Message, channels, nick, packNick, unpackNick, lambdabotName, showNick, readNick)
 
 import Control.Exception

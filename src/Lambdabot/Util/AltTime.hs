@@ -1,5 +1,5 @@
 -- | Time compatibility layer
-module Lambdabot.AltTime (
+module Lambdabot.Util.AltTime (
     ClockTime,
     getClockTime, diffClockTimes, addToClockTime, timeDiffPretty,
     module System.Time

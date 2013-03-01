@@ -8,7 +8,7 @@
 -- handleIrc
 
 -- Here's where we do that.
-module Lambdabot.Signals where
+module Lambdabot.Util.Signals where
 
 import Data.Typeable
 import Control.Exception (Exception)
@@ -27,7 +27,7 @@ withIrcSignalCatch :: (MonadError e m,MonadIO m) => m () -> m ()
 withIrcSignalCatch m = m
 
 #else
-import Lambdabot.Error (bracketError)
+import Lambdabot.Util.Error (bracketError)
 import Lambdabot.Util
 
 import Control.Concurrent (myThreadId, newEmptyMVar, putMVar, MVar, ThreadId)

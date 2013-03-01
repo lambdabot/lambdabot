@@ -11,7 +11,7 @@ import Control.Monad.Reader( asks )
 import Control.Monad.State( get, gets, put )
 import Control.Concurrent( forkIO )
 import Control.Concurrent.MVar( readMVar )
-import Lambdabot.Error( finallyError )
+import Lambdabot.Util.Error( finallyError )
 import Control.Exception ( evaluate )
 import System.Console.Haskeline
 

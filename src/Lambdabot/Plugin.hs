@@ -22,11 +22,11 @@ module Lambdabot.Plugin (
         module Lambdabot.State,
         
         module Lambdabot.File,
-        module Lambdabot.MiniHTTP,
-        module Lambdabot.Process,
-        module Lambdabot.Regex,
-        module Lambdabot.Serial,
-        module Lambdabot.Url,
+        module Lambdabot.Util.MiniHTTP,
+        module Lambdabot.Util.Process,
+        module Lambdabot.Util.Regex,
+        module Lambdabot.Util.Serial,
+        module Lambdabot.Util.Url,
         module Lambdabot.Util,
         
         module Data.Char,
@@ -47,11 +47,11 @@ import Lambdabot.State
 
 import Lambdabot.File (findLBFile)
 import Lambdabot.Message
-import Lambdabot.MiniHTTP
-import Lambdabot.Process
-import Lambdabot.Regex
-import Lambdabot.Serial
-import Lambdabot.Url
+import Lambdabot.Util.MiniHTTP
+import Lambdabot.Util.Process
+import Lambdabot.Util.Regex
+import Lambdabot.Util.Serial
+import Lambdabot.Util.Url
 import Lambdabot.Util
 
 import Data.List

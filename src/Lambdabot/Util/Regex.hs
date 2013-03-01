@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
 -- |
--- Module      :  Lambdabot.Regex
+-- Module      :  Lambdabot.Util.Regex
 -- Copyright   :  (c) Don Stewart 2007
 -- License     :  GPL (see LICENSE)
 --
@@ -8,7 +8,7 @@
 --
 -----------------------------------------------------------------------------
 
-module Lambdabot.Regex (
+module Lambdabot.Util.Regex (
         -- ByteString interface
         regex,      -- :: ByteString -> Regex
         matches,    -- :: Regex -> ByteString -> Bool

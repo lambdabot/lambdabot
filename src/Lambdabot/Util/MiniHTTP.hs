@@ -2,7 +2,7 @@
 -- <http://homepages.paradise.net.nz/warrickg/haskell/http/>
 -- <http://www.dtek.chalmers.se/~d00bring/haskell-xml-rpc/http.html>
 
-module Lambdabot.MiniHTTP (
+module Lambdabot.Util.MiniHTTP (
         Proxy,
         mkPost,
         readPage,

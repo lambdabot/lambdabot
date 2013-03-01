@@ -51,7 +51,7 @@ import Control.Arrow (first)
 import qualified Data.Map as M
 import Text.Printf (printf)
 
-import Lambdabot.AltTime
+import Lambdabot.Util.AltTime
 import Lambdabot.Plugin
 
 -- | Was it @tell or @ask that was the original command?

@@ -24,7 +24,7 @@ import           Lambdabot.IRC (IrcMessage)
 import           Lambdabot.Module
 import qualified Lambdabot.Message as Msg
 import qualified Lambdabot.Shared  as S
-import           Lambdabot.Signals
+import           Lambdabot.Util.Signals
 import           Lambdabot.Util
 
 import Prelude hiding           (mod, catch)

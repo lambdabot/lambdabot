@@ -2,7 +2,7 @@
 
 -- Haskell expression parser.  Big hack, but only uses documented APIs so it
 -- should be more robust than the previous hack.
-module Lambdabot.Parser (withParsed, prettyPrintInLine) where
+module Lambdabot.Util.Parser (withParsed, prettyPrintInLine) where
 
 import Data.Generics
 import Language.Haskell.Exts

@@ -4,7 +4,7 @@ module Lambdabot.Plugin.System (theModule) where
 import Lambdabot.Plugin
 import Lambdabot
 
-import Lambdabot.AltTime
+import Lambdabot.Util.AltTime
 import qualified Lambdabot.Message as Msg (Nick, server, readNick)
 import Lambdabot.IRC
 import qualified Data.Map as M       (Map,assocs,keys,fromList,insert,delete)

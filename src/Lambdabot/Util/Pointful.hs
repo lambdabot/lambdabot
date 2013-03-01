@@ -1,7 +1,7 @@
 {-# OPTIONS -fno-warn-missing-signatures #-}
-module Lambdabot.Pointful (pointful, ParseResult(..), test, main, combinatorModule) where
+module Lambdabot.Util.Pointful (pointful, ParseResult(..), test, main, combinatorModule) where
 
-import Lambdabot.Parser (withParsed, prettyPrintInLine)
+import Lambdabot.Util.Parser (withParsed, prettyPrintInLine)
 
 import Control.Monad.State
 import Data.Generics

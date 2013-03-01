@@ -13,7 +13,7 @@ module Lambdabot.Module
 import qualified Lambdabot.Command as Cmd
 
 import {-# SOURCE #-} Lambdabot.Monad (LB, MonadLB(..), lbIO)
-import Lambdabot.Serial
+import Lambdabot.Util.Serial
 import Lambdabot.State
 import Lambdabot.Util (withMWriter)
 

@@ -44,8 +44,8 @@ import Lambdabot.Command
 import Lambdabot.IRC
 import Lambdabot.Module
 import Lambdabot.Monad
-import Lambdabot.Serial
-import Lambdabot.Signals
+import Lambdabot.Util.Serial
+import Lambdabot.Util.Signals
 import Lambdabot.Util
 
 import Prelude hiding           (mod, catch)
