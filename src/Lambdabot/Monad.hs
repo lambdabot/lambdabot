@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
@@ -48,10 +47,6 @@ import           Lambdabot.Util
 import Prelude hiding           (mod, catch)
 
 import System.IO
-
-#ifndef mingw32_HOST_OS
-import System.Posix.Signals (Signal)
-#endif
 
 import Data.Char
 import Data.IORef               (newIORef, IORef, readIORef, writeIORef)

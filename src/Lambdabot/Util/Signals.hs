@@ -9,7 +9,8 @@
 
 -- Here's where we do that.
 module Lambdabot.Util.Signals
-    ( SignalException(..)
+    ( Signal
+    , SignalException(..)
     , ircSignalMessage
     , withIrcSignalCatch
     ) where

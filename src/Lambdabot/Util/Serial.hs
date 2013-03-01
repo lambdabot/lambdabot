@@ -1,4 +1,4 @@
-{-# LANGUAGE CPP, FlexibleInstances #-}
+{-# LANGUAGE FlexibleInstances #-}
 
 {- Copyright (c) 2004-5 Thomas Jaeger, Don Stewart
 

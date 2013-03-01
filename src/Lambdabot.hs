@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TemplateHaskell #-}
@@ -56,29 +55,19 @@ import System.Exit
 import System.IO
 import System.IO.Unsafe
 
-#ifndef mingw32_HOST_OS
--- n.b comment this out for prof
-import System.Posix.Process     ( exitImmediately )
-#endif
-
 import Data.Char
 import Data.List                (isSuffixOf, inits, tails)
 import Data.Maybe               (isJust)
 import qualified Data.Map as M
 import qualified Data.ByteString.Char8 as P
 import Data.Random.Source
+import Data.Typeable
 
 import Control.Concurrent (myThreadId, newEmptyMVar, newMVar, readMVar, putMVar,
                            takeMVar, threadDelay)
 import Control.Exception
 import Control.Monad.Reader
 import Control.Monad.State
-
-#ifdef mingw32_HOST_OS
--- compatability shim
-exitImmediately :: ExitCode -> IO a
-exitImmediately = exitWith
-#endif
 
 ------------------------------------------------------------------------
 --
@@ -101,10 +90,15 @@ runIrc evcmds initialise ld plugins = withSocketsDo $ do
 
     -- clean up and go home
     case r of
-        Left er -> do putStrLn "exception:"
-                      print (er :: SomeException)
-                      exitWith (ExitFailure 1) -- won't happen.  exitImmediately cleans it all up
-        Right _ -> exitWith ExitSuccess
+        Left er -> do
+            case cast er of
+                Just code -> exitWith code
+                Nothing -> do
+                    putStrLn "exception:"
+                    print (er :: SomeException)
+                    exitWith (ExitFailure 1)
+        Right _ -> do
+            exitWith ExitSuccess
 
 --
 -- | Default ro state
@@ -160,7 +154,7 @@ mainLoop = catchIrc
         flushModuleState
         
         -- this kills profiling output:
-        io $ exitImmediately (ExitFailure 1))
+        io $ exitWith (ExitFailure 1))
 
 -- | run 'exit' handler on modules
 runExitHandlers:: LB ()
