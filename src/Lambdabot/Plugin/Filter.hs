@@ -8,6 +8,7 @@ import Lambdabot.Plugin
 import Lambdabot.Util.Process
 
 import Control.Applicative
+import Data.Maybe
 import System.Directory (findExecutable)
 
 -- State consists of a map from filter name to executable path

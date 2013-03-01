@@ -7,11 +7,13 @@ module Lambdabot.Plugin.Eval (theModule, eval, exts) where
 import Lambdabot.Plugin
 import Lambdabot.Util.Process
 
+import Control.Exception (try, SomeException)
+import Control.Monad
+import Data.List
 import Data.Ord
 import qualified Language.Haskell.Exts as Hs
 import System.Directory
 import System.Exit
-import Control.Exception (try, SomeException)
 
 theModule = newModule
     { moduleCmds = return

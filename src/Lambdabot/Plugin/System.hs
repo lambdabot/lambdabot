@@ -1,15 +1,15 @@
 -- | System module : IRC control functions
 module Lambdabot.Plugin.System (theModule) where
 
-import Lambdabot.Plugin
 import Lambdabot
-
-import Lambdabot.Util.AltTime
-import qualified Lambdabot.Message as Msg (Nick, server, readNick)
 import Lambdabot.IRC
-import qualified Data.Map as M       (Map,assocs,keys,fromList,insert,delete)
+import qualified Lambdabot.Message as Msg
+import Lambdabot.Plugin
+import Lambdabot.Util.AltTime
 
-import Control.Monad.State      (MonadState(get, put))
+import Control.Monad.State (MonadState(get, put))
+import Control.Monad.Trans
+import qualified Data.Map as M
 
 type SystemState = (ClockTime, TimeDiff)
 type System = ModuleT SystemState LB

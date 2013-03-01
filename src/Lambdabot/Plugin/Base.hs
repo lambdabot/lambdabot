@@ -2,16 +2,17 @@
 -- | Lambdabot base module. Controls message send and receive
 module Lambdabot.Plugin.Base (theModule) where
 
-import Lambdabot.Plugin
 import Lambdabot
 import Lambdabot.IRC
 import qualified Lambdabot.Message as Msg (readNick, showNick)
+import Lambdabot.Plugin
 import Lambdabot.Util.Regex
 
-import qualified Data.Map as M   (insert, delete)
-
+import Control.Monad
 import Control.Monad.State  (MonadState(..))
-
+import Control.Monad.Trans
+import Data.List
+import qualified Data.Map as M   (insert, delete)
 import qualified Text.Regex as R
 
 -- valid command prefixes

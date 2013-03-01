@@ -12,6 +12,7 @@ import Lambdabot.Plugin
 import Lambdabot.Util.MiniHTTP
 import Lambdabot.Util.Url
 
+import Data.Maybe
 import Network.HTTP
 import Text.HTML.TagSoup
 import Text.HTML.TagSoup.Match (anyAttr, tagOpen)

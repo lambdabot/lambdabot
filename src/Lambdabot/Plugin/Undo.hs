@@ -5,9 +5,11 @@ module Lambdabot.Plugin.Undo (theModule) where
 
 import Lambdabot.Plugin
 import Lambdabot.Util.Parser (withParsed)
-import Language.Haskell.Exts.Syntax hiding (Module)
+
+import Control.Monad
 import Data.Generics
 import qualified Data.Set as Set
+import Language.Haskell.Exts.Syntax hiding (Module)
 
 theModule = newModule
     { moduleCmds = return

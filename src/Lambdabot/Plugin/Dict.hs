@@ -6,6 +6,9 @@ module Lambdabot.Plugin.Dict (theModule) where
 import Lambdabot.Plugin
 import qualified Lambdabot.Plugin.Dict.DictLookup as Dict
 
+import Control.Monad
+import Data.List
+
 type Dict = ModuleT () LB
 
 theModule = newModule

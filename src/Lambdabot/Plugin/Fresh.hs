@@ -4,6 +4,9 @@ module Lambdabot.Plugin.Fresh (theModule) where
 
 import Lambdabot.Plugin
 
+import Control.Monad.Trans
+import Data.Char
+
 type Fresh = ModuleT Integer LB
 
 theModule = newModule

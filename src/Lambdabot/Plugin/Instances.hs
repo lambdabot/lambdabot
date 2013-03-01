@@ -24,6 +24,10 @@ import Lambdabot.Plugin
 import Lambdabot.Util.Process
 import Lambdabot.Util.Regex
 
+import Data.Char
+import Data.List
+import Data.Maybe
+
 type Instance   = String
 type ClassName  = String
 type ModuleName = String

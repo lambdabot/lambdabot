@@ -7,7 +7,11 @@ module Lambdabot.Plugin.Dynamic (theModule) where
 
 import Lambdabot
 import Lambdabot.Plugin
+
+import Control.Monad.Error
 import Control.Monad.State
+import Data.Char
+import System.IO
 
 modHelp = "An interface to dynamic linker"
 

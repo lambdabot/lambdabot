@@ -20,7 +20,6 @@ module Lambdabot.Plugin
     
     , LB
     , lb
-    , ios
     , ios80
     
     , Nick(..)
@@ -34,44 +33,22 @@ module Lambdabot.Plugin
     , module Lambdabot.File
     , module Lambdabot.Util
     , module Lambdabot.Util.Serial
-    
-    , module Control.Monad.Error
-    , module Data.Char
-    , module Data.Either
-    , module Data.List
-    , module Data.Maybe
-    , module System.FilePath
-    , module System.IO
     ) where
 
-import Lambdabot.Config
 import Lambdabot
-import Lambdabot.Module
+import Lambdabot.Config
 import Lambdabot.Command hiding (runCommand, execCmd)
-import Lambdabot.State
-
 import Lambdabot.File (findLBFile)
 import Lambdabot.Message
+import Lambdabot.Module
+import Lambdabot.State
 import Lambdabot.Util
 import Lambdabot.Util.Serial
 
-import Data.List
-import Data.Char
-import Data.Maybe
-import Data.Either
-
-import System.IO
-import System.FilePath ((</>), (<.>))
-
 import Control.Monad.Error
-
 import Codec.Binary.UTF8.String
-
+import Data.Char
 import Language.Haskell.TH
-
--- | convenience, we often want to perform some io, get a string, and say it.
-ios  :: (MonadIO m) => IO String -> Cmd m ()
-ios x = io x >>= say
 
 -- | convenience, similar to ios but also cut output to channel to 80 characters
 -- usage:  @process _ _ to _ s = ios80 to (plugs s)@

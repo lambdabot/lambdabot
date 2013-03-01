@@ -10,6 +10,9 @@ import Lambdabot.Plugin
 import Lambdabot.Util.Process
 import Lambdabot.Util.Regex
 
+import Control.Monad.Trans
+import Data.Char
+import Data.Maybe
 import qualified Text.Regex as R
 
 helpStr = "spell <word>. Show spelling of word"

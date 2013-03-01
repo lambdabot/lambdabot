@@ -9,11 +9,13 @@ import Lambdabot.Main( received )
 
 import Prelude hiding (catch)
 
-import Control.Concurrent( forkIO, newQSem, waitQSem, threadDelay, signalQSem,
-                           newEmptyMVar, putMVar, takeMVar, MVar )
+import Control.Concurrent
 import Control.Exception
+import Control.Monad.Error
 import qualified Data.ByteString.Char8 as P
+import Data.List
 import Network( connectTo, PortID(..) )
+import System.IO
 
 type IRC = ModuleT () LB
 

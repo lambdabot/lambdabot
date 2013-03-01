@@ -4,7 +4,8 @@ module Lambdabot.Plugin.Ticker (theModule) where
 import Lambdabot.Plugin
 import Lambdabot.Util.MiniHTTP
 
-import Control.Applicative ((<$>))
+import Control.Applicative
+import Data.List
 import Text.Printf
 
 type Ticker = ModuleT () LB
@@ -70,7 +71,7 @@ getBidAsks tickers = do
     return $ map (extractPrice.csv) xs
     where
         extractPrice :: [String] -> Maybe (Float, Float)
-        extractPrice [bid,ask] = liftM2 (,) (readMaybe bid) (readMaybe ask)
+        extractPrice [bid,ask] = liftA2 (,) (readMaybe bid) (readMaybe ask)
         extractPrice _         = Nothing
 
 type AccumVal = Either String (Float, Float)

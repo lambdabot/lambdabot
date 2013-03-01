@@ -3,21 +3,21 @@
 module Lambdabot.Plugin.Source (theModule) where
 
 import Lambdabot.Plugin
-import qualified Data.Map as M
+import Control.Monad
 import qualified Data.ByteString.Char8 as P
-import Data.ByteString.Char8 (pack,unpack,ByteString)
+import qualified Data.Map as M
 
-type Env = M.Map ByteString ByteString
+type Env = M.Map P.ByteString P.ByteString
 
 theModule = newModule
     { moduleCmds = return
         [ (command "src")
             { help = say helpStr
-            , process = \key -> readMS >>= \env -> case fetch (pack key) env of
+            , process = \key -> readMS >>= \env -> case fetch (P.pack key) env of
                 _ | M.null env -> say "No source in the environment yet"
                 _ |   null key -> say helpStr
                 Nothing        -> say . ("Source not found. " ++) =<< io (random insult)
-                Just s         -> say (unpack s)
+                Just s         -> say (P.unpack s)
             }
         ]
 
@@ -30,7 +30,7 @@ theModule = newModule
             splat []   = []
             splat s    = a : splat (tail b) where (a,b) = break P.null s
 
-fetch :: ByteString -> Env -> Maybe ByteString
+fetch :: P.ByteString -> Env -> Maybe P.ByteString
 fetch x m = M.lookup x m `mplus`
             M.lookup (P.concat [P.singleton '(', x, P.singleton ')']) m
 

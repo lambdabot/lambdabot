@@ -5,20 +5,23 @@
 -- | Keep track of IRC users.
 module Lambdabot.Plugin.Seen (theModule) where
 
-import Lambdabot.Plugin
 import Lambdabot
-
+import qualified Lambdabot.Message as G (Message, channels, nick, packNick, unpackNick, lambdabotName, showNick, readNick)
+import Lambdabot.Plugin
 import Lambdabot.Plugin.Seen.StopWatch
 import Lambdabot.Plugin.Seen.UserStatus
-
 import Lambdabot.Util.AltTime
-import qualified Lambdabot.Message as G (Message, channels, nick, packNick, unpackNick, lambdabotName, showNick, readNick)
 
 import Control.Exception
+import Control.Monad
+import Control.Monad.Trans
 import Data.Binary
-import qualified Data.Map as M
 import qualified Data.ByteString.Char8 as P
 import qualified Data.ByteString.Lazy as L
+import Data.Char
+import Data.List
+import qualified Data.Map as M
+import System.IO
 import System.Time (normalizeTimeDiff) -- or export from AltTime.hs?
 import Text.Printf
 

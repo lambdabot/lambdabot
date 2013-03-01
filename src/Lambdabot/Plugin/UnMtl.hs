@@ -10,12 +10,11 @@
 
 module Lambdabot.Plugin.UnMtl (theModule) where
 
-import Control.Monad.Error ()
-
-import Language.Haskell.Exts as Hs hiding (tuple, var)
+import Lambdabot.Plugin
 import Lambdabot.Util.Parser (prettyPrintInLine)
 
-import Lambdabot.Plugin as P
+import Control.Monad
+import Language.Haskell.Exts as Hs hiding (tuple, var)
 
 theModule = newModule
     { moduleCmds = return

@@ -3,11 +3,12 @@
 module Lambdabot.Plugin.Dummy (theModule) where
 
 import Lambdabot.Plugin
-
 import Lambdabot.Plugin.Dummy.DocAssocs (docAssocs)
 
-import qualified Data.Map as M
+import Data.Char
 import qualified Data.ByteString.Char8 as P
+import qualified Data.Map as M
+import System.FilePath
 
 theModule = newModule
     { moduleCmds = return

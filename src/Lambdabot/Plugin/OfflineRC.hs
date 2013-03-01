@@ -3,17 +3,21 @@
 -- layer.
 module Lambdabot.Plugin.OfflineRC (theModule) where
 
-import Lambdabot.Plugin
 import Lambdabot
-
 import Lambdabot.Main( received )
-import Control.Monad.Reader( asks )
-import Control.Monad.State( get, gets, put )
+import Lambdabot.Plugin
+import Lambdabot.Util.Error( finallyError )
+
 import Control.Concurrent( forkIO )
 import Control.Concurrent.MVar( readMVar )
-import Lambdabot.Util.Error( finallyError )
 import Control.Exception ( evaluate )
+import Control.Monad( when )
+import Control.Monad.Reader( asks )
+import Control.Monad.State( get, gets, put )
+import Control.Monad.Trans( lift, liftIO )
+import Data.Char
 import System.Console.Haskeline
+import System.IO
 
 -- We need to track the number of active sourcings so that we can
 -- unregister the server (-> allow the bot to quit) when it is not

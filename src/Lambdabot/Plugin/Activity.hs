@@ -6,7 +6,8 @@ import Lambdabot
 
 import Control.Arrow ((&&&))
 import Control.Exception (evaluate)
-
+import Data.List
+import Data.Maybe
 import System.Time
 
 type ActivityState = [(ClockTime,Nick)]

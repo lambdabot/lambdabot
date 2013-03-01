@@ -24,6 +24,9 @@ import Lambdabot.Util.Regex
 
 import Lambdabot.Plugin.Eval (exts)
 
+import Control.Monad.Trans
+import Data.Char
+import Data.Maybe
 import qualified Text.Regex as R
 
 theModule = newModule

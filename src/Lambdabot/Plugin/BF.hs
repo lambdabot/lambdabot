@@ -9,6 +9,8 @@ import Lambdabot.Plugin
 import Lambdabot.Util.Process
 import Lambdabot.Util.Regex
 
+import Data.Char
+
 theModule = newModule
     { moduleCmds = return
         [ (command "bf")

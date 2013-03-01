@@ -19,6 +19,7 @@ import Lambdabot.Plugin.Pl.Optimize        (optimize)
 
 import Control.Concurrent.Chan    (Chan, newChan, isEmptyChan, readChan, writeList2Chan)
 import Control.Exception (unblock)
+
 -- firstTimeout is the timeout when the expression is simplified for the first
 -- time. After each unsuccessful attempt, this number is doubled until it hits
 -- maxTimeout.

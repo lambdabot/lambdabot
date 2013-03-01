@@ -5,9 +5,12 @@ module Lambdabot.Plugin.Quote (theModule) where
 import Lambdabot.Plugin
 import Lambdabot.Util.Regex
 
-import Data.Fortune
-import qualified Data.Map as M
 import qualified Data.ByteString.Char8 as P
+import Data.Char
+import Data.Fortune
+import Data.List
+import qualified Data.Map as M
+import Data.Maybe
 
 type Key    = P.ByteString
 type Quotes = M.Map Key [P.ByteString]

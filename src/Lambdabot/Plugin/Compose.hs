@@ -10,6 +10,10 @@ import Lambdabot.Plugin
 import Lambdabot
 
 import Control.Arrow (first)
+import Control.Monad
+import Control.Monad.Trans
+import Data.Char
+import Data.List
 
 type Compose = ModuleT () LB
 

@@ -11,6 +11,9 @@ import Lambdabot.Plugin
 import Lambdabot.Util.Process
 import Lambdabot.Util.Regex
 
+import Data.Char
+import Data.List
+import Data.Maybe
 import qualified Text.Regex as R
 
 -- | We can accumulate an interesting environment

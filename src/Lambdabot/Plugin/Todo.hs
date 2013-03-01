@@ -5,6 +5,7 @@
 module Lambdabot.Plugin.Todo (theModule) where
 
 import Lambdabot.Plugin
+import Control.Monad
 import qualified Data.ByteString.Char8 as P
 
 -- A list of key/elem pairs with an ordering determined by its position in the list

@@ -3,7 +3,11 @@ module Lambdabot.Plugin.Karma (theModule) where
 
 import Lambdabot.Plugin
 import qualified Lambdabot.NickEq as E
+
+import Data.Char
+import Data.List
 import qualified Data.Map as M
+import Data.Maybe
 import Text.Printf
 
 type KarmaState = M.Map Nick Integer

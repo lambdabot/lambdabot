@@ -7,8 +7,9 @@ import Lambdabot.Util.Parser (withParsed)
 
 import Control.Monad.State
 import Data.Generics
-import Language.Haskell.Exts as Hs
 import qualified Data.Map as M
+import Data.Maybe
+import Language.Haskell.Exts as Hs
 
 theModule = newModule
     { moduleCmds = return

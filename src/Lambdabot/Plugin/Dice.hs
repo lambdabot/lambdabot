@@ -6,7 +6,10 @@ module Lambdabot.Plugin.Dice (theModule) where
 
 import Lambdabot.Plugin
 
+import Data.List
 import Data.Random.Dice (rollEm)
+
+type Dice = ModuleT () LB
 
 theModule = newModule
     { moduleCmds = return
@@ -19,10 +22,7 @@ theModule = newModule
     , contextual = doDice False
     }
 
-----------------------------------------------------------------
--- the IRC shim stuff
-
-doDice :: MonadIO m => Bool -> String -> Cmd m ()
+doDice :: Bool -> String -> Cmd Dice ()
 doDice printErrs text = do
     user <- showNick =<< getSender
     result <- io (rollEm text)

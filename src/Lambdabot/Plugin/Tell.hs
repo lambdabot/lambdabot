@@ -47,12 +47,13 @@
 
 module Lambdabot.Plugin.Tell (theModule) where
 
+import Lambdabot.Plugin
+import Lambdabot.Util.AltTime
+
 import Control.Arrow (first)
+import Control.Monad
 import qualified Data.Map as M
 import Text.Printf (printf)
-
-import Lambdabot.Util.AltTime
-import Lambdabot.Plugin
 
 -- | Was it @tell or @ask that was the original command?
 data NoteType    = Tell | Ask deriving (Show, Eq, Read)

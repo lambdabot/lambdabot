@@ -11,9 +11,12 @@ import Lambdabot
 import Lambdabot.Plugin
 import qualified Lambdabot.Message as Msg
 
+import Control.Monad
 import qualified Data.Map as M
-import System.Time
 import System.Directory (createDirectoryIfMissing)
+import System.FilePath
+import System.Time
+import System.IO
 
 -- ------------------------------------------------------------------------
 

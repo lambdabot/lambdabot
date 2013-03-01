@@ -2,6 +2,7 @@
 
 module Modules (modulesInfo) where
 
+import Data.List
 import Lambdabot.Plugin
 
 -- to add a new plugin, one must first add a qualified import here, and also

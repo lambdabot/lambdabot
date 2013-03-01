@@ -10,6 +10,9 @@ import Lambdabot.Util.Regex
 import qualified Text.Regex as R
 
 import Control.Arrow
+import Control.Monad
+import Data.Char
+import Data.Maybe
 
 theModule = newModule
     { moduleCmds = return

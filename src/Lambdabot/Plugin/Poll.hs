@@ -9,6 +9,7 @@ module Lambdabot.Plugin.Poll (theModule) where
 
 import Lambdabot.Plugin hiding (choice)
 import qualified Data.ByteString.Char8 as P
+import Data.List
 import qualified Data.Map as M
 
 newPoll :: Poll

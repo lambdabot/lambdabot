@@ -1,10 +1,11 @@
 module Lambdabot.Plugin.Numberwang where
 
 import Control.Applicative
+import Control.Monad
 import Data.Random
 import Data.Random.Distribution.Poisson
-import Numeric
 import Lambdabot.Plugin
+import Numeric
 
 
 data NumberwangState = State

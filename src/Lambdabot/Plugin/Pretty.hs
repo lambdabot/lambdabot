@@ -16,6 +16,7 @@ module Lambdabot.Plugin.Pretty (theModule) where
 
 import Lambdabot.Plugin
 
+import Data.List
 import qualified Language.Haskell.Exts as Hs
 import Language.Haskell.Exts hiding (Module, Pretty)
 

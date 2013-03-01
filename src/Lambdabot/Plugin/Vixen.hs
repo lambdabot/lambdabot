@@ -9,6 +9,7 @@ import Lambdabot.Plugin
 import Lambdabot.Util.Regex
 
 import Control.Arrow ((***))
+import Control.Monad
 import Data.Binary
 import qualified Data.ByteString.Char8 as P
 import System.Directory
@@ -18,7 +19,7 @@ theModule = newModule
     { moduleCmds = return
         [ (command "vixen")
             { help = say "vixen <phrase>. Sergeant Curry's lonely hearts club"
-            , process = \txt -> readMS >>= (ios . ($ txt) . snd)
+            , process = \txt -> say =<< io . ($ txt) . snd =<< readMS
             }
         , (command "vixen-on")
             { privileged = True
@@ -43,7 +44,7 @@ theModule = newModule
     -- if vixen-chat is on, we can just respond to anything
     , contextual = \txt -> do
         (alive, k) <- readMS
-        if alive then ios (k txt)
+        if alive then io (k txt) >>= say
                  else return ()
 
     , moduleDefState = return (False, const (return "<undefined>"))

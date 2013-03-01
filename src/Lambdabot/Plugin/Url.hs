@@ -6,6 +6,10 @@ import Lambdabot.Plugin
 import Lambdabot.Util.MiniHTTP
 import Lambdabot.Util.Url
 
+import Control.Monad
+import Control.Monad.Trans
+import Data.List
+import Data.Maybe
 import qualified Text.Regex as R -- legacy
 
 theModule = newModule

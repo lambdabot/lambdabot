@@ -4,6 +4,8 @@ module Lambdabot.Plugin.More (theModule) where
 import Lambdabot.Plugin
 import Lambdabot
 
+import Control.Monad.Trans
+
 type MoreState = GlobalPrivate () [String]
 type More = ModuleT MoreState LB
 
