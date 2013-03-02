@@ -86,15 +86,10 @@ spellingNazi lin = fmap (take 1 . concat) (mapM correct (words lin))
 -- 'String' is a word to check the spelling of.
 --
 spell :: String -> IO [String]
-spell word = spellWithDict word Nothing []
+spell word = spellWithArgs word []
 
---
--- | Like 'spell', but you can specify which dictionary and pass extra
--- arguments to aspell.
---
-spellWithDict :: String -> Maybe Dictionary -> [String] -> IO [String]
-spellWithDict word (Just d) ex = spellWithDict word Nothing ("--master":show d:ex)
-spellWithDict word Nothing  ex = do
+spellWithArgs :: String -> [String] -> IO [String]
+spellWithArgs word ex = do
     (out,err,_) <- popen binary (args++ex) (Just word)
     let o = fromMaybe [word] ((clean_ . lines) out)
         e = fromMaybe e      ((clean_ . lines) err)
@@ -130,18 +125,3 @@ clean'' s
     | Just (_,_,m,_) <- pat `R.matchRegexAll` s = m
     | otherwise = s
     where pat  = regex' "[^:]*: "    -- drop header
-
---
--- Alternate dictionaries, currently just lambdabot's. The idea was to
--- have a dictionary for lambdabot commands, and aspell rather than
--- levinshtein for spelling errors. Turns out to be quite complicated,
--- for negligible gain.
---
-data Dictionary
-    = Lambdabot -- ^ Dictionary of lambdabot commands (it's its own language)
-
--- path to the master dictionary
-instance Show Dictionary where
-    -- TODO: use findLBFile from File.hs. But does this module even work anymore?
-    showsPrec _ Lambdabot = showString "State/lambdabot"
-

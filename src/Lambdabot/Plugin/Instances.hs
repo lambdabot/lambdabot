@@ -24,9 +24,11 @@ import Lambdabot.Plugin
 import Lambdabot.Util.Process
 import Lambdabot.Util.Regex
 
+import Control.Monad
 import Data.Char
 import Data.List
 import Data.Maybe
+import System.FilePath
 
 type Instance   = String
 type ClassName  = String
@@ -36,13 +38,13 @@ theModule = newModule
     { moduleCmds = return
         [ (command "instances")
             { help = say "instances <typeclass>. Fetch the instances of a typeclass."
-            , process = \cls -> fetchInstances cls >>= say
+            , process = fetchInstances >=> say
             }
         , (command "instances-importing")
             { help = say $
                 "instances-importing [<module> [<module> [<module...]]] <typeclass>. " ++
                 "Fetch the instances of a typeclass, importing specified modules first."
-            , process = \args -> fetchInstancesImporting args >>= say
+            , process = fetchInstancesImporting >=> say
             }
         ]
     }
@@ -128,14 +130,16 @@ fetchInstancesImporting args = fetchInstances' cls mdls
 --   the parser.
 fetchInstances' :: MonadLB m => String -> [ModuleName] -> m String
 fetchInstances' cls mdls = do
-  let s = unlines [cxt, command]
-  ghciCmd <- asksConfig ghci
-  (out, err, _) <- io $ popen ghciCmd ["-ignore-dot-ghci","-fglasgow-exts"] $
-                   Just s
-  let is = getInstances out cls
-  return $ if null is
-             then err
-             else intercalate ", " is
-  where cxt     = ":l State/L\n" ++
-		  ":m + " ++ unwords mdls
-        command = ":i " ++ cls
+    stateDir <- asksConfig outputDir
+    let s = unlines $ map unwords
+            [ [":l", show (stateDir </> "L")]
+            ,  ":m" : "+" : mdls
+            , [":i", cls]
+            ]
+    
+    ghciCmd <- asksConfig ghci
+    (out, err, _) <- io $ popen ghciCmd ["-ignore-dot-ghci","-fglasgow-exts"] (Just s)
+    let is = getInstances out cls
+    return $ if null is
+               then err
+               else intercalate ", " is
