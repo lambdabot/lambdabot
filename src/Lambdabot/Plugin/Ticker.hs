@@ -105,7 +105,7 @@ calcBids ticks = do
 -- | Fetch a page via HTTP and return its body as a list of lines.
 fetchPage :: MonadLB m => String -> String -> m [String]
 fetchPage meth url = do
-    proxy' <- asksConfig proxy
+    proxy' <- readConfig proxy
     
     let Just uri = parseURI url
         abs_path = uriPath uri ++ uriQuery uri ++ uriFragment uri

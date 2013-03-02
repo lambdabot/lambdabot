@@ -6,6 +6,7 @@ module Lambdabot.Plugin.OfflineRC (theModule) where
 import Lambdabot
 import Lambdabot.Main( received )
 import Lambdabot.Plugin
+import Lambdabot.Plugin.Base( commandPrefixes )
 import Lambdabot.Util.Error( finallyError )
 
 import Control.Concurrent( forkIO )
@@ -69,7 +70,7 @@ onInit = do
 
 feed :: String -> OfflineRC ()
 feed msg = do
-    cmdPrefix <- fmap head (asksConfig commandPrefixes)
+    cmdPrefix <- fmap head (readConfig commandPrefixes)
     let msg' = case msg of
             '>':xs -> cmdPrefix ++ "run " ++ xs
             '!':xs -> xs

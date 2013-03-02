@@ -6,8 +6,9 @@
 -- A sort of mini interpreter. Could do with some more thinking.
 module Lambdabot.Plugin.Compose (theModule) where
 
-import Lambdabot.Plugin
 import Lambdabot
+import Lambdabot.Plugin
+import Lambdabot.Plugin.Base (commandPrefixes)
 
 import Control.Arrow (first)
 import Control.Monad
@@ -73,7 +74,9 @@ lookupP cmd = withMsg $ \a -> do
 -- @@ @f x y (@g y z)
 evalBracket :: String -> Cmd Compose ()
 evalBracket args = do
-    config <- askConfig
+    cmdPrefixes <- readConfig commandPrefixes
+    
+    let config = cmdPrefixes
     xs <- mapM evalExpr (fst (parseBracket 0 True args config))
     mapM_ (say . addSpace) (concat' xs)
  where concat' ([x]:[y]:xs) = concat' ([x++y]:xs)
@@ -101,7 +104,7 @@ data Expr = Cmd String [Expr]
 -- | Parse a command invocation that can contain parentheses
 --   The Int indicates how many brackets must be closed to end the current argument, or 0
 --   The Bool indicates if this is a valid location for a character constant
-parseBracket :: Int -> Bool -> String -> Config -> ([Expr],String)
+parseBracket :: Int -> Bool -> String -> [String] -> ([Expr],String)
 parseBracket 0 _ [] _       = ([],[])
 parseBracket _ _ [] _       = error "Missing ')' in nested command"
 parseBracket 1 _ (')':xs) _ = ([],xs)
@@ -122,7 +125,7 @@ parseBracket n c (x:xs) cfg | x `elem` "\"'" && (c || x /= '\'')
 parseBracket n c (x:xs) cfg = first (addArg [x])
                             $ parseBracket n (not (isAlphaNum x) && (c || x /= '\'')) xs cfg
 
-parseCommand, parseInlineCommand :: Int -> String -> Config -> ([Expr],String)
+parseCommand, parseInlineCommand :: Int -> String -> [String] -> ([Expr],String)
 parseCommand n xs config = (Cmd cmd args:rest, ws)
     where
         (cmd, ys) = break (`elem` " )") xs
@@ -143,8 +146,8 @@ parseString delim (x:xs)
 
 
 -- | Does xs start with a command prefix?
-isCommand :: String -> Config -> Maybe String
-isCommand xs = msum . map dropPrefix . commandPrefixes
+isCommand :: String -> [String] -> Maybe String
+isCommand xs = msum . map dropPrefix
  where dropPrefix p
           | p `isPrefixOf` xs = Just $ drop (length p) xs
           | otherwise         = Nothing

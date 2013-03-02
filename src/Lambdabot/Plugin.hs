@@ -28,11 +28,14 @@ module Lambdabot.Plugin
     , unpackNick
     , ircPrivmsg
     
-    , askConfig
-    , asksConfig
+    , readConfig
     
     , debugStr
     , debugStrLn
+    
+    , proxy
+    , ghci
+    , outputDir
     
     , module Lambdabot.Config
     , module Lambdabot.Command

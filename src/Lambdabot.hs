@@ -57,6 +57,7 @@ import System.Exit
 import System.IO
 
 import Data.Char
+import Data.Dependent.Sum
 import Data.List                (isSuffixOf, inits, tails)
 import Data.Maybe               (isJust)
 import qualified Data.Map as M
@@ -81,9 +82,9 @@ data Mode = Online | Offline deriving Eq
 -- Also, handle any fatal exceptions (such as non-recoverable signals),
 -- (i.e. print a message and exit). Non-fatal exceptions should be dealt
 -- with in the mainLoop or further down.
-runIrc :: Config -> [String] -> LB a -> S.DynLoad -> [String] -> IO ()
-runIrc config evcmds initialise ld plugins = withSocketsDo $ do
-    rost <- initRoState config
+runIrc :: [String] -> LB a -> S.DynLoad -> [String] -> [DSum ConfigKey] -> IO ()
+runIrc evcmds initialise ld plugins configBindings = withSocketsDo $ do
+    rost <- initRoState (config configBindings)
     r <- try $ evalLB (do withDebug "Initialising plugins" initialise
                           withIrcSignalCatch mainLoop)
                        rost (initState ld plugins evcmds)

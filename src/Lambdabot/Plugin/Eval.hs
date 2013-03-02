@@ -5,6 +5,7 @@
 module Lambdabot.Plugin.Eval (theModule, eval, exts) where
 
 import Lambdabot.Plugin
+import Lambdabot.Plugin.Base (evalPrefixes)
 import Lambdabot.Util.Process
 
 import Control.Exception (try, SomeException)
@@ -38,7 +39,7 @@ theModule = newModule
         ]
 
     , contextual = \txt -> do
-        b <- asksConfig (isEval txt)
+        b <- isEval txt
         when b (lim80 (eval (dropPrefix txt)))
     }
 
@@ -58,8 +59,10 @@ args load src = concat
     , ["+RTS", "-N2", "-RTS"]
     ]
 
-isEval :: String -> Config -> Bool
-isEval str config = evalPrefixes config `arePrefixesWithSpaceOf` str
+isEval :: MonadLB m => String -> m Bool
+isEval str = do
+    prefixes <- readConfig evalPrefixes
+    return (prefixes `arePrefixesWithSpaceOf` str)
 
 dropPrefix :: String -> String
 dropPrefix = dropWhile (' ' ==) . drop 2

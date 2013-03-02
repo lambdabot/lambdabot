@@ -12,6 +12,7 @@ import Lambdabot.Plugin
 import Lambdabot.Util.MiniHTTP
 import Lambdabot.Util.Url
 
+import Control.Applicative
 import Data.Maybe
 import Network.HTTP
 import Text.HTML.TagSoup
@@ -28,11 +29,14 @@ engines =
 googleHeaders :: [Header]
 googleHeaders = [mkHeader HdrReferer "http://www.google.com/"]
 
-normalizeOptions :: Config -> NormalizeRequestOptions a
-normalizeOptions config = defaultNormalizeRequestOptions {
-    normDoClose = True,
-    normForProxy = isJust (proxy config),
-    normUserAgent = Nothing } -- there is a default user agent, perhaps we want it?
+normalizeOptions :: MonadLB m => m (NormalizeRequestOptions a)
+normalizeOptions = do
+    hasProxy <- isJust <$> readConfig proxy 
+    return defaultNormalizeRequestOptions
+        { normDoClose = True
+        , normForProxy = hasProxy
+        , normUserAgent = Nothing
+        } -- there is a default user agent, perhaps we want it?
 
 makeUri :: String -> String -> URI
 makeUri regName path = nullURI {
@@ -82,12 +86,12 @@ searchCmd engineName (Network.HTTP.urlEncode -> query)
                     handleUrl url []
                 _ -> return ["No Result Found."]
   where handleUrl url extra = do
-            proxy' <- asksConfig proxy
+            proxy' <- readConfig proxy
             title <- io $ runWebReq (urlPageTitle url) proxy'
             return $ extra ++ maybe [url] (\t -> [url, t]) title
         Just (uri, makeQuery, headers) = lookup engineName engines
         request' = do
-            opts <- asksConfig normalizeOptions
+            opts <- normalizeOptions
             return $ normalizeRequest opts $ Request
                 { rqURI = uri { uriQuery = makeQuery query }
                 , rqMethod = HEAD

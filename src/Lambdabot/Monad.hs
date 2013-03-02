@@ -1,8 +1,11 @@
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE GADTs #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE TemplateHaskell #-}
 module Lambdabot.Monad
     ( IRCRState(..)
     , IRCRWState(..)
@@ -32,8 +35,7 @@ module Lambdabot.Monad
     , forkLB
     , liftLB
     
-    , askConfig
-    , asksConfig
+    , readConfig
     
     , debugStr
     , debugStrLn
@@ -42,6 +44,11 @@ module Lambdabot.Monad
     , withCommand
     , withAllModules
     , getDictKeys
+
+    , verbose
+    , proxy
+    , ghci
+    , outputDir
     ) where
 
 import           Lambdabot.Command
@@ -70,6 +77,14 @@ import Control.Monad.Reader
 import Control.Monad.State
 
 import System.Console.Haskeline.MonadException (MonadException)
+
+-------------------------------------
+-- Core configuration variables
+
+configKey "verbose"             [t| Bool                    |] [| False         |]
+configKey "proxy"               [t| Maybe ([Char], Integer) |] [| Nothing       |]
+configKey "ghci"                [t| String                  |] [| "ghci"        |]
+configKey "outputDir"           [t| FilePath                |] [| "State/"      |]
 
 ------------------------------------------------------------------------
 --
@@ -218,8 +233,7 @@ instance Show IRCError where
 lbIO :: MonadLB m => ((forall a. LB a -> IO a) -> IO b) -> m b
 lbIO k = lb $ do
     r <- LB ask
-    let doLB m = runReaderT (runLB m) r
-    io (k doLB)
+    io (k (flip runReaderT r . runLB))
 
 -- | run a computation in the LB monad
 evalLB :: LB a -> IRCRState -> IRCRWState -> IO a
@@ -248,17 +262,14 @@ forkLB f = (`liftLB` f) $ \g -> do
 liftLB :: (IO a -> IO b) -> LB a -> LB b
 liftLB f = LB . mapReaderT f . runLB -- lbIO (\conv -> f (conv lb))
 
-askConfig :: MonadLB m => m Config
-askConfig = lb (asks ircConfig)
-
-asksConfig :: MonadLB m => (Config -> a) -> m a
-asksConfig f = liftM f askConfig
+readConfig :: MonadLB m => ConfigKey a -> m a
+readConfig k = liftM (lookupConfig k) (lb (asks ircConfig))
 
 -- | 'debugStr' checks if we have the verbose flag turned on. If we have
 --   it outputs the String given. Else, it is a no-op.
 debugStr :: MonadLB m => String -> m ()
 debugStr str = do
-    v <- asksConfig verbose
+    v <- readConfig verbose
     when v (io (putStr str))
 
 -- | 'debugStrLn' is a version of 'debugStr' that adds a newline to the end
