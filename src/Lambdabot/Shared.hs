@@ -20,11 +20,6 @@ newtype Module = Module String {- unique module identifier -}
 -- | Operations provided by the dynamic linker linked into the static
 -- core. A DynLoad value is passed from there to the dynamic code, for
 -- use by DynamicModule
---
--- Possibly want to treat this as an existential, ala MODULE
---
--- could add to DynLoad, Typeable a => ...
---
 data DynLoad = DynLoad {
         dynload    :: forall a. FilePath -> Symbol -> IO (Module,a),
         unload     :: Module   -> IO ()

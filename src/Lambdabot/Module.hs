@@ -1,15 +1,10 @@
-{-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE TypeFamilies #-}
 module Lambdabot.Module
-    ( MODULE(..)
-    , Module(..)
+    ( Module(..)
     , newModule
     
     , ModuleT(..)
-
-    , ModuleRef(..)
-    , CommandRef(..)
 
     , getRef
     , getModuleName
@@ -81,16 +76,6 @@ newModule = Module
     , moduleSerialize    = Nothing
     , moduleDefState     = return $ error "state not initialized"
     }
-
--- | An existential type holding a module, used to represent modules on
--- the value level, for manipluation at runtime by the dynamic linker.
-data MODULE = forall st. MODULE !(Module st)
-
-data ModuleRef = forall st.
-    ModuleRef (Module st) (MVar st) String
-
-data CommandRef = forall st.
-    CommandRef (Module st) (MVar st) (Cmd.Command (ModuleT st LB)) String
 
 --
 -- | This transformer encodes the additional information a module might

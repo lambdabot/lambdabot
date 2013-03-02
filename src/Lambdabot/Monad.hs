@@ -1,10 +1,13 @@
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE RankNTypes #-}
 module Lambdabot.Monad
     ( IRCRState(..)
     , IRCRWState(..)
+    , ModuleRef(..)
+    , CommandRef(..)
     , IRCError(..)
     
     , Callback
@@ -102,6 +105,12 @@ newtype ChanName = ChanName Msg.Nick -- always lowercase
   deriving (Eq, Ord)
 
 instance Show ChanName where show (ChanName x) = show x
+
+data ModuleRef = forall st.
+    ModuleRef (Module st) (MVar st) String
+
+data CommandRef = forall st.
+    CommandRef (Module st) (MVar st) (Command (ModuleT st LB)) String
 
 -- | only use the "smart constructor":
 mkCN :: Msg.Nick -> ChanName

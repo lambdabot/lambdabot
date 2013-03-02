@@ -198,8 +198,8 @@ toFilename = unsafePerformIO . findLBFile
 --
 -- | Register a module in the irc state
 --
-ircInstallModule :: MODULE -> String -> LB ()
-ircInstallModule (MODULE m) modname = do
+ircInstallModule :: Module st -> String -> LB ()
+ircInstallModule m modname = do
     savedState <- io $ readGlobalState m modname
     state      <- maybe (moduleDefState m) return savedState
     ref        <- io $ newMVar state
