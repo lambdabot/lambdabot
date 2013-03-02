@@ -10,6 +10,7 @@ import Lambdabot.Main( received )
 import Prelude hiding (catch)
 
 import Control.Concurrent
+import qualified Control.Concurrent.SSem as SSem
 import Control.Exception
 import Control.Monad.Error
 import qualified Data.ByteString.Char8 as P
@@ -107,17 +108,17 @@ online tag hostn portnum nickn ui = do
   sock <- io $ connectTo hostn portnum
   io $ hSetBuffering sock NoBuffering
   -- Implements flood control: RFC 2813, section 5.8
-  sem1 <- io $ newQSem 0
-  sem2 <- io $ newQSem 4 -- one extra token stays in the MVar
+  sem1 <- io $ SSem.new 0
+  sem2 <- io $ SSem.new 4 -- one extra token stays in the MVar
   sendmv <- io $ newEmptyMVar
   io $ forkIO $ sequence_ $ repeat $ do
-    waitQSem sem1
+    SSem.wait sem1
     threadDelay 2000000
-    signalQSem sem2
+    SSem.signal sem2
   io $ forkIO $ sequence_ $ repeat $ do
-    waitQSem sem2
+    SSem.wait sem2
     putMVar sendmv ()
-    signalQSem sem1
+    SSem.signal sem1
   catchError (addServer tag $ io . sendMsg tag sock sendmv)
              (\err -> io (hClose sock) >> throwError err)
   lift $ ircSignOn hostn (Nick tag nickn) ui
