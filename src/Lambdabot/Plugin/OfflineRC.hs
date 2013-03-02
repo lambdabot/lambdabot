@@ -90,13 +90,14 @@ handleMsg msg = liftIO $ do
 replLoop :: InputT OfflineRC ()
 replLoop = do
     line <- getInputLine "lambdabot> "
-    s' <- case line of Nothing -> fail "<eof>"
-                       Just x -> return $ dropWhile isSpace x
-    when (not $ null s') $ do
-        lift $ feed s'
-    continue <- lift (gets ircStayConnected)
-    when continue replLoop
-
+    case line of
+        Nothing -> return ()
+        Just x -> do
+            let s' = dropWhile isSpace x
+            when (not $ null s') $ do
+                lift $ feed s'
+            continue <- lift (gets ircStayConnected)
+            when continue replLoop
 
 lockRC :: OfflineRC ()
 lockRC = do

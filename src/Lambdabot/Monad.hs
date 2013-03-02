@@ -54,7 +54,7 @@ import Data.Map (Map)
 import qualified Data.Map as M hiding (Map)
 
 import Control.Applicative
-import Control.Concurrent (forkIO, MVar, ThreadId)
+import Control.Concurrent
 import Control.Exception
 import Control.Monad.Error (MonadError (..))
 import Control.Monad.Reader
@@ -68,19 +68,10 @@ import System.Console.Haskeline.MonadException (MonadException)
 --
 
 -- | Global read-only state.
-data IRCRState
-  = IRCRState {
-        ircMainThread  :: ThreadId,
-        ircInitDoneMVar:: MVar (),
-        ircQuitMVar    :: MVar ()
-        -- ^This is a mildly annoying hack.  In order to prevent the program
-        -- from closing immediately, we have to keep the main thread alive, but
-        -- the obvious infinite-MVar-wait technique doesn't work - the garbage
-        -- collector helpfully notices that the MVar is dead, kills the main
-        -- thread (which will never wake up, so why keep it around), thus
-        -- terminating the program.  Behold the infinite wisdom that is the
-        -- Glasgow FP group.
-  }
+data IRCRState = IRCRState
+    { ircInitDoneMVar:: MVar ()
+    , ircQuitMVar    :: MVar ()
+    }
 
 type Callback = IrcMessage -> LB ()
 
@@ -142,10 +133,12 @@ remServer tag = do
     s <- get
     let svrs = ircServerMap s
     case M.lookup tag svrs of
-        Just _ -> do let svrs' = M.delete tag svrs
-                     main <- asks ircMainThread
-                     when (M.null svrs') $ io $ throwTo main (ErrorCall "all servers detached")
-                     put (s { ircServerMap = svrs' })
+        Just _ -> do
+            let svrs' = M.delete tag svrs
+            put (s { ircServerMap = svrs' })
+            when (M.null svrs') $ do
+                quitMVar <- asks ircQuitMVar
+                io $ putMVar quitMVar ()
         Nothing -> fail $ "attempted to delete nonexistent servers named " ++ tag
 
 send :: IrcMessage -> LB ()

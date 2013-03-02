@@ -63,8 +63,7 @@ import qualified Data.ByteString.Char8 as P
 import Data.Random.Source
 import Data.Typeable
 
-import Control.Concurrent (myThreadId, newEmptyMVar, newMVar, readMVar, putMVar,
-                           takeMVar, threadDelay)
+import Control.Concurrent
 import Control.Exception
 import Control.Monad.Reader
 import Control.Monad.State
@@ -90,12 +89,12 @@ runIrc evcmds initialise ld plugins = withSocketsDo $ do
 
     -- clean up and go home
     case r of
-        Left er -> do
+        Left (SomeException er) -> do
             case cast er of
                 Just code -> exitWith code
                 Nothing -> do
                     putStrLn "exception:"
-                    print (er :: SomeException)
+                    print er
                     exitWith (ExitFailure 1)
         Right _ -> do
             exitWith ExitSuccess
@@ -105,15 +104,13 @@ runIrc evcmds initialise ld plugins = withSocketsDo $ do
 --
 initRoState :: IO IRCRState
 initRoState = do
-    threadmain <- io myThreadId
-    quitMVar <- io newEmptyMVar
-    initDoneMVar <- io newEmptyMVar
-
-    return $ IRCRState {
-                 ircQuitMVar    = quitMVar,
-                 ircInitDoneMVar= initDoneMVar,
-                 ircMainThread  = threadmain
-             }
+    quitMVar     <- newEmptyMVar
+    initDoneMVar <- newEmptyMVar
+    
+    return IRCRState 
+        { ircQuitMVar       = quitMVar
+        , ircInitDoneMVar   = initDoneMVar
+        }
 
 --
 -- | Default rw state
@@ -141,20 +138,20 @@ initState ld plugins evcmds = IRCRWState {
 
 -- Actually, this isn't a loop anymore.  FIXME: better name.
 mainLoop :: LB ()
-mainLoop = catchIrc
-   (do asks ircInitDoneMVar >>= io . flip putMVar ()
-       asks ircQuitMVar >>= io . takeMVar
-       fail "don't write to the quitMVar!")
-   (\e -> do -- catch anything, print informative message, and clean up
-        io $ hPutStrLn stderr $ case e of
-            IRCRaised ex   -> "Exception: " ++ show ex
-            SignalCaught s -> "Signal: " ++ ircSignalMessage s
+mainLoop = do
+    catchIrc
+        (do asks ircInitDoneMVar >>= io . flip putMVar ()
+            asks ircQuitMVar >>= io . takeMVar)
+        (\e -> do -- catch anything, print informative message, and clean up
+            io $ hPutStrLn stderr $ case e of
+                IRCRaised ex   -> "Exception: " ++ show ex
+                SignalCaught s -> "Signal: " ++ ircSignalMessage s)
         
-        runExitHandlers
-        flushModuleState
-        
-        -- this kills profiling output:
-        io $ exitWith (ExitFailure 1))
+    runExitHandlers
+    flushModuleState
+    
+    -- this kills profiling output:
+    io $ exitWith (ExitFailure 1)
 
 -- | run 'exit' handler on modules
 runExitHandlers:: LB ()
