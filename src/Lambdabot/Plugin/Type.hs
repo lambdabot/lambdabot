@@ -24,7 +24,6 @@ import Lambdabot.Util.Regex
 
 import Lambdabot.Plugin.Eval (exts)
 
-import Control.Monad.Trans
 import Data.Char
 import Data.Maybe
 import qualified Text.Regex as R
@@ -123,12 +122,13 @@ extract_signatures output
 --
 --     With this the command handler can be easily defined using popen:
 --
-query_ghci :: MonadIO m => String -> String -> m String
-query_ghci cmd expr = io $ do
-    l <- findLBFile "L.hs"
+query_ghci :: MonadLB m => String -> String -> m String
+query_ghci cmd expr = do
+    l <- lb $ findLBFile "L.hs"
     let context = ":load "++l++"\n:m *L\n" -- using -fforce-recomp to make sure we get *L in scope instead of just L
         extFlags = ["-X" ++ ext | ext <- exts]
-    (output, errors, _) <- popen (ghci config)
+    ghciCmd <- asksConfig ghci
+    (output, errors, _) <- io $ popen ghciCmd
         ("-v0":"-fforce-recomp":"-iState":extFlags)
         (Just (context ++ theCommand cmd (stripComments expr)))
     let ls = extract_signatures output

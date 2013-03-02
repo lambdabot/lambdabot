@@ -40,9 +40,11 @@ import qualified Lambdabot.Message as Msg
 import qualified Lambdabot.Shared  as S
 
 import Lambdabot.Command
+import Lambdabot.Config
 import Lambdabot.IRC
 import Lambdabot.Module
 import Lambdabot.Monad
+import Lambdabot.State
 import Lambdabot.Util.Serial
 import Lambdabot.Util.Signals
 import Lambdabot.Util
@@ -53,7 +55,6 @@ import Network                  (withSocketsDo)
 
 import System.Exit
 import System.IO
-import System.IO.Unsafe
 
 import Data.Char
 import Data.List                (isSuffixOf, inits, tails)
@@ -80,9 +81,9 @@ data Mode = Online | Offline deriving Eq
 -- Also, handle any fatal exceptions (such as non-recoverable signals),
 -- (i.e. print a message and exit). Non-fatal exceptions should be dealt
 -- with in the mainLoop or further down.
-runIrc :: [String] -> LB a -> S.DynLoad -> [String] -> IO ()
-runIrc evcmds initialise ld plugins = withSocketsDo $ do
-    rost <- initRoState
+runIrc :: Config -> [String] -> LB a -> S.DynLoad -> [String] -> IO ()
+runIrc config evcmds initialise ld plugins = withSocketsDo $ do
+    rost <- initRoState config
     r <- try $ evalLB (do withDebug "Initialising plugins" initialise
                           withIrcSignalCatch mainLoop)
                        rost (initState ld plugins evcmds)
@@ -100,18 +101,37 @@ runIrc evcmds initialise ld plugins = withSocketsDo $ do
             exitWith ExitSuccess
 
 -- | Default ro state
-initRoState :: IO IRCRState
-initRoState = do
+initRoState :: Config -> IO IRCRState
+initRoState config = do
     quitMVar     <- newEmptyMVar
     initDoneMVar <- newEmptyMVar
     
     return IRCRState 
         { ircQuitMVar       = quitMVar
         , ircInitDoneMVar   = initDoneMVar
+        , ircConfig         = config
         }
 
 -- | Default rw state
 initState :: S.DynLoad -> [String] -> [String] -> IRCRWState
+initState ld plugins evcmds = IRCRWState
+    { ircPrivilegedUsers = M.singleton (Msg.Nick "offlinerc" "null") True
+    , ircIgnoredUsers    = M.empty
+    , ircChannels        = M.empty
+    , ircModules         = M.empty
+    , ircServerMap       = M.empty
+    , ircCallbacks       = M.empty
+    , ircOutputFilters   = 
+        [ ([],cleanOutput)
+        , ([],lineify)
+        , ([],cleanOutput)
+        -- , ([],reduceIndent)
+        , ([],checkRecip) ]
+    , ircCommands        = M.empty
+    , ircStayConnected   = True
+    , ircDynLoad         = ld
+    , ircPlugins         = plugins
+    , ircOnStartupCmds   = evcmds
     }
 
 -- Actually, this isn't a loop anymore.  FIXME: better name.
@@ -149,28 +169,28 @@ flushModuleState = do
 -- | Peristence: write the global state out
 writeGlobalState :: Module st -> String -> ModuleT st LB ()
 writeGlobalState mod name = case moduleSerialize mod of
-  Nothing  -> return ()
-  Just ser -> do
-    state <- getRef >>= (io . readMVar) -- readMS
-    case serialize ser state of
-        Nothing  -> return ()   -- do not write any state
-        Just out -> io $ P.writeFile (toFilename name) out
+    Nothing  -> return ()
+    Just ser -> do
+        state <- readMS
+        case serialize ser state of
+            Nothing  -> return ()   -- do not write any state
+            Just out -> do
+                stateFile <- lb (findLBFile name)
+                io (P.writeFile stateFile out)
 
 -- | Read it in
-readGlobalState :: Module st -> String -> IO (Maybe st)
+readGlobalState :: Module st -> String -> LB (Maybe st)
 readGlobalState mod name = case moduleSerialize mod of
     Just ser -> do
-        state <- Just `fmap` P.readFile (toFilename name) `catch` \(_ :: SomeException) -> return Nothing
-        catch (evaluate $ maybe Nothing (Just $!) (deserialize ser =<< state)) -- Monad Maybe)
-              (\e -> do hPutStrLn stderr $ "Error parsing state file for: "
-                                        ++ name ++ ": " ++ show (e :: SomeException)
-                        hPutStrLn stderr $ "Try removing: "++ show (toFilename name)
-                        return Nothing) -- proceed regardless
+        stateFile <- findLBFile name
+        io $ do
+            state <- Just `fmap` P.readFile stateFile `catch` \(_ :: SomeException) -> return Nothing
+            catch (evaluate $ maybe Nothing (Just $!) (deserialize ser =<< state)) -- Monad Maybe)
+                  (\e -> do hPutStrLn stderr $ "Error parsing state file for: "
+                                            ++ name ++ ": " ++ show (e :: SomeException)
+                            hPutStrLn stderr $ "Try removing: "++ show stateFile
+                            return Nothing) -- proceed regardless
     Nothing -> return Nothing
-
--- | helper
-toFilename :: String -> String
-toFilename = unsafePerformIO . findLBFile
 
 ------------------------------------------------------------------------
 --
@@ -178,7 +198,7 @@ toFilename = unsafePerformIO . findLBFile
 --
 ircInstallModule :: Module st -> String -> LB ()
 ircInstallModule m modname = do
-    savedState <- io $ readGlobalState m modname
+    savedState <- readGlobalState m modname
     state      <- maybe (moduleDefState m) return savedState
     ref        <- io $ newMVar state
     

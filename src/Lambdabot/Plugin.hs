@@ -19,13 +19,20 @@ module Lambdabot.Plugin
     , bindModule2
     
     , LB
-    , lb
+    , MonadLB(..)
+    , lim80
     , ios80
     
     , Nick(..)
     , packNick
     , unpackNick
     , ircPrivmsg
+    
+    , askConfig
+    , asksConfig
+    
+    , debugStr
+    , debugStrLn
     
     , module Lambdabot.Config
     , module Lambdabot.Command
@@ -41,6 +48,7 @@ import Lambdabot.Command hiding (runCommand, execCmd)
 import Lambdabot.File (findLBFile)
 import Lambdabot.Message
 import Lambdabot.Module
+import Lambdabot.Monad
 import Lambdabot.State
 import Lambdabot.Util
 import Lambdabot.Util.Serial
@@ -50,17 +58,20 @@ import Codec.Binary.UTF8.String
 import Data.Char
 import Language.Haskell.TH
 
--- | convenience, similar to ios but also cut output to channel to 80 characters
--- usage:  @process _ _ to _ s = ios80 to (plugs s)@
-ios80 :: (Functor m, MonadIO m) => IO String -> Cmd m ()
-ios80 action = do
+lim80 :: Monad m => m String -> Cmd m ()
+lim80 action = do
     to <- getTarget
     let lim = case nName to of
                   ('#':_) -> limitStr 80 -- message to channel: be nice
                   _       -> id          -- private message: get everything
         spaceOut = unlines . map (' ':) . lines
         removeControl = filter (\x -> isSpace x || not (isControl x))
-    (say =<<) . io $ fmap (lim . encodeString . spaceOut . removeControl . decodeString) action 
+    (say =<<) . lift $ liftM (lim . encodeString . spaceOut . removeControl . decodeString) action 
+
+-- | convenience, similar to ios but also cut output to channel to 80 characters
+-- usage:  @process _ _ to _ s = ios80 to (plugs s)@
+ios80 :: MonadIO m => IO String -> Cmd m ()
+ios80 = lim80 . io
 
 modules :: [String] -> Q Exp
 modules xs = [| ($install, $names) |]

@@ -1,10 +1,12 @@
 module Lambdabot.Main
     ( main'
+    , defaultConfig
     , received
     ) where
 
-import Lambdabot.Shared
 import Lambdabot
+import Lambdabot.Config
+import Lambdabot.Shared
 
 import Control.Applicative
 import Control.Monad.State (get, liftIO)
@@ -16,13 +18,13 @@ parseArgs ("-e" : cmd : x)  = (cmd :) <$> parseArgs x
 parseArgs []                = Just []
 parseArgs _                 = Nothing
 
-main' :: Maybe DynLoad -> (LB (), [String]) -> IO ()
-main' dyn (loadStaticModules, pl) = do
+main' :: Config -> Maybe DynLoad -> (LB (), [String]) -> IO ()
+main' config dyn (loadStaticModules, pl) = do
     args <- parseArgs <$> getArgs
     
     let ld = maybe (error "no dynamic loading") id dyn
     case args of
-        Just xs -> runIrc (if null xs then ["offline"] else xs) loadStaticModules ld pl
+        Just xs -> runIrc config (if null xs then ["offline"] else xs) loadStaticModules ld pl
         _       -> putStrLn "Usage: lambdabot [-e 'cmd']*"
 
 

@@ -14,12 +14,12 @@ theModule = newModule
             { help = do
                 say "check <expr>"
                 say "You have QuickCheck and 3 seconds. Prove something."
-            , process = ios80 . check
+            , process = lim80 . check
             }
         ]
     }
 
-check :: String -> IO String
+check :: MonadLB m => String -> m String
 check src = 
     case Hs.parseExp src of
         Hs.ParseFailed l e  -> return (Hs.prettyPrint l ++ ':' : e)

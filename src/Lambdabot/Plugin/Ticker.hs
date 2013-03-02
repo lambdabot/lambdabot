@@ -29,7 +29,7 @@ theModule = newModule
 tickerCmd :: String -> Cmd Ticker ()
 tickerCmd []        = say "Empty ticker."
 tickerCmd tickers = do
-    quotes <- io $ fetchPage "GET" $ tickerUrl $ words tickers
+    quotes <- fetchPage "GET" $ tickerUrl $ words tickers
     case [x | Just x <- map extractQuote quotes] of
       []       -> say "No Result Found."
       xs       -> mapM_ say xs
@@ -58,14 +58,14 @@ bidsCmd :: String -> Cmd Ticker ()
 bidsCmd tickers =
     case words tickers of
         [] -> say (printf "Invalid argument '%s'" tickers)
-        xs -> io (calcBids xs) >>= say
+        xs -> calcBids xs >>= say
 
 -- fetch: b bid, a ask
 bidsUrl :: [String] -> String
 bidsUrl tickers = "http://download.finance.yahoo.com/d/quotes.csv?f=ba&e=.csv&s=" ++ ts
     where ts = intercalate "+" $ map urlEncode tickers
 
-getBidAsks :: [String] -> IO [Maybe (Float, Float)]
+getBidAsks :: MonadLB m => [String] -> m [Maybe (Float, Float)]
 getBidAsks tickers = do
     xs <- fetchPage "GET" $ bidsUrl tickers
     return $ map (extractPrice.csv) xs
@@ -87,7 +87,7 @@ accumOption (Right (a,b)) (_, Just (a',b')) = Right (a+a', b+b')
 
 -- Take a list of tickers which are optionally prefixed with '+' or '-'
 -- and add up (or subtract) the bid/ask prices on the based on the prefix.
-calcBids :: [String] -> IO String
+calcBids :: MonadLB m => [String] -> m String
 calcBids ticks = do
     xs <- getBidAsks $ map noPrefix ticks
     return $ case foldl accumOption (Right (0,0)) (zip ticks xs) of
@@ -103,15 +103,19 @@ calcBids ticks = do
 ---- Library routines, consider moving elsewhere. ----
 
 -- | Fetch a page via HTTP and return its body as a list of lines.
-fetchPage :: String -> String -> IO [String]
-fetchPage meth url = cleanup <$> readPage (proxy config) uri request ""
-    where Just uri = parseURI url
-          abs_path = uriPath uri ++ uriQuery uri ++ uriFragment uri
-          request  = case proxy config of
-                        Nothing -> [meth ++ " " ++ abs_path ++ " HTTP/1.0", ""]
-                        _       -> [meth ++ " " ++ url ++ " HTTP/1.0", ""]
-          dropHdr = drop 1 . dropWhile (not.null)
-          cleanup = dropHdr . (map (filter (/= '\r')))
+fetchPage :: MonadLB m => String -> String -> m [String]
+fetchPage meth url = do
+    proxy' <- asksConfig proxy
+    
+    let Just uri = parseURI url
+        abs_path = uriPath uri ++ uriQuery uri ++ uriFragment uri
+        request  = case proxy' of
+                      Nothing -> [meth ++ " " ++ abs_path ++ " HTTP/1.0", ""]
+                      _       -> [meth ++ " " ++ url ++ " HTTP/1.0", ""]
+        dropHdr = drop 1 . dropWhile (not.null)
+        cleanup = dropHdr . (map (filter (/= '\r')))
+    
+    cleanup <$> io (readPage proxy' uri request "")
 
 -- | Split a list into two lists based on a predicate.
 splitWhile :: (a -> Bool) -> [a] -> ([a], [a])

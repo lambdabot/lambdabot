@@ -11,8 +11,6 @@ module Lambdabot.Util (
         dropNL,
         splitFirstWord,
         firstWord,
-        debugStr,
-        debugStrLn,
         limitStr,
         listToStr, showWidth,
         showClean,
@@ -32,8 +30,6 @@ module Lambdabot.Util (
 
         random, insult, confirmation
     ) where
-
-import Lambdabot.Config
 
 import Data.List                (intercalate, isPrefixOf)
 import Data.Char                (isSpace)
@@ -90,20 +86,6 @@ splitFirstWord xs = (w, dropWhile isSpace xs')
 -- > first_word "This is a fine day" ===> "This"
 firstWord :: String -> String
 firstWord = takeWhile (not . isSpace)
-
--- refactor, might be good for logging to file later
--- | 'debugStr' checks if we have the verbose flag turned on. If we have
---   it outputs the String given. Else, it is a no-op.
-
-debugStr :: (MonadIO m) => String -> m ()
-debugStr
-    | verbose config  = liftIO . putStr
-    | otherwise       = const (return ())
-
--- | 'debugStrLn' is a version of 'debugStr' that adds a newline to the end
---   of the string outputted.
-debugStrLn :: (MonadIO m) => [Char] -> m ()
-debugStrLn x = debugStr (x ++ "\n")
 
 -- | Truncate a string to the specified length, putting ellipses at the
 -- end if necessary.

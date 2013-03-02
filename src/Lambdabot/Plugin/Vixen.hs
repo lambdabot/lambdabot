@@ -52,12 +52,13 @@ theModule = newModule
     -- suck in our (read only) regex state from disk
     -- compile it, and stick it in the plugin state
     , moduleInit = do
-      b <- io $ doesFileExist =<< findLBFile "vixen"
-      when b $ do
-          s <- io $ do st <- decodeFile =<< findLBFile "vixen"
-                       let compiled = map (regex *** id) st
-                       return (vixen (mkResponses compiled))
-          modifyMS $ \(v,_) -> (v, s)
+        vixenFile <- lb (findLBFile "vixen")
+        b <- io (doesFileExist vixenFile)
+        when b $ do
+            st <- io (decodeFile vixenFile)
+            let compiled = map (regex *** id) st
+                s = vixen (mkResponses compiled)
+            modifyMS $ \(v,_) -> (v, s)
     }
 
 ------------------------------------------------------------------------

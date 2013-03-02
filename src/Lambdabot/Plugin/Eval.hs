@@ -19,27 +19,27 @@ theModule = newModule
     { moduleCmds = return
         [ (command "run")
             { help = say "run <expr>. You have Haskell, 3 seconds and no IO. Go nuts!"
-            , process = ios80 . eval
+            , process = lim80 . eval
             }
         , (command "let")
             { aliases = ["define"] -- because @define always gets "corrected" to @undefine
             , help = say "let <x> = <e>. Add a binding"
-            , process = ios80 . define
+            , process = lim80 . define
             }
         , (command "undefine")
             { help = say "undefine. Reset evaluator local bindings"
             , process = \s -> 
                 if null s
                     then do
-                        io reset
+                        reset
                         say "Undefined."
                     else say "There's currently no way to undefine just one thing.  Say @undefine (with no extra words) to undefine everything."
             }
         ]
 
-    , contextual = \txt ->
-        when (isEval txt)
-            (ios80 (eval (dropPrefix txt)))
+    , contextual = \txt -> do
+        b <- asksConfig (isEval txt)
+        when b (lim80 (eval (dropPrefix txt)))
     }
 
 binary :: String
@@ -58,36 +58,36 @@ args load src = concat
     , ["+RTS", "-N2", "-RTS"]
     ]
 
-isEval :: String -> Bool
-isEval = ((evalPrefixes config) `arePrefixesWithSpaceOf`)
+isEval :: String -> Config -> Bool
+isEval str config = evalPrefixes config `arePrefixesWithSpaceOf` str
 
 dropPrefix :: String -> String
 dropPrefix = dropWhile (' ' ==) . drop 2
 
-eval :: String -> IO String
+eval :: MonadLB m => String -> m String
 eval src = do
-            load <- findLBFile "L.hs"
-            (out,err,_) <- popen binary (args load src) Nothing
-            case (out,err) of
-                ([],[]) -> return "Terminated\n"
-                _       -> do
-                    let o = munge out
-                        e = munge err
-                    return $ case () of {_
-                        | null o && null e -> "Terminated\n"
-                        | null o           -> " " ++ e
-                        | otherwise        -> " " ++ o
-                    }
+    load <- lb (findLBFile "L.hs")
+    (out,err,_) <- io (popen binary (args load src) Nothing)
+    case (out,err) of
+        ([],[]) -> return "Terminated\n"
+        _       -> do
+            let o = munge out
+                e = munge err
+            return $ case () of {_
+                | null o && null e -> "Terminated\n"
+                | null o           -> " " ++ e
+                | otherwise        -> " " ++ o
+            }
 
 ------------------------------------------------------------------------
 -- define a new binding
 
-define :: String -> IO String
+define :: MonadLB m => String -> m String
 define [] = return "Define what?"
 define src = case Hs.parseModule src of
     Hs.ParseOk srcModule -> do
-        l <- findLBFile "L.hs"
-        res <- Hs.parseFile l
+        l <- lb (findLBFile "L.hs")
+        res <- io (Hs.parseFile l)
         case res of
             Hs.ParseFailed loc err -> return (Hs.prettyPrint loc ++ ':' : err)
             Hs.ParseOk lModule -> do
@@ -124,27 +124,27 @@ moduleProblems (Hs.Module _ _ pragmas _ _ imports decls)
         langs = concat [ ls | Hs.LanguagePragma _ ls <- pragmas ]
 
 -- It parses. then add it to a temporary L.hs and typecheck
-comp :: Hs.Module -> IO String
+comp :: MonadLB m => Hs.Module -> m String
 comp src = do
     -- Note we copy to .L.hs, not L.hs. This hides the temporary files as dot-files
-    writeFile ".L.hs" (Hs.prettyPrint src)
+    io (writeFile ".L.hs" (Hs.prettyPrint src))
     
     -- and compile .L.hs
     -- careful with timeouts here. need a wrapper.
-    (o',e',c) <- popen "ghc" ["-O","-v0","-c"
-                             ,"-Werror"
-                             ,".L.hs"] Nothing
+    (o',e',c) <- io (popen "ghc" ["-O","-v0","-c"
+                                 ,"-Werror"
+                                 ,".L.hs"] Nothing)
     -- cleanup, 'try' because in case of error the files are not generated
-    try (removeFile ".L.hi") :: IO (Either SomeException ())
-    try (removeFile ".L.o")  :: IO (Either SomeException ())
+    io (try (removeFile ".L.hi") :: IO (Either SomeException ()))
+    io (try (removeFile ".L.o")  :: IO (Either SomeException ()))
 
     case (munge o', munge e') of
         ([],[]) | c /= ExitSuccess -> do
-                    removeFile ".L.hs"
+                    io (removeFile ".L.hs")
                     return "Error."
                 | otherwise -> do
-                    l <- findLBFile "L.hs"
-                    renameFile ".L.hs" l
+                    l <- lb (findLBFile "L.hs")
+                    io (renameFile ".L.hs" l)
                     return "Defined."
         (ee,[]) -> return ee
         (_ ,ee) -> return ee
@@ -155,8 +155,8 @@ munge = expandTab 8 . dropWhile (=='\n') . dropNL
 ------------------------------
 -- reset all bindings
 
-reset :: IO ()
+reset :: MonadLB m => m ()
 reset = do
-    l <- findLBFile "L.hs"
-    p <- findLBFile "Pristine.hs"
-    copyFile p l
+    l <- lb (findLBFile "L.hs")
+    p <- lb (findLBFile "Pristine.hs")
+    io (copyFile p l)

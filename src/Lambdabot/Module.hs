@@ -20,6 +20,7 @@ import Lambdabot.Util.Serial
 import Lambdabot.State
 import Lambdabot.Util (withMWriter)
 
+import Control.Applicative
 import Control.Concurrent (MVar)
 import Control.Monad.Error (MonadError(..))
 import Control.Monad.Reader (MonadReader(..), ReaderT(..))
@@ -82,7 +83,7 @@ newModule = Module
 --   need to access its name or its state.
 --
 newtype ModuleT st m a = ModuleT { moduleT :: ReaderT (MVar st, String) m a }
-    deriving (Functor, Monad, MonadTrans, MonadIO, MonadError e, MonadState t, MonadException)
+    deriving (Applicative, Functor, Monad, MonadTrans, MonadIO, MonadError e, MonadState t, MonadException)
 
 instance MonadLB m => MonadLB      (ModuleT st m) where lb = lift . lb
 instance MonadLB m => MonadLBState (ModuleT st m) where

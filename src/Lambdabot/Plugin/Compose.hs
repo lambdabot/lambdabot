@@ -73,7 +73,8 @@ lookupP cmd = withMsg $ \a -> do
 -- @@ @f x y (@g y z)
 evalBracket :: String -> Cmd Compose ()
 evalBracket args = do
-    xs <- mapM evalExpr (fst (parseBracket 0 True args))
+    config <- askConfig
+    xs <- mapM evalExpr (fst (parseBracket 0 True args config))
     mapM_ (say . addSpace) (concat' xs)
  where concat' ([x]:[y]:xs) = concat' ([x++y]:xs)
        concat' xs           = concat xs
@@ -96,39 +97,42 @@ data Expr = Cmd String [Expr]
           | Arg String
     deriving Show
 
+-- TODO: rewrite this using parsec or something
 -- | Parse a command invocation that can contain parentheses
 --   The Int indicates how many brackets must be closed to end the current argument, or 0
 --   The Bool indicates if this is a valid location for a character constant
-parseBracket :: Int -> Bool -> String -> ([Expr],String)
-parseBracket 0 _ []       = ([],[])
-parseBracket _ _ []       = error "Missing ')' in nested command"
-parseBracket 1 _ (')':xs) = ([],xs)
-parseBracket n _ (')':xs) | n > 0
-                          = first (addArg ")") $ parseBracket (n-1) True xs
-parseBracket n _ ('(':xs) | Just ys <- isCommand xs       -- (@cmd arg arg)
-                          = parseCommand n ys
-parseBracket n _ ('(':xs) | n > 0
-                          = first (addArg "(") $ parseBracket (n+1) True xs
-parseBracket n _ xs       | Just ('(':ys) <- isCommand xs -- @(cmd arg arg)
-                          = parseCommand n ys
-parseBracket n _ xs       | Just ys <- isCommand xs       -- @cmd arg arg
-                          = parseInlineCommand n ys
-parseBracket n c (x:xs)   | x `elem` "\"'" && (c || x /= '\'')
-                          = let (str, ys) = parseString x xs
-                                (rest,zs) = parseBracket n True ys
-                            in  (addArg (x:str) rest, zs)
-parseBracket n c (x:xs)   = first (addArg [x])
-                          $ parseBracket n (not (isAlphaNum x) && (c || x /= '\'')) xs
+parseBracket :: Int -> Bool -> String -> Config -> ([Expr],String)
+parseBracket 0 _ [] _       = ([],[])
+parseBracket _ _ [] _       = error "Missing ')' in nested command"
+parseBracket 1 _ (')':xs) _ = ([],xs)
+parseBracket n _ (')':xs) c | n > 0
+                            = first (addArg ")") $ parseBracket (n-1) True xs c
+parseBracket n _ ('(':xs) c | Just ys <- isCommand xs c     -- (@cmd arg arg)
+                            = parseCommand n ys c
+parseBracket n _ ('(':xs) c | n > 0
+                            = first (addArg "(") $ parseBracket (n+1) True xs c
+parseBracket n _ xs c       | Just ('(':ys) <- isCommand xs c -- @(cmd arg arg)
+                            = parseCommand n ys c
+parseBracket n _ xs c       | Just ys <- isCommand xs c       -- @cmd arg arg
+                            = parseInlineCommand n ys c
+parseBracket n c (x:xs) cfg | x `elem` "\"'" && (c || x /= '\'')
+                            = let (str, ys) = parseString x xs
+                                  (rest,zs) = parseBracket n True ys cfg
+                              in  (addArg (x:str) rest, zs)
+parseBracket n c (x:xs) cfg = first (addArg [x])
+                            $ parseBracket n (not (isAlphaNum x) && (c || x /= '\'')) xs cfg
 
-parseCommand, parseInlineCommand :: Int -> String -> ([Expr],String)
-parseCommand n xs = let (cmd, ys) = break (`elem` " )") xs
-                        (args,zs) = parseBracket 1 True (dropWhile (==' ') ys)
-                        (rest,ws) = parseBracket n True zs
-                    in  (Cmd cmd args:rest, ws)
+parseCommand, parseInlineCommand :: Int -> String -> Config -> ([Expr],String)
+parseCommand n xs config = (Cmd cmd args:rest, ws)
+    where
+        (cmd, ys) = break (`elem` " )") xs
+        (args,zs) = parseBracket 1 True (dropWhile (==' ') ys) config
+        (rest,ws) = parseBracket n True zs config
 
-parseInlineCommand n xs = let (cmd, ys) = break (`elem` " )") xs
-                              (rest,zs) = parseBracket n True (dropWhile (==' ') ys)
-                          in  (Cmd cmd rest:[], zs)
+parseInlineCommand n xs config = (Cmd cmd rest:[], zs)
+  where
+    (cmd, ys) = break (`elem` " )") xs
+    (rest,zs) = parseBracket n True (dropWhile (==' ') ys) config
 
 parseString :: Char -> String -> (String, String)
 parseString _     []          = ([],[])
@@ -139,8 +143,8 @@ parseString delim (x:xs)
 
 
 -- | Does xs start with a command prefix?
-isCommand :: String -> Maybe String
-isCommand xs = msum $ map dropPrefix (commandPrefixes config)
+isCommand :: String -> Config -> Maybe String
+isCommand xs = msum . map dropPrefix . commandPrefixes
  where dropPrefix p
           | p `isPrefixOf` xs = Just $ drop (length p) xs
           | otherwise         = Nothing

@@ -63,18 +63,18 @@ mbSay = maybe (return ()) say
 ------------------------------------------------------------------------
 
 -- | Fetch the title of the specified URL.
-fetchTitle :: MonadIO m => String -> m (Maybe String)
-fetchTitle url = io $ runWebReq (urlPageTitle url) (proxy config)
+fetchTitle :: MonadLB m => String -> m (Maybe String)
+fetchTitle url = io . runWebReq (urlPageTitle url) =<< asksConfig proxy
 
 -- | base url for fetching tiny urls
 tinyurl :: String
 tinyurl = "http://tinyurl.com/api-create.php?url="
 
 -- | Fetch the title of the specified URL.
-fetchTiny :: MonadIO m => String -> m (Maybe String)
+fetchTiny :: MonadLB m => String -> m (Maybe String)
 fetchTiny url
     | Just uri <- parseURI (tinyurl ++ url) = do
-        tiny <- io $ runWebReq (getHtmlPage uri) (proxy config)
+        tiny <- io . runWebReq (getHtmlPage uri) =<< asksConfig proxy
         return $ findTiny $ foldl' cat "" tiny
     | otherwise = return $ Just url
     where cat x y = x ++ " " ++ y

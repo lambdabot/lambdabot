@@ -54,7 +54,7 @@ theModule = newModule
                 [joinCB, partCB, quitCB, nickCB, joinChanCB, msgCB]
             ]
         
-        c <- io $ findLBFile "seen"
+        c <- lb $ findLBFile "seen"
         s <- io $ P.readFile c
         let ls = L.fromChunks [s]
         mbDecoded <- io . try . evaluate $ decode ls
@@ -77,7 +77,7 @@ theModule = newModule
             modifyMS $ \(n,m) -> (n, botPart ct (map G.packNick chans) m)
             
         -- and write out our state:
-        withMS $ \s _ -> io ( findLBFile "seen" >>= \ c -> encodeFile c s)
+        withMS $ \s _ -> findLBFile "seen" >>= \ c -> io (encodeFile c s)
     }
 
 lcNick :: Nick -> Nick

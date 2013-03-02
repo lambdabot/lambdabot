@@ -15,10 +15,6 @@ import Data.List
 import qualified Data.Map as M   (insert, delete)
 import qualified Text.Regex as R
 
--- valid command prefixes
-commands :: [String]
-commands  = commandPrefixes config
-
 type BaseState = GlobalPrivate () ()
 type Base = ModuleT BaseState LB
 
@@ -130,9 +126,10 @@ doRPL_TOPIC msg -- nearly the same as doTOPIC but has our nick on the front of b
 doPRIVMSG :: IrcMessage -> Base ()
 doPRIVMSG msg = do
     ignored <- lift $ checkIgnore msg
+    config <- askConfig
     if ignored
         then lift $ doIGNORE msg
-        else mapM_ (doPRIVMSG' (lambdabotName msg) msg) targets
+        else mapM_ (doPRIVMSG' config (lambdabotName msg) msg) targets
     where
         alltargets = head (ircMsgParams msg)
         targets = map (Msg.readNick msg) $ split "," alltargets
@@ -140,8 +137,8 @@ doPRIVMSG msg = do
 --
 -- | What does the bot respond to?
 --
-doPRIVMSG' :: Nick -> IrcMessage -> Nick -> Base ()
-doPRIVMSG' myname msg target
+doPRIVMSG' :: Config -> Nick -> IrcMessage -> Nick -> Base ()
+doPRIVMSG' config myname msg target
   | myname == target
     = let (cmd, params) = breakOnGlue " " text
       in doPersonalMsg cmd (dropWhile (== ' ') params)
@@ -165,6 +162,7 @@ doPRIVMSG' myname msg target
     text = tail (head (tail (ircMsgParams msg)))
     who = nick msg
 
+    commands = commandPrefixes config
     doPersonalMsg s r
         | commands `arePrefixesOf` s        = doMsg (tail s) r who
         | s `elem` (evalPrefixes config)    = doMsg "run"    r who

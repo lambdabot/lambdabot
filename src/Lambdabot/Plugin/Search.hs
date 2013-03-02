@@ -28,8 +28,8 @@ engines =
 googleHeaders :: [Header]
 googleHeaders = [mkHeader HdrReferer "http://www.google.com/"]
 
-normalizeOptions :: NormalizeRequestOptions a
-normalizeOptions = defaultNormalizeRequestOptions {
+normalizeOptions :: Config -> NormalizeRequestOptions a
+normalizeOptions config = defaultNormalizeRequestOptions {
     normDoClose = True,
     normForProxy = isJust (proxy config),
     normUserAgent = Nothing } -- there is a default user agent, perhaps we want it?
@@ -67,28 +67,35 @@ moduleHelp s = case s of
 searchCmd :: String -> String -> LB [String]
 searchCmd _          []   = return ["Empty search."]
 searchCmd engineName (Network.HTTP.urlEncode -> query)
-    | engineName == "google" = -- for Google we do both to get conversions, e.g. for '3 lbs in kg'
+    | engineName == "google" = do -- for Google we do both to get conversions, e.g. for '3 lbs in kg'
+        request <- request'
         doHTTP request $ \response -> 
-        case response of
-            Response { rspCode = (3,0,2), rspHeaders = (lookupHeader HdrLocation -> Just url) } ->
-                doGoogle >>=  handleUrl url
-            _ -> fmap (\extra -> if null extra then ["No Result Found."] else extra) doGoogle
-    | otherwise = 
+            case response of
+                Response { rspCode = (3,0,2), rspHeaders = (lookupHeader HdrLocation -> Just url) } ->
+                    doGoogle >>=  handleUrl url
+                _ -> fmap (\extra -> if null extra then ["No Result Found."] else extra) doGoogle
+    | otherwise = do
+        request <- request'
         doHTTP request $ \response -> 
-        case response of
-            Response { rspCode = (3,0,2), rspHeaders = (lookupHeader HdrLocation -> Just url) } ->
-                handleUrl url []
-            _ -> return ["No Result Found."]
+            case response of
+                Response { rspCode = (3,0,2), rspHeaders = (lookupHeader HdrLocation -> Just url) } ->
+                    handleUrl url []
+                _ -> return ["No Result Found."]
   where handleUrl url extra = do
-            title <- io $ runWebReq (urlPageTitle url) (proxy config)
+            proxy' <- asksConfig proxy
+            title <- io $ runWebReq (urlPageTitle url) proxy'
             return $ extra ++ maybe [url] (\t -> [url, t]) title
         Just (uri, makeQuery, headers) = lookup engineName engines
-        request = normalizeRequest normalizeOptions $ Request {
-            rqURI = uri { uriQuery = makeQuery query },
-            rqMethod = HEAD,
-            rqHeaders = headers,
-            rqBody = "" }
-        doGoogle = 
+        request' = do
+            opts <- asksConfig normalizeOptions
+            return $ normalizeRequest opts $ Request
+                { rqURI = uri { uriQuery = makeQuery query }
+                , rqMethod = HEAD
+                , rqHeaders = headers
+                , rqBody = ""
+                }
+        doGoogle = do
+            request <- request'
             doHTTP (request { rqMethod = GET, rqURI = uri { uriQuery = "?hl=en&q=" ++ query } }) $ \response ->
                 case response of
                     Response { rspCode = (2,_,_), rspBody = (extractConversion -> Just result) } ->

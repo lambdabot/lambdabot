@@ -2,29 +2,35 @@ module Lambdabot.File
     ( findLBFile
     ) where
 
-import Control.Monad
 import Lambdabot.Config
+import Lambdabot.Monad
+import Lambdabot.Util
+
+import Control.Monad
+import Paths_lambdabot
 import System.Directory
 import System.FilePath
-import Paths_lambdabot (getDataFileName)
 
 -- | Constants.
-lambdabot, local, state :: FilePath
+lambdabot :: FilePath
 lambdabot = ".lambdabot"
-state = lambdabot </> local
-local = outputDir config
+
+stateDir :: Config -> FilePath
+stateDir = (lambdabot </>) . outputDir
 
 maybeFileExists :: FilePath -> IO (Maybe FilePath)
-maybeFileExists path = 
-    do b <- doesFileExist path
-       return $ if b then Just path else Nothing
+maybeFileExists path = do
+    b <- doesFileExist path
+    return $! if b then Just path else Nothing
 
 -- | For a given file, look locally under State/. That is, suppose one is
 -- running out of a Lambdabot darcs repository in /home/cale/lambdabot. Then
 --
 -- > lookLocally "fact" ~> "/home/cale/lambdabot/State/fact"
-lookLocally :: FilePath -> IO (Maybe String)
-lookLocally file = maybeFileExists $ local </> file
+lookLocally :: FilePath -> LB (Maybe String)
+lookLocally file = do
+    local <- asksConfig outputDir
+    io $ maybeFileExists (local </> file)
 
 -- | For a given file, look at the home directory. By default, we stash files in
 -- ~/.lambdabot. So, running Lambdabot normally would let us do:
@@ -32,26 +38,37 @@ lookLocally file = maybeFileExists $ local </> file
 -- > lookHome "fact" ~> "/home/cale/lambdabot/State/fact"
 --
 -- (Note that for convenience we preserve the "State/foo" address pattern.)
-lookHome :: FilePath -> IO (Maybe String)
-lookHome f = do home <- getHomeDirectory
-                maybeFileExists $ home </> state </> f
+lookHome :: FilePath -> LB (Maybe String)
+lookHome f = do
+    home    <- io getHomeDirectory
+    state   <- asksConfig stateDir
+    io (maybeFileExists $ home </> state </> f)
 
 -- | Do ~/.lambdabot & ~/.lambdabot/State exist?
-isHome :: IO Bool
-isHome = do home <- getHomeDirectory
-            fmap and . mapM (doesDirectoryExist . (home </>)) $ [lambdabot, state]
+isHome :: LB Bool
+isHome = do
+    home  <- io getHomeDirectory
+    state <- asksConfig stateDir
+    io . fmap and . mapM (doesDirectoryExist . (home </>)) $ [lambdabot, state]
 
 -- | Create ~/.lambdabot and ~/.lambdabot/State
-mkdirL :: IO ()
-mkdirL = do home <- getHomeDirectory
-            mapM_ (createDirectory . (home </>)) $ [lambdabot, state]
+mkdirL :: LB ()
+mkdirL = do
+    home  <- io getHomeDirectory
+    state <- asksConfig stateDir
+    
+    io . mapM_ (createDirectory . (home </>)) $ [lambdabot, state]
 
 -- | Ask Cabal for the read-only copy of a file, and copy it into ~/.lambdabot/State.
-cpDataToHome :: FilePath -> IO ()
-cpDataToHome f = do rofile <- getDataFileName (local </> f)
-                    home <- getHomeDirectory
-                    -- cp /.../lambdabot-4.foo/State/foo ~/.lambdabot/State/foo
-                    copyFile rofile (home </> state </> f)
+cpDataToHome :: FilePath -> LB ()
+cpDataToHome f = do 
+    local   <- asksConfig outputDir
+    state   <- asksConfig stateDir
+    
+    rofile  <- io (getDataFileName (local </> f))
+    home    <- io getHomeDirectory
+    -- cp /.../lambdabot-4.foo/State/foo ~/.lambdabot/State/foo
+    io (copyFile rofile (home </> state </> f))
 
 -- | Complicated. If a file exists locally, we return that. If a file exists in
 -- ~/lambdabot/State, we return that. If neither the file nor ~/lambdabot/State
@@ -59,7 +76,7 @@ cpDataToHome f = do rofile <- getDataFileName (local </> f)
 -- Note that the return type is simple so we can just do a binding and stuff it
 -- into the conventional functions easily; unfortunately, this removes
 -- error-checking, as an error is now just \"\".
-findLBFile :: FilePath -> IO String
+findLBFile :: FilePath -> LB String
 findLBFile f = do
     first <- lookLocally f
     case first of
@@ -84,6 +101,7 @@ findLBFile f = do
                     case g of
                         Just a -> return a
                         Nothing -> do
-                            home <- getHomeDirectory 
+                            home  <- io getHomeDirectory 
+                            state <- asksConfig stateDir
                             fail $ "File.findLBFile: couldn't find file " 
                                 ++ f ++ " in " ++ home </> state

@@ -128,11 +128,12 @@ putHdlAndDS c hdl ds =
 
 -- | Open a file to write the log to.
 openChannelFile :: Channel -> UTCTime -> Log Handle
-openChannelFile chan ct =
+openChannelFile chan ct = do
+    stateDir <- asksConfig outputDir
+    let dir  = stateDir </> "Log" </> Msg.nTag chan </> Msg.nName chan
+        file = dir </> (dateToString date) <.> "txt"
     io $ createDirectoryIfMissing True dir >> openFile file AppendMode
-    where dir  = outputDir config </> "Log" </> Msg.nTag chan </> Msg.nName chan
-          date = dateStamp ct
-          file = dir </> (dateToString date) <.> "txt"
+    where date = dateStamp ct
 
 -- | Close and re-open a log file, and update the state.
 reopenChannelMaybe :: Channel -> UTCTime -> Log ()

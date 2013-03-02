@@ -68,16 +68,18 @@ onInit = do
     finallyError (mapM_ feed cmds) unlockRC
 
 feed :: String -> OfflineRC ()
-feed msg = let msg' = case msg of '>':xs -> cmdPrefix ++ "run " ++ xs
-                                  '!':xs -> xs
-                                  _      -> cmdPrefix ++ dropWhile (== ' ') msg
-           in lift . (>> return ()) . liftLB (timeout (15 * 1000 * 1000)) . received $
+feed msg = do
+    cmdPrefix <- fmap head (asksConfig commandPrefixes)
+    let msg' = case msg of
+            '>':xs -> cmdPrefix ++ "run " ++ xs
+            '!':xs -> xs
+            _      -> cmdPrefix ++ dropWhile (== ' ') msg
+    lift . (>> return ()) . liftLB (timeout (15 * 1000 * 1000)) . received $
               IrcMessage { ircMsgServer = "offlinerc"
                          , ircMsgLBName = "offline"
                          , ircMsgPrefix = "null!n=user@null"
                          , ircMsgCommand = "PRIVMSG"
                          , ircMsgParams = ["offline", ":" ++ msg' ] }
-   where cmdPrefix = head (commandPrefixes config)
 
 handleMsg :: IrcMessage -> LB ()
 handleMsg msg = liftIO $ do

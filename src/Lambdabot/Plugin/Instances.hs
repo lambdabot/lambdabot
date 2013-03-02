@@ -36,13 +36,13 @@ theModule = newModule
     { moduleCmds = return
         [ (command "instances")
             { help = say "instances <typeclass>. Fetch the instances of a typeclass."
-            , process = \cls -> io (fetchInstances cls) >>= say
+            , process = \cls -> fetchInstances cls >>= say
             }
         , (command "instances-importing")
             { help = say $
                 "instances-importing [<module> [<module> [<module...]]] <typeclass>. " ++
                 "Fetch the instances of a typeclass, importing specified modules first."
-            , process = \args -> io (fetchInstancesImporting args) >>= say
+            , process = \args -> fetchInstancesImporting args >>= say
             }
         ]
     }
@@ -112,13 +112,13 @@ stdMdls = controls
 
 -- | Main processing function for \@instances. Takes a class name and
 --   return a list of lines to output (which will actually only be one).
-fetchInstances :: ClassName -> IO String
+fetchInstances :: MonadLB m => ClassName -> m String
 fetchInstances cls = fetchInstances' cls stdMdls
 
 -- | Main processing function for \@instances-importing. Takes the args, which
 --   are words'd. The all but the last argument are taken to be the modules to
 --   import, and the last is the typeclass whose instances we want to print.
-fetchInstancesImporting :: String -> IO String
+fetchInstancesImporting :: MonadLB m => String -> m String
 fetchInstancesImporting args = fetchInstances' cls mdls
     where args' = words args
           cls   = last args'
@@ -126,10 +126,11 @@ fetchInstancesImporting args = fetchInstances' cls mdls
 
 -- | Interface with GHCi to get the input for the parser, then send it through
 --   the parser.
-fetchInstances' :: String -> [ModuleName] -> IO String
+fetchInstances' :: MonadLB m => String -> [ModuleName] -> m String
 fetchInstances' cls mdls = do
   let s = unlines [cxt, command]
-  (out, err, _) <- popen (ghci config) ["-ignore-dot-ghci","-fglasgow-exts"] $
+  ghciCmd <- asksConfig ghci
+  (out, err, _) <- io $ popen ghciCmd ["-ignore-dot-ghci","-fglasgow-exts"] $
                    Just s
   let is = getInstances out cls
   return $ if null is

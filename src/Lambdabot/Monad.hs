@@ -25,13 +25,18 @@ module Lambdabot.Monad
     , send
     , addServer
     , remServer
-    -- , addServer'
     
     , handleIrc
     , catchIrc
     
     , forkLB
     , liftLB
+    
+    , askConfig
+    , asksConfig
+    
+    , debugStr
+    , debugStrLn
     
     , withModule
     , withCommand
@@ -40,6 +45,7 @@ module Lambdabot.Monad
     ) where
 
 import           Lambdabot.Command
+import           Lambdabot.Config
 import           Lambdabot.IRC (IrcMessage)
 import           Lambdabot.Module
 import qualified Lambdabot.Message as Msg
@@ -72,8 +78,9 @@ import System.Console.Haskeline.MonadException (MonadException)
 
 -- | Global read-only state.
 data IRCRState = IRCRState
-    { ircInitDoneMVar:: MVar ()
-    , ircQuitMVar    :: MVar ()
+    { ircInitDoneMVar   :: MVar ()
+    , ircQuitMVar       :: MVar ()
+    , ircConfig         :: Config
     }
 
 -- | Global read\/write state.
@@ -172,7 +179,7 @@ send msg = do
 newtype LB a = LB { runLB :: ReaderT (IRCRState,IORef IRCRWState) IO a }
     deriving (Functor, Applicative, Monad, MonadIO, MonadException)
 
-class Monad m => MonadLB m where
+class (MonadIO m, Applicative m) => MonadLB m where
     lb :: LB a -> m a
 
 instance MonadLB LB where lb = id
@@ -240,6 +247,24 @@ forkLB f = (`liftLB` f) $ \g -> do
 -- | lift an io transformer into LB
 liftLB :: (IO a -> IO b) -> LB a -> LB b
 liftLB f = LB . mapReaderT f . runLB -- lbIO (\conv -> f (conv lb))
+
+askConfig :: MonadLB m => m Config
+askConfig = lb (asks ircConfig)
+
+asksConfig :: MonadLB m => (Config -> a) -> m a
+asksConfig f = liftM f askConfig
+
+-- | 'debugStr' checks if we have the verbose flag turned on. If we have
+--   it outputs the String given. Else, it is a no-op.
+debugStr :: MonadLB m => String -> m ()
+debugStr str = do
+    v <- asksConfig verbose
+    when v (io (putStr str))
+
+-- | 'debugStrLn' is a version of 'debugStr' that adds a newline to the end
+--   of the string outputted.
+debugStrLn :: MonadLB m => String -> m ()
+debugStrLn x = debugStr (x ++ "\n")
 
 ------------------------------------------------------------------------
 -- Module handling
