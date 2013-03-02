@@ -82,12 +82,13 @@ data Mode = Online | Offline deriving Eq
 -- Also, handle any fatal exceptions (such as non-recoverable signals),
 -- (i.e. print a message and exit). Non-fatal exceptions should be dealt
 -- with in the mainLoop or further down.
-runIrc :: [String] -> LB a -> S.DynLoad -> [String] -> [DSum ConfigKey] -> IO ()
-runIrc evcmds initialise ld plugins configBindings = withSocketsDo $ do
-    rost <- initRoState (config configBindings)
+runIrc :: [String] -> LB a -> [String] -> [DSum ConfigKey] -> IO ()
+runIrc evcmds initialise plugins configBindings = withSocketsDo $ do
+    let cfg = (onStartupCmds :=> evcmds) : configBindings
+    rost <- initRoState (config cfg)
     r <- try $ evalLB (do withDebug "Initialising plugins" initialise
                           withIrcSignalCatch mainLoop)
-                       rost (initState ld plugins evcmds)
+                       rost (initState plugins)
 
     -- clean up and go home
     case r of
@@ -114,8 +115,8 @@ initRoState config = do
         }
 
 -- | Default rw state
-initState :: S.DynLoad -> [String] -> [String] -> IRCRWState
-initState ld plugins evcmds = IRCRWState
+initState :: [String] -> IRCRWState
+initState plugins = IRCRWState
     { ircPrivilegedUsers = M.singleton (Msg.Nick "offlinerc" "null") True
     , ircIgnoredUsers    = M.empty
     , ircChannels        = M.empty
@@ -130,9 +131,7 @@ initState ld plugins evcmds = IRCRWState
         , ([],checkRecip) ]
     , ircCommands        = M.empty
     , ircStayConnected   = True
-    , ircDynLoad         = ld
     , ircPlugins         = plugins
-    , ircOnStartupCmds   = evcmds
     }
 
 -- Actually, this isn't a loop anymore.  FIXME: better name.
@@ -246,17 +245,20 @@ ircUnloadModule modname = withModule modname (error "module not loaded") (\m -> 
 --
 ircLoad :: FilePath -> S.Symbol -> LB (S.Module, a)
 ircLoad mod sym = do
-    s <- get
-    let fn  = S.dynload (ircDynLoad s)
-    io $ (fn mod sym)
+    mbDynLoad <- readConfig dynamicLoader
+    case mbDynLoad of
+        Nothing -> fail "no dynamic loading"
+        Just ld -> io $ S.dynload ld mod sym
 
 --
 -- | Dynamically unload a module
 --
 ircUnload :: FilePath -> LB ()
 ircUnload mod = do
-    s <- get
-    io $ (S.unload (ircDynLoad s)) (S.Module mod)
+    mbDynLoad <- readConfig dynamicLoader
+    case mbDynLoad of
+        Nothing -> fail "no dynamic loading"
+        Just ld -> io $ S.unload ld (S.Module mod)
 
 ------------------------------------------------------------------------
 

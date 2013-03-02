@@ -1,7 +1,10 @@
 -- | Offline mode / RC file / -e support module.  Handles spooling lists
 -- of commands (from haskeline, files, or the command line) into the vchat
 -- layer.
-module Lambdabot.Plugin.OfflineRC (theModule) where
+module Lambdabot.Plugin.OfflineRC 
+    ( onStartupCmds
+    , theModule
+    ) where
 
 import Lambdabot
 import Lambdabot.Main( received )
@@ -14,7 +17,7 @@ import Control.Concurrent.MVar( readMVar )
 import Control.Exception ( evaluate )
 import Control.Monad( when )
 import Control.Monad.Reader( asks )
-import Control.Monad.State( get, gets, put )
+import Control.Monad.State( gets )
 import Control.Monad.Trans( lift, liftIO )
 import Data.Char
 import System.Console.Haskeline
@@ -62,10 +65,8 @@ theModule = newModule
 
 onInit :: OfflineRC ()
 onInit = do
-    st <- get
-    put st { ircOnStartupCmds = [] }
-    let cmds = ircOnStartupCmds st
     lockRC
+    cmds <- readConfig onStartupCmds
     finallyError (mapM_ feed cmds) unlockRC
 
 feed :: String -> OfflineRC ()

@@ -36,6 +36,7 @@ module Lambdabot.Plugin
     , proxy
     , ghci
     , outputDir
+    , onStartupCmds
     
     , module Lambdabot.Config
     , module Lambdabot.Command
