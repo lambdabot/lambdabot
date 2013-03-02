@@ -153,7 +153,7 @@ needToRemind n = do
   return $ case M.lookup n st of
              Just (Just lastTime, _) ->
                let diff = now `diffClockTimes` lastTime
-               in diff > noTimeDiff { tdDay = 1 }
+               in diff > TimeDiff 86400
              Just (Nothing,       _) -> True
              Nothing                 -> True
 

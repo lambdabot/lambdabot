@@ -13,16 +13,16 @@ import qualified Lambdabot.Message as Msg
 
 import Control.Monad
 import qualified Data.Map as M
+import Data.Time
 import System.Directory (createDirectoryIfMissing)
 import System.FilePath
-import System.Time
 import System.IO
 
 -- ------------------------------------------------------------------------
 
 type Channel = Msg.Nick
 
-type DateStamp = (Int, Month, Int)
+type DateStamp = (Int, Int, Integer)
 data ChanState = CS { chanHandle  :: Handle,
                       chanDate    :: DateStamp }
                deriving (Show, Eq)
@@ -30,10 +30,10 @@ type LogState = M.Map Channel ChanState
 type Log = ModuleT LogState LB
 
 data Event =
-    Said Msg.Nick ClockTime String
-    | Joined Msg.Nick String ClockTime
-    | Parted Msg.Nick String ClockTime -- covers quitting as well
-    | Renick Msg.Nick String ClockTime Msg.Nick
+    Said Msg.Nick UTCTime String
+    | Joined Msg.Nick String UTCTime
+    | Parted Msg.Nick String UTCTime -- covers quitting as well
+    | Renick Msg.Nick String UTCTime Msg.Nick
     deriving (Eq)
 
 instance Show Event where
@@ -54,7 +54,7 @@ theModule = newModule
     , moduleInit      = do
         let doLog f m hdl = logString hdl . show . f m
             wrapCB f = bindModule1 $ \msg -> do
-                now <- io getClockTime
+                now <- io getCurrentTime
                 -- map over the channels this message was directed to, adding to each
                 -- of their log files.
                 mapM_ (withValidLog (doLog f msg) now) (channels msg)
@@ -69,15 +69,26 @@ theModule = newModule
 -- * Logging helpers
 --
 
+timeStamp :: UTCTime -> String
+timeStamp (UTCTime _ ct) = 
+    (showWidth 2 (hour `mod` 24)) ++ ":" ++
+    (showWidth 2 (min  `mod` 60)) ++ ":" ++
+    (showWidth 2 (sec  `mod` 60))
+    where
+        sec  = round ct :: Int
+        min  = sec `div` 60
+        hour = min `div` 60
+        
 -- | Show a DateStamp.
 dateToString :: DateStamp -> String
-dateToString (d, m, y) = (showWidth 2 y) ++ "-" ++
+dateToString (d, m, y) = (showWidth 2 $ fromInteger y) ++ "-" ++
                          (showWidth 2 $ fromEnum m + 1) ++ "-" ++
                          (showWidth 2 d)
 
--- | ClockTime -> DateStamp conversion
-dateStamp :: ClockTime -> DateStamp
-dateStamp ct = let cal = toUTCTime ct in (ctDay cal, ctMonth cal, ctYear cal)
+-- | UTCTime -> DateStamp conversion
+dateStamp :: UTCTime -> DateStamp
+dateStamp (UTCTime day _) = (d, m, y)
+    where (y,m,d) = toGregorian day
 
 -- * State manipulation functions
 --
@@ -116,7 +127,7 @@ putHdlAndDS c hdl ds =
 --
 
 -- | Open a file to write the log to.
-openChannelFile :: Channel -> ClockTime -> Log Handle
+openChannelFile :: Channel -> UTCTime -> Log Handle
 openChannelFile chan ct =
     io $ createDirectoryIfMissing True dir >> openFile file AppendMode
     where dir  = outputDir config </> "Log" </> Msg.nTag chan </> Msg.nName chan
@@ -124,7 +135,7 @@ openChannelFile chan ct =
           file = dir </> (dateToString date) <.> "txt"
 
 -- | Close and re-open a log file, and update the state.
-reopenChannelMaybe :: Channel -> ClockTime -> Log ()
+reopenChannelMaybe :: Channel -> UTCTime -> Log ()
 reopenChannelMaybe chan ct = do
   date <- getDate chan
   when (date /= dateStamp ct) $ do
@@ -134,7 +145,7 @@ reopenChannelMaybe chan ct = do
     putHdlAndDS chan hdl' (dateStamp ct)
 
 -- | Initialise the channel state (if it not already inited)
-initChannelMaybe :: Msg.Nick -> ClockTime -> Log ()
+initChannelMaybe :: Msg.Nick -> UTCTime -> Log ()
 initChannelMaybe chan ct = do
   chanp <- liftM (M.member chan) readMS
   unless chanp $ do
@@ -142,7 +153,7 @@ initChannelMaybe chan ct = do
     modifyMS (M.insert chan $ CS hdl (dateStamp ct))
 
 -- | Ensure that the log is correctly initialised etc.
-withValidLog :: (Handle -> ClockTime -> Log a) -> ClockTime -> Channel -> Log a
+withValidLog :: (Handle -> UTCTime -> Log a) -> UTCTime -> Channel -> Log a
 withValidLog f ct chan = do
   initChannelMaybe chan ct
   reopenChannelMaybe chan ct
@@ -159,21 +170,21 @@ logString hdl str = io $ hPutStrLn hdl str >> hFlush hdl
 --
 
 -- | When somebody joins.
-joinCB :: IrcMessage -> ClockTime -> Event
+joinCB :: IrcMessage -> UTCTime -> Event
 joinCB msg ct = Joined (Msg.nick msg) (Msg.fullName msg) ct
 
 -- | When somebody quits.
-partCB :: IrcMessage -> ClockTime -> Event
+partCB :: IrcMessage -> UTCTime -> Event
 partCB msg ct = Parted (Msg.nick msg) (Msg.fullName msg) ct
 
 -- | When somebody changes his\/her name.
 -- FIXME:  We should only do this for channels that the user is currently on.
-nickCB :: IrcMessage -> ClockTime -> Event
+nickCB :: IrcMessage -> UTCTime -> Event
 nickCB msg ct = Renick (Msg.nick msg) (Msg.fullName msg) ct
                        (Msg.readNick msg $ drop 1 $ head $ ircMsgParams msg)
 
 -- | When somebody speaks.
-msgCB :: IrcMessage -> ClockTime -> Event
+msgCB :: IrcMessage -> UTCTime -> Event
 msgCB msg ct = Said (Msg.nick msg) ct
                     (tail . concat . tail $ ircMsgParams msg)
                       -- each lines is :foo

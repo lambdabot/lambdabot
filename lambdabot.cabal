@@ -185,7 +185,7 @@ library
                         mtl                  >= 2.1        ,
                         network              >= 2.3.0.13   ,
                         oeis                 >= 0.3.1      ,
-                        old-time             >= 1.1.0.0    ,
+                        time                 >= 1.4        ,
                         parsec               >= 3.1.2      ,
                         pretty               >= 1.1.1.0    ,
                         process              >= 1.1.0.1    ,

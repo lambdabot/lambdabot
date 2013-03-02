@@ -8,9 +8,9 @@ import Control.Arrow ((&&&))
 import Control.Exception (evaluate)
 import Data.List
 import Data.Maybe
-import System.Time
+import Data.Time
 
-type ActivityState = [(ClockTime,Nick)]
+type ActivityState = [(UTCTime,Nick)]
 type Activity       = ModuleT ActivityState LB
 
 helpStr = "activity seconds. Find out where/how much the bot is being used"
@@ -38,8 +38,8 @@ activity full args = do
             | full || isPrefixOf "#" (nName nm) = return nm
             | otherwise = readNick "private"
     
-    TOD secs ps <- io getClockTime
-    let cutoff = TOD (secs - (fromMaybe 90 $ readM args)) ps
+    now <- io getCurrentTime
+    let cutoff = addUTCTime (- fromInteger (fromMaybe 90 $ readM args)) now
     users <- mapM (obscure . snd) . takeWhile ((> cutoff) . fst) =<< readMS
     let agg_users = reverse . sort . map (length &&& head) . group . sort $ users
     fmt_agg <- fmap (intercalate " " . (:) (show (length users) ++ "*total"))
@@ -51,6 +51,6 @@ activityFilter :: Nick -> [String] -> Activity [String]
 activityFilter target lns = do
     io $ evaluate $ foldr seq () $ map (foldr seq ()) $ lns
     withMS $ \ st wr -> do
-        now <- io getClockTime
+        now <- io getCurrentTime
         wr (map (const (now,target)) lns ++ st)
     return lns

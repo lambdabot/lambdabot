@@ -13,7 +13,6 @@ module Lambdabot.Util (
         firstWord,
         debugStr,
         debugStrLn,
-        timeStamp,
         limitStr,
         listToStr, showWidth,
         showClean,
@@ -47,8 +46,6 @@ import Data.IORef               (newIORef, readIORef, writeIORef)
 import Control.Concurrent       (MVar, newEmptyMVar, takeMVar, tryPutMVar, putMVar,
                                  forkIO, killThread, threadDelay)
 import Control.Exception        (bracket)
-
-import qualified System.Time as T
 
 ------------------------------------------------------------------------
 
@@ -290,14 +287,6 @@ showWidth :: Int    -- ^ Width to fill to
 showWidth width n = zeroes ++ num
     where num    = show n
           zeroes = replicate (width - length num) '0'
-
-timeStamp :: T.ClockTime -> String
-timeStamp ct = let cal = T.toUTCTime ct
-               in (showWidth 2 $ T.ctHour cal) ++ ":" ++
-                  (showWidth 2 $ T.ctMin cal)  ++ ":" ++
-                  (showWidth 2 $ T.ctSec cal)
-
-
 
 --
 -- Amusing insults from OpenBSD sudo

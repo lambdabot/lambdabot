@@ -22,7 +22,6 @@ import Data.Char
 import Data.List
 import qualified Data.Map as M
 import System.IO
-import System.Time (normalizeTimeDiff) -- or export from AltTime.hs?
 import Text.Printf
 
 type SeenState = (MaxMap, SeenMap)
@@ -104,8 +103,8 @@ doUsers rest = withMsg $ \msg -> do
         isActive (Present (Just (ct,_td)) _cs) = recent ct
         isActive _                             = False
         
-        recent t = normalizeTimeDiff (diffClockTimes s t) < gap_minutes
-        gap_minutes = TimeDiff 0 0 0 0 30 0 0 -- 30 minutes
+        recent t = diffClockTimes s t < gap_minutes
+        gap_minutes = TimeDiff 1800 -- 30 minutes
         
         percent p q = 100 * (fromIntegral p / fromIntegral q) :: Double
         
@@ -132,8 +131,8 @@ getAnswer msg rest seenFM now
             isActive (_nick,state) = case state of
                 (Present (Just (ct,_td)) _cs) -> recent ct
                 _ -> False
-            recent t = normalizeTimeDiff (diffClockTimes now t) < gap_minutes
-            gap_minutes = TimeDiff 0 0 0 0 15 0 0
+            recent t = diffClockTimes now t < gap_minutes
+            gap_minutes = TimeDiff 900 -- 15 minutes
          in (["Lately, I have seen " ++ (if null people then "nobody"
                  else listToStr "and" (map upAndShow people)) ++ "."], False)
 

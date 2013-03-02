@@ -1,4 +1,7 @@
 -- | Time compatibility layer
+-- (stuff to support old lambdabot state serialization formats)
+--
+-- TODO: trim this down to just the explicitly serialization-related stuff
 module Lambdabot.Util.AltTime 
     ( ClockTime
     , getClockTime
@@ -6,7 +9,6 @@ module Lambdabot.Util.AltTime
     , addToClockTime
     , timeDiffPretty
     
-    -- System.Time re-exports:
     , TimeDiff(..)
     , noTimeDiff
     ) where
@@ -16,41 +18,111 @@ import Control.Arrow (first)
 import Data.Binary
 
 import Data.List
-import System.Time (TimeDiff(..), noTimeDiff)
-import qualified System.Time as T
+import Data.Time
+import Text.Read hiding (get)
+import Text.Read.Lex
 
 -- | Wrapping ClockTime (which doesn't provide a Read instance!) seems
 -- easier than talking care of the serialization of UserStatus
 -- ourselves.
 --
-newtype ClockTime = ClockTime (T.ClockTime)
+newtype ClockTime = ClockTime UTCTime
+    deriving Eq
 
-instance Eq ClockTime where
-    ClockTime (T.TOD x1 y1) == ClockTime (T.TOD x2 y2) =
-        x1 == x2 && y1 == y2
+newtype TimeDiff = TimeDiff NominalDiffTime
+    deriving (Eq, Ord)
+
+noTimeDiff :: TimeDiff
+noTimeDiff = TimeDiff 0
+
+epoch :: UTCTime
+epoch = UTCTime (fromGregorian 1970 1 1) 0
+
+-- convert to/from the format in old-time, so we can serialize things 
+-- in the same way as older versions of lambdabot.
+toOldTime :: ClockTime -> (Integer, Integer)
+toOldTime (ClockTime t) = round (diffUTCTime t epoch * 1e12) `divMod` 1000000000000
+
+fromOldTime :: Integer -> Integer -> ClockTime
+fromOldTime x y = ClockTime (addUTCTime (fromIntegral x + fromIntegral y * 1e-12) epoch)
 
 instance Show ClockTime where
-  showsPrec p (ClockTime (T.TOD x y)) = showsPrec p (x,y)
+    showsPrec p = showsPrec p . toOldTime
 
 instance Read ClockTime where
-  readsPrec p = map (first $ ClockTime . uncurry T.TOD) . readsPrec p
+    readsPrec p = map (first (uncurry fromOldTime)) . readsPrec p
+
+instance Show TimeDiff where
+    showsPrec p td = showParen (p > 10) $
+        ( showString "TimeDiff {tdYear = "
+        . showsPrec 11 ye
+        . showString ", tdMonth = "
+        . showsPrec 11 mo
+        . showString ", tdDay = "
+        . showsPrec 11 da
+        . showString ", tdHour = "
+        . showsPrec 11 ho
+        . showString ", tdMin = "
+        . showsPrec 11 mi
+        . showString ", tdSec = "
+        . showsPrec 11 se
+        . showString ", tdPicosec = "
+        . showsPrec 11 ps
+        . showString "}")
+        where (ye, mo, da, ho, mi, se, ps) = toOldTimeDiff td
+
+instance Read TimeDiff where
+    readsPrec = readPrec_to_S $ parens
+        (prec 11 (do
+            let lexP = lift Text.Read.Lex.lex
+                readPrec :: Read a => ReadPrec a
+                readPrec = readS_to_Prec readsPrec
+            Ident "TimeDiff"    <- lexP
+            Punc "{"            <- lexP
+            Ident "tdYear"      <- lexP
+            Punc "="            <- lexP
+            ye                  <- reset readPrec
+            Punc ","            <- lexP
+            Ident "tdMonth"     <- lexP
+            Punc "="            <- lexP
+            mo                  <- reset readPrec
+            Punc ","            <- lexP
+            Ident "tdDay"       <- lexP
+            Punc "="            <- lexP
+            da                  <- reset readPrec
+            Punc ","            <- lexP
+            Ident "tdHour"      <- lexP
+            Punc "="            <- lexP
+            ho                  <- reset readPrec
+            Punc ","            <- lexP
+            Ident "tdMin"       <- lexP
+            Punc "="            <- lexP
+            mi                  <- reset readPrec
+            Punc ","            <- lexP
+            Ident "tdSec"       <- lexP
+            Punc "="            <- lexP
+            se                  <- reset readPrec
+            Punc ","            <- lexP
+            Ident "tdPicosec"   <- lexP
+            Punc "="            <- lexP
+            ps                  <- reset readPrec
+            Punc "}"            <- lexP
+            return (fromOldTimeDiff ye mo da ho mi se ps)))
+    readList = readListDefault
+    readListPrec = readListPrecDefault
 
 -- | Retrieve the current clocktime
 getClockTime :: IO ClockTime
-getClockTime = ClockTime `fmap` T.getClockTime
+getClockTime = ClockTime `fmap` getCurrentTime
 
 -- | Difference of two clock times
 diffClockTimes :: ClockTime -> ClockTime -> TimeDiff
-diffClockTimes (ClockTime ct1) (ClockTime ct2) =
--- This is an ugly hack (we don't care about picoseconds...) to avoid the
---   "Time.toClockTime: picoseconds out of range"
--- error. I think time arithmetic is broken in GHC.
-  (T.diffClockTimes ct1 ct2) { tdPicosec = 0 }
+diffClockTimes (ClockTime ct1) (ClockTime ct2) = TimeDiff (diffUTCTime ct1 ct2)
 
 -- | @'addToClockTime' d t@ adds a time difference @d@ and a -- clock
 -- time @t@ to yield a new clock time.
 addToClockTime :: TimeDiff -> ClockTime -> ClockTime
-addToClockTime td (ClockTime ct) = ClockTime $ T.addToClockTime td ct
+addToClockTime (TimeDiff td) (ClockTime ct) = ClockTime (addUTCTime td ct)
 
 -- | Pretty-print a TimeDiff. Both positive and negative Timediffs produce
 --   the same output.
@@ -58,44 +130,63 @@ addToClockTime td (ClockTime ct) = ClockTime $ T.addToClockTime td ct
 -- 14d 17h 8m 53s
 --
 timeDiffPretty :: TimeDiff -> String
-timeDiffPretty td = concat . intersperse " " $ filter (not . null) [
-    prettyP years             "y",
-    prettyP (months `mod` 12) "m",
-    prettyP (days   `mod` 28) "d",
-    prettyP (hours  `mod` 24) "h",
-    prettyP (mins   `mod` 60) "m",
-    prettyP (secs   `mod` 60) "s"]
+timeDiffPretty td = concat . intersperse " " $ filter (not . null)
+    [ prettyP ye "y"
+    , prettyP mo "m"
+    , prettyP da "d"
+    , prettyP ho "h"
+    , prettyP mi "m"
+    , prettyP se "s"
+    ]
   where
     prettyP 0 _ = []
     prettyP i s = show i ++ s
+    
+    (ye, mo, da, ho, mi, se, _) = toOldTimeDiff td
 
-    secs = abs $ tdSec td -- This is a hack, but there wasn't an sane output
-                          -- for negative TimeDiffs anyway.
-    mins   = secs   `div` 60
-    hours  = mins   `div` 60
-    days   = hours  `div` 24
-    months = days   `div` 28
-    years  = months `div` 12
+toOldTimeDiff :: TimeDiff -> (Int, Int, Int, Int, Int, Int, Integer)
+toOldTimeDiff (TimeDiff td) = (fromInteger ye, fromInteger mo, fromInteger da, fromInteger ho, fromInteger mi, fromInteger se, ps)
+    where
+        (a,  ps) = round (td * 1e12) `divMod` 1000000000000
+        (b,  se) = a `divMod` 60
+        (c,  mi) = b `divMod` 60
+        (d,  ho) = c `divMod` 24
+        (e,  da) = d `divMod` 28
+        (ye, mo) = e `divMod` 12
+
+fromOldTimeDiff :: Int -> Int -> Int -> Int -> Int -> Int -> Integer -> TimeDiff
+fromOldTimeDiff ye mo da ho mi se ps =
+    TimeDiff
+        (fromIntegral (ps 
+            + 1000000000000 * (toInteger se 
+                + 60 * (toInteger mi 
+                    + 60 * (toInteger ho
+                        + 24 * (toInteger da
+                            + 28 * (toInteger mo
+                                + 12 * toInteger ye)))))))
 
 ------------------------------------------------------------------------
 
 instance Binary ClockTime where
-        put (ClockTime (T.TOD i j)) = put i >> put j
-        get = do i <- get
-                 j <- get
-                 return (ClockTime (T.TOD i j))
+        put t = put i >> put j
+            where (i, j) = toOldTime t
+        get = do 
+            i <- get
+            j <- get
+            return (fromOldTime i j)
 
 instance Binary TimeDiff where
-        put (TimeDiff ye mo da ho mi se ps) = do
-                put ye; put mo; put da; put ho; put mi; put se; put ps
+        put td = do
+            put ye; put mo; put da; put ho; put mi; put se; put ps
+            where (ye, mo, da, ho, mi, se, ps) = toOldTimeDiff td
         get = do
-                ye <- get
-                mo <- get
-                da <- get
-                ho <- get
-                mi <- get
-                se <- get
-                ps <- get
-                return (TimeDiff ye mo da ho mi se ps)
+            ye <- get
+            mo <- get
+            da <- get
+            ho <- get
+            mi <- get
+            se <- get
+            ps <- get
+            return (fromOldTimeDiff ye mo da ho mi se ps)
 
 
