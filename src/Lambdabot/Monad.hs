@@ -76,30 +76,30 @@ data IRCRState = IRCRState
     , ircQuitMVar    :: MVar ()
     }
 
+-- | Global read\/write state.
+data IRCRWState = IRCRWState
+    { ircServerMap       :: Map String (String, IrcMessage -> LB ())
+    , ircPrivilegedUsers :: Map Msg.Nick Bool
+    , ircIgnoredUsers    :: Map Msg.Nick Bool
+    
+    , ircChannels        :: Map ChanName String
+    -- ^ maps channel names to topics
+    
+    , ircModules         :: Map String ModuleRef
+    , ircCallbacks       :: Map String [(String,Callback)]
+    , ircOutputFilters   :: [(String,OutputFilter)]
+    -- ^ Output filters, invoked from right to left
+    
+    , ircCommands        :: Map String CommandRef
+    , ircStayConnected   :: !Bool
+    , ircDynLoad         :: S.DynLoad
+    , ircOnStartupCmds   :: [String]
+    , ircPlugins         :: [String]
+    }
+
 type Callback = IrcMessage -> LB ()
 
 type OutputFilter = Msg.Nick -> [String] -> LB [String]
-
--- | Global read\/write state.
-data IRCRWState = IRCRWState {
-        ircServerMap       :: Map String (String, IrcMessage -> LB ()),
-        ircPrivilegedUsers :: Map Msg.Nick Bool,
-        ircIgnoredUsers    :: Map Msg.Nick Bool,
-
-        ircChannels        :: Map ChanName String,
-            -- ^ maps channel names to topics
-
-        ircModules         :: Map String ModuleRef,
-        ircCallbacks       :: Map String [(String,Callback)],
-        ircOutputFilters   :: [(String,OutputFilter)],
-            -- ^ Output filters, invoked from right to left
-
-        ircCommands        :: Map String CommandRef,
-        ircStayConnected   :: !Bool,
-        ircDynLoad         :: S.DynLoad,
-        ircOnStartupCmds   :: [String],
-        ircPlugins         :: [String]
-    }
 
 newtype ChanName = ChanName Msg.Nick -- always lowercase
   deriving (Eq, Ord)

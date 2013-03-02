@@ -99,9 +99,7 @@ runIrc evcmds initialise ld plugins = withSocketsDo $ do
         Right _ -> do
             exitWith ExitSuccess
 
---
 -- | Default ro state
---
 initRoState :: IO IRCRState
 initRoState = do
     quitMVar     <- newEmptyMVar
@@ -112,28 +110,8 @@ initRoState = do
         , ircInitDoneMVar   = initDoneMVar
         }
 
---
 -- | Default rw state
---
 initState :: S.DynLoad -> [String] -> [String] -> IRCRWState
-initState ld plugins evcmds = IRCRWState {
-        ircPrivilegedUsers = M.singleton (Msg.Nick "offlinerc" "null") True,
-        ircIgnoredUsers    = M.empty,
-        ircChannels        = M.empty,
-        ircModules         = M.empty,
-        ircServerMap       = M.empty,
-        ircCallbacks       = M.empty,
-        ircOutputFilters   = [
-            ([],cleanOutput),
-            ([],lineify),
-            ([],cleanOutput),
-        --  ([],reduceIndent),
-            ([],checkRecip) ],
-        ircCommands        = M.empty,
-        ircStayConnected   = True,
-        ircDynLoad         = ld,
-        ircPlugins         = plugins,
-        ircOnStartupCmds   = evcmds
     }
 
 -- Actually, this isn't a loop anymore.  FIXME: better name.
