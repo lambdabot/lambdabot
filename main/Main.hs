@@ -20,4 +20,4 @@ main = do
 
 -- special online target for ghci use
 online :: [String] -> IO ()
-online strs = runIrc strs (fst modulesInfo) [] []
+online strs = runIrc modulesInfo [onStartupCmds :=> strs]

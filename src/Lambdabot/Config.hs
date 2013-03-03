@@ -1,7 +1,17 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE TemplateHaskell #-}
 -- | Extensible configuration system for lambdabot
-module Lambdabot.Config where
+module Lambdabot.Config
+    ( Config
+    , ConfigKey
+
+    , DSum(..)
+    , config
+    
+    , lookupConfig
+    
+    , configKey
+    ) where
 
 import Control.Applicative
 import Control.Monad.Identity
@@ -22,10 +32,7 @@ import Language.Haskell.TH
 newtype Config = Config (D.DMap ConfigKey)
 
 data ConfigKey t where
-    ConfigKey :: (Typeable1 k, GCompare k) => 
-        { configKeyTag      :: !(k t)
-        , configDefault     :: t
-        } -> ConfigKey t
+    ConfigKey :: (Typeable1 k, GCompare k) => !(k t) -> t -> ConfigKey t
 
 cast1 :: (Typeable1 f, Typeable1 g) => f a -> Maybe (g a)
 cast1 = fmap runIdentity . gcast1 . Identity
@@ -41,7 +48,6 @@ instance GCompare ConfigKey where
             LT -> GLT
             EQ -> fromMaybe typeErr $ do
                 k2'  <- cast1 k2
-                Refl <- geq k1 k2'
                 return (gcompare k1 k2')
             GT -> GGT
         where
@@ -51,9 +57,8 @@ instance GCompare ConfigKey where
             typeErr = error "TypeReps claim to be equal but cast failed"
 
 lookupConfig :: ConfigKey t -> Config -> t
-lookupConfig k (Config m) = case D.lookup k m of
-    Just x  -> x
-    Nothing -> configDefault k
+lookupConfig k@(ConfigKey _ def) (Config m) = 
+    maybe def id (D.lookup k m)
 
 config :: [DSum ConfigKey] -> Config
 config = Config . D.fromList

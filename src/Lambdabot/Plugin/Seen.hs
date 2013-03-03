@@ -225,6 +225,7 @@ joinCB msg _ct nick fm
     | nick == lbNick = Right fm
     | otherwise      = Right $! insertUpd (updateJ Nothing chans) nick newInfo fm
     where 
+        insertUpd f = M.insertWith (\_ -> f)
         lbNick  = G.packNick $ G.lambdabotName msg
         newInfo = Present Nothing chans
         chans   = msgChans msg
@@ -279,6 +280,7 @@ joinChanCB msg now _nick fm
         chan = G.packNick $ lcNick $ G.readNick msg $ l !! 2
         chanUsers = map (G.packNick . lcNick . G.readNick msg) $ words (drop 1 (l !! 3)) -- remove ':'
         unUserMode nick = Nick (nTag nick) (dropWhile (`elem` "@+") $ nName nick)
+        insertUpd f = M.insertWith (\_ -> f)
         insertNick fm' u = insertUpd (updateJ (Just now) [chan])
             (G.packNick . unUserMode . lcNick . G.unpackNick $ u)
             (Present Nothing [chan]) fm'

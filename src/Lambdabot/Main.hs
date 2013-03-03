@@ -1,7 +1,14 @@
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE GADTs #-}
+{-# LANGUAGE TemplateHaskell #-}
 module Lambdabot.Main
-    ( lambdabotMain
+    ( onStartupCmds
+    , lambdabotMain
     , DSum(..)
     , received
+    
+    , Modules
+    , modules
     ) where
 
 import Lambdabot
@@ -9,21 +16,24 @@ import Lambdabot.Config
 
 import Control.Applicative
 import Control.Monad.State (get, liftIO)
-import Data.Dependent.Sum
+import Data.Char
 import qualified Data.Map as M
+import Language.Haskell.TH
 import System.Environment
+
+configKey "onStartupCmds" [t| [String] |] [| [] |]
 
 parseArgs :: [String] -> Maybe [String]
 parseArgs ("-e" : cmd : x)  = (cmd :) <$> parseArgs x
 parseArgs []                = Just []
 parseArgs _                 = Nothing
 
-lambdabotMain :: (LB (), [String]) -> [DSum ConfigKey] -> IO ()
-lambdabotMain (loadStaticModules, pl) config = do
+lambdabotMain :: Modules -> [DSum ConfigKey] -> IO ()
+lambdabotMain loadStaticModules config = do
     args <- parseArgs <$> getArgs
     
     case args of
-        Just xs -> runIrc (if null xs then ["offline"] else xs) loadStaticModules pl config
+        Just xs -> runIrc loadStaticModules ((onStartupCmds :=> if null xs then ["offline"] else xs) : config)
         _       -> putStrLn "Usage: lambdabot [-e 'cmd']*"
 
 ------------------------------------------------------------------------
@@ -46,3 +56,13 @@ allCallbacks (f:fs) msg = do
     allCallbacks fs msg
 
 ------------------------------------------------------------------------
+
+type Modules = LB ()
+
+modules :: [String] -> Q Exp
+modules xs = [| sequence_ $(listE $ map instalify xs) |]
+    where
+        instalify x = 
+            let mod = varE $ mkName $ concat $ ["Lambdabot.Plugin.", x, ".theModule"]
+                low = stringE $ map toLower x
+             in [| ircInstallModule $mod $low |]

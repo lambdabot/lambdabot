@@ -48,8 +48,6 @@ module Lambdabot.Monad
     , verbose
     , proxy
     , ghci
-    , outputDir
-    , onStartupCmds
     ) where
 
 import           Lambdabot.Command
@@ -84,8 +82,6 @@ import System.Console.Haskeline.MonadException (MonadException)
 configKey "verbose"         [t| Bool                    |] [| False         |]
 configKey "proxy"           [t| Maybe ([Char], Integer) |] [| Nothing       |]
 configKey "ghci"            [t| String                  |] [| "ghci"        |]
-configKey "outputDir"       [t| FilePath                |] [| "State/"      |]
-configKey "onStartupCmds"   [t| [String]                |] [| []            |]
 
 ------------------------------------------------------------------------
 --

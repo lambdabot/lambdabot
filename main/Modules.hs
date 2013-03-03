@@ -3,7 +3,7 @@
 module Modules (modulesInfo) where
 
 import Data.List
-import Lambdabot.Plugin
+import Lambdabot.Main
 
 -- to add a new plugin, one must first add a qualified import here, and also
 -- add a string in the list below
@@ -55,7 +55,7 @@ import qualified Lambdabot.Plugin.Version
 import qualified Lambdabot.Plugin.Vixen
 import qualified Lambdabot.Plugin.Where
 
-modulesInfo :: (LB (), [String])
+modulesInfo :: Modules
 modulesInfo = $(modules $ nub
                     -- these must be listed first.  Maybe.  Nobody really
                     -- knows, but better to be safe than sorry.

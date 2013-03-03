@@ -207,12 +207,12 @@ doTell ntype (who:args) = do
     sender <- getSender
     me <- getLambdabotName
     let rest = unwords args
-        res | sender    == recipient   = Left ("You can " ++ verb ntype ++ " yourself!")
-            | recipient == me          = Left "Nice try ;)"
-            | null args                = Left ("What should I " ++ verb ntype ++ " " ++ who ++ "?")
-            | otherwise                = Right "Consider it noted."
-    when (isRight res) (writeDown recipient sender rest ntype)
-    say (unEither res)
+        (record, res) | sender    == recipient   = (False, "You can " ++ verb ntype ++ " yourself!")
+            | recipient == me          = (False, "Nice try ;)")
+            | null args                = (False, "What should I " ++ verb ntype ++ " " ++ who ++ "?")
+            | otherwise                = (True,  "Consider it noted.")
+    when record (writeDown recipient sender rest ntype)
+    say res
 
 -- | Remind a user that they have messages.
 doRemind :: Nick -> Cmd Tell ()

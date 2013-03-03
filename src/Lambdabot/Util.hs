@@ -17,10 +17,7 @@ module Lambdabot.Util (
         expandTab,
         closest, closests,
         withMWriter, parIO, timeout,
-        choice,
         arePrefixesWithSpaceOf, arePrefixesOf,
-
-        addList, insertUpd,
 
         pprKeys,
 
@@ -219,21 +216,6 @@ timeout :: Int -> IO a -> IO (Maybe a)
 timeout n a = parIO (Just `fmap` a) (threadDelay n >> return Nothing)
 
 ------------------------------------------------------------------------
-
-{-# INLINE choice #-}
-choice :: Monad m => m Bool -> m a -> m a -> m a
-choice p f g = p >>= \b -> if b then f else g
-
-------------------------------------------------------------------------
-
-addList :: (Ord k) => [(k,a)] -> M.Map k a -> M.Map k a
-addList l m = M.union (M.fromList l) m
-{-# INLINE addList #-}
-
--- | This makes way more sense than @insertWith@ because we don't need to
---   remember the order of arguments of @f@.
-insertUpd :: Ord k => (a -> a) -> k -> a -> M.Map k a -> M.Map k a
-insertUpd f = M.insertWith (\_ -> f)
 
 --  | Print map keys
 pprKeys :: (Show k) => M.Map k a -> String

@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 --
 -- Copyright (c) 2006 Don Stewart - http://www.cse.unsw.edu.au/~dons
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
@@ -11,7 +9,6 @@ module Lambdabot.Plugin
     ( Module(..)
     , ModuleT
     , newModule
-    , modules
     
     , getModuleName
     , bindModule0
@@ -35,8 +32,6 @@ module Lambdabot.Plugin
     
     , proxy
     , ghci
-    , outputDir
-    , onStartupCmds
     
     , module Lambdabot.Config
     , module Lambdabot.Command
@@ -49,7 +44,7 @@ module Lambdabot.Plugin
 import Lambdabot
 import Lambdabot.Config
 import Lambdabot.Command hiding (runCommand, execCmd)
-import Lambdabot.File (findLBFile)
+import Lambdabot.File
 import Lambdabot.Message
 import Lambdabot.Module
 import Lambdabot.Monad
@@ -60,7 +55,6 @@ import Lambdabot.Util.Serial
 import Control.Monad.Error
 import Codec.Binary.UTF8.String
 import Data.Char
-import Language.Haskell.TH
 
 lim80 :: Monad m => m String -> Cmd m ()
 lim80 action = do
@@ -76,12 +70,3 @@ lim80 action = do
 -- usage:  @process _ _ to _ s = ios80 to (plugs s)@
 ios80 :: MonadIO m => IO String -> Cmd m ()
 ios80 = lim80 . io
-
-modules :: [String] -> Q Exp
-modules xs = [| ($install, $names) |]
- where
-    names = listE $ map (stringE . map toLower) xs
-    install = [| sequence_ $(listE $ map instalify xs) |]
-    instalify x = let mod = varE $ mkName $ concat $ ["Lambdabot.Plugin.", x, ".theModule"]
-                      low = stringE $ map toLower x
-                  in [| ircInstallModule $mod $low |]

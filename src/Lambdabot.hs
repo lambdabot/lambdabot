@@ -54,7 +54,6 @@ import System.Exit
 import System.IO
 
 import Data.Char
-import Data.Dependent.Sum
 import Data.List                (isSuffixOf, inits, tails)
 import Data.Maybe               (isJust)
 import qualified Data.Map as M
@@ -79,13 +78,12 @@ data Mode = Online | Offline deriving Eq
 -- Also, handle any fatal exceptions (such as non-recoverable signals),
 -- (i.e. print a message and exit). Non-fatal exceptions should be dealt
 -- with in the mainLoop or further down.
-runIrc :: [String] -> LB a -> [String] -> [DSum ConfigKey] -> IO ()
-runIrc evcmds initialise plugins configBindings = withSocketsDo $ do
-    let cfg = (onStartupCmds :=> evcmds) : configBindings
-    rost <- initRoState (config cfg)
+runIrc :: LB a -> [DSum ConfigKey] -> IO ()
+runIrc initialise configBindings = withSocketsDo $ do
+    rost <- initRoState (config configBindings)
     r <- try $ evalLB (do withDebug "Initialising plugins" initialise
                           withIrcSignalCatch mainLoop)
-                       rost (initState plugins)
+                       rost initState
 
     -- clean up and go home
     case r of
@@ -112,8 +110,8 @@ initRoState config = do
         }
 
 -- | Default rw state
-initState :: [String] -> IRCRWState
-initState plugins = IRCRWState
+initState :: IRCRWState
+initState = IRCRWState
     { ircPrivilegedUsers = M.singleton (Msg.Nick "offlinerc" "null") True
     , ircIgnoredUsers    = M.empty
     , ircChannels        = M.empty
@@ -210,7 +208,7 @@ ircInstallModule m modname = do
             cmdmap = ircCommands s
         put $ s {
           ircModules = M.insert modname modref modmap,
-          ircCommands = addList [ (name,cmdref cmd) | cmd <- cmds, name <- cmdNames cmd ] cmdmap
+          ircCommands = M.union (M.fromList [ (name,cmdref cmd) | cmd <- cmds, name <- cmdNames cmd ]) cmdmap
         }
         io $ hPutStr stderr "." >> hFlush stderr
 
