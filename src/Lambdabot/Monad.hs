@@ -43,8 +43,7 @@ module Lambdabot.Monad
     , withModule
     , withCommand
     , withAllModules
-    , getDictKeys
-
+    
     , verbose
     , proxy
     , ghci
@@ -58,15 +57,6 @@ import qualified Lambdabot.Message as Msg
 import           Lambdabot.Util.Signals
 import           Lambdabot.Util
 
-import Prelude hiding           (mod)
-
-import System.IO
-
-import Data.Char
-import Data.IORef               (newIORef, IORef, readIORef, writeIORef)
-import Data.Map (Map)
-import qualified Data.Map as M hiding (Map)
-
 import Control.Applicative
 import Control.Concurrent
 import Control.Exception
@@ -74,15 +64,19 @@ import qualified Control.Exception as E (catch)
 import Control.Monad.Error (MonadError (..))
 import Control.Monad.Reader
 import Control.Monad.State
-
+import Data.Char
+import qualified Data.Dependent.Map as D
+import Data.IORef
+import qualified Data.Map as M
 import System.Console.Haskeline.MonadException (MonadException)
+import System.IO
 
 -------------------------------------
 -- Core configuration variables
 
-configKey "verbose"         [t| Bool                    |] [| False         |]
-configKey "proxy"           [t| Maybe ([Char], Integer) |] [| Nothing       |]
-configKey "ghci"            [t| String                  |] [| "ghci"        |]
+config "verbose"         [t| Bool                    |] [| False         |]
+config "proxy"           [t| Maybe ([Char], Integer) |] [| Nothing       |]
+config "ghci"            [t| String                  |] [| "ghci"        |]
 
 ------------------------------------------------------------------------
 --
@@ -93,24 +87,24 @@ configKey "ghci"            [t| String                  |] [| "ghci"        |]
 data IRCRState = IRCRState
     { ircInitDoneMVar   :: MVar ()
     , ircQuitMVar       :: MVar ()
-    , ircConfig         :: Config
+    , ircConfig         :: D.DMap Config
     }
 
 -- | Global read\/write state.
 data IRCRWState = IRCRWState
-    { ircServerMap       :: Map String (String, IrcMessage -> LB ())
-    , ircPrivilegedUsers :: Map Msg.Nick Bool
-    , ircIgnoredUsers    :: Map Msg.Nick Bool
+    { ircServerMap       :: M.Map String (String, IrcMessage -> LB ())
+    , ircPrivilegedUsers :: M.Map Msg.Nick Bool
+    , ircIgnoredUsers    :: M.Map Msg.Nick Bool
     
-    , ircChannels        :: Map ChanName String
+    , ircChannels        :: M.Map ChanName String
     -- ^ maps channel names to topics
     
-    , ircModules         :: Map String ModuleRef
-    , ircCallbacks       :: Map String [(String,Callback)]
+    , ircModules         :: M.Map String ModuleRef
+    , ircCallbacks       :: M.Map String [(String,Callback)]
     , ircOutputFilters   :: [(String,OutputFilter)]
     -- ^ Output filters, invoked from right to left
     
-    , ircCommands        :: Map String CommandRef
+    , ircCommands        :: M.Map String CommandRef
     , ircStayConnected   :: !Bool
     }
 
@@ -257,8 +251,8 @@ forkLB f = (`liftLB` f) $ \g -> do
 liftLB :: (IO a -> IO b) -> LB a -> LB b
 liftLB f = LB . mapReaderT f . runLB -- lbIO (\conv -> f (conv lb))
 
-readConfig :: MonadLB m => ConfigKey a -> m a
-readConfig k = liftM (lookupConfig k) (lb (asks ircConfig))
+readConfig :: MonadLB m => Config a -> m a
+readConfig k = liftM (maybe (getConfigDefault k) id . D.lookup k) (lb (asks ircConfig))
 
 -- | 'debugStr' checks if we have the verbose flag turned on. If we have
 --   it outputs the String given. Else, it is a no-op.
@@ -317,6 +311,3 @@ withAllModules f = do
     mods <- gets $ M.elems . ircModules :: LB [ModuleRef]
     (`mapM` mods) $ \(ModuleRef m ref name) -> do
         runReaderT (moduleT $ f m) (ref, name)
-
-getDictKeys :: (MonadState s m) => (s -> Map k a) -> m [k]
-getDictKeys dict = gets (M.keys . dict)

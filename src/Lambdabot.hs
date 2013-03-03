@@ -13,7 +13,7 @@ module Lambdabot (
         LB(..), MonadLB(..),
         forkLB, liftLB,
         
-        withModule, withCommand, withAllModules, getDictKeys,
+        withModule, withCommand, withAllModules,
         
         Command(..), runCommand, 
         Cmd, execCmd,
@@ -48,24 +48,23 @@ import Lambdabot.Util
 
 import Prelude hiding           (mod)
 
-import Network                  (withSocketsDo)
-
-import System.Exit
-import System.IO
-
-import Data.Char
-import Data.List                (isSuffixOf, inits, tails)
-import Data.Maybe               (isJust)
-import qualified Data.Map as M
-import qualified Data.ByteString.Char8 as P
-import Data.Random.Source
-import Data.Typeable
-
 import Control.Concurrent
 import Control.Exception
 import qualified Control.Exception as E (catch)
 import Control.Monad.Reader
 import Control.Monad.State
+import qualified Data.ByteString.Char8 as P
+import Data.Char
+import qualified Data.Dependent.Map as D
+import Data.Dependent.Sum
+import Data.List (isSuffixOf, inits, tails)
+import qualified Data.Map as M
+import Data.Maybe (isJust)
+import Data.Random.Source
+import Data.Typeable
+import Network (withSocketsDo)
+import System.Exit
+import System.IO
 
 ------------------------------------------------------------------------
 --
@@ -79,9 +78,9 @@ data Mode = Online | Offline deriving Eq
 -- Also, handle any fatal exceptions (such as non-recoverable signals),
 -- (i.e. print a message and exit). Non-fatal exceptions should be dealt
 -- with in the mainLoop or further down.
-runIrc :: LB a -> [DSum ConfigKey] -> IO ()
+runIrc :: LB a -> [DSum Config] -> IO ()
 runIrc initialise configBindings = withSocketsDo $ do
-    rost <- initRoState (config configBindings)
+    rost <- initRoState (D.fromList configBindings)
     r <- try $ evalLB (do withDebug "Initialising plugins" initialise
                           withIrcSignalCatch mainLoop)
                        rost initState
@@ -99,7 +98,7 @@ runIrc initialise configBindings = withSocketsDo $ do
             exitWith ExitSuccess
 
 -- | Default ro state
-initRoState :: Config -> IO IRCRState
+initRoState :: D.DMap Config -> IO IRCRState
 initRoState configuration = do
     quitMVar     <- newEmptyMVar
     initDoneMVar <- newEmptyMVar

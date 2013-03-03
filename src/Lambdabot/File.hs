@@ -16,7 +16,7 @@ import Paths_lambdabot
 import System.Directory
 import System.FilePath
 
-configKey "outputDir" [t| FilePath |] [| "State/" |]
+config "outputDir" [t| FilePath |] [| "State/" |]
 
 -- | Constants.
 lambdabot :: FilePath

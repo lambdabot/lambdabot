@@ -17,15 +17,15 @@ import Lambdabot.Plugin
 
 import Control.Applicative
 import Control.Monad
-import Control.Monad.State  (MonadState(..))
+import Control.Monad.State
 import Control.Monad.Trans
 import Data.List
-import qualified Data.Map as M   (insert, delete)
+import qualified Data.Map as M
 import Text.Regex.TDFA
 
-configKey "commandPrefixes"     [t| [String]                |] [| ["@", "?"]    |]
-configKey "evalPrefixes"        [t| [String]                |] [| [">"]         |]
-configKey "disabledCommands"    [t| [String]                |] [| []            |]
+config "commandPrefixes"     [t| [String]                |] [| ["@", "?"]    |]
+config "evalPrefixes"        [t| [String]                |] [| [">"]         |]
+config "disabledCommands"    [t| [String]                |] [| []            |]
 
 type BaseState = GlobalPrivate () ()
 type Base = ModuleT BaseState LB
@@ -199,7 +199,7 @@ doPRIVMSG' config myname msg target
     --
     doMsg cmd rest towhere = do
         let ircmsg = ircPrivmsg towhere
-        allcmds <- getDictKeys ircCommands
+        allcmds <- gets (M.keys . ircCommands)
         let ms      = filter (isPrefixOf cmd) allcmds
         case ms of
             [s] -> docmd s                  -- a unique prefix

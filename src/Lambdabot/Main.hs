@@ -17,18 +17,19 @@ import Lambdabot.Config
 import Control.Applicative
 import Control.Monad.State (get, liftIO)
 import Data.Char
+import Data.Dependent.Sum
 import qualified Data.Map as M
 import Language.Haskell.TH
 import System.Environment
 
-configKey "onStartupCmds" [t| [String] |] [| [] |]
+config "onStartupCmds" [t| [String] |] [| [] |]
 
 parseArgs :: [String] -> Maybe [String]
 parseArgs ("-e" : cmd : x)  = (cmd :) <$> parseArgs x
 parseArgs []                = Just []
 parseArgs _                 = Nothing
 
-lambdabotMain :: Modules -> [DSum ConfigKey] -> IO ()
+lambdabotMain :: Modules -> [DSum Config] -> IO ()
 lambdabotMain loadStaticModules configuration = do
     args <- parseArgs <$> getArgs
     

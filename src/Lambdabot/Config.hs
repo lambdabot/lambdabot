@@ -3,47 +3,34 @@
 -- | Extensible configuration system for lambdabot
 module Lambdabot.Config
     ( Config
-    , ConfigKey
-
-    , DSum(..)
+    , getConfigDefault
     , config
-    
-    , lookupConfig
-    
-    , configKey
     ) where
 
 import Control.Applicative
 import Control.Monad.Identity
 import Data.Char
-import Data.Dependent.Sum
-import qualified Data.Dependent.Map as D
 import Data.GADT.Compare
 import Data.GADT.Compare.TH
 import Data.Maybe
 import Data.Typeable
 import Language.Haskell.TH
 
--- | The 'Config' type provides configurations for lambdabot. It is used
---   when lambdabot is started to determine the name of lambdabot, what
---   IRC-network lambdabot should join, which channels lambdabot should
---   join upon successful connection, etc.
---
-newtype Config = Config (D.DMap ConfigKey)
+data Config t where Config :: (Typeable1 k, GCompare k) => !(k t) -> t -> Config t
 
-data ConfigKey t where
-    ConfigKey :: (Typeable1 k, GCompare k) => !(k t) -> t -> ConfigKey t
+getConfigDefault :: Config t -> t
+getConfigDefault (Config _ def) = def
 
 cast1 :: (Typeable1 f, Typeable1 g) => f a -> Maybe (g a)
 cast1 = fmap runIdentity . gcast1 . Identity
 
-instance GEq ConfigKey where
-    geq (ConfigKey k1 _) (ConfigKey k2 _) = do
+instance GEq Config where
+    geq (Config k1 _) (Config k2 _) = do
         k2' <- cast1 k2
         geq k1 k2'
 
-instance GCompare ConfigKey where
-    gcompare (ConfigKey k1 _) (ConfigKey k2 _) = 
+instance GCompare Config where
+    gcompare (Config k1 _) (Config k2 _) = 
         case compare t1 t2 of
             LT -> GLT
             EQ -> fromMaybe typeErr $ do
@@ -56,15 +43,8 @@ instance GCompare ConfigKey where
             
             typeErr = error "TypeReps claim to be equal but cast failed"
 
-lookupConfig :: ConfigKey t -> Config -> t
-lookupConfig k@(ConfigKey _ def) (Config m) = 
-    maybe def id (D.lookup k m)
-
-config :: [DSum ConfigKey] -> Config
-config = Config . D.fromList
-
-configKey :: String -> TypeQ -> ExpQ -> Q [Dec]
-configKey nameStr tyQ defValQ = do
+config :: String -> TypeQ -> ExpQ -> Q [Dec]
+config nameStr tyQ defValQ = do
     let keyName = mkName nameStr
     tyName      <- newName (map toUpper nameStr)
     conName     <- newName (map toUpper nameStr)
@@ -74,8 +54,8 @@ configKey nameStr tyQ defValQ = do
     defVal      <- defValQ
     let tyDec   = DataD [] tyName [PlainTV tyVarName] [ForallC [] [EqualP (VarT tyVarName) ty] (NormalC conName [])] [''Typeable]
         keyDecs =
-            [ SigD keyName (AppT (ConT ''ConfigKey) ty)
-            , ValD (VarP keyName) (NormalB (ConE 'ConfigKey `AppE` ConE conName `AppE` defVal)) []
+            [ SigD keyName (AppT (ConT ''Config) ty)
+            , ValD (VarP keyName) (NormalB (ConE 'Config `AppE` ConE conName `AppE` defVal)) []
             ]
     
     concat <$> sequence
