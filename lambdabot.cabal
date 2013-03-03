@@ -91,7 +91,6 @@ library
                         Lambdabot.Plugin.Dict
                         Lambdabot.Plugin.Djinn
                         Lambdabot.Plugin.Dummy
-                        Lambdabot.Plugin.Dynamic
                         Lambdabot.Plugin.Elite
                         Lambdabot.Plugin.Eval
                         Lambdabot.Plugin.Eval.Trusted
@@ -135,7 +134,6 @@ library
                         Lambdabot.Plugin.Version
                         Lambdabot.Plugin.Vixen
                         Lambdabot.Plugin.Where
-                        Lambdabot.Shared
                         Lambdabot.State
                         Lambdabot.Util
                         Lambdabot.Util.AltTime

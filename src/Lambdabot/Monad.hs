@@ -50,7 +50,6 @@ module Lambdabot.Monad
     , ghci
     , outputDir
     , onStartupCmds
-    , dynamicLoader
     ) where
 
 import           Lambdabot.Command
@@ -58,7 +57,6 @@ import           Lambdabot.Config
 import           Lambdabot.IRC (IrcMessage)
 import           Lambdabot.Module
 import qualified Lambdabot.Message as Msg
-import qualified Lambdabot.Shared  as S
 import           Lambdabot.Util.Signals
 import           Lambdabot.Util
 
@@ -88,7 +86,6 @@ configKey "proxy"           [t| Maybe ([Char], Integer) |] [| Nothing       |]
 configKey "ghci"            [t| String                  |] [| "ghci"        |]
 configKey "outputDir"       [t| FilePath                |] [| "State/"      |]
 configKey "onStartupCmds"   [t| [String]                |] [| []            |]
-configKey "dynamicLoader"   [t| Maybe S.DynLoad         |] [| Nothing       |]
 
 ------------------------------------------------------------------------
 --
@@ -118,7 +115,6 @@ data IRCRWState = IRCRWState
     
     , ircCommands        :: Map String CommandRef
     , ircStayConnected   :: !Bool
-    , ircPlugins         :: [String]
     }
 
 type Callback = IrcMessage -> LB ()

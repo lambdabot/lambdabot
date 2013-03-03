@@ -29,15 +29,12 @@ module Lambdabot (
         ircInstallModule, ircUnloadModule,
         flushModuleState,
         
-        ircLoad, ircUnload,
-        
         checkPrivs, checkIgnore, mkCN, handleIrc, catchIrc, runIrc
   ) where
 
 import Lambdabot.File (findLBFile)
 
 import qualified Lambdabot.Message as Msg
-import qualified Lambdabot.Shared  as S
 
 import Lambdabot.Command
 import Lambdabot.Config
@@ -131,7 +128,6 @@ initState plugins = IRCRWState
         , ([],checkRecip) ]
     , ircCommands        = M.empty
     , ircStayConnected   = True
-    , ircPlugins         = plugins
     }
 
 -- Actually, this isn't a loop anymore.  FIXME: better name.
@@ -238,27 +234,6 @@ ircUnloadModule modname = withModule modname (error "module not loaded") (\m -> 
             { ircServerMap     = M.filter ((/=modname) . fst) svrs }
             { ircOutputFilters = filter ((/=modname) . fst) ofs }
   )
-
---
--- | Binding to dynamic loader functions (stored as a bundle in state)
--- passed from Boot. DynamicModule goes through here to get at them.
---
-ircLoad :: FilePath -> S.Symbol -> LB (S.Module, a)
-ircLoad mod sym = do
-    mbDynLoad <- readConfig dynamicLoader
-    case mbDynLoad of
-        Nothing -> fail "no dynamic loading"
-        Just ld -> io $ S.dynload ld mod sym
-
---
--- | Dynamically unload a module
---
-ircUnload :: FilePath -> LB ()
-ircUnload mod = do
-    mbDynLoad <- readConfig dynamicLoader
-    case mbDynLoad of
-        Nothing -> fail "no dynamic loading"
-        Just ld -> io $ S.unload ld (S.Module mod)
 
 ------------------------------------------------------------------------
 
