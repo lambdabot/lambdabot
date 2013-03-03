@@ -7,7 +7,7 @@
 -- |  inspiration: Where plugin (thanks shapr,dons)
 module Lambdabot.Plugin.Poll (theModule) where
 
-import Lambdabot.Plugin hiding (choice)
+import Lambdabot.Plugin
 import qualified Data.ByteString.Char8 as P
 import Data.List
 import qualified Data.Map as M
