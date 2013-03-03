@@ -8,12 +8,11 @@ module Lambdabot.Plugin.Spell (theModule) where
 
 import Lambdabot.Plugin
 import Lambdabot.Util.Process
-import Lambdabot.Util.Regex
 
 import Control.Monad.Trans
 import Data.Char
 import Data.Maybe
-import qualified Text.Regex as R
+import Text.Regex.TDFA
 
 helpStr = "spell <word>. Show spelling of word"
 
@@ -121,7 +120,5 @@ clean' (('&':rest):_) = Just $ split ", " (clean'' rest) -- suggestions
 clean' _              = Just []                          -- not sure
 
 clean'' :: String -> String
-clean'' s
-    | Just (_,_,m,_) <- pat `R.matchRegexAll` s = m
-    | otherwise = s
-    where pat  = regex' "[^:]*: "    -- drop header
+clean'' s = maybe s mrAfter (s =~~ pat)
+    where pat  = "[^:]*: "    -- drop header

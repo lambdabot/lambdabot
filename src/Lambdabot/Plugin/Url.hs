@@ -10,7 +10,7 @@ import Control.Monad
 import Control.Monad.Trans
 import Data.List
 import Data.Maybe
-import qualified Text.Regex as R -- legacy
+import Text.Regex.TDFA
 
 theModule = newModule
     { moduleCmds = return
@@ -82,11 +82,15 @@ fetchTiny url
 -- | Tries to find the start of a tinyurl
 findTiny :: String -> Maybe String
 findTiny text = do
-  (_,kind,rest,_) <- R.matchRegexAll begreg text
-  let url = takeWhile (/=' ') rest
-  return $ stripSuffixes ignoredUrlSuffixes $ kind ++ url
-  where
-  begreg = R.mkRegexWithOpts "http://tinyurl.com/" True False
+    mr <- matchM begreg text
+    let kind = mrMatch mr
+        rest = mrAfter mr
+        url = takeWhile (/=' ') rest
+    return $ stripSuffixes ignoredUrlSuffixes $ kind ++ url
+    where
+        begreg :: Regex
+        begreg = makeRegexOpts opts defaultExecOpt "http://tinyurl.com/"
+        opts = defaultCompOpt {caseSensitive = False}
 
 -- | List of strings that, if present in a contextual message, will
 -- prevent the looking up of titles.  This list can be used to stop
@@ -112,11 +116,14 @@ ignoredUrlSuffixes = [".", ",", ";", ")", "\"", "\1", "\n"]
 -- | Searches a string for an embeddded URL and returns it.
 containsUrl :: String -> Maybe String
 containsUrl text = do
-    (_,kind,rest,_) <- R.matchRegexAll begreg text
-    let url = takeWhile (`notElem` " \n\t\v") rest
+    mr <- matchM begreg text
+    let kind = mrMatch mr
+        rest = mrAfter mr
+        url = takeWhile (`notElem` " \n\t\v") rest
     return $ stripSuffixes ignoredUrlSuffixes $ kind ++ url
     where
-      begreg = R.mkRegexWithOpts "https?://"  True False
+        begreg = makeRegexOpts opts defaultExecOpt "https?://"
+        opts = defaultCompOpt { caseSensitive = False }
 
 -- | Utility function to remove potential suffixes from a string.
 -- Note, once a suffix is found, it is stripped and returned, no other

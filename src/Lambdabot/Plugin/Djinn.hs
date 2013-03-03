@@ -9,12 +9,11 @@ module Lambdabot.Plugin.Djinn (theModule) where
 
 import Lambdabot.Plugin
 import Lambdabot.Util.Process
-import Lambdabot.Util.Regex
 
 import Data.Char
 import Data.List
 import Data.Maybe
-import qualified Text.Regex as R
+import Text.Regex.TDFA
 
 -- | We can accumulate an interesting environment
 type DjinnEnv = ([Decl] {- prelude -}, [Decl])
@@ -89,10 +88,8 @@ djinnCmd s = do
         e       <- io $ djinn env $ ":set +sorted\nf ? " ++ dropForall s
         mapM_ say $ either id (parse . lines) e
     where
-      dropForall t
-          | Just (_, _, x, _) <- R.matchRegexAll re t = x
-          | otherwise = t
-      re = regex' "^forall [[:alnum:][:space:]]+\\."
+      dropForall t = maybe t mrAfter (t =~~ re)
+      re = "^forall [[:alnum:][:space:]]+\\."
       parse :: [String] -> [String]
       parse x = if length x < 2
                 then ["No output from Djinn; installed?"]
@@ -165,21 +162,17 @@ djinn env' src = do
         safeInit xs = init xs
         o = dropNL . clean_ . unlines . safeInit . drop 2 . lines $ out
     return $ case () of {_
-        | failed `matches'` o ||
-          unify  `matches'` o ||
-          err    `matches'` o -> Left (lines o)
-        | otherwise                          -> Right o
+        | o =~ "Cannot parse command" ||
+          o =~ "cannot be realized"   ||
+          o =~ "^Error:"                -> Left (lines o)
+        | otherwise                     -> Right o
     }
-    where
-        failed = regex' "Cannot parse command"
-        unify  = regex' "cannot be realized"
-        err = regex' "^Error:"
 
 --
 -- Clean up djinn output
 --
 clean_ :: String -> String
-clean_ s | Just (a,_,b,_) <- prompt `R.matchRegexAll` s = a ++ clean_ b
-         | otherwise      = s
-    where prompt = regex' "Djinn>[^\n]*\n"
-
+clean_ s | Just mr <- s =~~ prompt  = mrBefore mr ++ mrAfter mr
+         | otherwise                = s
+    where
+        prompt = "(Djinn> *)+"

@@ -20,13 +20,12 @@ module Lambdabot.Plugin.Type (theModule, query_ghci) where
 
 import Lambdabot.Plugin
 import Lambdabot.Util.Process
-import Lambdabot.Util.Regex
 
 import Lambdabot.Plugin.Eval (exts)
 
 import Data.Char
 import Data.Maybe
-import qualified Text.Regex as R
+import Text.Regex.TDFA
 
 theModule = newModule
     { moduleCmds = return 
@@ -59,10 +58,8 @@ theCommand cmd foo = cmd ++ " " ++ foo
 --     into GHCi and send any line matching
 
 signature_regex :: Regex
-signature_regex
-    = R.mkRegexWithOpts
-      "^(\\*?[A-Z][_a-zA-Z0-9]*(\\*?[A-Z][_a-zA-Z0-9]*)*>)? *(.*[       -=:].*)"
-      True True
+signature_regex = makeRegex
+    "^(\\*?[A-Z][_a-zA-Z0-9]*(\\*?[A-Z][_a-zA-Z0-9]*)*>)? *(.*[       -=:].*)"
 
 --
 -- Rather than use subRegex, which is new to 6.4, we can remove comments
@@ -102,7 +99,7 @@ extract_signatures :: String -> Maybe String
 extract_signatures output
         = fmap reverse . removeExp . reverse .
           unwords . map (dropWhile isSpace . expandTab 8) .
-          mapMaybe ((>>= last') . R.matchRegex signature_regex) .
+          mapMaybe ((>>= last') . fmap mrSubList . matchM signature_regex) .
           lines $ output
         where
         last' [] = Nothing
@@ -136,15 +133,15 @@ query_ghci cmd expr = do
                Nothing -> unlines . take 3 . filter (not . null) . map cleanRE2 .
                           lines . expandTab 8 . cleanRE . filter (/='\r') $ errors -- "bzzt"
                Just t -> t
-  where
-
-     cleanRE, cleanRE2 :: String -> String
-     cleanRE s
-        | Just _         <- notfound `R.matchRegex` s = "Couldn\'t find qualified module."
-        | Just (_,_,b,_) <- ghci_msg `R.matchRegexAll`  s = b
-        | otherwise      = s
-     cleanRE2 s
-        | Just (_,_,b,_) <- ghci_msg `R.matchRegexAll`  s = b
-        | otherwise      = s
-     ghci_msg = R.mkRegex "<interactive>:[^:]*:[^:]*: ?"
-     notfound = R.mkRegex "Failed to load interface"
+    
+    where
+        cleanRE, cleanRE2 :: String -> String
+        cleanRE s
+            |           s =~  notfound  = "Couldn\'t find qualified module."
+            | Just m <- s =~~ ghci_msg  = mrAfter m
+            | otherwise                 = s
+        cleanRE2 s
+            | Just m <- s =~~ ghci_msg  = mrAfter m
+            | otherwise                 = s
+        ghci_msg = "<interactive>:[^:]*:[^:]*: ?"
+        notfound = "Failed to load interface"

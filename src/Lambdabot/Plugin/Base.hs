@@ -14,14 +14,14 @@ import Lambdabot
 import Lambdabot.IRC
 import qualified Lambdabot.Message as Msg (readNick, showNick)
 import Lambdabot.Plugin
-import Lambdabot.Util.Regex
 
+import Control.Applicative
 import Control.Monad
 import Control.Monad.State  (MonadState(..))
 import Control.Monad.Trans
 import Data.List
 import qualified Data.Map as M   (insert, delete)
-import qualified Text.Regex as R
+import Text.Regex.TDFA
 
 configKey "commandPrefixes"     [t| [String]                |] [| ["@", "?"]    |]
 configKey "evalPrefixes"        [t| [String]                |] [| [">"]         |]
@@ -260,10 +260,10 @@ doPRIVMSG' config myname msg target
 ------------------------------------------------------------------------
 
 maybeCommand :: String -> String -> Maybe String
-maybeCommand nm text = case R.matchRegexAll re text of
-      Nothing -> Nothing
-      Just (_, _, cmd, _) -> Just cmd
-    where re = regex' (nm ++ "[.:,]*[[:space:]]*")
+maybeCommand nm text = mrAfter <$> matchM re text
+    where 
+        re :: Regex
+        re = makeRegex (nm ++ "[.:,]*[[:space:]]*")
 
 --
 -- And stuff we don't care about

@@ -6,13 +6,12 @@
 module Lambdabot.Plugin.Elite (theModule) where
 
 import Lambdabot.Plugin
-import Lambdabot.Util.Regex
-import qualified Text.Regex as R
 
 import Control.Arrow
 import Control.Monad
 import Data.Char
 import Data.Maybe
+import Text.Regex.TDFA
 
 theModule = newModule
     { moduleCmds = return
@@ -36,13 +35,16 @@ translate []  = return []
 translate str@(hd:tl) = do
     let alts = [ (subst match,rest)
                | (re, subst) <- ruleList
-               , ([], match, rest, _) <- maybeToList (R.matchRegexAll re str)
+               , mr <- maybeToList (matchM re str)
+               , null (mrBefore mr)
+               , let match = mrMatch mr
+                     rest  = mrAfter mr
                ]
     (subst,rest) <- random alts
     liftM (subst ++) (translate rest)
 
 ruleList :: [(Regex, String -> String)]
-ruleList = map (first regex')
+ruleList = map (first makeRegex)
     [ (".",     id            )
     , (".",     map toUpper   )
     , ("a",     const "4"     )
