@@ -10,6 +10,7 @@ import ShowQ
 import Math.OEIS
 import Test.QuickCheck
 
+describeSequence :: SequenceData -> Maybe String
 describeSequence = fmap description . lookupSequence
 
 newtype Mu f = In { out :: f (Mu f) }

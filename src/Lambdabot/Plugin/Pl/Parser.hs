@@ -60,7 +60,7 @@ table = addToFirst def $ map (map inf) operators where
 
   inf :: (String, (Assoc, Int)) -> Operator Char st Expr
   inf (name, (assoc, _)) = Infix (try $ do
-      string name
+      _ <- string name
       notFollowedBy $ oneOf opchars
       spaces
       let name' = if head name == '`'
@@ -88,10 +88,10 @@ pattern = buildExpressionParser ptable ((PVar `fmap`
 
 lambda :: Parser Expr
 lambda = do
-    symbol "\\"
+    _  <- symbol "\\"
     vs <- many1 pattern
-    symbol "->"
-    e <- myParser False
+    _  <- symbol "->"
+    e  <- myParser False
     return $ foldr Lambda e vs
   <?> "lambda abstraction"
 
@@ -114,21 +114,21 @@ list = msum (map (try . brackets) plist) <?> "list" where
     foldr (\e1 e2 -> cons `App` e1 `App` e2) nil `fmap`
       (myParser False `sepBy` symbol ","),
     do e <- myParser False
-       symbol ".."
+       _ <- symbol ".."
        return $ Var Pref "enumFrom" `App` e,
-    do e <- myParser False
-       symbol ","
+    do e  <- myParser False
+       _  <- symbol ","
        e' <- myParser False
-       symbol ".."
+       _  <- symbol ".."
        return $ Var Pref "enumFromThen" `App` e `App` e',
-    do e <- myParser False
-       symbol ".."
+    do e  <- myParser False
+       _  <- symbol ".."
        e' <- myParser False
        return $ Var Pref "enumFromTo" `App` e `App` e',
-    do e <- myParser False
-       symbol ","
-       e' <- myParser False
-       symbol ".."
+    do e   <- myParser False
+       _   <- symbol ","
+       e'  <- myParser False
+       _   <- symbol ".."
        e'' <- myParser False
        return $ Var Pref "enumFromThenTo" `App` e `App` e' `App` e''
     ]
@@ -143,7 +143,7 @@ tuple = do
 
 unaryNegation :: Parser Expr
 unaryNegation = do
-    symbol "-"
+    _ <- symbol "-"
     e <- myParser False
     return $ Var Pref "negate" `App` e
   <?> "unary negation"
@@ -202,7 +202,7 @@ application = do
 endsIn :: Parser a -> Parser b -> Parser [a]
 endsIn p end = do
   xs <- many p
-  end
+  _  <- end
   return $ xs
 
 input :: Parser TopLevel

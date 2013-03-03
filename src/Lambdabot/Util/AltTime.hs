@@ -19,7 +19,7 @@ import Data.Binary
 
 import Data.List
 import Data.Time
-import Text.Read hiding (get)
+import Text.Read hiding (get, lexP, readPrec)
 import Text.Read.Lex
 
 -- | Wrapping ClockTime (which doesn't provide a Read instance!) seems

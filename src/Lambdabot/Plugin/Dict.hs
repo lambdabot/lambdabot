@@ -11,6 +11,7 @@ import Data.List
 
 type Dict = ModuleT () LB
 
+theModule :: Module ()
 theModule = newModule
     { moduleCmds = return $
         [ (command "dict-help")
@@ -24,7 +25,7 @@ theModule = newModule
                 [] -> getHelp [name]
                 s  -> mapM_ (doLookup >=> sayResult) s
             }
-        | (name, (srv, db, descr)) <- dictTable
+        | (name, (srv, db, _)) <- dictTable
         , let doLookup  = io . Dict.simpleDictLookup srv db
               sayResult = say . either ("Error: " ++) id
         ]

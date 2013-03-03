@@ -5,6 +5,7 @@ module Lambdabot.Plugin.Hello (theModule) where
 
 import Lambdabot.Plugin
 
+theModule :: Module ()
 theModule = newModule
     { moduleCmds = return
         [ (command "hello")

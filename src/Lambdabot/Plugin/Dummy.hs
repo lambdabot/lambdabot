@@ -10,6 +10,7 @@ import qualified Data.ByteString.Char8 as P
 import qualified Data.Map as M
 import System.FilePath
 
+theModule :: Module ()
 theModule = newModule
     { moduleCmds = return
         $ (command "eval")
@@ -34,6 +35,7 @@ theModule = newModule
         _                  -> return ()
     }
 
+dummyHelp :: String -> String
 dummyHelp s = case s of
     "dummy"       -> "dummy. Print a string constant"
     "bug"         -> "bug. Submit a bug to GHC's trac"

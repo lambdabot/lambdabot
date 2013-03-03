@@ -59,6 +59,7 @@ data Command m = Command
     , process       :: String -> Cmd m ()
     }
 
+cmdNames :: Command m -> [String]
 cmdNames c = cmdName c : aliases c
 
 command :: String -> Command Identity

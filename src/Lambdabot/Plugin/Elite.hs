@@ -13,6 +13,7 @@ import Data.Char
 import Data.Maybe
 import Text.Regex.TDFA
 
+theModule :: Module ()
 theModule = newModule
     { moduleCmds = return
         [ (command "elite")
@@ -27,18 +28,19 @@ theModule = newModule
         ]
     }
 
+translateLine :: String -> IO String
 translateLine = fmap (dropWhile isSpace) . translate . (' ':)
 -- extra space allows whole-word patterns to match at start
 
 translate :: String -> IO String
 translate []  = return []
-translate str@(hd:tl) = do
-    let alts = [ (subst match,rest)
+translate str = do
+    let alts = [ (subst match',rest)
                | (re, subst) <- ruleList
                , mr <- maybeToList (matchM re str)
                , null (mrBefore mr)
-               , let match = mrMatch mr
-                     rest  = mrAfter mr
+               , let match' = mrMatch mr
+                     rest   = mrAfter mr
                ]
     (subst,rest) <- random alts
     liftM (subst ++) (translate rest)

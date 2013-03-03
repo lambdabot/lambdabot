@@ -11,6 +11,7 @@ import Lambdabot.Util.Process
 import Data.Char
 import Text.Regex.TDFA
 
+theModule :: Module ()
 theModule = newModule
     { moduleCmds = return
         [ (command "bf")

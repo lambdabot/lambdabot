@@ -10,6 +10,7 @@ import qualified Data.Map as M
 type HaddockState = M.Map P.ByteString [P.ByteString]
 type Haddock = ModuleT HaddockState LB
 
+theModule :: Module HaddockState
 theModule = newModule
     { moduleCmds = return
         [ (command "index")

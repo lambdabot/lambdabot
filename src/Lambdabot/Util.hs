@@ -139,7 +139,7 @@ dropNL = reverse . dropWhile (== '\n') . reverse
 expandTab :: Int -> String -> String
 expandTab w = go 0
   where
-    go i []         = []
+    go _ []         = []
     go i ('\t':xs)  = replicate (w - i `mod` w) ' ' ++ go 0 xs
     go i (x:xs)     = x : go (i+1) xs
 
@@ -201,14 +201,14 @@ withMWriter mvar f = bracket
 -- http://www.haskell.org/pipermail/haskell-cafe/2005-January/008314.html
 parIO :: IO a -> IO a -> IO a
 parIO a1 a2 = do
-  m <- newEmptyMVar
+  m  <- newEmptyMVar
   c1 <- forkIO $ putMVar m =<< a1
   c2 <- forkIO $ putMVar m =<< a2
-  r <- takeMVar m
+  r  <- takeMVar m
   -- killThread blocks until the thread has been killed.  Therefore, we call
   -- killThread asynchronously in case one thread is blocked in a foreign
   -- call.
-  forkIO $ killThread c1 >> killThread c2
+  _  <- forkIO $ killThread c1 >> killThread c2
   return r
 
 -- | run an action with a timeout

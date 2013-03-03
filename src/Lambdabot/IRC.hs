@@ -59,9 +59,16 @@ mkMessage svr cmd params = IrcMessage
     , ircMsgLBName = "urk!<outputmessage>"
     }
 
+joinChannel :: Nick -> IrcMessage
 joinChannel loc     = mkMessage (nTag loc)  "JOIN"  [nName loc]
+
+partChannel :: Nick -> IrcMessage
 partChannel loc     = mkMessage (nTag loc)  "PART"  [nName loc]
+
+getTopic :: Nick -> IrcMessage
 getTopic chan       = mkMessage (nTag chan) "TOPIC" [nName chan]
+
+setTopic :: Nick -> String -> IrcMessage
 setTopic chan topic = mkMessage (nTag chan) "TOPIC" [nName chan, ':' : topic]
 
 -- | 'privmsg' creates a private message to the person designated.

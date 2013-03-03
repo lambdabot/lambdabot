@@ -46,7 +46,7 @@ import Lambdabot.Util.Serial
 import Lambdabot.Util.Signals
 import Lambdabot.Util
 
-import Prelude hiding           (mod, catch)
+import Prelude hiding           (mod)
 
 import Network                  (withSocketsDo)
 
@@ -63,6 +63,7 @@ import Data.Typeable
 
 import Control.Concurrent
 import Control.Exception
+import qualified Control.Exception as E (catch)
 import Control.Monad.Reader
 import Control.Monad.State
 
@@ -99,14 +100,14 @@ runIrc initialise configBindings = withSocketsDo $ do
 
 -- | Default ro state
 initRoState :: Config -> IO IRCRState
-initRoState config = do
+initRoState configuration = do
     quitMVar     <- newEmptyMVar
     initDoneMVar <- newEmptyMVar
     
     return IRCRState 
         { ircQuitMVar       = quitMVar
         , ircInitDoneMVar   = initDoneMVar
-        , ircConfig         = config
+        , ircConfig         = configuration
         }
 
 -- | Default rw state
@@ -152,7 +153,7 @@ runExitHandlers = withAllModules moduleExit >> return ()
 -- | flush state of modules
 flushModuleState :: LB ()
 flushModuleState = do
-    withAllModules (\m -> getModuleName >>= writeGlobalState m)
+    _ <- withAllModules (\m -> getModuleName >>= writeGlobalState m)
     return ()
 
 -- ---------------------------------------------------------------------
@@ -165,8 +166,8 @@ writeGlobalState :: Module st -> String -> ModuleT st LB ()
 writeGlobalState mod name = case moduleSerialize mod of
     Nothing  -> return ()
     Just ser -> do
-        state <- readMS
-        case serialize ser state of
+        state' <- readMS
+        case serialize ser state' of
             Nothing  -> return ()   -- do not write any state
             Just out -> do
                 stateFile <- lb (findLBFile name)
@@ -178,8 +179,8 @@ readGlobalState mod name = case moduleSerialize mod of
     Just ser -> do
         stateFile <- findLBFile name
         io $ do
-            state <- Just `fmap` P.readFile stateFile `catch` \(_ :: SomeException) -> return Nothing
-            catch (evaluate $ maybe Nothing (Just $!) (deserialize ser =<< state)) -- Monad Maybe)
+            state' <- Just `fmap` P.readFile stateFile `E.catch` \(_ :: SomeException) -> return Nothing
+            E.catch (evaluate $ maybe Nothing (Just $!) (deserialize ser =<< state')) -- Monad Maybe)
                   (\e -> do hPutStrLn stderr $ "Error parsing state file for: "
                                             ++ name ++ ": " ++ show (e :: SomeException)
                             hPutStrLn stderr $ "Try removing: "++ show stateFile
@@ -193,8 +194,8 @@ readGlobalState mod name = case moduleSerialize mod of
 ircInstallModule :: Module st -> String -> LB ()
 ircInstallModule m modname = do
     savedState <- readGlobalState m modname
-    state      <- maybe (moduleDefState m) return savedState
-    ref        <- io $ newMVar state
+    state'     <- maybe (moduleDefState m) return savedState
+    ref        <- io $ newMVar state'
     
     let modref = ModuleRef m ref modname
         cmdref cmd = CommandRef m ref cmd modname
@@ -272,7 +273,7 @@ ircGetChannels = (map getCN . M.keys) `fmap` gets ircChannels
 -- exceptoin, we clean up and go home
 ircQuit :: String -> String -> LB ()
 ircQuit svr msg = do
-    modify $ \state -> state { ircStayConnected = False }
+    modify $ \state' -> state' { ircStayConnected = False }
     send  $ quit svr msg
     liftIO $ threadDelay 1000
     io $ hPutStrLn stderr "Quit"
@@ -304,7 +305,7 @@ ircPrivmsg' who msg = send $ privmsg who msg
 withDebug :: String -> LB a -> LB ()
 withDebug s a = do
     io $ hPutStr stderr (s ++ " ...")  >> hFlush stderr
-    a
+    _ <- a
     io $ hPutStrLn stderr " done." >> hFlush stderr
 
 ----------------------------------------------------------------------
