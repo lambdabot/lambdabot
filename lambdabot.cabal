@@ -143,7 +143,6 @@ library
                         Lambdabot.Util.MiniHTTP
                         Lambdabot.Util.Parser
                         Lambdabot.Util.Process
-                        Lambdabot.Util.Regex
                         Lambdabot.Util.Serial
                         Lambdabot.Util.Signals
                         Lambdabot.Util.Url
@@ -196,7 +195,6 @@ library
                         random                  >= 1.0.1.1    ,
                         random-fu               >= 0.2.2.0    ,
                         random-source           >= 0.3.0.2    ,
-                        regex-posix             >= 0.95.1     ,
                         regex-tdfa              >= 1.1        ,
                         SafeSemaphore           >= 0.9        ,
                         show                    >= 0.4.1.2    ,

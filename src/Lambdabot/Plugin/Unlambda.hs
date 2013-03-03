@@ -8,7 +8,7 @@ module Lambdabot.Plugin.Unlambda (theModule) where
 
 import Lambdabot.Plugin
 import Lambdabot.Util.Process
-import Lambdabot.Util.Regex
+import Text.Regex.TDFA
 
 theModule = newModule
     { moduleCmds = return
@@ -27,6 +27,6 @@ unlambda src = run binary src scrub
   where scrub = unlines . take 6 . map (' ':) . lines . cleanit
 
 cleanit :: String -> String
-cleanit s | terminated `matches'` s = "Terminated\n"
-          | otherwise               = s
-    where terminated = regex' "waitForProc"
+cleanit s | s =~ terminated = "Terminated\n"
+          | otherwise       = s
+    where terminated = "waitForProc"

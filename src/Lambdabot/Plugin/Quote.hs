@@ -3,7 +3,6 @@
 module Lambdabot.Plugin.Quote (theModule) where
 
 import Lambdabot.Plugin
-import Lambdabot.Util.Regex
 
 import qualified Data.ByteString.Char8 as P
 import Data.Char
@@ -11,6 +10,7 @@ import Data.Fortune
 import Data.List
 import qualified Data.Map as M
 import Data.Maybe
+import Text.Regex.TDFA
 
 type Key    = P.ByteString
 type Quotes = M.Map Key [P.ByteString]
@@ -160,9 +160,9 @@ search key pat db
     | P.null pat, Just qs <- mquotes =
         fmap (display key) (random qs)
 
-    | P.null pat         = match key allquotes
+    | P.null pat         = match' key allquotes
 
-    | Just qs <- mquotes = match pat (zip (repeat key) qs)
+    | Just qs <- mquotes = match' pat (zip (repeat key) qs)
 
     | otherwise          = do
         r <- random insult
@@ -172,17 +172,11 @@ search key pat db
     mquotes   = M.lookup key db
     allquotes = concat [ zip (repeat who) qs | (who, qs) <- M.assocs db ]
 
-    match p ss = do
-#if __GLASGOW_HASKELL__ >= 606
-        re <- do res <- compile (compExtended + compIgnoreCase + compNoSub) 0 p
-                 case res of
-                    Left  err -> error $ "regex failed: " ++ show err
-                    Right r   -> return r
-#else
-        let re = mkRegexWithOpts (P.unpack p) True True
-#endif
-
-        let rs = filter (matches re . snd) ss
+    match' p ss = do
+        re <- makeRegexOptsM defaultCompOpt {caseSensitive = False, newSyntax = True} 
+                             defaultExecOpt {captureGroups = False} p
+        
+        let rs = filter (match re . snd) ss
         if null rs
             then do r <- random insult
                     return $ "No quotes match. " ++ r

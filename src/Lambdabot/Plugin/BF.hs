@@ -7,9 +7,9 @@ module Lambdabot.Plugin.BF (theModule) where
 
 import Lambdabot.Plugin
 import Lambdabot.Util.Process
-import Lambdabot.Util.Regex
 
 import Data.Char
+import Text.Regex.TDFA
 
 theModule = newModule
     { moduleCmds = return
@@ -31,9 +31,9 @@ bf src = run binary src scrub
 -- Clean up output
 --
 cleanit :: String -> String
-cleanit s | terminated `matches'`    s = "Terminated\n"
-          | otherwise                  = filter printable s
-    where terminated = regex' "waitForProc"
+cleanit s | s =~ terminated   = "Terminated\n"
+          | otherwise         = filter printable s
+    where terminated = "waitForProc"
           -- the printable ascii chars are in the range [32 .. 126]
           -- according to wikipedia:
           -- http://en.wikipedia.org/wiki/ASCII#ASCII_printable_characters

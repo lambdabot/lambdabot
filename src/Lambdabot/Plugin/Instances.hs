@@ -22,13 +22,13 @@ import Text.ParserCombinators.Parsec
 
 import Lambdabot.Plugin
 import Lambdabot.Util.Process
-import Lambdabot.Util.Regex
 
 import Control.Monad
 import Data.Char
 import Data.List
 import Data.Maybe
 import System.FilePath
+import Text.Regex.TDFA
 
 type Instance   = String
 type ClassName  = String
@@ -88,7 +88,7 @@ getInstances s cls
 
    | otherwise = sort $ mapMaybe doParse (tail splut)
 
-    where classFound   = matches' (regex' $ "class.*" ++ cls ++ ".*where") s
+    where classFound   = s =~ ("class.*" ++ cls ++ ".*where")
           splut        = split "instance" s -- splut being the past participle
                                             -- of 'to split', obviously. :)
           notOperator  = all (\c -> or

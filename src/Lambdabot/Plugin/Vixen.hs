@@ -6,14 +6,13 @@
 module Lambdabot.Plugin.Vixen (theModule) where
 
 import Lambdabot.Plugin
-import Lambdabot.Util.Regex
 
 import Control.Arrow ((***))
 import Control.Monad
 import Data.Binary
 import qualified Data.ByteString.Char8 as P
 import System.Directory
-
+import Text.Regex.TDFA
 
 theModule = newModule
     { moduleCmds = return
@@ -56,7 +55,7 @@ theModule = newModule
         b <- io (doesFileExist vixenFile)
         when b $ do
             st <- io (decodeFile vixenFile)
-            let compiled = map (regex *** id) st
+            let compiled = map (makeRegex *** id) (st :: [(String, WTree)])
                 s = vixen (mkResponses compiled)
             modifyMS $ \(v,_) -> (v, s)
     }
@@ -72,7 +71,7 @@ randomW (Node ls) = random ls >>= randomW
 
 mkResponses :: RChoice -> String -> WTree
 mkResponses choices them = (\((_,wtree):_) -> wtree) $
-    filter (\(reg,_) -> matches' reg them) choices
+    filter (\(reg,_) -> match reg them) choices
 
 ------------------------------------------------------------------------
 -- serialisation for the vixen state
