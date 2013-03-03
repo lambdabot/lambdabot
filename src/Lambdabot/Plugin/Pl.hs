@@ -29,6 +29,7 @@ maxTimeout   = 15000000 -- 15 seconds
 type PlState = GlobalPrivate () (Int, TopLevel)
 type Pl = ModuleT PlState LB
 
+theModule :: Module (GlobalPrivate () (Int, TopLevel))
 theModule = newModule
     { moduleDefState = return $ mkGlobalPrivate 15 ()
     

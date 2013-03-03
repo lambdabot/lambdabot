@@ -7,6 +7,7 @@ module Lambdabot.Plugin.Hoogle (theModule) where
 import Lambdabot.Plugin
 import Lambdabot.Util.Process
 
+theModule :: Module [String]
 theModule = newModule
     { moduleDefState = return []
     , moduleCmds = return
@@ -21,7 +22,7 @@ theModule = newModule
         , (command "hoogle+")
             -- TODO: what does this really do?  give it a proper help msg
             { help = say "hoogle <expr>. Haskell API Search for either names, or types."
-            , process = \s -> do
+            , process = \_ -> do
                 this <- withMS $ \st write -> do
                     let (this,that) = splitAt 3 st
                     write that

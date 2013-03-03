@@ -58,7 +58,7 @@ import qualified Lambdabot.Message as Msg
 import           Lambdabot.Util.Signals
 import           Lambdabot.Util
 
-import Prelude hiding           (mod, catch)
+import Prelude hiding           (mod)
 
 import System.IO
 
@@ -70,6 +70,7 @@ import qualified Data.Map as M hiding (Map)
 import Control.Applicative
 import Control.Concurrent
 import Control.Exception
+import qualified Control.Exception as E (catch)
 import Control.Monad.Error (MonadError (..))
 import Control.Monad.Reader
 import Control.Monad.State
@@ -212,8 +213,8 @@ instance MonadError IRCError LB where
   throwError (IRCRaised e)    = io $ throwIO e
   throwError (SignalCaught e) = io $ evaluate (throw $ SignalException e)
   m `catchError` h = lbIO $ \conv -> (conv m
-              `catch` \(SignalException e) -> conv $ h $ SignalCaught e)
-              `catch` \e -> conv $ h $ IRCRaised e
+              `E.catch` \(SignalException e) -> conv $ h $ SignalCaught e)
+              `E.catch` \e -> conv $ h $ IRCRaised e
 
 -- A type for handling both Haskell exceptions and external signals
 data IRCError = IRCRaised SomeException | SignalCaught Signal
@@ -231,9 +232,9 @@ lbIO k = lb $ do
 
 -- | run a computation in the LB monad
 evalLB :: LB a -> IRCRState -> IRCRWState -> IO a
-evalLB (LB lb) rs rws = do
+evalLB (LB lb') rs rws = do
     ref  <- newIORef rws
-    lb `runReaderT` (rs,ref)
+    lb' `runReaderT` (rs,ref)
 
 -- May wish to add more things to the things caught, or restructure things
 -- a bit. Can't just catch everything - in particular EOFs from the socket
@@ -248,9 +249,9 @@ catchIrc = flip handleIrc
 -- | run an IO action in another thread, with a timeout, lifted into LB
 forkLB :: LB a -> LB ThreadId
 forkLB f = (`liftLB` f) $ \g -> do
-            forkIO $ do
-                timeout (15 * 1000 * 1000) g
-                return ()
+             forkIO $ do
+               _ <- timeout (15 * 1000 * 1000) g
+               return ()
 
 -- | lift an io transformer into LB
 liftLB :: (IO a -> IO b) -> LB a -> LB b

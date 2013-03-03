@@ -34,6 +34,7 @@ type Instance   = String
 type ClassName  = String
 type ModuleName = String
 
+theModule :: Module ()
 theModule = newModule
     { moduleCmds = return
         [ (command "instances")
@@ -64,8 +65,8 @@ eitherToMaybe = either (const Nothing) Just
 -- > instance (State s)
 --
 instanceP :: ClassName -> CharParser st Instance
-instanceP cls = do string "instance "
-                   try constrained <|> unconstrained
+instanceP cls = do _ <- string "instance "
+                   _ <- try constrained <|> unconstrained
                    skipMany space
                    -- break on the "imported from" comment or a newline. use
                    -- return so it typechecks.

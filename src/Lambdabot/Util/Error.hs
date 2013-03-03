@@ -15,7 +15,7 @@ finallyError :: MonadError e m => m a -- ^ Monadic operation
              -> m b -- ^ Guard
              -> m a -- ^ Returns: A new monad.
 finallyError m after = do a <- catchError m (\e -> after >> throwError e)
-                          after
+                          _ <- after
                           return a
 
 -- | 'bracketError' is the monadic version of DYNAMIC-WIND from Scheme

@@ -13,6 +13,7 @@ import Text.Printf
 type KarmaState = M.Map Nick Integer
 type Karma = ModuleT KarmaState LB
 
+theModule :: Module KarmaState
 theModule = newModule
     { moduleCmds = return
         [ (command "karma")
@@ -42,7 +43,7 @@ theModule = newModule
     , moduleSerialize = Just mapSerial
 
     -- nick++($| )
-    , contextual = \text -> withMsg $ \msg -> do
+    , contextual = \text -> withMsg $ \_ -> do
         sender <- getSender
 
         let ws          = words text
@@ -61,6 +62,7 @@ theModule = newModule
         mapM_ (changeKarma   1  sender) =<< incs
     }
 
+doCmd :: Integer -> String -> Cmd Karma ()
 doCmd dk rest = do
     sender <- getSender
     case words rest of

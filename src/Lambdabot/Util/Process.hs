@@ -41,7 +41,7 @@ popen file args minput =
 
     case minput of
         Just input -> hPutStr inp input >> E.catch (hClose inp)
-                                                   (\(E.SomeException e) -> return ())
+                                                   (\(E.SomeException _) -> return ())
         Nothing    -> return ()
 
     -- Now, grab the input

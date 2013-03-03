@@ -9,6 +9,7 @@ import Data.Char
 
 type Fresh = ModuleT Integer LB
 
+theModule :: Module Integer
 theModule = newModule
     { moduleDefState = return 0
     , moduleSerialize = Just stdSerial

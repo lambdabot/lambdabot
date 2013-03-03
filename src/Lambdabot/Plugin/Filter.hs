@@ -13,6 +13,7 @@ import System.Directory (findExecutable)
 
 -- State consists of a map from filter name to executable path
 
+theModule :: Module [(String, FilePath, String)]
 theModule = newModule
     { moduleDefState = catMaybes <$> sequence
         [ do
@@ -37,6 +38,7 @@ theModule = newModule
             ]
     }
 
+filters :: [(String, String)]
 filters =
     [ ("austro",     "austro <phrase>. Talk like Ahhhnold")
     , ("b1ff",       "b1ff <phrase>. B1ff of usenet yore")

@@ -11,6 +11,7 @@ import Data.Random.Dice (rollEm)
 
 type Dice = ModuleT () LB
 
+theModule :: Module ()
 theModule = newModule
     { moduleCmds = return
         [ (command "dice")

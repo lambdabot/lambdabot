@@ -6,6 +6,7 @@ import Lambdabot.Plugin
 
 import Math.OEIS
 
+theModule :: Module ()
 theModule = newModule
     { moduleCmds = return
         [ (command "oeis")

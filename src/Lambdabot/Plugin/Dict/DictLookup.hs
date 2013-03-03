@@ -40,7 +40,7 @@ openDictConnection :: QueryConfig -> IO DictConnection
 openDictConnection config = do
     hDictServer <- connectTo (host config) (mkPortNumber $ port config)
     hSetBuffering hDictServer LineBuffering
-    readResponseLine hDictServer -- ignore response
+    _ <- readResponseLine hDictServer -- ignore response
     return hDictServer
     where
     mkPortNumber = PortNumber . fromIntegral
@@ -48,7 +48,7 @@ openDictConnection config = do
 closeDictConnection :: DictConnection -> IO ()
 closeDictConnection conn = do
     sendCommand conn Quit
-    readResponseLine conn -- ignore response
+    _ <- readResponseLine conn -- ignore response
     hClose conn
 
 {-

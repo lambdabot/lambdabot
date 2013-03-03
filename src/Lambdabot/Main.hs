@@ -29,11 +29,11 @@ parseArgs []                = Just []
 parseArgs _                 = Nothing
 
 lambdabotMain :: Modules -> [DSum ConfigKey] -> IO ()
-lambdabotMain loadStaticModules config = do
+lambdabotMain loadStaticModules configuration = do
     args <- parseArgs <$> getArgs
     
     case args of
-        Just xs -> runIrc loadStaticModules ((onStartupCmds :=> if null xs then ["offline"] else xs) : config)
+        Just xs -> runIrc loadStaticModules ((onStartupCmds :=> if null xs then ["offline"] else xs) : configuration)
         _       -> putStrLn "Usage: lambdabot [-e 'cmd']*"
 
 ------------------------------------------------------------------------
@@ -63,6 +63,6 @@ modules :: [String] -> Q Exp
 modules xs = [| sequence_ $(listE $ map instalify xs) |]
     where
         instalify x = 
-            let mod = varE $ mkName $ concat $ ["Lambdabot.Plugin.", x, ".theModule"]
-                low = stringE $ map toLower x
-             in [| ircInstallModule $mod $low |]
+            let module' = varE $ mkName $ concat $ ["Lambdabot.Plugin.", x, ".theModule"]
+                low     = stringE $ map toLower x
+             in [| ircInstallModule $module' $low |]

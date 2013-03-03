@@ -1,4 +1,4 @@
-{-# LANGUAGE PatternGuards #-}
+{-# LANGUAGE PatternGuards, TypeFamilies #-}
 -- Copyright (c) 2005 Donald Bruce Stewart - http://www.cse.unsw.edu.au/~dons
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
 
@@ -20,6 +20,7 @@ type DjinnEnv = ([Decl] {- prelude -}, [Decl])
 type Djinn = ModuleT DjinnEnv LB
 type Decl = String
 
+theModule :: Module ([Decl], [Decl])
 theModule = newModule
     { moduleSerialize = Nothing
 
@@ -77,12 +78,15 @@ theModule = newModule
     }
 
 -- check the args, reject them if they start with a colon (ignoring whitespace)
+rejectingCmds :: Monad m => ([Char] -> Cmd m ()) -> [Char] -> Cmd m ()
 rejectingCmds action args
     | take 1 (dropWhile isSpace args) == ":"
                 = say "Invalid command"
     | otherwise = action args
 
 -- Normal commands
+djinnCmd :: (MonadLBState m, LBState m ~ (t, [Decl])) =>
+            [Char] -> Cmd m ()
 djinnCmd s = do
         (_,env) <- readMS
         e       <- io $ djinn env $ ":set +sorted\nf ? " ++ dropForall s
@@ -96,6 +100,8 @@ djinnCmd s = do
                 else tail x
 
 -- Augment environment. Have it checked by djinn.
+djinnAddCmd :: (MonadLBState m, LBState m ~ ([Decl], [Decl])) =>
+               [Char] -> Cmd m ()
 djinnAddCmd s = do
     (p,st)  <- readMS
     est     <- io $ getDjinnEnv $ (p, dropSpace s : st)
@@ -123,6 +129,8 @@ djinnClrCmd = modifyMS (flip (,) [] . fst)
 
 -- Remove sym from environment. We let djinn do the hard work of
 -- looking up the symbols.
+djinnDelCmd :: (MonadLBState m, LBState m ~ ([String], [String])) =>
+               [Char] -> Cmd m ()
 djinnDelCmd s =  do
     (_,env) <- readMS
     eenv <- io $ djinn env $ ":delete " ++ dropSpace s ++ "\n:environment"
