@@ -36,6 +36,7 @@ import Lambdabot.Message
 import Lambdabot.Module
 import Lambdabot.Monad
 import Lambdabot.Nick
+import Lambdabot.OutputFilter
 import Lambdabot.State
 import Lambdabot.Util
 import Lambdabot.Util.Serial
@@ -47,10 +48,8 @@ import qualified Control.Exception as E (catch)
 import Control.Monad.Reader
 import Control.Monad.State
 import qualified Data.ByteString.Char8 as P
-import Data.Char
 import qualified Data.Dependent.Map as D
 import Data.Dependent.Sum
-import Data.List (isSuffixOf, inits, tails)
 import qualified Data.Map as M
 import Data.Random.Source
 import qualified Data.Set as S
@@ -76,7 +75,7 @@ runIrc initialise configBindings = withSocketsDo $ do
     rost <- initRoState (D.fromList configBindings)
     r <- try $ evalLB (do withDebug "Initialising plugins" initialise
                           withIrcSignalCatch mainLoop)
-                       rost initState
+                       rost initRwState
 
     -- clean up and go home
     case r of
@@ -89,37 +88,6 @@ runIrc initialise configBindings = withSocketsDo $ do
                     exitWith (ExitFailure 1)
         Right _ -> do
             exitWith ExitSuccess
-
--- | Default ro state
-initRoState :: D.DMap Config -> IO IRCRState
-initRoState configuration = do
-    quitMVar     <- newEmptyMVar
-    initDoneMVar <- newEmptyMVar
-    
-    return IRCRState 
-        { ircQuitMVar       = quitMVar
-        , ircInitDoneMVar   = initDoneMVar
-        , ircConfig         = configuration
-        }
-
--- | Default rw state
-initState :: IRCRWState
-initState = IRCRWState
-    { ircPrivilegedUsers = S.singleton (Nick "offlinerc" "null")
-    , ircIgnoredUsers    = S.empty
-    , ircChannels        = M.empty
-    , ircModules         = M.empty
-    , ircServerMap       = M.empty
-    , ircCallbacks       = M.empty
-    , ircOutputFilters   = 
-        [ ([],cleanOutput)
-        , ([],lineify)
-        , ([],cleanOutput)
-        -- , ([],reduceIndent)
-        , ([],checkRecip) ]
-    , ircCommands        = M.empty
-    , ircStayConnected   = True
-    }
 
 -- Actually, this isn't a loop anymore.  FIXME: better name.
 mainLoop :: LB ()
@@ -237,7 +205,7 @@ ircSignalConnect str f = do
         Nothing -> put (s { ircCallbacks = M.insert str [(name,f)]    cbs})
         Just fs -> put (s { ircCallbacks = M.insert str ((name,f):fs) cbs})
 
-ircInstallOutputFilter :: OutputFilter -> ModuleT mod LB ()
+ircInstallOutputFilter :: OutputFilter LB -> ModuleT mod LB ()
 ircInstallOutputFilter f = do
     name <- getModuleName
     modify $ \s ->
@@ -299,59 +267,6 @@ withDebug s a = do
     io $ hPutStr stderr (s ++ " ...")  >> hFlush stderr
     _ <- a
     io $ hPutStrLn stderr " done." >> hFlush stderr
-
-----------------------------------------------------------------------
--- Output filters
-
-textwidth :: Int
-textwidth = 200 -- IRC maximum msg length, minus a bit for safety.
-
--- | For now, this just checks for duplicate empty lines.
-cleanOutput :: OutputFilter
-cleanOutput _ msg = return $ remDups True msg'
-    where
-        remDups True  ([]:xs) =    remDups True xs
-        remDups False ([]:xs) = []:remDups True xs
-        remDups _     (x: xs) = x: remDups False xs
-        remDups _     []      = []
-        msg' = map dropSpaceEnd msg
-
--- | wrap long lines.
-lineify :: OutputFilter
-lineify = const (return . mlines . unlines)
-
--- | break into lines
-mlines :: String -> [String]
-mlines = (mbreak =<<) . lines
-    where
-        mbreak :: String -> [String]
-        mbreak xs
-            | null bs   = [as]
-            | otherwise = (as++cs) : filter (not . null) (mbreak ds)
-            where
-                (as,bs) = splitAt (w-n) xs
-                breaks  = filter (not . isAlphaNum . last . fst) $ drop 1 $
-                                  take n $ zip (inits bs) (tails bs)
-                (cs,ds) = last $ (take n bs, drop n bs): breaks
-                w = textwidth
-                n = 10
-
--- | Don't send any output to alleged bots.
-checkRecip :: OutputFilter
-checkRecip who msg
---  FIXME: this doesn't work with plugin protocols :(
---  | who == Config.name Config.config                  = return []
-    | "bot" `isSuffixOf` map toLower (nName who)    = return []
-    | otherwise                                         = return msg
-
--- | Divide the lines' indent by two
-{-
-reduceIndent :: OutputFilter
-reduceIndent _ msg = return $ map redLine msg
-    where
-        redLine (' ':' ':xs)        = ' ':redLine xs
-        redLine xs                  = xs
--}
 
 monadRandom [d|
 

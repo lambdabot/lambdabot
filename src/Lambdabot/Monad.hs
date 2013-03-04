@@ -6,13 +6,15 @@
 {-# LANGUAGE RankNTypes #-}
 module Lambdabot.Monad
     ( IRCRState(..)
-    , IRCRWState(..)
-    , ModuleRef(..)
-    , CommandRef(..)
-    , IRCError(..)
+    , initRoState
     
     , Callback
-    , OutputFilter
+    , ModuleRef(..)
+    , CommandRef(..)
+    , IRCRWState(..)
+    , initRwState
+    
+    , IRCError(..)
     
     , LB(..)
     , MonadLB(..)
@@ -51,6 +53,7 @@ import           Lambdabot.IRC (IrcMessage)
 import           Lambdabot.Module
 import qualified Lambdabot.Message as Msg
 import           Lambdabot.Nick
+import           Lambdabot.OutputFilter
 import           Lambdabot.Util.Signals
 import           Lambdabot.Util
 
@@ -80,6 +83,26 @@ data IRCRState = IRCRState
     , ircConfig         :: D.DMap Config
     }
 
+-- | Default ro state
+initRoState :: D.DMap Config -> IO IRCRState
+initRoState configuration = do
+    quitMVar     <- newEmptyMVar
+    initDoneMVar <- newEmptyMVar
+    
+    return IRCRState 
+        { ircQuitMVar       = quitMVar
+        , ircInitDoneMVar   = initDoneMVar
+        , ircConfig         = configuration
+        }
+
+type Callback = IrcMessage -> LB ()
+
+data ModuleRef = forall st.
+    ModuleRef (Module st) (MVar st) String
+
+data CommandRef = forall st.
+    CommandRef (Module st) (MVar st) (Command (ModuleT st LB)) String
+
 -- | Global read\/write state.
 data IRCRWState = IRCRWState
     { ircServerMap       :: M.Map String (String, IrcMessage -> LB ())
@@ -91,22 +114,32 @@ data IRCRWState = IRCRWState
     
     , ircModules         :: M.Map String ModuleRef
     , ircCallbacks       :: M.Map String [(String,Callback)]
-    , ircOutputFilters   :: [(String,OutputFilter)]
+    , ircOutputFilters   :: [(String, OutputFilter LB)]
     -- ^ Output filters, invoked from right to left
     
     , ircCommands        :: M.Map String CommandRef
     , ircStayConnected   :: !Bool
     }
 
-type Callback = IrcMessage -> LB ()
+-- | Default rw state
+initRwState :: IRCRWState
+initRwState = IRCRWState
+    { ircPrivilegedUsers = S.singleton (Nick "offlinerc" "null")
+    , ircIgnoredUsers    = S.empty
+    , ircChannels        = M.empty
+    , ircModules         = M.empty
+    , ircServerMap       = M.empty
+    , ircCallbacks       = M.empty
+    , ircOutputFilters   = 
+        [ ([],cleanOutput)
+        , ([],lineify)
+        , ([],cleanOutput)
+        -- , ([],reduceIndent)
+        , ([],checkRecip) ]
+    , ircCommands        = M.empty
+    , ircStayConnected   = True
+    }
 
-type OutputFilter = Nick -> [String] -> LB [String]
-
-data ModuleRef = forall st.
-    ModuleRef (Module st) (MVar st) String
-
-data CommandRef = forall st.
-    CommandRef (Module st) (MVar st) (Command (ModuleT st LB)) String
 
 -- The virtual chat system.
 --
