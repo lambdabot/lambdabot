@@ -22,8 +22,6 @@ import Control.Monad.Reader
 import Control.Monad.Writer
 import Lambdabot.Message (Message, Nick)
 import qualified Lambdabot.Message as Msg
-import {-# SOURCE #-} Lambdabot.Monad
-import Lambdabot.State
 
 data CmdArgs = forall a. Message a => CmdArgs
     { _message  :: a
@@ -45,11 +43,6 @@ instance MonadTrans Cmd where
     lift = Cmd . lift . lift
 instance MonadIO m => MonadIO (Cmd m) where
     liftIO = lift . liftIO
-instance MonadLB m => MonadLB (Cmd m) where
-    lb = lift . lb
-instance MonadLBState m => MonadLBState (Cmd m) where
-    type LBState (Cmd m) = LBState m
-    withMS = lift . withMS
 
 data Command m = Command
     { cmdName       :: String

@@ -11,7 +11,6 @@ module Lambdabot.Util (
         listToStr,
         showClean,
         expandTab,
-        withMWriter,
         timeout,
         arePrefixesWithSpaceOf,
         arePrefixesOf,
@@ -23,16 +22,11 @@ module Lambdabot.Util (
         confirmation
     ) where
 
-import Data.List                (intercalate, isPrefixOf)
-import Data.Char                (isSpace)
+import Control.Concurrent
+import Control.Monad.Trans
+import Data.Char
+import Data.List
 import Data.Random
-import Control.Monad.State      (MonadIO(..))
-
-import Data.IORef               (newIORef, readIORef, writeIORef)
-
-import Control.Concurrent       (MVar, newEmptyMVar, takeMVar, tryPutMVar, putMVar,
-                                 forkIO, killThread, threadDelay)
-import Control.Exception        (bracket)
 
 ------------------------------------------------------------------------
 
@@ -98,14 +92,6 @@ expandTab w = go 0
     go i (x:xs)     = x : go (i+1) xs
 
 ------------------------------------------------------------------------
-
--- | Thread-safe modification of an MVar.
-withMWriter :: MVar a -> (a -> (a -> IO ()) -> IO b) -> IO b
-withMWriter mvar f = bracket
-  (do x <- takeMVar mvar; ref <- newIORef x; return (x,ref))
-  (\(_,ref) -> tryPutMVar mvar =<< readIORef ref)
-  (\(x,ref) -> f x $ writeIORef ref)
-
 
 -- stolen from
 -- http://www.haskell.org/pipermail/haskell-cafe/2005-January/008314.html

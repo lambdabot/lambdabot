@@ -20,14 +20,22 @@ module Lambdabot.State
     , writeGS
   ) where
 
-import {-# SOURCE #-} Lambdabot.Monad
-import Lambdabot.Util       (withMWriter)
+import Lambdabot.Monad
+import Lambdabot.Message
+import Lambdabot.Module
+import Lambdabot.Command
 
-import Control.Concurrent   (readMVar, newMVar, MVar)
-import Control.Monad        (liftM)
-import Control.Monad.Trans  (liftIO)
+import Control.Concurrent
+import Control.Exception
+import Control.Monad.Trans
+import Data.IORef
 
-import Lambdabot.Message    (Nick)
+-- | Thread-safe modification of an MVar.
+withMWriter :: MVar a -> (a -> (a -> IO ()) -> IO b) -> IO b
+withMWriter mvar f = bracket
+  (do x <- takeMVar mvar; ref <- newIORef x; return (x,ref))
+  (\(_,ref) -> tryPutMVar mvar =<< readIORef ref)
+  (\(x,ref) -> f x $ writeIORef ref)
 
 class MonadLB m => MonadLBState m where
     type LBState m
@@ -44,6 +52,17 @@ class MonadLB m => MonadLBState m where
     -- that came to my mind had even more serious deficiencies such as being prone
     -- to race conditions or semantic obscurities.
     withMS :: (LBState m -> (LBState m -> LB ()) -> LB a) -> m a
+
+instance MonadLB m => MonadLBState (ModuleT st m) where
+    type LBState (ModuleT st m) = st
+    withMS f = do
+        ref <- getRef
+        lbIO $ \conv -> withMWriter ref $ \x writer ->
+            conv $ f x (liftIO . writer)
+
+instance MonadLBState m => MonadLBState (Cmd m) where
+    type LBState (Cmd m) = LBState m
+    withMS = lift . withMS
 
 -- | Read the module's private state.
 readMS :: MonadLBState m => m (LBState m)
@@ -122,7 +141,7 @@ withGS f = withMS $ \state writer ->
 -- | Reads global state.
 readGS :: (MonadLBState m, LBState m ~ GlobalPrivate g p)
   => m g
-readGS = global `liftM` readMS
+readGS = fmap global readMS
 
 
 -- The old interface, as we don't wanna be too fancy right now.

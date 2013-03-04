@@ -15,10 +15,8 @@ module Lambdabot.Module
 
 import qualified Lambdabot.Command as Cmd
 
-import {-# SOURCE #-} Lambdabot.Monad (LB, MonadLB(..), lbIO)
+import {-# SOURCE #-} Lambdabot.Monad
 import Lambdabot.Util.Serial
-import Lambdabot.State
-import Lambdabot.Util (withMWriter)
 
 import Control.Applicative
 import Control.Concurrent (MVar)
@@ -84,15 +82,6 @@ newModule = Module
 --
 newtype ModuleT st m a = ModuleT { moduleT :: ReaderT (MVar st, String) m a }
     deriving (Applicative, Functor, Monad, MonadTrans, MonadIO, MonadError e, MonadState t, MonadException)
-
-instance MonadLB m => MonadLB      (ModuleT st m) where lb = lift . lb
-instance MonadLB m => MonadLBState (ModuleT st m) where
-    type LBState (ModuleT st m) = st
-    withMS f = do
-        ref <- getRef
-        lbIO $ \conv -> withMWriter ref $ \x writer ->
-            conv $ f x (liftIO . writer)
-
 
 getRef :: Monad m => ModuleT st m (MVar st)
 getRef  = ModuleT $ ask >>= return . fst

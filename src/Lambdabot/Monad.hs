@@ -179,6 +179,8 @@ class (MonadIO m, Applicative m) => MonadLB m where
     lb :: LB a -> m a
 
 instance MonadLB LB where lb = id
+instance MonadLB m => MonadLB (ModuleT st m) where lb = lift . lb
+instance MonadLB m => MonadLB (Cmd m)        where lb = lift . lb
 
 -- Actually, this isn't a reader anymore
 instance MonadReader IRCRState LB where
