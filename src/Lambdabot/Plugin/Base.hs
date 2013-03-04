@@ -1,7 +1,4 @@
-{-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE GADTs #-}
 {-# LANGUAGE PatternGuards #-}
-{-# LANGUAGE TemplateHaskell #-}
 -- | Lambdabot base module. Controls message send and receive
 module Lambdabot.Plugin.Base 
     ( commandPrefixes
@@ -11,6 +8,7 @@ module Lambdabot.Plugin.Base
     ) where
 
 import Lambdabot
+import Lambdabot.Config.Core
 import Lambdabot.IRC
 import qualified Lambdabot.Message as Msg (readNick, showNick)
 import Lambdabot.Plugin
@@ -23,10 +21,6 @@ import Data.List.Split
 import qualified Data.Map as M
 import Text.EditDistance
 import Text.Regex.TDFA
-
-config "commandPrefixes"     [t| [String]                |] [| ["@", "?"]    |]
-config "evalPrefixes"        [t| [String]                |] [| [">"]         |]
-config "disabledCommands"    [t| [String]                |] [| []            |]
 
 type BaseState = GlobalPrivate () ()
 type Base = ModuleT BaseState LB

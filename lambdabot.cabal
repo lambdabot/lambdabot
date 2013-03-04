@@ -74,6 +74,8 @@ library
   
   exposed-modules:      Lambdabot
                         Lambdabot.Command
+                        Lambdabot.Config
+                        Lambdabot.Config.Core
                         Lambdabot.File
                         Lambdabot.IRC
                         Lambdabot.Main
@@ -145,8 +147,7 @@ library
                         Lambdabot.Util.Signals
                         Lambdabot.Util.Url
   
-  other-modules:        Lambdabot.Config
-                        Paths_lambdabot
+  other-modules:        Paths_lambdabot
                         Lambdabot.Plugin.Dict.DictLookup
                         Lambdabot.Plugin.Dummy.DocAssocs
                         Lambdabot.Plugin.Free.Expr

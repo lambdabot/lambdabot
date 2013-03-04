@@ -3,7 +3,6 @@
 --
 module Main where
 
-import Lambdabot
 import Lambdabot.Main
 
 import Modules      (modulesInfo)

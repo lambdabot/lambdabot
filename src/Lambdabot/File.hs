@@ -1,12 +1,9 @@
-{-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE TemplateHaskell #-}
 module Lambdabot.File
     ( findLBFile
     , outputDir
     ) where
 
-import Lambdabot.Config
+import Lambdabot.Config.Core
 import Lambdabot.Monad
 import Lambdabot.Util
 
@@ -15,8 +12,6 @@ import Control.Monad
 import Paths_lambdabot
 import System.Directory
 import System.FilePath
-
-config "outputDir" [t| FilePath |] [| "State/" |]
 
 -- | Constants.
 lambdabot :: FilePath

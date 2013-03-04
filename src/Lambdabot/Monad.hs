@@ -1,11 +1,9 @@
-{-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE TemplateHaskell #-}
 module Lambdabot.Monad
     ( IRCRState(..)
     , IRCRWState(..)
@@ -51,6 +49,7 @@ module Lambdabot.Monad
 
 import           Lambdabot.Command
 import           Lambdabot.Config
+import           Lambdabot.Config.Core
 import           Lambdabot.IRC (IrcMessage)
 import           Lambdabot.Module
 import qualified Lambdabot.Message as Msg
@@ -70,13 +69,6 @@ import Data.IORef
 import qualified Data.Map as M
 import System.Console.Haskeline.MonadException (MonadException)
 import System.IO
-
--------------------------------------
--- Core configuration variables
-
-config "verbose"         [t| Bool                    |] [| False         |]
-config "proxy"           [t| Maybe ([Char], Integer) |] [| Nothing       |]
-config "ghci"            [t| String                  |] [| "ghci"        |]
 
 ------------------------------------------------------------------------
 --

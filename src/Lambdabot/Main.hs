@@ -1,9 +1,9 @@
-{-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE GADTs #-}
 {-# LANGUAGE TemplateHaskell #-}
 module Lambdabot.Main
     ( onStartupCmds
     , lambdabotMain
+    , runIrc
+    
     , DSum(..)
     , received
     
@@ -13,6 +13,7 @@ module Lambdabot.Main
 
 import Lambdabot
 import Lambdabot.Config
+import Lambdabot.Config.Core
 
 import Control.Applicative
 import Control.Monad.State (get, liftIO)
@@ -21,8 +22,6 @@ import Data.Dependent.Sum
 import qualified Data.Map as M
 import Language.Haskell.TH
 import System.Environment
-
-config "onStartupCmds" [t| [String] |] [| [] |]
 
 parseArgs :: [String] -> Maybe [String]
 parseArgs ("-e" : cmd : x)  = (cmd :) <$> parseArgs x
