@@ -64,6 +64,7 @@ import Control.Monad.State
 import qualified Data.Dependent.Map as D
 import Data.IORef
 import qualified Data.Map as M
+import qualified Data.Set as S
 import System.Console.Haskeline.MonadException (MonadException)
 import System.IO
 
@@ -82,8 +83,8 @@ data IRCRState = IRCRState
 -- | Global read\/write state.
 data IRCRWState = IRCRWState
     { ircServerMap       :: M.Map String (String, IrcMessage -> LB ())
-    , ircPrivilegedUsers :: M.Map Nick Bool
-    , ircIgnoredUsers    :: M.Map Nick Bool
+    , ircPrivilegedUsers :: S.Set Nick
+    , ircIgnoredUsers    :: S.Set Nick
     
     , ircChannels        :: M.Map ChanName String
     -- ^ maps channel names to topics

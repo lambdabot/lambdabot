@@ -52,8 +52,8 @@ import qualified Data.Dependent.Map as D
 import Data.Dependent.Sum
 import Data.List (isSuffixOf, inits, tails)
 import qualified Data.Map as M
-import Data.Maybe (isJust)
 import Data.Random.Source
+import qualified Data.Set as S
 import Data.Typeable
 import Network (withSocketsDo)
 import System.Exit
@@ -105,8 +105,8 @@ initRoState configuration = do
 -- | Default rw state
 initState :: IRCRWState
 initState = IRCRWState
-    { ircPrivilegedUsers = M.singleton (Nick "offlinerc" "null") True
-    , ircIgnoredUsers    = M.empty
+    { ircPrivilegedUsers = S.singleton (Nick "offlinerc" "null")
+    , ircIgnoredUsers    = S.empty
     , ircChannels        = M.empty
     , ircModules         = M.empty
     , ircServerMap       = M.empty
@@ -246,13 +246,13 @@ ircInstallOutputFilter f = do
 -- | Checks if the given user has admin permissions and excecute the action
 --   only in this case.
 checkPrivs :: IrcMessage -> LB Bool
-checkPrivs msg = gets (isJust . M.lookup (nick msg) . ircPrivilegedUsers)
+checkPrivs msg = gets (S.member (nick msg) . ircPrivilegedUsers)
 
 -- | Checks if the given user is being ignored.
 --   Privileged users can't be ignored.
 checkIgnore :: IrcMessage -> LB Bool
 checkIgnore msg = liftM2 (&&) (liftM not (checkPrivs msg))
-                  (gets (isJust . M.lookup (nick msg) . ircIgnoredUsers))
+                  (gets (S.member (nick msg) . ircIgnoredUsers))
 
 ------------------------------------------------------------------------
 -- Some generic server operations

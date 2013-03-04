@@ -11,6 +11,7 @@ import Lambdabot.Util.AltTime
 import Control.Monad.State (MonadState(get, put))
 import Control.Monad.Trans
 import qualified Data.Map as M
+import qualified Data.Set as S
 
 type SystemState = (ClockTime, TimeDiff)
 type System = ModuleT SystemState LB
@@ -110,16 +111,16 @@ doSystem' msg target cmd rest = get >>= \s -> case cmd of
                        return []
 
   "admin" -> do let pu = ircPrivilegedUsers s
-                pu' <- case rest of '+':' ':_ -> return $ M.insert nck True pu
-                                    '-':' ':_ -> return $ M.delete nck pu
+                pu' <- case rest of '+':' ':_ -> return $ S.insert nck pu
+                                    '-':' ':_ -> return $ S.delete nck pu
                                     _         -> fail "@admin: invalid usage"
                 put (s {ircPrivilegedUsers = pu'})
                 return []
       where nck = Msg.readNick msg (drop 2 rest)
 
   "ignore" -> do let iu = ircIgnoredUsers s
-                 iu' <- case rest of '+':' ':_ -> return $ M.insert nck True iu
-                                     '-':' ':_ -> return $ M.delete nck iu
+                 iu' <- case rest of '+':' ':_ -> return $ S.insert nck iu
+                                     '-':' ':_ -> return $ S.delete nck iu
                                      _         -> fail "@ignore: invalid usage"
                  put (s {ircIgnoredUsers = iu'})
                  return []
