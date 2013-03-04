@@ -132,14 +132,14 @@ fetchInstancesImporting args = fetchInstances' cls mdls
 --   the parser.
 fetchInstances' :: MonadLB m => String -> [ModuleName] -> m String
 fetchInstances' cls mdls = do
-    stateDir <- readConfig outputDir
+    stateDir <- getConfig outputDir
     let s = unlines $ map unwords
             [ [":l", show (stateDir </> "L")]
             ,  ":m" : "+" : mdls
             , [":i", cls]
             ]
     
-    ghciCmd <- readConfig ghci
+    ghciCmd <- getConfig ghci
     (out, err, _) <- io $ popen ghciCmd ["-ignore-dot-ghci","-fglasgow-exts"] (Just s)
     let is = getInstances out cls
     return $ if null is

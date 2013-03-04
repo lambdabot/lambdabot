@@ -139,9 +139,9 @@ doRPL_TOPIC msg -- nearly the same as doTOPIC but has our nick on the front of b
 doPRIVMSG :: IrcMessage -> Base ()
 doPRIVMSG msg = do
     ignored <- lift $ checkIgnore msg
-    commands    <- readConfig commandPrefixes
-    evPrefixes  <- readConfig evalPrefixes
-    disabled    <- readConfig disabledCommands
+    commands    <- getConfig commandPrefixes
+    evPrefixes  <- getConfig evalPrefixes
+    disabled    <- getConfig disabledCommands
     let config = (commands, evPrefixes, disabled)
     
     if ignored

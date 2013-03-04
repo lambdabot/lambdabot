@@ -31,7 +31,7 @@ googleHeaders = [mkHeader HdrReferer "http://www.google.com/"]
 
 normalizeOptions :: MonadLB m => m (NormalizeRequestOptions a)
 normalizeOptions = do
-    hasProxy <- isJust <$> readConfig proxy 
+    hasProxy <- isJust <$> getConfig proxy 
     return defaultNormalizeRequestOptions
         { normDoClose = True
         , normForProxy = hasProxy
@@ -86,7 +86,7 @@ searchCmd engineName (Network.HTTP.urlEncode -> query)
                     handleUrl url []
                 _ -> return ["No Result Found."]
   where handleUrl url extra = do
-            proxy' <- readConfig proxy
+            proxy' <- getConfig proxy
             title <- io $ runWebReq (urlPageTitle url) proxy'
             return $ extra ++ maybe [url] (\t -> [url, t]) title
         Just (uri, makeQuery, headers) = lookup engineName engines

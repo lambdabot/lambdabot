@@ -64,7 +64,7 @@ mbSay = maybe (return ()) say
 
 -- | Fetch the title of the specified URL.
 fetchTitle :: MonadLB m => String -> m (Maybe String)
-fetchTitle url = io . runWebReq (urlPageTitle url) =<< readConfig proxy
+fetchTitle url = io . runWebReq (urlPageTitle url) =<< getConfig proxy
 
 -- | base url for fetching tiny urls
 tinyurl :: String
@@ -74,7 +74,7 @@ tinyurl = "http://tinyurl.com/api-create.php?url="
 fetchTiny :: MonadLB m => String -> m (Maybe String)
 fetchTiny url
     | Just uri <- parseURI (tinyurl ++ url) = do
-        tiny <- io . runWebReq (getHtmlPage uri) =<< readConfig proxy
+        tiny <- io . runWebReq (getHtmlPage uri) =<< getConfig proxy
         return $ findTiny $ foldl' cat "" tiny
     | otherwise = return $ Just url
     where cat x y = x ++ " " ++ y

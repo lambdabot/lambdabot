@@ -124,7 +124,7 @@ query_ghci cmd expr = do
     l <- lb $ findLBFile "L.hs"
     let context = ":load "++l++"\n:m *L\n" -- using -fforce-recomp to make sure we get *L in scope instead of just L
         extFlags = ["-X" ++ ext | ext <- exts]
-    ghciCmd <- readConfig ghci
+    ghciCmd <- getConfig ghci
     (output, errors, _) <- io $ popen ghciCmd
         ("-v0":"-fforce-recomp":"-iState":extFlags)
         (Just (context ++ theCommand cmd (stripComments expr)))

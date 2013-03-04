@@ -63,12 +63,12 @@ theModule = newModule
 onInit :: OfflineRC ()
 onInit = do
     lockRC
-    cmds <- readConfig onStartupCmds
+    cmds <- getConfig onStartupCmds
     finallyError (mapM_ feed cmds) unlockRC
 
 feed :: String -> OfflineRC ()
 feed msg = do
-    cmdPrefix <- fmap head (readConfig commandPrefixes)
+    cmdPrefix <- fmap head (getConfig commandPrefixes)
     let msg' = case msg of
             '>':xs -> cmdPrefix ++ "run " ++ xs
             '!':xs -> xs

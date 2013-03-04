@@ -61,7 +61,7 @@ args load src = concat
 
 isEval :: MonadLB m => String -> m Bool
 isEval str = do
-    prefixes <- readConfig evalPrefixes
+    prefixes <- getConfig evalPrefixes
     return (prefixes `arePrefixesWithSpaceOf` str)
 
 dropPrefix :: String -> String

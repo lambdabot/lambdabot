@@ -23,7 +23,7 @@ lambdabot :: FilePath
 lambdabot = ".lambdabot"
 
 stateDir :: MonadLB m => m FilePath
-stateDir = (lambdabot </>) <$> readConfig outputDir
+stateDir = (lambdabot </>) <$> getConfig outputDir
 
 maybeFileExists :: FilePath -> IO (Maybe FilePath)
 maybeFileExists path = do
@@ -36,7 +36,7 @@ maybeFileExists path = do
 -- > lookLocally "fact" ~> "/home/cale/lambdabot/State/fact"
 lookLocally :: FilePath -> LB (Maybe String)
 lookLocally file = do
-    local <- readConfig outputDir
+    local <- getConfig outputDir
     io $ maybeFileExists (local </> file)
 
 -- | For a given file, look at the home directory. By default, we stash files in
@@ -69,7 +69,7 @@ mkdirL = do
 -- | Ask Cabal for the read-only copy of a file, and copy it into ~/.lambdabot/State.
 cpDataToHome :: FilePath -> LB ()
 cpDataToHome f = do 
-    local   <- readConfig outputDir
+    local   <- getConfig outputDir
     state   <- stateDir
     
     rofile  <- io (getDataFileName (local </> f))

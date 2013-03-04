@@ -25,7 +25,7 @@ module Lambdabot.Plugin
     , unpackNick
     , ircPrivmsg
     
-    , readConfig
+    , getConfig
     
     , debugStr
     , debugStrLn

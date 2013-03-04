@@ -35,7 +35,7 @@ module Lambdabot.Monad
     , forkLB
     , liftLB
     
-    , readConfig
+    , getConfig
     
     , debugStr
     , debugStrLn
@@ -251,14 +251,14 @@ forkLB f = (`liftLB` f) $ \g -> do
 liftLB :: (IO a -> IO b) -> LB a -> LB b
 liftLB f = LB . mapReaderT f . runLB -- lbIO (\conv -> f (conv lb))
 
-readConfig :: MonadLB m => Config a -> m a
-readConfig k = liftM (maybe (getConfigDefault k) id . D.lookup k) (lb (asks ircConfig))
+getConfig :: MonadLB m => Config a -> m a
+getConfig k = liftM (maybe (getConfigDefault k) id . D.lookup k) (lb (asks ircConfig))
 
 -- | 'debugStr' checks if we have the verbose flag turned on. If we have
 --   it outputs the String given. Else, it is a no-op.
 debugStr :: MonadLB m => String -> m ()
 debugStr str = do
-    v <- readConfig verbose
+    v <- getConfig verbose
     when v (io (putStr str))
 
 -- | 'debugStrLn' is a version of 'debugStr' that adds a newline to the end

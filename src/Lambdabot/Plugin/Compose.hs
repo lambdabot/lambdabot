@@ -75,7 +75,7 @@ lookupP cmd = withMsg $ \a -> do
 -- @@ @f x y (@g y z)
 evalBracket :: String -> Cmd Compose ()
 evalBracket args = do
-    cmdPrefixes <- readConfig commandPrefixes
+    cmdPrefixes <- getConfig commandPrefixes
     
     let config = cmdPrefixes
     xs <- mapM evalExpr (fst (parseBracket 0 True args config))
