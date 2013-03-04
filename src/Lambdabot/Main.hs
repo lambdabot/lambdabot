@@ -14,6 +14,8 @@ module Lambdabot.Main
 import Lambdabot
 import Lambdabot.Config
 import Lambdabot.Config.Core
+import Lambdabot.IRC
+import Lambdabot.Monad
 
 import Control.Applicative
 import Control.Monad.State (get, liftIO)

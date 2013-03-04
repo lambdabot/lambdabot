@@ -23,8 +23,8 @@ module Lambdabot.NickEq
     , mononickToPolynick
     ) where
 
-import Lambdabot.Message( Nick, readNick, showNick )
-import Lambdabot
+import Lambdabot.Message
+import Lambdabot.Monad
 
 import Data.List (intercalate)
 import Data.List.Split (splitOn)

@@ -1,8 +1,9 @@
 -- | Provide help for plugins
 module Lambdabot.Plugin.Help (theModule) where
 
+import Lambdabot.Command
+import Lambdabot.Monad
 import Lambdabot.Plugin
-import Lambdabot
 
 theModule = newModule
     { moduleCmds = return

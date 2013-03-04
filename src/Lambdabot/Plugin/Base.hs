@@ -8,9 +8,12 @@ module Lambdabot.Plugin.Base
     ) where
 
 import Lambdabot
+import Lambdabot.Command
 import Lambdabot.Config.Core
 import Lambdabot.IRC
+import Lambdabot.Message hiding (readNick, showNick)
 import qualified Lambdabot.Message as Msg (readNick, showNick)
+import Lambdabot.Monad
 import Lambdabot.Plugin
 
 import Control.Applicative

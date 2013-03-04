@@ -8,6 +8,7 @@
 module Lambdabot.Plugin.Log (theModule) where
 
 import Lambdabot
+import Lambdabot.IRC
 import Lambdabot.Plugin
 import qualified Lambdabot.Message as Msg
 
@@ -57,7 +58,7 @@ theModule = newModule
                 now <- io getCurrentTime
                 -- map over the channels this message was directed to, adding to each
                 -- of their log files.
-                mapM_ (withValidLog (doLog f msg) now) (channels msg)
+                mapM_ (withValidLog (doLog f msg) now) (Msg.channels msg)
             connect signal cb = ircSignalConnect signal =<< wrapCB cb
         
         connect "PRIVMSG" msgCB

@@ -3,7 +3,7 @@
 module Lambdabot.Plugin.IRC (theModule) where
 
 import Lambdabot.Plugin
-import Lambdabot
+import Lambdabot.Monad
 import Lambdabot.IRC
 import Lambdabot.Main( received )
 

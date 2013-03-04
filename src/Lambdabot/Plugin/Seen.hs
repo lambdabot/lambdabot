@@ -6,6 +6,7 @@
 module Lambdabot.Plugin.Seen (theModule) where
 
 import Lambdabot
+import Lambdabot.IRC
 import qualified Lambdabot.Message as G (Message, channels, nick, packNick, unpackNick, lambdabotName, showNick, readNick)
 import Lambdabot.Plugin
 import Lambdabot.Plugin.Seen.StopWatch

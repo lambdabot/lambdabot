@@ -6,7 +6,8 @@
 -- A sort of mini interpreter. Could do with some more thinking.
 module Lambdabot.Plugin.Compose (theModule) where
 
-import Lambdabot
+import Lambdabot.Command
+import Lambdabot.Monad
 import Lambdabot.Plugin
 import Lambdabot.Plugin.Base (commandPrefixes)
 

@@ -6,47 +6,38 @@
 -- The LB/Lambdabot monad
 -- Generic server connection,disconnection
 -- The module typeclass, type and operations on modules
-module Lambdabot (
-        Module(..), ModuleT, Mode(..),
-        
-        IRCRState(..), IRCRWState(..),
-        LB(..), MonadLB(..),
-        forkLB, liftLB,
-        
-        withModule, withCommand, withAllModules,
-        
-        Command(..), runCommand, 
-        Cmd, execCmd,
-        
-        Msg.Message(..),
-        IrcMessage(..), timeReply, errShowMsg,
-        send, addServer, remServer, 
-        ircPrivmsg, ircPrivmsg',
-        
-        ircQuit, ircReconnect,
-        ircGetChannels,
-        ircSignalConnect, Callback, ircInstallOutputFilter, OutputFilter,
-        ircInstallModule, ircUnloadModule,
-        flushModuleState,
-        
-        checkPrivs, checkIgnore, mkCN, handleIrc, catchIrc, runIrc
-  ) where
-
-import Lambdabot.File (findLBFile)
-
-import qualified Lambdabot.Message as Msg
+module Lambdabot
+    ( runIrc
+    
+    , flushModuleState
+    
+    , readGlobalState
+    
+    , ircInstallModule
+    , ircUnloadModule
+    , ircSignalConnect
+    , ircInstallOutputFilter
+    , checkPrivs
+    , checkIgnore
+    
+    , ircGetChannels
+    , ircQuit
+    , ircReconnect
+    , ircPrivmsg
+    , ircPrivmsg'
+    ) where
 
 import Lambdabot.Command
 import Lambdabot.Config
+import Lambdabot.File
 import Lambdabot.IRC
+import Lambdabot.Message
 import Lambdabot.Module
 import Lambdabot.Monad
 import Lambdabot.State
+import Lambdabot.Util
 import Lambdabot.Util.Serial
 import Lambdabot.Util.Signals
-import Lambdabot.Util
-
-import Prelude hiding           (mod)
 
 import Control.Concurrent
 import Control.Exception
@@ -112,7 +103,7 @@ initRoState configuration = do
 -- | Default rw state
 initState :: IRCRWState
 initState = IRCRWState
-    { ircPrivilegedUsers = M.singleton (Msg.Nick "offlinerc" "null") True
+    { ircPrivilegedUsers = M.singleton (Nick "offlinerc" "null") True
     , ircIgnoredUsers    = M.empty
     , ircChannels        = M.empty
     , ircModules         = M.empty
@@ -162,7 +153,7 @@ flushModuleState = do
 
 -- | Peristence: write the global state out
 writeGlobalState :: Module st -> String -> ModuleT st LB ()
-writeGlobalState mod name = case moduleSerialize mod of
+writeGlobalState module' name = case moduleSerialize module' of
     Nothing  -> return ()
     Just ser -> do
         state' <- readMS
@@ -174,7 +165,7 @@ writeGlobalState mod name = case moduleSerialize mod of
 
 -- | Read it in
 readGlobalState :: Module st -> String -> LB (Maybe st)
-readGlobalState mod name = case moduleSerialize mod of
+readGlobalState module' name = case moduleSerialize module' of
     Just ser -> do
         stateFile <- findLBFile name
         io $ do
@@ -253,18 +244,18 @@ ircInstallOutputFilter f = do
 -- | Checks if the given user has admin permissions and excecute the action
 --   only in this case.
 checkPrivs :: IrcMessage -> LB Bool
-checkPrivs msg = gets (isJust . M.lookup (Msg.nick msg) . ircPrivilegedUsers)
+checkPrivs msg = gets (isJust . M.lookup (nick msg) . ircPrivilegedUsers)
 
 -- | Checks if the given user is being ignored.
 --   Privileged users can't be ignored.
 checkIgnore :: IrcMessage -> LB Bool
 checkIgnore msg = liftM2 (&&) (liftM not (checkPrivs msg))
-                  (gets (isJust . M.lookup (Msg.nick msg) . ircIgnoredUsers))
+                  (gets (isJust . M.lookup (nick msg) . ircIgnoredUsers))
 
 ------------------------------------------------------------------------
 -- Some generic server operations
 
-ircGetChannels :: LB [Msg.Nick]
+ircGetChannels :: LB [Nick]
 ircGetChannels = (map getCN . M.keys) `fmap` gets ircChannels
 
 -- Send a quit message, settle and wait for the server to drop our
@@ -284,7 +275,7 @@ ircReconnect svr msg = do
 
 -- | Send a message to a channel\/user. If the message is too long, the rest
 --   of it is saved in the (global) more-state.
-ircPrivmsg :: Msg.Nick      -- ^ The channel\/user.
+ircPrivmsg :: Nick      -- ^ The channel\/user.
            -> String        -- ^ The message.
            -> LB ()
 
@@ -294,7 +285,7 @@ ircPrivmsg who msg = do
     mapM_ (\s -> ircPrivmsg' who (take textwidth s)) (take 10 sendlines)
 
 -- A raw send version
-ircPrivmsg' :: Msg.Nick -> String -> LB ()
+ircPrivmsg' :: Nick -> String -> LB ()
 ircPrivmsg' who ""  = ircPrivmsg' who " "
 ircPrivmsg' who msg = send $ privmsg who msg
 
@@ -348,7 +339,7 @@ checkRecip :: OutputFilter
 checkRecip who msg
 --  FIXME: this doesn't work with plugin protocols :(
 --  | who == Config.name Config.config                  = return []
-    | "bot" `isSuffixOf` map toLower (Msg.nName who)    = return []
+    | "bot" `isSuffixOf` map toLower (nName who)    = return []
     | otherwise                                         = return msg
 
 -- | Divide the lines' indent by two

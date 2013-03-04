@@ -6,7 +6,7 @@
 module Lambdabot.Plugin.Topic (theModule) where
 
 import Lambdabot.Plugin
-import Lambdabot
+import Lambdabot.Monad
 import Lambdabot.IRC
 
 import qualified Data.Map as M
