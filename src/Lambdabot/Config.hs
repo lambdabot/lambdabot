@@ -1,14 +1,22 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE TemplateHaskell #-}
 -- | Extensible configuration system for lambdabot
+-- 
+-- TODO: there's notthing lambdabot-specific about this, it could be a useful standalone library.
 module Lambdabot.Config
     ( Config
     , getConfigDefault
+    
+    , MonadConfig(..)
+    
     , config
     ) where
 
 import Control.Applicative
 import Control.Monad.Identity
+import Control.Monad.Reader
+import Control.Monad.Writer
+import Control.Monad.State
 import Data.Char
 import Data.GADT.Compare
 import Data.GADT.Compare.TH
@@ -17,9 +25,6 @@ import Data.Typeable
 import Language.Haskell.TH
 
 data Config t where Config :: (Typeable1 k, GCompare k) => !(k t) -> t -> Config t
-
-getConfigDefault :: Config t -> t
-getConfigDefault (Config _ def) = def
 
 cast1 :: (Typeable1 f, Typeable1 g) => f a -> Maybe (g a)
 cast1 = fmap runIdentity . gcast1 . Identity
@@ -42,6 +47,16 @@ instance GCompare Config where
             t2 = typeOf1 k2
             
             typeErr = error "TypeReps claim to be equal but cast failed"
+
+getConfigDefault :: Config t -> t
+getConfigDefault (Config _ def) = def
+
+class Monad m => MonadConfig m where
+    getConfig :: Config a -> m a
+
+instance  MonadConfig m            => MonadConfig (ReaderT r m) where getConfig = lift . getConfig
+instance (MonadConfig m, Monoid w) => MonadConfig (WriterT w m) where getConfig = lift . getConfig
+instance  MonadConfig m            => MonadConfig (StateT  s m) where getConfig = lift . getConfig
 
 config :: String -> TypeQ -> ExpQ -> Q [Dec]
 config nameStr tyQ defValQ = do

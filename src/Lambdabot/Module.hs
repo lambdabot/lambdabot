@@ -14,7 +14,7 @@ module Lambdabot.Module
     ) where
 
 import qualified Lambdabot.Command as Cmd
-
+import Lambdabot.Config
 import {-# SOURCE #-} Lambdabot.Monad
 import Lambdabot.Util.Serial
 
@@ -81,7 +81,7 @@ newModule = Module
 --   need to access its name or its state.
 --
 newtype ModuleT st m a = ModuleT { moduleT :: ReaderT (MVar st, String) m a }
-    deriving (Applicative, Functor, Monad, MonadTrans, MonadIO, MonadError e, MonadState t, MonadException)
+    deriving (Applicative, Functor, Monad, MonadTrans, MonadIO, MonadError e, MonadState t, MonadException, MonadConfig)
 
 getRef :: Monad m => ModuleT st m (MVar st)
 getRef  = ModuleT $ ask >>= return . fst

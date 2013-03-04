@@ -33,9 +33,6 @@ module Lambdabot.Monad
     
     , getConfig
     
-    , debugStr
-    , debugStrLn
-    
     , withModule
     , withCommand
     , withAllModules
@@ -194,7 +191,7 @@ send msg = do
 newtype LB a = LB { runLB :: ReaderT (IRCRState,IORef IRCRWState) IO a }
     deriving (Functor, Applicative, Monad, MonadIO, MonadException)
 
-class (MonadIO m, Applicative m) => MonadLB m where
+class (MonadIO m, MonadConfig m, Applicative m) => MonadLB m where
     lb :: LB a -> m a
 
 instance MonadLB LB where lb = id
@@ -222,6 +219,9 @@ instance MonadError IRCError LB where
   m `catchError` h = lbIO $ \conv -> (conv m
               `E.catch` \(SignalException e) -> conv $ h $ SignalCaught e)
               `E.catch` \e -> conv $ h $ IRCRaised e
+
+instance MonadConfig LB where
+    getConfig k = liftM (maybe (getConfigDefault k) id . D.lookup k) (lb (asks ircConfig))
 
 -- A type for handling both Haskell exceptions and external signals
 data IRCError = IRCRaised SomeException | SignalCaught Signal
@@ -263,21 +263,6 @@ forkLB f = (`liftLB` f) $ \g -> do
 -- | lift an io transformer into LB
 liftLB :: (IO a -> IO b) -> LB a -> LB b
 liftLB f = LB . mapReaderT f . runLB -- lbIO (\conv -> f (conv lb))
-
-getConfig :: MonadLB m => Config a -> m a
-getConfig k = liftM (maybe (getConfigDefault k) id . D.lookup k) (lb (asks ircConfig))
-
--- | 'debugStr' checks if we have the verbose flag turned on. If we have
---   it outputs the String given. Else, it is a no-op.
-debugStr :: MonadLB m => String -> m ()
-debugStr str = do
-    v <- getConfig verbose
-    when v (io (putStr str))
-
--- | 'debugStrLn' is a version of 'debugStr' that adds a newline to the end
---   of the string outputted.
-debugStrLn :: MonadLB m => String -> m ()
-debugStrLn x = debugStr (x ++ "\n")
 
 ------------------------------------------------------------------------
 -- Module handling

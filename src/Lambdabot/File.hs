@@ -17,7 +17,7 @@ import System.FilePath
 lambdabot :: FilePath
 lambdabot = ".lambdabot"
 
-stateDir :: MonadLB m => m FilePath
+stateDir :: LB FilePath
 stateDir = (lambdabot </>) <$> getConfig outputDir
 
 maybeFileExists :: FilePath -> IO (Maybe FilePath)

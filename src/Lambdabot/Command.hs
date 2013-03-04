@@ -16,12 +16,14 @@ module Lambdabot.Command
     , say
     ) where
 
+import Lambdabot.Config
+import qualified Lambdabot.Message as Msg
+import Lambdabot.Nick
+
 import Control.Applicative
 import Control.Monad.Identity
 import Control.Monad.Reader
 import Control.Monad.Writer
-import qualified Lambdabot.Message as Msg
-import Lambdabot.Nick
 
 data CmdArgs = forall a. Msg.Message a => CmdArgs
     { _message  :: a
@@ -43,6 +45,8 @@ instance MonadTrans Cmd where
     lift = Cmd . lift . lift
 instance MonadIO m => MonadIO (Cmd m) where
     liftIO = lift . liftIO
+instance MonadConfig m => MonadConfig (Cmd m) where
+    getConfig = lift . getConfig
 
 data Command m = Command
     { cmdName       :: String
