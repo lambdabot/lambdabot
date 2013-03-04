@@ -25,6 +25,7 @@ module Lambdabot.NickEq
 
 import Lambdabot.Message
 import Lambdabot.Monad
+import Lambdabot.Nick
 
 import Data.List (intercalate)
 import Data.List.Split (splitOn)

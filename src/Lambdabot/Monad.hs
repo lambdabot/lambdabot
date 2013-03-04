@@ -14,10 +14,6 @@ module Lambdabot.Monad
     , Callback
     , OutputFilter
     
-    , ChanName
-    , mkCN
-    , getCN
-    
     , LB(..)
     , MonadLB(..)
     , lbIO
@@ -47,12 +43,14 @@ module Lambdabot.Monad
     , ghci
     ) where
 
+import           Lambdabot.ChanName
 import           Lambdabot.Command
 import           Lambdabot.Config
 import           Lambdabot.Config.Core
 import           Lambdabot.IRC (IrcMessage)
 import           Lambdabot.Module
 import qualified Lambdabot.Message as Msg
+import           Lambdabot.Nick
 import           Lambdabot.Util.Signals
 import           Lambdabot.Util
 
@@ -63,7 +61,6 @@ import qualified Control.Exception as E (catch)
 import Control.Monad.Error (MonadError (..))
 import Control.Monad.Reader
 import Control.Monad.State
-import Data.Char
 import qualified Data.Dependent.Map as D
 import Data.IORef
 import qualified Data.Map as M
@@ -85,8 +82,8 @@ data IRCRState = IRCRState
 -- | Global read\/write state.
 data IRCRWState = IRCRWState
     { ircServerMap       :: M.Map String (String, IrcMessage -> LB ())
-    , ircPrivilegedUsers :: M.Map Msg.Nick Bool
-    , ircIgnoredUsers    :: M.Map Msg.Nick Bool
+    , ircPrivilegedUsers :: M.Map Nick Bool
+    , ircIgnoredUsers    :: M.Map Nick Bool
     
     , ircChannels        :: M.Map ChanName String
     -- ^ maps channel names to topics
@@ -102,25 +99,13 @@ data IRCRWState = IRCRWState
 
 type Callback = IrcMessage -> LB ()
 
-type OutputFilter = Msg.Nick -> [String] -> LB [String]
-
-newtype ChanName = ChanName Msg.Nick -- always lowercase
-  deriving (Eq, Ord)
-
-instance Show ChanName where show (ChanName x) = show x
+type OutputFilter = Nick -> [String] -> LB [String]
 
 data ModuleRef = forall st.
     ModuleRef (Module st) (MVar st) String
 
 data CommandRef = forall st.
     CommandRef (Module st) (MVar st) (Command (ModuleT st LB)) String
-
--- | only use the "smart constructor":
-mkCN :: Msg.Nick -> ChanName
-mkCN = ChanName . liftM2 Msg.Nick Msg.nTag (map toLower . Msg.nName)
-
-getCN :: ChanName -> Msg.Nick
-getCN (ChanName n) = n
 
 -- The virtual chat system.
 --

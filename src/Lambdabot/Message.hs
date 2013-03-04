@@ -3,19 +3,15 @@
 --
 module Lambdabot.Message
     ( Message(..)
-    , Nick(..)
     , showNick
     , readNick
     , packNick
     , unpackNick
     ) where
 
-import Lambdabot.Util(dropSpace)
+import Lambdabot.Nick
 
 import qualified Data.ByteString.Char8 as P
-import Data.Char (toUpper)
-
-import Control.Arrow (first)
 
 -- TODO: probably remove "Show a" later (used only to implement @echo)
 class Show a => Message a where
@@ -33,27 +29,6 @@ class Show a => Message a where
 
     -- TODO: there must be a better way of handling this ...
     lambdabotName :: a -> Nick
-
--- | The type of nicknames isolated from a message.
-data Nick
-  = Nick {
-        nTag :: !String, -- ^The tag of the server this nick is on
-        nName :: !String -- ^The server-specific nickname of this nick
-  }
-
--- This definition of canonicalizeName breaks strict RFC rules, but so does
--- freenode
-canonicalizeName :: String -> String
-canonicalizeName = dropSpace . map toUpper
-
-instance Eq Nick where
-  (Nick tag name) == (Nick tag2 name2) =
-     (canonicalizeName name == canonicalizeName name2) && (tag == tag2)
-
-instance Ord Nick where
-  (Nick tag name) <= (Nick tag2 name2) =
-     (tag, canonicalizeName name) <= (tag2, canonicalizeName name2)
-
 
 -- Helper functions
 upckStr :: String -> String -> Nick
@@ -76,13 +51,6 @@ readNick :: Message a => a -> String -> Nick
 readNick msg str = upckStr (server msg) str'
         where str' | last str `elem` ":" = init str
                    | otherwise           = str
-
-instance Show Nick where
-    show x | nTag x == "freenode" = show $ nName x
-           | otherwise            = show $ pckStr x
-
-instance Read Nick where
-    readsPrec prec str = map (first (upckStr "freenode")) (readsPrec prec str)
 
 -- | Pack a nickname into a ByteString.  Note that the resulting strings are
 -- not optimally formatted for human consumtion.

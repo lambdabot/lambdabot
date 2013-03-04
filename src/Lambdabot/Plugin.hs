@@ -20,6 +20,10 @@ module Lambdabot.Plugin
     , lim80
     , ios80
     
+    , ChanName
+    , mkCN
+    , getCN
+    
     , Nick(..)
     , packNick
     , unpackNick
@@ -42,12 +46,14 @@ module Lambdabot.Plugin
     ) where
 
 import Lambdabot
+import Lambdabot.ChanName
 import Lambdabot.Config
 import Lambdabot.Command hiding (runCommand, execCmd)
 import Lambdabot.File
 import Lambdabot.Message
 import Lambdabot.Module
 import Lambdabot.Monad
+import Lambdabot.Nick
 import Lambdabot.State
 import Lambdabot.Util
 import Lambdabot.Util.Serial

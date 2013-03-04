@@ -21,7 +21,7 @@ import System.IO
 
 -- ------------------------------------------------------------------------
 
-type Channel = Msg.Nick
+type Channel = Nick
 
 type DateStamp = (Int, Int, Integer)
 data ChanState = CS { chanHandle  :: Handle,
@@ -31,14 +31,14 @@ type LogState = M.Map Channel ChanState
 type Log = ModuleT LogState LB
 
 data Event =
-    Said Msg.Nick UTCTime String
-    | Joined Msg.Nick String UTCTime
-    | Parted Msg.Nick String UTCTime -- covers quitting as well
-    | Renick Msg.Nick String UTCTime Msg.Nick
+    Said Nick UTCTime String
+    | Joined Nick String UTCTime
+    | Parted Nick String UTCTime -- covers quitting as well
+    | Renick Nick String UTCTime Nick
     deriving (Eq)
 
 instance Show Event where
-    show (Said nick ct what)       = timeStamp ct ++ " <" ++ Msg.nName nick ++ "> " ++ what
+    show (Said nick ct what)       = timeStamp ct ++ " <" ++ nName nick ++ "> " ++ what
     show (Joined nick user ct)     = timeStamp ct ++ " " ++ show nick
                                      ++ " (" ++ user ++ ") joined."
     show (Parted nick user ct)     = timeStamp ct ++ " " ++ show nick
@@ -139,7 +139,7 @@ putHdlAndDS c hdl ds =
 openChannelFile :: Channel -> UTCTime -> Log Handle
 openChannelFile chan ct = do
     stateDir <- getConfig outputDir
-    let dir  = stateDir </> "Log" </> Msg.nTag chan </> Msg.nName chan
+    let dir  = stateDir </> "Log" </> nTag chan </> nName chan
         file = dir </> (dateToString date) <.> "txt"
     io $ createDirectoryIfMissing True dir >> openFile file AppendMode
     where date = dateStamp ct
@@ -155,7 +155,7 @@ reopenChannelMaybe chan ct = do
     putHdlAndDS chan hdl' (dateStamp ct)
 
 -- | Initialise the channel state (if it not already inited)
-initChannelMaybe :: Msg.Nick -> UTCTime -> Log ()
+initChannelMaybe :: Nick -> UTCTime -> Log ()
 initChannelMaybe chan ct = do
   chanp <- liftM (M.member chan) readMS
   unless chanp $ do

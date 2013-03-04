@@ -75,7 +75,7 @@ doSystem cmd rest = withMsg $ \msg -> do
     target <- getTarget
     lift (doSystem' msg target cmd rest) >>= mapM_ say
 
-doSystem' :: Msg.Message a => a -> Msg.Nick -> [Char] -> [Char] -> System [String]
+doSystem' :: Msg.Message a => a -> Nick -> [Char] -> [Char] -> System [String]
 doSystem' msg target cmd rest = get >>= \s -> case cmd of
   "listchans"   -> return [pprKeys (ircChannels s)]
   "listmodules" -> return [pprKeys (ircModules s) ]

@@ -20,10 +20,10 @@ import Control.Applicative
 import Control.Monad.Identity
 import Control.Monad.Reader
 import Control.Monad.Writer
-import Lambdabot.Message (Message, Nick)
 import qualified Lambdabot.Message as Msg
+import Lambdabot.Nick
 
-data CmdArgs = forall a. Message a => CmdArgs
+data CmdArgs = forall a. Msg.Message a => CmdArgs
     { _message  :: a
     , target    :: Nick
     , invokedAs :: String
@@ -65,10 +65,10 @@ command name = Command
     } where
         bug reason = say $ unwords [ "You should bug the author of the", show name, "command, because", reason]
 
-runCommand :: (Monad m, Message a) => Command m -> a -> Nick -> String -> String -> m [String]
+runCommand :: (Monad m, Msg.Message a) => Command m -> a -> Nick -> String -> String -> m [String]
 runCommand cmd msg tgt arg0 args = execCmd (process cmd args) msg tgt arg0
 
-execCmd ::  (Monad m, Message a) => Cmd m t -> a -> Nick -> String -> m [String]
+execCmd ::  (Monad m, Msg.Message a) => Cmd m t -> a -> Nick -> String -> m [String]
 execCmd cmd msg tgt arg0 = execWriterT (runReaderT (unCmd cmd) (CmdArgs msg tgt arg0))
 
 getTarget :: Monad m => Cmd m Nick
@@ -81,7 +81,7 @@ say :: Monad m => String -> Cmd m ()
 say [] = return ()
 say it = Cmd (tell [it])
 
-withMsg :: Monad m => (forall a. Message a => a -> Cmd m t) -> Cmd m t
+withMsg :: Monad m => (forall a. Msg.Message a => a -> Cmd m t) -> Cmd m t
 withMsg f = Cmd ask >>= f'
     where f' (CmdArgs msg _ _) = f msg
 

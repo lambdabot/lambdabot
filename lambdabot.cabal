@@ -73,6 +73,7 @@ library
                         -fwarn-unused-binds
   
   exposed-modules:      Lambdabot
+                        Lambdabot.ChanName
                         Lambdabot.Command
                         Lambdabot.Config
                         Lambdabot.Config.Core
@@ -82,6 +83,7 @@ library
                         Lambdabot.Message
                         Lambdabot.Module
                         Lambdabot.Monad
+                        Lambdabot.Nick
                         Lambdabot.NickEq
                         Lambdabot.Plugin
                         Lambdabot.Plugin.Activity

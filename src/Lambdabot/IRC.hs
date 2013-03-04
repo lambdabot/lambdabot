@@ -17,6 +17,7 @@ module Lambdabot.IRC
     ) where
 
 import Lambdabot.Message
+import Lambdabot.Nick
 
 import Data.Char (chr,isSpace)
 import Data.List.Split

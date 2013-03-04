@@ -27,6 +27,7 @@ module Lambdabot
     , ircPrivmsg'
     ) where
 
+import Lambdabot.ChanName
 import Lambdabot.Command
 import Lambdabot.Config
 import Lambdabot.File
@@ -34,6 +35,7 @@ import Lambdabot.IRC
 import Lambdabot.Message
 import Lambdabot.Module
 import Lambdabot.Monad
+import Lambdabot.Nick
 import Lambdabot.State
 import Lambdabot.Util
 import Lambdabot.Util.Serial

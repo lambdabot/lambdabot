@@ -21,8 +21,8 @@ module Lambdabot.State
   ) where
 
 import Lambdabot.Monad
-import Lambdabot.Message
 import Lambdabot.Module
+import Lambdabot.Nick
 import Lambdabot.Command
 
 import Control.Concurrent
