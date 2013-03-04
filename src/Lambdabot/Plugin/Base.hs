@@ -18,9 +18,10 @@ import Lambdabot.Plugin
 import Control.Applicative
 import Control.Monad
 import Control.Monad.State
-import Control.Monad.Trans
 import Data.List
+import Data.List.Split
 import qualified Data.Map as M
+import Text.EditDistance
 import Text.Regex.TDFA
 
 config "commandPrefixes"     [t| [String]                |] [| ["@", "?"]    |]
@@ -91,7 +92,7 @@ doJOIN msg | lambdabotName msg /= nick msg = doIGNORE msg
   = do s <- get
        put (s { ircChannels = M.insert  (mkCN loc) "[currently unknown]" (ircChannels s)}) -- the empty topic causes problems
        send $ getTopic loc -- initialize topic
-   where (_, aloc) = breakOnGlue ":" (head (ircMsgParams msg))
+   where aloc = dropWhile (/= ':') (head (ircMsgParams msg))
          loc       = case aloc of
                         [] -> Nick "freenode" "weird#"
                         _  -> Nick (server msg) (tail aloc)
@@ -148,7 +149,7 @@ doPRIVMSG msg = do
         else mapM_ (doPRIVMSG' config (lambdabotName msg) msg) targets
     where
         alltargets = head (ircMsgParams msg)
-        targets = map (Msg.readNick msg) $ split "," alltargets
+        targets = map (Msg.readNick msg) $ splitOn "," alltargets
 
 --
 -- | What does the bot respond to?
@@ -156,21 +157,21 @@ doPRIVMSG msg = do
 doPRIVMSG' :: ([String], [String], [String]) -> Nick -> IrcMessage -> Nick -> Base ()
 doPRIVMSG' config myname msg target
   | myname == target
-    = let (cmd, params) = breakOnGlue " " text
-      in doPersonalMsg cmd (dropWhile (== ' ') params)
+    = let (cmd, params) = splitFirstWord text
+      in doPersonalMsg cmd params
 
   | flip any ":," $ \c -> (Msg.showNick msg myname ++ [c]) `isPrefixOf` text
     = let Just wholeCmd = maybeCommand (Msg.showNick msg myname) text
-          (cmd, params) = breakOnGlue " " wholeCmd
-      in doPublicMsg cmd (dropWhile (==' ') params)
+          (cmd, params) = splitFirstWord wholeCmd
+      in doPublicMsg cmd params
 
   | (commands `arePrefixesOf` text)
   && length text > 1
   && (text !! 1 /= ' ') -- elem of prefixes
   && (not (commands `arePrefixesOf` [text !! 1]) ||
       (length text > 2 && text !! 2 == ' ')) -- ignore @@ prefix, but not the @@ command itself
-    = let (cmd, params) = breakOnGlue " " (dropWhile (==' ') text)
-      in doPublicMsg cmd (dropWhile (==' ') params)
+    = let (cmd, params) = splitFirstWord (dropWhile (==' ') text)
+      in doPublicMsg cmd params
 
   | otherwise =  doContextualMsg text
 
@@ -258,6 +259,12 @@ doPRIVMSG' config myname msg target
         return ()
 
 ------------------------------------------------------------------------
+
+closests :: String -> [String] -> (Int,[String])
+closests pat ss = M.findMin m
+    where
+        m = M.fromListWith (++) ls
+        ls = [ (levenshteinDistance defaultEditCosts pat s, [s]) | s <- ss ]
 
 maybeCommand :: String -> String -> Maybe String
 maybeCommand nm text = mrAfter <$> matchM re text

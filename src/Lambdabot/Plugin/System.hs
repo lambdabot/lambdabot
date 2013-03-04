@@ -94,9 +94,8 @@ doSystem' msg target cmd rest = get >>= \s -> case cmd of
   "part"  -> lift $ send (partChannel (Msg.readNick msg rest)) >> return []
 
    -- writes to another location:
-  "msg"   -> lift $ ircPrivmsg (Msg.readNick msg tgt) txt' >> return []
-                  where (tgt, txt) = breakOnGlue " " rest
-                        txt'       = dropWhile (== ' ') txt
+  "msg"   -> lift $ ircPrivmsg (Msg.readNick msg tgt) txt >> return []
+                  where (tgt, txt) = splitFirstWord rest
 
   "quit" -> lift $ do ircQuit (Msg.server msg) $ if null rest then "requested" else rest
                       return []
@@ -133,6 +132,10 @@ doSystem' msg target cmd rest = get >>= \s -> case cmd of
                   ", longest uptime: " ++ timeDiffPretty (max diff m)]
 
 ------------------------------------------------------------------------
+
+--  | Print map keys
+pprKeys :: (Show k) => M.Map k a -> String
+pprKeys = showClean . M.keys
 
 listAll :: LB [String]
 listAll = get >>= mapM listModule . M.keys . ircModules

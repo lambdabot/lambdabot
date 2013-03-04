@@ -25,9 +25,9 @@ module Lambdabot.NickEq
 
 import Lambdabot.Message( Nick, readNick, showNick )
 import Lambdabot
-import Lambdabot.Util (split)
 
 import Data.List (intercalate)
+import Data.List.Split (splitOn)
 import qualified Data.Map as M
 import Data.Maybe (mapMaybe)
 
@@ -42,7 +42,7 @@ nickMatches = return m'
 
 -- | Parse a read polynick.
 readPolynick :: Message a => a -> String -> Polynick
-readPolynick m = Polynick . map (readNick m) . split "|"
+readPolynick m = Polynick . map (readNick m) . splitOn "|"
 
 -- | Format a polynick.
 showPolynick :: Message a => a -> Polynick -> String

@@ -17,9 +17,9 @@ module Lambdabot.IRC
     ) where
 
 import Lambdabot.Message
-import Lambdabot.Util (split, breakOnGlue, clean)
 
 import Data.Char (chr,isSpace)
+import Data.List.Split
 
 import Control.Monad (liftM2)
 
@@ -35,13 +35,13 @@ data IrcMessage
   deriving (Show)
 
 instance Message IrcMessage where
-    nick                = liftM2 Nick ircMsgServer (fst . breakOnGlue "!" . ircMsgPrefix)
+    nick                = liftM2 Nick ircMsgServer (takeWhile (/= '!') . ircMsgPrefix)
     server              = ircMsgServer
-    fullName            = snd . breakOnGlue "!" . ircMsgPrefix
+    fullName            = dropWhile (/= '!') . ircMsgPrefix
     channels msg        = 
       let cstr = head $ ircMsgParams msg
         in map (Nick (server msg)) $
-           map (\(x:xs) -> if x == ':' then xs else x:xs) (split "," cstr)
+           map (\(x:xs) -> if x == ':' then xs else x:xs) (splitOn "," cstr)
                -- solves what seems to be an inconsistency in the parser
     lambdabotName msg   = Nick (server msg) (ircMsgLBName msg)
 
@@ -78,7 +78,7 @@ privmsg :: Nick -- ^ Who should recieve the message (nick)
 privmsg who msg = if action then mk [nName who, ':':(chr 0x1):("ACTION " ++ clean_msg ++ ((chr 0x1):[]))]
                             else mk [nName who, ':' : clean_msg]
     where mk = mkMessage (nTag who) "PRIVMSG"
-          cleaned_msg = case concatMap clean msg of
+          cleaned_msg = case filter (/= '\CR') msg of
               str@('@':_) -> ' ':str
               str         -> str
           (clean_msg,action) = case cleaned_msg of

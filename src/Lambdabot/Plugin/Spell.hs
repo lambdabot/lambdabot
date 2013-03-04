@@ -11,6 +11,7 @@ import Lambdabot.Util.Process
 
 import Control.Monad.Trans
 import Data.Char
+import Data.List.Split
 import Data.Maybe
 import Text.Regex.TDFA
 
@@ -116,7 +117,7 @@ clean_ s = clean' s                             -- no header for some reason
 clean' :: [String] -> Maybe [String]
 clean' (('*':_):_)    = Nothing                          -- correct spelling
 clean' (('#':_):_)    = Just []                          -- no match
-clean' (('&':rest):_) = Just $ split ", " (clean'' rest) -- suggestions
+clean' (('&':rest):_) = Just $ splitOn ", " (clean'' rest) -- suggestions
 clean' _              = Just []                          -- not sure
 
 clean'' :: String -> String

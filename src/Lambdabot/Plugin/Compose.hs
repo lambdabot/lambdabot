@@ -15,6 +15,7 @@ import Control.Monad
 import Control.Monad.Trans
 import Data.Char
 import Data.List
+import Data.List.Split
 
 type Compose = ModuleT () LB
 
@@ -41,7 +42,7 @@ theModule = newModule
                 , ". [or compose] is the composition of two plugins"
                 , " The following semantics are used: . f g xs == g xs >>= f"
                 ]
-            , process = \args -> case split " " args of
+            , process = \args -> case splitOn " " args of
                 (f:g:xs) -> do
                     f' <- lookupP f
                     g' <- lookupP g

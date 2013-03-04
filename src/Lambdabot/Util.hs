@@ -3,29 +3,24 @@
 
 -- | String and other utilities
 module Lambdabot.Util (
-        split,
-        breakOnGlue,
-        clean,
         dropSpace,
         dropSpaceEnd,
         dropNL,
         splitFirstWord,
-        firstWord,
         limitStr,
-        listToStr, showWidth,
+        listToStr,
         showClean,
         expandTab,
-        closest, closests,
-        withMWriter, parIO, timeout,
-        arePrefixesWithSpaceOf, arePrefixesOf,
-
-        pprKeys,
-
-        isLeft, isRight, unEither,
-
+        withMWriter,
+        timeout,
+        arePrefixesWithSpaceOf,
+        arePrefixesOf,
+        
         io,
-
-        random, insult, confirmation
+        
+        random,
+        insult,
+        confirmation
     ) where
 
 import Data.List                (intercalate, isPrefixOf)
@@ -33,7 +28,6 @@ import Data.Char                (isSpace)
 import Data.Random
 import Control.Monad.State      (MonadIO(..))
 
-import qualified Data.Map as M
 import Data.IORef               (newIORef, readIORef, writeIORef)
 
 import Control.Concurrent       (MVar, newEmptyMVar, takeMVar, tryPutMVar, putMVar,
@@ -42,34 +36,6 @@ import Control.Exception        (bracket)
 
 ------------------------------------------------------------------------
 
--- | Split a list into pieces that were held together by glue.  Example:
---
--- > split ", " "one, two, three" ===> ["one","two","three"]
-split :: Eq a => [a] -- ^ Glue that holds pieces together
-      -> [a]         -- ^ List to break into pieces
-      -> [[a]]       -- ^ Result: list of pieces
-split glue xs = split' xs
-    where
-    split' [] = []
-    split' xs' = piece : split' (dropGlue rest)
-        where (piece, rest) = breakOnGlue glue xs'
-    dropGlue = drop (length glue)
-
--- | Break off the first piece of a list held together by glue,
---   leaving the glue attached to the remainder of the list.  Example:
---   Like break, but works with a [a] match.
---
--- > breakOnGlue ", " "one, two, three" ===> ("one", ", two, three")
-breakOnGlue :: (Eq a) => [a] -- ^ Glue that holds pieces together
-            -> [a]           -- ^ List from which to break off a piece
-            -> ([a],[a])     -- ^ Result: (first piece, glue ++ rest of list)
-breakOnGlue _ [] = ([],[])
-breakOnGlue glue rest@(x:xs)
-    | glue `isPrefixOf` rest = ([], rest)
-    | otherwise = (x:piece, rest')
-        where (piece, rest') = breakOnGlue glue xs
-{-# INLINE breakOnGlue #-}
-
 -- | Break a String into it's first word, and the rest of the string. Example:
 --
 -- > split_first_word "A fine day" ===> ("A", "fine day)
@@ -77,12 +43,6 @@ splitFirstWord :: String -- ^ String to be broken
                  -> (String, String)
 splitFirstWord xs = (w, dropWhile isSpace xs')
   where (w, xs') = break isSpace xs
-
--- | Get the first word of a string. Example:
---
--- > first_word "This is a fine day" ===> "This"
-firstWord :: String -> String
-firstWord = takeWhile (not . isSpace)
 
 -- | Truncate a string to the specified length, putting ellipses at the
 -- end if necessary.
@@ -120,12 +80,6 @@ dropSpace = let f = reverse . dropWhile isSpace in f . f
 dropSpaceEnd :: [Char] -> [Char]
 dropSpaceEnd = reverse . dropWhile isSpace . reverse
 
--- | 'clean' takes a Char x and returns [x] unless the Char is '\CR' in
---   case [] is returned.
-clean :: Char -> [Char]
-clean x | x == '\CR' = []
-        | otherwise  = [x]
-
 ------------------------------------------------------------------------
 
 -- | show a list without heavyweight formatting
@@ -142,50 +96,6 @@ expandTab w = go 0
     go _ []         = []
     go i ('\t':xs)  = replicate (w - i `mod` w) ' ' ++ go 0 xs
     go i (x:xs)     = x : go (i+1) xs
-
-------------------------------------------------------------------------
-
---
--- | Find string in list with smallest levenshtein distance from first
--- argument, return the string and the distance from pat it is.  Will
--- return the alphabetically first match if there are multiple matches
--- (this may not be desirable, e.g. "mroe" -> "moo", not "more"
---
-closest :: String -> [String] -> (Int,String)
-closest pat ss = minimum ls
-    where
-        ls = map (\s -> (levenshtein pat s,s)) ss
-
-closests :: String -> [String] -> (Int,[String])
-closests pat ss =
-    let (m,_) = minimum ls
-    in (m, map snd (filter ((m ==) . fst) ls))
-    where
-        ls = map (\s -> (levenshtein pat s,s)) ss
-
---
--- | Levenshtein edit-distance algorithm
--- Translated from an Erlang version by Fredrik Svensson and Adam Lindberg
---
-levenshtein :: String -> String -> Int
-levenshtein [] [] = 0
-levenshtein s  [] = length s
-levenshtein [] s  = length s
-levenshtein s  t  = lvn s t [0..length t] 1
-
-lvn :: String -> String -> [Int] -> Int -> Int
-lvn [] _ dl _ = last dl
-lvn (s:ss) t dl n = lvn ss t (lvn' t dl s [n] n) (n + 1)
-
-lvn' :: String -> [Int] -> Char -> [Int] -> Int -> [Int]
-lvn' [] _ _ ndl _ = ndl
-lvn' (t:ts) (dlh:dlt) c ndl ld | length dlt > 0 = lvn' ts dlt c (ndl ++ [m]) m
-    where
-        m = foldl1 min [ld + 1, head dlt + 1, dlh + (dif t c)]
-lvn' _ _ _ _  _  = error "levenshtein, ran out of numbers"
-
-dif :: Char -> Char -> Int
-dif = (fromEnum .) . (/=)
 
 ------------------------------------------------------------------------
 
@@ -217,40 +127,16 @@ timeout n a = parIO (Just `fmap` a) (threadDelay n >> return Nothing)
 
 ------------------------------------------------------------------------
 
---  | Print map keys
-pprKeys :: (Show k) => M.Map k a -> String
-pprKeys = showClean . M.keys
-
--- | Two functions that really should be in Data.Either
-isLeft, isRight :: Either a b -> Bool
-isLeft (Left _) = True
-isLeft _        = False
-isRight         = not . isLeft
-
--- | Another useful Either function to easily get out of an Either
-unEither :: Either a a -> a
-unEither = either id id
-
-
 -- convenience:
 io :: MonadIO m => IO a -> m a
 io = liftIO
 {-# INLINE io #-}
-
 
 arePrefixesWithSpaceOf :: [String] -> String -> Bool
 arePrefixesWithSpaceOf = arePrefixesOf . map (++ " ")
 
 arePrefixesOf :: [String] -> String -> Bool
 arePrefixesOf = flip (any . flip isPrefixOf)
-
--- | Show a number, padded to the left with zeroes up to the specified width
-showWidth :: Int    -- ^ Width to fill to
-          -> Int    -- ^ Number to show
-          -> String -- ^ Padded string
-showWidth width n = zeroes ++ num
-    where num    = show n
-          zeroes = replicate (width - length num) '0'
 
 --
 -- Amusing insults from OpenBSD sudo

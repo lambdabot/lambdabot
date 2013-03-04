@@ -15,6 +15,7 @@ import Control.Exception
 import Control.Monad.Error
 import qualified Data.ByteString.Char8 as P
 import Data.List
+import Data.List.Split
 import Network( connectTo, PortID(..) )
 import System.IO
 
@@ -26,7 +27,7 @@ theModule = newModule
             { privileged = True
             , help = say "irc-connect tag host portnum nickname userinfo.  connect to an irc server"
             , process = \rest ->
-                case (split " " rest) of
+                case splitOn " " rest of
                     tag:hostn:portn:nickn:uix -> do
                         pn <- (PortNumber . fromInteger) `fmap` readM portn
                         lift (online tag hostn pn nickn (intercalate " " uix))

@@ -26,6 +26,7 @@ import Lambdabot.Util.Process
 import Control.Monad
 import Data.Char
 import Data.List
+import Data.List.Split
 import Data.Maybe
 import System.FilePath
 import Text.Regex.TDFA
@@ -90,7 +91,7 @@ getInstances s cls
    | otherwise = sort $ mapMaybe doParse (tail splut)
 
     where classFound   = s =~ ("class.*" ++ cls ++ ".*where")
-          splut        = split "instance" s -- splut being the past participle
+          splut        = splitOn "instance" s -- splut being the past participle
                                             -- of 'to split', obviously. :)
           notOperator  = all (\c -> or
                                [ isAlpha c,

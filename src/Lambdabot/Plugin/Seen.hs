@@ -192,7 +192,7 @@ getAnswer msg rest seenFM now
                     Just _               -> pstr
                     Nothing              -> error "SeenModule.nickIsNew: Nothing"
         
-        nick' = firstWord rest
+        nick' = takeWhile (not . isSpace) rest
         you   = pnick == lcNick (G.nick msg)
         nick  = if you then "you" else nick'
         pnick = lcNick $ G.readNick msg nick'

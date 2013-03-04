@@ -69,6 +69,14 @@ theModule = newModule
 -- * Logging helpers
 --
 
+-- | Show a number, padded to the left with zeroes up to the specified width
+showWidth :: Int    -- ^ Width to fill to
+          -> Int    -- ^ Number to show
+          -> String -- ^ Padded string
+showWidth width n = zeroes ++ num
+    where num    = show n
+          zeroes = replicate (width - length num) '0'
+
 timeStamp :: UTCTime -> String
 timeStamp (UTCTime _ ct) = 
     (showWidth 2 (hour `mod` 24)) ++ ":" ++
