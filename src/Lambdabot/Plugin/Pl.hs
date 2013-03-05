@@ -17,7 +17,7 @@ import Lambdabot.Plugin.Pl.PrettyPrinter   (Expr)
 import Lambdabot.Plugin.Pl.Transform       (transform)
 import Lambdabot.Plugin.Pl.Optimize        (optimize)
 
-import Control.Concurrent.Chan
+import Data.IORef
 
 -- firstTimeout is the timeout when the expression is simplified for the first
 -- time. After each unsuccessful attempt, this number is doubled until it hits
@@ -79,14 +79,9 @@ optimizeTopLevel (to, d) = do
 
 optimizeIO :: Int -> Expr -> IO (Expr, Bool)
 optimizeIO to e = do
-  chan <- newChan
-  result <- timeout to (writeList2Chan chan $ optimize e)
-  e' <- getChanLast chan e
+  best <- newIORef e
+  result <- timeout to (mapM_ (writeIORef best $!) $ optimize e)
+  e' <- readIORef best
   return $ case result of
     Nothing -> (e', False)
     Just _  -> (e', True)
-
-getChanLast :: Chan a -> a -> IO a
-getChanLast c x = do
-  b <- isEmptyChan c
-  if b then return x else getChanLast c =<< readChan c
