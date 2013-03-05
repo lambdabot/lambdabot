@@ -7,11 +7,9 @@
 -- Generic server connection,disconnection
 -- The module typeclass, type and operations on modules
 module Lambdabot
-    ( runIrc
-    
-    , flushModuleState
-    
+    ( flushModuleState
     , readGlobalState
+    , writeGlobalState
     
     , ircInstallModule
     , ircUnloadModule
@@ -29,7 +27,6 @@ module Lambdabot
 
 import Lambdabot.ChanName
 import Lambdabot.Command
-import Lambdabot.Config
 import Lambdabot.File
 import Lambdabot.IRC
 import Lambdabot.Message
@@ -40,7 +37,6 @@ import Lambdabot.OutputFilter
 import Lambdabot.State
 import Lambdabot.Util
 import Lambdabot.Util.Serial
-import Lambdabot.Util.Signals
 
 import Control.Concurrent
 import Control.Exception
@@ -48,78 +44,21 @@ import qualified Control.Exception as E (catch)
 import Control.Monad.Reader
 import Control.Monad.State
 import qualified Data.ByteString.Char8 as P
-import qualified Data.Dependent.Map as D
-import Data.Dependent.Sum
 import qualified Data.Map as M
 import Data.Random.Source
 import qualified Data.Set as S
-import Data.Typeable
-import Network (withSocketsDo)
-import System.Exit
 import System.IO
 
-------------------------------------------------------------------------
+-- ---------------------------------------------------------------------
 --
--- Lambdabot modes, networked , or command line
+-- Handling global state
 --
-data Mode = Online | Offline deriving Eq
-
--- | The Lambdabot entry point.
--- Initialise plugins, connect, and run the bot in the LB monad
---
--- Also, handle any fatal exceptions (such as non-recoverable signals),
--- (i.e. print a message and exit). Non-fatal exceptions should be dealt
--- with in the mainLoop or further down.
-runIrc :: LB a -> [DSum Config] -> IO ()
-runIrc initialise configBindings = withSocketsDo $ do
-    rost <- initRoState (D.fromList configBindings)
-    r <- try $ evalLB (do withDebug "Initialising plugins" initialise
-                          withIrcSignalCatch mainLoop)
-                       rost initRwState
-
-    -- clean up and go home
-    case r of
-        Left (SomeException er) -> do
-            case cast er of
-                Just code -> exitWith code
-                Nothing -> do
-                    putStrLn "exception:"
-                    print er
-                    exitWith (ExitFailure 1)
-        Right _ -> do
-            exitWith ExitSuccess
-
--- Actually, this isn't a loop anymore.  FIXME: better name.
-mainLoop :: LB ()
-mainLoop = do
-    catchIrc
-        (do asks ircInitDoneMVar >>= io . flip putMVar ()
-            asks ircQuitMVar >>= io . takeMVar)
-        (\e -> do -- catch anything, print informative message, and clean up
-            io $ hPutStrLn stderr $ case e of
-                IRCRaised ex   -> "Exception: " ++ show ex
-                SignalCaught s -> "Signal: " ++ ircSignalMessage s)
-        
-    runExitHandlers
-    flushModuleState
-    
-    -- this kills profiling output:
-    io $ exitWith (ExitFailure 1)
-
--- | run 'exit' handler on modules
-runExitHandlers:: LB ()
-runExitHandlers = withAllModules moduleExit >> return ()
 
 -- | flush state of modules
 flushModuleState :: LB ()
 flushModuleState = do
     _ <- withAllModules (\m -> getModuleName >>= writeGlobalState m)
     return ()
-
--- ---------------------------------------------------------------------
---
--- Handling global state
---
 
 -- | Peristence: write the global state out
 writeGlobalState :: Module st -> String -> ModuleT st LB ()
@@ -260,13 +199,6 @@ ircPrivmsg' who ""  = ircPrivmsg' who " "
 ircPrivmsg' who msg = send $ privmsg who msg
 
 ------------------------------------------------------------------------
-
--- | Print a debug message, and perform an action
-withDebug :: String -> LB a -> LB ()
-withDebug s a = do
-    io $ hPutStr stderr (s ++ " ...")  >> hFlush stderr
-    _ <- a
-    io $ hPutStrLn stderr " done." >> hFlush stderr
 
 monadRandom [d|
 
