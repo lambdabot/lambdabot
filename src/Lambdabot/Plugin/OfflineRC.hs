@@ -3,8 +3,8 @@
 -- layer.
 module Lambdabot.Plugin.OfflineRC ( theModule ) where
 
+import Lambdabot.Config.Core
 import Lambdabot.IRC
-import Lambdabot.Main( received, onStartupCmds )
 import Lambdabot.Monad
 import Lambdabot.Plugin
 import Lambdabot.Plugin.Base( commandPrefixes )

@@ -21,9 +21,10 @@ module Lambdabot.Monad
     , lbIO
     , evalLB
     
-    , send
     , addServer
     , remServer
+    , send
+    , received
     
     , handleIrc
     , catchIrc
@@ -46,7 +47,7 @@ import           Lambdabot.ChanName
 import           Lambdabot.Command
 import           Lambdabot.Config
 import           Lambdabot.Config.Core
-import           Lambdabot.IRC (IrcMessage)
+import           Lambdabot.IRC
 import           Lambdabot.Module
 import qualified Lambdabot.Message as Msg
 import           Lambdabot.Nick
@@ -176,6 +177,13 @@ send msg = do
         Just (_, sendf) -> sendf msg
         Nothing -> io $ hPutStrLn stderr $ "sending message to bogus server: " ++ show msg
 
+received :: IrcMessage -> LB ()
+received msg = do
+    s       <- get
+    handler <- getConfig uncaughtExceptionHandler
+    case M.lookup (ircMsgCommand msg) (ircCallbacks s) of
+        Just cbs -> mapM_ (\(_, cb) -> handleIrc handler (cb msg)) cbs
+        _        -> return ()
 
 -- ---------------------------------------------------------------------
 --

@@ -6,8 +6,6 @@ module Lambdabot.Main
     , lambdabotMain
     , runIrc
     
-    , received
-    
     , Modules
     , modules
     ) where
@@ -15,7 +13,6 @@ module Lambdabot.Main
 import Lambdabot
 import Lambdabot.Config
 import Lambdabot.Config.Core
-import Lambdabot.IRC
 import Lambdabot.Module
 import Lambdabot.Monad
 import Lambdabot.Util
@@ -25,11 +22,9 @@ import Control.Applicative
 import Control.Concurrent.MVar
 import Control.Exception
 import Control.Monad.Reader
-import Control.Monad.State
 import Data.Char
 import qualified Data.Dependent.Map as D
 import Data.Dependent.Sum
-import qualified Data.Map as M
 import Data.Typeable
 import Language.Haskell.TH
 import System.Environment
@@ -98,25 +93,6 @@ withDebug s a = do
     io $ hPutStr stderr (s ++ " ...")  >> hFlush stderr
     _ <- a
     io $ hPutStrLn stderr " done." >> hFlush stderr
-
-------------------------------------------------------------------------
-
-received :: IrcMessage -> LB ()
-received msg = do
-    s   <- get
-    case M.lookup (ircMsgCommand msg) (ircCallbacks s) of
-        Just cbs -> allCallbacks (map snd cbs) msg
-        _        -> return ()
-
--- If an error reaches allCallbacks, then all we can sensibly do is
--- write it on standard out. Hopefully BaseModule will have caught it already
--- if it can see a better place to send it
-
-allCallbacks :: [a -> LB ()] -> a -> LB ()
-allCallbacks [] _ = return ()
-allCallbacks (f:fs) msg = do
-    handleIrc (liftIO . putStrLn . ("Main: caught (and ignoring) "++) . show) (f msg)
-    allCallbacks fs msg
 
 ------------------------------------------------------------------------
 
