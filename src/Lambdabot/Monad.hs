@@ -26,9 +26,6 @@ module Lambdabot.Monad
     , send
     , received
     
-    , handleIrc
-    , catchIrc
-    
     , forkLB
     , liftLB
     
@@ -183,7 +180,7 @@ received msg = do
     s       <- get
     handler <- getConfig uncaughtExceptionHandler
     case M.lookup (ircMsgCommand msg) (ircCallbacks s) of
-        Just cbs -> mapM_ (\(_, cb) -> handleIrc handler (cb msg)) cbs
+        Just cbs -> mapM_ (\(_, cb) -> catchError (cb msg) handler) cbs
         _        -> return ()
 
 -- ---------------------------------------------------------------------
@@ -251,16 +248,6 @@ evalLB :: LB a -> IRCRState -> IRCRWState -> IO a
 evalLB (LB lb') rs rws = do
     ref  <- newIORef rws
     lb' `runReaderT` (rs,ref)
-
--- May wish to add more things to the things caught, or restructure things
--- a bit. Can't just catch everything - in particular EOFs from the socket
--- loops get thrown to this thread and we musn't just ignore them.
-handleIrc :: MonadError IRCError m => (IRCError -> m ()) -> m () -> m ()
-handleIrc handler m = catchError m handler
-
--- Like handleIrc, but with arguments reversed
-catchIrc :: MonadError IRCError m => m () -> (IRCError -> m ()) -> m ()
-catchIrc = flip handleIrc
 
 -- | run an IO action in another thread, with a timeout, lifted into LB
 forkLB :: LB a -> LB ThreadId

@@ -4,8 +4,7 @@
 -- Posix signals are external events that invoke signal handlers in
 -- Haskell. The signal handlers in turn throw dynamic exceptions.  Our
 -- instance of MonadError for LB maps the dynamic exceptions to
--- SignalCaughts, which can then be caught by a normal catchIrc or
--- handleIrc
+-- SignalCaughts, which can then be caught by a normal catchError
 
 -- Here's where we do that.
 module Lambdabot.Util.Signals
@@ -96,7 +95,7 @@ ircSignalMessage s
 -- signal flavour. On receiving a signal, the signal handler maps the
 -- signal to a a dynamic exception, and throws it out to the main
 -- thread. The LB MonadError instance can then do its trickery to catch
--- it in handler/catchIrc
+-- it in handler/catchError
 --
 ircSignalHandler :: ThreadId -> Signal -> Handler
 ircSignalHandler threadid s

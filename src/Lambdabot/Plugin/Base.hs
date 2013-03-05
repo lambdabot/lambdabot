@@ -18,6 +18,7 @@ import Lambdabot.Plugin
 
 import Control.Applicative
 import Control.Monad
+import Control.Monad.Error
 import Control.Monad.State
 import Data.List
 import Data.List.Split
@@ -223,7 +224,7 @@ doPRIVMSG' config myname msg target
 
                         if not ok
                           then lift $ ircPrivmsg towhere "Not enough privileges"
-                          else catchIrc
+                          else catchError
 
                             (do mstrs <- runCommand theCmd msg towhere cmd' rest
                                 -- send off our strings
@@ -250,7 +251,7 @@ doPRIVMSG' config myname msg target
                             lift $ mapM_ (ircPrivmsg target) ms
                    )
             name' <- getModuleName
-            lift $ catchIrc act (debugStrLn . (name' ++) .
+            lift $ catchError act (debugStrLn . (name' ++) .
                 (" module failed in contextual handler: " ++) . show)
             )
         return ()
