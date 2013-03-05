@@ -1,13 +1,13 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Lambdabot.Main
-    ( onStartupCmds
-    
-    , DSum(..)
+    ( DSum(..)
     , lambdabotMain
     , runIrc
     
     , Modules
     , modules
+    
+    , module Lambdabot.Config.Core
     ) where
 
 import Lambdabot
