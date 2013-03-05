@@ -11,7 +11,6 @@ module Lambdabot.Util (
         listToStr,
         showClean,
         expandTab,
-        timeout,
         arePrefixesWithSpaceOf,
         arePrefixesOf,
         
@@ -22,7 +21,6 @@ module Lambdabot.Util (
         confirmation
     ) where
 
-import Control.Concurrent
 import Control.Monad.Trans
 import Data.Char
 import Data.List
@@ -90,26 +88,6 @@ expandTab w = go 0
     go _ []         = []
     go i ('\t':xs)  = replicate (w - i `mod` w) ' ' ++ go 0 xs
     go i (x:xs)     = x : go (i+1) xs
-
-------------------------------------------------------------------------
-
--- stolen from
--- http://www.haskell.org/pipermail/haskell-cafe/2005-January/008314.html
-parIO :: IO a -> IO a -> IO a
-parIO a1 a2 = do
-  m  <- newEmptyMVar
-  c1 <- forkIO $ putMVar m =<< a1
-  c2 <- forkIO $ putMVar m =<< a2
-  r  <- takeMVar m
-  -- killThread blocks until the thread has been killed.  Therefore, we call
-  -- killThread asynchronously in case one thread is blocked in a foreign
-  -- call.
-  _  <- forkIO $ killThread c1 >> killThread c2
-  return r
-
--- | run an action with a timeout
-timeout :: Int -> IO a -> IO (Maybe a)
-timeout n a = parIO (Just `fmap` a) (threadDelay n >> return Nothing)
 
 ------------------------------------------------------------------------
 

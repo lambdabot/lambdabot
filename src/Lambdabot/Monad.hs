@@ -68,6 +68,7 @@ import qualified Data.Map as M
 import qualified Data.Set as S
 import System.Console.Haskeline.MonadException (MonadException)
 import System.IO
+import System.Timeout
 
 ------------------------------------------------------------------------
 --

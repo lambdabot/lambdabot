@@ -7,7 +7,6 @@ import Lambdabot.Config.Core
 import Lambdabot.IRC
 import Lambdabot.Monad
 import Lambdabot.Plugin
-import Lambdabot.Plugin.Base( commandPrefixes )
 import Lambdabot.Util.Error( finallyError )
 
 import Control.Concurrent( forkIO )
@@ -20,6 +19,7 @@ import Control.Monad.Trans( lift, liftIO )
 import Data.Char
 import System.Console.Haskeline
 import System.IO
+import System.Timeout
 
 -- We need to track the number of active sourcings so that we can
 -- unregister the server (-> allow the bot to quit) when it is not
