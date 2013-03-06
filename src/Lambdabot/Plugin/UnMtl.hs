@@ -11,11 +11,13 @@
 module Lambdabot.Plugin.UnMtl (theModule) where
 
 import Lambdabot.Plugin
+import qualified Lambdabot.Plugin as Lmb (Module)
 import Lambdabot.Util.Parser (prettyPrintInLine)
 
 import Control.Monad
 import Language.Haskell.Exts as Hs hiding (tuple, var)
 
+theModule :: Lmb.Module ()
 theModule = newModule
     { moduleCmds = return
         [ (command "unmtl")
@@ -70,6 +72,7 @@ mkPfun n cont = PMonad n (Just msg) (Just fun)
                    PMonad{pError  = Just _}  -> "."
                    PMonad{pResult = t }      -> ", giving `" ++ init l' ++ ". " ++ prettyPrintInLine t ++ "'"
           where l' = l ++ [x] ++ " "
+        full _ [] _ = error "UnMtl plugin error: ampty list"
 
 -----------------------------------------------------------
 -- Helpers for constructing types
@@ -170,7 +173,7 @@ mtlParser' t = return t
 
 -----------------------------------------------------------
 -- Examples
--- 
+--
 -- ContT ByteString (StateT s IO) a
 -- StateT s (ContT ByteString IO) a
 -- ErrorT ByteString (WriterT String (State s)) a

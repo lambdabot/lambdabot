@@ -27,8 +27,9 @@ import Data.Char
 import Data.Maybe
 import Text.Regex.TDFA
 
+theModule :: Module ()
 theModule = newModule
-    { moduleCmds = return 
+    { moduleCmds = return
         [ (command "type")
             { help = say "type <expr>. Return the type of a value"
             , process = runit ":t"
@@ -47,6 +48,8 @@ theModule = newModule
             _     -> return ()
     }
 
+runit :: MonadLB m =>
+         String -> String -> Cmd m ()
 runit s expr = query_ghci s expr >>= say
 
 --     In accordance with the KISS principle, the plan is to delegate all
@@ -133,7 +136,7 @@ query_ghci cmd expr = do
                Nothing -> unlines . take 3 . filter (not . null) . map cleanRE2 .
                           lines . expandTab 8 . cleanRE . filter (/='\r') $ errors -- "bzzt"
                Just t -> t
-    
+
     where
         cleanRE, cleanRE2 :: String -> String
         cleanRE s

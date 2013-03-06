@@ -1,6 +1,6 @@
 {-# LANGUAGE PatternGuards #-}
 -- | Lambdabot base module. Controls message send and receive
-module Lambdabot.Plugin.Base 
+module Lambdabot.Plugin.Base
     ( commandPrefixes
     , evalPrefixes
     , disabledCommands
@@ -29,6 +29,7 @@ import Text.Regex.TDFA
 type BaseState = GlobalPrivate () ()
 type Base = ModuleT BaseState LB
 
+theModule :: Module (GlobalPrivate () ())
 theModule = newModule
     { moduleDefState = return $ mkGlobalPrivate 20 ()
     , moduleInit = do
@@ -140,11 +141,11 @@ doPRIVMSG msg = do
     commands    <- getConfig commandPrefixes
     evPrefixes  <- getConfig evalPrefixes
     disabled    <- getConfig disabledCommands
-    let config = (commands, evPrefixes, disabled)
-    
+    let conf = (commands, evPrefixes, disabled)
+
     if ignored
         then lift $ doIGNORE msg
-        else mapM_ (doPRIVMSG' config (lambdabotName msg) msg) targets
+        else mapM_ (doPRIVMSG' conf (lambdabotName msg) msg) targets
     where
         alltargets = head (ircMsgParams msg)
         targets = map (Msg.readNick msg) $ splitOn "," alltargets
@@ -153,7 +154,7 @@ doPRIVMSG msg = do
 -- | What does the bot respond to?
 --
 doPRIVMSG' :: ([String], [String], [String]) -> Nick -> IrcMessage -> Nick -> Base ()
-doPRIVMSG' config myname msg target
+doPRIVMSG' configu myname msg target
   | myname == target
     = let (cmd, params) = splitFirstWord text
       in doPersonalMsg cmd params
@@ -177,7 +178,7 @@ doPRIVMSG' config myname msg target
     text = tail (head (tail (ircMsgParams msg)))
     who = nick msg
 
-    (commands, evPrefixes, disabled) = config
+    (commands, evPrefixes, disabled) = configu
     doPersonalMsg s r
         | commands `arePrefixesOf` s  = doMsg (tail s) r who
         | s `elem` evPrefixes         = doMsg "run"    r who
@@ -215,7 +216,7 @@ doPRIVMSG' config myname msg target
               act <- bindModule0 . withPS towhere $ \_ _ -> do
                 withCommand cmd'   -- Important.
                     (ircPrivmsg towhere "Unknown command, try @list")
-                    (\m theCmd -> do
+                    (\_ theCmd -> do
                         name'   <- getModuleName
 
                         hasPrivs <- lb (checkPrivs msg)
@@ -245,7 +246,7 @@ doPRIVMSG' config myname msg target
     -- them bubble back up to the mainloop
     --
     doContextualMsg r = lift $ do
-        withAllModules ( \m -> do
+        _ <- withAllModules ( \m -> do
             act <- bindModule0 ( do
                             ms <- execCmd (contextual m r) msg target "contextual"
                             lift $ mapM_ (ircPrivmsg target) ms
@@ -266,7 +267,7 @@ closests pat ss = M.findMin m
 
 maybeCommand :: String -> String -> Maybe String
 maybeCommand nm text = mrAfter <$> matchM re text
-    where 
+    where
         re :: Regex
         re = makeRegex (nm ++ "[.:,]*[[:space:]]*")
 

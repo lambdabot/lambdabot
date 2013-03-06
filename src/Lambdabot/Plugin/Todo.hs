@@ -12,10 +12,11 @@ import qualified Data.ByteString.Char8 as P
 type TodoState = [(P.ByteString, P.ByteString)]
 type Todo = ModuleT TodoState LB
 
+theModule :: Module TodoState
 theModule = newModule
     { moduleDefState  = return ([] :: TodoState)
     , moduleSerialize = Just assocListPackedSerial
-    
+
     , moduleCmds = return
         [ (command "todo")
             { help = say "todo. List todo entries"
@@ -41,7 +42,7 @@ getTodo _  = say "@todo has no args, try @todo-add or @list todo"
 -- | Pretty print todo list
 sayTodo :: [(P.ByteString, P.ByteString)] -> Cmd Todo ()
 sayTodo [] = say "Nothing to do!"
-sayTodo todoList = say . unlines =<< zipWithM fmtTodoItem [0..] todoList
+sayTodo todoList = say . unlines =<< zipWithM fmtTodoItem ([0..] :: [Int]) todoList
     where
         fmtTodoItem n (idea, nick_) = do
             nick <- showNick (unpackNick nick_)
@@ -62,7 +63,7 @@ delTodo rest
           _ | null ls -> return "Todo list is empty"
             | n > length ls - 1 || n < 0
             -> return (show n ++ " is out of range")
-    
+
             | otherwise -> do
                 write (map snd . filter ((/= n) . fst) . zip [0..] $ ls)
                 let (a,_) = ls !! n

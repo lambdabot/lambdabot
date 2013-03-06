@@ -38,17 +38,17 @@ data Event =
     deriving (Eq)
 
 instance Show Event where
-    show (Said nick ct what)       = timeStamp ct ++ " <" ++ nName nick ++ "> " ++ what
-    show (Joined nick user ct)     = timeStamp ct ++ " " ++ show nick
-                                     ++ " (" ++ user ++ ") joined."
-    show (Parted nick user ct)     = timeStamp ct ++ " " ++ show nick
-                                     ++ " (" ++ user ++ ") left."
-    show (Renick nick user ct new) = timeStamp ct ++ " " ++ show  nick
-                                     ++ " (" ++ user ++ ") is now " ++ show new ++ "."
+    show (Said nick ct what)      = timeStamp ct ++ " <" ++ nName nick ++ "> " ++ what
+    show (Joined nick usr ct)     = timeStamp ct ++ " " ++ show nick
+                                    ++ " (" ++ usr ++ ") joined."
+    show (Parted nick usr ct)     = timeStamp ct ++ " " ++ show nick
+                                    ++ " (" ++ usr ++ ") left."
+    show (Renick nick usr ct new) = timeStamp ct ++ " " ++ show  nick
+                                    ++ " (" ++ usr ++ ") is now " ++ show new ++ "."
 
 -- * Dispatchers and Module instance declaration
 --
-
+theModule :: Module (M.Map Channel ChanState)
 theModule = newModule
     { moduleDefState  = return M.empty
     , moduleExit      = cleanLogState
@@ -60,7 +60,7 @@ theModule = newModule
                 -- of their log files.
                 mapM_ (withValidLog (doLog f msg) now) (Msg.channels msg)
             connect signal cb = ircSignalConnect signal =<< wrapCB cb
-        
+
         connect "PRIVMSG" msgCB
         connect "JOIN"    joinCB
         connect "PART"    partCB
@@ -79,15 +79,15 @@ showWidth width n = zeroes ++ num
           zeroes = replicate (width - length num) '0'
 
 timeStamp :: UTCTime -> String
-timeStamp (UTCTime _ ct) = 
-    (showWidth 2 (hour `mod` 24)) ++ ":" ++
-    (showWidth 2 (min  `mod` 60)) ++ ":" ++
-    (showWidth 2 (sec  `mod` 60))
+timeStamp (UTCTime _ ct) =
+    (showWidth 2 (hours `mod` 24)) ++ ":" ++
+    (showWidth 2 (mins  `mod` 60)) ++ ":" ++
+    (showWidth 2 (secs  `mod` 60))
     where
-        sec  = round ct :: Int
-        min  = sec `div` 60
-        hour = min `div` 60
-        
+        secs  = round ct :: Int
+        mins  = secs `div` 60
+        hours = mins `div` 60
+
 -- | Show a DateStamp.
 dateToString :: DateStamp -> String
 dateToString (d, m, y) = (showWidth 2 $ fromInteger y) ++ "-" ++

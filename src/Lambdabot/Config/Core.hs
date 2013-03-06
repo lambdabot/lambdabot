@@ -34,4 +34,3 @@ defaultIrcHandler :: IRCError -> LB ()
 defaultIrcHandler = liftIO . putStrLn . ("Main: caught (and ignoring) "++) . show
 
 config "uncaughtExceptionHandler" [t| IRCError -> LB () |] [| defaultIrcHandler |]
-

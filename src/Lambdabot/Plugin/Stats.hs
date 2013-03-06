@@ -6,28 +6,34 @@ import Lambdabot.Plugin
 
 import Network.StatsD
 
-host = "stats.thecave.lan"
-port = "8125"
-prefix = ["lambdabot"]
 
 type Stats = ModuleT StatsD LB
 
+theModule :: Module StatsD
 theModule = newModule
     { moduleDefState = io (openStatsD host port prefix)
     , contextual = \msg -> do
         let n = length msg
-        
+
         user <- showNick =<< getSender
         chan <- showNick =<< getTarget
-        
-        counts 
-            [ (grp ++ [stat], val)
+
+        counts
+            [ (grp ++ [stat'], val')
             | grp <- [["user", user], ["channel", chan]]
-            , (stat, val) <- [("lines", 1), ("chars", toInteger n) ]
+            , (stat', val') <- [("lines", 1), ("chars", toInteger n) ]
             ]
     }
 
 -- various helpers
+host :: String
+host = "stats.thecave.lan"
+
+port :: String
+port = "8125"
+
+prefix :: [String]
+prefix = ["lambdabot"]
 
 report :: [Stat] -> Cmd Stats ()
 report xs = do
@@ -35,4 +41,4 @@ report xs = do
     io (push st xs)
 
 counts :: [([String], Integer)] -> Cmd Stats ()
-counts xs = report [stat bucket val "c" Nothing | (bucket, val) <- xs]
+counts xs = report [stat bucket' val' "c" Nothing | (bucket', val') <- xs]

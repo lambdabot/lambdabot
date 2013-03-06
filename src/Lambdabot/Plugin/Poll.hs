@@ -1,3 +1,4 @@
+{-# LANGUAGE TypeFamilies #-}
 -- | Module: Vote
 -- | Support for voting
 -- |
@@ -45,6 +46,7 @@ voteSerial = Serial (Just . showPacked) (Just . readPacked)
 
 ------------------------------------------------------------------------
 
+theModule :: Module (M.Map PollName Poll)
 theModule = newModule
     { moduleCmds = return
         [ (command "poll-list")
@@ -88,8 +90,9 @@ theModule = newModule
     , moduleSerialize = Just voteSerial
     }
 
+process_ :: (MonadLBState m, LBState m ~ M.Map PollName Poll) =>
+            [Char] -> [Char] -> Cmd m ()
 process_ cmd [] = say ("Missing argument. Check @help " ++ cmd ++ " for info.")
-
 process_ cmd dat = do
     result <- withMS $ \fm writer -> processCommand fm writer cmd (words dat)
     say result
@@ -190,4 +193,3 @@ closePoll fm writer poll = case M.lookup (P.pack poll) fm of
     Nothing     -> return $ "No such poll: " ++ show poll
     Just (_,p)  -> do writer $ M.update (const (Just (False,p))) (P.pack poll) fm
                       return $ "Poll " ++ show poll ++ " closed."
-

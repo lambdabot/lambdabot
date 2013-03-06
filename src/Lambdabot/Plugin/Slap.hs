@@ -5,6 +5,7 @@ import Lambdabot.Plugin
 
 type Slap = ModuleT () LB
 
+theModule :: Module ()
 theModule = newModule
     { moduleCmds = return
         [ (command "slap")
@@ -17,13 +18,14 @@ theModule = newModule
 
 ------------------------------------------------------------------------
 
+slap :: String -> Cmd Slap ()
 slap "me" = do
     target <- showNick =<< getSender
     slapRandom target
 slap "yourself" = do
     target <- showNick =<< getLambdabotName
     slapRandom target
-slap target = 
+slap target =
     slapRandom target
 
 slapRandom :: String -> Cmd Slap ()

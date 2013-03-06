@@ -20,8 +20,9 @@ import Data.List.Split
 
 type Compose = ModuleT () LB
 
+theModule :: Module ()
 theModule = newModule
-    { moduleCmds = return 
+    { moduleCmds = return
         [ (command "@")
             { aliases = ["?"]
             , help = do
@@ -65,7 +66,7 @@ lookupP cmd = withMsg $ \a -> do
     b <- getTarget
     lb $ withCommand cmd
         (error $ "Unknown command: " ++ show cmd)
-        (\m theCmd -> do
+        (\_m theCmd -> do
             when (privileged theCmd) $ error "Privileged commands cannot be composed"
             bindModule1 (runCommand theCmd a b cmd))
 
@@ -77,9 +78,9 @@ lookupP cmd = withMsg $ \a -> do
 evalBracket :: String -> Cmd Compose ()
 evalBracket args = do
     cmdPrefixes <- getConfig commandPrefixes
-    
-    let config = cmdPrefixes
-    xs <- mapM evalExpr (fst (parseBracket 0 True args config))
+
+    let conf = cmdPrefixes
+    xs <- mapM evalExpr (fst (parseBracket 0 True args conf))
     mapM_ (say . addSpace) (concat' xs)
  where concat' ([x]:[y]:xs) = concat' ([x++y]:xs)
        concat' xs           = concat xs
@@ -128,16 +129,16 @@ parseBracket n c (x:xs) cfg = first (addArg [x])
                             $ parseBracket n (not (isAlphaNum x) && (c || x /= '\'')) xs cfg
 
 parseCommand, parseInlineCommand :: Int -> String -> [String] -> ([Expr],String)
-parseCommand n xs config = (Cmd cmd args:rest, ws)
+parseCommand n xs conf = (Cmd cmd args:rest, ws)
     where
         (cmd, ys) = break (`elem` " )") xs
-        (args,zs) = parseBracket 1 True (dropWhile (==' ') ys) config
-        (rest,ws) = parseBracket n True zs config
+        (args,zs) = parseBracket 1 True (dropWhile (==' ') ys) conf
+        (rest,ws) = parseBracket n True zs conf
 
-parseInlineCommand n xs config = (Cmd cmd rest:[], zs)
+parseInlineCommand n xs conf = (Cmd cmd rest:[], zs)
   where
     (cmd, ys) = break (`elem` " )") xs
-    (rest,zs) = parseBracket n True (dropWhile (==' ') ys) config
+    (rest,zs) = parseBracket n True (dropWhile (==' ') ys) conf
 
 parseString :: Char -> String -> (String, String)
 parseString _     []          = ([],[])

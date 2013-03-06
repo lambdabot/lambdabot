@@ -33,20 +33,21 @@ type Seen = ModuleT SeenState LB
 
 ------------------------------------------------------------------------
 
+theModule :: Module (M.Map Channel Int, M.Map PackedNick UserStatus)
 theModule = newModule
     { moduleDefState = return (M.empty,M.empty)
-    
+
     , moduleCmds = return
         [ (command "users")
             { help = say "users [chan]. Report the maximum number of users seen in a channel, and active users in the last 30 minutes"
-            , process = doUsers                
+            , process = doUsers
             }
-        , (command "seen") 
+        , (command "seen")
             { help = say "seen <user>. Report if a user has been seen by the bot"
             , process = doSeen
             }
         ]
-    
+
     , moduleInit = do
         sequence_
             [ ircSignalConnect signal =<< bindModule1 (withSeenFM cb)
@@ -54,7 +55,7 @@ theModule = newModule
                 ["JOIN", "PART", "QUIT", "NICK", "353",      "PRIVMSG"]
                 [joinCB, partCB, quitCB, nickCB, joinChanCB, msgCB]
             ]
-        
+
         c <- lb $ findLBFile "seen"
         s <- io $ P.readFile c
         let ls = L.fromChunks [s]
@@ -67,16 +68,16 @@ theModule = newModule
                     Left exc2 -> do
                         let _ = exc2 :: SomeException
                         io $ hPutStrLn stderr ("WARNING: failed to read Seen module state: "  ++ show (exc :: SomeException))
-                    Right (maxMap, seenMap) -> 
+                    Right (maxMap, seenMap) ->
                         writeMS (M.mapKeys P.pack maxMap, seenMap)
             Right decoded -> writeMS decoded
-    
+
     , moduleExit = do
         chans <- lift $ ircGetChannels
         unless (null chans) $ do
             ct    <- io getClockTime
             modifyMS $ \(n,m) -> (n, botPart ct (map G.packNick chans) m)
-            
+
         -- and write out our state:
         withMS $ \s _ -> findLBFile "seen" >>= \ c -> io (encodeFile c s)
     }
@@ -95,24 +96,24 @@ doUsers rest = withMsg $ \msg -> do
     let who = G.packNick $ lcNick $ if null rest then chan else G.readNick msg rest
         now = length [ () | (_,Present _ chans) <- M.toList seenFM
                           , who `elem` chans ]
-        
+
         n = case M.lookup who m of Nothing -> 1; Just n' -> n'
-        
+
         active = length [() | (_,st@(Present _ chans)) <- M.toList seenFM
                             , who `elem` chans && isActive st ]
-        
+
         isActive (Present (Just (ct,_td)) _cs) = recent ct
         isActive _                             = False
-        
+
         recent t = diffClockTimes s t < gap_minutes
         gap_minutes = TimeDiff 1800 -- 30 minutes
-        
+
         percent p q = 100 * (fromIntegral p / fromIntegral q) :: Double
-        
+
         total   0 0 = "0"
         total   p q = printf "%d (%0.1f%%)" p (percent p q)
-    
-    say $! printf "Maximum users seen in %s: %d, currently: %s, active: %s" 
+
+    say $! printf "Maximum users seen in %s: %d, currently: %s, active: %s"
         (G.showNick msg $ G.unpackNick who) n (total now n) (total active now)
 
 doSeen :: String -> Cmd Seen ()
@@ -192,7 +193,7 @@ getAnswer msg rest seenFM now
                     Just (NewNick pstr') -> findFunc pstr'
                     Just _               -> pstr
                     Nothing              -> error "SeenModule.nickIsNew: Nothing"
-        
+
         nick' = takeWhile (not . isSpace) rest
         you   = pnick == lcNick (G.nick msg)
         nick  = if you then "you" else nick'
@@ -201,16 +202,16 @@ getAnswer msg rest seenFM now
             | all (==' ') diff = "just now"
             | otherwise        = diff ++ " ago"
             where diff = timeDiffPretty . diffClockTimes now $ past
-        
-        prettyMissed (Stopped _) ifMissed _     = "." -- ifMissed ++ "."
-        prettyMissed _           _ ifNotMissed  = "." -- ifNotMissed ++ "."
+
+        prettyMissed (Stopped _) _ifMissed _     = "." -- ifMissed ++ "."
+        prettyMissed _           _ _ifNotMissed  = "." -- ifNotMissed ++ "."
 
 {-
         prettyMissed (Stopped missed) ifMissed _
             | missedPretty <- timeDiffPretty missed
             , any (/=' ') missedPretty
             = concat [ifMissed, "I have missed ", missedPretty, " since then."]
-        
+
         prettyMissed _ _ ifNotMissed = ifNotMissed ++ "."
 -}
 
@@ -225,7 +226,7 @@ joinCB :: IrcMessage -> ClockTime -> PackedNick -> SeenMap -> Either String Seen
 joinCB msg _ct nick fm
     | nick == lbNick = Right fm
     | otherwise      = Right $! insertUpd (updateJ Nothing chans) nick newInfo fm
-    where 
+    where
         insertUpd f = M.insertWith (\_ -> f)
         lbNick  = G.packNick $ G.lambdabotName msg
         newInfo = Present Nothing chans
@@ -265,7 +266,7 @@ quitCB _ ct nick fm = case M.lookup nick fm of
 -- | when somebody changes his\/her name
 nickCB :: IrcMessage -> ClockTime -> PackedNick -> SeenMap -> Either String SeenMap
 nickCB msg _ nick fm = case M.lookup nick fm of
-    Just status -> Right $! M.insert lcnewnick status 
+    Just status -> Right $! M.insert lcnewnick status
                           $ M.insert nick (NewNick lcnewnick) fm
     _           -> Left "someone who isn't here changed nick"
     where
@@ -309,20 +310,20 @@ withSeenFM :: G.Message a
 withSeenFM f msg = do
     let chan = G.packNick . lcNick . head . G.channels $! msg
         nick = G.packNick . lcNick . G.nick $ msg
-    
+
     withMS $ \(maxUsers,state) writer -> do
         ct <- io getClockTime
         case f msg ct nick state of
             Left _         -> return ()
             Right newstate -> do
-                let curUsers = length $! 
+                let curUsers = length $!
                         [ () | (_,Present _ chans) <- M.toList state
                         , chan `elem` chans ]
-                    
+
                     newMax = case M.lookup chan maxUsers of
                         Nothing -> M.insert chan curUsers maxUsers
                         Just  n -> if n < curUsers
                             then M.insert chan curUsers maxUsers
                             else maxUsers
-                
+
                 newMax `seq` newstate `seq` writer (newMax, newstate)

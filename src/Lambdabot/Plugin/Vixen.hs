@@ -14,6 +14,7 @@ import qualified Data.ByteString.Char8 as P
 import System.Directory
 import Text.Regex.TDFA
 
+theModule :: Module (Bool, String -> IO [Char])
 theModule = newModule
     { moduleCmds = return
         [ (command "vixen")
@@ -39,7 +40,7 @@ theModule = newModule
                 say "Bye!"
             }
         ]
-    
+
     -- if vixen-chat is on, we can just respond to anything
     , contextual = \txt -> do
         (alive, k) <- readMS
@@ -90,5 +91,6 @@ instance Binary WTree where
         case tag of
             0 -> liftM Leaf get
             1 -> liftM Node get
+            _ -> error "Vixen plugin error: unknown tag"
 
 type RChoice = [(Regex, WTree)] -- compiled choices
