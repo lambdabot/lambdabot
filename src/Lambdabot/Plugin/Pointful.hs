@@ -43,6 +43,7 @@ pVarsIn h = everything (++) (mkQ [] (\x -> case x of PVar name' -> [name']; _ ->
 
 succName :: Name -> Name
 succName (Ident s) = Ident . reverse . succAlpha . reverse $ s
+succName (Symbol _ ) = error "Pointful plugin error: cannot determine successor for a Symbol"
 
 succAlpha :: String -> String
 succAlpha ('z':xs) = 'a' : succAlpha xs
@@ -175,6 +176,7 @@ combinators = M.fromList $ map declToTuple defs
           f@(ParseFailed _ _) -> error ("Combinator loading: " ++ show f)
         declToTuple (PatBind _ (PVar fname) _ (UnGuardedRhs body) (BDecls []))
           = (UnQual fname, Paren body)
+        declToTuple _ = error "Pointful Plugin error: can't convert declaration to tuple"
 
 -- the names we recognize as combinators, so we don't generate them as temporaries then substitute them.
 -- TODO: more generally correct would be to not substitute any variable which is bound by a pattern

@@ -55,6 +55,7 @@ undo v (Do stms) = f stms
                                             (Lit $ String "")
                                     ]
         where alt pat x = Alt s pat (UnGuardedAlt x) (BDecls [])
+    f _ = error "Undo plugin error: can't undo!"
 undo v (ListComp e stms) = f stms
  where
     f []                                = List [e]
@@ -70,6 +71,7 @@ undo v (ListComp e stms) = f stms
                                     ]
         where alt pat x = Alt s pat (UnGuardedAlt x) (BDecls [])
               concatMap' fun = App (App (var "concatMap") (Paren fun)) l
+    f _ = error "Undo plugin error: can't undo!"
 undo _ x           = x
 
 irrefutable :: Pat -> Bool

@@ -28,6 +28,7 @@ theModule = newModule
     }
         where
             pair (a:b) = (a, P.unlines b)
+            pair _     = error "Source Plugin error: not a pair"
             splat []   = []
             splat s    = a : splat (tail b) where (a,b) = break P.null s
 

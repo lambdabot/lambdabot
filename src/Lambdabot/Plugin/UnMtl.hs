@@ -72,6 +72,7 @@ mkPfun n cont = PMonad n (Just msg) (Just fun)
                    PMonad{pError  = Just _}  -> "."
                    PMonad{pResult = t }      -> ", giving `" ++ init l' ++ ". " ++ prettyPrintInLine t ++ "'"
           where l' = l ++ [x] ++ " "
+        full _ [] _ = error "UnMtl plugin error: ampty list"
 
 -----------------------------------------------------------
 -- Helpers for constructing types

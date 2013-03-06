@@ -91,5 +91,6 @@ instance Binary WTree where
         case tag of
             0 -> liftM Leaf get
             1 -> liftM Node get
+            _ -> error "Vixen plugin error: unknown tag"
 
 type RChoice = [(Regex, WTree)] -- compiled choices

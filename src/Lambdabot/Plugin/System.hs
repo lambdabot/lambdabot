@@ -133,6 +133,7 @@ doSystem' msg target cmd rest = get >>= \s -> case cmd of
           let diff = now `diffClockTimes` loaded
           return ["uptime: "           ++ timeDiffPretty diff ++
                   ", longest uptime: " ++ timeDiffPretty (max diff m)]
+  _             -> error ("System plugin error: unknown command \"" ++ cmd ++ "\"")
 
 ------------------------------------------------------------------------
 

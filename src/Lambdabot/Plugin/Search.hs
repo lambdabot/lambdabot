@@ -67,6 +67,7 @@ moduleHelp s = case s of
     -- "wikipedia" -> "wikipedia <expr>. Search wikipedia and show url of first hit"
     "gsite"     -> "gsite <site> <expr>. Search <site> for <expr> using google"
     "gwiki"     -> "gwiki <expr>. Search (new) haskell.org wiki for <expr> using google."
+    _           -> "Search Plugin does not have command \"" ++ s ++ "\""
 
 ------------------------------------------------------------------------
 
