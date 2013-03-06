@@ -16,10 +16,11 @@ type Key    = P.ByteString
 type Quotes = M.Map Key [P.ByteString]
 type Quote  = ModuleT Quotes LB
 
+theModule :: Module (M.Map P.ByteString [P.ByteString])
 theModule = newModule
     { moduleSerialize = Just mapListPackedSerial
     , moduleDefState  = return M.empty
-    
+
     , moduleCmds = return
         [ (command "quote")
             { help = say "quote <nick>: Quote <nick> or a random person if no nick is given"
@@ -64,7 +65,7 @@ theModule = newModule
         , (command "pinky")
             { help = say "pinky. Pinky and the Brain"
             , process = \s -> fortune $ if "pondering" `isInfixOf` s
-                then ["pinky-pondering"] 
+                then ["pinky-pondering"]
                 else ["pinky-pondering", "pinky"]
             }
         , (command "brain")
@@ -144,7 +145,7 @@ runForget str
 --  the @quote command, takes a user nm to choose a random quote from
 --
 runQuote :: String -> Cmd Quote ()
-runQuote str = 
+runQuote str =
     say =<< io . search (P.pack nm) (P.pack pat) =<< readMS
   where (nm, p) = break isSpace str
         pat     = drop 1 p
@@ -173,9 +174,9 @@ search key pat db
     allquotes = concat [ zip (repeat who) qs | (who, qs) <- M.assocs db ]
 
     match' p ss = do
-        re <- makeRegexOptsM defaultCompOpt {caseSensitive = False, newSyntax = True} 
+        re <- makeRegexOptsM defaultCompOpt {caseSensitive = False, newSyntax = True}
                              defaultExecOpt {captureGroups = False} p
-        
+
         let rs = filter (match re . snd) ss
         if null rs
             then do r <- random insult

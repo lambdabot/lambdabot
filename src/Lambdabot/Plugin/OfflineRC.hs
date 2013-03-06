@@ -27,14 +27,15 @@ import System.Timeout
 type OfflineRCState = Integer
 type OfflineRC = ModuleT OfflineRCState LB
 
+theModule :: Module OfflineRCState
 theModule = newModule
     { moduleDefState = return 0
     , moduleInit = do
         act <- bindModule0 onInit
-        lift $ liftLB forkIO $ do
-            mv <- asks ircInitDoneMVar
-            io $ readMVar mv
-            act
+        _ <- lift $ liftLB forkIO $ do
+                     mv <- asks ircInitDoneMVar
+                     io $ readMVar mv
+                     act
         return ()
 
     , moduleCmds = return
@@ -44,7 +45,7 @@ theModule = newModule
             , process = const . lift $ do
                 act <- bindModule0 $ finallyError (runInputT defaultSettings replLoop) unlockRC
                 lockRC
-                lift $ liftLB forkIO act
+                _ <- lift $ liftLB forkIO act
                 return ()
             }
         , (command "rc")
@@ -55,7 +56,7 @@ theModule = newModule
                 io $ evaluate $ foldr seq () txt
                 act <- bindModule0 $ finallyError (mapM_ feed $ lines txt) unlockRC
                 lockRC
-                lift $ liftLB forkIO act
+                _ <- lift $ liftLB forkIO act
                 return ()
             }
         ]

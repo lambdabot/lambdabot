@@ -14,6 +14,7 @@ import qualified Data.ByteString.Char8 as P
 import System.Directory
 import Text.Regex.TDFA
 
+theModule :: Module (Bool, String -> IO [Char])
 theModule = newModule
     { moduleCmds = return
         [ (command "vixen")
@@ -39,7 +40,7 @@ theModule = newModule
                 say "Bye!"
             }
         ]
-    
+
     -- if vixen-chat is on, we can just respond to anything
     , contextual = \txt -> do
         (alive, k) <- readMS

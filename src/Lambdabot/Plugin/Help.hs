@@ -2,9 +2,11 @@
 module Lambdabot.Plugin.Help (theModule) where
 
 import Lambdabot.Command
+import Lambdabot.Message (Message)
 import Lambdabot.Monad
 import Lambdabot.Plugin
 
+theModule :: Module ()
 theModule = newModule
     { moduleCmds = return
         [ (command "help")
@@ -16,6 +18,8 @@ theModule = newModule
         ]
     }
 
+moduleHelp :: (Monad m, Message a) =>
+              Command m -> a -> Nick -> String -> m [String]
 moduleHelp theCmd msg tgt cmd =
     execCmd (help theCmd) msg tgt cmd
 
@@ -23,6 +27,7 @@ moduleHelp theCmd msg tgt cmd =
 -- If a target is a command, find the associated help, otherwise if it's
 -- a module, return a list of commands that module implements.
 --
+doHelp :: Message t => t -> Nick -> [Char] -> LB [[Char]]
 doHelp msg tgt [] = doHelp msg tgt "help"
 doHelp msg tgt rest =
     withCommand arg                  -- see if it is a command
@@ -36,6 +41,6 @@ doHelp msg tgt rest =
                 return [s]))
 
         -- so it's a valid command, try to find its help
-        (\md theCmd -> moduleHelp theCmd msg tgt arg)
+        (\_md theCmd -> moduleHelp theCmd msg tgt arg)
 
     where (arg:_) = words rest

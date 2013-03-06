@@ -3,10 +3,10 @@ module Lambdabot.Main
     ( DSum(..)
     , lambdabotMain
     , runIrc
-    
+
     , Modules
     , modules
-    
+
     , module Lambdabot.Config.Core
     ) where
 
@@ -41,7 +41,7 @@ parseArgs _                 = Nothing
 lambdabotMain :: Modules -> [DSum Config] -> IO ()
 lambdabotMain loadStaticModules configuration = do
     args <- parseArgs <$> getArgs
-    
+
     case args of
         Just xs -> runIrc loadStaticModules ((onStartupCmds :=> if null xs then ["offline"] else xs) : configuration)
         _       -> putStrLn "Usage: lambdabot [-e 'cmd']*"
@@ -58,7 +58,7 @@ runIrc initialise configBindings = withSocketsDo $ do
     r <- try $ evalLB (do withDebug "Initialising plugins" initialise
                           withIrcSignalCatch mainLoop)
                        rost initRwState
-    
+
     -- clean up and go home
     case r of
         Left (SomeException er) -> do
@@ -81,10 +81,10 @@ mainLoop = do
             io $ hPutStrLn stderr $ case e of
                 IRCRaised ex   -> "Exception: " ++ show ex
                 SignalCaught s -> "Signal: " ++ ircSignalMessage s)
-    
-    withAllModules moduleExit
+
+    _ <- withAllModules moduleExit
     flushModuleState
-    
+
     -- this kills profiling output:
     io $ exitWith (ExitFailure 1)
 
@@ -102,7 +102,7 @@ type Modules = LB ()
 modules :: [String] -> Q Exp
 modules xs = [| sequence_ $(listE $ map instalify xs) |]
     where
-        instalify x = 
+        instalify x =
             let module' = varE $ mkName $ concat $ ["Lambdabot.Plugin.", x, ".theModule"]
                 low     = stringE $ map toLower x
              in [| ircInstallModule $module' $low |]

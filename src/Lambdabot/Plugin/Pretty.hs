@@ -22,6 +22,7 @@ import Language.Haskell.Exts hiding (Module, Pretty)
 
 type Pretty = ModuleT () LB
 
+theModule :: Module ()
 theModule = newModule
     { moduleCmds = return
         [ (command "pretty")
@@ -40,9 +41,9 @@ prettyCmd rest =
         modPrefix2 = "module Main where __expr__ = "
         prefLen1 = length modPrefix1
         result = case (parseModule (modPrefix1 ++ code ++ "\n"), parseModule (modPrefix2 ++ code ++ "\n"))  of
-            (ParseOk a, _)          -> doPretty a
-            (_, ParseOk a)          -> doPretty a
-            (ParseFailed loc msg,_) -> let (SrcLoc _ _ col) = loc in
+            (ParseOk a, _)            -> doPretty a
+            (_, ParseOk a)            -> doPretty a
+            (ParseFailed locat msg,_) -> let (SrcLoc _ _ col) = locat in
                    (show msg ++ " at column " ++ show (col - prefLen1)) : []
     in mapM_ say result -- XXX will this work? No, spaces are compressed.
 

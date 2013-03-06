@@ -15,10 +15,10 @@ import Data.List.Split
 import Data.Maybe
 import Text.Regex.TDFA
 
-helpStr = "spell <word>. Show spelling of word"
 
 type Spell = ModuleT Bool LB
 
+theModule :: Module Bool
 theModule = newModule
     { moduleCmds = return
         [ (command "spell")
@@ -48,12 +48,18 @@ theModule = newModule
                  else return ()
     }
 
+helpStr :: String
+helpStr = "spell <word>. Show spelling of word"
+
+doSpell :: MonadIO m => [Char] -> Cmd m ()
 doSpell [] = say "No word to spell."
 doSpell s  = (say . showClean . take 5) =<< (io (spell s))
 
+spellAll :: MonadIO m => [Char] -> Cmd m ()
 spellAll [] = say "No phrase to spell."
 spellAll s  = liftIO (spellingNazi s) >>= mapM_ say
 
+nazi :: Bool -> Cmd (ModuleT Bool LB) ()
 nazi True  = lift on  >> say "Spelling nazi engaged."
 nazi False = lift off >> say "Spelling nazi disengaged."
 

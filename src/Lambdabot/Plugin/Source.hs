@@ -9,6 +9,7 @@ import qualified Data.Map as M
 
 type Env = M.Map P.ByteString P.ByteString
 
+theModule :: Module (M.Map P.ByteString P.ByteString)
 theModule = newModule
     { moduleCmds = return
         [ (command "src")

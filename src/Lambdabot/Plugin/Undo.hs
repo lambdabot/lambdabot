@@ -11,6 +11,7 @@ import Data.Generics
 import qualified Data.Set as Set
 import Language.Haskell.Exts.Syntax hiding (Module)
 
+theModule :: Module ()
 theModule = newModule
     { moduleCmds = return
         [ (command "undo")

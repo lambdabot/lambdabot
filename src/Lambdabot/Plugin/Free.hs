@@ -6,6 +6,7 @@ import Lambdabot.Plugin
 import Lambdabot.Plugin.Free.FreeTheorem
 import Lambdabot.Plugin.Type (query_ghci)
 
+theModule :: Module ()
 theModule = newModule
     { moduleCmds = return
         [ (command "free")

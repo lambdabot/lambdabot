@@ -8,6 +8,7 @@ import Lambdabot.Plugin
 import Lambdabot.Plugin.Eval (eval)
 import qualified Language.Haskell.Exts as Hs
 
+theModule :: Module ()
 theModule = newModule
     { moduleCmds = return
         [ (command "check")
@@ -20,7 +21,7 @@ theModule = newModule
     }
 
 check :: MonadLB m => String -> m String
-check src = 
+check src =
     case Hs.parseExp src of
         Hs.ParseFailed l e  -> return (Hs.prettyPrint l ++ ':' : e)
         Hs.ParseOk{}        -> eval ("myquickcheck (" ++ src ++ ") `seq` hsep[]")

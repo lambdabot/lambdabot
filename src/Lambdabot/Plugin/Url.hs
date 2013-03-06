@@ -12,17 +12,18 @@ import Data.List
 import Data.Maybe
 import Text.Regex.TDFA
 
+theModule :: Module Bool
 theModule = newModule
     { moduleCmds = return
         [ (command "url-title")
             { help = say "url-title <url>. Fetch the page title."
-            , process = 
+            , process =
                   maybe (say "Url not valid.") (mbSay <=< fetchTitle)
                 . containsUrl
             }
         , (command "tiny-url")
             { help = say "tiny-url <url>. Shorten <url>."
-            , process = 
+            , process =
                   maybe (say "Url not valid.") (mbSay <=< fetchTiny)
                 . containsUrl
             }
@@ -58,6 +59,7 @@ theModule = newModule
         else return ()
     }
 
+mbSay :: Maybe String -> Cmd (ModuleT Bool LB) ()
 mbSay = maybe (return ()) say
 
 ------------------------------------------------------------------------
@@ -141,4 +143,3 @@ areSubstringsOf :: [String] -> String -> Bool
 areSubstringsOf = flip (any . flip isSubstringOf)
     where
       isSubstringOf s str = any (isPrefixOf s) (tails str)
-

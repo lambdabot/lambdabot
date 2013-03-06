@@ -10,6 +10,7 @@ import Text.Printf
 
 type Ticker = ModuleT () LB
 
+theModule :: Module ()
 theModule = newModule
     { moduleCmds = return
         [ (command "ticker")
@@ -106,7 +107,7 @@ calcBids ticks = do
 fetchPage :: MonadLB m => String -> String -> m [String]
 fetchPage meth url = do
     proxy' <- getConfig proxy
-    
+
     let Just uri = parseURI url
         abs_path = uriPath uri ++ uriQuery uri ++ uriFragment uri
         request  = case proxy' of
@@ -114,7 +115,7 @@ fetchPage meth url = do
                       _       -> [meth ++ " " ++ url ++ " HTTP/1.0", ""]
         dropHdr = drop 1 . dropWhile (not.null)
         cleanup = dropHdr . (map (filter (/= '\r')))
-    
+
     cleanup <$> io (readPage proxy' uri request "")
 
 -- | Split a list into two lists based on a predicate.
@@ -152,4 +153,3 @@ readMaybe :: Read a => String -> Maybe a
 readMaybe x = case readsPrec 0 x of
                 [(y,"")] -> Just y
                 _        -> Nothing
-

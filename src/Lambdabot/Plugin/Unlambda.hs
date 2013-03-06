@@ -10,6 +10,7 @@ import Lambdabot.Plugin
 import Lambdabot.Util.Process
 import Text.Regex.TDFA
 
+theModule :: Module ()
 theModule = newModule
     { moduleCmds = return
         [ (command "unlambda")

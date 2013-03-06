@@ -31,7 +31,7 @@ googleHeaders = [mkHeader HdrReferer "http://www.google.com/"]
 
 normalizeOptions :: MonadLB m => m (NormalizeRequestOptions a)
 normalizeOptions = do
-    hasProxy <- isJust <$> getConfig proxy 
+    hasProxy <- isJust <$> getConfig proxy
     return defaultNormalizeRequestOptions
         { normDoClose = True
         , normForProxy = hasProxy
@@ -48,6 +48,7 @@ googleUri :: URI
 googleUri = makeUri "www.google.com" "/search"
 -- wikipediaUri = makeUri "en.wikipedia.org" "/wiki/Special:Search"
 
+theModule :: Module ()
 theModule = newModule
     { moduleCmds = return
         [ (command name)
@@ -60,6 +61,7 @@ theModule = newModule
         ]
     }
 
+moduleHelp :: String -> String
 moduleHelp s = case s of
     "google"    -> "google <expr>. Search google and show url of first hit"
     -- "wikipedia" -> "wikipedia <expr>. Search wikipedia and show url of first hit"
@@ -73,14 +75,14 @@ searchCmd _          []   = return ["Empty search."]
 searchCmd engineName (Network.HTTP.urlEncode -> query)
     | engineName == "google" = do -- for Google we do both to get conversions, e.g. for '3 lbs in kg'
         request <- request'
-        doHTTP request $ \response -> 
+        doHTTP request $ \response ->
             case response of
                 Response { rspCode = (3,0,2), rspHeaders = (lookupHeader HdrLocation -> Just url) } ->
                     doGoogle >>=  handleUrl url
                 _ -> fmap (\extra -> if null extra then ["No Result Found."] else extra) doGoogle
     | otherwise = do
         request <- request'
-        doHTTP request $ \response -> 
+        doHTTP request $ \response ->
             case response of
                 Response { rspCode = (3,0,2), rspHeaders = (lookupHeader HdrLocation -> Just url) } ->
                     handleUrl url []

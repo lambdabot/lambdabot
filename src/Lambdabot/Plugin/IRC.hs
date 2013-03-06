@@ -6,11 +6,9 @@ import Lambdabot.Plugin
 import Lambdabot.Monad
 import Lambdabot.IRC
 
-import Prelude hiding (catch)
-
 import Control.Concurrent
 import qualified Control.Concurrent.SSem as SSem
-import Control.Exception
+import qualified Control.Exception as E (catch)
 import Control.Monad.Error
 import qualified Data.ByteString.Char8 as P
 import Data.List
@@ -20,6 +18,7 @@ import System.IO
 
 type IRC = ModuleT () LB
 
+theModule :: Module ()
 theModule = newModule
     { moduleCmds = return
         [ (command "irc-connect")
@@ -111,18 +110,18 @@ online tag hostn portnum nickn ui = do
   sem1 <- io $ SSem.new 0
   sem2 <- io $ SSem.new 4 -- one extra token stays in the MVar
   sendmv <- io $ newEmptyMVar
-  io $ forkIO $ sequence_ $ repeat $ do
+  _ <- io $ forkIO $ sequence_ $ repeat $ do
     SSem.wait sem1
     threadDelay 2000000
     SSem.signal sem2
-  io $ forkIO $ sequence_ $ repeat $ do
+  _ <- io $ forkIO $ sequence_ $ repeat $ do
     SSem.wait sem2
     putMVar sendmv ()
     SSem.signal sem1
   catchError (addServer tag $ io . sendMsg tag sock sendmv)
              (\err -> io (hClose sock) >> throwError err)
   lift $ ircSignOn hostn (Nick tag nickn) ui
-  lift $ liftLB forkIO $ catchError (readerLoop tag nickn sock)
+  _ <- lift $ liftLB forkIO $ catchError (readerLoop tag nickn sock)
                                    (\e -> do io $ hPutStrLn stderr $ "irc[" ++ tag ++ "] error: " ++ show e
                                              remServer tag)
   return ()
@@ -133,13 +132,13 @@ readerLoop tag nickn sock = do
   let line' = filter (\c -> c /= '\n' && c /= '\r') line
   if "PING " `isPrefixOf` line'
       then io $ hPutStr sock ("PONG " ++ drop 5 line' ++ "\r\n")
-      else do forkLB $ received (decodeMessage tag nickn line')
+      else do _ <- forkLB $ received (decodeMessage tag nickn line')
               return ()
   readerLoop tag nickn sock
 
 sendMsg :: String -> Handle -> MVar () -> IrcMessage -> IO ()
 sendMsg tag sock mv msg =
-    catch (do takeMVar mv
-              P.hPut sock $ P.pack $ encodeMessage msg "\r\n")
-          (\err -> do hPutStrLn stderr $ "irc[" ++ tag ++ "] error: " ++ show (err :: IOError)
-                      hClose sock)
+    E.catch (do takeMVar mv
+                P.hPut sock $ P.pack $ encodeMessage msg "\r\n")
+            (\err -> do hPutStrLn stderr $ "irc[" ++ tag ++ "] error: " ++ show (err :: IOError)
+                        hClose sock)

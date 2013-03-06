@@ -16,6 +16,7 @@ import qualified Data.Set as S
 type SystemState = (ClockTime, TimeDiff)
 type System = ModuleT SystemState LB
 
+theModule :: Module SystemState
 theModule = newModule
     { moduleCmds = return $
         [ (command name)
@@ -24,7 +25,7 @@ theModule = newModule
             }
         | (name, helpStr) <- M.assocs syscmds
         ] ++
-        [ (command name) 
+        [ (command name)
             { privileged = True
             , help = say helpStr
             , process = doSystem name
@@ -33,7 +34,7 @@ theModule = newModule
         ]
     , moduleDefState = flip (,) noTimeDiff `fmap` io getClockTime
     , moduleSerialize  = Just stdSerial
-    
+
     , moduleInit = do
         (_, d) <- readMS
         t      <- liftIO getClockTime
@@ -157,4 +158,3 @@ listModule s = withModule s fromCommand printProvides
         return . concat $ if null cmds'
                           then [name', " has no visible commands"]
                           else [name', " provides: ", showClean (concatMap cmdNames cmds')]
-

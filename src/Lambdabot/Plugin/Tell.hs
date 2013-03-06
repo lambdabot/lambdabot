@@ -69,6 +69,7 @@ type NoticeBoard = M.Map Nick (Maybe ClockTime, [Note])
 
 type Tell = ModuleT NoticeBoard LB
 
+theModule :: Module NoticeBoard
 theModule = newModule
     { moduleCmds = return
         [ (command "tell")
@@ -192,10 +193,11 @@ doMessages loud = do
 
     case msgs of
         Nothing -> say "You don't have any messages"
-        Just msgs -> do
+        Just mesgs -> do
             time <- io getClockTime
-            mapM_ (showNote time >=> tellNote) msgs
+            mapM_ (showNote time >=> tellNote) mesgs
 
+verb :: NoteType -> String
 verb Ask = "ask"
 verb Tell= "tell"
 

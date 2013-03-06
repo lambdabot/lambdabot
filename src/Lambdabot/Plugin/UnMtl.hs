@@ -11,11 +11,13 @@
 module Lambdabot.Plugin.UnMtl (theModule) where
 
 import Lambdabot.Plugin
+import qualified Lambdabot.Plugin as Lmb (Module)
 import Lambdabot.Util.Parser (prettyPrintInLine)
 
 import Control.Monad
 import Language.Haskell.Exts as Hs hiding (tuple, var)
 
+theModule :: Lmb.Module ()
 theModule = newModule
     { moduleCmds = return
         [ (command "unmtl")
@@ -170,7 +172,7 @@ mtlParser' t = return t
 
 -----------------------------------------------------------
 -- Examples
--- 
+--
 -- ContT ByteString (StateT s IO) a
 -- StateT s (ContT ByteString IO) a
 -- ErrorT ByteString (WriterT String (State s)) a

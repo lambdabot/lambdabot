@@ -16,6 +16,7 @@ import qualified Language.Haskell.Exts as Hs
 import System.Directory
 import System.Exit
 
+theModule :: Module ()
 theModule = newModule
     { moduleCmds = return
         [ (command "run")
@@ -29,7 +30,7 @@ theModule = newModule
             }
         , (command "undefine")
             { help = say "undefine. Reset evaluator local bindings"
-            , process = \s -> 
+            , process = \s ->
                 if null s
                     then do
                         reset
@@ -98,26 +99,28 @@ define src = case Hs.parseModule src of
                 case moduleProblems merged of
                     Just msg -> return msg
                     Nothing  -> comp merged
-    Hs.ParseFailed loc err -> return ("Parse failed: " ++ err)
+    Hs.ParseFailed _loc err -> return ("Parse failed: " ++ err)
 
--- merge the second module _into_ the first - meaning where merging doesn't 
+-- merge the second module _into_ the first - meaning where merging doesn't
 -- make sense, the field from the first will be used
-mergeModules (Hs.Module loc1 name1 pragmas1 warnings1 exports1 imports1 decls1)
-             (Hs.Module    _     _        _         _ exports2 imports2 decls2)
+mergeModules :: Hs.Module -> Hs.Module -> Hs.Module
+mergeModules (Hs.Module loc1 name1 pragmas1 warnings1  exports1 imports1 decls1)
+             (Hs.Module    _     _        _         _ _exports2 imports2 decls2)
     = Hs.Module loc1 name1 pragmas1 warnings1 exports1
         (mergeImports imports1 imports2)
         (mergeDecls   decls1   decls2)
     where
         mergeImports x y = nub (sortBy (comparing Hs.importModule) (x ++ y))
         mergeDecls x y = sortBy (comparing funcNamesBound) (x ++ y)
-        
+
         -- this is a very conservative measure... we really only even care about function names,
         -- because we just want to sort those together so clauses can be added in the right places
         -- TODO: find out whether the [Hs.Match] can contain clauses for more than one function (e,g. might it be a whole binding group?)
         funcNamesBound (Hs.FunBind ms) = nub $ sort [ n | Hs.Match _ n _ _ _ _ <- ms]
         funcNamesBound _ = []
 
-moduleProblems (Hs.Module _ _ pragmas _ _ imports decls)
+moduleProblems :: Hs.Module -> Maybe [Char]
+moduleProblems (Hs.Module _ _ pragmas _ _ _imports _decls)
     | safe `notElem` langs  = Just "Module has no \"Safe\" language pragma"
     | trusted `elem` langs  = Just "\"Trusted\" language pragma is set"
     | otherwise             = Nothing
@@ -131,15 +134,15 @@ comp :: MonadLB m => Hs.Module -> m String
 comp src = do
     -- Note we copy to .L.hs, not L.hs. This hides the temporary files as dot-files
     io (writeFile ".L.hs" (Hs.prettyPrint src))
-    
+
     -- and compile .L.hs
     -- careful with timeouts here. need a wrapper.
     (o',e',c) <- io (popen "ghc" ["-O","-v0","-c"
                                  ,"-Werror"
                                  ,".L.hs"] Nothing)
     -- cleanup, 'try' because in case of error the files are not generated
-    io (try (removeFile ".L.hi") :: IO (Either SomeException ()))
-    io (try (removeFile ".L.o")  :: IO (Either SomeException ()))
+    _ <- io (try (removeFile ".L.hi") :: IO (Either SomeException ()))
+    _ <- io (try (removeFile ".L.o")  :: IO (Either SomeException ()))
 
     case (munge o', munge e') of
         ([],[]) | c /= ExitSuccess -> do

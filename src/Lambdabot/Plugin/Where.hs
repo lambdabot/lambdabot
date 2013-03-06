@@ -17,10 +17,11 @@ type WhereState         = M.Map P.ByteString P.ByteString
 type WhereWriter        = WhereState -> LB ()
 type Where              = ModuleT WhereState LB
 
+theModule :: Module (M.Map P.ByteString P.ByteString)
 theModule = newModule
     { moduleDefState  = return M.empty
     , moduleSerialize = Just mapPackedSerial
-    
+
     , moduleCmds = return
         [ (command "where")
             { help = say "where <key>. Return element associated with key"
@@ -35,7 +36,7 @@ theModule = newModule
             , process = doCmd "what"
             }
         , (command "where+")
-            { help = say "where+ <key> <elem>. Define an association" 
+            { help = say "where+ <key> <elem>. Define an association"
             , process = doCmd "where+"
             }
         ]
@@ -70,4 +71,3 @@ updateWhere :: Bool -> WhereState -> WhereWriter -> String -> String -> LB Strin
 updateWhere _guard factFM writer fact dat = do
         writer $ M.insert (P.pack fact) (P.pack dat) factFM
         random confirmation
-

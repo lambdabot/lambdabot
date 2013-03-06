@@ -8,6 +8,7 @@ import Lambdabot.Plugin
 import Paths_lambdabot (version)
 import Data.Version (showVersion)
 
+theModule :: Module ()
 theModule = newModule
     { moduleCmds = return
         [ (command "version")
@@ -16,7 +17,7 @@ theModule = newModule
                 "and darcs repo of this bot"
             , process = const $ do
                 say $ "lambdabot " ++ showVersion version
-                say "darcs get http://code.haskell.org/lambdabot" 
+                say "darcs get http://code.haskell.org/lambdabot"
             }
         ]
     }
