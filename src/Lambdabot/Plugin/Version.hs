@@ -14,10 +14,10 @@ theModule = newModule
         [ (command "version")
             { help = say $
                 "version/source. Report the version " ++
-                "and darcs repo of this bot"
+                "and git repo of this bot"
             , process = const $ do
                 say $ "lambdabot " ++ showVersion version
-                say "darcs get http://code.haskell.org/lambdabot"
+                say "git clone git://github.com/mokus0/lambdabot.git"
             }
         ]
     }
