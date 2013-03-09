@@ -66,7 +66,6 @@ source-repository head
 library
   hs-source-dirs:       src
   ghc-options:          -Wall
-                        -fno-warn-orphans
                         -funbox-strict-fields
 
   exposed-modules:      Lambdabot
@@ -74,6 +73,7 @@ library
                         Lambdabot.Command
                         Lambdabot.Config
                         Lambdabot.Config.Core
+                        Lambdabot.Error
                         Lambdabot.File
                         Lambdabot.IRC
                         Lambdabot.Main

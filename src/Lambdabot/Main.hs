@@ -77,11 +77,8 @@ mainLoop = do
     catchError
         (do asks ircInitDoneMVar >>= io . flip putMVar ()
             asks ircQuitMVar >>= io . takeMVar)
-        (\e -> do -- catch anything, print informative message, and clean up
-            io $ hPutStrLn stderr $ case e of
-                IRCRaised ex   -> "Exception: " ++ show ex
-                SignalCaught s -> "Signal: " ++ ircSignalMessage s)
-
+        (io . hPrint stderr) -- catch anything, print informative message, and clean up
+    
     _ <- withAllModules moduleExit
     flushModuleState
 

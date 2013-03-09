@@ -44,6 +44,7 @@ import           Lambdabot.ChanName
 import           Lambdabot.Command
 import           Lambdabot.Config
 import           Lambdabot.Config.Core
+import           Lambdabot.Error
 import           Lambdabot.IRC
 import           Lambdabot.Module
 import qualified Lambdabot.Message as Msg
@@ -220,21 +221,14 @@ instance MonadState IRCRWState LB where
 -- And now a MonadError instance to map IRCErrors to MonadError in LB,
 -- so throwError and catchError "just work"
 instance MonadError IRCError LB where
-  throwError (IRCRaised e)    = io $ throwIO e
-  throwError (SignalCaught e) = io $ evaluate (throw $ SignalException e)
-  m `catchError` h = lbIO $ \conv -> (conv m
-              `E.catch` \(SignalException e) -> conv $ h $ SignalCaught e)
-              `E.catch` \e -> conv $ h $ IRCRaised e
+    throwError = io . throwIO
+    m `catchError` h = lbIO $ \conv -> (conv m
+        `E.catch` (conv . h)
+        `E.catch` \(SignalException e) -> conv $ h $ SignalCaught e)
+        `E.catch` (conv . h . IRCRaised)
 
 instance MonadConfig LB where
     getConfig k = liftM (maybe (getConfigDefault k) id . D.lookup k) (lb (asks ircConfig))
-
--- A type for handling both Haskell exceptions and external signals
-data IRCError = IRCRaised SomeException | SignalCaught Signal
-
-instance Show IRCError where
-    show (IRCRaised    e) = show e
-    show (SignalCaught s) = show s
 
 -- lbIO return :: LB (LB a -> IO a)
 -- CPS to work around predicativiy of haskell's type system.

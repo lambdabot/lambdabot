@@ -15,6 +15,7 @@ module Lambdabot.Config.Core
     ) where
 
 import Lambdabot.Config
+import Lambdabot.Error
 import {-# SOURCE #-} Lambdabot.Monad
 import Control.Monad.Trans
 
