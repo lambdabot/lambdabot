@@ -34,7 +34,7 @@ import Lambdabot.Util
 import Lambdabot.Util.Serial
 
 import Control.Concurrent
-import Control.Exception
+import Control.Exception as E
 import Control.Monad.Trans
 import qualified Data.ByteString.Char8 as P
 import Data.IORef
@@ -194,8 +194,8 @@ readGlobalState module' name = case moduleSerialize module' of
         case mbStateFile of
             Nothing         -> return Nothing
             Just stateFile  -> io $ do
-                state' <- Just `fmap` P.readFile stateFile `catch` \SomeException{} -> return Nothing
-                catch (evaluate $ maybe Nothing (Just $!) (deserialize ser =<< state')) -- Monad Maybe)
+                state' <- Just `fmap` P.readFile stateFile `E.catch` \SomeException{} -> return Nothing
+                E.catch (evaluate $ maybe Nothing (Just $!) (deserialize ser =<< state')) -- Monad Maybe)
                     (\e -> do
                         hPutStrLn stderr $ "Error parsing state file for: "
                             ++ name ++ ": " ++ show (e :: SomeException)
