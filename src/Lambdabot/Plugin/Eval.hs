@@ -57,7 +57,7 @@ args load src = concat
     [ map ("-X" ++) exts
     , ["--no-imports", "-l", load]
     , ["--expression=" ++ src]
-    , ["+RTS", "-N2", "-RTS"]
+    , ["+RTS", "-N", "-RTS"]
     ]
 
 isEval :: MonadLB m => String -> m Bool
