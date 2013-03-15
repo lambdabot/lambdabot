@@ -52,7 +52,7 @@ theModule = newModule
     -- suck in our (read only) regex state from disk
     -- compile it, and stick it in the plugin state
     , moduleInit = do
-        vixenFile <- lb (findLBFile "vixen")
+        vixenFile <- lb (findOrCreateLBFile "vixen")
         b <- io (doesFileExist vixenFile)
         when b $ do
             st <- io (decodeFile vixenFile)

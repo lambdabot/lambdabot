@@ -183,19 +183,22 @@ writeGlobalState module' name = case moduleSerialize module' of
         case serialize ser state' of
             Nothing  -> return ()   -- do not write any state
             Just out -> do
-                stateFile <- lb (findLBFile name)
+                stateFile <- lb (findOrCreateLBFile name)
                 io (P.writeFile stateFile out)
 
 -- | Read it in
 readGlobalState :: Module st -> String -> LB (Maybe st)
 readGlobalState module' name = case moduleSerialize module' of
     Just ser -> do
-        stateFile <- findLBFile name
-        io $ do
-            state' <- Just `fmap` P.readFile stateFile `catch` \SomeException{} -> return Nothing
-            catch (evaluate $ maybe Nothing (Just $!) (deserialize ser =<< state')) -- Monad Maybe)
-                  (\e -> do hPutStrLn stderr $ "Error parsing state file for: "
-                                            ++ name ++ ": " ++ show (e :: SomeException)
-                            hPutStrLn stderr $ "Try removing: "++ show stateFile
-                            return Nothing) -- proceed regardless
+        mbStateFile <- findLBFile name
+        case mbStateFile of
+            Nothing         -> return Nothing
+            Just stateFile  -> io $ do
+                state' <- Just `fmap` P.readFile stateFile `catch` \SomeException{} -> return Nothing
+                catch (evaluate $ maybe Nothing (Just $!) (deserialize ser =<< state')) -- Monad Maybe)
+                    (\e -> do
+                        hPutStrLn stderr $ "Error parsing state file for: "
+                            ++ name ++ ": " ++ show (e :: SomeException)
+                        hPutStrLn stderr $ "Try removing: "++ show stateFile
+                        return Nothing) -- proceed regardless
     Nothing -> return Nothing

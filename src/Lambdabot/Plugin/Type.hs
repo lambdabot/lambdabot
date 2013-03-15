@@ -124,7 +124,7 @@ extract_signatures output
 --
 query_ghci :: MonadLB m => String -> String -> m String
 query_ghci cmd expr = do
-    l <- lb $ findLBFile "L.hs"
+    l <- lb $ findOrCreateLBFile "L.hs"
     let context = ":load "++l++"\n:m *L\n" -- using -fforce-recomp to make sure we get *L in scope instead of just L
         extFlags = ["-X" ++ ext | ext <- exts]
     ghciCmd <- getConfig ghci

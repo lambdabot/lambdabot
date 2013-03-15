@@ -70,7 +70,7 @@ dropPrefix = dropWhile (' ' ==) . drop 2
 
 eval :: MonadLB m => String -> m String
 eval src = do
-    load <- lb (findLBFile "L.hs")
+    load <- lb (findOrCreateLBFile "L.hs")
     (out,err,_) <- io (popen binary (args load src) Nothing)
     case (out,err) of
         ([],[]) -> return "Terminated\n"
@@ -90,7 +90,7 @@ define :: MonadLB m => String -> m String
 define [] = return "Define what?"
 define src = case Hs.parseModule src of
     Hs.ParseOk srcModule -> do
-        l <- lb (findLBFile "L.hs")
+        l <- lb (findOrCreateLBFile "L.hs")
         res <- io (Hs.parseFile l)
         case res of
             Hs.ParseFailed loc err -> return (Hs.prettyPrint loc ++ ':' : err)
@@ -149,7 +149,7 @@ comp src = do
                     io (removeFile ".L.hs")
                     return "Error."
                 | otherwise -> do
-                    l <- lb (findLBFile "L.hs")
+                    l <- lb (findOrCreateLBFile "L.hs")
                     io (renameFile ".L.hs" l)
                     return "Defined."
         (ee,[]) -> return ee
@@ -163,6 +163,6 @@ munge = expandTab 8 . dropWhile (=='\n') . dropNL
 
 reset :: MonadLB m => m ()
 reset = do
-    l <- lb (findLBFile "L.hs")
-    p <- lb (findLBFile "Pristine.hs")
+    l <- lb (findOrCreateLBFile "L.hs")
+    p <- lb (findOrCreateLBFile "Pristine.hs")
     io (copyFile p l)
