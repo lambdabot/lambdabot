@@ -11,7 +11,12 @@ data IRCError
     | SignalCaught Signal
     deriving Typeable
 
-instance Exception IRCError
+-- avoid wrapping multiple layers of (SomeException . IRCRaised)
+instance Exception IRCError where
+    toException (IRCRaised e)   = e
+    toException other           = SomeException other
+    
+    fromException s@(SomeException e) = Just (maybe (IRCRaised s) id (cast e))
 
 instance Show IRCError where
     show (IRCRaised (SomeException e)) = show (typeOf e) ++ ": "   ++ show e
