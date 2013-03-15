@@ -7,11 +7,7 @@
 -- Generic server connection,disconnection
 -- The module typeclass, type and operations on modules
 module Lambdabot
-    ( flushModuleState
-    , readGlobalState
-    , writeGlobalState
-    
-    , ircInstallModule
+    ( ircInstallModule
     , ircUnloadModule
     , ircSignalConnect
     , ircInstallOutputFilter
@@ -27,7 +23,6 @@ module Lambdabot
 
 import Lambdabot.ChanName
 import Lambdabot.Command
-import Lambdabot.File
 import Lambdabot.IRC
 import Lambdabot.Message
 import Lambdabot.Module
@@ -36,55 +31,14 @@ import Lambdabot.Nick
 import Lambdabot.OutputFilter
 import Lambdabot.State
 import Lambdabot.Util
-import Lambdabot.Util.Serial
 
 import Control.Concurrent
-import Control.Exception
-import qualified Control.Exception as E (catch)
 import Control.Monad.Reader
 import Control.Monad.State
-import qualified Data.ByteString.Char8 as P
 import qualified Data.Map as M
 import Data.Random.Source
 import qualified Data.Set as S
 import System.IO
-
--- ---------------------------------------------------------------------
---
--- Handling global state
---
-
--- | flush state of modules
-flushModuleState :: LB ()
-flushModuleState = do
-    _ <- withAllModules (\m -> getModuleName >>= writeGlobalState m)
-    return ()
-
--- | Peristence: write the global state out
-writeGlobalState :: Module st -> String -> ModuleT st LB ()
-writeGlobalState module' name = case moduleSerialize module' of
-    Nothing  -> return ()
-    Just ser -> do
-        state' <- readMS
-        case serialize ser state' of
-            Nothing  -> return ()   -- do not write any state
-            Just out -> do
-                stateFile <- lb (findLBFile name)
-                io (P.writeFile stateFile out)
-
--- | Read it in
-readGlobalState :: Module st -> String -> LB (Maybe st)
-readGlobalState module' name = case moduleSerialize module' of
-    Just ser -> do
-        stateFile <- findLBFile name
-        io $ do
-            state' <- Just `fmap` P.readFile stateFile `E.catch` \(_ :: SomeException) -> return Nothing
-            E.catch (evaluate $ maybe Nothing (Just $!) (deserialize ser =<< state')) -- Monad Maybe)
-                  (\e -> do hPutStrLn stderr $ "Error parsing state file for: "
-                                            ++ name ++ ": " ++ show (e :: SomeException)
-                            hPutStrLn stderr $ "Try removing: "++ show stateFile
-                            return Nothing) -- proceed regardless
-    Nothing -> return Nothing
 
 ------------------------------------------------------------------------
 --

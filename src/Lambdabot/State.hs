@@ -18,17 +18,27 @@ module Lambdabot.State
     , withGS
     , readGS
     , writeGS
+    
+    -- ** Handling global state
+    , flushModuleState
+    , readGlobalState
+    , writeGlobalState
   ) where
 
+import Lambdabot.File
 import Lambdabot.Monad
 import Lambdabot.Module
 import Lambdabot.Nick
 import Lambdabot.Command
+import Lambdabot.Util
+import Lambdabot.Util.Serial
 
 import Control.Concurrent
 import Control.Exception
 import Control.Monad.Trans
+import qualified Data.ByteString.Char8 as P
 import Data.IORef
+import System.IO
 
 -- | Thread-safe modification of an MVar.
 withMWriter :: MVar a -> (a -> (a -> IO ()) -> IO b) -> IO b
@@ -152,3 +162,40 @@ writePS who x = withPS who (\_ writer -> writer x)
 writeGS :: (MonadLBState m, LBState m ~ GlobalPrivate g p)
   => g -> m ()
 writeGS g = withGS (\_ writer -> writer g)
+
+-- ---------------------------------------------------------------------
+--
+-- Handling global state
+--
+
+-- | flush state of modules
+flushModuleState :: LB ()
+flushModuleState = do
+    _ <- withAllModules (\m -> getModuleName >>= writeGlobalState m)
+    return ()
+
+-- | Peristence: write the global state out
+writeGlobalState :: Module st -> String -> ModuleT st LB ()
+writeGlobalState module' name = case moduleSerialize module' of
+    Nothing  -> return ()
+    Just ser -> do
+        state' <- readMS
+        case serialize ser state' of
+            Nothing  -> return ()   -- do not write any state
+            Just out -> do
+                stateFile <- lb (findLBFile name)
+                io (P.writeFile stateFile out)
+
+-- | Read it in
+readGlobalState :: Module st -> String -> LB (Maybe st)
+readGlobalState module' name = case moduleSerialize module' of
+    Just ser -> do
+        stateFile <- findLBFile name
+        io $ do
+            state' <- Just `fmap` P.readFile stateFile `catch` \SomeException{} -> return Nothing
+            catch (evaluate $ maybe Nothing (Just $!) (deserialize ser =<< state')) -- Monad Maybe)
+                  (\e -> do hPutStrLn stderr $ "Error parsing state file for: "
+                                            ++ name ++ ": " ++ show (e :: SomeException)
+                            hPutStrLn stderr $ "Try removing: "++ show stateFile
+                            return Nothing) -- proceed regardless
+    Nothing -> return Nothing

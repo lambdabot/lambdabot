@@ -15,6 +15,7 @@ import Lambdabot.Config
 import Lambdabot.Config.Core
 import Lambdabot.Module
 import Lambdabot.Monad
+import Lambdabot.State
 import Lambdabot.Util
 import Lambdabot.Util.Signals
 
