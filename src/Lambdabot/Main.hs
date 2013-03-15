@@ -72,7 +72,7 @@ runIrc initialise configBindings = withSocketsDo $ do
         Right _ -> do
             exitWith ExitSuccess
 
--- Actually, this isn't a loop anymore.  FIXME: better name.
+-- Actually, this isn't a loop anymore.  TODO: better name.
 mainLoop :: LB ()
 mainLoop = do
     catchError

@@ -76,7 +76,7 @@ doPretty (Hs.Module _ _ _ _ _ _ decls) =
         prettyDecl (PatBind _ (PVar (Ident "__expr__")) _ (UnGuardedRhs e) (BDecls [])) -- pretty printing an expression
                      = prettyPrintWithMode (makeModeExp e) e
         prettyDecl d = prettyPrintWithMode (makeMode d) d
-    -- FIXME: prefixing with hashes is done, because i didn't find a way
+    -- TODO: prefixing with hashes is done, because i didn't find a way
     --   to disable the indentation filter of lambdabot only for this module...
     in map (" "++) . lines . concat . intersperse "\n"
        -- . map show $ decls

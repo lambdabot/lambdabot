@@ -188,7 +188,7 @@ partCB :: IrcMessage -> UTCTime -> Event
 partCB msg ct = Parted (Msg.nick msg) (Msg.fullName msg) ct
 
 -- | When somebody changes his\/her name.
--- FIXME:  We should only do this for channels that the user is currently on.
+-- TODO:  We should only do this for channels that the user is currently on.
 nickCB :: IrcMessage -> UTCTime -> Event
 nickCB msg ct = Renick (Msg.nick msg) (Msg.fullName msg) ct
                        (Msg.readNick msg $ drop 1 $ head $ ircMsgParams msg)

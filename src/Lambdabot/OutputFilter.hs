@@ -51,7 +51,7 @@ mlines = (mbreak =<<) . lines
 -- | Don't send any output to alleged bots.
 checkRecip :: Monad m => OutputFilter m
 checkRecip who msg
---  FIXME: this doesn't work with plugin protocols :(
+--  TODO: this doesn't work with plugin protocols :(
 --  | who == Config.name Config.config                  = return []
     | "bot" `isSuffixOf` map toLower (nName who)    = return []
     | otherwise                                         = return msg

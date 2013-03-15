@@ -55,7 +55,7 @@ encodeMessage msg
     encodeParams (p:ps) = showChar ' ' . showString p . encodeParams ps
 
 -- | 'decodeMessage' Takes an input line from the IRC protocol stream
---   and decodes it into a message.  FIXME: this has too many parameters.
+--   and decodes it into a message.  TODO: this has too many parameters.
 decodeMessage :: String -> String -> String -> IrcMessage
 decodeMessage svr lbn line =
     let (prefix, rest1) = decodePrefix (,) line
