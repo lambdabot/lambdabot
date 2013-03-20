@@ -1,17 +1,11 @@
 {-# LANGUAGE Safe #-}
 
 {-# LANGUAGE ConstrainedClassMethods #-}
-{-# LANGUAGE CPP #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveFoldable #-}
 {-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DeriveTraversable #-}
-#if __GLASGOW_HASKELL__ < 706
-{-# LANGUAGE DoRec #-}
-#else
-{-# LANGUAGE RecursiveDo #-}
-#endif
 {-# LANGUAGE EmptyDataDecls #-}
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE FlexibleContexts #-}
