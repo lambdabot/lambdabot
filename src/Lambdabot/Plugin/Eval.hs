@@ -50,11 +50,20 @@ binary = "mueval"
 -- extensions to enable for the interpreted expression
 -- (and probably also L.hs if it doesn't already have these set)
 exts :: [String]
-exts = []
+exts = ["ImplicitPrelude"] -- workaround for bug in hint package
+
+trustedPkgs :: [String]
+trustedPkgs =
+    [ "lambdabot"
+    , "array"
+    , "random"
+    ]
 
 args :: String -> String -> [String]
 args load src = concat
-    [ map ("-X" ++) exts
+    [ ["-S"]
+    , map ("-s" ++) trustedPkgs
+    , map ("-X" ++) exts
     , ["--no-imports", "-l", load]
     , ["--expression=" ++ src]
     , ["+RTS", "-N", "-RTS"]
