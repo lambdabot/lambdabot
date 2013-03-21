@@ -1,8 +1,7 @@
-susie-lambdabot
-=============== 
+lambdabot ![Build Status](https://travis-ci.org/mokus0/lambdabot.png)
+===============
 
-This is a fork of lambdabot which was developed for use on my family IRC server (where it runs as a bot named "susie").
-
+Lambdabot is an IRC bot written over several years by those on the #haskell [IRC channel](http://www.haskell.org/haskellwiki/IRC_channel). It also operates in an offline mode as a Haskell development tool, and embedded as an extension to ghci.
 
 PREREQUISITES
 -------------
