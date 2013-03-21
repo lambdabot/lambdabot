@@ -139,12 +139,12 @@ library
                         Lambdabot.State
                         Lambdabot.Util
                         Lambdabot.Util.AltTime
+                        Lambdabot.Util.Browser
                         Lambdabot.Util.Error
                         Lambdabot.Util.Parser
                         Lambdabot.Util.Process
                         Lambdabot.Util.Serial
                         Lambdabot.Util.Signals
-                        Lambdabot.Util.Url
 
   other-modules:        Paths_lambdabot
                         Lambdabot.Plugin.Dict.DictLookup

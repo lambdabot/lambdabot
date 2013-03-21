@@ -3,12 +3,14 @@
 module Lambdabot.Plugin.Url (theModule) where
 
 import Lambdabot.Plugin
-import Lambdabot.Util.Url
+import Lambdabot.Util.Browser
 
 import Control.Monad
 import Control.Monad.Trans
 import Data.List
 import Data.Maybe
+import Network.Browser
+import Network.HTTP
 import Text.Regex.TDFA
 
 theModule :: Module Bool
@@ -63,9 +65,13 @@ mbSay = maybe (return ()) say
 
 ------------------------------------------------------------------------
 
+-- | The string that I prepend to the quoted page title.
+urlTitlePrompt :: String
+urlTitlePrompt = "Title: "
+
 -- | Fetch the title of the specified URL.
 fetchTitle :: MonadLB m => String -> m (Maybe String)
-fetchTitle url = io . runWebReq (urlPageTitle url) =<< getConfig proxy
+fetchTitle url = fmap (fmap (urlTitlePrompt ++)) (browseLB (urlPageTitle url))
 
 -- | base url for fetching tiny urls
 tinyurl :: String
@@ -74,9 +80,10 @@ tinyurl = "http://tinyurl.com/api-create.php?url="
 -- | Fetch the title of the specified URL.
 fetchTiny :: MonadLB m => String -> m (Maybe String)
 fetchTiny url = do
-    tiny <- io . runWebReq (getHtmlPage (tinyurl ++ url)) =<< getConfig proxy
-    return $ findTiny $ foldl' cat "" tiny
-    where cat x y = x ++ " " ++ y
+    (_, response) <- browseLB (request (getRequest (tinyurl ++ url)))
+    case rspCode response of
+      (2,0,0) -> return $ findTiny (rspBody response)
+      _       -> return Nothing
 
 -- | Tries to find the start of a tinyurl
 findTiny :: String -> Maybe String

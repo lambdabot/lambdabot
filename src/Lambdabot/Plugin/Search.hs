@@ -9,7 +9,7 @@
 module Lambdabot.Plugin.Search (theModule) where
 
 import Lambdabot.Plugin
-import Lambdabot.Util.Url
+import Lambdabot.Util.Browser
 
 import Data.Maybe
 import Network.HTTP
@@ -92,9 +92,8 @@ searchCmd engineName (urlEncode -> query)
                     handleUrl url []
                 _ -> return ["No Result Found."]
   where handleUrl url extra = do
-            proxy' <- getConfig proxy
-            title <- io $ runWebReq (urlPageTitle url) proxy'
-            return $ extra ++ maybe [url] (\t -> [url, t]) title
+            title <- browseLB (urlPageTitle url)
+            return $ extra ++ maybe [url] (\t -> [url, "Title: " ++ t]) title
         Just (uri, makeQuery, headers) = lookup engineName engines
         request' = do
             opts <- normalizeOptions

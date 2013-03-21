@@ -2,10 +2,11 @@
 module Lambdabot.Plugin.Ticker (theModule) where
 
 import Lambdabot.Plugin
+import Lambdabot.Util.Browser
 
 import Control.Applicative
 import Data.List
-import Network.Browser hiding (err)
+import Network.Browser (request)
 import Network.HTTP
 import Text.Printf
 
@@ -104,14 +105,9 @@ calcBids ticks = do
 -- | Fetch a page via HTTP and return its body as a list of lines.
 getPage :: MonadLB m => String -> m [String]
 getPage url = do
-    proxy' <- getConfig proxy
-    
     let cleanup = (map (filter (/= '\r'))) . lines
     
-    io $ browse $ do
-        setOutHandler (const (return ()))
-        setErrHandler (const (return ()))
-        setProxy proxy'
+    browseLB $ do
         (_, result) <- request (getRequest url)
         case rspCode result of
           (2,0,0) -> return (cleanup (rspBody result))
