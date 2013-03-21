@@ -214,7 +214,7 @@ library
                         IOSpec                  >= 0.2,
                         logict                  >= 0.5,
                         MonadRandom             >= 0.1,
-                        --mueval                  >= 0.8,
+                        mueval                  >= 0.9,
                         numbers                 >= 3000,
                         unlambda                >= 0.1,
                         vector-space            >= 0.8
