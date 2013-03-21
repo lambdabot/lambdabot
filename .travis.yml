@@ -1,5 +1,5 @@
 language: haskell
-before-install: cabal update
+before_install: cabal update
 branches:
   only:
     - master
