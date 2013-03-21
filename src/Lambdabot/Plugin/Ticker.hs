@@ -2,10 +2,11 @@
 module Lambdabot.Plugin.Ticker (theModule) where
 
 import Lambdabot.Plugin
-import Lambdabot.Util.MiniHTTP
 
 import Control.Applicative
 import Data.List
+import Network.Browser hiding (err)
+import Network.HTTP
 import Text.Printf
 
 type Ticker = ModuleT () LB
@@ -30,7 +31,7 @@ theModule = newModule
 tickerCmd :: String -> Cmd Ticker ()
 tickerCmd []        = say "Empty ticker."
 tickerCmd tickers = do
-    quotes <- fetchPage "GET" $ tickerUrl $ words tickers
+    quotes <- getPage $ tickerUrl $ words tickers
     case [x | Just x <- map extractQuote quotes] of
       []       -> say "No Result Found."
       xs       -> mapM_ say xs
@@ -68,7 +69,7 @@ bidsUrl tickers = "http://download.finance.yahoo.com/d/quotes.csv?f=ba&e=.csv&s=
 
 getBidAsks :: MonadLB m => [String] -> m [Maybe (Float, Float)]
 getBidAsks tickers = do
-    xs <- fetchPage "GET" $ bidsUrl tickers
+    xs <- getPage $ bidsUrl tickers
     return $ map (extractPrice.csv) xs
     where
         extractPrice :: [String] -> Maybe (Float, Float)
@@ -100,49 +101,30 @@ calcBids ticks = do
         noPrefix ('-':xs) = xs
         noPrefix xs = xs
 
-
----- Library routines, consider moving elsewhere. ----
-
 -- | Fetch a page via HTTP and return its body as a list of lines.
-fetchPage :: MonadLB m => String -> String -> m [String]
-fetchPage meth url = do
+getPage :: MonadLB m => String -> m [String]
+getPage url = do
     proxy' <- getConfig proxy
-
-    let Just uri = parseURI url
-        abs_path = uriPath uri ++ uriQuery uri ++ uriFragment uri
-        request  = case proxy' of
-                      Nothing -> [meth ++ " " ++ abs_path ++ " HTTP/1.0", ""]
-                      _       -> [meth ++ " " ++ url ++ " HTTP/1.0", ""]
-        dropHdr = drop 1 . dropWhile (not.null)
-        cleanup = dropHdr . (map (filter (/= '\r')))
-
-    cleanup <$> io (readPage proxy' uri request "")
-
--- | Split a list into two lists based on a predicate.
-splitWhile :: (a -> Bool) -> [a] -> ([a], [a])
-splitWhile p xs = (takeWhile p xs, dropWhile p xs)
-
--- | Unfoldr, continuing while the predicate is true.
-{-
-unfoldrp :: (b -> Bool) -> (b -> Maybe (a, b)) -> b -> [a]
-unfoldrp p f = unfoldr (\x -> guard (p x) >> f x)
--}
-
--- | Split a list on a distinguished character (which is eliminated).
-{-
-splitList :: (Eq a) => a -> [a] -> [[a]]
-splitList ch = unfoldrp (not.null) (return.f)
-    where f = (second (drop 1)) . (splitWhile (/= ch))
--}
+    
+    let cleanup = (map (filter (/= '\r'))) . lines
+    
+    io $ browse $ do
+        setOutHandler (const (return ()))
+        setErrHandler (const (return ()))
+        setProxy proxy'
+        (_, result) <- request (getRequest url)
+        case rspCode result of
+          (2,0,0) -> return (cleanup (rspBody result))
+          (x,y,z) -> return ["Connection error: " ++ ([x,y,z] >>= show) ++ show (rspReason result)]
 
 -- | Return a list of comma-separated values.
 -- Quotes allowed in CSV if it's the first character of a field.
 csv :: String -> [String]
-csv ('"':xs) = case splitWhile (/= '"') xs of
+csv ('"':xs) = case span (/= '"') xs of
                   (word, '"':',':rest) -> word : csv rest
                   (word, '"':[])       -> word : []
                   _                    -> error "invalid CSV"
-csv xs = case splitWhile (/= ',') xs of
+csv xs = case span (/= ',') xs of
              (word, ',':rest) -> word : csv rest
              ([], [])         -> []
              (word, [])       -> [word]
@@ -153,3 +135,4 @@ readMaybe :: Read a => String -> Maybe a
 readMaybe x = case readsPrec 0 x of
                 [(y,"")] -> Just y
                 _        -> Nothing
+

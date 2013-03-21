@@ -140,7 +140,6 @@ library
                         Lambdabot.Util
                         Lambdabot.Util.AltTime
                         Lambdabot.Util.Error
-                        Lambdabot.Util.MiniHTTP
                         Lambdabot.Util.Parser
                         Lambdabot.Util.Process
                         Lambdabot.Util.Serial

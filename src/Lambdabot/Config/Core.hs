@@ -17,7 +17,9 @@ module Lambdabot.Config.Core
 import Lambdabot.Config
 import Lambdabot.Error
 import {-# SOURCE #-} Lambdabot.Monad
+
 import Control.Monad.Trans
+import Network.HTTP.Proxy
 
 -------------------------------------
 -- Core configuration variables
@@ -28,7 +30,7 @@ config "evalPrefixes"       [t| [String]                |] [| [">"]         |]
 config "ghci"               [t| String                  |] [| "ghci"        |]
 config "onStartupCmds"      [t| [String]                |] [| []            |]
 config "outputDir"          [t| FilePath                |] [| "State/"      |]
-config "proxy"              [t| Maybe ([Char], Integer) |] [| Nothing       |]
+config "proxy"              [t| Proxy                   |] [| NoProxy       |]
 config "verbose"            [t| Bool                    |] [| False         |]
 
 defaultIrcHandler :: IRCError -> LB ()

@@ -9,12 +9,12 @@
 module Lambdabot.Plugin.Search (theModule) where
 
 import Lambdabot.Plugin
-import Lambdabot.Util.MiniHTTP
 import Lambdabot.Util.Url
 
-import Control.Applicative
 import Data.Maybe
 import Network.HTTP
+import Network.HTTP.Proxy
+import Network.URI hiding (path, query)
 import Text.HTML.TagSoup
 import Text.HTML.TagSoup.Match (anyAttr, tagOpen)
 
@@ -31,7 +31,10 @@ googleHeaders = [mkHeader HdrReferer "http://www.google.com/"]
 
 normalizeOptions :: MonadLB m => m (NormalizeRequestOptions a)
 normalizeOptions = do
-    hasProxy <- isJust <$> getConfig proxy
+    proxy' <- getConfig proxy
+    let hasProxy = case proxy' of
+            NoProxy -> False
+            _       -> True
     return defaultNormalizeRequestOptions
         { normDoClose = True
         , normForProxy = hasProxy
@@ -73,7 +76,7 @@ moduleHelp s = case s of
 
 searchCmd :: String -> String -> LB [String]
 searchCmd _          []   = return ["Empty search."]
-searchCmd engineName (Network.HTTP.urlEncode -> query)
+searchCmd engineName (urlEncode -> query)
     | engineName == "google" = do -- for Google we do both to get conversions, e.g. for '3 lbs in kg'
         request <- request'
         doHTTP request $ \response ->

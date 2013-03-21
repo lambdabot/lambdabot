@@ -3,7 +3,6 @@
 module Lambdabot.Plugin.Url (theModule) where
 
 import Lambdabot.Plugin
-import Lambdabot.Util.MiniHTTP
 import Lambdabot.Util.Url
 
 import Control.Monad
@@ -74,11 +73,9 @@ tinyurl = "http://tinyurl.com/api-create.php?url="
 
 -- | Fetch the title of the specified URL.
 fetchTiny :: MonadLB m => String -> m (Maybe String)
-fetchTiny url
-    | Just uri <- parseURI (tinyurl ++ url) = do
-        tiny <- io . runWebReq (getHtmlPage uri) =<< getConfig proxy
-        return $ findTiny $ foldl' cat "" tiny
-    | otherwise = return $ Just url
+fetchTiny url = do
+    tiny <- io . runWebReq (getHtmlPage (tinyurl ++ url)) =<< getConfig proxy
+    return $ findTiny $ foldl' cat "" tiny
     where cat x y = x ++ " " ++ y
 
 -- | Tries to find the start of a tinyurl
