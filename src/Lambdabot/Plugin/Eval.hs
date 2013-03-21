@@ -54,8 +54,11 @@ exts = ["ImplicitPrelude"] -- workaround for bug in hint package
 
 trustedPkgs :: [String]
 trustedPkgs =
-    [ "lambdabot"
-    , "array"
+    [ "array"
+    , "base"
+    , "bytestring"
+    , "containers"
+    , "lambdabot"
     , "random"
     ]
 
@@ -146,9 +149,12 @@ comp src = do
 
     -- and compile .L.hs
     -- careful with timeouts here. need a wrapper.
-    (o',e',c) <- io (popen "ghc" ["-O","-v0","-c"
-                                 ,"-Werror"
-                                 ,".L.hs"] Nothing)
+    let ghcArgs = concat
+            [ ["-O", "-v0", "-c", "-Werror", "-fpackage-trust"]
+            , concat [["-trust", pkg] | pkg <- trustedPkgs]
+            , [".L.hs"]
+            ]
+    (o',e',c) <- io (popen "ghc" ghcArgs Nothing)
     -- cleanup, 'try' because in case of error the files are not generated
     _ <- io (try (removeFile ".L.hi") :: IO (Either SomeException ()))
     _ <- io (try (removeFile ".L.o")  :: IO (Either SomeException ()))
