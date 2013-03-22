@@ -5,7 +5,7 @@
 module Lambdabot.Plugin.Hoogle (theModule) where
 
 import Lambdabot.Plugin
-import Lambdabot.Util.Process
+import System.Process
 
 theModule :: Module [String]
 theModule = newModule
@@ -45,7 +45,7 @@ cutoff = -10
 hoogle :: String -> IO [String]
 hoogle s = do
         let args = ["--count=20", s]
-        (out,err,_) <- popen hoogleBinary args (Just "")
+        (_,out,err) <- readProcessWithExitCode hoogleBinary args ""
         return $ result out err
 
     where result [] [] = ["A Hoogle error occurred."]

@@ -8,11 +8,11 @@
 module Lambdabot.Plugin.Djinn (theModule) where
 
 import Lambdabot.Plugin
-import Lambdabot.Util.Process
 
 import Data.Char
 import Data.List
 import Data.Maybe
+import System.Process (readProcess)
 import Text.Regex.TDFA
 
 -- | We can accumulate an interesting environment
@@ -141,9 +141,14 @@ djinnDelCmd s =  do
 
 -- Version number
 djinnVerCmd :: Cmd Djinn ()
-djinnVerCmd = do
-    (out,_,_) <- io $ popen binary [] (Just ":q")
-    say . dropNL . clean_ . drop 18 . head . lines $ out
+djinnVerCmd = say =<< io getDjinnVersion
+
+getDjinnVersion :: IO String
+getDjinnVersion = fmap (extractVersion . head . lines) (readProcess binary [] ":q")
+    where extractVersion str = case str =~~ "version [0-9]+(-[0-9]+)*" of
+            Nothing -> "Unknown"
+            Just m  -> m
+
 
 ------------------------------------------------------------------------
 
@@ -165,7 +170,7 @@ getDjinnEnv (prel,env') = do
 djinn :: [Decl] -> String -> IO (Either [String] String)
 djinn env' src = do
     let env = concat . intersperse "\n" $ env'
-    (out,_,_) <- popen binary [] (Just (unlines [env, src, ":q"]))
+    out <- readProcess binary [] (unlines [env, src, ":q"])
     let safeInit [] = []
         safeInit xs = init xs
         o = dropNL . clean_ . unlines . safeInit . drop 2 . lines $ out

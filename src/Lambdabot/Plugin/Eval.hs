@@ -6,7 +6,6 @@ module Lambdabot.Plugin.Eval (theModule, eval, exts) where
 
 import Lambdabot.Plugin
 import Lambdabot.Plugin.Base (evalPrefixes)
-import Lambdabot.Util.Process
 
 import Control.Exception (try, SomeException)
 import Control.Monad
@@ -15,6 +14,7 @@ import Data.Ord
 import qualified Language.Haskell.Exts as Hs
 import System.Directory
 import System.Exit
+import System.Process
 
 theModule :: Module ()
 theModule = newModule
@@ -83,7 +83,7 @@ dropPrefix = dropWhile (' ' ==) . drop 2
 eval :: MonadLB m => String -> m String
 eval src = do
     load <- lb (findOrCreateLBFile "L.hs")
-    (out,err,_) <- io (popen binary (args load src) Nothing)
+    (_,out,err) <- io (readProcessWithExitCode binary (args load src) "")
     case (out,err) of
         ([],[]) -> return "Terminated\n"
         _       -> do
@@ -154,7 +154,7 @@ comp src = do
             , concat [["-trust", pkg] | pkg <- trustedPkgs]
             , [".L.hs"]
             ]
-    (o',e',c) <- io (popen "ghc" ghcArgs Nothing)
+    (c, o',e') <- io (readProcessWithExitCode "ghc" ghcArgs "")
     -- cleanup, 'try' because in case of error the files are not generated
     _ <- io (try (removeFile ".L.hi") :: IO (Either SomeException ()))
     _ <- io (try (removeFile ".L.o")  :: IO (Either SomeException ()))

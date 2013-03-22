@@ -21,7 +21,6 @@ module Lambdabot.Plugin.Instances (theModule) where
 import Text.ParserCombinators.Parsec
 
 import Lambdabot.Plugin
-import Lambdabot.Util.Process
 
 import Control.Monad
 import Data.Char
@@ -29,6 +28,7 @@ import Data.List
 import Data.List.Split
 import Data.Maybe
 import System.FilePath
+import System.Process
 import Text.Regex.TDFA
 
 type Instance   = String
@@ -140,7 +140,7 @@ fetchInstances' cls mdls = do
             ]
     
     ghciCmd <- getConfig ghci
-    (out, err, _) <- io $ popen ghciCmd ["-ignore-dot-ghci","-fglasgow-exts"] (Just s)
+    (_, out, err) <- io $ readProcessWithExitCode ghciCmd ["-ignore-dot-ghci","-fglasgow-exts"] s
     let is = getInstances out cls
     return $ if null is
                then err

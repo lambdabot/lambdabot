@@ -7,12 +7,12 @@
 module Lambdabot.Plugin.Spell (theModule) where
 
 import Lambdabot.Plugin
-import Lambdabot.Util.Process
 
 import Control.Monad.Trans
 import Data.Char
 import Data.List.Split
 import Data.Maybe
+import System.Process
 import Text.Regex.TDFA
 
 
@@ -96,7 +96,7 @@ spell word = spellWithArgs word []
 
 spellWithArgs :: String -> [String] -> IO [String]
 spellWithArgs word ex = do
-    (out,err,_) <- popen binary (args++ex) (Just word)
+    (_,out,err) <- readProcessWithExitCode binary (args++ex) word
     let o = fromMaybe [word] ((clean_ . lines) out)
         e = fromMaybe e      ((clean_ . lines) err)
     return $ case () of {_

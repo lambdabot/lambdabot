@@ -19,12 +19,12 @@
 module Lambdabot.Plugin.Type (theModule, query_ghci) where
 
 import Lambdabot.Plugin
-import Lambdabot.Util.Process
 
 import Lambdabot.Plugin.Eval (exts)
 
 import Data.Char
 import Data.Maybe
+import System.Process
 import Text.Regex.TDFA
 
 theModule :: Module ()
@@ -120,7 +120,7 @@ extract_signatures output
         removeExp' _ []                  = Nothing
 
 --
---     With this the command handler can be easily defined using popen:
+--     With this the command handler can be easily defined using readProcessWithExitCode:
 --
 query_ghci :: MonadLB m => String -> String -> m String
 query_ghci cmd expr = do
@@ -128,9 +128,9 @@ query_ghci cmd expr = do
     let context = ":load "++l++"\n:m *L\n" -- using -fforce-recomp to make sure we get *L in scope instead of just L
         extFlags = ["-X" ++ ext | ext <- exts]
     ghciCmd <- getConfig ghci
-    (output, errors, _) <- io $ popen ghciCmd
+    (_, output, errors) <- io $ readProcessWithExitCode ghciCmd
         ("-v0":"-fforce-recomp":"-iState":extFlags)
-        (Just (context ++ theCommand cmd (stripComments expr)))
+        (context ++ theCommand cmd (stripComments expr))
     let ls = extract_signatures output
     return $ case ls of
                Nothing -> unlines . take 3 . filter (not . null) . map cleanRE2 .

@@ -5,11 +5,11 @@
 module Lambdabot.Plugin.Filter (theModule) where
 
 import Lambdabot.Plugin
-import Lambdabot.Util.Process
 
 import Control.Applicative
 import Data.Maybe
 import System.Directory (findExecutable)
+import System.Process
 
 -- State consists of a map from filter name to executable path
 
@@ -62,7 +62,7 @@ filters =
 
 runFilter :: String -> String -> IO String
 runFilter f s = do
-    (out,_,_) <- popen f [] (Just s)
+    out <- readProcess f [] s
     return $ result out
     where result [] = "Couldn't run the filter."
           result xs = unlines . filter (not . all (==' ')) . lines $ xs
