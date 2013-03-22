@@ -1,4 +1,4 @@
-{-# LANGUAGE PatternGuards, TypeFamilies #-}
+{-# LANGUAGE PatternGuards #-}
 -- Copyright (c) 2005 Donald Bruce Stewart - http://www.cse.unsw.edu.au/~dons
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
 
@@ -7,6 +7,7 @@
 -- | A binding to Djinn.
 module Lambdabot.Plugin.Djinn (theModule) where
 
+import Lambdabot.Config.Core
 import Lambdabot.Plugin
 
 import Data.Char
@@ -26,7 +27,8 @@ theModule = newModule
 
     -- this means djinn better be visible at boot time
     , moduleDefState = do
-        st <- io $ getDjinnEnv ([],[]) -- get the prelude
+        binary  <- getConfig djinnBinary
+        st      <- io $ getDjinnEnv binary ([],[]) -- get the prelude
         return (either (const []) snd{-!-} st, [])
 
     , moduleCmds = return
@@ -85,11 +87,11 @@ rejectingCmds action args
     | otherwise = action args
 
 -- Normal commands
-djinnCmd :: (MonadLBState m, LBState m ~ (t, [Decl])) =>
-            [Char] -> Cmd m ()
+djinnCmd :: [Char] -> Cmd Djinn ()
 djinnCmd s = do
         (_,env) <- readMS
-        e       <- io $ djinn env $ ":set +sorted\nf ? " ++ dropForall s
+        binary  <- getConfig djinnBinary
+        e       <- io $ djinn binary env $ ":set +sorted\nf ? " ++ dropForall s
         mapM_ say $ either id (parse . lines) e
     where
       dropForall t = maybe t mrAfter (t =~~ re)
@@ -100,11 +102,11 @@ djinnCmd s = do
                 else tail x
 
 -- Augment environment. Have it checked by djinn.
-djinnAddCmd :: (MonadLBState m, LBState m ~ ([Decl], [Decl])) =>
-               [Char] -> Cmd m ()
+djinnAddCmd :: [Char] -> Cmd Djinn ()
 djinnAddCmd s = do
     (p,st)  <- readMS
-    est     <- io $ getDjinnEnv $ (p, dropSpace s : st)
+    binary  <- getConfig djinnBinary
+    est     <- io $ getDjinnEnv binary (p, dropSpace s : st)
     case est of
         Left e     -> say (head e)
         Right st'' -> writeMS st''
@@ -129,11 +131,11 @@ djinnClrCmd = modifyMS (flip (,) [] . fst)
 
 -- Remove sym from environment. We let djinn do the hard work of
 -- looking up the symbols.
-djinnDelCmd :: (MonadLBState m, LBState m ~ ([String], [String])) =>
-               [Char] -> Cmd m ()
+djinnDelCmd :: [Char] -> Cmd Djinn ()
 djinnDelCmd s =  do
     (_,env) <- readMS
-    eenv <- io $ djinn env $ ":delete " ++ dropSpace s ++ "\n:environment"
+    binary  <- getConfig djinnBinary
+    eenv <- io $ djinn binary env $ ":delete " ++ dropSpace s ++ "\n:environment"
     case eenv of
         Left e     -> say (head e)
         Right env' -> modifyMS $ \(prel,_) ->
@@ -141,10 +143,12 @@ djinnDelCmd s =  do
 
 -- Version number
 djinnVerCmd :: Cmd Djinn ()
-djinnVerCmd = say =<< io getDjinnVersion
+djinnVerCmd = do
+    binary <- getConfig djinnBinary
+    say =<< io (getDjinnVersion binary)
 
-getDjinnVersion :: IO String
-getDjinnVersion = fmap (extractVersion . head . lines) (readProcess binary [] ":q")
+getDjinnVersion :: String -> IO String
+getDjinnVersion binary = fmap (extractVersion . head . lines) (readProcess binary [] ":q")
     where extractVersion str = case str =~~ "version [0-9]+(-[0-9]+)*" of
             Nothing -> "Unknown"
             Just m  -> m
@@ -152,14 +156,10 @@ getDjinnVersion = fmap (extractVersion . head . lines) (readProcess binary [] ":
 
 ------------------------------------------------------------------------
 
--- | Should be built inplace by the build system
-binary :: String
-binary = "djinn"
-
 -- | Extract the default environment
-getDjinnEnv :: DjinnEnv -> IO (Either [String] DjinnEnv)
-getDjinnEnv (prel,env') = do
-    env <- djinn env' ":environment"
+getDjinnEnv :: String -> DjinnEnv -> IO (Either [String] DjinnEnv)
+getDjinnEnv binary (prel,env') = do
+    env <- djinn binary env' ":environment"
     case env of
         Left e  -> return $ Left e
         Right o -> do let new = filter (\p -> p `notElem` prel) . nub .  lines $ o
@@ -167,8 +167,8 @@ getDjinnEnv (prel,env') = do
 
 -- | Call the binary:
 
-djinn :: [Decl] -> String -> IO (Either [String] String)
-djinn env' src = do
+djinn :: String -> [Decl] -> String -> IO (Either [String] String)
+djinn binary env' src = do
     let env = concat . intersperse "\n" $ env'
     out <- readProcess binary [] (unlines [env, src, ":q"])
     let safeInit [] = []

@@ -16,21 +16,17 @@ theModule = newModule
     { moduleCmds = return
         [ (command "bf")
             { help = say "bf <expr>. Evaluate a brainf*ck expression"
-            , process = ios80 . bf
+            , process = \msg -> do
+                bf <- getConfig bfBinary
+                ios80 (run bf msg scrub)
             }
         ]
     }
 
-binary :: String
-binary = "bf"
-
-bf :: String -> IO String
-bf src = run binary src scrub
-  where scrub = unlines . take 6 . map (' ':) . filter (not.null) . map cleanit . lines
-
---
 -- Clean up output
---
+scrub :: String -> String
+scrub = unlines . take 6 . map (' ':) . filter (not.null) . map cleanit . lines
+
 cleanit :: String -> String
 cleanit s | s =~ terminated   = "Terminated\n"
           | otherwise         = filter printable s

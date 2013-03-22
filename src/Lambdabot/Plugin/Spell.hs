@@ -44,20 +44,25 @@ theModule = newModule
 
     , contextual = \txt -> do
         alive <- readMS
-        if alive then io (spellingNazi txt) >>= mapM_ say
+        binary <- getConfig aspellBinary
+        if alive then io (spellingNazi binary txt) >>= mapM_ say
                  else return ()
     }
 
 helpStr :: String
 helpStr = "spell <word>. Show spelling of word"
 
-doSpell :: MonadIO m => [Char] -> Cmd m ()
+doSpell :: [Char] -> Cmd Spell ()
 doSpell [] = say "No word to spell."
-doSpell s  = (say . showClean . take 5) =<< (io (spell s))
+doSpell s  = do
+    binary <- getConfig aspellBinary
+    (say . showClean . take 5) =<< (io (spell binary s))
 
-spellAll :: MonadIO m => [Char] -> Cmd m ()
+spellAll :: [Char] -> Cmd Spell ()
 spellAll [] = say "No phrase to spell."
-spellAll s  = liftIO (spellingNazi s) >>= mapM_ say
+spellAll s  = do
+    binary <- getConfig aspellBinary
+    liftIO (spellingNazi binary s) >>= mapM_ say
 
 nazi :: Bool -> Cmd (ModuleT Bool LB) ()
 nazi True  = lift on  >> say "Spelling nazi engaged."
@@ -69,9 +74,6 @@ on  = writeMS True
 off :: Spell ()
 off = writeMS False
 
-binary :: String
-binary = "aspell"
-
 args :: [String]
 args = ["pipe"]
 
@@ -79,10 +81,10 @@ args = ["pipe"]
 -- | Find the first misspelled word in the input line, and return plausible
 -- output.
 --
-spellingNazi :: String -> IO [String]
-spellingNazi lin = fmap (take 1 . concat) (mapM correct (words lin))
+spellingNazi :: String -> String -> IO [String]
+spellingNazi binary lin = fmap (take 1 . concat) (mapM correct (words lin))
     where correct word = do
-            var <- take 5 `fmap` spell word
+            var <- take 5 `fmap` spell binary word
             return $ if null var || any (equating' (map toLower) word) var
                 then []
                 else ["Did you mean " ++ listToStr "or" var ++ "?"]
@@ -91,11 +93,11 @@ spellingNazi lin = fmap (take 1 . concat) (mapM correct (words lin))
 -- | Return a list of possible spellings for a word
 -- 'String' is a word to check the spelling of.
 --
-spell :: String -> IO [String]
-spell word = spellWithArgs word []
+spell :: String -> String -> IO [String]
+spell binary word = spellWithArgs binary word []
 
-spellWithArgs :: String -> [String] -> IO [String]
-spellWithArgs word ex = do
+spellWithArgs :: String -> String -> [String] -> IO [String]
+spellWithArgs binary word ex = do
     (_,out,err) <- readProcessWithExitCode binary (args++ex) word
     let o = fromMaybe [word] ((clean_ . lines) out)
         e = fromMaybe e      ((clean_ . lines) err)

@@ -127,8 +127,8 @@ query_ghci cmd expr = do
     l <- lb $ findOrCreateLBFile "L.hs"
     let context = ":load "++l++"\n:m *L\n" -- using -fforce-recomp to make sure we get *L in scope instead of just L
         extFlags = ["-X" ++ ext | ext <- exts]
-    ghciCmd <- getConfig ghci
-    (_, output, errors) <- io $ readProcessWithExitCode ghciCmd
+    ghci <- getConfig ghciBinary
+    (_, output, errors) <- io $ readProcessWithExitCode ghci
         ("-v0":"-fforce-recomp":"-iState":extFlags)
         (context ++ theCommand cmd (stripComments expr))
     let ls = extract_signatures output

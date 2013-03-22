@@ -1,11 +1,6 @@
 {-# LANGUAGE PatternGuards #-}
 -- | Lambdabot base module. Controls message send and receive
-module Lambdabot.Plugin.Base
-    ( commandPrefixes
-    , evalPrefixes
-    , disabledCommands
-    , theModule
-    ) where
+module Lambdabot.Plugin.Base (theModule) where
 
 import Lambdabot
 import Lambdabot.Command

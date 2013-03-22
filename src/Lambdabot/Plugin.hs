@@ -32,10 +32,8 @@ module Lambdabot.Plugin
     , debugStr
     , debugStrLn
     
-    , proxy
-    , ghci
-    
     , module Lambdabot.Config
+    , module Lambdabot.Config.Core
     , module Lambdabot.Command
     , module Lambdabot.State
     , module Lambdabot.File
@@ -46,6 +44,7 @@ module Lambdabot.Plugin
 import Lambdabot
 import Lambdabot.ChanName
 import Lambdabot.Config
+import Lambdabot.Config.Core
 import Lambdabot.Command hiding (runCommand, execCmd)
 import Lambdabot.File
 import Lambdabot.Message

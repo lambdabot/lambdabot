@@ -14,7 +14,8 @@ theModule = newModule
         [ (command "hoogle")
             { help = say "hoogle <expr>. Haskell API Search for either names, or types."
             , process = \s -> do
-                o <- io (hoogle s)
+                binary <- getConfig hoogleBinary
+                o <- io (hoogle binary s)
                 let (this,that) = splitAt 3 o
                 writeMS that
                 mapM_ say this
@@ -34,18 +35,15 @@ theModule = newModule
 
 ------------------------------------------------------------------------
 
-hoogleBinary :: FilePath
-hoogleBinary = "hoogle"
-
 -- arbitrary cutoff point
 cutoff :: Int
 cutoff = -10
 
 -- | Actually run the hoogle binary
-hoogle :: String -> IO [String]
-hoogle s = do
+hoogle :: String -> String -> IO [String]
+hoogle binary s = do
         let args = ["--count=20", s]
-        (_,out,err) <- readProcessWithExitCode hoogleBinary args ""
+        (_,out,err) <- readProcessWithExitCode binary args ""
         return $ result out err
 
     where result [] [] = ["A Hoogle error occurred."]

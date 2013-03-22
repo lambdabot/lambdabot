@@ -9,7 +9,6 @@ module Lambdabot.Plugin.Compose (theModule) where
 import Lambdabot.Command
 import Lambdabot.Monad
 import Lambdabot.Plugin
-import Lambdabot.Plugin.Base (commandPrefixes)
 
 import Control.Arrow (first)
 import Control.Monad

@@ -34,10 +34,6 @@ module Lambdabot.Monad
     , withModule
     , withCommand
     , withAllModules
-    
-    , verbose
-    , proxy
-    , ghci
     ) where
 
 import           Lambdabot.ChanName

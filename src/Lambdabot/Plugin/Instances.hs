@@ -139,8 +139,8 @@ fetchInstances' cls mdls = do
             , [":i", cls]
             ]
     
-    ghciCmd <- getConfig ghci
-    (_, out, err) <- io $ readProcessWithExitCode ghciCmd ["-ignore-dot-ghci","-fglasgow-exts"] s
+    ghci <- getConfig ghciBinary
+    (_, out, err) <- io $ readProcessWithExitCode ghci ["-ignore-dot-ghci","-fglasgow-exts"] s
     let is = getInstances out cls
     return $ if null is
                then err

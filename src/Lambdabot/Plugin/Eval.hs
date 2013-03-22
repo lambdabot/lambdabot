@@ -5,7 +5,6 @@
 module Lambdabot.Plugin.Eval (theModule, eval, exts) where
 
 import Lambdabot.Plugin
-import Lambdabot.Plugin.Base (evalPrefixes)
 
 import Control.Exception (try, SomeException)
 import Control.Monad
@@ -44,9 +43,6 @@ theModule = newModule
         when b (lim80 (eval (dropPrefix txt)))
     }
 
-binary :: String
-binary = "mueval"
-
 -- extensions to enable for the interpreted expression
 -- (and probably also L.hs if it doesn't already have these set)
 exts :: [String]
@@ -82,7 +78,8 @@ dropPrefix = dropWhile (' ' ==) . drop 2
 
 eval :: MonadLB m => String -> m String
 eval src = do
-    load <- lb (findOrCreateLBFile "L.hs")
+    load    <- lb (findOrCreateLBFile "L.hs")
+    binary  <- getConfig muevalBinary
     (_,out,err) <- io (readProcessWithExitCode binary (args load src) "")
     case (out,err) of
         ([],[]) -> return "Terminated\n"
@@ -154,7 +151,8 @@ comp src = do
             , concat [["-trust", pkg] | pkg <- trustedPkgs]
             , [".L.hs"]
             ]
-    (c, o',e') <- io (readProcessWithExitCode "ghc" ghcArgs "")
+    ghc <- getConfig ghcBinary
+    (c, o',e') <- io (readProcessWithExitCode ghc ghcArgs "")
     -- cleanup, 'try' because in case of error the files are not generated
     _ <- io (try (removeFile ".L.hi") :: IO (Either SomeException ()))
     _ <- io (try (removeFile ".L.o")  :: IO (Either SomeException ()))
