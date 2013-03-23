@@ -15,6 +15,7 @@ import Data.List
 import Data.List.Split
 import Network( connectTo, PortID(..) )
 import System.IO
+import System.Timeout
 
 type IRC = ModuleT () LB
 
@@ -132,7 +133,7 @@ readerLoop tag nickn sock = do
   let line' = filter (\c -> c /= '\n' && c /= '\r') line
   if "PING " `isPrefixOf` line'
       then io $ hPutStr sock ("PONG " ++ drop 5 line' ++ "\r\n")
-      else do _ <- forkLB $ received (decodeMessage tag nickn line')
+      else do _ <- liftLB (forkIO . void . timeout 15000000) $ received (decodeMessage tag nickn line')
               return ()
   readerLoop tag nickn sock
 

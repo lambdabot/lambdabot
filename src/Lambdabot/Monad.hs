@@ -26,7 +26,6 @@ module Lambdabot.Monad
     , send
     , received
     
-    , forkLB
     , liftLB
     
     , getConfig
@@ -62,7 +61,6 @@ import qualified Data.Map as M
 import qualified Data.Set as S
 import System.Console.Haskeline.MonadException (MonadException)
 import System.IO
-import System.Timeout
 
 ------------------------------------------------------------------------
 --
@@ -238,13 +236,6 @@ evalLB :: LB a -> IRCRState -> IRCRWState -> IO a
 evalLB (LB lb') rs rws = do
     ref  <- newIORef rws
     lb' `runReaderT` (rs,ref)
-
--- | run an IO action in another thread, with a timeout, lifted into LB
-forkLB :: LB a -> LB ThreadId
-forkLB f = (`liftLB` f) $ \g -> do
-             forkIO $ do
-               _ <- timeout (15 * 1000 * 1000) g
-               return ()
 
 -- | lift an io transformer into LB
 liftLB :: (IO a -> IO b) -> LB a -> LB b
