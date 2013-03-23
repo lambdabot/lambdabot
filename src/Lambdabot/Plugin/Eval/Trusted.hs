@@ -1,13 +1,13 @@
 {-# LANGUAGE Trustworthy #-}
 module Lambdabot.Plugin.Eval.Trusted
-    ( module ShowQ
-    , module Math.OEIS
+    ( module Math.OEIS
     , module Test.QuickCheck
+    , module Lambdabot.Plugin.Check.ShowQ
     , module Lambdabot.Plugin.Eval.Trusted
     ) where
 
-import ShowQ
 import Math.OEIS
+import Lambdabot.Plugin.Check.ShowQ
 import Test.QuickCheck
 
 describeSequence :: SequenceData -> Maybe String
