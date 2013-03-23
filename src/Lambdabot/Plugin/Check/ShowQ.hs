@@ -1,25 +1,10 @@
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE NoMonomorphismRestriction #-}
-
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
 -- Copyright date and holder unknown.
-
 module Lambdabot.Plugin.Check.ShowQ (myquickcheck) where
 
 import Data.List (group, intercalate, sort)
 import System.IO.Unsafe (unsafePerformIO)
 import Test.QuickCheck (numTests, quickCheckWithResult, stdArgs, Result(..), Testable)
-
-{-
-import qualified Test.SmallCheck as SC (smallCheck, Testable)
-
--- | WARNING: ¡¡¡NOT SAFE!!! (only being put in here for historical record, will be removed
--- by next commit)
-mysmallcheck :: (SC.Testable IO prop) => prop -> ()
-mysmallcheck = unsafePerformIO . mysmallcheck'
-mysmallcheck' :: (SC.Testable IO prop) => prop -> IO ()
-mysmallcheck' = SC.smallCheck 6
--}
 
 myquickcheck :: Testable prop => prop -> String
 myquickcheck = unsafePerformIO . myquickcheck'
