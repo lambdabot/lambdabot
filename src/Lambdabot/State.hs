@@ -175,9 +175,7 @@ writeGS g = withGS (\_ writer -> writer g)
 
 -- | flush state of modules
 flushModuleState :: LB ()
-flushModuleState = do
-    _ <- withAllModules (\m -> getModuleName >>= writeGlobalState m)
-    return ()
+flushModuleState = withAllModules (\m -> getModuleName >>= writeGlobalState m)
 
 -- | Peristence: write the global state out
 writeGlobalState :: Module st -> String -> ModuleT st LB ()

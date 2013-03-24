@@ -263,8 +263,8 @@ withCommand cmdname def f = do
       _                           -> def
 
 -- | Interpret a function in the context of all modules
-withAllModules :: (forall st. Module st -> ModuleT st LB a) -> LB [a]
+withAllModules :: (forall st. Module st -> ModuleT st LB a) -> LB ()
 withAllModules f = do
     mods <- gets $ M.elems . ircModules :: LB [ModuleRef]
-    (`mapM` mods) $ \(ModuleRef m ref name) -> do
+    (`mapM_` mods) $ \(ModuleRef m ref name) -> do
         runReaderT (runModuleT $ f m) (ref, name)

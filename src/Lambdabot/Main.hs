@@ -52,7 +52,7 @@ lambdabotMain loadStaticModules configuration = do
 -- Also, handle any fatal exceptions (such as non-recoverable signals),
 -- (i.e. print a message and exit). Non-fatal exceptions should be dealt
 -- with in the mainLoop or further down.
-runIrc :: LB a -> [DSum Config] -> IO ()
+runIrc :: LB () -> [DSum Config] -> IO a
 runIrc initialise configBindings = withSocketsDo $ do
     rost <- initRoState (D.fromList configBindings)
     r <- try $ evalLB (do withDebug "Initialising plugins" initialise
@@ -79,18 +79,19 @@ mainLoop = do
             asks ircQuitMVar >>= io . takeMVar)
         (\e@SomeException{} -> io (hPrint stderr e)) -- catch anything, print informative message, and clean up
     
-    _ <- withAllModules moduleExit
+    withAllModules moduleExit
     flushModuleState
 
     -- this kills profiling output:
     io $ exitWith (ExitFailure 1)
 
 -- | Print a debug message, and perform an action
-withDebug :: String -> LB a -> LB ()
+withDebug :: String -> LB a -> LB a
 withDebug s a = do
     io $ hPutStr stderr (s ++ " ...")  >> hFlush stderr
-    _ <- a
+    r <- a
     io $ hPutStrLn stderr " done." >> hFlush stderr
+    return r
 
 ------------------------------------------------------------------------
 

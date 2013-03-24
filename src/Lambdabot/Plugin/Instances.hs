@@ -22,6 +22,7 @@ import Text.ParserCombinators.Parsec
 
 import Lambdabot.Plugin
 
+import Control.Applicative ((*>))
 import Control.Monad
 import Data.Char
 import Data.List
@@ -66,15 +67,14 @@ eitherToMaybe = either (const Nothing) Just
 -- > instance (State s)
 --
 instanceP :: ClassName -> CharParser st Instance
-instanceP cls = do _ <- string "instance "
-                   _ <- try constrained <|> unconstrained
-                   skipMany space
-                   -- break on the "imported from" comment or a newline. use
-                   -- return so it typechecks.
-                   let end = try (string "--") <|> (eof >> return " ")
-                   anyChar `manyTill` end
+instanceP cls
+    =  string "instance " *> (try constrained <|> unconstrained) *> skipMany space
+    *> anyChar `manyTill` end
     where constrained   = noneOf "=" `manyTill` string ("=> " ++ cls)
           unconstrained = string cls
+          
+          -- break on the "imported from" comment or a newline.
+          end           = void (try (string "--")) <|> eof
 
 -- | Wrapper for the instance parser.
 parseInstance :: ClassName -> String -> Maybe Instance

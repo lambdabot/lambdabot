@@ -238,14 +238,11 @@ doPRIVMSG' configu myname msg target
     -- Note how we catch any plugin errors here, rather than letting
     -- them bubble back up to the mainloop
     --
-    doContextualMsg r = lift $ do
-        _ <- withAllModules ( \m -> do
-            name' <- getModuleName
-            E.catch 
-                (lift . mapM_ (ircPrivmsg target) =<< execCmd (contextual m r) msg target "contextual") 
-                (\e@SomeException{} -> debugStrLn . (name' ++) . (" module failed in contextual handler: " ++) $ show e)
-            )
-        return ()
+    doContextualMsg r = lift $ withAllModules $ \m -> do
+        name' <- getModuleName
+        E.catch 
+            (lift . mapM_ (ircPrivmsg target) =<< execCmd (contextual m r) msg target "contextual") 
+            (\e@SomeException{} -> debugStrLn . (name' ++) . (" module failed in contextual handler: " ++) $ show e)
 
 ------------------------------------------------------------------------
 
