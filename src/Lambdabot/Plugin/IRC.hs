@@ -106,38 +106,37 @@ ircSignOn svr nickn ircname = do
 
 online :: String -> String -> PortID -> String -> String -> IRC ()
 online tag hostn portnum nickn ui = do
-  sock <- io $ connectTo hostn portnum
-  io $ hSetBuffering sock NoBuffering
-  -- Implements flood control: RFC 2813, section 5.8
-  sem1 <- io $ SSem.new 0
-  sem2 <- io $ SSem.new 4 -- one extra token stays in the MVar
-  sendmv <- io $ newEmptyMVar
-  _ <- io $ fork $ sequence_ $ repeat $ do
-    SSem.wait sem1
-    threadDelay 2000000
-    SSem.signal sem2
-  _ <- io $ fork $ sequence_ $ repeat $ do
-    SSem.wait sem2
-    putMVar sendmv ()
-    SSem.signal sem1
-  E.catch 
-        (addServer tag $ io . sendMsg tag sock sendmv)
+    sock    <- io $ connectTo hostn portnum
+    io $ hSetBuffering sock NoBuffering
+    -- Implements flood control: RFC 2813, section 5.8
+    sem1    <- io $ SSem.new 0
+    sem2    <- io $ SSem.new 4 -- one extra token stays in the MVar
+    sendmv  <- io newEmptyMVar
+    io . void . fork . forever $ do
+        SSem.wait sem1
+        threadDelay 2000000
+        SSem.signal sem2
+    io . void . fork . forever $ do
+        SSem.wait sem2
+        putMVar sendmv ()
+        SSem.signal sem1
+    E.catch 
+        (addServer tag (io . sendMsg tag sock sendmv))
         (\err@SomeException{} -> io (hClose sock) >> E.throwIO err)
-  lift $ ircSignOn hostn (Nick tag nickn) ui
-  void . lb . fork $ E.catch
+    lb $ ircSignOn hostn (Nick tag nickn) ui
+    lb . void . fork $ E.catch
         (readerLoop tag nickn sock)
         (\e@SomeException{} -> do
             io $ hPutStrLn stderr $ "irc[" ++ tag ++ "] error: " ++ show e
             remServer tag)
 
 readerLoop :: String -> String -> Handle -> LB ()
-readerLoop tag nickn sock = do
-  line <- io $ hGetLine sock
-  let line' = filter (\c -> c /= '\n' && c /= '\r') line
-  if "PING " `isPrefixOf` line'
-      then io $ hPutStr sock ("PONG " ++ drop 5 line' ++ "\r\n")
-      else void . fork . void . timeout 15000000 $ received (decodeMessage tag nickn line')
-  readerLoop tag nickn sock
+readerLoop tag nickn sock = forever $ do
+    line <- io $ hGetLine sock
+    let line' = filter (`notElem` "\r\n") line
+    if "PING " `isPrefixOf` line'
+        then io $ hPutStr sock ("PONG " ++ drop 5 line' ++ "\r\n")
+        else void . fork . void . timeout 15000000 $ received (decodeMessage tag nickn line')
 
 sendMsg :: String -> Handle -> MVar () -> IrcMessage -> IO ()
 sendMsg tag sock mv msg =
