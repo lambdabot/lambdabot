@@ -23,10 +23,8 @@ module Lambdabot.Config.Core
     ) where
 
 import Lambdabot.Config
-import {-# SOURCE #-} Lambdabot.Monad
 
 import Control.Exception
-import Control.Monad.Trans
 import Network.HTTP.Proxy
 
 -------------------------------------
@@ -55,7 +53,7 @@ config "unlambdaBinary"     [t| String                  |] [| "unlambda"    |]
 -------------------------------------
 -- Top level exception-handler
 
-defaultIrcHandler :: SomeException -> LB ()
-defaultIrcHandler = liftIO . putStrLn . ("Main: caught (and ignoring) "++) . show
+defaultIrcHandler :: SomeException -> IO ()
+defaultIrcHandler = putStrLn . ("Main: caught (and ignoring) "++) . show
 
-config "uncaughtExceptionHandler" [t| SomeException -> LB () |] [| defaultIrcHandler |]
+config "uncaughtExceptionHandler" [t| SomeException -> IO () |] [| defaultIrcHandler |]

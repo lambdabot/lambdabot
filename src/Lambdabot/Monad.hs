@@ -169,7 +169,7 @@ received msg = do
     s       <- get
     handler <- getConfig uncaughtExceptionHandler
     case M.lookup (ircMsgCommand msg) (ircCallbacks s) of
-        Just cbs -> mapM_ (\(_, cb) -> cb msg `E.catch` handler) cbs
+        Just cbs -> mapM_ (\(_, cb) -> cb msg `E.catch` (liftIO . handler)) cbs
         _        -> return ()
 
 -- ---------------------------------------------------------------------
