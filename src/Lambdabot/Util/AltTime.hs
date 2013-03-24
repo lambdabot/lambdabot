@@ -157,7 +157,7 @@ toOldTimeDiff (TimeDiff td) = (fromInteger ye, fromInteger mo, fromInteger da, f
 fromOldTimeDiff :: Int -> Int -> Int -> Int -> Int -> Int -> Integer -> TimeDiff
 fromOldTimeDiff ye mo da ho mi se ps =
     TimeDiff
-        (fromIntegral (ps 
+        (1e-12 * fromIntegral (ps 
             + 1000000000000 * (toInteger se 
                 + 60 * (toInteger mi 
                     + 60 * (toInteger ho
