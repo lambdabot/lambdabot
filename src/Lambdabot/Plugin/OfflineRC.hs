@@ -9,8 +9,7 @@ import Lambdabot.Monad
 import Lambdabot.Plugin
 import Lambdabot.Util.Error( finallyError )
 
-import Control.Concurrent( forkIO )
-import Control.Concurrent.MVar( readMVar )
+import Control.Concurrent.Lifted
 import Control.Exception ( evaluate )
 import Control.Monad( when )
 import Control.Monad.Reader( asks )
@@ -19,7 +18,7 @@ import Control.Monad.Trans( lift, liftIO )
 import Data.Char
 import System.Console.Haskeline
 import System.IO
-import System.Timeout
+import System.Timeout.Lifted
 
 -- We need to track the number of active sourcings so that we can
 -- unregister the server (-> allow the bot to quit) when it is not
@@ -32,9 +31,9 @@ theModule = newModule
     { moduleDefState = return 0
     , moduleInit = do
         act <- bindModule0 onInit
-        _ <- lift $ liftLB forkIO $ do
+        _ <- lift $ fork $ do
                      mv <- asks ircInitDoneMVar
-                     io $ readMVar mv
+                     readMVar mv
                      act
         return ()
 
@@ -45,7 +44,7 @@ theModule = newModule
             , process = const . lift $ do
                 act <- bindModule0 $ finallyError (runInputT defaultSettings replLoop) unlockRC
                 lockRC
-                _ <- lift $ liftLB forkIO act
+                _ <- lift $ fork act
                 return ()
             }
         , (command "rc")
@@ -56,7 +55,7 @@ theModule = newModule
                 io $ evaluate $ foldr seq () txt
                 act <- bindModule0 $ finallyError (mapM_ feed $ lines txt) unlockRC
                 lockRC
-                _ <- lift $ liftLB forkIO act
+                _ <- lift $ fork act
                 return ()
             }
         ]
@@ -75,7 +74,7 @@ feed msg = do
             '>':xs -> cmdPrefix ++ "run " ++ xs
             '!':xs -> xs
             _      -> cmdPrefix ++ dropWhile (== ' ') msg
-    lift . (>> return ()) . liftLB (timeout (15 * 1000 * 1000)) . received $
+    lift . (>> return ()) . timeout (15 * 1000 * 1000) . received $
               IrcMessage { ircMsgServer = "offlinerc"
                          , ircMsgLBName = "offline"
                          , ircMsgPrefix = "null!n=user@null"
@@ -104,12 +103,11 @@ replLoop = do
 
 lockRC :: OfflineRC ()
 lockRC = do
-    add <- bindModule0 $ addServer "offlinerc" handleMsg
     withMS $ \ cur writ -> do
-        when (cur == 0) $ add
+        when (cur == 0) (addServer "offlinerc" handleMsg)
         writ (cur + 1)
 
 unlockRC :: OfflineRC ()
 unlockRC = withMS $ \ cur writ -> do
-    when (cur == 1) $ remServer "offlinerc"
+    when (cur == 1) $ lb $ remServer "offlinerc"
     writ (cur - 1)

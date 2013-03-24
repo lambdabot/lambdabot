@@ -1,5 +1,8 @@
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE UndecidableInstances #-}
 module Lambdabot.Module
     ( Module(..)
     , newModule
@@ -20,10 +23,13 @@ import Lambdabot.Util.Serial
 
 import Control.Applicative
 import Control.Concurrent (MVar)
+import Control.Monad
+import Control.Monad.Base
 import Control.Monad.Error (MonadError(..))
 import Control.Monad.Reader (MonadReader(..), ReaderT(..))
 import Control.Monad.State (MonadState(..))
 import Control.Monad.Trans (MonadTrans(..), MonadIO(..))
+import Control.Monad.Trans.Control
 import System.Console.Haskeline.MonadException (MonadException)
 
 ------------------------------------------------------------------------
@@ -80,8 +86,27 @@ newModule = Module
 -- | This transformer encodes the additional information a module might
 --   need to access its name or its state.
 --
-newtype ModuleT st m a = ModuleT { moduleT :: ReaderT (MVar st, String) m a }
+newtype ModuleT st m a = ModuleT { runModuleT :: ReaderT (MVar st, String) m a }
     deriving (Applicative, Functor, Monad, MonadTrans, MonadIO, MonadError e, MonadState t, MonadException, MonadConfig)
+
+instance MonadBase b m => MonadBase b (ModuleT st m) where
+    liftBase = lift . liftBase
+
+instance MonadTransControl (ModuleT st) where
+    newtype StT (ModuleT st) a = StModule {unStModule :: a}
+    liftWith f = do
+        r <- ModuleT ask
+        lift $ f $ \t -> liftM StModule (runReaderT (runModuleT t) r)
+    restoreT = lift . liftM unStModule
+    {-# INLINE liftWith #-}
+    {-# INLINE restoreT #-}
+
+instance MonadBaseControl b m => MonadBaseControl b (ModuleT st m) where
+    newtype StM (ModuleT st m) a = StMModule {unStMModule :: ComposeSt (ModuleT st) m a}
+    liftBaseWith = defaultLiftBaseWith StMModule
+    restoreM     = defaultRestoreM     unStMModule
+    {-# INLINE liftBaseWith #-}
+    {-# INLINE restoreM #-}
 
 getRef :: Monad m => ModuleT st m (MVar st)
 getRef  = ModuleT $ ask >>= return . fst
@@ -97,7 +122,7 @@ bindModule0 act = bindModule1 (const act) >>= return . ($ ())
 -- | variant of `bindModule0' for monad actions with one argument
 bindModule1 :: (a -> ModuleT mod LB b) -> ModuleT mod LB (a -> LB b)
 bindModule1 act = ModuleT $
-    ask >>= \st -> return (\val -> runReaderT (moduleT $ act val) st)
+    ask >>= \st -> return (\val -> runReaderT (runModuleT $ act val) st)
 
 -- | variant of `bindModule0' for monad actions with two arguments
 bindModule2 :: (a -> b -> ModuleT mod LB c) -> ModuleT mod LB (a -> b -> LB c)

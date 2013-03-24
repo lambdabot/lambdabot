@@ -14,7 +14,7 @@ import Data.Char
 import qualified Data.Map as M
 
 type WhereState         = M.Map P.ByteString P.ByteString
-type WhereWriter        = WhereState -> LB ()
+type WhereWriter        = WhereState -> Cmd Where ()
 type Where              = ModuleT WhereState LB
 
 theModule :: Module (M.Map P.ByteString P.ByteString)
@@ -52,7 +52,7 @@ doCmd cmd rest = (say =<<) . withMS $ \factFM writer ->
 ------------------------------------------------------------------------
 
 processCommand :: WhereState -> WhereWriter
-               -> String -> String -> String -> LB String
+               -> String -> String -> String -> Cmd Where String
 
 processCommand factFM writer fact cmd dat = case cmd of
         "where"     -> return $ getWhere factFM fact
@@ -67,7 +67,7 @@ getWhere fm fact =
         Nothing -> "I know nothing about " ++ fact ++ "."
         Just x  -> P.unpack x
 
-updateWhere :: Bool -> WhereState -> WhereWriter -> String -> String -> LB String
+updateWhere :: Bool -> WhereState -> WhereWriter -> String -> String -> Cmd Where String
 updateWhere _guard factFM writer fact dat = do
         writer $ M.insert (P.pack fact) (P.pack dat) factFM
         random confirmation

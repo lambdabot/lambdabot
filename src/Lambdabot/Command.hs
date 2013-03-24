@@ -1,4 +1,9 @@
-{-# LANGUAGE ExistentialQuantification, RankNTypes, TypeFamilies #-}
+{-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE UndecidableInstances #-}
 module Lambdabot.Command 
     ( Command(..)
     , cmdNames
@@ -21,8 +26,10 @@ import qualified Lambdabot.Message as Msg
 import Lambdabot.Nick
 
 import Control.Applicative
+import Control.Monad.Base
 import Control.Monad.Identity
 import Control.Monad.Reader
+import Control.Monad.Trans.Control
 import Control.Monad.Writer
 
 data CmdArgs = forall a. Msg.Message a => CmdArgs
@@ -41,10 +48,26 @@ instance Monad m => Monad (Cmd m) where
     return = Cmd . return
     Cmd x >>= f = Cmd (x >>= (unCmd . f))
     fail = lift . fail
-instance MonadTrans Cmd where
-    lift = Cmd . lift . lift
 instance MonadIO m => MonadIO (Cmd m) where
     liftIO = lift . liftIO
+instance MonadBase b m => MonadBase b (Cmd m) where
+    liftBase = lift . liftBase
+instance MonadTrans Cmd where
+    lift = Cmd . lift . lift
+instance MonadTransControl Cmd where
+    newtype StT Cmd a = StCmd {unStCmd :: (a, [String])}
+    liftWith f = do
+        r <- Cmd ask
+        lift $ f $ \t -> liftM StCmd (runWriterT (runReaderT (unCmd t) r))
+    restoreT = Cmd . lift . WriterT . liftM unStCmd
+    {-# INLINE liftWith #-}
+    {-# INLINE restoreT #-}
+instance MonadBaseControl b m => MonadBaseControl b (Cmd m) where
+    newtype StM (Cmd m) a = StMCmd {unStMCmd :: ComposeSt Cmd m a}
+    liftBaseWith = defaultLiftBaseWith StMCmd
+    restoreM     = defaultRestoreM     unStMCmd
+    {-# INLINE liftBaseWith #-}
+    {-# INLINE restoreM #-}
 instance MonadConfig m => MonadConfig (Cmd m) where
     getConfig = lift . getConfig
 

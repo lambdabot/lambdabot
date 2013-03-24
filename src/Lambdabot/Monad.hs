@@ -4,6 +4,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE TypeFamilies #-}
 module Lambdabot.Monad
     ( IRCRState(..)
     , initRoState
@@ -18,15 +19,12 @@ module Lambdabot.Monad
     
     , LB(..)
     , MonadLB(..)
-    , lbIO
     , evalLB
     
     , addServer
     , remServer
     , send
     , received
-    
-    , liftLB
     
     , getConfig
     
@@ -52,9 +50,11 @@ import Control.Applicative
 import Control.Concurrent
 import Control.Exception
 import qualified Control.Exception as E (catch)
+import Control.Monad.Base
 import Control.Monad.Error (MonadError (..))
 import Control.Monad.Reader
 import Control.Monad.State
+import Control.Monad.Trans.Control
 import qualified Data.Dependent.Map as D
 import Data.IORef
 import qualified Data.Map as M
@@ -192,7 +192,15 @@ received msg = do
 newtype LB a = LB { runLB :: ReaderT (IRCRState,IORef IRCRWState) IO a }
     deriving (Functor, Applicative, Monad, MonadIO, MonadException)
 
-class (MonadIO m, MonadConfig m, Applicative m) => MonadLB m where
+instance MonadBase IO LB where
+    liftBase = LB . liftBase
+
+instance MonadBaseControl IO LB where
+    newtype StM LB a = StLB { unStLB :: StM (ReaderT (IRCRState,IORef IRCRWState) IO) a }
+    liftBaseWith action = LB (liftBaseWith (\run -> action (fmap StLB . run . runLB)))
+    restoreM = LB . restoreM . unStLB
+
+class (MonadIO m, MonadBaseControl IO m, MonadConfig m, Applicative m) => MonadLB m where
     lb :: LB a -> m a
 
 instance MonadLB LB where lb = id
@@ -216,30 +224,23 @@ instance MonadState IRCRWState LB where
 -- so throwError and catchError "just work"
 instance MonadError IRCError LB where
     throwError = io . throwIO
-    m `catchError` h = lbIO $ \conv -> (conv m
-        `E.catch` (conv . h)
-        `E.catch` \(SignalException e) -> conv $ h $ SignalCaught e)
-        `E.catch` (conv . h . IRCRaised)
+    m `catchError` h = do
+        r <- LB ask
+        let h' = flip runReaderT r . runLB . h
+        io $ do
+            runReaderT (runLB m) r
+                `E.catch` h'
+                `E.catch` (\(SignalException e) -> h' $ SignalCaught e)
+                `E.catch` (h' . IRCRaised)
 
 instance MonadConfig LB where
     getConfig k = liftM (maybe (getConfigDefault k) id . D.lookup k) (lb (asks ircConfig))
-
--- lbIO return :: LB (LB a -> IO a)
--- CPS to work around predicativiy of haskell's type system.
-lbIO :: MonadLB m => ((forall a. LB a -> IO a) -> IO b) -> m b
-lbIO k = lb $ do
-    r <- LB ask
-    io (k (flip runReaderT r . runLB))
 
 -- | run a computation in the LB monad
 evalLB :: LB a -> IRCRState -> IRCRWState -> IO a
 evalLB (LB lb') rs rws = do
     ref  <- newIORef rws
     lb' `runReaderT` (rs,ref)
-
--- | lift an io transformer into LB
-liftLB :: (IO a -> IO b) -> LB a -> LB b
-liftLB f = LB . mapReaderT f . runLB -- lbIO (\conv -> f (conv lb))
 
 ------------------------------------------------------------------------
 -- Module handling
@@ -261,7 +262,7 @@ withModule modname def f = do
       -- TODO stick this ref stuff in a monad instead. more portable in
       -- the long run.
       Just (ModuleRef m ref name) -> do
-          runReaderT (moduleT $ f m) (ref, name)
+          runReaderT (runModuleT $ f m) (ref, name)
       _                           -> def
 
 withCommand :: String
@@ -277,7 +278,7 @@ withCommand cmdname def f = do
       -- TODO stick this ref stuff in a monad instead. more portable in
       -- the long run.
       Just (CommandRef m ref cmd name) -> do
-          runReaderT (moduleT $ f m cmd) (ref, name)
+          runReaderT (runModuleT $ f m cmd) (ref, name)
       _                           -> def
 
 -- | Interpret a function in the context of all modules
@@ -285,4 +286,4 @@ withAllModules :: (forall st. Module st -> ModuleT st LB a) -> LB [a]
 withAllModules f = do
     mods <- gets $ M.elems . ircModules :: LB [ModuleRef]
     (`mapM` mods) $ \(ModuleRef m ref name) -> do
-        runReaderT (moduleT $ f m) (ref, name)
+        runReaderT (runModuleT $ f m) (ref, name)

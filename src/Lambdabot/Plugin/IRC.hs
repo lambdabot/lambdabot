@@ -6,7 +6,7 @@ import Lambdabot.Plugin
 import Lambdabot.Monad
 import Lambdabot.IRC
 
-import Control.Concurrent
+import Control.Concurrent.Lifted
 import qualified Control.Concurrent.SSem as SSem
 import qualified Control.Exception as E (catch)
 import Control.Monad.Error
@@ -15,7 +15,7 @@ import Data.List
 import Data.List.Split
 import Network( connectTo, PortID(..) )
 import System.IO
-import System.Timeout
+import System.Timeout.Lifted
 
 type IRC = ModuleT () LB
 
@@ -111,20 +111,20 @@ online tag hostn portnum nickn ui = do
   sem1 <- io $ SSem.new 0
   sem2 <- io $ SSem.new 4 -- one extra token stays in the MVar
   sendmv <- io $ newEmptyMVar
-  _ <- io $ forkIO $ sequence_ $ repeat $ do
+  _ <- io $ fork $ sequence_ $ repeat $ do
     SSem.wait sem1
     threadDelay 2000000
     SSem.signal sem2
-  _ <- io $ forkIO $ sequence_ $ repeat $ do
+  _ <- io $ fork $ sequence_ $ repeat $ do
     SSem.wait sem2
     putMVar sendmv ()
     SSem.signal sem1
   catchError (addServer tag $ io . sendMsg tag sock sendmv)
              (\err -> io (hClose sock) >> throwError err)
   lift $ ircSignOn hostn (Nick tag nickn) ui
-  _ <- lift $ liftLB forkIO $ catchError (readerLoop tag nickn sock)
-                                   (\e -> do io $ hPutStrLn stderr $ "irc[" ++ tag ++ "] error: " ++ show e
-                                             remServer tag)
+  _ <- lb $ fork $ catchError (readerLoop tag nickn sock)
+                              (\e -> do io $ hPutStrLn stderr $ "irc[" ++ tag ++ "] error: " ++ show e
+                                        remServer tag)
   return ()
 
 readerLoop :: String -> String -> Handle -> LB ()
@@ -133,8 +133,7 @@ readerLoop tag nickn sock = do
   let line' = filter (\c -> c /= '\n' && c /= '\r') line
   if "PING " `isPrefixOf` line'
       then io $ hPutStr sock ("PONG " ++ drop 5 line' ++ "\r\n")
-      else do _ <- liftLB (forkIO . void . timeout 15000000) $ received (decodeMessage tag nickn line')
-              return ()
+      else void . fork . void . timeout 15000000 $ received (decodeMessage tag nickn line')
   readerLoop tag nickn sock
 
 sendMsg :: String -> Handle -> MVar () -> IrcMessage -> IO ()

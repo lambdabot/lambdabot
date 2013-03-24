@@ -1,3 +1,5 @@
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeFamilies #-}
 -- | Support for the LB (LambdaBot) monad
 module Lambdabot.State
@@ -33,15 +35,16 @@ import Lambdabot.Command
 import Lambdabot.Util
 import Lambdabot.Util.Serial
 
-import Control.Concurrent
-import Control.Exception as E
+import Control.Concurrent.Lifted
+import Control.Exception.Lifted as E
 import Control.Monad.Trans
+import Control.Monad.Trans.Control
 import qualified Data.ByteString.Char8 as P
-import Data.IORef
+import Data.IORef.Lifted
 import System.IO
 
 -- | Thread-safe modification of an MVar.
-withMWriter :: MVar a -> (a -> (a -> IO ()) -> IO b) -> IO b
+withMWriter :: MonadBaseControl IO m => MVar a -> (a -> (a -> m ()) -> m b) -> m b
 withMWriter mvar f = bracket
   (do x <- takeMVar mvar; ref <- newIORef x; return (x,ref))
   (\(_,ref) -> tryPutMVar mvar =<< readIORef ref)
@@ -61,18 +64,21 @@ class MonadLB m => MonadLBState m where
     -- will cause a dead-lock. However, all other possibilies to access the state
     -- that came to my mind had even more serious deficiencies such as being prone
     -- to race conditions or semantic obscurities.
-    withMS :: (LBState m -> (LBState m -> LB ()) -> LB a) -> m a
+    withMS :: (LBState m -> (LBState m -> m ()) -> m a) -> m a
 
 instance MonadLB m => MonadLBState (ModuleT st m) where
     type LBState (ModuleT st m) = st
     withMS f = do
         ref <- getRef
-        lbIO $ \conv -> withMWriter ref $ \x writer ->
-            conv $ f x (liftIO . writer)
+        withMWriter ref f
 
 instance MonadLBState m => MonadLBState (Cmd m) where
     type LBState (Cmd m) = LBState m
-    withMS = lift . withMS
+    withMS f = do
+        x <- liftWith $ \run -> 
+            withMS $ \st wr -> 
+                run (f st (lift . wr))
+        restoreT (return x)
 
 -- | Read the module's private state.
 readMS :: MonadLBState m => m (LBState m)
@@ -115,8 +121,7 @@ withPS :: (MonadLBState m, LBState m ~ GlobalPrivate g p)
   -> m a
 withPS who f = do
   mvar <- accessPS return id who
-  lbIO $ \conv -> withMWriter mvar $ \x writer ->
-      conv $ f x (liftIO . writer)
+  lb $ withMWriter mvar f
 
 -- | Reads private state.
 readPS :: (MonadLBState m, LBState m ~ GlobalPrivate g p)
@@ -126,7 +131,7 @@ readPS = accessPS (liftIO . readMVar) (\_ -> return Nothing)
 -- | Reads private state, executes one of the actions success and failure
 -- which take an MVar and an action producing a @Nothing@ MVar, respectively.
 accessPS :: (MonadLBState m, LBState m ~ GlobalPrivate g p)
-  => (MVar (Maybe p) -> LB a) -> (LB (MVar (Maybe p)) -> LB a)
+  => (MVar (Maybe p) -> m a) -> (m (MVar (Maybe p)) -> m a)
   -> Nick
   -> m a
 accessPS success failure who = withMS $ \state writer ->
@@ -144,7 +149,7 @@ accessPS success failure who = withMS $ \state writer ->
 
 -- | Writes global state. Locks everything
 withGS :: (MonadLBState m, LBState m ~ GlobalPrivate g p)
-  => (g -> (g -> LB ()) -> LB ()) -> m ()
+  => (g -> (g -> m ()) -> m ()) -> m ()
 withGS f = withMS $ \state writer ->
   f (global state) $ \g -> writer $ state { global = g }
 

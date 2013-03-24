@@ -50,7 +50,7 @@ doNumberwang cmd n
             else when cmd $ say "Sorry, that's not Numberwang."
 
 withState :: (MonadLBState m, LBState m ~ NumberwangState) =>
-             Bool -> (Int -> (Int -> LB ()) -> RVar Int -> LB a) -> m a
+             Bool -> (Int -> (Int -> m ()) -> RVar Int -> m a) -> m a
 withState True f = withMS $ \st setST ->
     f (nextCmd st) (\n -> setST st {nextCmd = n}) cmdDist
 withState False f = withMS $ \st setST ->
@@ -61,7 +61,7 @@ checkNumberwang :: (MonadLBState m, LBState m ~ NumberwangState) =>
 checkNumberwang cmd l = withState cmd $ \ n setN nDist -> do
     if n <= l
         then do
-            setN =<< sample nDist
+            setN =<< lb (sample nDist)
             return True
         else do
             setN (n - l)

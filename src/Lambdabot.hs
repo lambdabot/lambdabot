@@ -53,7 +53,7 @@ ircInstallModule m modname = do
     let modref = ModuleRef m ref modname
         cmdref cmd = CommandRef m ref cmd modname
     
-    flip runReaderT (ref, modname) . moduleT $ do
+    flip runReaderT (ref, modname) . runModuleT $ do
         moduleInit m
         cmds  <- moduleCmds m
         

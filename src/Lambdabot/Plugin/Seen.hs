@@ -79,7 +79,7 @@ theModule = newModule
             modifyMS $ \(n,m) -> (n, botPart ct (map G.packNick chans) m)
 
         -- and write out our state:
-        withMS $ \s _ -> findOrCreateLBFile "seen" >>= \ c -> io (encodeFile c s)
+        withMS $ \s _ -> lb (findOrCreateLBFile "seen") >>= \ c -> io (encodeFile c s)
     }
 
 lcNick :: Nick -> Nick
