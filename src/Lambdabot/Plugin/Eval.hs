@@ -131,11 +131,11 @@ mergeModules (Hs.Module loc1 name1 pragmas1 warnings1  exports1 imports1 decls1)
 moduleProblems :: Hs.Module -> Maybe [Char]
 moduleProblems (Hs.Module _ _ pragmas _ _ _imports _decls)
     | safe `notElem` langs  = Just "Module has no \"Safe\" language pragma"
-    | trusted `elem` langs  = Just "\"Trusted\" language pragma is set"
+    | trusted `elem` langs  = Just "\"Trustworthy\" language pragma is set"
     | otherwise             = Nothing
     where
         safe    = Hs.name "Safe"
-        trusted = Hs.name "Trusted"
+        trusted = Hs.name "Trustworthy"
         langs = concat [ ls | Hs.LanguagePragma _ ls <- pragmas ]
 
 -- It parses. then add it to a temporary L.hs and typecheck
