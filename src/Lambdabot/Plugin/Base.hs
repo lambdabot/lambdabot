@@ -12,8 +12,8 @@ import Lambdabot.Monad
 import Lambdabot.Plugin
 
 import Control.Applicative
+import Control.Exception.Lifted as E
 import Control.Monad
-import Control.Monad.Error
 import Control.Monad.State
 import Data.List
 import Data.List.Split
@@ -207,8 +207,7 @@ doPRIVMSG' configu myname msg target
         where
             e = 3   -- edit distance cut off. Seems reasonable for small words
 
-            docmd cmd' = do
-              act <- bindModule0 . withPS towhere $ \_ _ -> do
+            docmd cmd' = withPS towhere $ \_ _ -> do
                 withCommand cmd'   -- Important.
                     (ircPrivmsg towhere "Unknown command, try @list")
                     (\_ theCmd -> do
@@ -220,15 +219,14 @@ doPRIVMSG' configu myname msg target
 
                         if not ok
                           then lift $ ircPrivmsg towhere "Not enough privileges"
-                          else catchError
+                          else E.catch
 
                             (do mstrs <- runCommand theCmd msg towhere cmd' rest
                                 -- send off our strings
                                 lift $ mapM_ (ircPrivmsg towhere . expandTab 8) mstrs)
 
-                            (lift . ircPrivmsg towhere .
-                                (("Plugin `" ++ name' ++ "' failed with: ") ++) . show))
-              lift $ act
+                            (\exc@SomeException{} -> lift . ircPrivmsg towhere .
+                                (("Plugin `" ++ name' ++ "' failed with: ") ++) $ show exc))
     --
     -- contextual messages are all input that isn't an explicit command.
     -- they're passed to all modules (todo, sounds inefficient) for
@@ -242,13 +240,10 @@ doPRIVMSG' configu myname msg target
     --
     doContextualMsg r = lift $ do
         _ <- withAllModules ( \m -> do
-            act <- bindModule0 ( do
-                            ms <- execCmd (contextual m r) msg target "contextual"
-                            lift $ mapM_ (ircPrivmsg target) ms
-                   )
             name' <- getModuleName
-            lift $ catchError act (debugStrLn . (name' ++) .
-                (" module failed in contextual handler: " ++) . show)
+            E.catch 
+                (lift . mapM_ (ircPrivmsg target) =<< execCmd (contextual m r) msg target "contextual") 
+                (\e@SomeException{} -> debugStrLn . (name' ++) . (" module failed in contextual handler: " ++) $ show e)
             )
         return ()
 

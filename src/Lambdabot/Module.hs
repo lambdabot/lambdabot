@@ -25,7 +25,6 @@ import Control.Applicative
 import Control.Concurrent (MVar)
 import Control.Monad
 import Control.Monad.Base
-import Control.Monad.Error (MonadError(..))
 import Control.Monad.Reader (MonadReader(..), ReaderT(..))
 import Control.Monad.State (MonadState(..))
 import Control.Monad.Trans (MonadTrans(..), MonadIO(..))
@@ -87,7 +86,7 @@ newModule = Module
 --   need to access its name or its state.
 --
 newtype ModuleT st m a = ModuleT { runModuleT :: ReaderT (MVar st, String) m a }
-    deriving (Applicative, Functor, Monad, MonadTrans, MonadIO, MonadError e, MonadState t, MonadException, MonadConfig)
+    deriving (Applicative, Functor, Monad, MonadTrans, MonadIO, MonadState t, MonadException, MonadConfig)
 
 instance MonadBase b m => MonadBase b (ModuleT st m) where
     liftBase = lift . liftBase

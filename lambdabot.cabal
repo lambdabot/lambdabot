@@ -73,7 +73,6 @@ library
                         Lambdabot.Command
                         Lambdabot.Config
                         Lambdabot.Config.Core
-                        Lambdabot.Error
                         Lambdabot.File
                         Lambdabot.IRC
                         Lambdabot.Main
@@ -141,7 +140,6 @@ library
                         Lambdabot.Util
                         Lambdabot.Util.AltTime
                         Lambdabot.Util.Browser
-                        Lambdabot.Util.Error
                         Lambdabot.Util.Parser
                         Lambdabot.Util.Process
                         Lambdabot.Util.Serial

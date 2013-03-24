@@ -1,4 +1,6 @@
-{-# LANGUAGE CPP, DeriveDataTypeable #-}
+{-# LANGUAGE CPP #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 -- | The signal story.
 -- Posix signals are external events that invoke signal handlers in
@@ -16,7 +18,6 @@ module Lambdabot.Util.Signals
 
 import Data.Typeable
 import Control.Exception (Exception)
-import Control.Monad.Error
 
 #ifdef mingw32_HOST_OS
 
@@ -27,15 +28,16 @@ instance Exception SignalException
 ircSignalMessage :: Signal -> [Char]
 ircSignalMessage s = s
 
-withIrcSignalCatch :: (MonadError e m,MonadIO m) => m () -> m ()
+withIrcSignalCatch :: MonadBaseControl IO m => m () -> m ()
 withIrcSignalCatch m = m
 
 #else
-import Lambdabot.Util.Error (bracketError)
-import Lambdabot.Util
 
-import Control.Concurrent (myThreadId, newEmptyMVar, putMVar, MVar, ThreadId)
-import Control.Exception (throwTo)
+import Control.Concurrent.Lifted (myThreadId, newEmptyMVar, putMVar, MVar, ThreadId)
+import Control.Exception.Lifted (bracket, throwTo)
+import Control.Monad
+import Control.Monad.Base
+import Control.Monad.Trans.Control
 
 import System.IO.Unsafe
 import System.Posix.Signals
@@ -46,15 +48,14 @@ instance Exception SignalException
 --
 -- A bit of sugar for installing a new handler
 --
-withHandler :: (MonadIO m,MonadError e m) => Signal -> Handler -> m () -> m ()
+withHandler :: MonadBaseControl IO m => Signal -> Handler -> m () -> m ()
 withHandler s h m
-  = bracketError (io (installHandler s h Nothing))
-                 (io . flip (installHandler s) Nothing)
-                 (const m)
+  = bracket (liftBase (installHandler s h Nothing))
+            (liftBase . flip (installHandler s) Nothing)
+            (const m)
 
 -- And more sugar for installing a list of handlers
-withHandlerList :: (MonadError e m,MonadIO m)
-                => [Signal] -> (Signal -> Handler) -> m () -> m ()
+withHandlerList :: MonadBaseControl IO m => [Signal] -> (Signal -> Handler) -> m () -> m ()
 withHandlerList sl h m = foldr (withHandler `ap` h) m sl
 
 --
@@ -126,10 +127,10 @@ catchLock = unsafePerformIO newEmptyMVar
 --
 -- | Register signal handlers to catch external signals
 --
-withIrcSignalCatch :: (MonadError e m,MonadIO m) => m () -> m ()
+withIrcSignalCatch :: MonadBaseControl IO m => m () -> m ()
 withIrcSignalCatch m = do
-    _ <- io $ installHandler sigPIPE Ignore Nothing
-    _ <- io $ installHandler sigALRM Ignore Nothing
-    threadid <- io myThreadId
+    _ <- liftBase $ installHandler sigPIPE Ignore Nothing
+    _ <- liftBase $ installHandler sigALRM Ignore Nothing
+    threadid <- myThreadId
     withHandlerList ircSignalsToCatch (ircSignalHandler threadid) m
 #endif

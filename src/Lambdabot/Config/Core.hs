@@ -23,9 +23,9 @@ module Lambdabot.Config.Core
     ) where
 
 import Lambdabot.Config
-import Lambdabot.Error
 import {-# SOURCE #-} Lambdabot.Monad
 
+import Control.Exception
 import Control.Monad.Trans
 import Network.HTTP.Proxy
 
@@ -55,7 +55,7 @@ config "unlambdaBinary"     [t| String                  |] [| "unlambda"    |]
 -------------------------------------
 -- Top level exception-handler
 
-defaultIrcHandler :: IRCError -> LB ()
+defaultIrcHandler :: SomeException -> LB ()
 defaultIrcHandler = liftIO . putStrLn . ("Main: caught (and ignoring) "++) . show
 
-config "uncaughtExceptionHandler" [t| IRCError -> LB () |] [| defaultIrcHandler |]
+config "uncaughtExceptionHandler" [t| SomeException -> LB () |] [| defaultIrcHandler |]

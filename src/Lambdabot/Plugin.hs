@@ -55,8 +55,9 @@ import Lambdabot.State
 import Lambdabot.Util
 import Lambdabot.Util.Serial
 
-import Control.Monad.Error
 import Codec.Binary.UTF8.String
+import Control.Monad
+import Control.Monad.Trans
 import Data.Char
 
 lim80 :: Monad m => m String -> Cmd m ()

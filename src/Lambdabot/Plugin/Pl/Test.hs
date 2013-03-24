@@ -18,8 +18,6 @@ import Lambdabot.Plugin.Pl.PrettyPrinter
 import Data.List ((\\))
 import Data.Char (isSpace)
 
-import Control.Monad.Error
-
 import System.IO (hSetBuffering, stdout, BufferMode(NoBuffering))
 import System.Environment (getArgs)
 

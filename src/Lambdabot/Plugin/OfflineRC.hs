@@ -7,16 +7,15 @@ import Lambdabot.Config.Core
 import Lambdabot.IRC
 import Lambdabot.Monad
 import Lambdabot.Plugin
-import Lambdabot.Util.Error( finallyError )
 
 import Control.Concurrent.Lifted
-import Control.Exception ( evaluate )
-import Control.Monad( when )
+import Control.Exception.Lifted ( evaluate, finally )
+import Control.Monad( void, when )
 import Control.Monad.Reader( asks )
 import Control.Monad.State( gets )
 import Control.Monad.Trans( lift, liftIO )
 import Data.Char
-import System.Console.Haskeline
+import System.Console.Haskeline (InputT, runInputT, defaultSettings, getInputLine)
 import System.IO
 import System.Timeout.Lifted
 
@@ -30,21 +29,17 @@ theModule :: Module OfflineRCState
 theModule = newModule
     { moduleDefState = return 0
     , moduleInit = do
-        act <- bindModule0 onInit
-        _ <- lift $ fork $ do
-                     mv <- asks ircInitDoneMVar
-                     readMVar mv
-                     act
-        return ()
+        void . fork $ do
+            lift (readMVar =<< asks ircInitDoneMVar)
+            onInit
 
     , moduleCmds = return
         [ (command "offline")
             { privileged = True
             , help = say "offline. Start a repl"
             , process = const . lift $ do
-                act <- bindModule0 $ finallyError (runInputT defaultSettings replLoop) unlockRC
                 lockRC
-                _ <- lift $ fork act
+                _ <- fork (runInputT defaultSettings replLoop `finally` unlockRC)
                 return ()
             }
         , (command "rc")
@@ -53,9 +48,8 @@ theModule = newModule
             , process = \fn -> lift $ do
                 txt <- io $ readFile fn
                 io $ evaluate $ foldr seq () txt
-                act <- bindModule0 $ finallyError (mapM_ feed $ lines txt) unlockRC
                 lockRC
-                _ <- lift $ fork act
+                _ <- fork (mapM_ feed (lines txt) `finally` unlockRC)
                 return ()
             }
         ]
@@ -65,7 +59,7 @@ onInit :: OfflineRC ()
 onInit = do
     lockRC
     cmds <- getConfig onStartupCmds
-    finallyError (mapM_ feed cmds) unlockRC
+    mapM_ feed cmds `finally` unlockRC
 
 feed :: String -> OfflineRC ()
 feed msg = do

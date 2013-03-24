@@ -21,8 +21,7 @@ import Lambdabot.Util.Signals
 
 import Control.Applicative
 import Control.Concurrent.MVar
-import Control.Exception
-import Control.Monad.Error
+import Control.Exception.Lifted as E
 import Control.Monad.Reader
 import Data.Char
 import qualified Data.Dependent.Map as D
@@ -75,10 +74,10 @@ runIrc initialise configBindings = withSocketsDo $ do
 -- Actually, this isn't a loop anymore.  TODO: better name.
 mainLoop :: LB ()
 mainLoop = do
-    catchError
+    E.catch
         (do asks ircInitDoneMVar >>= io . flip putMVar ()
             asks ircQuitMVar >>= io . takeMVar)
-        (io . hPrint stderr) -- catch anything, print informative message, and clean up
+        (\e@SomeException{} -> io (hPrint stderr e)) -- catch anything, print informative message, and clean up
     
     _ <- withAllModules moduleExit
     flushModuleState

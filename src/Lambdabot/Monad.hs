@@ -15,8 +15,6 @@ module Lambdabot.Monad
     , IRCRWState(..)
     , initRwState
     
-    , IRCError(..)
-    
     , LB(..)
     , MonadLB(..)
     , evalLB
@@ -37,21 +35,17 @@ import           Lambdabot.ChanName
 import           Lambdabot.Command
 import           Lambdabot.Config
 import           Lambdabot.Config.Core
-import           Lambdabot.Error
 import           Lambdabot.IRC
 import           Lambdabot.Module
 import qualified Lambdabot.Message as Msg
 import           Lambdabot.Nick
 import           Lambdabot.OutputFilter
-import           Lambdabot.Util.Signals
 import           Lambdabot.Util
 
 import Control.Applicative
 import Control.Concurrent
-import Control.Exception
-import qualified Control.Exception as E (catch)
+import Control.Exception.Lifted as E (catch)
 import Control.Monad.Base
-import Control.Monad.Error (MonadError (..))
 import Control.Monad.Reader
 import Control.Monad.State
 import Control.Monad.Trans.Control
@@ -175,7 +169,7 @@ received msg = do
     s       <- get
     handler <- getConfig uncaughtExceptionHandler
     case M.lookup (ircMsgCommand msg) (ircCallbacks s) of
-        Just cbs -> mapM_ (\(_, cb) -> catchError (cb msg) handler) cbs
+        Just cbs -> mapM_ (\(_, cb) -> cb msg `E.catch` handler) cbs
         _        -> return ()
 
 -- ---------------------------------------------------------------------
@@ -219,19 +213,6 @@ instance MonadState IRCRWState LB where
     put x = LB $ do
         ref <- asks snd
         lift $ writeIORef ref x
-
--- And now a MonadError instance to map IRCErrors to MonadError in LB,
--- so throwError and catchError "just work"
-instance MonadError IRCError LB where
-    throwError = io . throwIO
-    m `catchError` h = do
-        r <- LB ask
-        let h' = flip runReaderT r . runLB . h
-        io $ do
-            runReaderT (runLB m) r
-                `E.catch` h'
-                `E.catch` (\(SignalException e) -> h' $ SignalCaught e)
-                `E.catch` (h' . IRCRaised)
 
 instance MonadConfig LB where
     getConfig k = liftM (maybe (getConfigDefault k) id . D.lookup k) (lb (asks ircConfig))

@@ -8,8 +8,9 @@ import Lambdabot.IRC
 
 import Control.Concurrent.Lifted
 import qualified Control.Concurrent.SSem as SSem
-import qualified Control.Exception as E (catch)
-import Control.Monad.Error
+import Control.Exception.Lifted as E (SomeException(..), throwIO, catch)
+import Control.Monad
+import Control.Monad.Trans
 import qualified Data.ByteString.Char8 as P
 import Data.List
 import Data.List.Split
@@ -119,13 +120,15 @@ online tag hostn portnum nickn ui = do
     SSem.wait sem2
     putMVar sendmv ()
     SSem.signal sem1
-  catchError (addServer tag $ io . sendMsg tag sock sendmv)
-             (\err -> io (hClose sock) >> throwError err)
+  E.catch 
+        (addServer tag $ io . sendMsg tag sock sendmv)
+        (\err@SomeException{} -> io (hClose sock) >> E.throwIO err)
   lift $ ircSignOn hostn (Nick tag nickn) ui
-  _ <- lb $ fork $ catchError (readerLoop tag nickn sock)
-                              (\e -> do io $ hPutStrLn stderr $ "irc[" ++ tag ++ "] error: " ++ show e
-                                        remServer tag)
-  return ()
+  void . lb . fork $ E.catch
+        (readerLoop tag nickn sock)
+        (\e@SomeException{} -> do
+            io $ hPutStrLn stderr $ "irc[" ++ tag ++ "] error: " ++ show e
+            remServer tag)
 
 readerLoop :: String -> String -> Handle -> LB ()
 readerLoop tag nickn sock = do
