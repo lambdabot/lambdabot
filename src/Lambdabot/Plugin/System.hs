@@ -3,12 +3,11 @@ module Lambdabot.Plugin.System (theModule) where
 
 import Lambdabot
 import Lambdabot.IRC
-import qualified Lambdabot.Message as Msg
 import Lambdabot.Monad
 import Lambdabot.Plugin
 import Lambdabot.Util.AltTime
 
-import Control.Monad.State (MonadState(get, put))
+import Control.Monad.State (gets, modify)
 import Control.Monad.Trans
 import qualified Data.Map as M
 import qualified Data.Set as S
@@ -18,131 +17,152 @@ type System = ModuleT SystemState LB
 
 theModule :: Module SystemState
 theModule = newModule
-    { moduleCmds = return $
-        [ (command name)
-            { help = say helpStr
-            , process = doSystem name
-            }
-        | (name, helpStr) <- M.assocs syscmds
-        ] ++
-        [ (command name)
-            { privileged = True
-            , help = say helpStr
-            , process = doSystem name
-            }
-        | (name, helpStr) <- M.assocs privcmds
-        ]
-    , moduleDefState = flip (,) noTimeDiff `fmap` io getClockTime
+    { moduleDefState = flip (,) noTimeDiff `fmap` io getClockTime
     , moduleSerialize  = Just stdSerial
 
     , moduleInit = do
         (_, d) <- readMS
-        t      <- liftIO getClockTime
+        t      <- io getClockTime
         writeMS (t, d)
     , moduleExit = do
         (initial, d) <- readMS
         now          <- liftIO getClockTime
         writeMS (initial, max d (diffClockTimes now initial))
+    
+    , moduleCmds = return $
+        [ (command "listchans")
+            { help = say "Show channels bot has joined"
+            , process = \_ -> listKeys ircChannels
+            }
+        , (command "listmodules")
+            { help = say "listmodules. Show available plugins"
+            , process = \_ -> listKeys ircModules
+            }
+        , (command "listservers")
+            { help = say "listservers. Show current servers"
+            , process = \_ -> listKeys ircServerMap
+            }
+        , (command "list")
+            { help = say "list [module|command]. Show commands for [module] or the module providing [command]."
+            , process = doList
+            }
+        , (command "echo")
+            { help = say "echo <msg>. echo irc protocol string"
+            , process = doEcho
+            }
+        , (command "uptime")
+            { help = say "uptime. Show uptime"
+            , process = \_ -> do
+                (uptime, maxUptime) <- lift getUptime
+                say ("uptime: "           ++ timeDiffPretty uptime ++
+                     ", longest uptime: " ++ timeDiffPretty maxUptime)
+            }
+        
+        , (command "listall")
+            { privileged = True
+            , help = say "list all commands"
+            , process = \_ -> mapM_ doList . M.keys =<< lb (gets ircModules)
+            }
+        , (command "join")
+            { privileged = True
+            , help = say "join <channel>"
+            , process = \rest -> do
+                chan <- readNick rest
+                lb $ send (joinChannel chan)
+            }
+        , (command "part")
+            { privileged = True
+            , help = say "part <channel>"
+            , aliases = ["leave"]
+            , process = \rest -> do
+                chan <- readNick rest
+                lb $ send (partChannel chan)
+            }
+        , (command "msg")
+            { privileged = True
+            , help = say "msg <nick or channel> <msg>"
+            , process = \rest -> do
+                -- writes to another location:
+                let (tgt, txt) = splitFirstWord rest
+                tgtNick <- readNick tgt
+                lb $ ircPrivmsg tgtNick txt
+            }
+        , (command "quit")
+            { privileged = True
+            , help = say "quit [msg], have the bot exit with msg"
+            , process = \rest -> do
+                server <- getServer
+                lb (ircQuit server $ if null rest then "requested" else rest)
+            }
+        , (command "flush")
+            { privileged = True
+            , help = say "flush. flush state to disk"
+            , process = \_ -> lb flushModuleState
+            }
+        , (command "admin")
+            { privileged = True
+            , help = say "admin [+|-] nick. change a user's admin status."
+            , process = doAdmin
+            }
+        , (command "ignore")
+            { privileged = True
+            , help = say "ignore [+|-] nick. change a user's ignore status."
+            , process = doIgnore
+            }
+        , (command "reconnect")
+            { privileged = True
+            , help = say "reconnect to server"
+            , process = \rest -> do
+                server <- getServer
+                lb (ircReconnect server $ if null rest then "requested" else rest)
+            }
+        ]
     }
 
 ------------------------------------------------------------------------
 
-syscmds :: M.Map String String
-syscmds = M.fromList
-       [("listchans",   "Show channels bot has joined")
-       ,("listmodules", "listmodules. Show available plugins")
-       ,("listservers", "listservers. Show current servers")
-       ,("list",        "list [module|command]\n"++
-                        "show all commands or command for [module]. http://code.haskell.org/lambdabot/COMMANDS")
-       ,("echo",        "echo <msg>. echo irc protocol string")
-       ,("uptime",      "uptime. Show uptime")]
+doList :: String -> Cmd System ()
+doList "" = say "What module?  Try @listmodules for some ideas."
+doList m  = say =<< lb (listModule m)
 
-privcmds :: M.Map String String
-privcmds = M.fromList [
-        ("join",        "join <channel>")
-       ,("leave",       "leave <channel>")
-       ,("part",        "part <channel>")
-       ,("msg",         "msg <nick or channel> <msg>")
-       ,("quit",        "quit [msg], have the bot exit with msg")
-       ,("listall",     "list all commands")
-       ,("flush",       "flush. flush state to disk")
-       ,("admin",       "admin [+|-] nick. change a user's admin status.")
-       ,("ignore",      "ignore [+|-] nick. change a user's ignore status.")
-       ,("reconnect",   "reconnect to server")]
-
-------------------------------------------------------------------------
-
-doSystem :: String -> String -> Cmd System ()
-doSystem cmd rest = withMsg $ \msg -> do
+doEcho :: String -> Cmd System ()
+doEcho rest = do
+    rawMsg <- withMsg (return . show)
     target <- getTarget
-    lift (doSystem' msg target cmd rest) >>= mapM_ say
+    say (concat ["echo; msg:", rawMsg, " target:" , show target, " rest:", show rest])
 
-doSystem' :: Msg.Message a => a -> Nick -> [Char] -> [Char] -> System [String]
-doSystem' msg target cmd rest = get >>= \s -> case cmd of
-  "listchans"   -> return [pprKeys (ircChannels s)]
-  "listmodules" -> return [pprKeys (ircModules s) ]
-  "listservers" -> return [pprKeys (ircServerMap s)]
-  "listall"     -> lift listAll
-  "list"| null rest         -> return ["What module?  (\"modules\" to list modules, \"all\" to list all commands)"]
-        | rest == "all"     -> lift listAll
-        | rest == "modules" -> return [pprKeys (ircModules s) ]
-        | otherwise         -> lift $ listModule rest >>= return . (:[])
+doAdmin :: String -> Cmd System ()
+doAdmin = toggleNick $ \op nck s -> s { ircPrivilegedUsers = op nck (ircPrivilegedUsers s) }
 
-  ------------------------------------------------------------------------
-
-  --TODO error handling
-   -- system commands
-  "join"  -> lift $ send (joinChannel (Msg.readNick msg rest)) >> return []
-  "leave" -> lift $ send (partChannel (Msg.readNick msg rest)) >> return []
-  "part"  -> lift $ send (partChannel (Msg.readNick msg rest)) >> return []
-
-   -- writes to another location:
-  "msg"   -> lift $ ircPrivmsg (Msg.readNick msg tgt) txt >> return []
-                  where (tgt, txt) = splitFirstWord rest
-
-  "quit" -> lift $ do ircQuit (Msg.server msg) $ if null rest then "requested" else rest
-                      return []
-
-  "reconnect" -> lift $ do ircReconnect (Msg.server msg) $ if null rest then "request" else rest
-                           return []
-
-  "echo" -> return [concat ["echo; msg:", show msg, " target:" , show target, " rest:", show rest]]
-
-  "flush" -> lift $ do flushModuleState
-                       return []
-
-  "admin" -> do let pu = ircPrivilegedUsers s
-                pu' <- case rest of '+':' ':_ -> return $ S.insert nck pu
-                                    '-':' ':_ -> return $ S.delete nck pu
-                                    _         -> fail "@admin: invalid usage"
-                put (s {ircPrivilegedUsers = pu'})
-                return []
-      where nck = Msg.readNick msg (drop 2 rest)
-
-  "ignore" -> do let iu = ircIgnoredUsers s
-                 iu' <- case rest of '+':' ':_ -> return $ S.insert nck iu
-                                     '-':' ':_ -> return $ S.delete nck iu
-                                     _         -> fail "@ignore: invalid usage"
-                 put (s {ircIgnoredUsers = iu'})
-                 return []
-      where nck = Msg.readNick msg (drop 2 rest)
-
-  "uptime" -> do
-          (loaded, m) <- readMS
-          now         <- io getClockTime
-          let diff = now `diffClockTimes` loaded
-          return ["uptime: "           ++ timeDiffPretty diff ++
-                  ", longest uptime: " ++ timeDiffPretty (max diff m)]
-  _             -> error ("System plugin error: unknown command \"" ++ cmd ++ "\"")
+doIgnore :: String -> Cmd System ()
+doIgnore = toggleNick $ \op nck s -> s { ircIgnoredUsers = op nck (ircIgnoredUsers s) }
 
 ------------------------------------------------------------------------
 
 --  | Print map keys
-pprKeys :: (Show k) => M.Map k a -> String
-pprKeys = showClean . M.keys
+listKeys :: Show k => (IRCRWState -> M.Map k v) -> Cmd System ()
+listKeys f = say . showClean . M.keys =<< lb (gets f)
 
-listAll :: LB [String]
-listAll = get >>= mapM listModule . M.keys . ircModules
+getUptime :: System (TimeDiff, TimeDiff)
+getUptime = do
+    (loaded, m) <- readMS
+    now         <- io getClockTime
+    let diff = now `diffClockTimes` loaded
+    return (diff, max diff m)
+
+toggleNick :: (Ord a, MonadLB m) =>
+    ((a -> S.Set a -> S.Set a) -> Nick -> IRCRWState -> IRCRWState)
+    -> String -> Cmd m ()
+toggleNick edit rest = do
+    let (op, tgt) = splitAt 2 rest
+    
+    f <- case op of
+        "+ " -> return S.insert
+        "- " -> return S.delete
+        _    -> fail "invalid usage"
+    
+    nck <- readNick tgt
+    lb . modify $ edit f nck
 
 listModule :: String -> LB String
 listModule s = withModule s fromCommand printProvides

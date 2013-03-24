@@ -15,6 +15,7 @@ module Lambdabot.Command
     , withMsg
     , readNick
     , showNick
+    , getServer
     , getSender
     , getTarget
     , getLambdabotName
@@ -117,6 +118,9 @@ readNick nick = withMsg (return . flip Msg.readNick nick)
 
 showNick :: Monad m => Nick -> Cmd m String
 showNick nick = withMsg (return . flip Msg.showNick nick)
+
+getServer :: Monad m => Cmd m String
+getServer = withMsg (return . Msg.server)
 
 getSender :: Monad m => Cmd m Nick
 getSender = withMsg (return . Msg.nick)
