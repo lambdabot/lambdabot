@@ -11,7 +11,6 @@ import Lambdabot.Plugin
 import Control.Concurrent.Lifted
 import Control.Exception.Lifted ( evaluate, finally )
 import Control.Monad( void, when )
-import Control.Monad.Reader( asks )
 import Control.Monad.State( gets )
 import Control.Monad.Trans( lift, liftIO )
 import Data.Char
@@ -30,8 +29,10 @@ theModule = newModule
     { moduleDefState = return 0
     , moduleInit = do
         void . fork $ do
-            lift (readMVar =<< asks ircInitDoneMVar)
-            onInit
+            waitForInit
+            lockRC
+            cmds <- getConfig onStartupCmds
+            mapM_ feed cmds `finally` unlockRC
 
     , moduleCmds = return
         [ (command "offline")
@@ -54,12 +55,6 @@ theModule = newModule
             }
         ]
     }
-
-onInit :: OfflineRC ()
-onInit = do
-    lockRC
-    cmds <- getConfig onStartupCmds
-    mapM_ feed cmds `finally` unlockRC
 
 feed :: String -> OfflineRC ()
 feed msg = do

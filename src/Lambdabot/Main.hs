@@ -20,9 +20,7 @@ import Lambdabot.Util
 import Lambdabot.Util.Signals
 
 import Control.Applicative
-import Control.Concurrent.MVar
 import Control.Exception.Lifted as E
-import Control.Monad.Reader
 import Data.Char
 import qualified Data.Dependent.Map as D
 import Data.Dependent.Sum
@@ -56,7 +54,7 @@ runIrc :: LB () -> [DSum Config] -> IO a
 runIrc initialise configBindings = withSocketsDo $ do
     rost <- initRoState (D.fromList configBindings)
     r <- try $ evalLB (do withDebug "Initialising plugins" initialise
-                          withIrcSignalCatch mainLoop)
+                          withIrcSignalCatch (reportInitDone rost >> mainLoop))
                        rost initRwState
 
     -- clean up and go home
@@ -74,9 +72,7 @@ runIrc initialise configBindings = withSocketsDo $ do
 -- Actually, this isn't a loop anymore.  TODO: better name.
 mainLoop :: LB ()
 mainLoop = do
-    E.catch
-        (do asks ircInitDoneMVar >>= io . flip putMVar ()
-            asks ircQuitMVar >>= io . takeMVar)
+    waitForQuit `E.catch`
         (\e@SomeException{} -> io (hPrint stderr e)) -- catch anything, print informative message, and clean up
     
     withAllModules moduleExit

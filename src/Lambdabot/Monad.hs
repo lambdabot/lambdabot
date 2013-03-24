@@ -6,8 +6,11 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE TypeFamilies #-}
 module Lambdabot.Monad
-    ( IRCRState(..)
+    ( IRCRState
     , initRoState
+    , reportInitDone
+    , waitForInit
+    , waitForQuit
     
     , Callback
     , ModuleRef(..)
@@ -43,7 +46,7 @@ import           Lambdabot.OutputFilter
 import           Lambdabot.Util
 
 import Control.Applicative
-import Control.Concurrent
+import Control.Concurrent.Lifted
 import Control.Exception.Lifted as E (catch)
 import Control.Monad.Base
 import Control.Monad.Reader
@@ -79,6 +82,18 @@ initRoState configuration = do
         , ircInitDoneMVar   = initDoneMVar
         , ircConfig         = configuration
         }
+
+reportInitDone :: MonadIO m => IRCRState -> m ()
+reportInitDone = io . flip putMVar () . ircInitDoneMVar
+
+askLB :: MonadLB m => (IRCRState -> a) -> m a
+askLB f  = lb . LB $ asks (f . fst)
+
+waitForInit :: MonadLB m => m ()
+waitForInit = readMVar =<< askLB ircInitDoneMVar
+
+waitForQuit :: MonadLB m => m ()
+waitForQuit = readMVar =<< askLB ircQuitMVar
 
 type Callback = IrcMessage -> LB ()
 
@@ -153,7 +168,7 @@ remServer tag = do
             let svrs' = M.delete tag svrs
             put (s { ircServerMap = svrs' })
             when (M.null svrs') $ do
-                quitMVar <- asks ircQuitMVar
+                quitMVar <- askLB ircQuitMVar
                 io $ putMVar quitMVar ()
         Nothing -> fail $ "attempted to delete nonexistent servers named " ++ tag
 
@@ -201,11 +216,6 @@ instance MonadLB LB where lb = id
 instance MonadLB m => MonadLB (ModuleT st m) where lb = lift . lb
 instance MonadLB m => MonadLB (Cmd m)        where lb = lift . lb
 
--- Actually, this isn't a reader anymore
-instance MonadReader IRCRState LB where
-    ask   = LB $ asks fst
-    local = error "You are not supposed to call local"
-
 instance MonadState IRCRWState LB where
     get = LB $ do
         ref <- asks snd
@@ -215,7 +225,7 @@ instance MonadState IRCRWState LB where
         lift $ writeIORef ref x
 
 instance MonadConfig LB where
-    getConfig k = liftM (maybe (getConfigDefault k) id . D.lookup k) (lb (asks ircConfig))
+    getConfig k = liftM (maybe (getConfigDefault k) id . D.lookup k) (lb (askLB ircConfig))
 
 -- | run a computation in the LB monad
 evalLB :: LB a -> IRCRState -> IRCRWState -> IO a
