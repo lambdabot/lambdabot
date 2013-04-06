@@ -44,20 +44,11 @@ extra-source-files:     AUTHORS
 
 data-files:             scripts/online.rc,
                         State/djinn,
-                        State/fresh,
                         State/haddock,
-                        State/karma,
                         State/L.hs,
-                        State/poll,
                         State/Pristine.hs,
-                        State/quote,
-                        State/seen,
                         State/source,
-                        State/tell,
-                        State/todo,
-                        State/url,
-                        State/vixen,
-                        State/where
+                        State/vixen
 
 source-repository head
   type:                 git
