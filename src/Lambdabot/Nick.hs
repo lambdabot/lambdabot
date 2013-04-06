@@ -14,6 +14,7 @@ data Nick = Nick
 
 -- This definition of canonicalizeName breaks strict RFC rules, but so does
 -- freenode
+-- TODO: server-specific rules should have server-specific implementations
 canonicalizeName :: String -> String
 canonicalizeName = dropSpace . map toUpper
 
