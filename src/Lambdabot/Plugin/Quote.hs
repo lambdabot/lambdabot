@@ -20,6 +20,7 @@ theModule :: Module (M.Map P.ByteString [P.ByteString])
 theModule = newModule
     { moduleSerialize = Just mapListPackedSerial
     , moduleDefState  = return M.empty
+    , moduleInit      = modifyMS (M.filter (not . null))
 
     , moduleCmds = return
         [ (command "quote")
@@ -131,7 +132,9 @@ runForget str
     | otherwise = do
         ss <- withMS $ \fm writer -> do
             let ss  = fromMaybe [] (M.lookup (P.pack nm) fm)
-                fm' = M.insert (P.pack nm) (delete (P.pack q) ss) fm
+                fm' = case delete (P.pack q) ss of
+                    []  -> M.delete (P.pack nm)     fm
+                    ss' -> M.insert (P.pack nm) ss' fm
             writer fm'
             return ss
         say $ if P.pack q `elem` ss
