@@ -75,6 +75,8 @@ dropSpaceEnd = reverse . dropWhile isSpace . reverse
 ------------------------------------------------------------------------
 
 -- | show a list without heavyweight formatting
+-- NB: assumes show instance outputs a quoted 'String'.
+-- under that assumption, strips the outer quotes.
 showClean :: (Show a) => [a] -> String
 showClean = intercalate " " . map (init . tail . show)
 

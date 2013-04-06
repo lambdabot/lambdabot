@@ -2,6 +2,7 @@
 module Lambdabot.Plugin.System (theModule) where
 
 import Lambdabot
+import Lambdabot.Compat.FreenodeNick
 import Lambdabot.IRC
 import Lambdabot.Monad
 import Lambdabot.Plugin
@@ -32,7 +33,7 @@ theModule = newModule
     , moduleCmds = return $
         [ (command "listchans")
             { help = say "Show channels bot has joined"
-            , process = \_ -> listKeys ircChannels
+            , process = \_ -> listKeys (M.mapKeysMonotonic (FreenodeNick . getCN) . ircChannels)
             }
         , (command "listmodules")
             { help = say "listmodules. Show available plugins"
@@ -128,8 +129,8 @@ doList m  = say =<< lb (listModule m)
 doEcho :: String -> Cmd System ()
 doEcho rest = do
     rawMsg <- withMsg (return . show)
-    target <- getTarget
-    say (concat ["echo; msg:", rawMsg, " target:" , show target, " rest:", show rest])
+    target <- showNick =<< getTarget
+    say (concat ["echo; msg:", rawMsg, " target:" , target, " rest:", show rest])
 
 doAdmin :: String -> Cmd System ()
 doAdmin = toggleNick $ \op nck s -> s { ircPrivilegedUsers = op nck (ircPrivilegedUsers s) }

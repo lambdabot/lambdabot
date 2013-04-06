@@ -47,6 +47,7 @@
 
 module Lambdabot.Plugin.Tell (theModule) where
 
+import Lambdabot.Compat.FreenodeNick
 import Lambdabot.Plugin
 import Lambdabot.Util.AltTime
 
@@ -58,14 +59,14 @@ import Text.Printf (printf)
 -- | Was it @tell or @ask that was the original command?
 data NoteType    = Tell | Ask deriving (Show, Eq, Read)
 -- | The Note datatype. Fields self-explanatory.
-data Note        = Note { noteSender   :: Nick,
+data Note        = Note { noteSender   :: FreenodeNick,
                           noteContents :: String,
                           noteTime     :: ClockTime,
                           noteType     :: NoteType }
                    deriving (Eq, Show, Read)
 -- | The state. A map of (times we last told this nick they've got messages, the
 --   messages themselves)
-type NoticeBoard = M.Map Nick (Maybe ClockTime, [Note])
+type NoticeBoard = M.Map FreenodeNick (Maybe ClockTime, [Note])
 
 type Tell = ModuleT NoticeBoard LB
 
@@ -138,7 +139,7 @@ theModule = newModule
 -- | Take a note and the current time, then display it
 showNote :: ClockTime -> Note -> Cmd Tell String
 showNote time note = do
-    sender <- showNick (noteSender note)
+    sender <- showNick (getFreenodeNick (noteSender note))
     let diff    = time `diffClockTimes` noteTime note
         ago     = case timeDiffPretty diff of
                     [] -> "less than a minute"
@@ -151,7 +152,7 @@ needToRemind :: Nick -> Cmd Tell Bool
 needToRemind n = do
   st  <- readMS
   now <- io getClockTime
-  return $ case M.lookup n st of
+  return $ case M.lookup (FreenodeNick n) st of
              Just (Just lastTime, _) ->
                let diff = now `diffClockTimes` lastTime
                in diff > TimeDiff 86400
@@ -162,20 +163,20 @@ needToRemind n = do
 writeDown :: Nick -> Nick -> String -> NoteType -> Cmd Tell ()
 writeDown to from what ntype = do
   time <- io getClockTime
-  let note = Note { noteSender   = from,
+  let note = Note { noteSender   = FreenodeNick from,
                     noteContents = what,
                     noteTime     = time,
                     noteType     = ntype }
   modifyMS (M.insertWith (\_ (_, ns) -> (Nothing, ns ++ [note]))
-                         to (Nothing, [note]))
+                         (FreenodeNick to) (Nothing, [note]))
 
 -- | Return a user's notes, or Nothing if they don't have any
 getMessages :: Nick -> Cmd Tell (Maybe [Note])
-getMessages sender = fmap (fmap snd . M.lookup sender) readMS
+getMessages sender = fmap (fmap snd . M.lookup (FreenodeNick sender)) readMS
 
 -- | Clear a user's messages.
 clearMessages :: Nick -> Cmd Tell ()
-clearMessages sender = modifyMS (M.delete sender)
+clearMessages sender = modifyMS (M.delete (FreenodeNick sender))
 
 -- * Handlers
 --
@@ -221,7 +222,7 @@ doRemind :: Nick -> Cmd Tell ()
 doRemind sender = do
     ms  <- getMessages sender
     now <- io getClockTime
-    modifyMS (M.update (Just . first (const $ Just now)) sender)
+    modifyMS (M.update (Just . first (const $ Just now)) (FreenodeNick sender))
     case ms of
         Just msgs -> do
            me <- showNick =<< getLambdabotName

@@ -1,6 +1,7 @@
 -- | Karma
 module Lambdabot.Plugin.Karma (theModule) where
 
+import Lambdabot.Compat.FreenodeNick
 import Lambdabot.Plugin
 import qualified Lambdabot.NickEq as E
 
@@ -40,7 +41,7 @@ theModule = newModule
         ]
 
     , moduleDefState  = return $ M.empty
-    , moduleSerialize = Just mapSerial
+    , moduleSerialize = Just freenodeNickMapSerial
 
     -- nick++($| )
     , contextual = \text -> withMsg $ \_ -> do
@@ -86,7 +87,9 @@ listKarma :: Cmd Karma ()
 listKarma = do
     ks <- M.toList `fmap` readMS
     let ks' = sortBy (\(_,e) (_,e') -> e' `compare` e) ks
-    mapM_ (\(k,e) -> say (printf " %-20s %4d" (show k) e)) ks'
+    flip mapM_ ks' $ \(k,e) -> do
+        k' <- showNick k
+        say (printf " %-20s %4d" k' e)
 
 changeKarma :: Integer -> Nick -> Nick -> Cmd Karma String
 changeKarma km sender nick

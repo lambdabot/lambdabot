@@ -71,6 +71,7 @@ library
   exposed-modules:      Lambdabot
                         Lambdabot.ChanName
                         Lambdabot.Command
+                        Lambdabot.Compat.FreenodeNick
                         Lambdabot.Config
                         Lambdabot.Config.Core
                         Lambdabot.File

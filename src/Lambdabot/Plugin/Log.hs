@@ -8,6 +8,7 @@
 module Lambdabot.Plugin.Log (theModule) where
 
 import Lambdabot
+import Lambdabot.Compat.FreenodeNick
 import Lambdabot.IRC
 import Lambdabot.Plugin
 import qualified Lambdabot.Message as Msg
@@ -39,12 +40,12 @@ data Event =
 
 instance Show Event where
     show (Said nick ct what)      = timeStamp ct ++ " <" ++ nName nick ++ "> " ++ what
-    show (Joined nick usr ct)     = timeStamp ct ++ " " ++ show nick
+    show (Joined nick usr ct)     = timeStamp ct ++ " " ++ show (FreenodeNick nick)
                                     ++ " (" ++ usr ++ ") joined."
-    show (Parted nick usr ct)     = timeStamp ct ++ " " ++ show nick
+    show (Parted nick usr ct)     = timeStamp ct ++ " " ++ show (FreenodeNick nick)
                                     ++ " (" ++ usr ++ ") left."
-    show (Renick nick usr ct new) = timeStamp ct ++ " " ++ show  nick
-                                    ++ " (" ++ usr ++ ") is now " ++ show new ++ "."
+    show (Renick nick usr ct new) = timeStamp ct ++ " " ++ show  (FreenodeNick nick)
+                                    ++ " (" ++ usr ++ ") is now " ++ show (FreenodeNick new) ++ "."
 
 -- * Dispatchers and Module instance declaration
 --
