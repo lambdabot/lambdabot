@@ -102,7 +102,7 @@ data ModuleRef = forall st.
     ModuleRef (Module st) (MVar st) String
 
 data CommandRef = forall st.
-    CommandRef (Module st) (MVar st) (Command (ModuleT st LB)) String
+    CommandRef (Module st) (MVar st) String (Command (ModuleT st LB))
 
 -- | Global read\/write state.
 data IRCRWState = IRCRWState
@@ -273,7 +273,7 @@ withCommand cmdname def f = do
     case maybecmd of
       -- TODO stick this ref stuff in a monad instead. more portable in
       -- the long run.
-      Just (CommandRef m ref cmd name) -> do
+      Just (CommandRef m ref name cmd) -> do
           runReaderT (runModuleT $ f m cmd) (ref, name)
       _                           -> def
 

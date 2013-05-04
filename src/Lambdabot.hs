@@ -52,8 +52,8 @@ ircLoadModule m modname = do
     state'     <- maybe (moduleDefState m) return savedState
     ref        <- io $ newMVar state'
     
-    let modref = ModuleRef m ref modname
-        cmdref cmd = CommandRef m ref cmd modname
+    let modref = ModuleRef  m ref modname
+        cmdref = CommandRef m ref modname
     
     cmds  <- flip runReaderT (ref, modname) . runModuleT $ do
         moduleInit m
@@ -83,7 +83,7 @@ ircUnloadModule modname = withModule modname (error "module not loaded") $ \m ->
         svrs   = ircServerMap s
         ofs    = ircOutputFilters s
     lift $ put s
-        { ircCommands      = M.filter (\(CommandRef _ _ _ name) -> name /= modname) cmdmap
+        { ircCommands      = M.filter (\(CommandRef _ _ name _) -> name /= modname) cmdmap
         , ircModules       = M.delete modname modmap
         , ircCallbacks     =   filter ((/=modname) . fst) `fmap` cbs
         , ircServerMap     = M.filter ((/=modname) . fst) svrs
