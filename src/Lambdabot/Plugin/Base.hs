@@ -195,7 +195,7 @@ doPRIVMSG' configu myname msg target
     --
     doMsg cmd rest towhere = do
         let ircmsg = ircPrivmsg towhere
-        allcmds <- gets (M.keys . ircCommands)
+        allcmds <- lift (gets (M.keys . ircCommands))
         let ms      = filter (isPrefixOf cmd) allcmds
         case ms of
             [s] -> docmd s                  -- a unique prefix

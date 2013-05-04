@@ -153,11 +153,11 @@ initRwState = IRCRWState
 
 addServer :: String -> (IrcMessage -> LB ()) -> ModuleT mod LB ()
 addServer tag sendf = do
-    s <- get
+    s <- lift get
     let svrs = ircServerMap s
     name <- getModuleName
     case M.lookup tag svrs of
-        Nothing -> put (s { ircServerMap = M.insert tag (name,sendf) svrs})
+        Nothing -> lift (put s { ircServerMap = M.insert tag (name,sendf) svrs})
         Just _ -> fail $ "attempted to create two servers named " ++ tag
 
 remServer :: String -> LB ()

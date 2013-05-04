@@ -27,7 +27,6 @@ import Control.Concurrent (MVar)
 import Control.Monad
 import Control.Monad.Base
 import Control.Monad.Reader (MonadReader(..), ReaderT(..))
-import Control.Monad.State (MonadState(..))
 import Control.Monad.Trans (MonadTrans(..), MonadIO(..))
 import Control.Monad.Trans.Control
 import System.Console.Haskeline.MonadException (MonadException)
@@ -88,7 +87,7 @@ newModule = Module
 --   need to access its name or its state.
 --
 newtype ModuleT st m a = ModuleT { runModuleT :: ReaderT (MVar st, String) m a }
-    deriving (Applicative, Functor, Monad, MonadTrans, MonadIO, MonadState t, MonadException, MonadConfig)
+    deriving (Applicative, Functor, Monad, MonadTrans, MonadIO, MonadException, MonadConfig)
 
 instance MonadLogging m => MonadLogging (ModuleT st m) where
     getCurrentLogger = liftM2 (<.>) (lift getCurrentLogger) getModuleName

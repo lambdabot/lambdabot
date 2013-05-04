@@ -87,7 +87,7 @@ replLoop = do
             let s' = dropWhile isSpace x
             when (not $ null s') $ do
                 lift $ feed s'
-            continue <- lift (gets ircStayConnected)
+            continue <- lift (lift (gets ircStayConnected))
             when continue replLoop
 
 lockRC :: OfflineRC ()

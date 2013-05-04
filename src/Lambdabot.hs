@@ -55,55 +55,56 @@ ircLoadModule m modname = do
     let modref = ModuleRef m ref modname
         cmdref cmd = CommandRef m ref cmd modname
     
-    flip runReaderT (ref, modname) . runModuleT $ do
+    cmds  <- flip runReaderT (ref, modname) . runModuleT $ do
         moduleInit m
-        cmds  <- moduleCmds m
-        
-        s <- get
-        let modmap = ircModules s
-            cmdmap = ircCommands s
-        put $ s {
-          ircModules = M.insert modname modref modmap,
-          ircCommands = M.union (M.fromList [ (name,cmdref cmd) | cmd <- cmds, name <- cmdNames cmd ]) cmdmap
-        }
+        moduleCmds m
+    
+    s <- get
+    let modmap = ircModules s
+        cmdmap = ircCommands s
+    put s {
+      ircModules = M.insert modname modref modmap,
+      ircCommands = M.union (M.fromList [ (name,cmdref cmd) | cmd <- cmds, name <- cmdNames cmd ]) cmdmap
+    }
 
 --
 -- | Unregister a module's entry in the irc state
 --
 ircUnloadModule :: String -> LB ()
-ircUnloadModule modname = withModule modname (error "module not loaded") (\m -> do
+ircUnloadModule modname = withModule modname (error "module not loaded") $ \m -> do
     infoM ("Unloading module " ++ show modname)
     when (moduleSticky m) $ error "module is sticky"
     moduleExit m
     writeGlobalState m modname
-    s <- get
+    s <- lift get
     let modmap = ircModules s
         cmdmap = ircCommands s
         cbs    = ircCallbacks s
         svrs   = ircServerMap s
         ofs    = ircOutputFilters s
-    put $ s { ircCommands      = M.filter (\(CommandRef _ _ _ name) -> name /= modname) cmdmap }
-            { ircModules       = M.delete modname modmap }
-            { ircCallbacks     = filter ((/=modname) . fst) `fmap` cbs }
-            { ircServerMap     = M.filter ((/=modname) . fst) svrs }
-            { ircOutputFilters = filter ((/=modname) . fst) ofs }
-  )
+    lift $ put s
+        { ircCommands      = M.filter (\(CommandRef _ _ _ name) -> name /= modname) cmdmap
+        , ircModules       = M.delete modname modmap
+        , ircCallbacks     =   filter ((/=modname) . fst) `fmap` cbs
+        , ircServerMap     = M.filter ((/=modname) . fst) svrs
+        , ircOutputFilters =   filter ((/=modname) . fst) ofs
+        }
 
 ------------------------------------------------------------------------
 
 ircSignalConnect :: String -> Callback -> ModuleT mod LB ()
 ircSignalConnect str f = do
-    s <- get
+    s <- lift get
     let cbs = ircCallbacks s
     name <- getModuleName
     case M.lookup str cbs of -- TODO
-        Nothing -> put (s { ircCallbacks = M.insert str [(name,f)]    cbs})
-        Just fs -> put (s { ircCallbacks = M.insert str ((name,f):fs) cbs})
+        Nothing -> lift (put s { ircCallbacks = M.insert str [(name,f)]    cbs})
+        Just fs -> lift (put s { ircCallbacks = M.insert str ((name,f):fs) cbs})
 
 ircInstallOutputFilter :: OutputFilter LB -> ModuleT mod LB ()
 ircInstallOutputFilter f = do
     name <- getModuleName
-    modify $ \s ->
+    lift . modify $ \s ->
         s { ircOutputFilters = (name, f): ircOutputFilters s }
 
 -- | Checks if the given user has admin permissions and excecute the action
