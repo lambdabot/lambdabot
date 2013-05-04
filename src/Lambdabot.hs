@@ -7,7 +7,7 @@
 -- Generic server connection,disconnection
 -- The module typeclass, type and operations on modules
 module Lambdabot
-    ( ircInstallModule
+    ( ircLoadModule
     , ircUnloadModule
     , ircSignalConnect
     , ircInstallOutputFilter
@@ -45,8 +45,8 @@ import System.IO
 --
 -- | Register a module in the irc state
 --
-ircInstallModule :: Module st -> String -> LB ()
-ircInstallModule m modname = do
+ircLoadModule :: Module st -> String -> LB ()
+ircLoadModule m modname = do
     infoM ("Loading module " ++ show modname)
     savedState <- readGlobalState m modname
     state'     <- maybe (moduleDefState m) return savedState

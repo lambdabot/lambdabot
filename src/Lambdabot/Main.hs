@@ -116,4 +116,4 @@ modules xs = [| sequence_ $(listE $ map instalify xs) |]
         instalify x =
             let module' = varE $ mkName $ concat $ ["Lambdabot.Plugin.", x, ".theModule"]
                 low     = stringE $ map toLower x
-             in [| ircInstallModule $module' $low |]
+             in [| ircLoadModule $module' $low |]
