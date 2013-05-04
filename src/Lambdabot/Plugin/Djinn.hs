@@ -11,7 +11,7 @@ import Lambdabot.Config.Core
 import Lambdabot.Logging
 import Lambdabot.Plugin
 
-import Control.Exception.Lifted
+import Control.Exception.Lifted as E
 import Control.Monad
 import Control.Monad.Trans
 import Data.Char
@@ -174,7 +174,7 @@ getDjinnVersion :: MonadLB m => m String
 getDjinnVersion = do
     binary <- getConfig djinnBinary
     io (fmap readVersion (readProcess binary [] ":q"))
-        `catch` \SomeException{} ->
+        `E.catch` \SomeException{} ->
             return "The djinn command does not appear to be installed."
     where 
         readVersion = extractVersion . unlines . take 1 . lines
@@ -188,7 +188,7 @@ djinn :: MonadLB m => [Decl] -> String -> m (Either [String] String)
 djinn env src = do
     binary <- getConfig djinnBinary
     io (tryDjinn binary env src)
-        `catch` \e@SomeException{} -> do
+        `E.catch` \e@SomeException{} -> do
             let cmdDesc = case binary of
                     "djinn" -> ""
                     _       -> "(" ++ binary ++ ") "
