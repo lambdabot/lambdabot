@@ -30,7 +30,6 @@ import Control.Monad.Reader (MonadReader(..), ReaderT(..))
 import Control.Monad.Trans (MonadTrans(..), MonadIO(..))
 import Control.Monad.Trans.Control
 import System.Console.Haskeline.MonadException (MonadException)
-import System.FilePath
 
 ------------------------------------------------------------------------
 
@@ -90,7 +89,10 @@ newtype ModuleT st m a = ModuleT { runModuleT :: ReaderT (MVar st, String) m a }
     deriving (Applicative, Functor, Monad, MonadTrans, MonadIO, MonadException, MonadConfig)
 
 instance MonadLogging m => MonadLogging (ModuleT st m) where
-    getCurrentLogger = liftM2 (<.>) (lift getCurrentLogger) getModuleName
+    getCurrentLogger = do
+        parent <- lift getCurrentLogger
+        self   <- getModuleName
+        return (parent ++ ["Plugin", self])
     logM a b c = lift (logM a b c)
 
 instance MonadBase b m => MonadBase b (ModuleT st m) where

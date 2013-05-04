@@ -210,7 +210,7 @@ instance MonadBaseControl IO LB where
     liftBaseWith action = LB (liftBaseWith (\run -> action (fmap StLB . run . runLB)))
     restoreM = LB . restoreM . unStLB
 
-class (MonadIO m, MonadBaseControl IO m, MonadConfig m, Applicative m) => MonadLB m where
+class (MonadIO m, MonadBaseControl IO m, MonadConfig m, MonadLogging m, Applicative m) => MonadLB m where
     lb :: LB a -> m a
 
 instance MonadLB LB where lb = id
@@ -229,7 +229,7 @@ instance MonadConfig LB where
     getConfig k = liftM (maybe (getConfigDefault k) id . D.lookup k) (lb (askLB ircConfig))
 
 instance MonadLogging LB where
-    getCurrentLogger = getConfig lbRootLoggerName
+    getCurrentLogger = getConfig lbRootLoggerPath
     logM a b c = io (logM a b c)
 
 -- | run a computation in the LB monad

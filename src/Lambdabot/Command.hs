@@ -33,7 +33,6 @@ import Control.Monad.Identity
 import Control.Monad.Reader
 import Control.Monad.Trans.Control
 import Control.Monad.Writer
-import System.FilePath
 
 data CmdArgs = forall a. Msg.Message a => CmdArgs
     { _message  :: a
@@ -74,7 +73,10 @@ instance MonadBaseControl b m => MonadBaseControl b (Cmd m) where
 instance MonadConfig m => MonadConfig (Cmd m) where
     getConfig = lift . getConfig
 instance MonadLogging m => MonadLogging (Cmd m) where
-    getCurrentLogger = liftM2 (<.>) (lift getCurrentLogger) getCmdName
+    getCurrentLogger = do
+        parent <- lift getCurrentLogger
+        self   <- getCmdName
+        return (parent ++ ["Command", self])
     logM a b c = lift (logM a b c)
 
 data Command m = Command
