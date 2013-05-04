@@ -28,7 +28,7 @@ instance Exception SignalException
 ircSignalMessage :: Signal -> [Char]
 ircSignalMessage s = s
 
-withIrcSignalCatch :: MonadBaseControl IO m => m () -> m ()
+withIrcSignalCatch :: MonadBaseControl IO m => m a -> m a
 withIrcSignalCatch m = m
 
 #else
@@ -48,14 +48,14 @@ instance Exception SignalException
 --
 -- A bit of sugar for installing a new handler
 --
-withHandler :: MonadBaseControl IO m => Signal -> Handler -> m () -> m ()
+withHandler :: MonadBaseControl IO m => Signal -> Handler -> m a -> m a
 withHandler s h m = bracket
     (liftBase (installHandler s h Nothing))
     (liftBase . flip (installHandler s) Nothing)
     (const m)
 
 -- And more sugar for installing a list of handlers
-withHandlerList :: MonadBaseControl IO m => [Signal] -> (Signal -> Handler) -> m () -> m ()
+withHandlerList :: MonadBaseControl IO m => [Signal] -> (Signal -> Handler) -> m a -> m a
 withHandlerList sl h m = foldr (withHandler `ap` h) m sl
 
 --
@@ -120,7 +120,7 @@ catchLock = unsafePerformIO newEmptyMVar
 --
 -- | Register signal handlers to catch external signals
 --
-withIrcSignalCatch :: MonadBaseControl IO m => m () -> m ()
+withIrcSignalCatch :: MonadBaseControl IO m => m a -> m a
 withIrcSignalCatch m = do
     _ <- liftBase $ installHandler sigPIPE Ignore Nothing
     _ <- liftBase $ installHandler sigALRM Ignore Nothing

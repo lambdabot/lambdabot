@@ -73,13 +73,14 @@ setupLogging = do
 -- (i.e. print a message and exit). Non-fatal exceptions should be dealt
 -- with in the mainLoop or further down.
 runIrc :: LB () -> [DSum Config] -> IO a
-runIrc initialise configBindings = withSocketsDo $ do
+runIrc initialise configBindings = withSocketsDo . withIrcSignalCatch $ do
     rost <- initRoState (D.fromList configBindings)
     r <- try $ evalLB (do setupLogging
                           noticeM "Initialising plugins"
                           initialise
                           noticeM "Done loading plugins"
-                          withIrcSignalCatch (reportInitDone rost >> mainLoop))
+                          reportInitDone rost
+                          mainLoop)
                        rost initRwState
 
     -- clean up and go home
