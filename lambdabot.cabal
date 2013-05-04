@@ -222,5 +222,4 @@ executable lambdabot
 
   ghc-options:          -Wall -threaded
   build-depends:        base                 >= 3 && < 5,
-                        lambdabot,
-                        unix                 >= 2.5
+                        lambdabot

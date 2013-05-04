@@ -1,8 +1,10 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Lambdabot.Main
-    ( DSum(..)
+    ( lambdabotVersion
+    
+    , Config
+    , DSum(..)
     , lambdabotMain
-    , runIrc
 
     , Modules
     , modules
@@ -21,32 +23,21 @@ import Lambdabot.State
 import Lambdabot.Util
 import Lambdabot.Util.Signals
 
-import Control.Applicative
 import Control.Exception.Lifted as E
 import Data.Char
-import qualified Data.Dependent.Map as D
 import Data.Dependent.Sum
 import Data.Typeable
+import Data.Version
 import Language.Haskell.TH
-import System.Environment
+import Paths_lambdabot
 import System.Exit
 import System.Log.Formatter
 import qualified System.Log.Logger as L
 import System.Log.Handler.Simple
 import Network (withSocketsDo)
 
-parseArgs :: [String] -> Maybe [String]
-parseArgs ("-e" : cmd : x)  = (cmd :) <$> parseArgs x
-parseArgs []                = Just []
-parseArgs _                 = Nothing
-
-lambdabotMain :: Modules -> [DSum Config] -> IO ()
-lambdabotMain loadStaticModules configuration = do
-    args <- parseArgs <$> getArgs
-    
-    case args of
-        Just xs -> runIrc loadStaticModules ((onStartupCmds :=> if null xs then ["offline"] else xs) : configuration)
-        _       -> putStrLn "Usage: lambdabot [-e 'cmd']*"
+lambdabotVersion :: Version
+lambdabotVersion = version
 
 setupLogging :: LB ()
 setupLogging = do
@@ -72,28 +63,28 @@ setupLogging = do
 -- Also, handle any fatal exceptions (such as non-recoverable signals),
 -- (i.e. print a message and exit). Non-fatal exceptions should be dealt
 -- with in the mainLoop or further down.
-runIrc :: LB () -> [DSum Config] -> IO a
-runIrc initialise configBindings = withSocketsDo . withIrcSignalCatch $ do
-    rost <- initRoState (D.fromList configBindings)
+lambdabotMain :: LB () -> [DSum Config] -> IO ExitCode
+lambdabotMain initialise cfg = withSocketsDo . withIrcSignalCatch $ do
+    rost <- initRoState cfg
     r <- try $ evalLB (do setupLogging
                           noticeM "Initialising plugins"
                           initialise
                           noticeM "Done loading plugins"
                           reportInitDone rost
-                          mainLoop)
+                          mainLoop
+                          return ExitSuccess)
                        rost initRwState
 
     -- clean up and go home
     case r of
         Left (SomeException er) -> do
             case cast er of
-                Just code -> exitWith code
+                Just code -> return code
                 Nothing -> do
                     putStrLn "exception:"
                     print er
-                    exitWith (ExitFailure 1)
-        Right _ -> do
-            exitWith ExitSuccess
+                    return (ExitFailure 1)
+        Right code -> return code
 
 -- Actually, this isn't a loop anymore.  TODO: better name.
 mainLoop :: LB ()
@@ -104,8 +95,6 @@ mainLoop = do
     withAllModules moduleExit
     flushModuleState
 
-    -- this kills profiling output:
-    io $ exitWith (ExitFailure 1)
 
 ------------------------------------------------------------------------
 

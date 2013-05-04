@@ -40,7 +40,7 @@ import System.IO
 config "commandPrefixes"    [t| [String]                |] [| ["@", "?"]    |]
 config "disabledCommands"   [t| [String]                |] [| []            |]
 config "evalPrefixes"       [t| [String]                |] [| [">"]         |]
-config "onStartupCmds"      [t| [String]                |] [| []            |]
+configWithMerge [| (++) |] "onStartupCmds" [t| [String] |] [| ["offline"]   |]
 config "outputDir"          [t| FilePath                |] [| "State/"      |]
 config "proxy"              [t| Proxy                   |] [| NoProxy       |]
 

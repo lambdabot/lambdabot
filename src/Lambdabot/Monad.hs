@@ -73,7 +73,7 @@ data IRCRState = IRCRState
     }
 
 -- | Default ro state
-initRoState :: D.DMap Config -> IO IRCRState
+initRoState :: [D.DSum Config] -> IO IRCRState
 initRoState configuration = do
     quitMVar     <- newEmptyMVar
     initDoneMVar <- newEmptyMVar
@@ -81,7 +81,7 @@ initRoState configuration = do
     return IRCRState 
         { ircQuitMVar       = quitMVar
         , ircInitDoneMVar   = initDoneMVar
-        , ircConfig         = configuration
+        , ircConfig         = D.fromListWithKey (flip . mergeConfig) configuration
         }
 
 reportInitDone :: MonadIO m => IRCRState -> m ()
