@@ -42,7 +42,6 @@ import Control.Monad.Trans
 import Control.Monad.Trans.Control
 import qualified Data.ByteString.Char8 as P
 import Data.IORef.Lifted
-import System.IO
 
 -- | Thread-safe modification of an MVar.
 withMWriter :: MonadBaseControl IO m => MVar a -> (a -> (a -> m ()) -> m b) -> m b

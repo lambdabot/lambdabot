@@ -84,7 +84,7 @@ ircUnloadModule :: String -> LB ()
 ircUnloadModule modname = do
     infoM ("Unloading module " ++ show modname)
     
-    exitResult <- withModule modname (error "module not loaded") $ \m -> do
+    withModule modname (error "module not loaded") $ \m -> do
         when (moduleSticky m) $ fail "module is sticky"
         
         exitResult <- try (moduleExit m)
