@@ -34,6 +34,8 @@ import Lambdabot.State
 import Lambdabot.Util
 
 import Control.Concurrent
+import Control.Exception.Lifted
+import Control.Monad.Error
 import Control.Monad.Reader
 import Control.Monad.State
 import qualified Data.Map as M
@@ -55,34 +57,50 @@ ircLoadModule m modname = do
     let modref = ModuleRef  m ref modname
         cmdref = CommandRef m ref modname
     
-    cmds  <- flip runReaderT (ref, modname) . runModuleT $ do
-        moduleInit m
-        moduleCmds m
+    mbCmds <- flip runReaderT (ref, modname) . runModuleT $ do
+        initResult <- try (moduleInit m)
+        case initResult of
+            Left e  -> return (Left e)
+            Right{} -> try (moduleCmds m)
     
-    s <- get
-    let modmap = ircModules s
-        cmdmap = ircCommands s
-    put s {
-      ircModules = M.insert modname modref modmap,
-      ircCommands = M.union (M.fromList [ (name,cmdref cmd) | cmd <- cmds, name <- cmdNames cmd ]) cmdmap
-    }
+    case mbCmds of
+        Left e@SomeException{} -> do
+            errorM ("Module " ++ show modname ++ " failed to load.  Exception thrown: " ++ show e)
+            
+            fail "Refusing to load due to a broken plugin"
+        Right cmds -> do
+            s <- get
+            let modmap = ircModules s
+                cmdmap = ircCommands s
+            put s {
+              ircModules = M.insert modname modref modmap,
+              ircCommands = M.union (M.fromList [ (name,cmdref cmd) | cmd <- cmds, name <- cmdNames cmd ]) cmdmap
+            }
 
 --
 -- | Unregister a module's entry in the irc state
 --
 ircUnloadModule :: String -> LB ()
-ircUnloadModule modname = withModule modname (error "module not loaded") $ \m -> do
+ircUnloadModule modname = do
     infoM ("Unloading module " ++ show modname)
-    when (moduleSticky m) $ error "module is sticky"
-    moduleExit m
-    writeGlobalState m modname
-    s <- lift get
+    
+    exitResult <- withModule modname (error "module not loaded") $ \m -> do
+        when (moduleSticky m) $ fail "module is sticky"
+        
+        exitResult <- try (moduleExit m)
+        case exitResult of
+            Right{} -> return ()
+            Left e@SomeException{} -> errorM ("Module " ++ show modname ++ " threw the following exception in moduleExit: " ++ show e)
+        
+        writeGlobalState m modname
+    
+    s <- get
     let modmap = ircModules s
         cmdmap = ircCommands s
         cbs    = ircCallbacks s
         svrs   = ircServerMap s
         ofs    = ircOutputFilters s
-    lift $ put s
+    put s
         { ircCommands      = M.filter (\(CommandRef _ _ name _) -> name /= modname) cmdmap
         , ircModules       = M.delete modname modmap
         , ircCallbacks     =   filter ((/=modname) . fst) `fmap` cbs
@@ -97,7 +115,7 @@ ircSignalConnect str f = do
     s <- lift get
     let cbs = ircCallbacks s
     name <- getModuleName
-    case M.lookup str cbs of -- TODO
+    case M.lookup str cbs of -- TODO: figure out what this TODO is for
         Nothing -> lift (put s { ircCallbacks = M.insert str [(name,f)]    cbs})
         Just fs -> lift (put s { ircCallbacks = M.insert str ((name,f):fs) cbs})
 

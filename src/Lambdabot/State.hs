@@ -28,6 +28,7 @@ module Lambdabot.State
   ) where
 
 import Lambdabot.File
+import Lambdabot.Logging
 import Lambdabot.Monad
 import Lambdabot.Module
 import Lambdabot.Nick
@@ -179,29 +180,33 @@ flushModuleState = withAllModules (\m -> getModuleName >>= writeGlobalState m)
 
 -- | Peristence: write the global state out
 writeGlobalState :: Module st -> String -> ModuleT st LB ()
-writeGlobalState module' name = case moduleSerialize module' of
-    Nothing  -> return ()
-    Just ser -> do
-        state' <- readMS
-        case serialize ser state' of
-            Nothing  -> return ()   -- do not write any state
-            Just out -> do
-                stateFile <- lb (findOrCreateLBFile name)
-                io (P.writeFile stateFile out)
+writeGlobalState module' name = do
+    debugM ("saving state for module " ++ show name)
+    case moduleSerialize module' of
+        Nothing  -> return ()
+        Just ser -> do
+            state' <- readMS
+            case serialize ser state' of
+                Nothing  -> return ()   -- do not write any state
+                Just out -> do
+                    stateFile <- lb (findOrCreateLBFile name)
+                    io (P.writeFile stateFile out)
 
 -- | Read it in
 readGlobalState :: Module st -> String -> LB (Maybe st)
-readGlobalState module' name = case moduleSerialize module' of
-    Just ser -> do
-        mbStateFile <- findLBFile name
-        case mbStateFile of
-            Nothing         -> return Nothing
-            Just stateFile  -> io $ do
-                state' <- Just `fmap` P.readFile stateFile `E.catch` \SomeException{} -> return Nothing
-                E.catch (evaluate $ maybe Nothing (Just $!) (deserialize ser =<< state')) -- Monad Maybe)
-                    (\e -> do
-                        hPutStrLn stderr $ "Error parsing state file for: "
-                            ++ name ++ ": " ++ show (e :: SomeException)
-                        hPutStrLn stderr $ "Try removing: "++ show stateFile
-                        return Nothing) -- proceed regardless
-    Nothing -> return Nothing
+readGlobalState module' name = do
+    debugM ("loading state for module " ++ show name)
+    case moduleSerialize module' of
+        Just ser -> do
+            mbStateFile <- findLBFile name
+            case mbStateFile of
+                Nothing         -> return Nothing
+                Just stateFile  -> io $ do
+                    state' <- Just `fmap` P.readFile stateFile `E.catch` \SomeException{} -> return Nothing
+                    E.catch (evaluate $ maybe Nothing (Just $!) (deserialize ser =<< state')) -- Monad Maybe)
+                        (\e -> do
+                            errorM $ "Error parsing state file for: "
+                                ++ name ++ ": " ++ show (e :: SomeException)
+                            errorM $ "Try removing: "++ show stateFile
+                            return Nothing) -- proceed regardless
+        Nothing -> return Nothing
