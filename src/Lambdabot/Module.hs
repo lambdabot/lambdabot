@@ -18,6 +18,7 @@ module Lambdabot.Module
 
 import qualified Lambdabot.Command as Cmd
 import Lambdabot.Config
+import Lambdabot.Logging
 import {-# SOURCE #-} Lambdabot.Monad
 import Lambdabot.Util.Serial
 
@@ -30,6 +31,7 @@ import Control.Monad.State (MonadState(..))
 import Control.Monad.Trans (MonadTrans(..), MonadIO(..))
 import Control.Monad.Trans.Control
 import System.Console.Haskeline.MonadException (MonadException)
+import System.FilePath
 
 ------------------------------------------------------------------------
 
@@ -87,6 +89,10 @@ newModule = Module
 --
 newtype ModuleT st m a = ModuleT { runModuleT :: ReaderT (MVar st, String) m a }
     deriving (Applicative, Functor, Monad, MonadTrans, MonadIO, MonadState t, MonadException, MonadConfig)
+
+instance MonadLogging m => MonadLogging (ModuleT st m) where
+    getCurrentLogger = liftM2 (<.>) (lift getCurrentLogger) getModuleName
+    logM a b c = lift (logM a b c)
 
 instance MonadBase b m => MonadBase b (ModuleT st m) where
     liftBase = lift . liftBase

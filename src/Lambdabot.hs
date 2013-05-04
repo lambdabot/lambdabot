@@ -24,6 +24,7 @@ module Lambdabot
 import Lambdabot.ChanName
 import Lambdabot.Command
 import Lambdabot.IRC
+import Lambdabot.Logging
 import Lambdabot.Message
 import Lambdabot.Module
 import Lambdabot.Monad
@@ -46,6 +47,7 @@ import System.IO
 --
 ircInstallModule :: Module st -> String -> LB ()
 ircInstallModule m modname = do
+    infoM ("Loading module " ++ show modname)
     savedState <- readGlobalState m modname
     state'     <- maybe (moduleDefState m) return savedState
     ref        <- io $ newMVar state'
@@ -64,13 +66,13 @@ ircInstallModule m modname = do
           ircModules = M.insert modname modref modmap,
           ircCommands = M.union (M.fromList [ (name,cmdref cmd) | cmd <- cmds, name <- cmdNames cmd ]) cmdmap
         }
-        io $ hPutStr stderr "." >> hFlush stderr
 
 --
 -- | Unregister a module's entry in the irc state
 --
 ircUnloadModule :: String -> LB ()
 ircUnloadModule modname = withModule modname (error "module not loaded") (\m -> do
+    infoM ("Unloading module " ++ show modname)
     when (moduleSticky m) $ error "module is sticky"
     moduleExit m
     writeGlobalState m modname

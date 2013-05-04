@@ -67,6 +67,7 @@ library
                         Lambdabot.Config.Core
                         Lambdabot.File
                         Lambdabot.IRC
+                        Lambdabot.Logging
                         Lambdabot.Main
                         Lambdabot.Message
                         Lambdabot.Module
@@ -172,6 +173,7 @@ library
                         haskeline               >= 0.7,
                         haskell-src-exts        >= 1.12.0,
                         hstatsd                 >= 0.1,
+                        hslogger                >= 1.2.1,
                         HTTP                    >= 4000,
                         lifted-base             >= 0.2,
                         misfortune              >= 0.1,

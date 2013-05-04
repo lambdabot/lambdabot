@@ -10,7 +10,11 @@ module Lambdabot.Config.Core
     , outputDir
     , proxy
     , uncaughtExceptionHandler
-    , verbose
+    
+    , replaceRootLogger
+    , consoleLogHandle
+    , consoleLogLevel
+    , consoleLogFormat
     
     , aspellBinary
     , bfBinary
@@ -23,9 +27,11 @@ module Lambdabot.Config.Core
     ) where
 
 import Lambdabot.Config
+import Lambdabot.Logging
 
 import Control.Exception
 import Network.HTTP.Proxy
+import System.IO
 
 -------------------------------------
 -- Core configuration variables
@@ -36,7 +42,12 @@ config "evalPrefixes"       [t| [String]                |] [| [">"]         |]
 config "onStartupCmds"      [t| [String]                |] [| []            |]
 config "outputDir"          [t| FilePath                |] [| "State/"      |]
 config "proxy"              [t| Proxy                   |] [| NoProxy       |]
-config "verbose"            [t| Bool                    |] [| False         |]
+
+-- basic logging.  for more complex setups, configure directly using System.Log.Logger
+config "replaceRootLogger"  [t| Bool                    |] [| True                        |]
+config "consoleLogHandle"   [t| Handle                  |] [| stderr                      |]
+config "consoleLogLevel"    [t| Priority                |] [| NOTICE                      |]
+config "consoleLogFormat"   [t| String                  |] [| "[$prio] $loggername: $msg" |]
 
 -------------------------------------
 -- Program names/locations
@@ -54,6 +65,6 @@ config "unlambdaBinary"     [t| String                  |] [| "unlambda"    |]
 -- Top level exception-handler
 
 defaultIrcHandler :: SomeException -> IO ()
-defaultIrcHandler = putStrLn . ("Main: caught (and ignoring) "++) . show
+defaultIrcHandler = errorM . ("Main: caught (and ignoring) "++) . show
 
 config "uncaughtExceptionHandler" [t| SomeException -> IO () |] [| defaultIrcHandler |]

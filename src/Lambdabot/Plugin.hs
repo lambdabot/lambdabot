@@ -29,9 +29,6 @@ module Lambdabot.Plugin
     , unpackNick
     , ircPrivmsg
     
-    , debugStr
-    , debugStrLn
-    
     , module Lambdabot.Config
     , module Lambdabot.Config.Core
     , module Lambdabot.Command
@@ -74,15 +71,3 @@ lim80 action = do
 -- usage:  @process _ _ to _ s = ios80 to (plugs s)@
 ios80 :: MonadIO m => IO String -> Cmd m ()
 ios80 = lim80 . io
-
--- | 'debugStr' checks if we have the verbose flag turned on. If we have
---   it outputs the String given. Else, it is a no-op.
-debugStr :: MonadLB m => String -> m ()
-debugStr str = do
-    v <- getConfig verbose
-    when v (io (putStr str))
-
--- | 'debugStrLn' is a version of 'debugStr' that adds a newline to the end
---   of the string outputted.
-debugStrLn :: MonadLB m => String -> m ()
-debugStrLn x = debugStr (x ++ "\n")

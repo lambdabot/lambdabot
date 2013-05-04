@@ -6,6 +6,7 @@ import Lambdabot
 import Lambdabot.Command
 import Lambdabot.Config.Core
 import Lambdabot.IRC
+import Lambdabot.Logging
 import Lambdabot.Message hiding (readNick, showNick)
 import qualified Lambdabot.Message as Msg (readNick, showNick)
 import Lambdabot.Monad
@@ -64,10 +65,10 @@ theModule = newModule
     }
 
 doIGNORE :: Callback
-doIGNORE msg = debugStrLn $ show msg
+doIGNORE = debugM . show
 
 doPING :: Callback
-doPING msg = debugStrLn $ errShowMsg msg
+doPING = debugM . errShowMsg
 
 -- If this is a "TIME" then we need to pass it over to the localtime plugin
 -- otherwise, dump it to stdout
@@ -75,7 +76,7 @@ doNOTICE :: IrcMessage -> Base ()
 doNOTICE msg
     | isCTCPTimeReply   = doPRIVMSG (timeReply msg)
         -- TODO: need to say which module to run the privmsg in
-    | otherwise         = debugStrLn $ "NOTICE: " ++ show body
+    | otherwise         = noticeM (show body)
     where
         body = ircMsgParams msg
         isCTCPTimeReply = ":\SOHTIME" `isPrefixOf` (last body)
@@ -121,7 +122,7 @@ doQUIT :: Callback
 doQUIT msg = doIGNORE msg
 
 doRPL_BOUNCE :: Callback
-doRPL_BOUNCE _msg = debugStrLn "BOUNCE!"
+doRPL_BOUNCE _msg = debugM "BOUNCE!"
 
 doRPL_TOPIC :: Callback
 doRPL_TOPIC msg -- nearly the same as doTOPIC but has our nick on the front of body
@@ -242,7 +243,7 @@ doPRIVMSG' configu myname msg target
         name' <- getModuleName
         E.catch 
             (lift . mapM_ (ircPrivmsg target) =<< execCmd (contextual m r) msg target "contextual") 
-            (\e@SomeException{} -> debugStrLn . (name' ++) . (" module failed in contextual handler: " ++) $ show e)
+            (\e@SomeException{} -> debugM . (name' ++) . (" module failed in contextual handler: " ++) $ show e)
 
 ------------------------------------------------------------------------
 
@@ -298,7 +299,7 @@ doRPL_GLOBALUSERS _msg = return ()
 
 doUNKNOWN :: Callback
 doUNKNOWN msg
-    = debugStrLn $ "UNKNOWN> <" ++ msgPrefix msg ++
+    = debugM $ "UNKNOWN> <" ++ msgPrefix msg ++
       "> [" ++ msgCommand msg ++ "] " ++ show (body msg)
 
 doRPL_NAMREPLY :: Callback

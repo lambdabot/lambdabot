@@ -39,6 +39,7 @@ import           Lambdabot.Command
 import           Lambdabot.Config
 import           Lambdabot.Config.Core
 import           Lambdabot.IRC
+import           Lambdabot.Logging
 import           Lambdabot.Module
 import qualified Lambdabot.Message as Msg
 import           Lambdabot.Nick
@@ -226,6 +227,10 @@ instance MonadState IRCRWState LB where
 
 instance MonadConfig LB where
     getConfig k = liftM (maybe (getConfigDefault k) id . D.lookup k) (lb (askLB ircConfig))
+
+instance MonadLogging LB where
+    getCurrentLogger = return "Lambdabot"
+    logM a b c = io (logM a b c)
 
 -- | run a computation in the LB monad
 evalLB :: LB a -> IRCRState -> IRCRWState -> IO a

@@ -23,6 +23,7 @@ module Lambdabot.Command
     ) where
 
 import Lambdabot.Config
+import Lambdabot.Logging
 import qualified Lambdabot.Message as Msg
 import Lambdabot.Nick
 
@@ -32,6 +33,7 @@ import Control.Monad.Identity
 import Control.Monad.Reader
 import Control.Monad.Trans.Control
 import Control.Monad.Writer
+import System.FilePath
 
 data CmdArgs = forall a. Msg.Message a => CmdArgs
     { _message  :: a
@@ -71,6 +73,9 @@ instance MonadBaseControl b m => MonadBaseControl b (Cmd m) where
     {-# INLINE restoreM #-}
 instance MonadConfig m => MonadConfig (Cmd m) where
     getConfig = lift . getConfig
+instance MonadLogging m => MonadLogging (Cmd m) where
+    getCurrentLogger = liftM2 (<.>) (lift getCurrentLogger) getCmdName
+    logM a b c = lift (logM a b c)
 
 data Command m = Command
     { cmdName       :: String
