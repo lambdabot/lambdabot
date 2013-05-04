@@ -229,7 +229,7 @@ instance MonadConfig LB where
     getConfig k = liftM (maybe (getConfigDefault k) id . D.lookup k) (lb (askLB ircConfig))
 
 instance MonadLogging LB where
-    getCurrentLogger = return "Lambdabot"
+    getCurrentLogger = getConfig lbRootLoggerName
     logM a b c = io (logM a b c)
 
 -- | run a computation in the LB monad

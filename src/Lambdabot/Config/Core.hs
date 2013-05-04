@@ -12,6 +12,7 @@ module Lambdabot.Config.Core
     , uncaughtExceptionHandler
     
     , replaceRootLogger
+    , lbRootLoggerName
     , consoleLogHandle
     , consoleLogLevel
     , consoleLogFormat
@@ -32,6 +33,7 @@ import Lambdabot.Logging
 import Control.Exception
 import Network.HTTP.Proxy
 import System.IO
+import System.Log.Logger (rootLoggerName)
 
 -------------------------------------
 -- Core configuration variables
@@ -45,6 +47,7 @@ config "proxy"              [t| Proxy                   |] [| NoProxy       |]
 
 -- basic logging.  for more complex setups, configure directly using System.Log.Logger
 config "replaceRootLogger"  [t| Bool                    |] [| True                        |]
+config "lbRootLoggerName"   [t| String                  |] [| rootLoggerName              |]
 config "consoleLogHandle"   [t| Handle                  |] [| stderr                      |]
 config "consoleLogLevel"    [t| Priority                |] [| NOTICE                      |]
 config "consoleLogFormat"   [t| String                  |] [| "[$prio] $loggername: $msg" |]
