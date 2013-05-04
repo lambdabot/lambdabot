@@ -87,6 +87,7 @@ library
                         Lambdabot.Plugin.Djinn
                         Lambdabot.Plugin.Dummy
                         Lambdabot.Plugin.Elite
+                        Lambdabot.Plugin.Error
                         Lambdabot.Plugin.Eval
                         Lambdabot.Plugin.Eval.Trusted
                         Lambdabot.Plugin.Filter
