@@ -14,7 +14,7 @@ import Control.Monad( void, when )
 import Control.Monad.State( gets )
 import Control.Monad.Trans( lift, liftIO )
 import Data.Char
-import System.Console.Haskeline (InputT, runInputT, defaultSettings, getInputLine)
+import System.Console.Haskeline (InputT, Settings(..), runInputT, defaultSettings, getInputLine)
 import System.IO
 import System.Timeout.Lifted
 
@@ -40,7 +40,9 @@ theModule = newModule
             , help = say "offline. Start a repl"
             , process = const . lift $ do
                 lockRC
-                _ <- fork (runInputT defaultSettings replLoop `finally` unlockRC)
+                histFile <- lb $ findOrCreateLBFile "offlinerc"
+                let settings = defaultSettings { historyFile = Just histFile }
+                _ <- fork (runInputT settings replLoop `finally` unlockRC)
                 return ()
             }
         , (command "rc")
