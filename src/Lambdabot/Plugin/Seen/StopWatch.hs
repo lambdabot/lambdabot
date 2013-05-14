@@ -1,6 +1,6 @@
 module Lambdabot.Plugin.Seen.StopWatch where
 
-import Lambdabot.Util.AltTime
+import Lambdabot.Compat.AltTime
 
 import Data.Binary
 

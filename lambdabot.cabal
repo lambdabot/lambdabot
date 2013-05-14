@@ -62,6 +62,7 @@ library
   exposed-modules:      Lambdabot
                         Lambdabot.ChanName
                         Lambdabot.Command
+                        Lambdabot.Compat.AltTime
                         Lambdabot.Compat.FreenodeNick
                         Lambdabot.Config
                         Lambdabot.Config.Core
@@ -132,7 +133,6 @@ library
                         Lambdabot.Plugin.Where
                         Lambdabot.State
                         Lambdabot.Util
-                        Lambdabot.Util.AltTime
                         Lambdabot.Util.Browser
                         Lambdabot.Util.Parser
                         Lambdabot.Util.Process

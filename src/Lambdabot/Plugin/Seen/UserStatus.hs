@@ -4,7 +4,7 @@ import Control.Applicative
 import Data.Binary
 import qualified Data.ByteString as BS
 import Data.List
-import Lambdabot.Util.AltTime
+import Lambdabot.Compat.AltTime
 import Lambdabot.Plugin.Seen.StopWatch
 
 -- | The type of channels

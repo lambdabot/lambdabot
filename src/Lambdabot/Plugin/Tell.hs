@@ -49,7 +49,7 @@ module Lambdabot.Plugin.Tell (theModule) where
 
 import Lambdabot.Compat.FreenodeNick
 import Lambdabot.Plugin
-import Lambdabot.Util.AltTime
+import Lambdabot.Compat.AltTime
 
 import Control.Arrow (first)
 import Control.Monad

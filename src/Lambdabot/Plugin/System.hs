@@ -6,7 +6,7 @@ import Lambdabot.Compat.FreenodeNick
 import Lambdabot.IRC
 import Lambdabot.Monad
 import Lambdabot.Plugin
-import Lambdabot.Util.AltTime
+import Lambdabot.Compat.AltTime
 
 import Control.Monad.State (gets, modify)
 import Control.Monad.Trans

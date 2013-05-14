@@ -2,7 +2,7 @@
 -- (stuff to support old lambdabot state serialization formats)
 --
 -- TODO: trim this down to just the explicitly serialization-related stuff
-module Lambdabot.Util.AltTime 
+module Lambdabot.Compat.AltTime 
     ( ClockTime
     , getClockTime
     , diffClockTimes
