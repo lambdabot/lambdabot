@@ -63,9 +63,30 @@ instance  MonadConfig m            => MonadConfig (ReaderT r m) where getConfig 
 instance (MonadConfig m, Monoid w) => MonadConfig (WriterT w m) where getConfig = lift . getConfig
 instance  MonadConfig m            => MonadConfig (StateT  s m) where getConfig = lift . getConfig
 
+-- |Define a new configuration key with the specified name, type and 
+-- default value
+-- 
+-- You should probably also provide an explicit export list for any
+-- module that defines config keys, because the definition introduces
+-- a few extra types that will clutter up the export list otherwise.
 config :: String -> TypeQ -> ExpQ -> Q [Dec]
 config = configWithMerge [| flip const |]
 
+-- |Like 'config', but also allowing you to specify a \"merge rule\"
+-- that will be used to combine multiple bindings of the same key.
+-- 
+-- For example, in "Lambdabot.Config.Core", 'onStartupCmds' is
+-- defined as a list of commands to execute on startup.  Its default
+-- value is ["offlinerc"], so if a user invokes the default lambdabot
+-- executable without arguments, they will get a REPL.  Each instance
+-- of "-e" on the command-line adds a binding of the form:
+--
+-- > onStartupCmds :=> [command]
+-- 
+-- So if they give one "-e", it replaces the default (note that it
+-- is _not_ merged with the default - the default is discarded), and
+-- if they give more than one they are merged using the specified
+-- operation (in this case, `(++)`).
 configWithMerge :: ExpQ -> String -> TypeQ -> ExpQ -> Q [Dec]
 configWithMerge mergeQ nameStr tyQ defValQ = do
     let keyName = mkName nameStr
