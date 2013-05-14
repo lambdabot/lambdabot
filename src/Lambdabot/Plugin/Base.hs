@@ -7,9 +7,9 @@ import Lambdabot.Command
 import Lambdabot.Config.Core
 import Lambdabot.IRC
 import Lambdabot.Logging
-import Lambdabot.Message hiding (readNick, showNick)
-import qualified Lambdabot.Message as Msg (readNick, showNick)
+import Lambdabot.Message
 import Lambdabot.Monad
+import Lambdabot.Nick
 import Lambdabot.Plugin
 
 import Control.Applicative
@@ -144,7 +144,7 @@ doPRIVMSG msg = do
         else mapM_ (doPRIVMSG' conf (lambdabotName msg) msg) targets
     where
         alltargets = head (ircMsgParams msg)
-        targets = map (Msg.readNick msg) $ splitOn "," alltargets
+        targets = map (readNick' (ircMsgServer msg)) $ splitOn "," alltargets
 
 --
 -- | What does the bot respond to?
@@ -155,8 +155,8 @@ doPRIVMSG' configu myname msg target
     = let (cmd, params) = splitFirstWord text
       in doPersonalMsg cmd params
 
-  | flip any ":," $ \c -> (Msg.showNick msg myname ++ [c]) `isPrefixOf` text
-    = let Just wholeCmd = maybeCommand (Msg.showNick msg myname) text
+  | flip any ":," $ \c -> (showNick' (ircMsgServer msg) myname ++ [c]) `isPrefixOf` text
+    = let Just wholeCmd = maybeCommand (showNick' (ircMsgServer msg) myname) text
           (cmd, params) = splitFirstWord wholeCmd
       in doPublicMsg cmd params
 

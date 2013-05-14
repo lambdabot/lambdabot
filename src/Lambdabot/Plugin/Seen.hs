@@ -7,7 +7,8 @@ module Lambdabot.Plugin.Seen (theModule) where
 
 import Lambdabot
 import Lambdabot.IRC
-import qualified Lambdabot.Message as G (Message, channels, nick, packNick, unpackNick, lambdabotName, showNick, readNick)
+import qualified Lambdabot.Message as G
+import Lambdabot.Nick
 import Lambdabot.Plugin
 import Lambdabot.Plugin.Seen.StopWatch
 import Lambdabot.Plugin.Seen.UserStatus
@@ -76,7 +77,7 @@ theModule = newModule
         chans <- lift $ ircGetChannels
         unless (null chans) $ do
             ct    <- io getClockTime
-            modifyMS $ \(n,m) -> (n, botPart ct (map G.packNick chans) m)
+            modifyMS $ \(n,m) -> (n, botPart ct (map packNick chans) m)
 
         -- and write out our state:
         withMS $ \s _ -> lb (findOrCreateLBFile "seen") >>= \ c -> io (encodeFile c s)
@@ -93,7 +94,7 @@ doUsers rest = withMsg $ \msg -> do
     chan <- getTarget
     (m, seenFM) <- readMS
     s <- io getClockTime
-    let who = G.packNick $ lcNick $ if null rest then chan else G.readNick msg rest
+    let who = packNick $ lcNick $ if null rest then chan else readNick' (G.server msg) rest
         now = length [ () | (_,Present _ chans) <- M.toList seenFM
                           , who `elem` chans ]
 
@@ -114,7 +115,7 @@ doUsers rest = withMsg $ \msg -> do
         total   p q = printf "%d (%0.1f%%)" p (percent p q)
 
     say $! printf "Maximum users seen in %s: %d, currently: %s, active: %s"
-        (G.showNick msg $ G.unpackNick who) n (total now n) (total active now)
+        (showNick' (G.server msg) $ unpackNick who) n (total now n) (total active now)
 
 doSeen :: String -> Cmd Seen ()
 doSeen rest = withMsg $ \msg -> do
@@ -139,7 +140,7 @@ getAnswer msg rest seenFM now
                  else listToStr "and" (map upAndShow people)) ++ "."], False)
 
     | pnick == G.lambdabotName msg =
-        case M.lookup (G.packNick pnick) seenFM of
+        case M.lookup (packNick pnick) seenFM of
             Just (Present _ cs) ->
                 (["Yes, I'm here. I'm in " ++ listToStr "and" (map upAndShow cs)], True)
             _ -> error "I'm here, but not here. And very confused!"
@@ -148,13 +149,13 @@ getAnswer msg rest seenFM now
         let people  = map fst $ filter inChan $ M.toList seenFM
             inChan (_nick,state) = case state of
                 (Present (Just _) cs)
-                    -> G.packNick pnick `elem` cs
+                    -> packNick pnick `elem` cs
                 _   -> False
          in (["In "++nick'++" I can see "
             ++ (if null people then "nobody"    -- todo, how far back does this go?
                else listToStr "and" (map upAndShow people)) ++ "."], False)
 
-    | otherwise        = (return $ concat (case M.lookup (G.packNick pnick) seenFM of
+    | otherwise        = (return $ concat (case M.lookup (packNick pnick) seenFM of
         Just (Present mct cs)            -> nickPresent mct (map upAndShow cs)
         Just (NotPresent ct td chans)    -> nickNotPresent ct td (map upAndShow chans)
         Just (WasPresent ct sw _ chans)  -> nickWasPresent ct sw (map upAndShow chans)
@@ -162,7 +163,7 @@ getAnswer msg rest seenFM now
         _ -> ["I haven't seen ", nick, "."]), True)
     where
         -- I guess the only way out of this spagetty hell are printf-style responses.
-        upAndShow = G.showNick msg . G.unpackNick
+        upAndShow = showNick' (G.server msg) . unpackNick
         nickPresent mct cs =
             [ if you then "You are" else nick ++ " is"
             , " in ", listToStr "and" cs, "."
@@ -197,7 +198,7 @@ getAnswer msg rest seenFM now
         nick' = takeWhile (not . isSpace) rest
         you   = pnick == lcNick (G.nick msg)
         nick  = if you then "you" else nick'
-        pnick = lcNick $ G.readNick msg nick'
+        pnick = lcNick $ readNick' (G.server msg) nick'
         clockDifference past
             | all (==' ') diff = "just now"
             | otherwise        = diff ++ " ago"
@@ -217,7 +218,7 @@ getAnswer msg rest seenFM now
 
 -- | extract channels from message as packed, lower cased, strings.
 msgChans :: G.Message a => a -> [Channel]
-msgChans = map (G.packNick . lcNick) . G.channels
+msgChans = map (packNick . lcNick) . G.channels
 
 -- | Callback for when somebody joins. If it is not the bot that joins, record
 --   that we have a new user in our state tree and that we have never seen the
@@ -228,7 +229,7 @@ joinCB msg _ct nick fm
     | otherwise      = Right $! insertUpd (updateJ Nothing chans) nick newInfo fm
     where
         insertUpd f = M.insertWith (\_ -> f)
-        lbNick  = G.packNick $ G.lambdabotName msg
+        lbNick  = packNick $ G.lambdabotName msg
         newInfo = Present Nothing chans
         chans   = msgChans msg
 
@@ -255,7 +256,7 @@ partCB msg ct nick fm
                 [] -> Right $! M.insert nick (NotPresent ct zeroWatch xs) fm
                 ys -> Right $! M.insert nick (Present mct ys)             fm
         _ -> Left "someone who isn't known parted"
-    where lbNick = G.packNick $ G.lambdabotName msg
+    where lbNick = packNick $ G.lambdabotName msg
 
 -- | when somebody quits
 quitCB :: IrcMessage -> ClockTime -> PackedNick -> SeenMap -> Either String SeenMap
@@ -271,7 +272,7 @@ nickCB msg _ nick fm = case M.lookup nick fm of
     _           -> Left "someone who isn't here changed nick"
     where
         newnick = drop 1 $ head (ircMsgParams msg)
-        lcnewnick = G.packNick $ lcNick $ G.readNick msg newnick
+        lcnewnick = packNick $ lcNick $ readNick' (G.server msg) newnick
 
 -- | when the bot joins a channel
 joinChanCB :: IrcMessage -> ClockTime -> PackedNick -> SeenMap -> Either String SeenMap
@@ -279,12 +280,12 @@ joinChanCB msg now _nick fm
     = Right $! fmap (updateNP now chan) (foldl insertNick fm chanUsers)
     where
         l = ircMsgParams msg
-        chan = G.packNick $ lcNick $ G.readNick msg $ l !! 2
-        chanUsers = map (G.packNick . lcNick . G.readNick msg) $ words (drop 1 (l !! 3)) -- remove ':'
+        chan = packNick $ lcNick $ readNick' (G.server msg) $ l !! 2
+        chanUsers = map (packNick . lcNick . readNick' (G.server msg)) $ words (drop 1 (l !! 3)) -- remove ':'
         unUserMode nick = Nick (nTag nick) (dropWhile (`elem` "@+") $ nName nick)
         insertUpd f = M.insertWith (\_ -> f)
         insertNick fm' u = insertUpd (updateJ (Just now) [chan])
-            (G.packNick . unUserMode . lcNick . G.unpackNick $ u)
+            (packNick . unUserMode . lcNick . unpackNick $ u)
             (Present Nothing [chan]) fm'
 
 -- | when somebody speaks, update their clocktime
@@ -308,8 +309,8 @@ withSeenFM :: G.Message a
            -> (a -> Seen ())
 
 withSeenFM f msg = do
-    let chan = G.packNick . lcNick . head . G.channels $! msg
-        nick = G.packNick . lcNick . G.nick $ msg
+    let chan = packNick . lcNick . head . G.channels $! msg
+        nick = packNick . lcNick . G.nick $ msg
 
     withMS $ \(maxUsers,state) writer -> do
         ct <- io getClockTime

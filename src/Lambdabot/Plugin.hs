@@ -44,7 +44,6 @@ import Lambdabot.Config
 import Lambdabot.Config.Core
 import Lambdabot.Command hiding (runCommand, execCmd)
 import Lambdabot.File
-import Lambdabot.Message
 import Lambdabot.Module
 import Lambdabot.Monad
 import Lambdabot.Nick

@@ -10,8 +10,9 @@ module Lambdabot.Plugin.Log (theModule) where
 import Lambdabot
 import Lambdabot.Compat.FreenodeNick
 import Lambdabot.IRC
-import Lambdabot.Plugin
 import qualified Lambdabot.Message as Msg
+import Lambdabot.Nick
+import Lambdabot.Plugin
 
 import Control.Monad
 import qualified Data.Map as M
@@ -192,7 +193,7 @@ partCB msg ct = Parted (Msg.nick msg) (Msg.fullName msg) ct
 -- TODO:  We should only do this for channels that the user is currently on.
 nickCB :: IrcMessage -> UTCTime -> Event
 nickCB msg ct = Renick (Msg.nick msg) (Msg.fullName msg) ct
-                       (Msg.readNick msg $ drop 1 $ head $ ircMsgParams msg)
+                       (readNick' (Msg.server msg) $ drop 1 $ head $ ircMsgParams msg)
 
 -- | When somebody speaks.
 msgCB :: IrcMessage -> UTCTime -> Event
