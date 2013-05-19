@@ -18,13 +18,14 @@ import System.IO
 flags :: [OptDescr (IO (DSum Config))]
 flags = 
     [ Option "h?" ["help"]  (NoArg (usage []))                      "Print this help message"
-    , Option "e"  []        (arg "<command>" onStartupCmds   cmd)   "Run a lambdabot command instead of a REPL"
+    , Option "e"  []        (arg "<command>" onStartupCmds   strs)  "Run a lambdabot command instead of a REPL"
     , Option "l"  []        (arg "<level>"   consoleLogLevel level) "Set the logging level"
+    , Option "t"  ["trust"] (arg "<package>" trustedPackages strs)  "Trust the specified packages when evaluating code"
     ] where 
         arg :: String -> Config t -> (String -> IO t) -> ArgDescr (IO (DSum Config))
         arg descr key fn = ReqArg (fmap (key :=>) . fn) descr
         
-        cmd = return . (:[])
+        strs = return . (:[])
         
         level str = case reads (map toUpper str) of
             (lv, []):_ -> return lv

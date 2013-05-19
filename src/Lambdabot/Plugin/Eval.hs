@@ -48,20 +48,10 @@ theModule = newModule
 exts :: [String]
 exts = ["ImplicitPrelude"] -- workaround for bug in hint package
 
-trustedPkgs :: [String]
-trustedPkgs =
-    [ "array"
-    , "base"
-    , "bytestring"
-    , "containers"
-    , "lambdabot"
-    , "random"
-    ]
-
-args :: String -> String -> [String]
-args load src = concat
+args :: String -> String -> [String] -> [String]
+args load src trusted = concat
     [ ["-S"]
-    , map ("-s" ++) trustedPkgs
+    , map ("-s" ++) trusted
     , map ("-X" ++) exts
     , ["--no-imports", "-l", load]
     , ["--expression=" ++ src]
@@ -80,7 +70,8 @@ eval :: MonadLB m => String -> m String
 eval src = do
     load    <- lb (findOrCreateLBFile "L.hs")
     binary  <- getConfig muevalBinary
-    (_,out,err) <- io (readProcessWithExitCode binary (args load src) "")
+    trusted <- getConfig trustedPackages
+    (_,out,err) <- io (readProcessWithExitCode binary (args load src trusted) "")
     case (out,err) of
         ([],[]) -> return "Terminated\n"
         _       -> do
@@ -146,9 +137,10 @@ comp src = do
 
     -- and compile .L.hs
     -- careful with timeouts here. need a wrapper.
+    trusted <- getConfig trustedPackages
     let ghcArgs = concat
             [ ["-O", "-v0", "-c", "-Werror", "-fpackage-trust"]
-            , concat [["-trust", pkg] | pkg <- trustedPkgs]
+            , concat [["-trust", pkg] | pkg <- trusted]
             , [".L.hs"]
             ]
     ghc <- getConfig ghcBinary

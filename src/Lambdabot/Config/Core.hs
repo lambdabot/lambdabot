@@ -9,6 +9,7 @@ module Lambdabot.Config.Core
     , onStartupCmds
     , outputDir
     , proxy
+    , trustedPackages
     , uncaughtExceptionHandler
     
     , replaceRootLogger
@@ -63,8 +64,20 @@ config "hoogleBinary"       [t| String                  |] [| "hoogle"      |]
 config "muevalBinary"       [t| String                  |] [| "mueval"      |]
 config "unlambdaBinary"     [t| String                  |] [| "unlambda"    |]
 
--------------------------------------
--- Top level exception-handler
+--------------------------------------------
+-- Default values with longer definitions
+
+trustedPkgs :: [String]
+trustedPkgs =
+    [ "array"
+    , "base"
+    , "bytestring"
+    , "containers"
+    , "lambdabot"
+    , "random"
+    ]
+
+configWithMerge [| (++) |] "trustedPackages"    [t| [String] |] [| trustedPkgs   |]
 
 defaultIrcHandler :: SomeException -> IO ()
 defaultIrcHandler = errorM . ("Main: caught (and ignoring) "++) . show
