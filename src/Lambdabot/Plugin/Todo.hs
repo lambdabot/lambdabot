@@ -4,6 +4,7 @@
 -- (c) 2005 Samuel Bronson
 module Lambdabot.Plugin.Todo (theModule) where
 
+import Lambdabot.Compat.PackedNick
 import Lambdabot.Plugin
 import Control.Monad
 import qualified Data.ByteString.Char8 as P

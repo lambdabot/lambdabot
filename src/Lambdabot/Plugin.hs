@@ -25,8 +25,6 @@ module Lambdabot.Plugin
     , getCN
     
     , Nick(..)
-    , packNick
-    , unpackNick
     , ircPrivmsg
     
     , module Lambdabot.Config

@@ -6,13 +6,14 @@
 module Lambdabot.Plugin.Seen (theModule) where
 
 import Lambdabot
+import Lambdabot.Compat.AltTime
+import Lambdabot.Compat.PackedNick
 import Lambdabot.IRC
 import qualified Lambdabot.Message as G
 import Lambdabot.Nick
 import Lambdabot.Plugin
 import Lambdabot.Plugin.Seen.StopWatch
 import Lambdabot.Plugin.Seen.UserStatus
-import Lambdabot.Compat.AltTime
 
 import Control.Exception
 import Control.Monad

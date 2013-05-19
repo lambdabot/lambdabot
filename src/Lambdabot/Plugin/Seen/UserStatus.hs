@@ -5,13 +5,11 @@ import Data.Binary
 import qualified Data.ByteString as BS
 import Data.List
 import Lambdabot.Compat.AltTime
+import Lambdabot.Compat.PackedNick
 import Lambdabot.Plugin.Seen.StopWatch
 
 -- | The type of channels
 type Channel = BS.ByteString
-
--- | The type of nicknames
-type PackedNick = BS.ByteString
 
 -- | We last heard the user speak at ClockTime; since then we have missed
 --   TimeDiff of him because we were absent.

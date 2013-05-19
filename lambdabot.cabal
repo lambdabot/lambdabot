@@ -64,6 +64,7 @@ library
                         Lambdabot.Command
                         Lambdabot.Compat.AltTime
                         Lambdabot.Compat.FreenodeNick
+                        Lambdabot.Compat.PackedNick
                         Lambdabot.Config
                         Lambdabot.Config.Core
                         Lambdabot.File
