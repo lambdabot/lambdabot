@@ -18,6 +18,15 @@ Lambdabot's functionality is provided by a "core" that provides message routing 
 
 - Callbacks.  Plugins can register callbacks to react to non-chat messages such as nick changes, join/part events, etc.
 
+User code execution
+--------------------
+
+Lambdabot provides the ability to execute user-supplied Haskell code.  This is obviously a somewhat risky thing to do.  We use 2 main mechanisms to mitigate this risk:
+
+- Safe Haskell.  The "Safe Haskell" GHC extension tracks usage of features such as `unsafePerformIO` and the FFI (among others) which subvert the type system.  The full details are available in the GHC documentation.  By default, lambdabot only trusts a small set of common libraries.  The user may override this set on the command-line.
+
+- Sandboxing and resource limits.  The `mueval` program implements timeouts and resource limits to keep user-provided code from hogging the system.  Lambdabot uses `mueval` to run code
+
 Monads
 ------
 
