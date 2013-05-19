@@ -25,6 +25,7 @@ extra-source-files:     AUTHORS.md
                         COMMANDS
                         COMMENTARY.md
                         README.md
+                        main/Modules.hs
                         scripts/ghci.sh
                         scripts/vim/bot
                         scripts/vim/pl
@@ -32,11 +33,6 @@ extra-source-files:     AUTHORS.md
                         scripts/vim/run
                         scripts/vim/runwith
                         scripts/vim/typeOf
-                        lambdabot-trusted/lambdabot-trusted.cabal
-                        lambdabot-trusted/Setup.lhs
-                        lambdabot-trusted/src/*.hs
-                        src/*.hs,
-                        src/*.hs-boot
                         src/Lambdabot/Plugin/Free/Test.hs
 
 data-files:             scripts/online.rc,
