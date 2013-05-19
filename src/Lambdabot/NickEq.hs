@@ -43,11 +43,11 @@ nickMatches = return m'
 
 -- | Parse a read polynick.
 readPolynick :: Message a => a -> String -> Polynick
-readPolynick m = Polynick . map (readNick' (server m)) . splitOn "|"
+readPolynick m = Polynick . map (parseNick (server m)) . splitOn "|"
 
 -- | Format a polynick.
 showPolynick :: Message a => a -> Polynick -> String
-showPolynick m (Polynick n) = intercalate "|" $ map (showNick' (server m)) n
+showPolynick m (Polynick n) = intercalate "|" $ map (fmtNick (server m)) n
 
 -- | Convert a regular mononick into a polynick.
 mononickToPolynick :: Nick -> Polynick

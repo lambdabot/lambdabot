@@ -144,7 +144,7 @@ doPRIVMSG msg = do
         else mapM_ (doPRIVMSG' conf (lambdabotName msg) msg) targets
     where
         alltargets = head (ircMsgParams msg)
-        targets = map (readNick' (ircMsgServer msg)) $ splitOn "," alltargets
+        targets = map (parseNick (ircMsgServer msg)) $ splitOn "," alltargets
 
 --
 -- | What does the bot respond to?
@@ -155,8 +155,8 @@ doPRIVMSG' configu myname msg target
     = let (cmd, params) = splitFirstWord text
       in doPersonalMsg cmd params
 
-  | flip any ":," $ \c -> (showNick' (ircMsgServer msg) myname ++ [c]) `isPrefixOf` text
-    = let Just wholeCmd = maybeCommand (showNick' (ircMsgServer msg) myname) text
+  | flip any ":," $ \c -> (fmtNick (ircMsgServer msg) myname ++ [c]) `isPrefixOf` text
+    = let Just wholeCmd = maybeCommand (fmtNick (ircMsgServer msg) myname) text
           (cmd, params) = splitFirstWord wholeCmd
       in doPublicMsg cmd params
 

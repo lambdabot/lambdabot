@@ -1,7 +1,7 @@
 module Lambdabot.Nick
     ( Nick(..)
-    , showNick'
-    , readNick'
+    , fmtNick
+    , parseNick
     ) where
 
 import Lambdabot.Util
@@ -30,15 +30,15 @@ instance Ord Nick where
 
 -- | Format a nickname for display.  This will automatically omit the server
 -- field if it is the same as the server of the provided message.
-showNick' :: String -> Nick -> String
-showNick' svr nck
+fmtNick :: String -> Nick -> String
+fmtNick svr nck
     | nTag nck == svr = nName nck
     | otherwise       = nTag nck ++ ':' : nName nck
 
 -- | Parse a nickname received in a message.  If the server field is not
 -- provided, it defaults to the same as that of the message.
-readNick' :: String -> String -> Nick
-readNick' def str
+parseNick :: String -> String -> Nick
+parseNick def str
     | null ac   = Nick def str
     | otherwise = Nick bc ac
     where 

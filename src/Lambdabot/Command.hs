@@ -121,10 +121,10 @@ withMsg f = Cmd ask >>= f'
     where f' (CmdArgs msg _ _) = f msg
 
 readNick :: Monad m => String -> Cmd m Nick
-readNick nick = withMsg (\msg -> return (readNick' (Msg.server msg) nick))
+readNick nick = withMsg (\msg -> return (parseNick (Msg.server msg) nick))
 
 showNick :: Monad m => Nick -> Cmd m String
-showNick nick = withMsg (\msg -> return (showNick' (Msg.server msg) nick))
+showNick nick = withMsg (\msg -> return (fmtNick (Msg.server msg) nick))
 
 getServer :: Monad m => Cmd m String
 getServer = withMsg (return . Msg.server)

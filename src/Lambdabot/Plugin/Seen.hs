@@ -95,7 +95,7 @@ doUsers rest = withMsg $ \msg -> do
     chan <- getTarget
     (m, seenFM) <- readMS
     s <- io getClockTime
-    let who = packNick $ lcNick $ if null rest then chan else readNick' (G.server msg) rest
+    let who = packNick $ lcNick $ if null rest then chan else parseNick (G.server msg) rest
         now = length [ () | (_,Present _ chans) <- M.toList seenFM
                           , who `elem` chans ]
 
@@ -116,7 +116,7 @@ doUsers rest = withMsg $ \msg -> do
         total   p q = printf "%d (%0.1f%%)" p (percent p q)
 
     say $! printf "Maximum users seen in %s: %d, currently: %s, active: %s"
-        (showNick' (G.server msg) $ unpackNick who) n (total now n) (total active now)
+        (fmtNick (G.server msg) $ unpackNick who) n (total now n) (total active now)
 
 doSeen :: String -> Cmd Seen ()
 doSeen rest = withMsg $ \msg -> do
@@ -164,7 +164,7 @@ getAnswer msg rest seenFM now
         _ -> ["I haven't seen ", nick, "."]), True)
     where
         -- I guess the only way out of this spagetty hell are printf-style responses.
-        upAndShow = showNick' (G.server msg) . unpackNick
+        upAndShow = fmtNick (G.server msg) . unpackNick
         nickPresent mct cs =
             [ if you then "You are" else nick ++ " is"
             , " in ", listToStr "and" cs, "."
@@ -199,7 +199,7 @@ getAnswer msg rest seenFM now
         nick' = takeWhile (not . isSpace) rest
         you   = pnick == lcNick (G.nick msg)
         nick  = if you then "you" else nick'
-        pnick = lcNick $ readNick' (G.server msg) nick'
+        pnick = lcNick $ parseNick (G.server msg) nick'
         clockDifference past
             | all (==' ') diff = "just now"
             | otherwise        = diff ++ " ago"
@@ -273,7 +273,7 @@ nickCB msg _ nick fm = case M.lookup nick fm of
     _           -> Left "someone who isn't here changed nick"
     where
         newnick = drop 1 $ head (ircMsgParams msg)
-        lcnewnick = packNick $ lcNick $ readNick' (G.server msg) newnick
+        lcnewnick = packNick $ lcNick $ parseNick (G.server msg) newnick
 
 -- | when the bot joins a channel
 joinChanCB :: IrcMessage -> ClockTime -> PackedNick -> SeenMap -> Either String SeenMap
@@ -281,8 +281,8 @@ joinChanCB msg now _nick fm
     = Right $! fmap (updateNP now chan) (foldl insertNick fm chanUsers)
     where
         l = ircMsgParams msg
-        chan = packNick $ lcNick $ readNick' (G.server msg) $ l !! 2
-        chanUsers = map (packNick . lcNick . readNick' (G.server msg)) $ words (drop 1 (l !! 3)) -- remove ':'
+        chan = packNick $ lcNick $ parseNick (G.server msg) $ l !! 2
+        chanUsers = map (packNick . lcNick . parseNick (G.server msg)) $ words (drop 1 (l !! 3)) -- remove ':'
         unUserMode nick = Nick (nTag nick) (dropWhile (`elem` "@+") $ nName nick)
         insertUpd f = M.insertWith (\_ -> f)
         insertNick fm' u = insertUpd (updateJ (Just now) [chan])

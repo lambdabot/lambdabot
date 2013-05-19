@@ -193,7 +193,7 @@ partCB msg ct = Parted (Msg.nick msg) (Msg.fullName msg) ct
 -- TODO:  We should only do this for channels that the user is currently on.
 nickCB :: IrcMessage -> UTCTime -> Event
 nickCB msg ct = Renick (Msg.nick msg) (Msg.fullName msg) ct
-                       (readNick' (Msg.server msg) $ drop 1 $ head $ ircMsgParams msg)
+                       (parseNick (Msg.server msg) $ drop 1 $ head $ ircMsgParams msg)
 
 -- | When somebody speaks.
 msgCB :: IrcMessage -> UTCTime -> Event
