@@ -1,45 +1,46 @@
-babel provides: babel
+activity provides: activity
 base has no visible commands
 bf provides: bf
 check provides: check
-compose provides: . compose
-dice provides: dice
-dict provides: dict dict-help all-dicts devils easton elements foldoc gazetteer hitchcock jargon lojban vera web1913 wn world02
+compose provides: @ ? . compose
+dice provides: dice roll
+dict provides: dict-help all-dicts bouvier cide devils easton elements foldoc gazetteer hitchcock jargon thesaurus vera wn world02
 djinn provides: djinn djinn-add djinn-del djinn-env djinn-names djinn-clr djinn-ver
-dummy provides: eval choose id read show dummy bug get-shapr faq paste learn map shootout botsnack wiki oldwiki docs source fptools
-elite provides: elite
-eval provides: run let undefine
-fact provides: fact fact-set fact-delete fact-cons fact-snoc fact-update
+dummy provides: eval choose dummy bug id show wiki paste docs learn haskellers botsnack get-shapr shootout faq googleit hackage thanks thx thank you ping tic-tac-toe
+elite provides: elite leet l33t 1337
+eval provides: run let define undefine
+filter provides: austro b1ff brooklyn chef cockney drawl dubya fudd funetak jethro jive kraut pansy pirate postmodern redneck valspeak warez
 free provides: free
 fresh provides: freshname
-ft provides: ft
 haddock provides: index
 help provides: help
 hoogle provides: hoogle hoogle+
 instances provides: instances instances-importing
+irc has no visible commands
 karma provides: karma karma+ karma- karma-all
 localtime provides: time localtime localtime-reply
-log has no visible commands
 more provides: more
-pl provides: pointless pl-resume pl
+oeis provides: oeis sequence
+offlinerc has no visible commands
+pl provides: pointless pl pl-resume
 pointful provides: pointful pointy repoint unpointless unpl unpf
 poll provides: poll-list poll-show poll-add choice-add vote poll-result poll-close poll-remove
 pretty provides: pretty
-quote provides: quote remember ghc fortune yow arr yarr keal b52s brain palomer girl19 v yhjulwwiefzojcbxybbruweejw protontorpedo
-search provides: gwiki google wikipedia gsite
+quote provides: quote remember forget ghc fortune yow arr yarr keal b52s pinky brain palomer girl19 v yhjulwwiefzojcbxybbruweejw protontorpedo nixon farber
+search provides: google gsite gwiki
 seen provides: users seen
-slap provides: slap
-small provides: scheck
+slap provides: slap smack
 source provides: src
 spell provides: spell spell-all
-state has no visible commands
-system provides: echo list listchans listmodules uptime
-tell provides: tell ask messages messages? clear-messages
+system provides: listchans listmodules listservers list echo uptime
+tell provides: tell ask messages messages-loud messages? clear-messages
+ticker provides: ticker bid
 todo provides: todo todo-add
-topic provides: topic-tell topic-cons topic-snoc topic-tail topic-init topic-null
+topic provides: set-topic get-topic unshift-topic queue-topic shift-topic push-topic pop-topic dequeue-topic clear-topic
 type provides: type kind
-undo provides: undo redo
+undo provides: undo do
 unlambda provides: unlambda
+unmtl provides: unmtl
 url provides: url-title tiny-url
 version provides: version
 vixen provides: vixen

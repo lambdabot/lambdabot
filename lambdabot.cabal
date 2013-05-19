@@ -21,13 +21,10 @@ build-type:             Simple
 cabal-version:          >= 1.8
 tested-with:            GHC==7.4.1
 
-extra-source-files:     AUTHORS
-                        BUGS
+extra-source-files:     AUTHORS.md
                         COMMANDS
-                        COMMENTARY
-                        README
-                        STYLE
-                        TODO
+                        COMMENTARY.md
+                        README.md
                         scripts/ghci.sh
                         scripts/vim/bot
                         scripts/vim/pl

@@ -60,7 +60,23 @@ SCRIPTS
 CONFIGURING
 ===========
 
-TODO: demonstrate configuration
+Lambdabot uses an extensible configuration system which allows plugins to define their own configuration variables.  The lambdabot core system defines several, listed in the module `Lambdabot.Config.Core`.  The default `lambdabot` executable provides a command-line interface to set some of the most common ones, but currently the only way to set others is to define your own executable (which you must currently do anyway to change the default set of modules).
+
+When doing so, configuration is passed in to the `lambdabotMain` function as a list of bindings.  Configuration variables are bound using the `:=>` operator (actually the data constructor of the `DSum` type), for example:
+
+    ghcBinary :=> "ghc-7.4.2"
+
+So a typical custom lambdabot executable might look something like:
+
+    module MyBot where
+    
+    import Lambdabot.Main
+    {- import your plugins here -}
+    
+    main = lambdabotMain myPlugins 
+        [ configKey  :=> value
+        , anotherKey :=> anotherValue
+        ]
 
 BUGS
 ====
