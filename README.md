@@ -15,6 +15,7 @@ External executable dependencies:
 - `djinn` for the "djinn" plugin, which tries to find Haskell functions matching arbitrary types.  Available on Hackage.
 - `ghc` and `mueval` for the "eval" plugin, which evaluates Haskell expressions in chat (when prefixed with "> "; e.g. `> 1 + 1`).  GHC is available from haskell.org (the Haskell Platform is recommended).  Mueval is available on Hackage.
 - `hoogle` for the "hoogle" plugin, which provides a command for searching Haskell APIs.  Available from Hackage.
+- GNU talk-filters (optional) for the "filters" plugin.  Available via most package managers, I believe.
 - `unlambda` for executing unlambda programs.  Available on Hackage.
 
 Some of these dependencies (those with corresponding hackage libraries) will be installed by cabal, but not all of them will.  In all cases, cabal does not actually track the executables so if they have previously been installed and deleted on your system (without unregistering the matching library), you will have to manually reinstall them.
