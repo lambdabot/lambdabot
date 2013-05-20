@@ -5,6 +5,7 @@ import Lambdabot.Command
 import Lambdabot.Message (Message)
 import Lambdabot.Monad
 import Lambdabot.Plugin
+import Lambdabot.Util
 
 theModule :: Module ()
 theModule = newModule

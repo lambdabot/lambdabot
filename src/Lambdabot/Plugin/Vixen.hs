@@ -6,6 +6,7 @@
 module Lambdabot.Plugin.Vixen (theModule) where
 
 import Lambdabot.Plugin
+import Lambdabot.Util
 
 import Control.Arrow ((***))
 import Control.Monad

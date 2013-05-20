@@ -7,6 +7,7 @@ import Lambdabot.Config.Core
 import Lambdabot.IRC
 import Lambdabot.Monad
 import Lambdabot.Plugin
+import Lambdabot.Util
 
 import Control.Concurrent.Lifted
 import Control.Exception.Lifted ( evaluate, finally )

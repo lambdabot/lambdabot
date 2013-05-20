@@ -4,6 +4,7 @@ module Lambdabot.Plugin.Dummy (theModule) where
 
 import Lambdabot.Plugin
 import Lambdabot.Plugin.Dummy.DocAssocs (docAssocs)
+import Lambdabot.Util
 
 import Data.Char
 import qualified Data.ByteString.Char8 as P

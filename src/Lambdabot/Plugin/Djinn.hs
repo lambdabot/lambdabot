@@ -10,6 +10,7 @@ module Lambdabot.Plugin.Djinn (theModule) where
 import Lambdabot.Config.Core
 import Lambdabot.Logging
 import Lambdabot.Plugin
+import Lambdabot.Util
 
 import Control.Exception.Lifted as E
 import Control.Monad

@@ -32,7 +32,6 @@ module Lambdabot.Plugin
     , module Lambdabot.Command
     , module Lambdabot.State
     , module Lambdabot.File
-    , module Lambdabot.Util
     , module Lambdabot.Util.Serial
     ) where
 

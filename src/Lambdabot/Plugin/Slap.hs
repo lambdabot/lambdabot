@@ -2,6 +2,7 @@
 module Lambdabot.Plugin.Slap (theModule) where
 
 import Lambdabot.Plugin
+import Lambdabot.Util
 
 type Slap = ModuleT () LB
 

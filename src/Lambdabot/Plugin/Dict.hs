@@ -5,6 +5,7 @@ module Lambdabot.Plugin.Dict (theModule) where
 
 import Lambdabot.Plugin
 import qualified Lambdabot.Plugin.Dict.DictLookup as Dict
+import Lambdabot.Util
 
 import Control.Monad
 import Data.List

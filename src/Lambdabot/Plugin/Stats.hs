@@ -3,6 +3,7 @@
 module Lambdabot.Plugin.Stats (theModule) where
 
 import Lambdabot.Plugin
+import Lambdabot.Util
 
 import Network.StatsD
 

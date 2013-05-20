@@ -13,6 +13,7 @@ import Lambdabot.IRC
 import qualified Lambdabot.Message as Msg
 import Lambdabot.Nick
 import Lambdabot.Plugin
+import Lambdabot.Util
 
 import Control.Monad
 import qualified Data.Map as M

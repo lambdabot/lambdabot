@@ -3,6 +3,7 @@
 module Lambdabot.Plugin.Source (theModule) where
 
 import Lambdabot.Plugin
+import Lambdabot.Util
 import Control.Monad
 import qualified Data.ByteString.Char8 as P
 import qualified Data.Map as M

@@ -10,6 +10,7 @@
 module Lambdabot.Plugin.Pl (theModule) where
 
 import Lambdabot.Plugin
+import Lambdabot.Util
 
 import Lambdabot.Plugin.Pl.Common          (TopLevel, mapTopLevel, getExpr)
 import Lambdabot.Plugin.Pl.Parser          (parsePF)

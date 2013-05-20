@@ -9,6 +9,7 @@
 module Lambdabot.Plugin.Search (theModule) where
 
 import Lambdabot.Plugin
+import Lambdabot.Util
 import Lambdabot.Util.Browser
 
 import Data.Maybe

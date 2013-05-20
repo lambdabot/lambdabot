@@ -5,6 +5,7 @@
 module Lambdabot.Plugin.Filter (theModule) where
 
 import Lambdabot.Plugin
+import Lambdabot.Util
 
 import Control.Applicative
 import Data.Maybe

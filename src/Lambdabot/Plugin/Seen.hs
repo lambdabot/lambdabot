@@ -13,6 +13,8 @@ import Lambdabot.Logging
 import qualified Lambdabot.Message as G
 import Lambdabot.Nick
 import Lambdabot.Plugin
+import Lambdabot.Util
+
 import Lambdabot.Plugin.Seen.StopWatch
 import Lambdabot.Plugin.Seen.UserStatus
 

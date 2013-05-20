@@ -6,6 +6,7 @@ import Lambdabot.IRC
 import Lambdabot.Logging
 import Lambdabot.Monad
 import Lambdabot.Plugin
+import Lambdabot.Util
 
 import Control.Concurrent.Lifted
 import qualified Control.Concurrent.SSem as SSem

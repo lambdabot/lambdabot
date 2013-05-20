@@ -7,6 +7,7 @@
 module Lambdabot.Plugin.Spell (theModule) where
 
 import Lambdabot.Plugin
+import Lambdabot.Util
 
 import Control.Monad.Trans
 import Data.Char

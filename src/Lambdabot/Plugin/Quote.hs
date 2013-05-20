@@ -3,6 +3,7 @@
 module Lambdabot.Plugin.Quote (theModule) where
 
 import Lambdabot.Plugin
+import Lambdabot.Util
 
 import qualified Data.ByteString.Char8 as P
 import Data.Char

@@ -2,11 +2,12 @@
 module Lambdabot.Plugin.System (theModule) where
 
 import Lambdabot
+import Lambdabot.Compat.AltTime
 import Lambdabot.Compat.FreenodeNick
 import Lambdabot.IRC
 import Lambdabot.Monad
 import Lambdabot.Plugin
-import Lambdabot.Compat.AltTime
+import Lambdabot.Util
 
 import Control.Monad.State (gets, modify)
 import Control.Monad.Trans

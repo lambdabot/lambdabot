@@ -5,9 +5,10 @@
 --   to delete it due to Network Splits.
 module Lambdabot.Plugin.Topic (theModule) where
 
-import Lambdabot.Plugin
-import Lambdabot.Monad
 import Lambdabot.IRC
+import Lambdabot.Monad
+import Lambdabot.Plugin
+import Lambdabot.Util
 
 import qualified Data.Map as M
 

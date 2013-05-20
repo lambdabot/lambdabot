@@ -21,6 +21,7 @@ module Lambdabot.Plugin.Instances (theModule) where
 import Text.ParserCombinators.Parsec
 
 import Lambdabot.Plugin
+import Lambdabot.Util
 
 import Control.Applicative ((*>))
 import Control.Monad

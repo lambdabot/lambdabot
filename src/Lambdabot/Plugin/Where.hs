@@ -9,6 +9,7 @@
 module Lambdabot.Plugin.Where (theModule) where
 
 import Lambdabot.Plugin
+import Lambdabot.Util
 import qualified Data.ByteString.Char8 as P
 import Data.Char
 import qualified Data.Map as M

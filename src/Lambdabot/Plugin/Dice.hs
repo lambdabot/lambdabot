@@ -5,6 +5,7 @@
 module Lambdabot.Plugin.Dice (theModule) where
 
 import Lambdabot.Plugin
+import Lambdabot.Util
 
 import Data.List
 import Data.Random.Dice (rollEm)

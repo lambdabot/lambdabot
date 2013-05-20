@@ -19,8 +19,8 @@
 module Lambdabot.Plugin.Type (theModule, query_ghci) where
 
 import Lambdabot.Plugin
-
 import Lambdabot.Plugin.Eval (exts)
+import Lambdabot.Util
 
 import Data.Char
 import Data.Maybe

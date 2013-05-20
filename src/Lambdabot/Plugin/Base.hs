@@ -11,6 +11,7 @@ import Lambdabot.Message
 import Lambdabot.Monad
 import Lambdabot.Nick
 import Lambdabot.Plugin
+import Lambdabot.Util
 
 import Control.Applicative
 import Control.Exception.Lifted as E

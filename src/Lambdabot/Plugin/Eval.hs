@@ -5,6 +5,7 @@
 module Lambdabot.Plugin.Eval (theModule, eval, exts) where
 
 import Lambdabot.Plugin
+import Lambdabot.Util
 
 import Control.Exception (try, SomeException)
 import Control.Monad
