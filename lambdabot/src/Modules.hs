@@ -2,7 +2,6 @@
 
 module Modules (modulesInfo) where
 
-import Data.List
 import Lambdabot.Main
 
 -- to add a new plugin, one must first add a qualified import here, and also
@@ -29,7 +28,6 @@ import Lambdabot.Plugin.Spell
 import Lambdabot.Plugin.Tell
 import Lambdabot.Plugin.Ticker
 import Lambdabot.Plugin.Todo
-import Lambdabot.Plugin.Topic
 import Lambdabot.Plugin.Unlambda
 import Lambdabot.Plugin.Url
 import Lambdabot.Plugin.Vixen
