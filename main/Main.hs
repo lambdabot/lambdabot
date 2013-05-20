@@ -21,6 +21,7 @@ flags =
     , Option "e"  []        (arg "<command>" onStartupCmds   strs)  "Run a lambdabot command instead of a REPL"
     , Option "l"  []        (arg "<level>"   consoleLogLevel level) "Set the logging level"
     , Option "t"  ["trust"] (arg "<package>" trustedPackages strs)  "Trust the specified packages when evaluating code"
+    , Option "V"  ["version"] (NoArg version)                       "Print the version of lambdabot"
     ] where 
         arg :: String -> Config t -> (String -> IO t) -> ArgDescr (IO (DSum Config))
         arg descr key fn = ReqArg (fmap (key :=>) . fn) descr
@@ -36,6 +37,14 @@ flags =
                 
                 
 
+versionString :: String
+versionString = ("lambdabot version " ++ showVersion lambdabotVersion)
+
+version :: IO a
+version = do
+    putStrLn versionString
+    exitWith ExitSuccess
+
 usage :: [String] -> IO a
 usage errors = do
     cmd <- getProgName
@@ -46,7 +55,7 @@ usage errors = do
     mapM_ (hPutStrLn out) errors
     when isErr (hPutStrLn out "")
     
-    hPutStrLn out ("lambdabot " ++ showVersion lambdabotVersion)
+    hPutStrLn out versionString
     hPutStr   out (usageInfo (cmd ++ " [options]") flags)
     
     exitWith (if isErr then ExitFailure 1 else ExitSuccess)
