@@ -1,0 +1,98 @@
+name:                   lambdabot-haskell-plugins
+version:                5.0
+
+license:                GPL
+license-file:           LICENSE
+
+author:                 Don Stewart
+maintainer:             James Cook <mokus@deepbondi.net>
+
+category:               Development, Web
+synopsis:               Lambdabot is a development tool and advanced IRC bot
+description:            Lambdabot is an IRC bot written over several years by
+                        those on the #haskell IRC channel.
+                        .
+                        It operates as a command line tool, embedded in an editor,
+                        embedded in GHCi, via internet relay chat and on the web.
+
+homepage:               http://haskell.org/haskellwiki/Lambdabot
+
+build-type:             Simple
+cabal-version:          >= 1.8
+tested-with:            GHC==7.4.1, GHC == 7.6.3
+
+extra-source-files:     src/Lambdabot/Plugin/Free/Test.hs
+
+source-repository head
+  type:                 git
+  location:             https://github.com/mokus0/lambdabot.git
+
+library
+  hs-source-dirs:       src
+  ghc-options:          -Wall
+                        -funbox-strict-fields
+
+  exposed-modules:      Lambdabot.Plugin.Check
+                        Lambdabot.Plugin.Check.ShowQ
+                        Lambdabot.Plugin.Djinn
+                        Lambdabot.Plugin.Eval
+                        Lambdabot.Plugin.Eval.Trusted
+                        Lambdabot.Plugin.Free
+                        Lambdabot.Plugin.Haddock
+                        Lambdabot.Plugin.Hoogle
+                        Lambdabot.Plugin.Instances
+                        Lambdabot.Plugin.Pl
+                        Lambdabot.Plugin.Pointful
+                        Lambdabot.Plugin.Pretty
+                        Lambdabot.Plugin.Source
+                        Lambdabot.Plugin.Type
+                        Lambdabot.Plugin.Undo
+                        Lambdabot.Plugin.UnMtl
+
+  other-modules:        Lambdabot.Plugin.Free.Expr
+                        Lambdabot.Plugin.Free.FreeTheorem
+                        Lambdabot.Plugin.Free.Parse
+                        Lambdabot.Plugin.Free.Theorem
+                        Lambdabot.Plugin.Free.Type
+                        Lambdabot.Plugin.Free.Util
+                        Lambdabot.Plugin.Pl.Common
+                        Lambdabot.Plugin.Pl.Names
+                        Lambdabot.Plugin.Pl.Optimize
+                        Lambdabot.Plugin.Pl.Parser
+                        Lambdabot.Plugin.Pl.PrettyPrinter
+                        Lambdabot.Plugin.Pl.RuleLib
+                        Lambdabot.Plugin.Pl.Rules
+                        Lambdabot.Plugin.Pl.Transform
+                        Lambdabot.Util.Parser
+
+  build-depends:        array                   >= 0.4,
+                        base                    >= 4.4,
+                        bytestring              >= 0.9,
+                        containers              >= 0.4,
+                        directory               >= 1.1,
+                        filepath                >= 1.3,
+                        haskell-src-exts        >= 1.12.0,
+                        lambdabot-core          >= 5,
+                        lifted-base             >= 0.2,
+                        mtl                     >= 2,
+                        oeis                    >= 0.3.1,
+                        parsec                  >= 3,
+                        pretty                  >= 1.1,
+                        process                 >= 1.1,
+                        QuickCheck              >= 2,
+                        regex-tdfa              >= 1.1,
+                        split                   >= 0.2,
+                        syb                     >= 0.3,
+                        transformers            >= 0.2,
+
+                        -- runtime dependencies - for eval etc.
+                        arrows                  >= 0.4,
+                        data-memocombinators    >= 0.4,
+                        hoogle                  >= 4.2,
+                        IOSpec                  >= 0.2,
+                        logict                  >= 0.5,
+                        MonadRandom             >= 0.1,
+                        mueval                  >= 0.9,
+                        numbers                 >= 3000,
+                        show                    >= 0.4,
+                        vector-space            >= 0.8

@@ -10,7 +10,7 @@ import Lambdabot.Util
 
 import Control.Applicative
 import Control.Monad
-import Paths_lambdabot
+import Paths_lambdabot_core
 import System.Directory
 import System.FilePath
 

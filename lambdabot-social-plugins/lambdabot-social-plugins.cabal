@@ -1,0 +1,47 @@
+name:                   lambdabot-social-plugins
+version:                5.0
+
+license:                GPL
+license-file:           LICENSE
+
+author:                 Don Stewart
+maintainer:             James Cook <mokus@deepbondi.net>
+
+category:               Development, Web
+synopsis:               Lambdabot is a development tool and advanced IRC bot
+description:            Lambdabot is an IRC bot written over several years by
+                        those on the #haskell IRC channel.
+                        .
+                        It operates as a command line tool, embedded in an editor,
+                        embedded in GHCi, via internet relay chat and on the web.
+
+homepage:               http://haskell.org/haskellwiki/Lambdabot
+
+build-type:             Simple
+cabal-version:          >= 1.8
+tested-with:            GHC==7.4.1, GHC == 7.6.3
+
+source-repository head
+  type:                 git
+  location:             https://github.com/mokus0/lambdabot.git
+
+library
+  hs-source-dirs:       src
+  ghc-options:          -Wall
+                        -funbox-strict-fields
+
+  exposed-modules:      Lambdabot.Plugin.Activity
+                        Lambdabot.Plugin.Poll
+                        Lambdabot.Plugin.Seen
+                        Lambdabot.Plugin.Tell
+
+  other-modules:        Lambdabot.Plugin.Seen.StopWatch
+                        Lambdabot.Plugin.Seen.UserStatus
+
+  build-depends:        base                    >= 4.4,
+                        binary                  >= 0.5,
+                        bytestring              >= 0.9,
+                        containers              >= 0.4,
+                        lambdabot-core          >= 5,
+                        mtl                     >= 2,
+                        time                    >= 1.4

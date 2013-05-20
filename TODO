@@ -1,0 +1,6 @@
+- move util modules closer to plugins that use them
+- dynamically loadable plugins (even if not unloadable)
+- aggregate all plugins from each package into one module
+- package default state files with the plugins they are for
+- ability to list loaded plugins on command-line
+- try to disentangle licenses, AUTHORS file, etc., a bit?

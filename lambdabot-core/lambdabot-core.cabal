@@ -1,0 +1,105 @@
+name:                   lambdabot-core
+version:                5.0
+
+license:                GPL
+license-file:           LICENSE
+
+author:                 Don Stewart
+maintainer:             James Cook <mokus@deepbondi.net>
+
+category:               Development, Web
+synopsis:               Lambdabot is a development tool and advanced IRC bot
+description:            Lambdabot is an IRC bot written over several years by
+                        those on the #haskell IRC channel.
+                        .
+                        It operates as a command line tool, embedded in an editor,
+                        embedded in GHCi, via internet relay chat and on the web.
+
+homepage:               http://haskell.org/haskellwiki/Lambdabot
+
+build-type:             Simple
+cabal-version:          >= 1.8
+tested-with:            GHC==7.4.1, GHC == 7.6.3
+
+extra-source-files:     AUTHORS.md
+                        COMMENTARY.md
+                        README.md
+
+source-repository head
+  type:                 git
+  location:             https://github.com/mokus0/lambdabot.git
+
+library
+  hs-source-dirs:       src
+  ghc-options:          -Wall
+                        -funbox-strict-fields
+
+  exposed-modules:      Lambdabot
+                        Lambdabot.ChanName
+                        Lambdabot.Command
+                        Lambdabot.Compat.AltTime
+                        Lambdabot.Compat.FreenodeNick
+                        Lambdabot.Compat.PackedNick
+                        Lambdabot.Config
+                        Lambdabot.Config.Core
+                        Lambdabot.File
+                        Lambdabot.IRC
+                        Lambdabot.Logging
+                        Lambdabot.Main
+                        Lambdabot.Message
+                        Lambdabot.Module
+                        Lambdabot.Monad
+                        Lambdabot.Nick
+                        Lambdabot.NickEq
+                        Lambdabot.OutputFilter
+                        Lambdabot.Plugin
+                        Lambdabot.Plugin.Base
+                        Lambdabot.Plugin.Compose
+                        Lambdabot.Plugin.Help
+                        Lambdabot.Plugin.More
+                        Lambdabot.Plugin.OfflineRC
+                        Lambdabot.Plugin.System
+                        Lambdabot.Plugin.Version
+                        Lambdabot.State
+                        Lambdabot.Util
+                        Lambdabot.Util.Browser
+                        Lambdabot.Util.Process
+                        Lambdabot.Util.Serial
+                        Lambdabot.Util.Signals
+
+  other-modules:        Paths_lambdabot_core
+
+  build-depends:        base                    >= 4.4,
+                        binary                  >= 0.5,
+                        bytestring              >= 0.9,
+                        containers              >= 0.4,
+                        dependent-map           == 0.1.*,
+                        dependent-sum           == 0.2.*,
+                        dependent-sum-template  >= 0.0.0.1,
+                        directory               >= 1.1,
+                        edit-distance           >= 0.2,
+                        filepath                >= 1.3,
+                        haskeline               >= 0.7,
+                        hstatsd                 >= 0.1,
+                        hslogger                >= 1.2.1,
+                        HTTP                    >= 4000,
+                        lifted-base             >= 0.2,
+                        monad-control           >= 0.3,
+                        mtl                     >= 2,
+                        network                 >= 2.3.0.13,
+                        time                    >= 1.4,
+                        parsec                  >= 3,
+                        process                 >= 1.1,
+                        random                  >= 1,
+                        random-fu               >= 0.2,
+                        random-source           >= 0.3,
+                        regex-tdfa              >= 1.1,
+                        SafeSemaphore           >= 0.9,
+                        split                   >= 0.2,
+                        tagsoup                 >= 0.12,
+                        template-haskell        >= 2.7,
+                        transformers            >= 0.2,
+                        transformers-base       >= 0.4,
+                        unix                    >= 2.5,
+                        utf8-string             >= 0.3,
+                        zlib                    >= 0.5

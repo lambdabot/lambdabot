@@ -5,7 +5,7 @@
 module Lambdabot.Plugin.Version (theModule) where
 
 import Lambdabot.Plugin
-import Paths_lambdabot (version)
+import Paths_lambdabot_core (version)
 import Data.Version (showVersion)
 
 theModule :: Module ()

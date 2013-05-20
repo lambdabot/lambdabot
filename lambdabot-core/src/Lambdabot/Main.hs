@@ -29,7 +29,7 @@ import Data.Dependent.Sum
 import Data.Typeable
 import Data.Version
 import Language.Haskell.TH
-import Paths_lambdabot
+import Paths_lambdabot_core
 import System.Exit
 import System.Log.Formatter
 import qualified System.Log.Logger as L
