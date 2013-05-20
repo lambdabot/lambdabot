@@ -2,14 +2,14 @@
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
 
 -- | Talk to Neil Mitchell's `Hoogle' program
-module Lambdabot.Plugin.Hoogle (theModule) where
+module Lambdabot.Plugin.Hoogle (hooglePlugin) where
 
 import Lambdabot.Plugin
 import Lambdabot.Util
 import System.Process
 
-theModule :: Module [String]
-theModule = newModule
+hooglePlugin :: Module [String]
+hooglePlugin = newModule
     { moduleDefState = return []
     , moduleCmds = return
         [ (command "hoogle")

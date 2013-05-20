@@ -2,14 +2,14 @@
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
 
 -- | Lambdabot version information
-module Lambdabot.Plugin.Version (theModule) where
+module Lambdabot.Plugin.Version (versionPlugin) where
 
 import Lambdabot.Plugin
 import Paths_lambdabot (version)
 import Data.Version (showVersion)
 
-theModule :: Module ()
-theModule = newModule
+versionPlugin :: Module ()
+versionPlugin = newModule
     { moduleCmds = return
         [ (command "version")
             { help = say $

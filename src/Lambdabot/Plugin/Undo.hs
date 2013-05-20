@@ -1,7 +1,7 @@
 -- Copyright (c) 2006 Spencer Janssen
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
 
-module Lambdabot.Plugin.Undo (theModule) where
+module Lambdabot.Plugin.Undo (undoPlugin) where
 
 import Lambdabot.Plugin
 import Lambdabot.Util.Parser (withParsed)
@@ -11,8 +11,8 @@ import Data.Generics
 import qualified Data.Set as Set
 import Language.Haskell.Exts.Syntax hiding (Module)
 
-theModule :: Module ()
-theModule = newModule
+undoPlugin :: Module ()
+undoPlugin = newModule
     { moduleCmds = return
         [ (command "undo")
             { help = say "undo <expr>\nTranslate do notation to Monad operators."

@@ -5,7 +5,7 @@
 --
 -- | Logging an IRC channel..
 --
-module Lambdabot.Plugin.Log (theModule) where
+module Lambdabot.Plugin.Log (logPlugin) where
 
 import Lambdabot
 import Lambdabot.Compat.FreenodeNick
@@ -51,8 +51,8 @@ instance Show Event where
 
 -- * Dispatchers and Module instance declaration
 --
-theModule :: Module (M.Map Channel ChanState)
-theModule = newModule
+logPlugin :: Module (M.Map Channel ChanState)
+logPlugin = newModule
     { moduleDefState  = return M.empty
     , moduleExit      = cleanLogState
     , moduleInit      = do

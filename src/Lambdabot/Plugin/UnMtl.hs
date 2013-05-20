@@ -8,7 +8,7 @@
 --
 ----------------------------------------------------------------------
 
-module Lambdabot.Plugin.UnMtl (theModule) where
+module Lambdabot.Plugin.UnMtl (unmtlPlugin) where
 
 import Lambdabot.Plugin
 import qualified Lambdabot.Plugin as Lmb (Module)
@@ -17,8 +17,8 @@ import Lambdabot.Util.Parser (prettyPrintInLine)
 import Control.Monad
 import Language.Haskell.Exts as Hs hiding (tuple, var)
 
-theModule :: Lmb.Module ()
-theModule = newModule
+unmtlPlugin :: Lmb.Module ()
+unmtlPlugin = newModule
     { moduleCmds = return
         [ (command "unmtl")
             { help = say "unroll mtl monads"

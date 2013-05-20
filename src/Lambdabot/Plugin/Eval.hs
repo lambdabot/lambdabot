@@ -2,7 +2,7 @@
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
 
 -- | A Haskell evaluator for the pure part, using mueval
-module Lambdabot.Plugin.Eval (theModule, eval, exts) where
+module Lambdabot.Plugin.Eval (evalPlugin, runGHC, exts) where
 
 import Lambdabot.Plugin
 import Lambdabot.Util
@@ -16,12 +16,12 @@ import System.Directory
 import System.Exit
 import System.Process
 
-theModule :: Module ()
-theModule = newModule
+evalPlugin :: Module ()
+evalPlugin = newModule
     { moduleCmds = return
         [ (command "run")
             { help = say "run <expr>. You have Haskell, 3 seconds and no IO. Go nuts!"
-            , process = lim80 . eval
+            , process = lim80 . runGHC
             }
         , (command "let")
             { aliases = ["define"] -- because @define always gets "corrected" to @undefine
@@ -41,7 +41,7 @@ theModule = newModule
 
     , contextual = \txt -> do
         b <- isEval txt
-        when b (lim80 (eval (dropPrefix txt)))
+        when b (lim80 (runGHC (dropPrefix txt)))
     }
 
 -- extensions to enable for the interpreted expression
@@ -67,8 +67,8 @@ isEval str = do
 dropPrefix :: String -> String
 dropPrefix = dropWhile (' ' ==) . drop 2
 
-eval :: MonadLB m => String -> m String
-eval src = do
+runGHC :: MonadLB m => String -> m String
+runGHC src = do
     load    <- lb (findOrCreateLBFile "L.hs")
     binary  <- getConfig muevalBinary
     trusted <- getConfig trustedPackages

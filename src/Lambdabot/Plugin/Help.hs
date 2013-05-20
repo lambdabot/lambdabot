@@ -1,5 +1,5 @@
 -- | Provide help for plugins
-module Lambdabot.Plugin.Help (theModule) where
+module Lambdabot.Plugin.Help (helpPlugin) where
 
 import Lambdabot.Command
 import Lambdabot.Message (Message)
@@ -7,8 +7,8 @@ import Lambdabot.Monad
 import Lambdabot.Plugin
 import Lambdabot.Util
 
-theModule :: Module ()
-theModule = newModule
+helpPlugin :: Module ()
+helpPlugin = newModule
     { moduleCmds = return
         [ (command "help")
             { help = say "help <command>. Ask for help for <command>. Try 'list' for all commands"

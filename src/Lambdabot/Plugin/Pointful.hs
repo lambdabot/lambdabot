@@ -1,5 +1,5 @@
 -- Undo pointfree transformations. Plugin code derived from Pl.hs.
-module Lambdabot.Plugin.Pointful (theModule) where
+module Lambdabot.Plugin.Pointful (pointfulPlugin) where
 
 import Lambdabot.Module as Lmb (Module)
 import Lambdabot.Plugin
@@ -12,8 +12,8 @@ import qualified Data.Map as M
 import Data.Maybe
 import Language.Haskell.Exts as Hs
 
-theModule :: Lmb.Module ()
-theModule = newModule
+pointfulPlugin :: Lmb.Module ()
+pointfulPlugin = newModule
     { moduleCmds = return
         [ (command "pointful")
             { aliases = ["pointy","repoint","unpointless","unpl","unpf"]

@@ -1,6 +1,6 @@
 {-# LANGUAGE PatternGuards #-}
 -- | Fetch URL page titles of HTML links.
-module Lambdabot.Plugin.Url (theModule) where
+module Lambdabot.Plugin.Url (urlPlugin) where
 
 import Lambdabot.Plugin
 import Lambdabot.Util.Browser
@@ -13,8 +13,8 @@ import Network.Browser
 import Network.HTTP
 import Text.Regex.TDFA
 
-theModule :: Module Bool
-theModule = newModule
+urlPlugin :: Module Bool
+urlPlugin = newModule
     { moduleCmds = return
         [ (command "url-title")
             { help = say "url-title <url>. Fetch the page title."

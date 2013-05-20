@@ -16,7 +16,7 @@
 > Int
 -}
 
-module Lambdabot.Plugin.Instances (theModule) where
+module Lambdabot.Plugin.Instances (instancesPlugin) where
 
 import Text.ParserCombinators.Parsec
 
@@ -37,8 +37,8 @@ type Instance   = String
 type ClassName  = String
 type ModuleName = String
 
-theModule :: Module ()
-theModule = newModule
+instancesPlugin :: Module ()
+instancesPlugin = newModule
     { moduleCmds = return
         [ (command "instances")
             { help = say "instances <typeclass>. Fetch the instances of a typeclass."

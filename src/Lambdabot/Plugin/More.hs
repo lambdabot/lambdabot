@@ -1,5 +1,5 @@
 -- | Support for more(1) buffering
-module Lambdabot.Plugin.More (theModule) where
+module Lambdabot.Plugin.More (morePlugin) where
 
 import Lambdabot.Plugin
 import Lambdabot
@@ -10,8 +10,8 @@ type MoreState = GlobalPrivate () [String]
 type More = ModuleT MoreState LB
 
 -- the @more state is handled centrally
-theModule :: Module (GlobalPrivate () [String])
-theModule = newModule
+morePlugin :: Module (GlobalPrivate () [String])
+morePlugin = newModule
     { moduleDefState = return $ mkGlobalPrivate 20 ()
     , moduleInit
         =   bindModule2 moreFilter

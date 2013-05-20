@@ -1,6 +1,6 @@
 {-# LANGUAGE CPP, PatternGuards #-}
 -- | Support for quotes
-module Lambdabot.Plugin.Quote (theModule) where
+module Lambdabot.Plugin.Quote (quotePlugin) where
 
 import Lambdabot.Plugin
 import Lambdabot.Util
@@ -17,8 +17,8 @@ type Key    = P.ByteString
 type Quotes = M.Map Key [P.ByteString]
 type Quote  = ModuleT Quotes LB
 
-theModule :: Module (M.Map P.ByteString [P.ByteString])
-theModule = newModule
+quotePlugin :: Module (M.Map P.ByteString [P.ByteString])
+quotePlugin = newModule
     { moduleSerialize = Just mapListPackedSerial
     , moduleDefState  = return M.empty
     , moduleInit      = modifyMS (M.filter (not . null))

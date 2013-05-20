@@ -4,14 +4,14 @@
 -- | A plugin for the Haskell interpreter for the unlambda language
 --
 -- http://www.madore.org/~david/programs/unlambda/
-module Lambdabot.Plugin.Unlambda (theModule) where
+module Lambdabot.Plugin.Unlambda (unlambdaPlugin) where
 
 import Lambdabot.Plugin
 import Lambdabot.Util.Process
 import Text.Regex.TDFA
 
-theModule :: Module ()
-theModule = newModule
+unlambdaPlugin :: Module ()
+unlambdaPlugin = newModule
     { moduleCmds = return
         [ (command "unlambda")
             { help = say "unlambda <expr>. Evaluate an unlambda expression"

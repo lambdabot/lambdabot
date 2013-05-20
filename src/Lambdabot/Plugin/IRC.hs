@@ -1,6 +1,6 @@
 -- | The plugin-level IRC interface.
 
-module Lambdabot.Plugin.IRC (theModule) where
+module Lambdabot.Plugin.IRC (ircPlugin) where
 
 import Lambdabot.IRC
 import Lambdabot.Logging
@@ -22,8 +22,8 @@ import System.Timeout.Lifted
 
 type IRC = ModuleT () LB
 
-theModule :: Module ()
-theModule = newModule
+ircPlugin :: Module ()
+ircPlugin = newModule
     { moduleCmds = return
         [ (command "irc-connect")
             { privileged = True

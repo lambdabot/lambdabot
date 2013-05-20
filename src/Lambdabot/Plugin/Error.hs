@@ -2,7 +2,7 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# OPTIONS_GHC -fno-warn-overlapping-patterns #-}
-module Lambdabot.Plugin.Error (theModule, failOnLoad, errorOnLoad) where
+module Lambdabot.Plugin.Error (errorPlugin, failOnLoad, errorOnLoad) where
 
 import Lambdabot.Config
 import Lambdabot.Plugin
@@ -12,8 +12,8 @@ import Control.Monad
 config "failOnLoad"  [t| Bool |] [| False |]
 config "errorOnLoad" [t| Bool |] [| False |]
 
-theModule :: Module ()
-theModule = newModule
+errorPlugin :: Module ()
+errorPlugin = newModule
     { moduleCmds = return
         [ (command "error")
             { help = say "Throw an error, see what lambdabot does with it!"

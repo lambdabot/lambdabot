@@ -3,7 +3,7 @@
 
 -- | A plugin for the Haskell interpreter for the brainf*ck language
 -- http://www.muppetlabs.com/~breadbox/bf/
-module Lambdabot.Plugin.BF (theModule) where
+module Lambdabot.Plugin.BF (bfPlugin) where
 
 import Lambdabot.Plugin
 import Lambdabot.Util.Process
@@ -11,8 +11,8 @@ import Lambdabot.Util.Process
 import Data.Char
 import Text.Regex.TDFA
 
-theModule :: Module ()
-theModule = newModule
+bfPlugin :: Module ()
+bfPlugin = newModule
     { moduleCmds = return
         [ (command "bf")
             { help = say "bf <expr>. Evaluate a brainf*ck expression"

@@ -1,13 +1,13 @@
 -- | Free theorems plugin
 -- Andrew Bromage, 2006
-module Lambdabot.Plugin.Free (theModule) where
+module Lambdabot.Plugin.Free (freePlugin) where
 
 import Lambdabot.Plugin
 import Lambdabot.Plugin.Free.FreeTheorem
 import Lambdabot.Plugin.Type (query_ghci)
 
-theModule :: Module ()
-theModule = newModule
+freePlugin :: Module ()
+freePlugin = newModule
     { moduleCmds = return
         [ (command "free")
             { help = say "free <ident>. Generate theorems for free"

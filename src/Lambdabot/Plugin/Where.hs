@@ -6,7 +6,7 @@
 --
 -- Slightly specialised version of Where for associating projects with their urls.
 -- Code almost all copied.
-module Lambdabot.Plugin.Where (theModule) where
+module Lambdabot.Plugin.Where (wherePlugin) where
 
 import Lambdabot.Plugin
 import Lambdabot.Util
@@ -18,8 +18,8 @@ type WhereState         = M.Map P.ByteString P.ByteString
 type WhereWriter        = WhereState -> Cmd Where ()
 type Where              = ModuleT WhereState LB
 
-theModule :: Module (M.Map P.ByteString P.ByteString)
-theModule = newModule
+wherePlugin :: Module (M.Map P.ByteString P.ByteString)
+wherePlugin = newModule
     { moduleDefState  = return M.empty
     , moduleSerialize = Just mapPackedSerial
 

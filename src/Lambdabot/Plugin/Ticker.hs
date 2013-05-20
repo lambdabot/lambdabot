@@ -1,5 +1,5 @@
 -- | Pull quotes down from yahoo.
-module Lambdabot.Plugin.Ticker (theModule) where
+module Lambdabot.Plugin.Ticker (tickerPlugin) where
 
 import Lambdabot.Plugin
 import Lambdabot.Util.Browser
@@ -12,8 +12,8 @@ import Text.Printf
 
 type Ticker = ModuleT () LB
 
-theModule :: Module ()
-theModule = newModule
+tickerPlugin :: Module ()
+tickerPlugin = newModule
     { moduleCmds = return
         [ (command "ticker")
             { help = say "ticker symbols.  Look up quotes for symbols"

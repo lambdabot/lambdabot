@@ -2,7 +2,7 @@
 -- needs: http://www.hyperrealm.com/main.php?s=talkfilters
 -- Edward Kmett 2006
 
-module Lambdabot.Plugin.Filter (theModule) where
+module Lambdabot.Plugin.Filter (filterPlugin) where
 
 import Lambdabot.Plugin
 import Lambdabot.Util
@@ -14,8 +14,8 @@ import System.Process
 
 -- State consists of a map from filter name to executable path
 
-theModule :: Module [(String, FilePath, String)]
-theModule = newModule
+filterPlugin :: Module [(String, FilePath, String)]
+filterPlugin = newModule
     { moduleDefState = catMaybes <$> sequence
         [ do
             mbPath <- io (findExecutable name)

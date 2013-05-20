@@ -6,7 +6,7 @@
 
 -- Joel Koerwer 11-01-2005 generalized query for different methods
 --   and added extractConversion to make things like @google 1+2 work
-module Lambdabot.Plugin.Search (theModule) where
+module Lambdabot.Plugin.Search (searchPlugin) where
 
 import Lambdabot.Plugin
 import Lambdabot.Util
@@ -52,8 +52,8 @@ googleUri :: URI
 googleUri = makeUri "www.google.com" "/search"
 -- wikipediaUri = makeUri "en.wikipedia.org" "/wiki/Special:Search"
 
-theModule :: Module ()
-theModule = newModule
+searchPlugin :: Module ()
+searchPlugin = newModule
     { moduleCmds = return
         [ (command name)
             { help = say (moduleHelp name)

@@ -4,7 +4,7 @@
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
 
 -- | Simple wrapper over privmsg to get time information via the CTCP
-module Lambdabot.Plugin.Localtime (theModule) where
+module Lambdabot.Plugin.Localtime (localtimePlugin) where
 
 import Lambdabot.Plugin
 import Lambdabot (ircPrivmsg')
@@ -13,8 +13,8 @@ import qualified Data.Map as M
 type TimeMap = M.Map Nick  -- the person who's time we requested
                     [Nick] -- a list of targets waiting on this time
 
-theModule :: Module TimeMap
-theModule = newModule
+localtimePlugin :: Module TimeMap
+localtimePlugin = newModule
     { moduleDefState = return M.empty
 
     , moduleCmds = return

@@ -3,7 +3,7 @@
 -- (c) Mark Wotton
 -- Serialisation (c) 2007 Don Stewart
 
-module Lambdabot.Plugin.Vixen (theModule) where
+module Lambdabot.Plugin.Vixen (vixenPlugin) where
 
 import Lambdabot.Plugin
 import Lambdabot.Util
@@ -15,8 +15,8 @@ import qualified Data.ByteString.Char8 as P
 import System.Directory
 import Text.Regex.TDFA
 
-theModule :: Module (Bool, String -> IO [Char])
-theModule = newModule
+vixenPlugin :: Module (Bool, String -> IO [Char])
+vixenPlugin = newModule
     { moduleCmds = return
         [ (command "vixen")
             { help = say "vixen <phrase>. Sergeant Curry's lonely hearts club"
