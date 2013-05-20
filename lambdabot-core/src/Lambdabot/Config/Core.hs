@@ -5,11 +5,8 @@
 module Lambdabot.Config.Core
     ( commandPrefixes
     , disabledCommands
-    , evalPrefixes
     , onStartupCmds
     , outputDir
-    , proxy
-    , trustedPackages
     , uncaughtExceptionHandler
     
     , replaceRootLogger
@@ -20,11 +17,6 @@ module Lambdabot.Config.Core
     
     , aspellBinary
     , bfBinary
-    , djinnBinary
-    , ghcBinary
-    , ghciBinary
-    , hoogleBinary
-    , muevalBinary
     , unlambdaBinary
     ) where
 
@@ -32,7 +24,6 @@ import Lambdabot.Config
 import Lambdabot.Logging
 
 import Control.Exception
-import Network.HTTP.Proxy
 import System.IO
 
 -------------------------------------
@@ -40,10 +31,8 @@ import System.IO
 
 config "commandPrefixes"    [t| [String]                |] [| ["@", "?"]    |]
 config "disabledCommands"   [t| [String]                |] [| []            |]
-config "evalPrefixes"       [t| [String]                |] [| [">"]         |]
 configWithMerge [| (++) |] "onStartupCmds" [t| [String] |] [| ["offline"]   |]
 config "outputDir"          [t| FilePath                |] [| "State/"      |]
-config "proxy"              [t| Proxy                   |] [| NoProxy       |]
 
 -- basic logging.  for more complex setups, configure directly using System.Log.Logger
 config "replaceRootLogger"  [t| Bool                    |] [| True                        |]
@@ -57,27 +46,10 @@ config "consoleLogFormat"   [t| String                  |] [| "[$prio] $loggerna
 
 config "aspellBinary"       [t| String                  |] [| "aspell"      |]
 config "bfBinary"           [t| String                  |] [| "bf"          |]
-config "djinnBinary"        [t| String                  |] [| "djinn"       |]
-config "ghcBinary"          [t| String                  |] [| "ghc"         |]
-config "ghciBinary"         [t| String                  |] [| "ghci"        |]
-config "hoogleBinary"       [t| String                  |] [| "hoogle"      |]
-config "muevalBinary"       [t| String                  |] [| "mueval"      |]
 config "unlambdaBinary"     [t| String                  |] [| "unlambda"    |]
 
 --------------------------------------------
 -- Default values with longer definitions
-
-trustedPkgs :: [String]
-trustedPkgs =
-    [ "array"
-    , "base"
-    , "bytestring"
-    , "containers"
-    , "lambdabot"
-    , "random"
-    ]
-
-configWithMerge [| (++) |] "trustedPackages"    [t| [String] |] [| trustedPkgs   |]
 
 defaultIrcHandler :: SomeException -> IO ()
 defaultIrcHandler = errorM . ("Main: caught (and ignoring) "++) . show

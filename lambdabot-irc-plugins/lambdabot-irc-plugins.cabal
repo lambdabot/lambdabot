@@ -31,9 +31,11 @@ library
                         -funbox-strict-fields
 
   exposed-modules:      Lambdabot.Plugin.IRC
-                        Lambdabot.Plugin.Localtime
-                        Lambdabot.Plugin.Log
-                        Lambdabot.Plugin.Topic
+
+  other-modules:        Lambdabot.Plugin.IRC.IRC
+                        Lambdabot.Plugin.IRC.Localtime
+                        Lambdabot.Plugin.IRC.Log
+                        Lambdabot.Plugin.IRC.Topic
 
   build-depends:        base                    >= 4.4,
                         bytestring              >= 0.9,

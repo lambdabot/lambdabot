@@ -38,7 +38,8 @@ library
                         Lambdabot.Plugin.Url
                         Lambdabot.Plugin.Where
 
-  other-modules:        Lambdabot.Plugin.Dict.DictLookup
+  other-modules:        Lambdabot.Config.Reference
+                        Lambdabot.Plugin.Dict.DictLookup
                         Lambdabot.Util.Browser
 
   build-depends:        base                    >= 4.4,

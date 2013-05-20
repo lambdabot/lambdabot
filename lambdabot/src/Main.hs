@@ -4,6 +4,7 @@
 module Main where
 
 import Lambdabot.Main
+import Lambdabot.Plugin.Haskell
 import Modules      (modulesInfo)
 
 import Control.Applicative

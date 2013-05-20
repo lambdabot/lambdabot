@@ -32,37 +32,39 @@ library
   ghc-options:          -Wall
                         -funbox-strict-fields
 
-  exposed-modules:      Lambdabot.Plugin.Check
-                        Lambdabot.Plugin.Check.ShowQ
-                        Lambdabot.Plugin.Djinn
-                        Lambdabot.Plugin.Eval
-                        Lambdabot.Plugin.Eval.Trusted
-                        Lambdabot.Plugin.Free
-                        Lambdabot.Plugin.Haddock
-                        Lambdabot.Plugin.Hoogle
-                        Lambdabot.Plugin.Instances
-                        Lambdabot.Plugin.Pl
-                        Lambdabot.Plugin.Pointful
-                        Lambdabot.Plugin.Pretty
-                        Lambdabot.Plugin.Source
-                        Lambdabot.Plugin.Type
-                        Lambdabot.Plugin.Undo
-                        Lambdabot.Plugin.UnMtl
+  exposed-modules:      Lambdabot.Plugin.Haskell
 
-  other-modules:        Lambdabot.Plugin.Free.Expr
-                        Lambdabot.Plugin.Free.FreeTheorem
-                        Lambdabot.Plugin.Free.Parse
-                        Lambdabot.Plugin.Free.Theorem
-                        Lambdabot.Plugin.Free.Type
-                        Lambdabot.Plugin.Free.Util
-                        Lambdabot.Plugin.Pl.Common
-                        Lambdabot.Plugin.Pl.Names
-                        Lambdabot.Plugin.Pl.Optimize
-                        Lambdabot.Plugin.Pl.Parser
-                        Lambdabot.Plugin.Pl.PrettyPrinter
-                        Lambdabot.Plugin.Pl.RuleLib
-                        Lambdabot.Plugin.Pl.Rules
-                        Lambdabot.Plugin.Pl.Transform
+  other-modules:        Lambdabot.Config.Haskell
+                        Lambdabot.Plugin.Haskell.Check
+                        Lambdabot.Plugin.Haskell.Check.ShowQ
+                        Lambdabot.Plugin.Haskell.Djinn
+                        Lambdabot.Plugin.Haskell.Eval
+                        Lambdabot.Plugin.Haskell.Eval.Trusted
+                        Lambdabot.Plugin.Haskell.Free
+                        Lambdabot.Plugin.Haskell.Free.Expr
+                        Lambdabot.Plugin.Haskell.Free.FreeTheorem
+                        Lambdabot.Plugin.Haskell.Free.Parse
+                        Lambdabot.Plugin.Haskell.Free.Theorem
+                        Lambdabot.Plugin.Haskell.Free.Type
+                        Lambdabot.Plugin.Haskell.Free.Util
+                        Lambdabot.Plugin.Haskell.Haddock
+                        Lambdabot.Plugin.Haskell.Hoogle
+                        Lambdabot.Plugin.Haskell.Instances
+                        Lambdabot.Plugin.Haskell.Pl
+                        Lambdabot.Plugin.Haskell.Pl.Common
+                        Lambdabot.Plugin.Haskell.Pl.Names
+                        Lambdabot.Plugin.Haskell.Pl.Optimize
+                        Lambdabot.Plugin.Haskell.Pl.Parser
+                        Lambdabot.Plugin.Haskell.Pl.PrettyPrinter
+                        Lambdabot.Plugin.Haskell.Pl.RuleLib
+                        Lambdabot.Plugin.Haskell.Pl.Rules
+                        Lambdabot.Plugin.Haskell.Pl.Transform
+                        Lambdabot.Plugin.Haskell.Pointful
+                        Lambdabot.Plugin.Haskell.Pretty
+                        Lambdabot.Plugin.Haskell.Source
+                        Lambdabot.Plugin.Haskell.Type
+                        Lambdabot.Plugin.Haskell.Undo
+                        Lambdabot.Plugin.Haskell.UnMtl
                         Lambdabot.Util.Parser
 
   build-depends:        array                   >= 0.4,

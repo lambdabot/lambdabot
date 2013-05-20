@@ -9,22 +9,23 @@ module Lambdabot.Main
     , Modules
     , modules
 
-    , module Lambdabot.Config.Core
+    , module Lambdabot.Plugin.Core
     , Priority(..)
     ) where
 
 import Lambdabot
 import Lambdabot.Config
-import Lambdabot.Config.Core
 import Lambdabot.Logging
 import Lambdabot.Module
 import Lambdabot.Monad
+import Lambdabot.Plugin.Core
 import Lambdabot.State
 import Lambdabot.Util
 import Lambdabot.Util.Signals
 
 import Control.Exception.Lifted as E
 import Data.Dependent.Sum
+import Data.List
 import Data.Typeable
 import Data.Version
 import Language.Haskell.TH
@@ -100,7 +101,7 @@ mainLoop = do
 type Modules = LB ()
 
 modules :: [String] -> Q Exp
-modules xs = [| sequence_ $(listE $ map instalify xs) |]
+modules xs = [| sequence_ $(listE $ map instalify (nub xs)) |]
     where
         instalify x =
             let module' = varE $ mkName x

@@ -8,6 +8,7 @@
 --   and added extractConversion to make things like @google 1+2 work
 module Lambdabot.Plugin.Search (searchPlugin) where
 
+import Lambdabot.Config.Reference
 import Lambdabot.Plugin
 import Lambdabot.Util
 import Lambdabot.Util.Browser
