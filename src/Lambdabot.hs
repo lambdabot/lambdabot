@@ -41,7 +41,6 @@ import Control.Monad.State
 import qualified Data.Map as M
 import Data.Random.Source
 import qualified Data.Set as S
-import System.IO
 
 ------------------------------------------------------------------------
 --
@@ -150,7 +149,7 @@ ircQuit svr msg = do
     modify $ \state' -> state' { ircStayConnected = False }
     send  $ quit svr msg
     liftIO $ threadDelay 1000
-    io $ hPutStrLn stderr "Quit"
+    noticeM "Quitting"
 
 ircReconnect :: String -> String -> LB ()
 ircReconnect svr msg = do

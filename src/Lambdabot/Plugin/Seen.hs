@@ -9,6 +9,7 @@ import Lambdabot
 import Lambdabot.Compat.AltTime
 import Lambdabot.Compat.PackedNick
 import Lambdabot.IRC
+import Lambdabot.Logging
 import qualified Lambdabot.Message as G
 import Lambdabot.Nick
 import Lambdabot.Plugin
@@ -24,7 +25,6 @@ import qualified Data.ByteString.Lazy as L
 import Data.Char
 import Data.List
 import qualified Data.Map as M
-import System.IO
 import Text.Printf
 
 type SeenState = (MaxMap, SeenMap)
@@ -63,13 +63,12 @@ theModule = newModule
         let ls = L.fromChunks [s]
         mbDecoded <- io . try . evaluate $ decode ls
         case mbDecoded of
-            Left exc -> do
+            Left exc@SomeException{} -> do
                 -- try reading the old format (slightly different type... oh, "binary"...)
                 mbOld <- io . try . evaluate $ decode ls
                 case mbOld of
-                    Left exc2 -> do
-                        let _ = exc2 :: SomeException
-                        io $ hPutStrLn stderr ("WARNING: failed to read Seen module state: "  ++ show (exc :: SomeException))
+                    Left SomeException{} ->
+                        warningM ("WARNING: failed to read Seen module state: "  ++ show exc)
                     Right (maxMap, seenMap) ->
                         writeMS (M.mapKeys P.pack maxMap, seenMap)
             Right decoded -> writeMS decoded

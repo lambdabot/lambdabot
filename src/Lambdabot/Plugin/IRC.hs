@@ -2,9 +2,10 @@
 
 module Lambdabot.Plugin.IRC (theModule) where
 
-import Lambdabot.Plugin
-import Lambdabot.Monad
 import Lambdabot.IRC
+import Lambdabot.Logging
+import Lambdabot.Monad
+import Lambdabot.Plugin
 
 import Control.Concurrent.Lifted
 import qualified Control.Concurrent.SSem as SSem
@@ -121,13 +122,13 @@ online tag hostn portnum nickn ui = do
         putMVar sendmv ()
         SSem.signal sem1
     E.catch 
-        (addServer tag (io . sendMsg tag sock sendmv))
+        (addServer tag (io . sendMsg sock sendmv))
         (\err@SomeException{} -> io (hClose sock) >> E.throwIO err)
     lb $ ircSignOn hostn (Nick tag nickn) ui
     lb . void . fork $ E.catch
         (readerLoop tag nickn sock)
         (\e@SomeException{} -> do
-            io $ hPutStrLn stderr $ "irc[" ++ tag ++ "] error: " ++ show e
+            errorM (show e)
             remServer tag)
 
 readerLoop :: String -> String -> Handle -> LB ()
@@ -138,9 +139,9 @@ readerLoop tag nickn sock = forever $ do
         then io $ hPutStr sock ("PONG " ++ drop 5 line' ++ "\r\n")
         else void . fork . void . timeout 15000000 $ received (decodeMessage tag nickn line')
 
-sendMsg :: String -> Handle -> MVar () -> IrcMessage -> IO ()
-sendMsg tag sock mv msg =
+sendMsg :: Handle -> MVar () -> IrcMessage -> IO ()
+sendMsg sock mv msg =
     E.catch (do takeMVar mv
                 P.hPut sock $ P.pack $ encodeMessage msg "\r\n")
-            (\err -> do hPutStrLn stderr $ "irc[" ++ tag ++ "] error: " ++ show (err :: IOError)
+            (\err -> do errorM (show (err :: IOError))
                         hClose sock)

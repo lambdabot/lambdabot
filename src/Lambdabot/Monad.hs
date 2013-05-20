@@ -58,7 +58,6 @@ import Data.IORef
 import qualified Data.Map as M
 import qualified Data.Set as S
 import System.Console.Haskeline.MonadException (MonadException)
-import System.IO
 
 ------------------------------------------------------------------------
 --
@@ -178,7 +177,7 @@ send msg = do
     s <- gets ircServerMap
     case M.lookup (Msg.server msg) s of
         Just (_, sendf) -> sendf msg
-        Nothing -> io $ hPutStrLn stderr $ "sending message to bogus server: " ++ show msg
+        Nothing -> warningM $ "sending message to bogus server: " ++ show msg
 
 received :: IrcMessage -> LB ()
 received msg = do
