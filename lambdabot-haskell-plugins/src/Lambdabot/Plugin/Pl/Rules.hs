@@ -3,8 +3,6 @@
 -- | This marvellous module contributed by Thomas J\344ger
 module Lambdabot.Plugin.Pl.Rules (RewriteRule(..), fire, rules) where
 
-import Lambdabot.Util.Serial (readM)
-
 import Lambdabot.Plugin.Pl.Common
 import Lambdabot.Plugin.Pl.RuleLib
 import Lambdabot.Plugin.Pl.Names

@@ -3,7 +3,7 @@ module Lambdabot.Plugin.Pl.Common (
         bt, sizeExpr, mapTopLevel, getExpr,
         operators, opchars, reservedOps, lookupOp, lookupFix, minPrec, maxPrec,
         comp, flip', id', const', scomb, cons, nil, fix', if',
-        makeList, getList,
+        makeList, getList, readM,
         Assoc(..),
         module Data.Maybe,
         module Control.Arrow,
@@ -16,6 +16,7 @@ import Data.Maybe (isJust, fromJust)
 import Data.List (intersperse, minimumBy)
 import qualified Data.Map as M
 
+import Control.Applicative
 import Control.Monad
 import Control.Arrow (first, second, (***), (&&&), (|||), (+++))
 
@@ -135,3 +136,8 @@ lookupFix :: String -> (Assoc, Int)
 lookupFix str = case lookupOp $ str of
   Nothing -> (AssocLeft, 9 + shift)
   Just x  -> x
+
+readM :: (Read a, Alternative m) => String -> m a
+readM str = case reads str of
+   [(x, "")] -> pure x
+   _         -> empty

@@ -41,6 +41,8 @@ library
                         Lambdabot.Plugin.Unlambda
                         Lambdabot.Plugin.Vixen
 
+  other-modules:        Lambdabot.Util.Process
+
   build-depends:        base                    >= 4.4,
                         binary                  >= 0.5,
                         bytestring              >= 0.9,

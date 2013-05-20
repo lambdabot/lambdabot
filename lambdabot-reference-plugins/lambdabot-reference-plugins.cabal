@@ -39,6 +39,7 @@ library
                         Lambdabot.Plugin.Where
 
   other-modules:        Lambdabot.Plugin.Dict.DictLookup
+                        Lambdabot.Util.Browser
 
   build-depends:        base                    >= 4.4,
                         bytestring              >= 0.9,
@@ -51,4 +52,5 @@ library
                         process                 >= 1.1,
                         regex-tdfa              >= 1.1,
                         split                   >= 0.2,
-                        tagsoup                 >= 0.12
+                        tagsoup                 >= 0.12,
+                        utf8-string             >= 0.3

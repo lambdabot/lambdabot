@@ -3,7 +3,6 @@ module Lambdabot.Plugin.Pl.PrettyPrinter (Expr) where
 
 -- Dummy export to make ghc -Wall happy
 
-import Lambdabot.Util.Serial (readM)
 import Lambdabot.Plugin.Pl.Common
 
 instance Show Decl where

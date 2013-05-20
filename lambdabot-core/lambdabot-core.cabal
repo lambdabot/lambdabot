@@ -62,12 +62,10 @@ library
                         Lambdabot.Plugin.Version
                         Lambdabot.State
                         Lambdabot.Util
-                        Lambdabot.Util.Browser
-                        Lambdabot.Util.Process
-                        Lambdabot.Util.Serial
-                        Lambdabot.Util.Signals
 
   other-modules:        Paths_lambdabot_core
+                        Lambdabot.Util.Serial
+                        Lambdabot.Util.Signals
 
   build-depends:        base                    >= 4.4,
                         binary                  >= 0.5,
@@ -89,7 +87,6 @@ library
                         network                 >= 2.3.0.13,
                         time                    >= 1.4,
                         parsec                  >= 3,
-                        process                 >= 1.1,
                         random                  >= 1,
                         random-fu               >= 0.2,
                         random-source           >= 0.3,
