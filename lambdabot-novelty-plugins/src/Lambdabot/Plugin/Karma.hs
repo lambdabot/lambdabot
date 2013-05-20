@@ -1,5 +1,5 @@
 -- | Karma
-module Lambdabot.Plugin.Karma (theModule) where
+module Lambdabot.Plugin.Karma (karmaPlugin) where
 
 import Lambdabot.Compat.FreenodeNick
 import Lambdabot.Plugin
@@ -14,8 +14,8 @@ import Text.Printf
 type KarmaState = M.Map Nick Integer
 type Karma = ModuleT KarmaState LB
 
-theModule :: Module KarmaState
-theModule = newModule
+karmaPlugin :: Module KarmaState
+karmaPlugin = newModule
     { moduleCmds = return
         [ (command "karma")
             { help = say "karma <polynick>. Return a person's karma value"

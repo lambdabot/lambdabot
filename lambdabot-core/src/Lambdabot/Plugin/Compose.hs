@@ -4,7 +4,7 @@
 
 -- Another progressive plugin. Compose two (for now) plugins transparently
 -- A sort of mini interpreter. Could do with some more thinking.
-module Lambdabot.Plugin.Compose (theModule) where
+module Lambdabot.Plugin.Compose (composePlugin) where
 
 import Lambdabot.Command
 import Lambdabot.Monad
@@ -19,8 +19,8 @@ import Data.List.Split
 
 type Compose = ModuleT () LB
 
-theModule :: Module ()
-theModule = newModule
+composePlugin :: Module ()
+composePlugin = newModule
     { moduleCmds = return
         [ (command "@")
             { aliases = ["?"]

@@ -1,8 +1,9 @@
 -- | Logging an IRC channel..
-module Lambdabot.Plugin.Activity (theModule) where
+module Lambdabot.Plugin.Activity (activityPlugin) where
 
-import Lambdabot.Plugin
 import Lambdabot
+import Lambdabot.Plugin
+import Lambdabot.Util
 
 import Control.Arrow ((&&&))
 import Control.Exception (evaluate)
@@ -13,8 +14,8 @@ import Data.Time
 type ActivityState = [(UTCTime,Nick)]
 type Activity       = ModuleT ActivityState LB
 
-theModule :: Module [(UTCTime, Nick)]
-theModule = newModule
+activityPlugin :: Module [(UTCTime, Nick)]
+activityPlugin = newModule
     { moduleDefState = return []
     , moduleInit = bindModule2 activityFilter >>= ircInstallOutputFilter
 

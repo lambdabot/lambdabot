@@ -7,9 +7,10 @@
 -- Use more Arrow stuff
 --
 -- TODO would be to plug into HaRe and use some of their refactorings.
-module Lambdabot.Plugin.Pl (theModule) where
+module Lambdabot.Plugin.Pl (plPlugin) where
 
 import Lambdabot.Plugin
+import Lambdabot.Util
 
 import Lambdabot.Plugin.Pl.Common          (TopLevel, mapTopLevel, getExpr)
 import Lambdabot.Plugin.Pl.Parser          (parsePF)
@@ -30,8 +31,8 @@ maxTimeout   = 15000000 -- 15 seconds
 type PlState = GlobalPrivate () (Int, TopLevel)
 type Pl = ModuleT PlState LB
 
-theModule :: Module (GlobalPrivate () (Int, TopLevel))
-theModule = newModule
+plPlugin :: Module (GlobalPrivate () (Int, TopLevel))
+plPlugin = newModule
     { moduleDefState = return $ mkGlobalPrivate 15 ()
     
     , moduleCmds = return

@@ -5,11 +5,12 @@
 -- Written: Mon Dec 12 10:16:56 EST 2005
 
 -- | A binding to Djinn.
-module Lambdabot.Plugin.Djinn (theModule) where
+module Lambdabot.Plugin.Djinn (djinnPlugin) where
 
 import Lambdabot.Config.Core
 import Lambdabot.Logging
 import Lambdabot.Plugin
+import Lambdabot.Util
 
 import Control.Exception.Lifted as E
 import Control.Monad
@@ -25,8 +26,8 @@ type DjinnEnv = ([Decl] {- prelude -}, [Decl])
 type Djinn = ModuleT (Maybe DjinnEnv) LB
 type Decl = String
 
-theModule :: Module (Maybe DjinnEnv)
-theModule = newModule
+djinnPlugin :: Module (Maybe DjinnEnv)
+djinnPlugin = newModule
     { moduleSerialize = Nothing
     , moduleDefState = return Nothing
     

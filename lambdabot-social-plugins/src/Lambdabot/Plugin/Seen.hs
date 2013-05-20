@@ -3,7 +3,7 @@
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
 
 -- | Keep track of IRC users.
-module Lambdabot.Plugin.Seen (theModule) where
+module Lambdabot.Plugin.Seen (seenPlugin) where
 
 import Lambdabot
 import Lambdabot.Compat.AltTime
@@ -13,6 +13,8 @@ import Lambdabot.Logging
 import qualified Lambdabot.Message as G
 import Lambdabot.Nick
 import Lambdabot.Plugin
+import Lambdabot.Util
+
 import Lambdabot.Plugin.Seen.StopWatch
 import Lambdabot.Plugin.Seen.UserStatus
 
@@ -35,8 +37,8 @@ type Seen = ModuleT SeenState LB
 
 ------------------------------------------------------------------------
 
-theModule :: Module (M.Map Channel Int, M.Map PackedNick UserStatus)
-theModule = newModule
+seenPlugin :: Module (M.Map Channel Int, M.Map PackedNick UserStatus)
+seenPlugin = newModule
     { moduleDefState = return (M.empty,M.empty)
 
     , moduleCmds = return

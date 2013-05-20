@@ -1,6 +1,6 @@
 -- | Haskell project name generation
 -- semi-joke
-module Lambdabot.Plugin.Fresh (theModule) where
+module Lambdabot.Plugin.Fresh (freshPlugin) where
 
 import Lambdabot.Plugin
 
@@ -9,8 +9,8 @@ import Data.Char
 
 type Fresh = ModuleT Integer LB
 
-theModule :: Module Integer
-theModule = newModule
+freshPlugin :: Module Integer
+freshPlugin = newModule
     { moduleDefState = return 0
     , moduleSerialize = Just stdSerial
     

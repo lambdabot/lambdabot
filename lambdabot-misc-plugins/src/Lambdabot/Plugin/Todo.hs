@@ -2,7 +2,7 @@
 -- | A todo list
 --
 -- (c) 2005 Samuel Bronson
-module Lambdabot.Plugin.Todo (theModule) where
+module Lambdabot.Plugin.Todo (todoPlugin) where
 
 import Lambdabot.Compat.PackedNick
 import Lambdabot.Plugin
@@ -13,8 +13,8 @@ import qualified Data.ByteString.Char8 as P
 type TodoState = [(P.ByteString, P.ByteString)]
 type Todo = ModuleT TodoState LB
 
-theModule :: Module TodoState
-theModule = newModule
+todoPlugin :: Module TodoState
+todoPlugin = newModule
     { moduleDefState  = return ([] :: TodoState)
     , moduleSerialize = Just assocListPackedSerial
 

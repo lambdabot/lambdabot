@@ -7,105 +7,105 @@ import Lambdabot.Main
 
 -- to add a new plugin, one must first add a qualified import here, and also
 -- add a string in the list below
-import qualified Lambdabot.Plugin.Activity
-import qualified Lambdabot.Plugin.Base
-import qualified Lambdabot.Plugin.BF
-import qualified Lambdabot.Plugin.Check
-import qualified Lambdabot.Plugin.Compose
-import qualified Lambdabot.Plugin.Dice
-import qualified Lambdabot.Plugin.Dict
-import qualified Lambdabot.Plugin.Djinn
-import qualified Lambdabot.Plugin.Dummy
-import qualified Lambdabot.Plugin.Elite
-import qualified Lambdabot.Plugin.Eval
-import qualified Lambdabot.Plugin.Filter
-import qualified Lambdabot.Plugin.Free
-import qualified Lambdabot.Plugin.Fresh
-import qualified Lambdabot.Plugin.Haddock
-import qualified Lambdabot.Plugin.Help
-import qualified Lambdabot.Plugin.Hoogle
-import qualified Lambdabot.Plugin.Instances
-import qualified Lambdabot.Plugin.IRC
-import qualified Lambdabot.Plugin.Karma
-import qualified Lambdabot.Plugin.Localtime
-import qualified Lambdabot.Plugin.More
-import qualified Lambdabot.Plugin.OEIS
-import qualified Lambdabot.Plugin.OfflineRC
-import qualified Lambdabot.Plugin.Pl
-import qualified Lambdabot.Plugin.Pointful
-import qualified Lambdabot.Plugin.Poll
-import qualified Lambdabot.Plugin.Pretty
-import qualified Lambdabot.Plugin.Quote
-import qualified Lambdabot.Plugin.Search
-import qualified Lambdabot.Plugin.Seen
-import qualified Lambdabot.Plugin.Slap
-import qualified Lambdabot.Plugin.Source
-import qualified Lambdabot.Plugin.Spell
-import qualified Lambdabot.Plugin.System
-import qualified Lambdabot.Plugin.Tell
-import qualified Lambdabot.Plugin.Ticker
-import qualified Lambdabot.Plugin.Todo
-import qualified Lambdabot.Plugin.Topic
-import qualified Lambdabot.Plugin.Type
-import qualified Lambdabot.Plugin.Undo
-import qualified Lambdabot.Plugin.Unlambda
-import qualified Lambdabot.Plugin.UnMtl
-import qualified Lambdabot.Plugin.Url
-import qualified Lambdabot.Plugin.Version
-import qualified Lambdabot.Plugin.Vixen
-import qualified Lambdabot.Plugin.Where
+import Lambdabot.Plugin.Activity
+import Lambdabot.Plugin.Base
+import Lambdabot.Plugin.BF
+import Lambdabot.Plugin.Check
+import Lambdabot.Plugin.Compose
+import Lambdabot.Plugin.Dice
+import Lambdabot.Plugin.Dict
+import Lambdabot.Plugin.Djinn
+import Lambdabot.Plugin.Dummy
+import Lambdabot.Plugin.Elite
+import Lambdabot.Plugin.Eval
+import Lambdabot.Plugin.Filter
+import Lambdabot.Plugin.Free
+import Lambdabot.Plugin.Fresh
+import Lambdabot.Plugin.Haddock
+import Lambdabot.Plugin.Help
+import Lambdabot.Plugin.Hoogle
+import Lambdabot.Plugin.Instances
+import Lambdabot.Plugin.IRC
+import Lambdabot.Plugin.Karma
+import Lambdabot.Plugin.Localtime
+import Lambdabot.Plugin.More
+import Lambdabot.Plugin.OEIS
+import Lambdabot.Plugin.OfflineRC
+import Lambdabot.Plugin.Pl
+import Lambdabot.Plugin.Pointful
+import Lambdabot.Plugin.Poll
+import Lambdabot.Plugin.Pretty
+import Lambdabot.Plugin.Quote
+import Lambdabot.Plugin.Search
+import Lambdabot.Plugin.Seen
+import Lambdabot.Plugin.Slap
+import Lambdabot.Plugin.Source
+import Lambdabot.Plugin.Spell
+import Lambdabot.Plugin.System
+import Lambdabot.Plugin.Tell
+import Lambdabot.Plugin.Ticker
+import Lambdabot.Plugin.Todo
+import Lambdabot.Plugin.Topic
+import Lambdabot.Plugin.Type
+import Lambdabot.Plugin.Undo
+import Lambdabot.Plugin.Unlambda
+import Lambdabot.Plugin.UnMtl
+import Lambdabot.Plugin.Url
+import Lambdabot.Plugin.Version
+import Lambdabot.Plugin.Vixen
+import Lambdabot.Plugin.Where
 
 modulesInfo :: Modules
 modulesInfo = $(modules $ nub
                     -- these must be listed first.  Maybe.  Nobody really
                     -- knows, but better to be safe than sorry.
-                    [ "Base"
-                    , "System"
-                    , "OfflineRC"
+                    [ "base"
+                    , "system"
+                    , "offlineRC"
 
                     -- plugins also go in this list:
-                    , "Activity"
-                    , "BF"
-                    , "Check"
-                    , "Compose"
-                    , "Dice"
-                    , "Dict"
-                    , "Djinn"
-                    , "Dummy"
-                    , "Elite"
-                    , "Eval"
-                    , "Filter"
-                    , "Free"
-                    , "Fresh"
-                    , "Haddock"
-                    , "Help"
-                    , "Hoogle"
-                    , "Instances"
-                    , "IRC"
-                    , "Karma"
-                    , "Localtime"
-                    , "More"
-                    , "OEIS"
-                    , "Pl"
-                    , "Pointful"
-                    , "Poll"
-                    , "Pretty"
-                    , "Quote"
-                    , "Search"
-                    , "Seen"
-                    , "Slap"
-                    , "Source"
-                    , "Spell"
-                    , "Tell"
-                    , "Ticker"
-                    , "Todo"
-                    , "Topic"
-                    , "Type"
-                    , "Undo"
-                    , "Unlambda"
-                    , "UnMtl"
-                    , "Url"
-                    , "Version"
-                    , "Vixen"
-                    , "Where"
+                    , "activityPlugin"
+                    , "bfPlugin"
+                    , "checkPlugin"
+                    , "composePlugin"
+                    , "dicePlugin"
+                    , "dictPlugin"
+                    , "djinnPlugin"
+                    , "dummyPlugin"
+                    , "elitePlugin"
+                    , "evalPlugin"
+                    , "filterPlugin"
+                    , "freePlugin"
+                    , "freshPlugin"
+                    , "haddockPlugin"
+                    , "helpPlugin"
+                    , "hooglePlugin"
+                    , "instancesPlugin"
+                    , "ircPlugin"
+                    , "karmaPlugin"
+                    , "localtimePlugin"
+                    , "morePlugin"
+                    , "oeisPlugin"
+                    , "plPlugin"
+                    , "pointfulPlugin"
+                    , "pollPlugin"
+                    , "prettyPlugin"
+                    , "quotePlugin"
+                    , "searchPlugin"
+                    , "seenPlugin"
+                    , "slapPlugin"
+                    , "sourcePlugin"
+                    , "spellPlugin"
+                    , "tellPlugin"
+                    , "tickerPlugin"
+                    , "todoPlugin"
+                    , "topicPlugin"
+                    , "typePlugin"
+                    , "undoPlugin"
+                    , "unlambdaPlugin"
+                    , "unmtlPlugin"
+                    , "urlPlugin"
+                    , "versionPlugin"
+                    , "vixenPlugin"
+                    , "wherePlugin"
                     ])

@@ -1,18 +1,19 @@
 {-# LANGUAGE PatternGuards #-}
 -- | DICT (RFC 2229) Lookup Module for lambdabot IRC robot.
 -- Tom Moertel <tom@moertel.com>
-module Lambdabot.Plugin.Dict (theModule) where
+module Lambdabot.Plugin.Dict (dictPlugin) where
 
 import Lambdabot.Plugin
 import qualified Lambdabot.Plugin.Dict.DictLookup as Dict
+import Lambdabot.Util
 
 import Control.Monad
 import Data.List
 
 type Dict = ModuleT () LB
 
-theModule :: Module ()
-theModule = newModule
+dictPlugin :: Module ()
+dictPlugin = newModule
     { moduleCmds = return $
         [ (command "dict-help")
             { help = getHelp []

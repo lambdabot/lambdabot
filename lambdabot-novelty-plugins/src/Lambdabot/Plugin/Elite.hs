@@ -3,9 +3,10 @@
 
 -- Inspired by the following page:
 -- http://www.microsoft.com/athome/security/children/kidtalk.mspx
-module Lambdabot.Plugin.Elite (theModule) where
+module Lambdabot.Plugin.Elite (elitePlugin) where
 
 import Lambdabot.Plugin
+import Lambdabot.Util
 
 import Control.Arrow
 import Control.Monad
@@ -13,8 +14,8 @@ import Data.Char
 import Data.Maybe
 import Text.Regex.TDFA
 
-theModule :: Module ()
-theModule = newModule
+elitePlugin :: Module ()
+elitePlugin = newModule
     { moduleCmds = return
         [ (command "elite")
             { aliases = ["leet", "l33t", "1337"]

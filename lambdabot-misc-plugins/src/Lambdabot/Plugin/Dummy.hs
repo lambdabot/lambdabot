@@ -1,17 +1,18 @@
 -- | Simple template module
 -- Contains many constant bot commands.
-module Lambdabot.Plugin.Dummy (theModule) where
+module Lambdabot.Plugin.Dummy (dummyPlugin) where
 
 import Lambdabot.Plugin
 import Lambdabot.Plugin.Dummy.DocAssocs (docAssocs)
+import Lambdabot.Util
 
 import Data.Char
 import qualified Data.ByteString.Char8 as P
 import qualified Data.Map as M
 import System.FilePath
 
-theModule :: Module ()
-theModule = newModule
+dummyPlugin :: Module ()
+dummyPlugin = newModule
     { moduleCmds = return
         $ (command "eval")
             { help = say "eval. Do nothing (perversely)"

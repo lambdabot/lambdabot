@@ -16,19 +16,19 @@
 --
 --     Well, what do you know, this plugin enables lambdabot to automate
 --     that lookup for you and your fellow lambda hackers.
-module Lambdabot.Plugin.Type (theModule, query_ghci) where
+module Lambdabot.Plugin.Type (typePlugin, query_ghci) where
 
 import Lambdabot.Plugin
-
 import Lambdabot.Plugin.Eval (exts)
+import Lambdabot.Util
 
 import Data.Char
 import Data.Maybe
 import System.Process
 import Text.Regex.TDFA
 
-theModule :: Module ()
-theModule = newModule
+typePlugin :: Module ()
+typePlugin = newModule
     { moduleCmds = return
         [ (command "type")
             { help = say "type <expr>. Return the type of a value"

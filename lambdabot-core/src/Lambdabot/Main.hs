@@ -24,7 +24,6 @@ import Lambdabot.Util
 import Lambdabot.Util.Signals
 
 import Control.Exception.Lifted as E
-import Data.Char
 import Data.Dependent.Sum
 import Data.Typeable
 import Data.Version
@@ -104,6 +103,5 @@ modules :: [String] -> Q Exp
 modules xs = [| sequence_ $(listE $ map instalify xs) |]
     where
         instalify x =
-            let module' = varE $ mkName $ concat $ ["Lambdabot.Plugin.", x, ".theModule"]
-                low     = stringE $ map toLower x
-             in [| ircLoadModule $module' $low |]
+            let module' = varE $ mkName x
+             in [| ircLoadModule $module' x |]

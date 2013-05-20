@@ -1,6 +1,6 @@
 {-# LANGUAGE TypeFamilies #-}
 
-module Lambdabot.Plugin.Numberwang where
+module Lambdabot.Plugin.Numberwang (numberwangPlugin) where
 
 import Control.Applicative
 import Control.Monad
@@ -21,8 +21,8 @@ cmdDist = poisson (3.5 :: Double)
 conDist :: RVar Int
 conDist = poisson (32  :: Double)
 
-theModule :: Module NumberwangState
-theModule = newModule
+numberwangPlugin :: Module NumberwangState
+numberwangPlugin = newModule
     { moduleDefState = sample (State <$> cmdDist <*> conDist)
     , moduleCmds = return
         [ (command "numberwang")

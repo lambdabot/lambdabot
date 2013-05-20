@@ -1,13 +1,13 @@
 -- | Look up sequences in the Online Encyclopedia of Integer Sequences
 --   Based on the Math.OEIS library
-module Lambdabot.Plugin.OEIS (theModule) where
+module Lambdabot.Plugin.OEIS (oeisPlugin) where
 
 import Lambdabot.Plugin
 
 import Math.OEIS
 
-theModule :: Module ()
-theModule = newModule
+oeisPlugin :: Module ()
+oeisPlugin = newModule
     { moduleCmds = return
         [ (command "oeis")
             { aliases = ["sequence"]

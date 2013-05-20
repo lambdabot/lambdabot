@@ -6,7 +6,7 @@
 -- |
 -- | added by Kenneth Hoste (boegel), 22/11/2005
 -- |  inspiration: Where plugin (thanks shapr,dons)
-module Lambdabot.Plugin.Poll (theModule) where
+module Lambdabot.Plugin.Poll (pollPlugin) where
 
 import Lambdabot.Plugin
 import qualified Data.ByteString.Char8 as P
@@ -46,8 +46,8 @@ voteSerial = Serial (Just . showPacked) (Just . readPacked)
 
 ------------------------------------------------------------------------
 
-theModule :: Module (M.Map PollName Poll)
-theModule = newModule
+pollPlugin :: Module (M.Map PollName Poll)
+pollPlugin = newModule
     { moduleCmds = return
         [ (command "poll-list")
             { help = say "poll-list                   Shows all current polls"

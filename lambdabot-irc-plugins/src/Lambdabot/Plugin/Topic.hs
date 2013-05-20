@@ -3,11 +3,12 @@
 --   The advantage of having the bot maintain the topic is that we get an
 --   authoritative source for the current topic, when the IRC server decides
 --   to delete it due to Network Splits.
-module Lambdabot.Plugin.Topic (theModule) where
+module Lambdabot.Plugin.Topic (topicPlugin) where
 
-import Lambdabot.Plugin
-import Lambdabot.Monad
 import Lambdabot.IRC
+import Lambdabot.Monad
+import Lambdabot.Plugin
+import Lambdabot.Util
 
 import qualified Data.Map as M
 
@@ -50,8 +51,8 @@ commands =
       (alterListTopic (\_ _ -> []))
     ]
 
-theModule :: Module ()
-theModule = newModule
+topicPlugin :: Module ()
+topicPlugin = newModule
     { moduleCmds = return
         [ (command name)
             { help = say helpStr

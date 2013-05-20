@@ -1,16 +1,17 @@
 -- Plugin.Source
 -- Display source for specified identifiers
-module Lambdabot.Plugin.Source (theModule) where
+module Lambdabot.Plugin.Source (sourcePlugin) where
 
 import Lambdabot.Plugin
+import Lambdabot.Util
 import Control.Monad
 import qualified Data.ByteString.Char8 as P
 import qualified Data.Map as M
 
 type Env = M.Map P.ByteString P.ByteString
 
-theModule :: Module (M.Map P.ByteString P.ByteString)
-theModule = newModule
+sourcePlugin :: Module (M.Map P.ByteString P.ByteString)
+sourcePlugin = newModule
     { moduleCmds = return
         [ (command "src")
             { help = say helpStr

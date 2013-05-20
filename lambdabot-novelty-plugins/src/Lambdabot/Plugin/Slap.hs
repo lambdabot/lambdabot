@@ -1,12 +1,13 @@
 -- | Support for quotes
-module Lambdabot.Plugin.Slap (theModule) where
+module Lambdabot.Plugin.Slap (slapPlugin) where
 
 import Lambdabot.Plugin
+import Lambdabot.Util
 
 type Slap = ModuleT () LB
 
-theModule :: Module ()
-theModule = newModule
+slapPlugin :: Module ()
+slapPlugin = newModule
     { moduleCmds = return
         [ (command "slap")
             { aliases = ["smack"]

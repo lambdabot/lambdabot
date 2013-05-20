@@ -1,12 +1,12 @@
 --
 -- | Hello world plugin
 --
-module Lambdabot.Plugin.Hello (theModule) where
+module Lambdabot.Plugin.Hello (helloPlugin) where
 
 import Lambdabot.Plugin
 
-theModule :: Module ()
-theModule = newModule
+helloPlugin :: Module ()
+helloPlugin = newModule
     { moduleCmds = return
         [ (command "hello")
             { aliases = ["goodbye"]

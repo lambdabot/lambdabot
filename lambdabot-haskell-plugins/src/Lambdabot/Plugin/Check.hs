@@ -2,14 +2,14 @@
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
 
 -- | Test a property with QuickCheck
-module Lambdabot.Plugin.Check (theModule) where
+module Lambdabot.Plugin.Check (checkPlugin) where
 
 import Lambdabot.Plugin
-import Lambdabot.Plugin.Eval (eval)
+import Lambdabot.Plugin.Eval (runGHC)
 import qualified Language.Haskell.Exts as Hs
 
-theModule :: Module ()
-theModule = newModule
+checkPlugin :: Module ()
+checkPlugin = newModule
     { moduleCmds = return
         [ (command "check")
             { help = do
@@ -24,4 +24,4 @@ check :: MonadLB m => String -> m String
 check src =
     case Hs.parseExp src of
         Hs.ParseFailed l e  -> return (Hs.prettyPrint l ++ ':' : e)
-        Hs.ParseOk{}        -> eval ("myquickcheck (" ++ src ++ ") `seq` hsep[]")
+        Hs.ParseOk{}        -> runGHC ("myquickcheck (" ++ src ++ ") `seq` hsep[]")

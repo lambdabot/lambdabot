@@ -1,5 +1,5 @@
 -- | Hackish Haddock module.
-module Lambdabot.Plugin.Haddock (theModule) where
+module Lambdabot.Plugin.Haddock (haddockPlugin) where
 
 import Lambdabot.Plugin
 
@@ -10,8 +10,8 @@ import qualified Data.Map as M
 type HaddockState = M.Map P.ByteString [P.ByteString]
 type Haddock = ModuleT HaddockState LB
 
-theModule :: Module HaddockState
-theModule = newModule
+haddockPlugin :: Module HaddockState
+haddockPlugin = newModule
     { moduleCmds = return
         [ (command "index")
             { help = say "index <ident>. Returns the Haskell modules in which <ident> is defined"

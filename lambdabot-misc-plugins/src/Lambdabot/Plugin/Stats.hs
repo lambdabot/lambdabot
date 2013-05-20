@@ -1,16 +1,17 @@
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE GADTs #-}
-module Lambdabot.Plugin.Stats (theModule) where
+module Lambdabot.Plugin.Stats (statsPlugin) where
 
 import Lambdabot.Plugin
+import Lambdabot.Util
 
 import Network.StatsD
 
 
 type Stats = ModuleT StatsD LB
 
-theModule :: Module StatsD
-theModule = newModule
+statsPlugin :: Module StatsD
+statsPlugin = newModule
     { moduleDefState = io (openStatsD host port prefix)
     , contextual = \msg -> do
         let n = length msg

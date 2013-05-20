@@ -2,17 +2,18 @@
 
 -- Original version copyright Einar Karttunen <ekarttun@cs.helsinki.fi> 2005-04-06.
 -- Massive rewrite circa 2008-10-20 copyright James Cook <mokus@deepbondi.net>
-module Lambdabot.Plugin.Dice (theModule) where
+module Lambdabot.Plugin.Dice (dicePlugin) where
 
 import Lambdabot.Plugin
+import Lambdabot.Util
 
 import Data.List
 import Data.Random.Dice (rollEm)
 
 type Dice = ModuleT () LB
 
-theModule :: Module ()
-theModule = newModule
+dicePlugin :: Module ()
+dicePlugin = newModule
     { moduleCmds = return
         [ (command "dice")
             { aliases = ["roll"]

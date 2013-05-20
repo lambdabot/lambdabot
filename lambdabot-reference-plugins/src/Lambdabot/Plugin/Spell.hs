@@ -4,9 +4,10 @@
 --
 -- | Interface to /aspell/, an open source spelling checker, from a
 -- suggestion by Kai Engelhardt. Requires you to install aspell.
-module Lambdabot.Plugin.Spell (theModule) where
+module Lambdabot.Plugin.Spell (spellPlugin) where
 
 import Lambdabot.Plugin
+import Lambdabot.Util
 
 import Control.Monad.Trans
 import Data.Char
@@ -18,8 +19,8 @@ import Text.Regex.TDFA
 
 type Spell = ModuleT Bool LB
 
-theModule :: Module Bool
-theModule = newModule
+spellPlugin :: Module Bool
+spellPlugin = newModule
     { moduleCmds = return
         [ (command "spell")
             { help = say helpStr

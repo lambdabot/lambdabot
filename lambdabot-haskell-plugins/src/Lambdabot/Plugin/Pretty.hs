@@ -12,7 +12,7 @@ example:
 
 (c) Johannes Ahlmann, 2005-12-13, released under GPL 2 -}
 
-module Lambdabot.Plugin.Pretty (theModule) where
+module Lambdabot.Plugin.Pretty (prettyPlugin) where
 
 import Lambdabot.Plugin
 
@@ -22,8 +22,8 @@ import Language.Haskell.Exts hiding (Module, Pretty)
 
 type Pretty = ModuleT () LB
 
-theModule :: Module ()
-theModule = newModule
+prettyPlugin :: Module ()
+prettyPlugin = newModule
     { moduleCmds = return
         [ (command "pretty")
             { help = say "pretty <expr>. Display haskell code in a pretty-printed manner"

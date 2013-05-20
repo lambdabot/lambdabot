@@ -45,11 +45,12 @@
 >                  hack away!
 -}
 
-module Lambdabot.Plugin.Tell (theModule) where
+module Lambdabot.Plugin.Tell (tellPlugin) where
 
+import Lambdabot.Compat.AltTime
 import Lambdabot.Compat.FreenodeNick
 import Lambdabot.Plugin
-import Lambdabot.Compat.AltTime
+import Lambdabot.Util
 
 import Control.Arrow (first)
 import Control.Monad
@@ -70,8 +71,8 @@ type NoticeBoard = M.Map FreenodeNick (Maybe ClockTime, [Note])
 
 type Tell = ModuleT NoticeBoard LB
 
-theModule :: Module NoticeBoard
-theModule = newModule
+tellPlugin :: Module NoticeBoard
+tellPlugin = newModule
     { moduleCmds = return
         [ (command "tell")
             { help = say "tell <nick> <message>. When <nick> shows activity, tell them <message>."
