@@ -13,4 +13,4 @@ import Lambdabot.Plugin.IRC.Log
 import Lambdabot.Plugin.IRC.Topic
 
 ircPlugins :: [String]
-ircPlugins = ["ircPlugin", "localtimePlugin", "logPlugin", "topicPlugin"]
+ircPlugins = ["irc", "localtime", "log", "topic"]

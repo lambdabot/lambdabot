@@ -15,10 +15,9 @@ import Lambdabot.Plugin.Social
 
 modulesInfo :: Modules
 modulesInfo = $(modules $ corePlugins
-                    ++ haskellPlugins
-                    ++ ["ircPlugin", "localtimePlugin", "topicPlugin"] -- ircPlugins
-                    ++ ["dummyPlugin", "freshPlugin", "todoPlugin"] -- miscPlugins
-                    ++ ["bfPlugin", "dicePlugin", "elitePlugin", "filterPlugin",
-                         "quotePlugin", "slapPlugin", "unlambdaPlugin", "vixenPlugin"] -- noveltyPlugins
-                    ++ referencePlugins
-                    ++ socialPlugins)
+    ++ haskellPlugins
+    ++ ["irc", "localtime", "topic"] -- ircPlugins
+    ++ ["dummy", "fresh", "todo"] -- miscPlugins
+    ++ ["bf", "dice", "elite", "filter", "quote", "slap", "unlambda", "vixen"] -- noveltyPlugins
+    ++ referencePlugins
+    ++ socialPlugins)

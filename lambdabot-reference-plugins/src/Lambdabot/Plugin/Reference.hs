@@ -22,5 +22,4 @@ import Lambdabot.Plugin.Reference.Url
 import Lambdabot.Plugin.Reference.Where
 
 referencePlugins :: [String]
-referencePlugins = ["dictPlugin", "oeisPlugin", "searchPlugin", "spellPlugin",
-                    "tickerPlugin", "urlPlugin", "wherePlugin"]
+referencePlugins = ["dict", "oeis", "search", "spell", "ticker", "url", "where"]

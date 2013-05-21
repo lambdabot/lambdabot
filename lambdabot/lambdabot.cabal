@@ -31,7 +31,6 @@ extra-source-files:     src/Modules.hs
                         scripts/vim/typeOf
 
 data-files:             scripts/online.rc,
-                        State/djinn,
                         State/haddock,
                         State/L.hs,
                         State/Pristine.hs,

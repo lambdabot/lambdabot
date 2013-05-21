@@ -1,6 +1,6 @@
 {-# LANGUAGE PatternGuards #-}
 -- | Lambdabot base module. Controls message send and receive
-module Lambdabot.Plugin.Core.Base (base) where
+module Lambdabot.Plugin.Core.Base (basePlugin) where
 
 import Lambdabot.Bot
 import Lambdabot.Command
@@ -26,8 +26,8 @@ import Text.Regex.TDFA
 type BaseState = GlobalPrivate () ()
 type Base = ModuleT BaseState LB
 
-base :: Module (GlobalPrivate () ())
-base = newModule
+basePlugin :: Module (GlobalPrivate () ())
+basePlugin = newModule
     { moduleDefState = return $ mkGlobalPrivate 20 ()
     , moduleInit = do
              ircSignalConnect "PING"    doPING

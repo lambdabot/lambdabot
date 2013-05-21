@@ -1,7 +1,7 @@
 -- | Offline mode / RC file / -e support module.  Handles spooling lists
 -- of commands (from haskeline, files, or the command line) into the vchat
 -- layer.
-module Lambdabot.Plugin.Core.OfflineRC ( offlineRC ) where
+module Lambdabot.Plugin.Core.OfflineRC ( offlineRCPlugin ) where
 
 import Lambdabot.Config.Core
 import Lambdabot.IRC
@@ -25,8 +25,8 @@ import System.Timeout.Lifted
 type OfflineRCState = Integer
 type OfflineRC = ModuleT OfflineRCState LB
 
-offlineRC :: Module OfflineRCState
-offlineRC = newModule
+offlineRCPlugin :: Module OfflineRCState
+offlineRCPlugin = newModule
     { moduleDefState = return 0
     , moduleInit = do
         void . fork $ do

@@ -104,5 +104,5 @@ modules :: [String] -> Q Exp
 modules xs = [| sequence_ $(listE $ map instalify (nub xs)) |]
     where
         instalify x =
-            let module' = varE $ mkName x
+            let module' = varE $ mkName (x ++ "Plugin")
              in [| ircLoadModule $module' x |]

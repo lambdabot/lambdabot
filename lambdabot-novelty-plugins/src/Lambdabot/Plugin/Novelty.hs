@@ -10,6 +10,7 @@ module Lambdabot.Plugin.Novelty
     , vixenPlugin
     
     , noveltyPlugins
+    
     , module Lambdabot.Config.Novelty
     ) where
 
@@ -25,5 +26,4 @@ import Lambdabot.Plugin.Novelty.Unlambda
 import Lambdabot.Plugin.Novelty.Vixen
 
 noveltyPlugins :: [String]
-noveltyPlugins = ["bfPlugin", "dicePlugin", "elitePlugin", "filterPlugin", "numberwangPlugin",
-                  "quotePlugin", "slapPlugin", "unlambdaPlugin", "vixenPlugin"]
+noveltyPlugins = ["bf", "dice", "elite", "filter", "numberwang", "quote", "slap", "unlambda", "vixen"]

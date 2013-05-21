@@ -36,6 +36,5 @@ import Lambdabot.Plugin.Haskell.Undo
 import Lambdabot.Plugin.Haskell.UnMtl
 
 haskellPlugins :: [String]
-haskellPlugins = ["checkPlugin", "djinnPlugin", "evalPlugin", "freePlugin",
-    "haddockPlugin", "hooglePlugin", "instancesPlugin", "plPlugin", "pointfulPlugin",
-    "prettyPlugin", "sourcePlugin", "typePlugin", "undoPlugin", "unmtlPlugin"]
+haskellPlugins = ["check", "djinn", "eval", "free", "haddock", "hoogle", "instances",
+                  "pl", "pointful", "pretty", "source", "type", "undo", "unmtl"]

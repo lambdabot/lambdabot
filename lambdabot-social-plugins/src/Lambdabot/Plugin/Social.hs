@@ -15,4 +15,4 @@ import Lambdabot.Plugin.Social.Seen
 import Lambdabot.Plugin.Social.Tell
 
 socialPlugins :: [String]
-socialPlugins = ["activityPlugin", "karmaPlugin", "pollPlugin", "seenPlugin", "tellPlugin"]
+socialPlugins = ["activity", "karma", "poll", "seen", "tell"]

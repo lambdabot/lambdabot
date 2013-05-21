@@ -1,5 +1,5 @@
 -- | System module : IRC control functions
-module Lambdabot.Plugin.Core.System (system) where
+module Lambdabot.Plugin.Core.System (systemPlugin) where
 
 import Lambdabot.Bot
 import Lambdabot.Compat.AltTime
@@ -17,8 +17,8 @@ import qualified Data.Set as S
 type SystemState = (ClockTime, TimeDiff)
 type System = ModuleT SystemState LB
 
-system :: Module SystemState
-system = newModule
+systemPlugin :: Module SystemState
+systemPlugin = newModule
     { moduleDefState = flip (,) noTimeDiff `fmap` io getClockTime
     , moduleSerialize  = Just stdSerial
 

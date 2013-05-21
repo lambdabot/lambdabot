@@ -1,7 +1,7 @@
 module Lambdabot.Plugin.Core
-    ( base
-    , system
-    , offlineRC
+    ( basePlugin
+    , systemPlugin
+    , offlineRCPlugin
     , composePlugin
     , helpPlugin
     , morePlugin
@@ -21,5 +21,4 @@ import Lambdabot.Plugin.Core.System
 import Lambdabot.Plugin.Core.Version
 
 corePlugins :: [String]
-corePlugins = ["base", "system", "offlineRC",
-    "composePlugin", "helpPlugin", "morePlugin", "versionPlugin"]
+corePlugins = ["base", "system", "offlineRC", "compose", "help", "more", "version"]

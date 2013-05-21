@@ -1,8 +1,0 @@
-- dynamically loadable plugins (even if not unloadable)
-- aggregate all plugins from each package into one module
-- package default state files with the plugins they are for
-- ability to list loaded plugins on command-line
-- try to disentangle licenses, AUTHORS file, etc., a bit?
-- move config vars into appropriate packages
-- make inactive plugins installed by default (but still inactive)
-- make plugins not primarily identified by strings?
