@@ -30,14 +30,15 @@ library
   ghc-options:          -Wall
                         -funbox-strict-fields
 
-  exposed-modules:      Lambdabot.Plugin.Dummy
-                        Lambdabot.Plugin.Fresh
-                        Lambdabot.Plugin.Error
-                        Lambdabot.Plugin.Hello
-                        Lambdabot.Plugin.Stats
-                        Lambdabot.Plugin.Todo
+  exposed-modules:      Lambdabot.Plugin.Misc
+  other-modules:        Lambdabot.Plugin.Misc.Dummy
+                        Lambdabot.Plugin.Misc.Fresh
+                        Lambdabot.Plugin.Misc.Error
+                        Lambdabot.Plugin.Misc.Hello
+                        Lambdabot.Plugin.Misc.Stats
+                        Lambdabot.Plugin.Misc.Todo
 
-  other-modules:        Lambdabot.Plugin.Dummy.DocAssocs
+  other-modules:        Lambdabot.Plugin.Misc.Dummy.DocAssocs
 
   build-depends:        base                    >= 4.4,
                         bytestring              >= 0.9,

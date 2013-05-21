@@ -5,3 +5,4 @@
 - try to disentangle licenses, AUTHORS file, etc., a bit?
 - move config vars into appropriate packages
 - make inactive plugins installed by default (but still inactive)
+- make plugins not primarily identified by strings?

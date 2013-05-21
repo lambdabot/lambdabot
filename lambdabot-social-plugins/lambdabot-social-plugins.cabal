@@ -30,13 +30,16 @@ library
   ghc-options:          -Wall
                         -funbox-strict-fields
 
-  exposed-modules:      Lambdabot.Plugin.Activity
-                        Lambdabot.Plugin.Poll
-                        Lambdabot.Plugin.Seen
-                        Lambdabot.Plugin.Tell
+  exposed-modules:      Lambdabot.Plugin.Social
 
-  other-modules:        Lambdabot.Plugin.Seen.StopWatch
-                        Lambdabot.Plugin.Seen.UserStatus
+  other-modules:        Lambdabot.Plugin.Social.Activity
+                        Lambdabot.Plugin.Social.Karma
+                        Lambdabot.Plugin.Social.Poll
+                        Lambdabot.Plugin.Social.Seen
+                        Lambdabot.Plugin.Social.Seen.StopWatch
+                        Lambdabot.Plugin.Social.Seen.UserStatus
+                        Lambdabot.Plugin.Social.Tell
+                        Lambdabot.Util.NickEq
 
   build-depends:        base                    >= 4.4,
                         binary                  >= 0.5,
@@ -44,4 +47,5 @@ library
                         containers              >= 0.4,
                         lambdabot-core          >= 5,
                         mtl                     >= 2,
+                        split                   >= 0.2,
                         time                    >= 1.4

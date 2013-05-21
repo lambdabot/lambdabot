@@ -14,10 +14,6 @@ module Lambdabot.Config.Core
     , consoleLogHandle
     , consoleLogLevel
     , consoleLogFormat
-    
-    , aspellBinary
-    , bfBinary
-    , unlambdaBinary
     ) where
 
 import Lambdabot.Config
@@ -40,13 +36,6 @@ config "lbRootLoggerPath"   [t| [String]                |] [| []                
 config "consoleLogHandle"   [t| Handle                  |] [| stderr                      |]
 config "consoleLogLevel"    [t| Priority                |] [| NOTICE                      |]
 config "consoleLogFormat"   [t| String                  |] [| "[$prio] $loggername: $msg" |]
-
--------------------------------------
--- Program names/locations
-
-config "aspellBinary"       [t| String                  |] [| "aspell"      |]
-config "bfBinary"           [t| String                  |] [| "bf"          |]
-config "unlambdaBinary"     [t| String                  |] [| "unlambda"    |]
 
 --------------------------------------------
 -- Default values with longer definitions

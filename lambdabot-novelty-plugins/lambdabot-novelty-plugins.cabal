@@ -30,16 +30,17 @@ library
   ghc-options:          -Wall
                         -funbox-strict-fields
 
-  exposed-modules:      Lambdabot.Plugin.BF
-                        Lambdabot.Plugin.Dice
-                        Lambdabot.Plugin.Elite
-                        Lambdabot.Plugin.Filter
-                        Lambdabot.Plugin.Karma
-                        Lambdabot.Plugin.Numberwang
-                        Lambdabot.Plugin.Quote
-                        Lambdabot.Plugin.Slap
-                        Lambdabot.Plugin.Unlambda
-                        Lambdabot.Plugin.Vixen
+  exposed-modules:      Lambdabot.Plugin.Novelty
+  other-modules:        Lambdabot.Config.Novelty
+                        Lambdabot.Plugin.Novelty.BF
+                        Lambdabot.Plugin.Novelty.Dice
+                        Lambdabot.Plugin.Novelty.Elite
+                        Lambdabot.Plugin.Novelty.Filter
+                        Lambdabot.Plugin.Novelty.Numberwang
+                        Lambdabot.Plugin.Novelty.Quote
+                        Lambdabot.Plugin.Novelty.Slap
+                        Lambdabot.Plugin.Novelty.Unlambda
+                        Lambdabot.Plugin.Novelty.Vixen
 
   other-modules:        Lambdabot.Util.Process
 

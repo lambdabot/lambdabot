@@ -30,16 +30,17 @@ library
   ghc-options:          -Wall
                         -funbox-strict-fields
 
-  exposed-modules:      Lambdabot.Plugin.Dict
-                        Lambdabot.Plugin.OEIS
-                        Lambdabot.Plugin.Search
-                        Lambdabot.Plugin.Spell
-                        Lambdabot.Plugin.Ticker
-                        Lambdabot.Plugin.Url
-                        Lambdabot.Plugin.Where
+  exposed-modules:      Lambdabot.Plugin.Reference
+  other-modules:        Lambdabot.Plugin.Reference.Dict
+                        Lambdabot.Plugin.Reference.OEIS
+                        Lambdabot.Plugin.Reference.Search
+                        Lambdabot.Plugin.Reference.Spell
+                        Lambdabot.Plugin.Reference.Ticker
+                        Lambdabot.Plugin.Reference.Url
+                        Lambdabot.Plugin.Reference.Where
 
   other-modules:        Lambdabot.Config.Reference
-                        Lambdabot.Plugin.Dict.DictLookup
+                        Lambdabot.Plugin.Reference.Dict.DictLookup
                         Lambdabot.Util.Browser
 
   build-depends:        base                    >= 4.4,

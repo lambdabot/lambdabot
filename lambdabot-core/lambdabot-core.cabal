@@ -49,7 +49,6 @@ library
                         Lambdabot.Module
                         Lambdabot.Monad
                         Lambdabot.Nick
-                        Lambdabot.NickEq
                         Lambdabot.OutputFilter
                         Lambdabot.Plugin
                         Lambdabot.Plugin.Core
