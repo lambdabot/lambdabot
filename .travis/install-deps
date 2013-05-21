@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+set -e
+
+cd lambdabot-core
+cabal install --only-dependencies --enable-tests
+
+# can't really do the others since they depend on the core...
