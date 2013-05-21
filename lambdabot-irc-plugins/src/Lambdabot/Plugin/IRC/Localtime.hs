@@ -7,7 +7,7 @@
 module Lambdabot.Plugin.IRC.Localtime (localtimePlugin) where
 
 import Lambdabot.Plugin
-import Lambdabot (ircPrivmsg')
+import Lambdabot.Bot (ircPrivmsg')
 import qualified Data.Map as M
 
 type TimeMap = M.Map Nick  -- the person who's time we requested
