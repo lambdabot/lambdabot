@@ -1,7 +1,7 @@
 -- | Logging an IRC channel..
 module Lambdabot.Plugin.Social.Activity (activityPlugin) where
 
-import Lambdabot
+import Lambdabot.Bot
 import Lambdabot.Plugin
 import Lambdabot.Util
 

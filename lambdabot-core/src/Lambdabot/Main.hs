@@ -13,7 +13,7 @@ module Lambdabot.Main
     , Priority(..)
     ) where
 
-import Lambdabot
+import Lambdabot.Bot
 import Lambdabot.Config
 import Lambdabot.Logging
 import Lambdabot.Module

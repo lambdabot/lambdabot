@@ -1,7 +1,7 @@
 -- | System module : IRC control functions
 module Lambdabot.Plugin.Core.System (system) where
 
-import Lambdabot
+import Lambdabot.Bot
 import Lambdabot.Compat.AltTime
 import Lambdabot.Compat.FreenodeNick
 import Lambdabot.IRC

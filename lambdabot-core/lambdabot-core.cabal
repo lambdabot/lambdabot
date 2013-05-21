@@ -34,7 +34,7 @@ library
   ghc-options:          -Wall
                         -funbox-strict-fields
 
-  exposed-modules:      Lambdabot
+  exposed-modules:      Lambdabot.Bot
                         Lambdabot.ChanName
                         Lambdabot.Command
                         Lambdabot.Compat.AltTime

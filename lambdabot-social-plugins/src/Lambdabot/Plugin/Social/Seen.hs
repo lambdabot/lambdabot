@@ -5,7 +5,7 @@
 -- | Keep track of IRC users.
 module Lambdabot.Plugin.Social.Seen (seenPlugin) where
 
-import Lambdabot
+import Lambdabot.Bot
 import Lambdabot.Compat.AltTime
 import Lambdabot.Compat.PackedNick
 import Lambdabot.IRC

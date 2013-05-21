@@ -2,7 +2,7 @@
 -- | Lambdabot base module. Controls message send and receive
 module Lambdabot.Plugin.Core.Base (base) where
 
-import Lambdabot
+import Lambdabot.Bot
 import Lambdabot.Command
 import Lambdabot.Config.Core
 import Lambdabot.IRC

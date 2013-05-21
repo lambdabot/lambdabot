@@ -2,7 +2,7 @@
 module Lambdabot.Plugin.Core.More (morePlugin) where
 
 import Lambdabot.Plugin
-import Lambdabot
+import Lambdabot.Bot
 
 import Control.Monad.Trans
 

@@ -7,7 +7,7 @@
 --
 module Lambdabot.Plugin.IRC.Log (logPlugin) where
 
-import Lambdabot
+import Lambdabot.Bot
 import Lambdabot.Compat.FreenodeNick
 import Lambdabot.IRC
 import qualified Lambdabot.Message as Msg

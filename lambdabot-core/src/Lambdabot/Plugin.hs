@@ -35,7 +35,7 @@ module Lambdabot.Plugin
     , module Lambdabot.Util.Serial
     ) where
 
-import Lambdabot
+import Lambdabot.Bot
 import Lambdabot.ChanName
 import Lambdabot.Config
 import Lambdabot.Config.Core

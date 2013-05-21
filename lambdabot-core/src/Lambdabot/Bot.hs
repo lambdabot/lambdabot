@@ -6,7 +6,7 @@
 -- The LB/Lambdabot monad
 -- Generic server connection,disconnection
 -- The module typeclass, type and operations on modules
-module Lambdabot
+module Lambdabot.Bot
     ( ircLoadModule
     , ircUnloadModule
     , ircSignalConnect
