@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+set -e
+
+for dir in lambdabot-core lambdabot-*-plugins lambdabot; do
+    (cd "$dir" && cabal install)
+done
+
+echo "Thank you, come again!"
