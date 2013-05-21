@@ -69,7 +69,9 @@ doIGNORE :: Callback
 doIGNORE = debugM . show
 
 doPING :: Callback
-doPING = debugM . errShowMsg
+doPING = noticeM . showPingMsg
+    where showPingMsg msg = "PING! <" ++ ircMsgServer msg ++ (':' : ircMsgPrefix msg) ++
+            "> [" ++ ircMsgCommand msg ++ "] " ++ show (ircMsgParams msg)
 
 -- If this is a "TIME" then we need to pass it over to the localtime plugin
 -- otherwise, dump it to stdout

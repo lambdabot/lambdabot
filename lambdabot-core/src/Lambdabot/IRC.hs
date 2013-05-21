@@ -11,7 +11,6 @@ module Lambdabot.IRC
     , privmsg
     , quit
     , timeReply
-    , errShowMsg -- TODO: remove
     , user
     , setNick
     ) where
@@ -101,11 +100,6 @@ timeReply msg = msg
                    ,":@localtime-reply " ++ (nName $ nick msg) ++ ":" ++
                       (init $ drop 7 (last (ircMsgParams msg))) ]
     }
-
--- Only needed for Base.hs
-errShowMsg :: IrcMessage -> String
-errShowMsg msg = "ERROR> <" ++ ircMsgServer msg ++ (':' : ircMsgPrefix msg) ++
-      "> [" ++ ircMsgCommand msg ++ "] " ++ show (ircMsgParams msg)
 
 user :: String -> String -> String -> String -> IrcMessage
 user svr nick_ server_ ircname = mkMessage svr "USER" [nick_, "localhost", server_, ircname]
