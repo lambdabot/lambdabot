@@ -24,7 +24,7 @@ trustedPkgs =
     , "base"
     , "bytestring"
     , "containers"
-    , "lambdabot"
+    , "lambdabot-haskell-plugins"
     , "random"
     ]
 

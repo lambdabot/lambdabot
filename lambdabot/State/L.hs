@@ -60,7 +60,7 @@ import Data.Typeable
 import Data.Word
 import Numeric
 import System.Random
-import Lambdabot.Plugin.Eval.Trusted
+import Lambdabot.Plugin.Haskell.Eval.Trusted
 import Text.PrettyPrint.HughesPJ hiding (empty)
 import Text.Printf
 import qualified Data.ByteString as BS

@@ -33,13 +33,13 @@ library
                         -funbox-strict-fields
 
   exposed-modules:      Lambdabot.Plugin.Haskell
+                        Lambdabot.Plugin.Haskell.Eval.Trusted
 
   other-modules:        Lambdabot.Config.Haskell
                         Lambdabot.Plugin.Haskell.Check
                         Lambdabot.Plugin.Haskell.Check.ShowQ
                         Lambdabot.Plugin.Haskell.Djinn
                         Lambdabot.Plugin.Haskell.Eval
-                        Lambdabot.Plugin.Haskell.Eval.Trusted
                         Lambdabot.Plugin.Haskell.Free
                         Lambdabot.Plugin.Haskell.Free.Expr
                         Lambdabot.Plugin.Haskell.Free.FreeTheorem
