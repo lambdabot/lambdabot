@@ -88,16 +88,15 @@ doJOIN :: Callback
 doJOIN msg 
     | lambdabotName msg /= nick msg = doIGNORE msg
     | otherwise                     = do
-        let aloc = dropWhile (/= ':') (head (ircMsgParams msg))
-            loc = case aloc of
-                [] -> Nick "freenode" "weird#"
-                _  -> Nick (server msg) (tail aloc)
+        let msgArg  = concat (take 1 (ircMsgParams msg))
+            chan    = case dropWhile (/= ':') msgArg of
+                []      -> msgArg
+                aloc    -> aloc
+            loc = Nick (server msg) (dropWhile (== ':') chan)
         
         s <- get
         put (s { ircChannels = M.insert  (mkCN loc) "[currently unknown]" (ircChannels s)}) -- the empty topic causes problems
-        if null aloc
-            then warningM ("Unable to parse server JOIN message: " ++ show msg)
-            else send $ getTopic loc -- initialize topic
+        send $ getTopic loc -- initialize topic
    where 
 
 doPART :: Callback
