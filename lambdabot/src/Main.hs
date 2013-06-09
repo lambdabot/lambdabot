@@ -23,6 +23,7 @@ flags =
     , Option "l"  []        (arg "<level>"   consoleLogLevel level) "Set the logging level"
     , Option "t"  ["trust"] (arg "<package>" trustedPackages strs)  "Trust the specified packages when evaluating code"
     , Option "V"  ["version"] (NoArg version)                       "Print the version of lambdabot"
+    , Option "X"  []        (arg "<extension>" languageExts strs)   "Set a GHC language extension for @run"
     ] where 
         arg :: String -> Config t -> (String -> IO t) -> ArgDescr (IO (DSum Config))
         arg descr key fn = ReqArg (fmap (key :=>) . fn) descr

@@ -2,7 +2,7 @@
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
 
 -- | A Haskell evaluator for the pure part, using mueval
-module Lambdabot.Plugin.Haskell.Eval (evalPlugin, runGHC, exts) where
+module Lambdabot.Plugin.Haskell.Eval (evalPlugin, runGHC) where
 
 import Lambdabot.Config.Haskell
 import Lambdabot.Plugin
@@ -45,13 +45,8 @@ evalPlugin = newModule
         when b (lim80 (runGHC (dropPrefix txt)))
     }
 
--- extensions to enable for the interpreted expression
--- (and probably also L.hs if it doesn't already have these set)
-exts :: [String]
-exts = ["ImplicitPrelude"] -- workaround for bug in hint package
-
-args :: String -> String -> [String] -> [String]
-args load src trusted = concat
+args :: String -> String -> [String] -> [String] -> [String]
+args load src exts trusted = concat
     [ ["-S"]
     , map ("-s" ++) trusted
     , map ("-X" ++) exts
@@ -72,8 +67,9 @@ runGHC :: MonadLB m => String -> m String
 runGHC src = do
     load    <- lb (findOrCreateLBFile "L.hs")
     binary  <- getConfig muevalBinary
+    exts    <- getConfig languageExts
     trusted <- getConfig trustedPackages
-    (_,out,err) <- io (readProcessWithExitCode binary (args load src trusted) "")
+    (_,out,err) <- io (readProcessWithExitCode binary (args load src exts trusted) "")
     case (out,err) of
         ([],[]) -> return "Terminated\n"
         _       -> do

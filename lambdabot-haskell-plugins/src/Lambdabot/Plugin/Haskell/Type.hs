@@ -20,7 +20,6 @@ module Lambdabot.Plugin.Haskell.Type (typePlugin, query_ghci) where
 
 import Lambdabot.Config.Haskell
 import Lambdabot.Plugin
-import Lambdabot.Plugin.Haskell.Eval (exts)
 import Lambdabot.Util
 
 import Data.Char
@@ -126,6 +125,7 @@ extract_signatures output
 query_ghci :: MonadLB m => String -> String -> m String
 query_ghci cmd expr = do
     l <- lb $ findOrCreateLBFile "L.hs"
+    exts <- getConfig languageExts
     let context = ":load "++l++"\n:m *L\n" -- using -fforce-recomp to make sure we get *L in scope instead of just L
         extFlags = ["-X" ++ ext | ext <- exts]
     ghci <- getConfig ghciBinary
