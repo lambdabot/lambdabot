@@ -59,6 +59,7 @@ import Data.Tuple
 import Data.Typeable
 import Data.Word
 import Numeric
+import ShowFun
 import System.Random
 import Lambdabot.Plugin.Haskell.Eval.Trusted
 import Text.PrettyPrint.HughesPJ hiding (empty)
