@@ -206,10 +206,11 @@ verb Tell= "tell"
 -- | Execute a @tell or @ask command.
 doTell :: NoteType -> [String] -> Cmd Tell ()
 doTell ntype []         = say ("Who should I " ++ verb ntype ++ "?")
-doTell ntype (who:args) = do
-    recipient <- readNick who
-    sender <- getSender
-    me <- getLambdabotName
+doTell ntype (who':args) = do
+    let who     = dropFromEnd (== ':') who'
+    recipient   <- readNick who
+    sender      <- getSender
+    me          <- getLambdabotName
     let rest = unwords args
         (record, res)
             | sender    == recipient   = (False, "You can " ++ verb ntype ++ " yourself!")
