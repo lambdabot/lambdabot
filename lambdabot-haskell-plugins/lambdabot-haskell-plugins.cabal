@@ -21,7 +21,7 @@ build-type:             Simple
 cabal-version:          >= 1.8
 tested-with:            GHC==7.4.1, GHC == 7.6.3
 
-extra-source-files:     src/Lambdabot/Plugin/Free/Test.hs
+extra-source-files:     src/Lambdabot/Plugin/Haskell/Free/Test.hs
 
 source-repository head
   type:                 git
