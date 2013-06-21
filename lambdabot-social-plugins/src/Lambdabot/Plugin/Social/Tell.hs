@@ -96,8 +96,8 @@ tellPlugin = newModule
                 sender <- getSender
                 ms <- getMessages sender
                 case ms of
-                    Just _ -> doRemind sender
-                    Nothing   -> say "Sorry, no messages today."
+                    Just _      -> doRemind sender False
+                    Nothing     -> say "Sorry, no messages today."
             }
         , (command "clear-messages")
             { help = say "clear-messages. Clears your messages."
@@ -133,7 +133,7 @@ tellPlugin = newModule
         sender <- getSender
         remp <- needToRemind sender
         if remp
-            then doRemind sender
+            then doRemind sender True
             else return ()
     }
 
@@ -219,8 +219,12 @@ doTell ntype (who:args) = do
     say res
 
 -- | Remind a user that they have messages.
-doRemind :: Nick -> Cmd Tell ()
-doRemind sender = do
+doRemind :: Nick -> Bool -> Cmd Tell ()
+doRemind sender discreetly = do
+    let remind = if discreetly
+            then lb . ircPrivmsg sender
+            else say
+    
     ms  <- getMessages sender
     now <- io getClockTime
     modifyMS (M.update (Just . first (const $ Just now)) (FreenodeNick sender))
@@ -232,5 +236,5 @@ doRemind sender = do
                    | otherwise         = ("message", "it")
                msg = printf "You have %d new %s. '/msg %s @messages' to read %s."
                        (length msgs) messages me pronoun
-           lb (ircPrivmsg sender msg)
+           remind msg
         Nothing -> return ()
