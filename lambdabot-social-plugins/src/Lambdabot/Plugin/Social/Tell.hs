@@ -211,7 +211,8 @@ doTell ntype (who:args) = do
     sender <- getSender
     me <- getLambdabotName
     let rest = unwords args
-        (record, res) | sender    == recipient   = (False, "You can " ++ verb ntype ++ " yourself!")
+        (record, res)
+            | sender    == recipient   = (False, "You can " ++ verb ntype ++ " yourself!")
             | recipient == me          = (False, "Nice try ;)")
             | null args                = (False, "What should I " ++ verb ntype ++ " " ++ who ++ "?")
             | otherwise                = (True,  "Consider it noted.")
