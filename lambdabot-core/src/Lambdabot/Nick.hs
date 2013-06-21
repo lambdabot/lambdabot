@@ -18,7 +18,7 @@ data Nick = Nick
 -- freenode
 -- TODO: server-specific rules should have server-specific implementations
 canonicalizeName :: String -> String
-canonicalizeName = dropSpace . map toUpper
+canonicalizeName = strip isSpace . map toUpper
 
 instance Eq Nick where
   (Nick tag name) == (Nick tag2 name2) =

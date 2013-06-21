@@ -80,7 +80,7 @@ instanceP cls
 
 -- | Wrapper for the instance parser.
 parseInstance :: ClassName -> String -> Maybe Instance
-parseInstance cls = fmap dropSpace . eitherToMaybe
+parseInstance cls = fmap (strip isSpace) . eitherToMaybe
                     . parse (instanceP cls) "GHCi output"
 
 -- | Split the input into a list of the instances, then run each instance

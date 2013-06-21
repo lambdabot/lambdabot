@@ -111,5 +111,5 @@ lookupPackage begin sep end x'' =
                <.> end
     where 
         choice p f g = p >>= \b -> if b then f else g
-        x  = dropSpace x''
+        x  = strip isSpace x''
         x' = map toLower x

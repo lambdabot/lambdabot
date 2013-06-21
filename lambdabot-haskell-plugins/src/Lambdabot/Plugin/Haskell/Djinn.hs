@@ -122,7 +122,7 @@ djinnCmd s = do
 djinnAddCmd :: [Char] -> Cmd Djinn ()
 djinnAddCmd s = do
     (p,st)  <- lift getSavedEnv
-    est     <- getDjinnEnv (p, dropSpace s : st)
+    est     <- getDjinnEnv (p, strip isSpace s : st)
     case est of
         Left e     -> say (head e)
         Right st'  -> writeMS (Just st')
@@ -150,7 +150,7 @@ djinnClrCmd = writeMS Nothing
 djinnDelCmd :: [Char] -> Cmd Djinn ()
 djinnDelCmd s =  do
     (_,env) <- lift getSavedEnv
-    eenv <- djinn env $ ":delete " ++ dropSpace s ++ "\n:environment"
+    eenv <- djinn env $ ":delete " ++ strip isSpace s ++ "\n:environment"
     case eenv of
         Left e     -> say (head e)
         Right env' -> modifyMS . fmap $ \(prel,_) ->
@@ -202,7 +202,7 @@ tryDjinn binary env src = do
     out <- readProcess binary [] (unlines (env ++ [src, ":q"]))
     let safeInit [] = []
         safeInit xs = init xs
-        o = dropNL . clean_ . unlines . safeInit . drop 2 . lines $ out
+        o = dropFromEnd (== '\n') . clean_ . unlines . safeInit . drop 2 . lines $ out
     return $ case () of {_
         | o =~ "Cannot parse command" ||
           o =~ "cannot be realized"   ||

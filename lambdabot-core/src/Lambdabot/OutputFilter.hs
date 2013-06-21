@@ -26,7 +26,7 @@ cleanOutput _ msg = return $ remDups True msg'
         remDups False ([]:xs) = []:remDups True xs
         remDups _     (x: xs) = x: remDups False xs
         remDups _     []      = []
-        msg' = map dropSpaceEnd msg
+        msg' = map (dropFromEnd isSpace) msg
 
 -- | wrap long lines.
 lineify :: Monad m => OutputFilter m

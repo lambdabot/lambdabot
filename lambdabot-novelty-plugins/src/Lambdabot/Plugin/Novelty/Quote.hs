@@ -26,15 +26,15 @@ quotePlugin = newModule
     , moduleCmds = return
         [ (command "quote")
             { help = say "quote <nick>: Quote <nick> or a random person if no nick is given"
-            , process = runQuote . dropSpace
+            , process = runQuote . strip isSpace
             }
         , (command "remember")
             { help = say "remember <nick> <quote>: Remember that <nick> said <quote>."
-            , process = runRemember . dropSpace
+            , process = runRemember . strip isSpace
             }
         , (command "forget")
             { help = say "forget nick quote.  Delete a quote"
-            , process = runForget . dropSpace
+            , process = runForget . strip isSpace
             }
         , (command "ghc")
             { help = say "ghc. Choice quotes from GHC."

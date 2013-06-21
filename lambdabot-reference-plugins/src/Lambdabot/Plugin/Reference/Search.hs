@@ -13,6 +13,7 @@ import Lambdabot.Plugin
 import Lambdabot.Util
 import Lambdabot.Util.Browser
 
+import Data.Char
 import Data.Maybe
 import Network.HTTP
 import Network.HTTP.Proxy
@@ -60,7 +61,7 @@ searchPlugin = newModule
             { help = say (moduleHelp name)
             , process = \e -> do
                 s <- getCmdName
-                lb (searchCmd s (dropSpace e)) >>= mapM_ say
+                lb (searchCmd s (strip isSpace e)) >>= mapM_ say
             }
         | name <- map fst engines
         ]
@@ -124,5 +125,5 @@ doHTTP request handler = do
 extractConversion :: String -> Maybe String
 extractConversion (parseTags -> tags) = listToMaybe [txt |
     section <- sections (tagOpen ("h2"==) (anyAttr (\(name, value) -> name == "class" && value == "r"))) tags,
-    txt <- [dropSpace $ drop 1 $ dropWhile (/= '=') t | TagText t <- section],
+    txt <- [strip isSpace $ drop 1 $ dropWhile (/= '=') t | TagText t <- section],
     not (null txt)]

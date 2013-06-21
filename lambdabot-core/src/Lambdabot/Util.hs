@@ -3,9 +3,8 @@
 
 -- | String and other utilities
 module Lambdabot.Util (
-        dropSpace,
-        dropSpaceEnd,
-        dropNL,
+        strip,
+        dropFromEnd,
         splitFirstWord,
         limitStr,
         listToStr,
@@ -61,16 +60,17 @@ random = io . sample . randomElement
 
 ------------------------------------------------------------------------
 
--- | 'dropSpace' takes as input a String and strips spaces from the
---   prefix as well as the suffix of the String. Example:
+-- | 'strip' takes as input a predicate and a list and strips
+--   elements matching the predicate from the prefix as well as
+--   the suffix of the list. Example:
 --
--- > dropSpace "   abc  " ===> "abc"
-dropSpace :: [Char] -> [Char]
-dropSpace = let f = reverse . dropWhile isSpace in f . f
+-- > strip isSpace "   abc  " ===> "abc"
+strip :: (a -> Bool) -> [a] -> [a]
+strip p = let f = reverse . dropWhile p in f . f
 
--- | Drop space from the end of the string
-dropSpaceEnd :: [Char] -> [Char]
-dropSpaceEnd = reverse . dropWhile isSpace . reverse
+-- | Drop elements matching a predicate from the end of a list
+dropFromEnd :: (a -> Bool) -> [a] -> [a]
+dropFromEnd p = reverse . dropWhile p . reverse
 
 ------------------------------------------------------------------------
 
@@ -79,9 +79,6 @@ dropSpaceEnd = reverse . dropWhile isSpace . reverse
 -- under that assumption, strips the outer quotes.
 showClean :: (Show a) => [a] -> String
 showClean = intercalate " " . map (init . tail . show)
-
-dropNL :: [Char] -> [Char]
-dropNL = reverse . dropWhile (== '\n') . reverse
 
 -- | untab an string
 expandTab :: Int -> String -> String
