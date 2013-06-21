@@ -96,7 +96,7 @@ tellPlugin = newModule
                 sender <- getSender
                 ms <- getMessages sender
                 case ms of
-                    Just _      -> doRemind sender False
+                    Just _      -> doRemind sender say
                     Nothing     -> say "Sorry, no messages today."
             }
         , (command "clear-messages")
@@ -133,7 +133,7 @@ tellPlugin = newModule
         sender <- getSender
         remp <- needToRemind sender
         if remp
-            then doRemind sender True
+            then doRemind sender (lb . ircPrivmsg sender)
             else return ()
     }
 
@@ -220,22 +220,18 @@ doTell ntype (who:args) = do
     say res
 
 -- | Remind a user that they have messages.
-doRemind :: Nick -> Bool -> Cmd Tell ()
-doRemind sender discreetly = do
-    let remind = if discreetly
-            then lb . ircPrivmsg sender
-            else say
-    
+doRemind :: Nick -> (String -> Cmd Tell ()) -> Cmd Tell ()
+doRemind sender remind = do
     ms  <- getMessages sender
     now <- io getClockTime
     modifyMS (M.update (Just . first (const $ Just now)) (FreenodeNick sender))
     case ms of
         Just msgs -> do
-           me <- showNick =<< getLambdabotName
-           let (messages, pronoun)
-                   | length msgs > 1   = ("messages", "them")
-                   | otherwise         = ("message", "it")
-               msg = printf "You have %d new %s. '/msg %s @messages' to read %s."
-                       (length msgs) messages me pronoun
-           remind msg
+            me <- showNick =<< getLambdabotName
+            let n = length msgs
+                (messages, pronoun)
+                    | n > 1     = ("messages", "them")
+                    | otherwise = ("message", "it")
+            remind $ printf "You have %d new %s. '/msg %s @messages' to read %s."
+                        n messages me pronoun
         Nothing -> return ()
