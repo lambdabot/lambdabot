@@ -134,8 +134,7 @@ initRwState = IRCRWState
         [ ([],cleanOutput)
         , ([],lineify)
         , ([],cleanOutput)
-        -- , ([],reduceIndent)
-        , ([],checkRecip) ]
+        ]
     , ircCommands        = M.empty
     , ircStayConnected   = True
     }
