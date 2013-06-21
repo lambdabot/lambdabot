@@ -174,7 +174,7 @@ doPRIVMSG' configu myname msg target
     = let (cmd, params) = splitFirstWord (dropWhile (==' ') text)
       in doPublicMsg cmd params
 
-  | otherwise =  doContextualMsg text
+  | otherwise =  doContextualMsg target text
 
   where
     text = tail (head (tail (ircMsgParams msg)))
@@ -183,7 +183,7 @@ doPRIVMSG' configu myname msg target
     (commands, disabled) = configu
     doPersonalMsg s r
         | commands `arePrefixesOf` s  = doMsg (tail s) r who
-        | otherwise                   = (lift $ doIGNORE msg)
+        | otherwise                   = doContextualMsg who text
 
     doPublicMsg s r
         | commands `arePrefixesOf` s            = doMsg (tail s) r target
@@ -243,10 +243,10 @@ doPRIVMSG' configu myname msg target
     -- Note how we catch any plugin errors here, rather than letting
     -- them bubble back up to the mainloop
     --
-    doContextualMsg r = lift $ withAllModules $ \m -> do
+    doContextualMsg towhere r = lift $ withAllModules $ \m -> do
         name' <- getModuleName
-        E.catch 
-            (lift . mapM_ (ircPrivmsg target) =<< execCmd (contextual m r) msg target "contextual") 
+        E.catch
+            (lift . mapM_ (ircPrivmsg towhere) =<< execCmd (contextual m r) msg target "contextual") 
             (\e@SomeException{} -> debugM . (name' ++) . (" module failed in contextual handler: " ++) $ show e)
 
 ------------------------------------------------------------------------
