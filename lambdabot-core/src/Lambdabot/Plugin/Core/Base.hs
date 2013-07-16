@@ -140,14 +140,12 @@ doRPL_TOPIC msg -- nearly the same as doTOPIC but has our nick on the front of b
 
 doPRIVMSG :: IrcMessage -> Base ()
 doPRIVMSG msg = do
-    ignored <- lift $ checkIgnore msg
+    ignored     <- lift $ checkIgnore msg
     commands    <- getConfig commandPrefixes
-    disabled    <- getConfig disabledCommands
-    let conf = (commands, disabled)
-
+    
     if ignored
         then lift $ doIGNORE msg
-        else mapM_ (doPRIVMSG' conf (lambdabotName msg) msg) targets
+        else mapM_ (doPRIVMSG' commands (lambdabotName msg) msg) targets
     where
         alltargets = head (ircMsgParams msg)
         targets = map (parseNick (ircMsgServer msg)) $ splitOn "," alltargets
@@ -155,99 +153,109 @@ doPRIVMSG msg = do
 --
 -- | What does the bot respond to?
 --
-doPRIVMSG' :: ([String], [String]) -> Nick -> IrcMessage -> Nick -> Base ()
-doPRIVMSG' configu myname msg target
-  | myname == target
+doPRIVMSG' :: [String] -> Nick -> IrcMessage -> Nick -> Base ()
+doPRIVMSG' commands myname msg target
+    | myname == target
     = let (cmd, params) = splitFirstWord text
-      in doPersonalMsg cmd params
-
-  | flip any ":," $ \c -> (fmtNick (ircMsgServer msg) myname ++ [c]) `isPrefixOf` text
+      in doPersonalMsg commands msg target text cmd params
+    
+    | flip any ":," $ \c -> (fmtNick (ircMsgServer msg) myname ++ [c]) `isPrefixOf` text
     = let Just wholeCmd = maybeCommand (fmtNick (ircMsgServer msg) myname) text
           (cmd, params) = splitFirstWord wholeCmd
-      in doPublicMsg cmd params
-
-  | (commands `arePrefixesOf` text)
-  && length text > 1
-  && (text !! 1 /= ' ') -- elem of prefixes
-  && (not (commands `arePrefixesOf` [text !! 1]) ||
+      in doPublicMsg commands msg target cmd params
+    
+    | (commands `arePrefixesOf` text)
+    && length text > 1
+    && (text !! 1 /= ' ') -- elem of prefixes
+    && (not (commands `arePrefixesOf` [text !! 1]) ||
       (length text > 2 && text !! 2 == ' ')) -- ignore @@ prefix, but not the @@ command itself
     = let (cmd, params) = splitFirstWord (dropWhile (==' ') text)
-      in doPublicMsg cmd params
+      in doPublicMsg commands msg target cmd params
+    
+    | otherwise =  doContextualMsg msg target target text
+    
+    where
+        text = tail (head (tail (ircMsgParams msg)))
 
-  | otherwise =  doContextualMsg target text
+doPersonalMsg :: [String] -> IrcMessage -> Nick -> String -> String -> String -> Base ()
+doPersonalMsg commands msg target text s r
+    | commands `arePrefixesOf` s  = doMsg msg (tail s) r who
+    | otherwise                   = doContextualMsg msg target who text
+    where
+      who = nick msg
 
-  where
-    text = tail (head (tail (ircMsgParams msg)))
-    who = nick msg
+doPublicMsg :: [String] -> IrcMessage -> Nick -> String -> String -> Base ()
+doPublicMsg commands msg target s r
+    | commands `arePrefixesOf` s  = doMsg msg (tail s) r target
+    | otherwise                   = (lift $ doIGNORE msg)
 
-    (commands, disabled) = configu
-    doPersonalMsg s r
-        | commands `arePrefixesOf` s  = doMsg (tail s) r who
-        | otherwise                   = doContextualMsg who text
+--
+-- normal commands.
+--
+-- check privledges, do any spell correction, dispatch, handling
+-- possible timeouts.
+--
+-- todo, refactor
+--
+doMsg :: IrcMessage -> String -> String -> Nick -> Base ()
+doMsg msg cmd rest towhere = do
+    let ircmsg = ircPrivmsg towhere
+    allcmds <- lift (gets (M.keys . ircCommands))
+    let ms      = filter (isPrefixOf cmd) allcmds
+    case ms of
+        [s] -> docmd msg towhere rest s                  -- a unique prefix
+        _ | cmd `elem` ms -> docmd msg towhere rest cmd  -- correct command (usual case)
+        _ | otherwise     -> case closests cmd allcmds of
+          (n,[s]) | n < e ,  ms == [] -> docmd msg towhere rest s -- unique edit match
+          (n,ss)  | n < e || ms /= []            -- some possibilities
+              -> lift . ircmsg $ "Maybe you meant: "++showClean(nub(ms++ss))
+          _   -> docmd msg towhere rest cmd         -- no prefix, edit distance too far
+    where
+        e = 3   -- edit distance cut off. Seems reasonable for small words
 
-    doPublicMsg s r
-        | commands `arePrefixesOf` s            = doMsg (tail s) r target
-        | otherwise                             = (lift $ doIGNORE msg)
+docmd :: IrcMessage -> Nick -> [Char] -> String -> Base ()
+docmd msg towhere rest cmd' = withPS towhere $ \_ _ -> do
+    withCommand cmd'   -- Important.
+        (ircPrivmsg towhere "Unknown command, try @list")
+        (\_ theCmd -> do
+            name'   <- getModuleName
 
-    --
-    -- normal commands.
-    --
-    -- check privledges, do any spell correction, dispatch, handling
-    -- possible timeouts.
-    --
-    -- todo, refactor
-    --
-    doMsg cmd rest towhere = do
-        let ircmsg = ircPrivmsg towhere
-        allcmds <- lift (gets (M.keys . ircCommands))
-        let ms      = filter (isPrefixOf cmd) allcmds
-        case ms of
-            [s] -> docmd s                  -- a unique prefix
-            _ | cmd `elem` ms -> docmd cmd  -- correct command (usual case)
-            _ | otherwise     -> case closests cmd allcmds of
-                  (n,[s]) | n < e ,  ms == [] -> docmd s -- unique edit match
-                  (n,ss)  | n < e || ms /= []            -- some possibilities
-                          -> lift . ircmsg $ "Maybe you meant: "++showClean(nub(ms++ss))
-                  _ -> docmd cmd         -- no prefix, edit distance too far
-        where
-            e = 3   -- edit distance cut off. Seems reasonable for small words
+            hasPrivs <- lb (checkPrivs msg)
+            
+            -- TODO: handle disabled commands earlier
+            -- users should probably see no difference between a
+            -- command that is disabled and one that doesn't exist.
+            disabled <- elem cmd' <$> getConfig disabledCommands
+            let ok = not disabled && (not (privileged theCmd) || hasPrivs)
 
-            docmd cmd' = withPS towhere $ \_ _ -> do
-                withCommand cmd'   -- Important.
-                    (ircPrivmsg towhere "Unknown command, try @list")
-                    (\_ theCmd -> do
-                        name'   <- getModuleName
+            response <- if not ok
+                then return ["Not enough privileges"]
+                else runCommand theCmd msg towhere cmd' rest
+                    `E.catch` \exc@SomeException{} ->
+                        return ["Plugin `" ++ name' ++ "' failed with: " ++ show exc]
+            
+            -- send off our response strings
+            -- TODO: expandTab here should probably be an OutputFilter
+            lift $ mapM_ (ircPrivmsg towhere . expandTab 8) response
+        )
 
-                        hasPrivs <- lb (checkPrivs msg)
-                        let ok =  (cmd' `notElem` disabled)
-                               && (not (privileged theCmd) || hasPrivs)
-
-                        if not ok
-                          then lift $ ircPrivmsg towhere "Not enough privileges"
-                          else E.catch
-
-                            (do mstrs <- runCommand theCmd msg towhere cmd' rest
-                                -- send off our strings
-                                lift $ mapM_ (ircPrivmsg towhere . expandTab 8) mstrs)
-
-                            (\exc@SomeException{} -> lift . ircPrivmsg towhere .
-                                (("Plugin `" ++ name' ++ "' failed with: ") ++) $ show exc))
-    --
-    -- contextual messages are all input that isn't an explicit command.
-    -- they're passed to all modules (todo, sounds inefficient) for
-    -- scanning, and any that implement 'contextual' will reply.
-    --
-    -- we try to run the contextual functions from all modules, on every
-    -- non-command. better hope this is efficient.
-    --
-    -- Note how we catch any plugin errors here, rather than letting
-    -- them bubble back up to the mainloop
-    --
-    doContextualMsg towhere r = lift $ withAllModules $ \m -> do
-        name' <- getModuleName
-        E.catch
-            (lift . mapM_ (ircPrivmsg towhere) =<< execCmd (contextual m r) msg target "contextual") 
-            (\e@SomeException{} -> debugM . (name' ++) . (" module failed in contextual handler: " ++) $ show e)
+--
+-- contextual messages are all input that isn't an explicit command.
+-- they're passed to all modules (todo, sounds inefficient) for
+-- scanning, and any that implement 'contextual' will reply.
+--
+-- we try to run the contextual functions from all modules, on every
+-- non-command. better hope this is efficient.
+--
+-- Note how we catch any plugin errors here, rather than letting
+-- them bubble back up to the mainloop
+--
+doContextualMsg :: IrcMessage -> Nick -> Nick -> [Char] -> Base ()
+doContextualMsg msg target towhere r = lift $ withAllModules $ \m -> do
+    name' <- getModuleName
+    E.catch
+        (lift . mapM_ (ircPrivmsg towhere) =<< execCmd (contextual m r) msg target "contextual") 
+        (\e@SomeException{} -> debugM . (name' ++) . (" module failed in contextual handler: " ++) $ show e)
 
 ------------------------------------------------------------------------
 
