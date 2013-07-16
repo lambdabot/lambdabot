@@ -22,6 +22,8 @@ dist
 *.hi
 *.chi
 *.chs.h
+.cabal-sandbox
+cabal.sandbox.config
 
 ###########
 # Editors #
