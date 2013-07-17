@@ -4,6 +4,7 @@ module Lambdabot.Main
     
     , Config
     , DSum(..)
+    , (==>)
     , lambdabotMain
 
     , Modules
@@ -24,6 +25,7 @@ import Lambdabot.Util
 import Lambdabot.Util.Signals
 
 import Control.Exception.Lifted as E
+import Control.Monad.Identity
 import Data.Dependent.Sum
 import Data.List
 import Data.Typeable
@@ -63,7 +65,7 @@ setupLogging = do
 -- Also, handle any fatal exceptions (such as non-recoverable signals),
 -- (i.e. print a message and exit). Non-fatal exceptions should be dealt
 -- with in the mainLoop or further down.
-lambdabotMain :: LB () -> [DSum Config] -> IO ExitCode
+lambdabotMain :: LB () -> [DSum Config Identity] -> IO ExitCode
 lambdabotMain initialise cfg = withSocketsDo . withIrcSignalCatch $ do
     rost <- initRoState cfg
     r <- try $ evalLB (do setupLogging

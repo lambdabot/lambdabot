@@ -51,6 +51,7 @@ import Control.Applicative
 import Control.Concurrent.Lifted
 import Control.Exception.Lifted as E (catch)
 import Control.Monad.Base
+import Control.Monad.Identity
 import Control.Monad.Reader
 import Control.Monad.State
 import Control.Monad.Trans.Control
@@ -69,19 +70,21 @@ import System.Console.Haskeline.MonadException (MonadException)
 data IRCRState = IRCRState
     { ircInitDoneMVar   :: MVar ()
     , ircQuitMVar       :: MVar ()
-    , ircConfig         :: D.DMap Config
+    , ircConfig         :: D.DMap Config Identity
     }
 
 -- | Default ro state
-initRoState :: [D.DSum Config] -> IO IRCRState
+initRoState :: [D.DSum Config Identity] -> IO IRCRState
 initRoState configuration = do
     quitMVar     <- newEmptyMVar
     initDoneMVar <- newEmptyMVar
     
+    let mergeConfig' k (Identity x) (Identity y) = Identity (mergeConfig k y x)
+    
     return IRCRState 
         { ircQuitMVar       = quitMVar
         , ircInitDoneMVar   = initDoneMVar
-        , ircConfig         = D.fromListWithKey (flip . mergeConfig) configuration
+        , ircConfig         = D.fromListWithKey mergeConfig' configuration
         }
 
 reportInitDone :: MonadIO m => IRCRState -> m ()
@@ -226,7 +229,7 @@ instance MonadState IRCRWState LB where
         lift $ writeIORef ref x
 
 instance MonadConfig LB where
-    getConfig k = liftM (maybe (getConfigDefault k) id . D.lookup k) (lb (askLB ircConfig))
+    getConfig k = liftM (maybe (getConfigDefault k) runIdentity . D.lookup k) (lb (askLB ircConfig))
 
 instance MonadLogging LB where
     getCurrentLogger = getConfig lbRootLoggerPath

@@ -10,6 +10,7 @@ import qualified Paths_lambdabot as P
 
 import Control.Applicative
 import Control.Monad
+import Control.Monad.Identity
 import Data.Char
 import Data.Version
 import System.Console.GetOpt
@@ -17,7 +18,7 @@ import System.Environment
 import System.Exit
 import System.IO
 
-flags :: [OptDescr (IO (DSum Config))]
+flags :: [OptDescr (IO (DSum Config Identity))]
 flags = 
     [ Option "h?" ["help"]  (NoArg (usage []))                      "Print this help message"
     , Option "e"  []        (arg "<command>" onStartupCmds   strs)  "Run a lambdabot command instead of a REPL"
@@ -27,8 +28,8 @@ flags =
     , Option "X"  []        (arg "<extension>" languageExts strs)   "Set a GHC language extension for @run"
     , Option "n"  ["nice"]  (NoArg noinsult)                        "Be nice (disable insulting error messages)"
     ] where 
-        arg :: String -> Config t -> (String -> IO t) -> ArgDescr (IO (DSum Config))
-        arg descr key fn = ReqArg (fmap (key :=>) . fn) descr
+        arg :: String -> Config t -> (String -> IO t) -> ArgDescr (IO (DSum Config Identity))
+        arg descr key fn = ReqArg (fmap (key ==>) . fn) descr
         
         strs = return . (:[])
         
@@ -39,7 +40,7 @@ flags =
                 , "Valid levels are: " ++ show [DEBUG, INFO, NOTICE, WARNING, ERROR, CRITICAL, ALERT, EMERGENCY]
                 ]
         
-        noinsult = return (enableInsults :=> False)
+        noinsult = return (enableInsults ==> False)
 
 versionString :: String
 versionString = ("lambdabot version " ++ showVersion P.version)
@@ -72,11 +73,11 @@ main = do
     config' <- sequence config
     dir <- P.getDataDir
     exitWith <=< lambdabotMain modulesInfo $
-        [dataDir :=> dir, lbVersion :=> P.version] ++ config'
+        [dataDir ==> dir, lbVersion ==> P.version] ++ config'
 
 -- special online target for ghci use
 online :: [String] -> IO ()
 online strs = do
     dir <- P.getDataDir
     void $ lambdabotMain modulesInfo
-        [dataDir :=> dir, lbVersion :=> P.version, onStartupCmds :=> strs]
+        [dataDir ==> dir, lbVersion ==> P.version, onStartupCmds ==> strs]
