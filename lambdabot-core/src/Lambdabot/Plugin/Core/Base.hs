@@ -202,6 +202,7 @@ doMsg msg cmd rest towhere = do
     let ircmsg = ircPrivmsg towhere
     allcmds <- lift (gets (M.keys . ircCommands))
     let ms      = filter (isPrefixOf cmd) allcmds
+    e <- getConfig editDistanceLimit
     case ms of
         [s] -> docmd msg towhere rest s                  -- a unique prefix
         _ | cmd `elem` ms -> docmd msg towhere rest cmd  -- correct command (usual case)
@@ -210,8 +211,6 @@ doMsg msg cmd rest towhere = do
           (n,ss)  | n < e || ms /= []            -- some possibilities
               -> lift . ircmsg $ "Maybe you meant: "++showClean(nub(ms++ss))
           _   -> docmd msg towhere rest cmd         -- no prefix, edit distance too far
-    where
-        e = 3   -- edit distance cut off. Seems reasonable for small words
 
 docmd :: IrcMessage -> Nick -> [Char] -> String -> Base ()
 docmd msg towhere rest cmd' = withPS towhere $ \_ _ -> do
