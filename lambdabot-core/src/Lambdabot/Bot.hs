@@ -142,11 +142,11 @@ ircPrivmsg' who msg = send $ privmsg who msg
 monadRandom [d|
 
     instance MonadRandom LB where
-        getRandomWord8          = LB (lift getRandomWord8)
-        getRandomWord16         = LB (lift getRandomWord16)
-        getRandomWord32         = LB (lift getRandomWord32)
-        getRandomWord64         = LB (lift getRandomWord64)
-        getRandomDouble         = LB (lift getRandomDouble)
-        getRandomNByteInteger n = LB (lift (getRandomNByteInteger n))
+        getRandomWord8          = liftIO getRandomWord8
+        getRandomWord16         = liftIO getRandomWord16
+        getRandomWord32         = liftIO getRandomWord32
+        getRandomWord64         = liftIO getRandomWord64
+        getRandomDouble         = liftIO getRandomDouble
+        getRandomNByteInteger n = liftIO (getRandomNByteInteger n)
 
  |]

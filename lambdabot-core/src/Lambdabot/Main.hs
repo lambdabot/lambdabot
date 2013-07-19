@@ -28,6 +28,7 @@ import Control.Exception.Lifted as E
 import Control.Monad.Identity
 import Data.Dependent.Sum
 import Data.List
+import Data.IORef
 import Data.Typeable
 import Data.Version
 import Language.Haskell.TH
@@ -68,14 +69,16 @@ setupLogging = do
 lambdabotMain :: LB () -> [DSum Config Identity] -> IO ExitCode
 lambdabotMain initialise cfg = withSocketsDo . withIrcSignalCatch $ do
     rost <- initRoState cfg
-    r <- try $ evalLB (do setupLogging
-                          noticeM "Initialising plugins"
-                          initialise
-                          noticeM "Done loading plugins"
-                          reportInitDone rost
-                          mainLoop
-                          return ExitSuccess)
-                       rost initRwState
+    rwst <- newIORef initRwState
+    r <- try $ flip runLB (rost, rwst) $ do
+        setupLogging
+        noticeM "Initialising plugins"
+        initialise
+        noticeM "Done loading plugins"
+        reportInitDone rost
+        mainLoop
+        return ExitSuccess
+                       
 
     -- clean up and go home
     case r of
