@@ -24,6 +24,7 @@ dist
 *.chs.h
 .cabal-sandbox
 cabal.sandbox.config
+cabal.config
 
 ###########
 # Editors #
