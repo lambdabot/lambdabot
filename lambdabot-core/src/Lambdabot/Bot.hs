@@ -44,8 +44,8 @@ import qualified Data.Set as S
 --
 -- | Register a module in the irc state
 --
-ircLoadModule :: Module st -> String -> LB ()
-ircLoadModule m mName = do
+ircLoadModule :: String -> Module st -> LB ()
+ircLoadModule mName m = do
     infoM ("Loading module " ++ show mName)
     
     savedState <- readGlobalState m mName
@@ -77,7 +77,7 @@ ircUnloadModule mName = do
             `E.catch` \e@SomeException{} -> 
                 errorM ("Module " ++ show mName ++ " threw the following exception in moduleExit: " ++ show e)
         
-        writeGlobalState m mName
+        writeGlobalState
     
     unregisterModule mName
 

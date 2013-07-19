@@ -1,4 +1,4 @@
-{-# LANGUAGE PatternGuards #-}
+{-# LANGUAGE PatternGuards, FlexibleContexts #-}
 -- | Lambdabot base module. Controls message send and receive
 module Lambdabot.Plugin.Core.Base (basePlugin) where
 
@@ -280,11 +280,16 @@ docmd msg towhere rest cmd' = withPS towhere $ \_ _ -> do
 -- them bubble back up to the mainloop
 --
 doContextualMsg :: IrcMessage -> Nick -> Nick -> [Char] -> Base ()
-doContextualMsg msg target towhere r = lift $ withAllModules $ \m -> do
-    name' <- asks moduleName
-    E.catch
-        (lift . mapM_ (ircPrivmsg towhere) =<< execCmd (contextual m r) msg target "contextual") 
-        (\e@SomeException{} -> debugM . (name' ++) . (" module failed in contextual handler: " ++) $ show e)
+doContextualMsg msg target towhere r = lb (withAllModules (withHandler invokeContextual))
+    where
+        withHandler x = E.catch x $ \e@SomeException{} -> do
+            mName   <- asks moduleName
+            debugM ("Module " ++ show mName ++ " failed in contextual handler: " ++ show e)
+        
+        invokeContextual = do
+            m       <- asks theModule
+            reply   <- execCmd (contextual m r) msg target "contextual"
+            lb $ mapM_ (ircPrivmsg towhere) reply
 
 ------------------------------------------------------------------------
 

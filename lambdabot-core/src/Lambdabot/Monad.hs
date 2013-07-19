@@ -99,8 +99,10 @@ initRoState configuration = do
         , ircConfig         = D.fromListWithKey mergeConfig' configuration
         }
 
-reportInitDone :: MonadIO m => IRCRState -> m ()
-reportInitDone = io . flip putMVar () . ircInitDoneMVar
+reportInitDone :: LB ()
+reportInitDone = do
+    mvar <- LB (asks (ircInitDoneMVar . fst))
+    io $ putMVar mvar ()
 
 askLB :: MonadLB m => (IRCRState -> a) -> m a
 askLB f  = lb . LB $ asks (f . fst)
@@ -357,8 +359,7 @@ listModules :: LB [String]
 listModules = gets (M.keys . ircModulesByName)
 
 -- | Interpret a function in the context of all modules
-withAllModules :: (forall st. Module st -> ModuleT st LB a) -> LB ()
+withAllModules :: (forall st. ModuleT st LB a) -> LB ()
 withAllModules f = do
     mods <- gets $ M.elems . ircModulesByName
-    (`mapM_` mods) $ \(This modInfo) ->
-        runModuleT (f (theModule modInfo)) modInfo
+    forM_ mods $ \(This modInfo) -> runModuleT f modInfo

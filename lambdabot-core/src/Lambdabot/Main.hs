@@ -20,7 +20,6 @@ import Lambdabot.Logging
 import Lambdabot.Module
 import Lambdabot.Monad
 import Lambdabot.Plugin.Core
-import Lambdabot.State
 import Lambdabot.Util
 import Lambdabot.Util.Signals
 
@@ -29,7 +28,7 @@ import Control.Monad.Identity
 import Data.Dependent.Sum
 import Data.List
 import Data.IORef
-import Data.Typeable
+import Data.Some
 import Data.Version
 import Language.Haskell.TH
 import Paths_lambdabot_core (version)
@@ -66,48 +65,48 @@ setupLogging = do
 -- Also, handle any fatal exceptions (such as non-recoverable signals),
 -- (i.e. print a message and exit). Non-fatal exceptions should be dealt
 -- with in the mainLoop or further down.
-lambdabotMain :: LB () -> [DSum Config Identity] -> IO ExitCode
+lambdabotMain :: Modules -> [DSum Config Identity] -> IO ExitCode
 lambdabotMain initialise cfg = withSocketsDo . withIrcSignalCatch $ do
     rost <- initRoState cfg
     rwst <- newIORef initRwState
-    r <- try $ flip runLB (rost, rwst) $ do
-        setupLogging
-        noticeM "Initialising plugins"
-        initialise
-        noticeM "Done loading plugins"
-        reportInitDone rost
-        mainLoop
-        return ExitSuccess
-                       
-
-    -- clean up and go home
-    case r of
-        Left (SomeException er) -> do
-            case cast er of
+    runLB (lambdabotRun initialise) (rost, rwst)
+        `E.catch` \e -> do
+            -- clean up and go home
+            case fromException e of
                 Just code -> return code
-                Nothing -> do
-                    putStrLn "exception:"
-                    print er
+                Nothing   -> do
+                    errorM (show e)
                     return (ExitFailure 1)
-        Right code -> return code
 
--- Actually, this isn't a loop anymore.  TODO: better name.
-mainLoop :: LB ()
-mainLoop = do
-    waitForQuit `E.catch`
-        (\e@SomeException{} -> errorM (show e)) -- catch anything, print informative message, and clean up
+lambdabotRun :: Modules -> LB ExitCode
+lambdabotRun ms = do
+    setupLogging
+    infoM "Initialising plugins"
+    withModules ms $ do
+        infoM "Done loading plugins"
+        reportInitDone
+        
+        waitForQuit `E.catch`
+            (\e@SomeException{} -> errorM (show e)) -- catch anything, print informative message, and clean up
     
-    withAllModules moduleExit
-    flushModuleState
-
+    -- clean up any dynamically loaded modules
+    mapM_ ircUnloadModule =<< listModules
+    return ExitSuccess
 
 ------------------------------------------------------------------------
 
-type Modules = LB ()
+type Modules = [(String, Some Module)]
 
 modules :: [String] -> Q Exp
-modules xs = [| sequence_ $(listE $ map instalify (nub xs)) |]
+modules xs = [| $(listE $ map instalify (nub xs)) |]
     where
         instalify x =
             let module' = varE $ mkName (x ++ "Plugin")
-             in [| ircLoadModule $module' x |]
+             in [| (x, This $module') |]
+
+withModules :: Modules -> LB a -> LB a
+withModules []      = id
+withModules ((n, This m):ms)  = withModule n m . withModules ms
+
+withModule :: String -> Module st -> LB a -> LB a
+withModule name m = bracket_ (ircLoadModule name m) (ircUnloadModule name)

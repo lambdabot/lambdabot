@@ -22,7 +22,6 @@ module Lambdabot.State
     , writeGS
     
     -- ** Handling global state
-    , flushModuleState
     , readGlobalState
     , writeGlobalState
   ) where
@@ -173,22 +172,21 @@ writeGS g = withGS (\_ writer -> writer g)
 -- Handling global state
 --
 
--- | flush state of modules
-flushModuleState :: LB ()
-flushModuleState = withAllModules (\m -> asks moduleName >>= writeGlobalState m)
-
 -- | Peristence: write the global state out
-writeGlobalState :: Module st -> String -> ModuleT st LB ()
-writeGlobalState module' name = do
-    debugM ("saving state for module " ++ show name)
-    case moduleSerialize module' of
+writeGlobalState :: ModuleT st LB ()
+writeGlobalState = do
+    m     <- asks theModule
+    mName <- asks moduleName
+    
+    debugM ("saving state for module " ++ show mName)
+    case moduleSerialize m of
         Nothing  -> return ()
         Just ser -> do
             state' <- readMS
             case serialize ser state' of
                 Nothing  -> return ()   -- do not write any state
                 Just out -> do
-                    stateFile <- lb (findLBFileForWriting name)
+                    stateFile <- lb (findLBFileForWriting mName)
                     io (P.writeFile stateFile out)
 
 -- | Read it in

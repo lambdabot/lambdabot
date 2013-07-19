@@ -114,7 +114,8 @@ systemPlugin = newModule
         , (command "flush")
             { privileged = True
             , help = say "flush. flush state to disk"
-            , process = \_ -> lb flushModuleState
+            , process = \_ -> lb (withAllModules writeGlobalState)
+                
             }
         , (command "admin")
             { privileged = True
