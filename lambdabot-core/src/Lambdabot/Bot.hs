@@ -9,8 +9,6 @@
 module Lambdabot.Bot
     ( ircLoadModule
     , ircUnloadModule
-    , ircSignalConnect
-    , ircInstallOutputFilter
     , checkPrivs
     , checkIgnore
     
@@ -23,19 +21,18 @@ module Lambdabot.Bot
     ) where
 
 import Lambdabot.ChanName
-import Lambdabot.Command
+import Lambdabot.Config
+import Lambdabot.Config.Core
 import Lambdabot.IRC
 import Lambdabot.Logging
 import Lambdabot.Message
 import Lambdabot.Module
 import Lambdabot.Monad
 import Lambdabot.Nick
-import Lambdabot.OutputFilter
 import Lambdabot.State
-import Lambdabot.Util
 
 import Control.Concurrent
-import Control.Exception.Lifted
+import Control.Exception.Lifted as E
 import Control.Monad.Error
 import Control.Monad.Reader
 import Control.Monad.State
@@ -48,89 +45,49 @@ import qualified Data.Set as S
 -- | Register a module in the irc state
 --
 ircLoadModule :: Module st -> String -> LB ()
-ircLoadModule m modname = do
-    infoM ("Loading module " ++ show modname)
-    savedState <- readGlobalState m modname
-    state'     <- maybe (moduleDefState m) return savedState
-    ref        <- io $ newMVar state'
+ircLoadModule m mName = do
+    infoM ("Loading module " ++ show mName)
     
-    let modref = ModuleRef  m ref modname
-        cmdref = CommandRef m ref modname
+    savedState <- readGlobalState m mName
+    mState     <- maybe (moduleDefState m) return savedState
     
-    mbCmds <- flip runReaderT (ref, modname) . runModuleT $ do
-        initResult <- try (moduleInit m)
-        case initResult of
-            Left e  -> return (Left e)
-            Right{} -> try (moduleCmds m)
+    mInfo       <- registerModule mName m mState
     
-    case mbCmds of
-        Left e@SomeException{} -> do
-            errorM ("Module " ++ show modname ++ " failed to load.  Exception thrown: " ++ show e)
+    flip runModuleT mInfo (do
+            moduleInit m
+            registerCommands =<< moduleCmds m)
+        `E.catch` \e@SomeException{} -> do
+            errorM ("Module " ++ show mName ++ " failed to load.  Exception thrown: " ++ show e)
             
+            unregisterModule mName
             fail "Refusing to load due to a broken plugin"
-        Right cmds -> do
-            s <- get
-            let modmap = ircModules s
-                cmdmap = ircCommands s
-            put s {
-              ircModules = M.insert modname modref modmap,
-              ircCommands = M.union (M.fromList [ (name,cmdref cmd) | cmd <- cmds, name <- cmdNames cmd ]) cmdmap
-            }
 
 --
 -- | Unregister a module's entry in the irc state
 --
 ircUnloadModule :: String -> LB ()
-ircUnloadModule modname = do
-    infoM ("Unloading module " ++ show modname)
+ircUnloadModule mName = do
+    infoM ("Unloading module " ++ show mName)
     
-    withModule modname (error "module not loaded") $ \m -> do
+    inModuleNamed mName (fail "module not loaded") $ do
+        m <- asks theModule
         when (moduleSticky m) $ fail "module is sticky"
         
-        exitResult <- try (moduleExit m)
-        case exitResult of
-            Right{} -> return ()
-            Left e@SomeException{} -> errorM ("Module " ++ show modname ++ " threw the following exception in moduleExit: " ++ show e)
+        moduleExit m
+            `E.catch` \e@SomeException{} -> 
+                errorM ("Module " ++ show mName ++ " threw the following exception in moduleExit: " ++ show e)
         
-        writeGlobalState m modname
+        writeGlobalState m mName
     
-    s <- get
-    let modmap = ircModules s
-        cmdmap = ircCommands s
-        cbs    = ircCallbacks s
-        svrs   = ircServerMap s
-        ofs    = ircOutputFilters s
-    put s
-        { ircCommands      = M.filter (\(CommandRef _ _ name _) -> name /= modname) cmdmap
-        , ircModules       = M.delete modname modmap
-        , ircCallbacks     =   filter ((/=modname) . fst) `fmap` cbs
-        , ircServerMap     = M.filter ((/=modname) . fst) svrs
-        , ircOutputFilters =   filter ((/=modname) . fst) ofs
-        }
+    unregisterModule mName
 
 ------------------------------------------------------------------------
 
-ircSignalConnect :: String -> Callback -> ModuleT mod LB ()
-ircSignalConnect str f = do
-    s <- lift get
-    let cbs = ircCallbacks s
-    name <- getModuleName
-    case M.lookup str cbs of -- TODO: figure out what this TODO is for
-        Nothing -> lift (put s { ircCallbacks = M.insert str [(name,f)]    cbs})
-        Just fs -> lift (put s { ircCallbacks = M.insert str ((name,f):fs) cbs})
-
-ircInstallOutputFilter :: OutputFilter LB -> ModuleT mod LB ()
-ircInstallOutputFilter f = do
-    name <- getModuleName
-    lift . modify $ \s ->
-        s { ircOutputFilters = (name, f): ircOutputFilters s }
-
--- | Checks if the given user has admin permissions and excecute the action
---   only in this case.
+-- | Checks whether the given user has admin permissions
 checkPrivs :: IrcMessage -> LB Bool
 checkPrivs msg = gets (S.member (nick msg) . ircPrivilegedUsers)
 
--- | Checks if the given user is being ignored.
+-- | Checks whether the given user is being ignored.
 --   Privileged users can't be ignored.
 checkIgnore :: IrcMessage -> LB Bool
 checkIgnore msg = liftM2 (&&) (liftM not (checkPrivs msg))
@@ -165,18 +122,17 @@ ircReconnect svr msg = do
     send $ quit svr msg
     liftIO $ threadDelay 1000
 
--- | Send a message to a channel\/user. If the message is too long, the rest
---   of it is saved in the (global) more-state.
+-- | Send a message to a channel\/user, applying all output filters
 ircPrivmsg :: Nick      -- ^ The channel\/user.
            -> String        -- ^ The message.
            -> LB ()
 
 ircPrivmsg who msg = do
-    filters   <- gets ircOutputFilters
-    sendlines <- foldr (\f -> (=<<) (f who)) ((return . lines) msg) $ map snd filters
-    mapM_ (\s -> ircPrivmsg' who (take textwidth s)) (take 10 sendlines)
+    sendlines <- applyOutputFilters who msg
+    w <- getConfig textWidth
+    mapM_ (\s -> ircPrivmsg' who (take w s)) (take 10 sendlines)
 
--- A raw send version
+-- A raw send version (bypasses output filters)
 ircPrivmsg' :: Nick -> String -> LB ()
 ircPrivmsg' who ""  = ircPrivmsg' who " "
 ircPrivmsg' who msg = send $ privmsg who msg

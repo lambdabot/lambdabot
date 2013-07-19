@@ -38,7 +38,7 @@ import Lambdabot.Util.Serial
 
 import Control.Concurrent.Lifted
 import Control.Exception.Lifted as E
-import Control.Monad.Trans
+import Control.Monad.Reader
 import Control.Monad.Trans.Control
 import qualified Data.ByteString.Char8 as P
 import Data.IORef.Lifted
@@ -69,7 +69,7 @@ class MonadLB m => MonadLBState m where
 instance MonadLB m => MonadLBState (ModuleT st m) where
     type LBState (ModuleT st m) = st
     withMS f = do
-        ref <- getRef
+        ref <- asks moduleState
         withMWriter ref f
 
 instance MonadLBState m => MonadLBState (Cmd m) where
@@ -175,7 +175,7 @@ writeGS g = withGS (\_ writer -> writer g)
 
 -- | flush state of modules
 flushModuleState :: LB ()
-flushModuleState = withAllModules (\m -> getModuleName >>= writeGlobalState m)
+flushModuleState = withAllModules (\m -> asks moduleName >>= writeGlobalState m)
 
 -- | Peristence: write the global state out
 writeGlobalState :: Module st -> String -> ModuleT st LB ()

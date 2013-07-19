@@ -1,7 +1,7 @@
 -- | Logging an IRC channel..
 module Lambdabot.Plugin.Social.Activity (activityPlugin) where
 
-import Lambdabot.Bot
+import Lambdabot.Monad
 import Lambdabot.Plugin
 import Lambdabot.Util
 
@@ -17,7 +17,7 @@ type Activity       = ModuleT ActivityState LB
 activityPlugin :: Module [(UTCTime, Nick)]
 activityPlugin = newModule
     { moduleDefState = return []
-    , moduleInit = bindModule2 activityFilter >>= ircInstallOutputFilter
+    , moduleInit = registerOutputFilter activityFilter
 
     , moduleCmds = return
         [ (command "activity")

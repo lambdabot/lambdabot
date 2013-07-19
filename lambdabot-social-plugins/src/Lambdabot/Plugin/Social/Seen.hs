@@ -11,6 +11,7 @@ import Lambdabot.Compat.PackedNick
 import Lambdabot.IRC
 import Lambdabot.Logging
 import qualified Lambdabot.Message as G
+import Lambdabot.Monad
 import Lambdabot.Nick
 import Lambdabot.Plugin
 import Lambdabot.Util
@@ -54,7 +55,7 @@ seenPlugin = newModule
 
     , moduleInit = do
         sequence_
-            [ ircSignalConnect signal =<< bindModule1 (withSeenFM cb)
+            [ registerCallback signal (withSeenFM cb)
             | (signal, cb) <- zip
                 ["JOIN", "PART", "QUIT", "NICK", "353",      "PRIVMSG"]
                 [joinCB, partCB, quitCB, nickCB, joinChanCB, msgCB]

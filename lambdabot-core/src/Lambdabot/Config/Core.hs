@@ -11,6 +11,7 @@ module Lambdabot.Config.Core
     , outputDir
     , dataDir
     , lbVersion
+    , textWidth
     , uncaughtExceptionHandler
     
     , replaceRootLogger
@@ -40,6 +41,9 @@ config "outputDir"          [t| FilePath                |] [| "State/"      |]
 config "dataDir"            [t| FilePath                |] [| "."           |]
 -- ditto for lbVersion
 config "lbVersion"          [t| Version                 |] [| Version [] [] |]
+
+-- IRC maximum msg length, minus a bit for safety.
+config "textWidth"          [t| Int                     |] [| 200 :: Int    |]
 
 -- basic logging.  for more complex setups, configure directly using System.Log.Logger
 config "replaceRootLogger"  [t| Bool                    |] [| True                        |]

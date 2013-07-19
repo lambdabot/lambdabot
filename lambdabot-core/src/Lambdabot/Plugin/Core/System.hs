@@ -5,12 +5,13 @@ import Lambdabot.Bot
 import Lambdabot.Compat.AltTime
 import Lambdabot.Compat.FreenodeNick
 import Lambdabot.IRC
+import Lambdabot.Module
 import Lambdabot.Monad
 import Lambdabot.Plugin
 import Lambdabot.Util
 
+import Control.Monad.Reader
 import Control.Monad.State (gets, modify)
-import Control.Monad.Trans
 import qualified Data.Map as M
 import qualified Data.Set as S
 
@@ -38,7 +39,7 @@ systemPlugin = newModule
             }
         , (command "listmodules")
             { help = say "listmodules. Show available plugins"
-            , process = \_ -> listKeys ircModules
+            , process = \_ -> say . showClean =<< lb listModules
             }
         , (command "listservers")
             { help = say "listservers. Show current servers"
@@ -63,7 +64,7 @@ systemPlugin = newModule
         , (command "listall")
             { privileged = True
             , help = say "list all commands"
-            , process = \_ -> mapM_ doList . M.keys =<< lb (gets ircModules)
+            , process = \_ -> mapM_ doList =<< lb listModules
             }
         , (command "join")
             { privileged = True
@@ -181,17 +182,16 @@ toggleNick edit rest = do
     lb . modify $ edit f nck
 
 listModule :: String -> LB String
-listModule s = withModule s fromCommand printProvides
+listModule s = inModuleNamed s fromCommand printProvides
   where
     fromCommand = withCommand s
-        (return $ "No module \""++s++"\" loaded") (const . printProvides)
+        (return $ "No module \""++s++"\" loaded") (const printProvides)
 
-    -- ghc now needs a type annotation here
-    printProvides :: Module st -> ModuleT st LB String
-    printProvides m = do
-        cmds <- moduleCmds m
+    printProvides :: ModuleT st LB String
+    printProvides = do
+        cmds <- moduleCmds =<< asks theModule
         let cmds' = filter (not . privileged) cmds
-        name' <- getModuleName
+        name' <- asks moduleName
         return . concat $ if null cmds'
                           then [name', " has no visible commands"]
                           else [name', " provides: ", showClean (concatMap cmdNames cmds')]

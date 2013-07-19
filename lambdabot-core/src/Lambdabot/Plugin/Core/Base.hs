@@ -8,6 +8,7 @@ import Lambdabot.Config.Core
 import Lambdabot.IRC
 import Lambdabot.Logging
 import Lambdabot.Message
+import Lambdabot.Module
 import Lambdabot.Monad
 import Lambdabot.Nick
 import Lambdabot.Plugin
@@ -16,7 +17,9 @@ import Lambdabot.Util
 import Control.Applicative
 import Control.Exception.Lifted as E
 import Control.Monad
+import Control.Monad.Reader
 import Control.Monad.State
+import Data.Char
 import Data.List
 import Data.List.Split
 import qualified Data.Map as M
@@ -30,46 +33,50 @@ basePlugin :: Module (GlobalPrivate () ())
 basePlugin = newModule
     { moduleDefState = return $ mkGlobalPrivate 20 ()
     , moduleInit = do
-             ircSignalConnect "PING"    doPING
-             bindModule1 doNOTICE >>= ircSignalConnect "NOTICE"
-             ircSignalConnect "PART"    doPART
-             bindModule1 doKICK   >>= ircSignalConnect "KICK"
-             ircSignalConnect "JOIN"    doJOIN
-             ircSignalConnect "NICK"    doNICK
-             ircSignalConnect "MODE"    doMODE
-             ircSignalConnect "TOPIC"   doTOPIC
-             ircSignalConnect "QUIT"    doQUIT
-             bindModule1 doPRIVMSG >>= ircSignalConnect "PRIVMSG"
-             ircSignalConnect "001"     doRPL_WELCOME
-
-          {- ircSignalConnect "002"     doRPL_YOURHOST
-             ircSignalConnect "003"     doRPL_CREATED
-             ircSignalConnect "004"     doRPL_MYINFO -}
-
-             ircSignalConnect "005"     doRPL_BOUNCE
-
-          {- ircSignalConnect "250"     doRPL_STATSCONN
-             ircSignalConnect "251"     doRPL_LUSERCLIENT
-             ircSignalConnect "252"     doRPL_LUSEROP
-             ircSignalConnect "253"     doRPL_LUSERUNKNOWN
-             ircSignalConnect "254"     doRPL_LUSERCHANNELS
-             ircSignalConnect "255"     doRPL_LUSERME
-             ircSignalConnect "265"     doRPL_LOCALUSERS
-             ircSignalConnect "266"     doRPL_GLOBALUSERS -}
-
-             ircSignalConnect "332"     doRPL_TOPIC
-
-          {- ircSignalConnect "353"     doRPL_NAMRELY
-             ircSignalConnect "366"     doRPL_ENDOFNAMES
-             ircSignalConnect "372"     doRPL_MOTD
-             ircSignalConnect "375"     doRPL_MOTDSTART
-             ircSignalConnect "376"     doRPL_ENDOFMOTD -}
+        registerOutputFilter cleanOutput
+        registerOutputFilter lineify
+        registerOutputFilter cleanOutput
+        
+        registerCallback "PING"    doPING
+        registerCallback "NOTICE"  doNOTICE
+        registerCallback "PART"    doPART
+        registerCallback "KICK"    doKICK
+        registerCallback "JOIN"    doJOIN
+        registerCallback "NICK"    doNICK
+        registerCallback "MODE"    doMODE
+        registerCallback "TOPIC"   doTOPIC
+        registerCallback "QUIT"    doQUIT
+        registerCallback "PRIVMSG" doPRIVMSG
+        registerCallback "001"     doRPL_WELCOME
+        
+        -- registerCallback "002"     doRPL_YOURHOST
+        -- registerCallback "003"     doRPL_CREATED
+        -- registerCallback "004"     doRPL_MYINFO
+        
+        registerCallback "005"     doRPL_BOUNCE
+        
+        -- registerCallback "250"     doRPL_STATSCONN
+        -- registerCallback "251"     doRPL_LUSERCLIENT
+        -- registerCallback "252"     doRPL_LUSEROP
+        -- registerCallback "253"     doRPL_LUSERUNKNOWN
+        -- registerCallback "254"     doRPL_LUSERCHANNELS
+        -- registerCallback "255"     doRPL_LUSERME
+        -- registerCallback "265"     doRPL_LOCALUSERS
+        -- registerCallback "266"     doRPL_GLOBALUSERS
+        
+        registerCallback "332"     doRPL_TOPIC
+        
+        -- registerCallback "353"     doRPL_NAMRELY
+        -- registerCallback "366"     doRPL_ENDOFNAMES
+        -- registerCallback "372"     doRPL_MOTD
+        -- registerCallback "375"     doRPL_MOTDSTART
+        -- registerCallback "376"     doRPL_ENDOFMOTD
     }
 
-doIGNORE :: Callback
+doIGNORE :: IrcMessage -> Base ()
 doIGNORE = debugM . show
 
-doPING :: Callback
+doPING :: IrcMessage -> Base ()
 doPING = noticeM . showPingMsg
     where showPingMsg msg = "PING! <" ++ ircMsgServer msg ++ (':' : ircMsgPrefix msg) ++
             "> [" ++ ircMsgCommand msg ++ "] " ++ show (ircMsgParams msg)
@@ -85,7 +92,7 @@ doNOTICE msg
         body = ircMsgParams msg
         isCTCPTimeReply = ":\SOHTIME" `isPrefixOf` (last body)
 
-doJOIN :: Callback
+doJOIN :: IrcMessage -> Base ()
 doJOIN msg 
     | lambdabotName msg /= nick msg = doIGNORE msg
     | otherwise                     = do
@@ -95,18 +102,20 @@ doJOIN msg
                 aloc    -> aloc
             loc = Nick (server msg) (dropWhile (== ':') chan)
         
-        s <- get
-        put (s { ircChannels = M.insert  (mkCN loc) "[currently unknown]" (ircChannels s)}) -- the empty topic causes problems
-        send $ getTopic loc -- initialize topic
+        -- the empty topic causes problems
+        -- TODO: find out what they are and fix them properly
+        lb . modify $ \s -> s
+            { ircChannels = M.insert  (mkCN loc) "[currently unknown]" (ircChannels s)}
+        lb . send $ getTopic loc -- initialize topic
    where 
 
-doPART :: Callback
+doPART :: IrcMessage -> Base ()
 doPART msg
   = when (lambdabotName msg == nick msg) $ do
         let body = ircMsgParams msg
             loc = Nick (server msg) (head body)
-        s <- get
-        put (s { ircChannels = M.delete (mkCN loc) (ircChannels s) })
+        lb . modify $ \s -> s
+            { ircChannels = M.delete (mkCN loc) (ircChannels s) }
 
 doKICK :: IrcMessage -> Base ()
 doKICK msg
@@ -118,46 +127,46 @@ doKICK msg
             lift $ modify $ \s ->
                 s { ircChannels = M.delete (mkCN loc) (ircChannels s) }
 
-doNICK :: Callback
+doNICK :: IrcMessage -> Base ()
 doNICK msg
   = doIGNORE msg
 
-doMODE :: Callback
+doMODE :: IrcMessage -> Base ()
 doMODE msg
   = doIGNORE msg
 
 
-doTOPIC :: Callback
-doTOPIC msg
-    = do let loc = Nick (server msg) (head (ircMsgParams msg))
-         s <- get
-         put (s { ircChannels = M.insert (mkCN loc) (tail $ head $ tail $ ircMsgParams msg) (ircChannels s)})
+doTOPIC :: IrcMessage -> Base ()
+doTOPIC msg = lb . modify $ \s -> s
+    { ircChannels = M.insert (mkCN loc) (tail $ head $ tail $ ircMsgParams msg) (ircChannels s) }
+    where loc = Nick (server msg) (head (ircMsgParams msg))
 
-doRPL_WELCOME :: Callback
-doRPL_WELCOME msg
-    = do modify $ \state' -> let persists = if M.findWithDefault True (server msg) (ircPersists state')
-                                            then ircPersists state'
-                                            else M.delete (server msg) $ ircPersists state'
-                             in state' { ircPersists = persists }
-         chans <- gets ircChannels
-         forM_ (M.keys chans) $ \chan -> do
-             let cn = getCN chan
-             when (nTag cn == server msg) $ do
-                 modify $ \state' -> state' { ircChannels = M.delete chan $ ircChannels state' }
-                 lb $ send $ joinChannel cn
+doRPL_WELCOME :: IrcMessage -> Base ()
+doRPL_WELCOME msg = lb $ do
+    modify $ \state' -> 
+        let persists = if M.findWithDefault True (server msg) (ircPersists state')
+                then ircPersists state'
+                else M.delete (server msg) $ ircPersists state'
+         in state' { ircPersists = persists }
+    chans <- gets ircChannels
+    forM_ (M.keys chans) $ \chan -> do
+        let cn = getCN chan
+        when (nTag cn == server msg) $ do
+            modify $ \state' -> state' { ircChannels = M.delete chan $ ircChannels state' }
+            lb $ send $ joinChannel cn
 
-doQUIT :: Callback
+doQUIT :: IrcMessage -> Base ()
 doQUIT msg = doIGNORE msg
 
-doRPL_BOUNCE :: Callback
+doRPL_BOUNCE :: IrcMessage -> Base ()
 doRPL_BOUNCE _msg = debugM "BOUNCE!"
 
-doRPL_TOPIC :: Callback
+doRPL_TOPIC :: IrcMessage -> Base ()
 doRPL_TOPIC msg -- nearly the same as doTOPIC but has our nick on the front of body
     = do let body = ircMsgParams msg
              loc = Nick (server msg) (body !! 1)
-         s <- get
-         put (s { ircChannels = M.insert (mkCN loc) (tail $ last body) (ircChannels s) })
+         lb . modify $ \s -> s
+            { ircChannels = M.insert (mkCN loc) (tail $ last body) (ircChannels s) }
 
 doPRIVMSG :: IrcMessage -> Base ()
 doPRIVMSG msg = do
@@ -165,7 +174,7 @@ doPRIVMSG msg = do
     commands    <- getConfig commandPrefixes
     
     if ignored
-        then lift $ doIGNORE msg
+        then doIGNORE msg
         else mapM_ (doPRIVMSG' commands (lambdabotName msg) msg) targets
     where
         alltargets = head (ircMsgParams msg)
@@ -208,7 +217,7 @@ doPersonalMsg commands msg target text s r
 doPublicMsg :: [String] -> IrcMessage -> Nick -> String -> String -> Base ()
 doPublicMsg commands msg target s r
     | commands `arePrefixesOf` s  = doMsg msg (tail s) r target
-    | otherwise                   = (lift $ doIGNORE msg)
+    | otherwise                   = doIGNORE msg
 
 --
 -- normal commands.
@@ -237,8 +246,8 @@ docmd :: IrcMessage -> Nick -> [Char] -> String -> Base ()
 docmd msg towhere rest cmd' = withPS towhere $ \_ _ -> do
     withCommand cmd'   -- Important.
         (ircPrivmsg towhere "Unknown command, try @list")
-        (\_ theCmd -> do
-            name'   <- getModuleName
+        (\theCmd -> do
+            name'   <- asks moduleName
 
             hasPrivs <- lb (checkPrivs msg)
             
@@ -272,7 +281,7 @@ docmd msg towhere rest cmd' = withPS towhere $ \_ _ -> do
 --
 doContextualMsg :: IrcMessage -> Nick -> Nick -> [Char] -> Base ()
 doContextualMsg msg target towhere r = lift $ withAllModules $ \m -> do
-    name' <- getModuleName
+    name' <- asks moduleName
     E.catch
         (lift . mapM_ (ircPrivmsg towhere) =<< execCmd (contextual m r) msg target "contextual") 
         (\e@SomeException{} -> debugM . (name' ++) . (" module failed in contextual handler: " ++) $ show e)
@@ -296,56 +305,85 @@ maybeCommand nm text = mrAfter <$> matchM re text
 --
 
 {-
-doRPL_YOURHOST :: Callback
+doRPL_YOURHOST :: IrcMessage -> LB ()
 doRPL_YOURHOST _msg = return ()
 
-doRPL_CREATED :: Callback
+doRPL_CREATED :: IrcMessage -> LB ()
 doRPL_CREATED _msg = return ()
 
-doRPL_MYINFO :: Callback
+doRPL_MYINFO :: IrcMessage -> LB ()
 doRPL_MYINFO _msg = return ()
 
-doRPL_STATSCONN :: Callback
+doRPL_STATSCONN :: IrcMessage -> LB ()
 doRPL_STATSCONN _msg = return ()
 
-doRPL_LUSERCLIENT :: Callback
+doRPL_LUSERCLIENT :: IrcMessage -> LB ()
 doRPL_LUSERCLIENT _msg = return ()
 
-doRPL_LUSEROP :: Callback
+doRPL_LUSEROP :: IrcMessage -> LB ()
 doRPL_LUSEROP _msg = return ()
 
-doRPL_LUSERUNKNOWN :: Callback
+doRPL_LUSERUNKNOWN :: IrcMessage -> LB ()
 doRPL_LUSERUNKNOWN _msg = return ()
 
-doRPL_LUSERCHANNELS :: Callback
+doRPL_LUSERCHANNELS :: IrcMessage -> LB ()
 doRPL_LUSERCHANNELS _msg = return ()
 
-doRPL_LUSERME :: Callback
+doRPL_LUSERME :: IrcMessage -> LB ()
 doRPL_LUSERME _msg = return ()
 
-doRPL_LOCALUSERS :: Callback
+doRPL_LOCALUSERS :: IrcMessage -> LB ()
 doRPL_LOCALUSERS _msg = return ()
 
-doRPL_GLOBALUSERS :: Callback
+doRPL_GLOBALUSERS :: IrcMessage -> LB ()
 doRPL_GLOBALUSERS _msg = return ()
 
-doUNKNOWN :: Callback
+doUNKNOWN :: IrcMessage -> Base ()
 doUNKNOWN msg
     = debugM $ "UNKNOWN> <" ++ msgPrefix msg ++
       "> [" ++ msgCommand msg ++ "] " ++ show (body msg)
 
-doRPL_NAMREPLY :: Callback
+doRPL_NAMREPLY :: IrcMessage -> LB ()
 doRPL_NAMREPLY _msg = return ()
 
-doRPL_ENDOFNAMES :: Callback
+doRPL_ENDOFNAMES :: IrcMessage -> LB ()
 doRPL_ENDOFNAMES _msg = return ()
 
-doRPL_MOTD :: Callback
+doRPL_MOTD :: IrcMessage -> LB ()
 doRPL_MOTD _msg = return ()
 
-doRPL_MOTDSTART :: Callback
+doRPL_MOTDSTART :: IrcMessage -> LB ()
 doRPL_MOTDSTART _msg = return ()
 
-doRPL_ENDOFMOTD :: Callback
+doRPL_ENDOFMOTD :: IrcMessage -> LB ()
 doRPL_ENDOFMOTD _msg = return ()
 -}
+
+-- Initial output filters
+
+-- | For now, this just checks for duplicate empty lines.
+cleanOutput :: Monad m => a -> [String] -> m [String]
+cleanOutput _ msg = return $ remDups True msg'
+    where
+        remDups True  ([]:xs) =    remDups True xs
+        remDups False ([]:xs) = []:remDups True xs
+        remDups _     (x: xs) = x: remDups False xs
+        remDups _     []      = []
+        msg' = map (dropFromEnd isSpace) msg
+
+-- | wrap long lines.
+lineify :: MonadConfig m => a -> [String] -> m [String]
+lineify _ msg = do
+    w <- getConfig textWidth
+    return (lines (unlines msg) >>= mbreak w)
+    where
+        -- | break into lines
+        mbreak w xs
+            | null bs   = [as]
+            | otherwise = (as++cs) : filter (not . null) (mbreak w ds)
+            where
+                (as,bs) = splitAt (w-n) xs
+                breaks  = filter (not . isAlphaNum . last . fst) $ drop 1 $
+                                  take n $ zip (inits bs) (tails bs)
+                (cs,ds) = last $ (take n bs, drop n bs): breaks
+                n = 10

@@ -10,6 +10,7 @@ module Lambdabot.Util.Browser
 import Codec.Binary.UTF8.String
 import Control.Applicative
 import Control.Monad.Trans
+import Lambdabot.Config
 import Lambdabot.Config.Reference
 import Lambdabot.Monad
 import Lambdabot.Util (limitStr)

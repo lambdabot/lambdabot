@@ -49,7 +49,6 @@ library
                         Lambdabot.Module
                         Lambdabot.Monad
                         Lambdabot.Nick
-                        Lambdabot.OutputFilter
                         Lambdabot.Plugin
                         Lambdabot.Plugin.Core
                         Lambdabot.State
@@ -86,6 +85,7 @@ library
                         network                 >= 2.3.0.13,
                         time                    >= 1.4,
                         parsec                  >= 3,
+                        prim-uniq               == 0.1.*,
                         random                  >= 1,
                         random-fu               >= 0.2,
                         random-source           >= 0.3,

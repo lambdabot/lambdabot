@@ -16,6 +16,7 @@ import Control.Monad.State( gets, modify )
 import Control.Monad.Trans( lift, liftIO )
 import Data.Char
 import qualified Data.Map as M
+import qualified Data.Set as S
 import System.Console.Haskeline (InputT, Settings(..), runInputT, defaultSettings, getInputLine)
 import System.IO
 import System.Timeout.Lifted
@@ -30,6 +31,10 @@ offlineRCPlugin :: Module OfflineRCState
 offlineRCPlugin = newModule
     { moduleDefState = return 0
     , moduleInit = do
+        lb . modify $ \s -> s
+            { ircPrivilegedUsers = S.insert (Nick "offlinerc" "null") (ircPrivilegedUsers s)
+            }
+        
         void . fork $ do
             waitForInit
             lockRC
@@ -67,14 +72,14 @@ feed msg = do
             '>':xs -> cmdPrefix ++ "run " ++ xs
             '!':xs -> xs
             _      -> cmdPrefix ++ dropWhile (== ' ') msg
-    lift . (>> return ()) . timeout (15 * 1000 * 1000) . received $
+    lb . void . timeout (15 * 1000 * 1000) . received $
               IrcMessage { ircMsgServer = "offlinerc"
                          , ircMsgLBName = "offline"
                          , ircMsgPrefix = "null!n=user@null"
                          , ircMsgCommand = "PRIVMSG"
                          , ircMsgParams = ["offline", ":" ++ msg' ] }
 
-handleMsg :: IrcMessage -> LB ()
+handleMsg :: IrcMessage -> OfflineRC ()
 handleMsg msg = liftIO $ do
     let str = case (tail . ircMsgParams) msg of
             []    -> []
@@ -98,12 +103,12 @@ lockRC :: OfflineRC ()
 lockRC = do
     withMS $ \ cur writ -> do
         when (cur == 0) $ do
-          addServer "offlinerc" handleMsg
-          lift $ modify $ \state' ->
-              state' { ircPersists = M.insert "offlinerc" True $ ircPersists state' }
+            registerServer "offlinerc" handleMsg
+            lift $ modify $ \state' ->
+                state' { ircPersists = M.insert "offlinerc" True $ ircPersists state' }
         writ (cur + 1)
 
 unlockRC :: OfflineRC ()
 unlockRC = withMS $ \ cur writ -> do
-    when (cur == 1) $ lb $ remServer "offlinerc"
+    when (cur == 1) $ unregisterServer "offlinerc"
     writ (cur - 1)
