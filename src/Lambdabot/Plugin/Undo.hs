@@ -80,7 +80,7 @@ irrefutable (PIrrPat _)  = True
 irrefutable PWildCard    = True
 irrefutable (PAsPat _ p) = irrefutable p
 irrefutable (PParen p)   = irrefutable p
-irrefutable (PTuple ps)  = all irrefutable ps
+irrefutable (PTuple _box ps) = all irrefutable ps
 irrefutable _              = False
 
 infixed :: Exp -> String -> Exp -> Exp
