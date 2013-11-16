@@ -20,9 +20,14 @@ import Network( connectTo, PortID(..) )
 import System.IO
 import System.Timeout.Lifted
 
-type IRC = ModuleT () LB
+data IRCState =
+    IRCState {
+        password :: Maybe String
+    }
 
-ircPlugin :: Module ()
+type IRC = ModuleT IRCState LB
+
+ircPlugin :: Module IRCState
 ircPlugin = newModule
     { moduleCmds = return
         [ (command "irc-connect")
@@ -35,7 +40,17 @@ ircPlugin = newModule
                         lift (online tag hostn pn nickn (intercalate " " uix))
                     _ -> say "Not enough parameters!"
             }
+        , (command "irc-password")
+            { privileged = True
+            , help = say "irc-password pwd.  set password for next irc-connect command"
+            , process = \rest ->
+                case splitOn " " rest of
+                    pwd:_ -> do
+                        modifyMS (\ms -> ms{ password = Just pwd })
+                    _ -> say "Not enough parameters!"
+            }
         ]
+    , moduleDefState = return $ IRCState{ password = Nothing }
     }
 
 ----------------------------------------------------------------------
@@ -93,8 +108,9 @@ decodeMessage svr lbn line =
           | otherwise  = decodeParams' (c:param) params cs
         decodeParams' param params (c:cs) = decodeParams' (c:param) params cs
 
-ircSignOn :: String -> Nick -> String -> LB ()
-ircSignOn svr nickn ircname = do
+ircSignOn :: String -> Nick -> Maybe String -> String -> LB ()
+ircSignOn svr nickn pwd ircname = do
+    maybe (return ()) (\pwd -> send $ pass (nTag nickn) pwd) pwd
     send $ user (nTag nickn) (nName nickn) svr ircname
     send $ setNick nickn
 
@@ -125,7 +141,9 @@ online tag hostn portnum nickn ui = do
     E.catch 
         (addServer tag (io . sendMsg sock sendmv))
         (\err@SomeException{} -> io (hClose sock) >> E.throwIO err)
-    lb $ ircSignOn hostn (Nick tag nickn) ui
+    pwd <- password `fmap` readMS
+    modifyMS $ \ms -> ms{ password = Nothing }
+    lb $ ircSignOn hostn (Nick tag nickn) pwd ui
     lb . void . fork $ E.catch
         (readerLoop tag nickn sock)
         (\e@SomeException{} -> do

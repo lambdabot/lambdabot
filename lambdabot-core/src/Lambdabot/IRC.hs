@@ -11,6 +11,7 @@ module Lambdabot.IRC
     , privmsg
     , quit
     , timeReply
+    , pass
     , user
     , setNick
     ) where
@@ -103,6 +104,9 @@ timeReply msg = msg
 
 user :: String -> String -> String -> String -> IrcMessage
 user svr nick_ server_ ircname = mkMessage svr "USER" [nick_, "localhost", server_, ircname]
+
+pass :: String -> String -> IrcMessage
+pass svr pwd = mkMessage svr "PASS" [pwd]
 
 setNick :: Nick -> IrcMessage
 setNick nick_ = mkMessage (nTag nick_) "NICK" [nName nick_]
