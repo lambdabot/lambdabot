@@ -155,7 +155,7 @@ readerLoop tag nickn sock = forever $ do
     line <- io $ hGetLine sock
     let line' = filter (`notElem` "\r\n") line
     if "PING " `isPrefixOf` line'
-        then io $ hPutStr sock ("PONG " ++ drop 5 line' ++ "\r\n")
+        then io $ P.hPut sock $ P.pack $ "PONG " ++ drop 5 line' ++ "\r\n"
         else void . fork . void . timeout 15000000 $ received (decodeMessage tag nickn line')
 
 sendMsg :: Handle -> MVar () -> IrcMessage -> IO ()
