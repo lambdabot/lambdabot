@@ -101,6 +101,7 @@ go _ _      = []   -- unterminated
 extract_signatures :: String -> Maybe String
 extract_signatures output
         = fmap reverse . removeExp . reverse .
+          (' ':) .
           unwords . map (dropWhile isSpace . expandTab 8) .
           mapMaybe ((>>= last') . fmap mrSubList . matchM signature_regex) .
           lines $ output
