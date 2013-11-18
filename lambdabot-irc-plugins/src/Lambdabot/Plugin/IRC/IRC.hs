@@ -19,6 +19,7 @@ import Data.List.Split
 import Network( connectTo, PortID(..) )
 import System.IO
 import System.Timeout.Lifted
+import Data.IORef
 
 data IRCState =
     IRCState {
@@ -110,7 +111,7 @@ decodeMessage svr lbn line =
 
 ircSignOn :: String -> Nick -> Maybe String -> String -> LB ()
 ircSignOn svr nickn pwd ircname = do
-    maybe (return ()) (\pwd -> send $ pass (nTag nickn) pwd) pwd
+    maybe (return ()) (\pwd' -> send $ pass (nTag nickn) pwd') pwd
     send $ user (nTag nickn) (nName nickn) svr ircname
     send $ setNick nickn
 
@@ -130,6 +131,7 @@ online tag hostn portnum nickn ui = do
     sem1    <- io $ SSem.new 0
     sem2    <- io $ SSem.new 4 -- one extra token stays in the MVar
     sendmv  <- io newEmptyMVar
+    pongref <- io $ newIORef False
     io . void . fork . forever $ do
         SSem.wait sem1
         threadDelay 2000000
@@ -145,18 +147,37 @@ online tag hostn portnum nickn ui = do
     modifyMS $ \ms -> ms{ password = Nothing }
     lb $ ircSignOn hostn (Nick tag nickn) pwd ui
     lb . void . fork $ E.catch
-        (readerLoop tag nickn sock)
+        (readerLoop tag nickn pongref sock)
+        (\e@SomeException{} -> do
+            errorM (show e)
+            remServer tag)
+    lb . void . fork $ E.catch
+        (pingPongLoop tag hostn pongref sock)
         (\e@SomeException{} -> do
             errorM (show e)
             remServer tag)
 
-readerLoop :: String -> String -> Handle -> LB ()
-readerLoop tag nickn sock = forever $ do
+pingPongLoop :: String -> String -> IORef Bool -> Handle -> LB ()
+pingPongLoop tag hostn pongref sock = do
+    io $ writeIORef pongref False
+    io $ P.hPut sock $ P.pack $ "PING " ++ hostn ++ "\r\n"
+    io $ threadDelay 120000000
+    pong <- io $ readIORef pongref
+    if pong
+        then pingPongLoop tag hostn pongref sock
+        else errorM "Ping timeout." >> remServer tag
+
+readerLoop :: String -> String -> IORef Bool -> Handle -> LB ()
+readerLoop tag nickn pongref sock = forever $ do
     line <- io $ hGetLine sock
     let line' = filter (`notElem` "\r\n") line
     if "PING " `isPrefixOf` line'
         then io $ P.hPut sock $ P.pack $ "PONG " ++ drop 5 line' ++ "\r\n"
-        else void . fork . void . timeout 15000000 $ received (decodeMessage tag nickn line')
+        else void . fork . void . timeout 15000000 $ do
+            let msg = decodeMessage tag nickn line'
+            if ircMsgCommand msg == "PONG"
+                then io $ writeIORef pongref True
+                else received msg
 
 sendMsg :: Handle -> MVar () -> IrcMessage -> IO ()
 sendMsg sock mv msg =
