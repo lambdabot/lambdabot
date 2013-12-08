@@ -18,6 +18,6 @@ modulesInfo = $(modules $ corePlugins
     ++ haskellPlugins
     ++ ["irc", "localtime", "topic"] -- ircPlugins
     ++ ["dummy", "fresh", "todo"] -- miscPlugins
-    ++ ["bf", "dice", "elite", "filter", "quote", "slap", "unlambda", "vixen"] -- noveltyPlugins
-    ++ referencePlugins
-    ++ socialPlugins)
+    ++ ["bf", "dice", "elite", "filter", "quote", "slap", "unlambda"] -- noveltyPlugins
+    ++ ["dict", "metar", "oeis", "search", "spell", "ticker", "where"] -- referencePlugins
+    ++ ["activity", "karma", "poll", "tell"]) -- socialPlugins
