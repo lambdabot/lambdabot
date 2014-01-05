@@ -104,12 +104,11 @@ docPrefix = "http://haskell.org/ghc/docs/latest/html/libraries"
 lookupPackage :: String -> Char -> String -> String -> String
 lookupPackage begin sep end x'' = 
     case M.lookup (P.pack x') docAssocs of
-        Nothing -> x ++ " not available"
-        Just m  -> begin
+        Nothing -> strip isSpace x'' ++ " not available"
+        Just (x, m)  -> begin
                </> P.unpack m
-               </> map (choice (=='.') (const sep) id) x'
+               </> map (choice (=='.') (const sep) id) (P.unpack x)
                <.> end
     where 
         choice p f g = p >>= \b -> if b then f else g
-        x  = strip isSpace x''
-        x' = map toLower x
+        x'  = map toLower (strip isSpace x'')
