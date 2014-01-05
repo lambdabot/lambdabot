@@ -1,0 +1,39 @@
+name:                   lambdabot-trusted
+version:                5.0
+
+license:                GPL
+license-file:           LICENSE
+
+author:                 Bertram Felgenhauer
+maintainer:             Bertram Felgenhauer <int-e@gmx.de>
+
+category:               Development, Web
+synopsis:               Lambdabot is a development tool and advanced IRC bot
+description:            Lambdabot is an IRC bot written over several years by
+                        those on the #haskell IRC channel.
+                        .
+                        It operates as a command line tool, embedded in an editor,
+                        embedded in GHCi, via internet relay chat and on the web.
+
+homepage:               http://haskell.org/haskellwiki/Lambdabot
+
+build-type:             Simple
+cabal-version:          >= 1.8
+tested-with:            GHC==7.4.1, GHC == 7.6.3
+
+source-repository head
+  type:                 git
+  location:             https://github.com/mokus0/lambdabot.git
+
+library
+  hs-source-dirs:       src
+  ghc-options:          -Wall
+                        -funbox-strict-fields
+
+  exposed-modules:      Lambdabot.Plugin.Haskell.Eval.Trusted
+
+  other-modules:        Lambdabot.Plugin.Haskell.Check.ShowQ
+
+  build-depends:        base                    >= 4.4,
+                        oeis                    >= 0.3.1,
+                        QuickCheck              >= 2

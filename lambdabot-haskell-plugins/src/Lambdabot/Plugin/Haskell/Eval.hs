@@ -77,8 +77,8 @@ runGHC src = do
                 e = munge err
             return $ case () of {_
                 | null o && null e -> "Terminated\n"
-                | null o           -> " " ++ e
-                | otherwise        -> " " ++ o
+                | null o           -> e
+                | otherwise        -> o
             }
 
 ------------------------------------------------------------------------

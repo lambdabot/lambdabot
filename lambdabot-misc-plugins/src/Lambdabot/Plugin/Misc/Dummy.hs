@@ -32,7 +32,7 @@ dummyPlugin = newModule
           ]
 
     , contextual = \msg -> case msg of
-        "lisppaste2: url"  -> say "Haskell pastebin: http://hpaste.org/"
+        "lisppaste2: url"  -> say "Haskell pastebin: http://lpaste.net/"
         _                  -> return ()
     }
 
@@ -62,7 +62,7 @@ dummylst =
     ,("id"         , (' ' :) . id)
     ,("show"       , show)
     ,("wiki"       , lookupWiki)
-    ,("paste"      , const "Haskell pastebin: http://hpaste.org/")
+    ,("paste"      , const "Haskell pastebin: http://lpaste.net/")
     ,("docs"       , \x -> if null x
                            then docPrefix </> "index.html"
                            else lookupPackage docPrefix '-' "html" x)

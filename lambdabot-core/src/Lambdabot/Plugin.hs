@@ -57,11 +57,11 @@ lim80 :: Monad m => m String -> Cmd m ()
 lim80 action = do
     to <- getTarget
     let lim = case nName to of
-                  ('#':_) -> limitStr 80 -- message to channel: be nice
+                  ('#':_) -> take 5 . map (limitStr 80) -- message to channel: be nice
                   _       -> id          -- private message: get everything
-        spaceOut = unlines . map (' ':) . lines
+        spaceOut = unlines . lim . map (' ':) . lines
         removeControl = filter (\x -> isSpace x || not (isControl x))
-    (say =<<) . lift $ liftM (lim . encodeString . spaceOut . removeControl . decodeString) action 
+    (say =<<) . lift $ liftM (encodeString . spaceOut . removeControl . decodeString) action
 
 -- | convenience, similar to ios but also cut output to channel to 80 characters
 -- usage:  @process _ _ to _ s = ios80 to (plugs s)@
