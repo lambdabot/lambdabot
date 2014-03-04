@@ -8,6 +8,7 @@ module Lambdabot.IRC
     , partChannel
     , getTopic
     , setTopic
+    , codepage
     , privmsg
     , quit
     , timeReply
@@ -85,6 +86,11 @@ privmsg who msg = if action then mk [nName who, ':':(chr 0x1):("ACTION " ++ clea
           (clean_msg,action) = case cleaned_msg of
               ('/':'m':'e':r) -> (dropWhile isSpace r,True)
               str             -> (str,False)
+
+-- | 'codepage' creates a server CODEPAGE message. The input string given is the
+--   codepage name for current session.
+codepage :: String -> String -> IrcMessage
+codepage svr codepage = mkMessage svr "CODEPAGE" [' ':codepage]
 
 -- | 'quit' creates a server QUIT message. The input string given is the
 --   quit message, given to other parties when leaving the network.

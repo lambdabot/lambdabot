@@ -89,6 +89,13 @@ systemPlugin = newModule
                 tgtNick <- readNick tgt
                 lb $ ircPrivmsg tgtNick txt
             }
+        , (command "codepage")
+            { privileged = True
+            , help = say "codepage <server> <CP-name>"
+            , process = \rest -> do
+                let (server, cp) = splitFirstWord rest
+                lb $ ircCodepage server cp
+            }
         , (command "quit")
             { privileged = True
             , help = say "quit [msg], have the bot exit with msg"
