@@ -52,9 +52,9 @@ import Lambdabot.Compat.FreenodeNick
 import Lambdabot.Plugin
 import Lambdabot.Util
 
-import Control.Arrow (first)
 import Control.Monad
 import qualified Data.Map as M
+import Data.Maybe (fromMaybe)
 import Text.Printf (printf)
 
 -- | Was it @tell or @ask that was the original command?
@@ -66,8 +66,9 @@ data Note        = Note { noteSender   :: FreenodeNick,
                           noteType     :: NoteType }
                    deriving (Eq, Show, Read)
 -- | The state. A map of (times we last told this nick they've got messages, the
---   messages themselves)
-type NoticeBoard = M.Map FreenodeNick (Maybe ClockTime, [Note])
+--   messages themselves, the auto-reply)
+type NoticeEntry = (Maybe ClockTime, [Note], Maybe String)
+type NoticeBoard = M.Map FreenodeNick NoticeEntry
 
 type Tell = ModuleT NoticeBoard LB
 
@@ -105,6 +106,26 @@ tellPlugin = newModule
                 sender <- getSender
                 clearMessages sender
                 say "Messages cleared."
+            }
+        , (command "auto-reply")
+            { help = say "auto-reply. Lets lambda-bot auto-reply if someone sends you a message"
+            , process = doAutoReply
+            }
+        , (command "auto-reply?")
+            { help = say "auto-reply?. Tells you your auto-reply status"
+            , process = const $ do
+                sender <- getSender
+                a <- getAutoReply sender
+                case a of
+                    Just s      -> say $ "Your auto-reply is \"" ++ s ++ "\"."
+                    Nothing     -> say "You do not have an auto-reply message set."
+            }
+        , (command "clear-auto-reply")
+            { help = say "clear-auto-reply. Clears your auto-reply message."
+            , process = const $ do
+                sender <- getSender
+                clearAutoReply sender
+                say "Auto-reply message cleared."
             }
         , (command "print-notices")
             { privileged = True
@@ -154,11 +175,11 @@ needToRemind n = do
   st  <- readMS
   now <- io getClockTime
   return $ case M.lookup (FreenodeNick n) st of
-             Just (Just lastTime, _) ->
+             Just (Just lastTime, _, _) ->
                let diff = now `diffClockTimes` lastTime
                in diff > TimeDiff 86400
-             Just (Nothing,       _) -> True
-             Nothing                 -> True
+             Just (Nothing,       _, _) -> True
+             Nothing                    -> True
 
 -- | Add a note to the NoticeBoard
 writeDown :: Nick -> Nick -> String -> NoteType -> Cmd Tell ()
@@ -168,16 +189,35 @@ writeDown to from what ntype = do
                     noteContents = what,
                     noteTime     = time,
                     noteType     = ntype }
-  modifyMS (M.insertWith (\_ (_, ns) -> (Nothing, ns ++ [note]))
-                         (FreenodeNick to) (Nothing, [note]))
+  modEntry to $ \(_, ns, a) -> (Nothing, ns ++ [note], a)
 
 -- | Return a user's notes, or Nothing if they don't have any
 getMessages :: Nick -> Cmd Tell (Maybe [Note])
-getMessages sender = fmap (fmap snd . M.lookup (FreenodeNick sender)) readMS
+getMessages sender = fmap (fmap (\(_,ns,_) -> ns) . M.lookup (FreenodeNick sender)) readMS
 
 -- | Clear a user's messages.
 clearMessages :: Nick -> Cmd Tell ()
-clearMessages sender = modifyMS (M.delete (FreenodeNick sender))
+clearMessages sender = modEntry sender $ \(_, _, a) -> (Nothing, [], a)
+
+-- | Sets a user's auto-reply message
+setAutoReply :: Nick -> String -> Cmd Tell ()
+setAutoReply sender msg = modEntry sender $ \(t, ns, _) -> (t, ns, Just msg)
+
+-- | Gets a user's auto-reply message
+getAutoReply :: Nick -> Cmd Tell (Maybe String)
+getAutoReply sender = fmap (join . fmap (\(_,_,a) -> a) . M.lookup (FreenodeNick sender)) readMS
+
+-- | Clears the auto-reply message
+clearAutoReply :: Nick -> Cmd Tell ()
+clearAutoReply sender = modEntry sender $ \(t, ns, _) -> (t, ns, Nothing)
+
+-- | Modifies an entry, taking care of missing entries and cleaning up empty entries.
+-- (We consider an entry empty even if it still has a timestamp.)
+modEntry :: Nick -> (NoticeEntry -> NoticeEntry) -> Cmd Tell ()
+modEntry sender f = modifyMS $ M.alter (cleanup . f . fromMaybe empty) (FreenodeNick sender)
+  where empty = (Nothing, [], Nothing)
+        cleanup (_, [], Nothing) = Nothing
+        cleanup e = Just e
 
 -- * Handlers
 --
@@ -217,15 +257,28 @@ doTell ntype (who':args) = do
             | recipient == me          = (False, "Nice try ;)")
             | null args                = (False, "What should I " ++ verb ntype ++ " " ++ who ++ "?")
             | otherwise                = (True,  "Consider it noted.")
-    when record (writeDown recipient sender rest ntype)
+    when record $ do
+        autoReply <- getAutoReply recipient
+        case autoReply of
+            Nothing -> return ()
+            Just s -> say $ who ++ " lets you know: " ++ s
+        writeDown recipient sender rest ntype
     say res
+
+-- | Execute a @auto-reply
+doAutoReply :: String -> Cmd Tell ()
+doAutoReply "" = say "No auto-reply message given. Did you mean @clear-auto-reply?"
+doAutoReply msg = do
+    sender      <- getSender
+    setAutoReply sender msg
+    say "Auto-Reply messages noted. You can check the status with auto-reply? and clear it with clear-auto-reply."
 
 -- | Remind a user that they have messages.
 doRemind :: Nick -> (String -> Cmd Tell ()) -> Cmd Tell ()
 doRemind sender remind = do
     ms  <- getMessages sender
     now <- io getClockTime
-    modifyMS (M.update (Just . first (const $ Just now)) (FreenodeNick sender))
+    modEntry sender $ \(_,ns,a) -> (Just now, ns, a)
     case ms of
         Just msgs -> do
             me <- showNick =<< getLambdabotName
