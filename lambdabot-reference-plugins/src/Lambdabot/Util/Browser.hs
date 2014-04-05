@@ -18,6 +18,8 @@ import Network.HTTP
 import Network.URI
 import Text.HTML.TagSoup
 import Text.HTML.TagSoup.Match
+import Data.Char (toLower)
+import Data.List (isPrefixOf)
 
 -- | Run a browser action with some standardized settings
 browseLB :: MonadLB m => BrowserAction conn a -> m a
@@ -50,7 +52,7 @@ urlPageTitle = fmap (fmap (limitStr maxTitleLength)) . rawPageTitle
 -- only be used by other plugins if and only if the result is not to
 -- be displayed in an IRC channel.  Instead, use 'urlPageTitle'.
 rawPageTitle :: String -> BrowserAction (HandleStream String) (Maybe String)
-rawPageTitle url = do
+rawPageTitle url = checkHTTPS $ do
     (_, result) <- request (getRequest (takeWhile (/='#') url))
     case rspCode result of
         (2,0,0)   -> do
@@ -62,6 +64,8 @@ rawPageTitle url = do
     
     where googleCacheURL = (gURL++) . escapeURIString (const False)
           gURL = "http://www.google.com/search?hl=en&q=cache:"
+          checkHTTPS act | "https:" `isPrefixOf` map toLower url = return Nothing
+                         | otherwise = act
 
 -- | Given a server response (list of Strings), return the text in
 -- between the title HTML element, only if it is text/html content.
