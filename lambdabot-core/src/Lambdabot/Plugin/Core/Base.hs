@@ -33,6 +33,7 @@ basePlugin = newModule
              ircSignalConnect "PING"    doPING
              bindModule1 doNOTICE >>= ircSignalConnect "NOTICE"
              ircSignalConnect "PART"    doPART
+             bindModule1 doKICK   >>= ircSignalConnect "KICK"
              ircSignalConnect "JOIN"    doJOIN
              ircSignalConnect "NICK"    doNICK
              ircSignalConnect "MODE"    doMODE
@@ -106,6 +107,16 @@ doPART msg
             loc = Nick (server msg) (head body)
         s <- get
         put (s { ircChannels = M.delete (mkCN loc) (ircChannels s) })
+
+doKICK :: IrcMessage -> Base ()
+doKICK msg
+   = do let body = ircMsgParams msg
+            loc = Nick (server msg) (body !! 0)
+            who = Nick (server msg) (body !! 1)
+        when (lambdabotName msg == who) $ do
+            noticeM $ fmtNick "" (nick msg) ++ " KICK " ++ fmtNick (server msg) loc ++ " " ++ show (drop 2 body)
+            lift $ modify $ \s ->
+                s { ircChannels = M.delete (mkCN loc) (ircChannels s) }
 
 doNICK :: Callback
 doNICK msg
