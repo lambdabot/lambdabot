@@ -16,6 +16,7 @@ import qualified Language.Haskell.Exts as Hs
 import System.Directory
 import System.Exit
 import System.Process
+import Codec.Binary.UTF8.String
 
 evalPlugin :: Module ()
 evalPlugin = newModule
@@ -86,7 +87,7 @@ runGHC src = do
 
 define :: MonadLB m => String -> m String
 define [] = return "Define what?"
-define src = case Hs.parseModule src of
+define src = case Hs.parseModule (decodeString src) of
     Hs.ParseOk srcModule -> do
         l <- lb (findOrCreateLBFile "L.hs")
         res <- io (Hs.parseFile l)
@@ -147,7 +148,7 @@ comp src = do
     _ <- io (try (removeFile ".L.hi") :: IO (Either SomeException ()))
     _ <- io (try (removeFile ".L.o")  :: IO (Either SomeException ()))
 
-    case (munge o', munge e') of
+    case (mungeEnc o', mungeEnc e') of
         ([],[]) | c /= ExitSuccess -> do
                     io (removeFile ".L.hs")
                     return "Error."
@@ -158,8 +159,9 @@ comp src = do
         (ee,[]) -> return ee
         (_ ,ee) -> return ee
 
-munge :: String -> String
+munge, mungeEnc :: String -> String
 munge = expandTab 8 . strip (=='\n')
+mungeEnc = encodeString . munge
 
 ------------------------------
 -- reset all bindings
