@@ -84,6 +84,7 @@ library
                         split                   >= 0.2,
                         syb                     >= 0.3,
                         transformers            >= 0.2,
+                        utf8-string             >= 0.3,
 
                         -- runtime dependencies - for eval etc.
                         arrows                  >= 0.4,
