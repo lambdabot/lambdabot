@@ -1,0 +1,5 @@
+irc-connect libera localhost 6667 lambdabot Lambda_Robots:_100%_Loyal
+rc passwd.rc
+rc admins.rc
+rc channels.rc
+rc ignores.rc
