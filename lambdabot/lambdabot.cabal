@@ -34,9 +34,7 @@ extra-source-files:     scripts/ghci.sh
                         Changelog
                         README.md
 
-data-files:             scripts/online.rc,
-                        scripts/passwd.rc.sample,
-                        State/haddock,
+data-files:             State/haddock,
                         State/Pristine.hs.default,
                         State/source,
                         State/vixen
@@ -60,4 +58,8 @@ executable lambdabot
                         lambdabot-novelty-plugins    >= 5.3 && < 5.4,
                         lambdabot-reference-plugins  >= 5.3 && < 5.4,
                         lambdabot-social-plugins     >= 5.3 && < 5.4,
-                        mtl                          >= 2
+                        mtl                          >= 2,
+                        -- more runtime dependencies
+                        -- djinn,
+                        lens,
+                        data-default

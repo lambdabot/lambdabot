@@ -1,0 +1,17 @@
+#! /bin/bash
+cd
+screen -q -wipe lambda
+# screen -q -ls lambda
+[ $? == 9 ] || exit
+echo $(date): restarting screen session >> setup-screen-session.log
+screen -S lambda -d -m
+sleep 0.3
+screen -S lambda -X stuff 'while true; do socat TCP4-LISTEN:6667,bind=127.0.0.1,reuseaddr,fork,forever OPENSSL:irc.libera.chat:6697; done\n'
+screen -S lambda -X screen
+screen -S lambda -X stuff 'cd ~/run\n./loop\n'
+screen -S lambda -X screen
+screen -S lambda -X stuff 'top -d 30 -u lambda\n'
+sleep 0.3
+screen -S lambda -X stuff 'M'
+screen -S lambda -X screen
+screen -S lambda -X stuff './mueval-loop\n'
