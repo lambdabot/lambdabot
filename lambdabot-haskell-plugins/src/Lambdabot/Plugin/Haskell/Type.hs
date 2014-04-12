@@ -21,6 +21,7 @@ module Lambdabot.Plugin.Haskell.Type (typePlugin, query_ghci) where
 import Lambdabot.Config.Haskell
 import Lambdabot.Plugin
 import Lambdabot.Util
+import Codec.Binary.UTF8.String
 
 import Data.Char
 import Data.Maybe
@@ -132,10 +133,10 @@ query_ghci cmd expr = do
     ghci <- getConfig ghciBinary
     (_, output, errors) <- io $ readProcessWithExitCode ghci
         ("-v0":"-fforce-recomp":"-iState":extFlags)
-        (context ++ theCommand cmd (stripComments expr))
+        (context ++ theCommand cmd (stripComments (decodeString expr)))
     let ls = extract_signatures output
     return $ case ls of
-               Nothing -> unlines . take 3 . filter (not . null) . map cleanRE2 .
+               Nothing -> encodeString . unlines . take 3 . filter (not . null) . map cleanRE2 .
                           lines . expandTab 8 . cleanRE . filter (/='\r') $ errors -- "bzzt"
                Just t -> t
 
