@@ -87,18 +87,21 @@ runGHC src = do
 
 define :: MonadLB m => String -> m String
 define [] = return "Define what?"
-define src = case Hs.parseModule (decodeString src) of
-    Hs.ParseOk srcModule -> do
-        l <- lb (findOrCreateLBFile "L.hs")
-        res <- io (Hs.parseFile l)
-        case res of
-            Hs.ParseFailed loc err -> return (Hs.prettyPrint loc ++ ':' : err)
-            Hs.ParseOk lModule -> do
-                let merged = mergeModules lModule srcModule
-                case moduleProblems merged of
-                    Just msg -> return msg
-                    Nothing  -> comp merged
-    Hs.ParseFailed _loc err -> return ("Parse failed: " ++ err)
+define src = do
+    exts <- getConfig languageExts
+    let mode = Hs.defaultParseMode{ Hs.extensions = map Hs.classifyExtension exts }
+    case Hs.parseModuleWithMode mode (decodeString src) of
+        Hs.ParseOk srcModule -> do
+            l <- lb (findOrCreateLBFile "L.hs")
+            res <- io (Hs.parseFile l)
+            case res of
+                Hs.ParseFailed loc err -> return (Hs.prettyPrint loc ++ ':' : err)
+                Hs.ParseOk lModule -> do
+                    let merged = mergeModules lModule srcModule
+                    case moduleProblems merged of
+                        Just msg -> return msg
+                        Nothing  -> comp merged
+        Hs.ParseFailed _loc err -> return ("Parse failed: " ++ err)
 
 -- merge the second module _into_ the first - meaning where merging doesn't
 -- make sense, the field from the first will be used
