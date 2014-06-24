@@ -7,6 +7,7 @@ module Lambdabot.Plugin.Haskell.Eval (evalPlugin, runGHC) where
 import Lambdabot.Config.Haskell
 import Lambdabot.Plugin
 import Lambdabot.Util
+import Lambdabot.Util.Browser
 
 import Control.Exception (try, SomeException)
 import Control.Monad
@@ -17,6 +18,9 @@ import System.Directory
 import System.Exit
 import System.Process
 import Codec.Binary.UTF8.String
+import Network.Browser
+import Network.HTTP (rspBody)
+import Network.URI  (parseURI)
 
 evalPlugin :: Module ()
 evalPlugin = newModule
@@ -29,6 +33,10 @@ evalPlugin = newModule
             { aliases = ["define"] -- because @define always gets "corrected" to @undefine
             , help = say "let <x> = <e>. Add a binding"
             , process = lim80 . define
+            }
+        , (command "letlpaste")
+            { help = say "letlpaste <paste_id>. Import the contents of an lpaste."
+            , process = lim80 . defineFromLPaste
             }
         , (command "undefine")
             { help = say "undefine. Reset evaluator local bindings"
@@ -165,6 +173,27 @@ comp src = do
 munge, mungeEnc :: String -> String
 munge = expandTab 8 . strip (=='\n')
 mungeEnc = encodeString . munge
+
+------------------------------
+-- define from lpaste
+
+defineFromLPaste :: MonadLB m => String -> m String
+defineFromLPaste num = do
+  mcode <- fetchLPaste num
+  case mcode of
+    Nothing   -> return "Failed to fetch lpaste."
+    Just code -> define code
+
+fetchLPaste :: MonadLB m => String -> m (Maybe String)
+fetchLPaste num = browseLB $ do
+  let src = "http://lpaste.net/raw/" ++ num
+  case parseURI src of
+    Nothing  -> return Nothing
+    Just uri -> do
+      (euri, resp) <- request $ defaultGETRequest uri
+      return $ if euri == uri
+        then Just $ rspBody resp
+        else Nothing
 
 ------------------------------
 -- reset all bindings
