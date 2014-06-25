@@ -96,4 +96,7 @@ library
                         mueval                  >= 0.9,
                         numbers                 >= 3000,
                         show                    >= 0.4,
-                        vector-space            >= 0.8
+                        vector-space            >= 0.8,
+                        HTTP                    >= 4000,
+                        network                 >= 2.3.0.13,
+                        lambdabot-reference-plugins
