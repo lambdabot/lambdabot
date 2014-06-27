@@ -14,6 +14,7 @@ module Lambdabot.Bot
     , checkPrivs
     , checkIgnore
     
+    , ircCodepage
     , ircGetChannels
     , ircQuit
     , ircReconnect
@@ -137,6 +138,13 @@ checkIgnore msg = liftM2 (&&) (liftM not (checkPrivs msg))
 
 ------------------------------------------------------------------------
 -- Some generic server operations
+
+-- Send a CODEPAGE command to set encoding for current session.
+-- Some IRC networks don't provide UTF-8 ports, but allow
+-- switching it in runtime
+ircCodepage :: String -> String -> LB ()
+ircCodepage svr cpage = do
+    send $ codepage svr cpage
 
 ircGetChannels :: LB [Nick]
 ircGetChannels = (map getCN . M.keys) `fmap` gets ircChannels
