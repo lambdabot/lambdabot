@@ -6,6 +6,7 @@ module Lambdabot.Config.Core
     ( commandPrefixes
     , disabledCommands
     , editDistanceLimit
+    , enableInsults
     , onStartupCmds
     , outputDir
     , uncaughtExceptionHandler
@@ -29,6 +30,7 @@ import System.IO
 config "commandPrefixes"    [t| [String]                |] [| ["@", "?"]    |]
 config "disabledCommands"   [t| [String]                |] [| []            |]
 config "editDistanceLimit"  [t| Int                     |] [| 3 :: Int      |]
+config "enableInsults"      [t| Bool                    |] [| True          |]
 configWithMerge [| (++) |] "onStartupCmds" [t| [String] |] [| ["offline"]   |]
 config "outputDir"          [t| FilePath                |] [| "State/"      |]
 

@@ -24,6 +24,7 @@ flags =
     , Option "t"  ["trust"] (arg "<package>" trustedPackages strs)  "Trust the specified packages when evaluating code"
     , Option "V"  ["version"] (NoArg version)                       "Print the version of lambdabot"
     , Option "X"  []        (arg "<extension>" languageExts strs)   "Set a GHC language extension for @run"
+    , Option "n"  ["nice"]  (NoArg noinsult)                        "Be nice (disable insulting error messages)"
     ] where 
         arg :: String -> Config t -> (String -> IO t) -> ArgDescr (IO (DSum Config))
         arg descr key fn = ReqArg (fmap (key :=>) . fn) descr
@@ -36,8 +37,8 @@ flags =
                 [ "Unknown log level."
                 , "Valid levels are: " ++ show [DEBUG, INFO, NOTICE, WARNING, ERROR, CRITICAL, ALERT, EMERGENCY]
                 ]
-                
-                
+        
+        noinsult = return (enableInsults :=> False)
 
 versionString :: String
 versionString = ("lambdabot version " ++ showVersion lambdabotVersion)

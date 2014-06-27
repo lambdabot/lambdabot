@@ -71,4 +71,4 @@ getWhere fm fact =
 updateWhere :: Bool -> WhereState -> WhereWriter -> String -> String -> Cmd Where String
 updateWhere _guard factFM writer fact dat = do
         writer $ M.insert (P.pack fact) (P.pack dat) factFM
-        random confirmation
+        randomSuccessMsg

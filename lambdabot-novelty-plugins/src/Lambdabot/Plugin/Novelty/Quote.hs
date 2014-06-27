@@ -121,7 +121,7 @@ runRemember str
             let ss  = fromMaybe [] (M.lookup (P.pack nm) fm)
                 fm' = M.insert (P.pack nm) (P.pack q : ss) fm
             writer fm'
-        say =<< random confirmation
+        say =<< randomSuccessMsg
     where
         (nm,rest) = break isSpace str
         q         = drop 1 rest
@@ -150,11 +150,11 @@ runForget str
 --
 runQuote :: String -> Cmd Quote ()
 runQuote str =
-    say =<< io . search (P.pack nm) (P.pack pat) =<< readMS
+    say =<< search (P.pack nm) (P.pack pat) =<< readMS
   where (nm, p) = break isSpace str
         pat     = drop 1 p
 
-search :: Key -> P.ByteString -> Quotes -> IO String
+search :: Key -> P.ByteString -> Quotes -> Cmd Quote String
 search key pat db
     | M.null db          = return "No quotes yet."
 
@@ -170,7 +170,7 @@ search key pat db
     | Just qs <- mquotes = match' pat (zip (repeat key) qs)
 
     | otherwise          = do
-        r <- random insult
+        r <- randomFailureMsg
         return $ "No quotes for this person. " ++ r
 
   where
@@ -183,7 +183,7 @@ search key pat db
 
         let rs = filter (match re . snd) ss
         if null rs
-            then do r <- random insult
+            then do r <- randomFailureMsg
                     return $ "No quotes match. " ++ r
             else do (who, saying) <- random rs
                     return $ P.unpack who ++ " says: " ++ P.unpack saying

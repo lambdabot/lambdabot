@@ -18,7 +18,7 @@ sourcePlugin = newModule
             , process = \key -> readMS >>= \env -> case fetch (P.pack key) env of
                 _ | M.null env -> say "No source in the environment yet"
                 _ |   null key -> say helpStr
-                Nothing        -> say . ("Source not found. " ++) =<< io (random insult)
+                Nothing        -> say . ("Source not found. " ++) =<< randomFailureMsg
                 Just s         -> say (P.unpack s)
             }
         ]

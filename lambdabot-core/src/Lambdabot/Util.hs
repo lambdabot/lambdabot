@@ -16,14 +16,16 @@ module Lambdabot.Util (
         io,
         
         random,
-        insult,
-        confirmation
+        randomFailureMsg,
+        randomSuccessMsg
     ) where
 
 import Control.Monad.Trans
 import Data.Char
 import Data.List
 import Data.Random
+import Lambdabot.Config
+import Lambdabot.Config.Core
 
 ------------------------------------------------------------------------
 
@@ -142,18 +144,27 @@ insult =
 
     -- More haskellish insults
     "You untyped fool!",
-    "My brain just exploded",
+    "My brain just exploded"
+    ]
 
-    -- some more friendly replies
-    "I am sorry.","Sorry.",
+--
+-- some more friendly replies
+--
+apology :: [String]
+apology =
+   ["I am sorry.","Sorry.",
     "Maybe you made a typo?",
     "Just try something else.",
     "There are some things that I just don't know.",
     "Whoa.",
-    -- sometimes don't insult at all
     ":(",":(",
     "","",""
     ]
+
+randomFailureMsg :: (MonadIO m, MonadConfig m) => m String
+randomFailureMsg = do
+    useInsults <- getConfig enableInsults
+    random (if useInsults then insult ++ apology else apology)
 
 --
 -- Some more interesting confirmations for @remember and @where
@@ -169,3 +180,6 @@ confirmation =
     "It is forever etched in my memory.",
     "Nice!"
    ]
+
+randomSuccessMsg :: MonadIO m => m String
+randomSuccessMsg = random confirmation
