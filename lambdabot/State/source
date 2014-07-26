@@ -196,7 +196,6 @@ const x _ = x
 
 (.)
 (f . g) x = f (g x)
-NB: In lambdabot,  (.) = fmap
 
 flip
 flip f x y = f y x
