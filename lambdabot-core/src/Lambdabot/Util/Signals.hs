@@ -21,8 +21,10 @@ import Control.Exception (Exception)
 
 #ifdef mingw32_HOST_OS
 
+import Control.Monad.Trans.Control
+
 type Signal = String
-newtype SignalException = SignalException Signal deriving Typeable
+newtype SignalException = SignalException Signal deriving (Show, Typeable)
 instance Exception SignalException
 
 ircSignalMessage :: Signal -> [Char]
