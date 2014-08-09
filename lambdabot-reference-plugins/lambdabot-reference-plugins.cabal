@@ -37,6 +37,7 @@ library
   exposed-modules:      Lambdabot.Plugin.Reference
                         Lambdabot.Util.Browser
   other-modules:        Lambdabot.Plugin.Reference.Dict
+                        Lambdabot.Plugin.Reference.Metar
                         Lambdabot.Plugin.Reference.OEIS
                         Lambdabot.Plugin.Reference.Search
                         Lambdabot.Plugin.Reference.Spell
