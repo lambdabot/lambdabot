@@ -2,6 +2,6 @@
 
 set -e
 
-cabal install lambdabot-core/ lambdabot-*-plugins/ lambdabot/
+cabal install lambdabot-core/ lambdabot-trusted/ lambdabot-*-plugins/ lambdabot/
 
 echo "Thank you, come again!"
