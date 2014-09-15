@@ -25,6 +25,10 @@ source-repository head
   type:                 git
   location:             https://github.com/mokus0/lambdabot.git
 
+flag network-uri
+  description: Get Network.URI from the network-uri package
+  default: True
+
 library
   hs-source-dirs:       src
   ghc-options:          -Wall
@@ -49,7 +53,6 @@ library
                         lifted-base             >= 0.2,
                         monad-control           >= 0.3,
                         mtl                     >= 2,
-                        network                 >= 2.3.0.13,
                         time                    >= 1.4,
                         parsec                  >= 3,
                         process                 >= 1.1,
@@ -66,3 +69,8 @@ library
                         unix                    >= 2.5,
                         utf8-string             >= 0.3,
                         zlib                    >= 0.5
+
+  if flag(network-uri)
+    build-depends: network-uri >= 2.6, network >= 2.6
+  else
+    build-depends: network-uri < 2.6, network < 2.6
