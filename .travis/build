@@ -2,7 +2,7 @@
 
 set -e
 
-for dir in lambdabot-core lambdabot-*-plugins lambdabot; do
+for dir in lambdabot-core lambdabot-*-plugins lambdabot lambdabot-trusted; do
     (cd "$dir" && cabal install)
 done
 
