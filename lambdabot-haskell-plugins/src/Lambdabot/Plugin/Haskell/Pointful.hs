@@ -54,7 +54,7 @@ succAlpha []       = "a"
 
 -- move lambda patterns into LHS
 optimizeD :: Decl -> Decl
-optimizeD (PatBind locat (PVar fname) Nothing (UnGuardedRhs (Lambda _ pats rhs)) (BDecls []))
+optimizeD (PatBind locat (PVar fname) (UnGuardedRhs (Lambda _ pats rhs)) (BDecls []))
         =  FunBind [Match locat fname pats Nothing (UnGuardedRhs rhs) (BDecls [])]
 ---- combine function binding and lambda
 optimizeD (FunBind [Match locat fname pats1 Nothing (UnGuardedRhs (Lambda _ pats2 rhs)) (BDecls [])])
@@ -174,7 +174,7 @@ combinators = M.fromList $ map declToTuple defs
   where defs = case parseModule combinatorModule of
           ParseOk (Hs.Module _ _ _ _ _ _ d) -> d
           f@(ParseFailed _ _) -> error ("Combinator loading: " ++ show f)
-        declToTuple (PatBind _ (PVar fname) _ (UnGuardedRhs body) (BDecls []))
+        declToTuple (PatBind _ (PVar fname) (UnGuardedRhs body) (BDecls []))
           = (UnQual fname, Paren body)
         declToTuple _ = error "Pointful Plugin error: can't convert declaration to tuple"
 
