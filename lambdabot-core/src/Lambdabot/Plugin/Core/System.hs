@@ -15,7 +15,8 @@ import Lambdabot.Nick
 import Control.Monad.Reader
 import Control.Monad.State (gets, modify)
 import Control.Monad.Trans
-import Control.Monad (when)
+import Control.Monad (when, forever, void)
+import Control.Concurrent.Lifted (fork, threadDelay)
 import qualified Data.Map as M
 import qualified Data.Set as S
 
@@ -31,6 +32,11 @@ systemPlugin = newModule
         (_, d) <- readMS
         t      <- io getClockTime
         writeMS (t, d)
+-- HACK HACK HACK
+        lb $ void . fork $ forever $ do
+            threadDelay 300000000
+            withAllModules writeGlobalState
+-- KCAH KCAH KCAH
     , moduleExit = do
         (initial, d) <- readMS
         now          <- liftIO getClockTime
