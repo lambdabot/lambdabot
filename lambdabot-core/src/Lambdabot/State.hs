@@ -41,6 +41,9 @@ import Control.Monad.Reader
 import Control.Monad.Trans.Control
 import qualified Data.ByteString.Char8 as P
 import Data.IORef.Lifted
+import qualified System.IO as I
+import qualified System.FilePath as I
+import qualified System.Directory as I
 
 -- | Thread-safe modification of an MVar.
 withMWriter :: MonadBaseControl IO m => MVar a -> (a -> (a -> m ()) -> m b) -> m b
@@ -187,7 +190,9 @@ writeGlobalState = do
                 Nothing  -> return ()   -- do not write any state
                 Just out -> do
                     stateFile <- lb (findLBFileForWriting mName)
-                    io (P.writeFile stateFile out)
+                    (stateFile', hdl) <- io (I.openBinaryTempFileWithDefaultPermissions (I.takeDirectory stateFile) (I.takeFileName stateFile))
+                    io (P.hPutStr hdl out >> I.hClose hdl)
+                    io (I.renameFile stateFile' stateFile)
 
 -- | Read it in
 readGlobalState :: Module st -> String -> LB (Maybe st)
