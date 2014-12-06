@@ -43,4 +43,4 @@ moreFilter target msglines = do
                           then []
                           else ['[':shows (length morelines) " @more lines]"]
 
-    where maxLines = 5 -- arbitrary, really
+    where maxLines = 3 -- arbitrary, really
