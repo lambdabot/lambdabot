@@ -54,7 +54,7 @@ undo v (Do stms) = f stms
                                             (var "fail")
                                             (Lit $ String "")
                                     ]
-        where alt pat x = Alt s pat (UnGuardedAlt x) (BDecls [])
+        where alt pat x = Alt s pat (UnGuardedRhs x) (BDecls [])
     f _ = error "Undo plugin error: can't undo!"
 undo v (ListComp e stms) = f stms
  where
@@ -69,7 +69,7 @@ undo v (ListComp e stms) = f stms
                                     [ alt p (f xs)
                                     , alt PWildCard nil
                                     ]
-        where alt pat x = Alt s pat (UnGuardedAlt x) (BDecls [])
+        where alt pat x = Alt s pat (UnGuardedRhs x) (BDecls [])
               concatMap' fun = App (App (var "concatMap") (Paren fun)) l
     f _ = error "Undo plugin error: can't undo!"
 undo _ x           = x
@@ -103,8 +103,8 @@ do' v e@(InfixApp l (QVarOp (UnQual (Symbol op))) r) =
              case r of
                  (Lambda loc [p] (Do stms)) -> Do (Generator loc p l : stms)
                  (Lambda loc [PVar v1] (Case (Var (UnQual v2))
-                                            [ Alt _ p (UnGuardedAlt s) (BDecls [])
-                                            , Alt _ PWildCard (UnGuardedAlt (App (Var (UnQual (Ident "fail"))) _)) (BDecls [])
+                                            [ Alt _ p (UnGuardedRhs s) (BDecls [])
+                                            , Alt _ PWildCard (UnGuardedRhs (App (Var (UnQual (Ident "fail"))) _)) (BDecls [])
                                             ]))
                            | v1 == v2           -> case s of
                                                        Do stms -> Do (Generator loc p l : stms)
