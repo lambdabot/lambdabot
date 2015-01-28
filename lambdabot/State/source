@@ -878,6 +878,20 @@ read s = either error id (readEither s)
 reads
 reads = readsPrec minPrec
 
+readMaybe
+readMaybe s = case readEither s of
+                Left _  -> Nothing
+                Right a -> Just a
+
+readEither
+-- The old-style Read definition. The real one uses readPrec instead.
+readEither s =
+  let s' = dropWhile isSpace s
+  in  case [x | (x, rest) <- reads s', all isSpace rest] of
+        [x] -> Right x
+        []  -> Left "Prelude.read: no parse"
+        _   -> Left "Prelude.read: ambiguous parse"
+
 IOArray
 newtype IOArray i e = IOArray (STArray RealWorld i e)
 
