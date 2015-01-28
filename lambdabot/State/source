@@ -166,6 +166,9 @@ compare x y | x == y    = EQ
             | x <= y    = LT
             | otherwise = GT
 
+comparing
+comparing p x y = compare (p x) (p y)
+
 (/=)
 x /= y = not (x == y)
 
