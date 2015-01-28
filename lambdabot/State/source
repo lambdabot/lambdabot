@@ -342,10 +342,20 @@ take n _      | n <= 0 = []
 take _ []              = []
 take n (x:xs)          = x : take (n-1) xs
 
+dropWhile
+dropWhile _ []                 = []
+dropWhile p (x:xs) | p x       = dropWhile p xs
+                   | otherwise = x:xs
+
 drop
 drop n xs     | n <= 0 = xs
 drop _ []              = []
 drop n (_:xs)          = drop (n-1) xs
+
+stripPrefix
+stripPrefix []     ys              = Just ys
+stripPrefix (x:xs) (y:ys) | x == y = stripPrefix xs ys
+stripPrefix _      _               = Nothing
 
 splitAt
 splitAt n xs = (take n xs, drop n xs)
@@ -439,6 +449,12 @@ isInfixOf needle haystack = any (isPrefixOf needle) (tails haystack)
 
 nub
 nub = nubBy (==)
+--OR
+nub l = go l []
+  where go []     _       = []
+        go (x:xs) ls
+            | x `elem` ls = go xs ls
+            | otherwise   = x : go xs (x:ls)
 
 nubBy
 nubBy eq []     = []
