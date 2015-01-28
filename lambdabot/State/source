@@ -552,8 +552,8 @@ sortBy cmp = foldr (insertBy cmp) []
 
 unfoldr
 unfoldr f b = case f b of
-   Just (a,new_b) -> a : unfoldr f new_b
-   Nothing        -> []
+    Just (a, b') -> a : unfoldr f b'
+    Nothing      -> []
 
 foldl'
 foldl' f a []     = a
