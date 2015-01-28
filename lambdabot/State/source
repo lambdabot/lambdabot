@@ -284,21 +284,21 @@ asTypeOf = const
 
 head
 head (x:_) = x
-head []    = undefined
+head []    = error "Prelude.head: empty list"
 
 tail
 tail (_:xs) = xs
-tail []     = undefined
+tail []     = error "Prelude.tail: empty list"
 
 last
 last [x]    = x
 last (_:xs) = last xs
-last []     = undefined
+last []     = error "Prelude.last: empty list"
 
 init
 init [x]    = []
 init (x:xs) = x : init xs
-init []     = undefined
+init []     = error "Prelude.init: empty list"
 
 null
 null []    = True
