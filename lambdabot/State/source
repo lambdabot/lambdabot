@@ -560,6 +560,15 @@ sortBy
 -- The actual definition used by GHC is an optimised mergesort.
 sortBy cmp = foldr (insertBy cmp) []
 
+sortWith
+sortWith f = sortBy (\x y -> compare (f x) (f y))
+
+the
+the (x:xs)
+  | all (x ==) xs = x
+  | otherwise     = error "GHC.Exts.the: non-identical elements"
+the []            = error "GHC.Exts.the: empty list"
+
 unfoldr
 unfoldr f b = case f b of
     Just (a, b') -> a : unfoldr f b'
