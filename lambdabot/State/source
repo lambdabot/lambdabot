@@ -123,16 +123,30 @@ unless
 unless p s = if p then return () else s
 
 liftM
-liftM f m1 = do { x1 <- m1; return (f x1) }
+liftM f m1 = do
+    x1 <- m1
+    return (f x1)
 
 liftM2
-liftM2 f m1 m2 = do { x1 <- m1; x2 <- m2; return (f x1 x2) }
+liftM2 f m1 m2 = do
+    x1 <- m1
+    x2 <- m2
+    return (f x1 x2)
 
 liftM3
-liftM3 f m1 m2 m3 = do { x1 <- m1; x2 <- m2; x3 <- m3; return (f x1 x2 x3) }
+liftM3 f m1 m2 m3 = do
+    x1 <- m1
+    x2 <- m2
+    x3 <- m3
+    return (f x1 x2 x3)
 
 liftM4
-liftM4 f m1 m2 m3 m4 = do { x1 <- m1; x2 <- m2; x3 <- m3; x4 <- m4; return (f x1 x2 x3 x4) }
+liftM4 f m1 m2 m3 m4 = do
+    x1 <- m1
+    x2 <- m2
+    x3 <- m3
+    x4 <- m4
+    return (f x1 x2 x3 x4)
 
 ap
 ap = liftM2 id
@@ -155,16 +169,24 @@ x /= y = not (x == y)
 x == y = not (x /= y)
 
 (<)
-x < y = case compare x y of { LT -> True; _other -> False }
+x < y = case compare x y of
+          LT -> True
+          _  -> False
 
 (<=)
-x <= y = case compare x y of { GT -> False; _other -> True }
+x <= y = case compare x y of
+           GT -> False
+           _  -> True
 
 (>)
-x > y = case compare x y of { GT -> True; _other -> False }
+x > y = case compare x y of
+          GT -> True
+          _  -> False
 
 (>=)
-x >= y = case compare x y of { LT -> False; _other -> True }
+x >= y = case compare x y of
+           LT -> False
+           _  -> True
 
 max
 max x y = if x <= y then y else x
@@ -555,7 +577,8 @@ fromJust Nothing  = undefined
 fromJust (Just x) = x
 
 fromMaybe
-fromMaybe d x = case x of {Nothing -> d;Just v  -> v}
+fromMaybe d Nothing  = d
+fromMaybe _ (Just v) = v
 
 maybeToList
 maybeToList Nothing  = []
@@ -735,13 +758,13 @@ try a = catch (a >>= \ v -> return (Right v)) (\e -> return (Left e))
 bracket
 bracket before after thing = block $ do
     a <- before
-    r <- catch (unblock (thing a)) (\e -> do { after a; throw e })
+    r <- catch (unblock (thing a)) (\e -> after a >> throw e)
     after a
     return r
 
 finally
 a `finally` sequel = block $ do
-    r <- catch (unblock a) (\e -> do { sequel; throw e })
+    r <- catch (unblock a) (\e -> sequel >> throw e)
     sequel
     return r
 
@@ -1031,15 +1054,16 @@ data STRef s a = STRef (MutVar# s a)
 
 newSTRef
 newSTRef init = ST $ \s1# ->
-    case newMutVar# init s1# of { (# s2#, var# #) -> (# s2#, STRef var# #) }
+    case newMutVar# init s1# of
+      (# s2#, var# #) -> (# s2#, STRef var# #)
 
 readSTRef
 readSTRef (STRef var#) = ST $ \s1# -> readMutVar# var# s1#
 
 writeSTRef
 writeSTRef (STRef var#) val = ST $ \s1# ->
-    case writeMutVar# var# val s1#      of { s2# ->
-        (# s2#, () #) }
+    case writeMutVar# var# val s1# of
+      s2# -> (# s2#, () #)
 
 STRef (==)
 STRef v1# == STRef v2# = sameMutVar# v1# v2#
