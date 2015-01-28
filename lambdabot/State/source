@@ -621,6 +621,20 @@ either
 either f _ (Left x)  = f x
 either _ g (Right y) = g y
 
+lefts
+lefts x = [a | Left a <- x]
+
+rights
+rights x = [a | Right a <- x]
+
+isLeft
+isLeft (Left  _) = True
+isLeft (Right _) = False
+
+isRight
+isRight (Left  _) = False
+isRight (Right _) = True
+
 fst
 fst (x,_) = x
 
