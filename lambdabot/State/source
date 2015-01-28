@@ -248,6 +248,10 @@ not False = True
 otherwise
 otherwise = True
 
+bool
+bool f _ False = f
+bool _ t True  = t
+
 ()
 data () = ()
 
