@@ -23,6 +23,46 @@ newtype Rec a = InR { outR :: Rec a -> a }
 (=<<)
 f =<< x = x >>= f
 
+Reader
+type Reader r = ReaderT r Identity
+--OR
+data Reader r a = Reader { runReader :: r -> a }
+
+Reader return
+return a = Reader $ \_ -> a
+
+Reader (>>=)
+m >>= k = Reader $ \r ->
+  let a = runReader m r
+  in  runReader (k a) r
+
+Writer
+type Writer w = WriterT w Identity
+--OR
+data Writer w a = Writer { runWriter :: (a, w) }
+
+Writer return
+return a = Writer (a, mempty)
+
+Writer (>>=)
+m >>= k = Writer $
+  let (a, w)  = runWriter m
+      (b, w') = runWriter (k a)
+  in  (b, w <> w')
+
+State
+type State s = StateT s Identity
+--OR
+data State s a = State { runState :: s -> (a, s) }
+
+State return
+return a = State $ \s -> (a, s)
+
+State (>>=)
+m >>= k = State $ \s ->
+  let (a, s') = runState m s
+  in  runState (k a) s'
+
 sequence
 sequence []     = return []
 sequence (x:xs) = do v <- x; vs <- sequence xs; return (v:vs)
