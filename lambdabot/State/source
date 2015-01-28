@@ -547,6 +547,7 @@ sort
 sort = sortBy compare
 
 sortBy
+-- The actual definition used by GHC is an optimised mergesort.
 sortBy cmp = foldr (insertBy cmp) []
 
 unfoldr
