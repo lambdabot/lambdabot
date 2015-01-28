@@ -98,6 +98,12 @@ msum = foldr mplus mzero
 join
 join x = x >>= id
 
+forever
+forever a = let a' = a >> a' in a'
+
+void
+void = fmap (const ())
+
 mapAndUnzipM
 mapAndUnzipM f xs = sequence (map f xs) >>= return . unzip
 
