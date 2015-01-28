@@ -1144,6 +1144,7 @@ class (Fractional a) => Floating a where
     (**), logBase       :: a -> a -> a
 
 Num
+-- Doesn't require (Eq a, Show a) in newer GHC.
 class (Eq a, Show a) => Num a where
     (+), (-), (*)       :: a -> a -> a
     negate, abs, signum :: a -> a
