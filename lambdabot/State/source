@@ -2,6 +2,10 @@ asTypeIn
 a `asTypeIn` f = a where _ = f a
 infixl 0 `asTypeIn`
 
+asAppliedTo
+f `asAppliedTo` a = f where _ = f a
+infixl 0 `asAppliedTo`
+
 Mu
 newtype Mu f = In { out :: f (Mu f) }
 
