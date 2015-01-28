@@ -1219,6 +1219,83 @@ class Monoid a where
     mappend :: a -> a -> a
     mconcat :: [a] -> a
 
+(<>)
+(<>) = mappend
+
+Dual
+newtype Dual a = Dual { getDual :: a }
+
+Dual mempty
+mempty = Dual mempty
+
+Dual mappend
+Dual x `mappend` Dual y = Dual (y `mappend` x)
+
+Endo
+newtype Endo a = Endo { appEndo :: a -> a }
+
+Endo mempty
+mempty = Endo id
+
+Endo mappend
+Endo f `mappend` Endo g = Endo (f . g)
+
+All
+newtype All = All { getAll :: Bool }
+
+All mempty
+mempty = All True
+
+All mappend
+All x `mappend` All y = All (x && y)
+
+Any
+newtype Any = Any { getAny :: Bool }
+
+Any mempty
+mempty = Any False
+
+Any mappend
+Any x `mappend` Any y = Any (x || y)
+
+Sum
+newtype Sum a = Sum { getSum :: a }
+
+Sum mempty
+mempty = Sum 0
+
+Sum mappend
+Sum x `mappend` Sum y = Sum (x + y)
+
+Product
+newtype Product a = Product { getProduct :: a }
+
+Product mempty
+mempty = Product 1
+
+Product mappend
+Product x `mappend` Product y = Product (x * y)
+
+First
+newtype First a = First { getFirst :: Maybe a }
+
+First mempty
+mempty = First Nothing
+
+First mappend
+r@(First (Just _)) `mappend` _ = r
+First Nothing      `mappend` r = r
+
+Last
+newtype Last a = Last { getLast :: Maybe a }
+
+Last mempty
+mempty = Last Nothing
+
+Last mappend
+_ `mappend` r@(Last (Just _)) = r
+r `mappend`    Last Nothing   = r
+
 Arrow
 class Arrow a where
     arr, pure :: (b -> c) -> a b c
