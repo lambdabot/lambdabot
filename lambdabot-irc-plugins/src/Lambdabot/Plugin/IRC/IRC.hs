@@ -152,16 +152,19 @@ online tag hostn portnum nickn ui = do
             errorM (show e)
             remServer tag)
     lb . void . fork $ E.catch
-        (pingPongLoop tag hostn pongref sock)
+        (pingPongDelay >> pingPongLoop tag hostn pongref sock)
         (\e@SomeException{} -> do
             errorM (show e)
             remServer tag)
+
+pingPongDelay :: LB ()
+pingPongDelay = io $ threadDelay 120000000
 
 pingPongLoop :: String -> String -> IORef Bool -> Handle -> LB ()
 pingPongLoop tag hostn pongref sock = do
     io $ writeIORef pongref False
     io $ P.hPut sock $ P.pack $ "PING " ++ hostn ++ "\r\n"
-    io $ threadDelay 120000000
+    pingPongDelay
     pong <- io $ readIORef pongref
     if pong
         then pingPongLoop tag hostn pongref sock
