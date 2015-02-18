@@ -90,6 +90,7 @@ library
                         data-memocombinators    >= 0.4,
                         hoogle                  >= 4.2,
                         IOSpec                  >= 0.2,
+                        lambdabot-trusted       >= 5,
                         logict                  >= 0.5,
                         MonadRandom             >= 0.1,
                         mueval                  >= 0.9,
