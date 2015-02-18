@@ -193,7 +193,12 @@ writeDown to from what ntype = do
 
 -- | Return a user's notes, or Nothing if they don't have any
 getMessages :: Nick -> Cmd Tell (Maybe [Note])
-getMessages sender = fmap (fmap (\(_,ns,_) -> ns) . M.lookup (FreenodeNick sender)) readMS
+getMessages sender = do
+  st  <- readMS
+  return $ case M.lookup (FreenodeNick sender) st of
+             Nothing ->         Nothing
+             Just (_, [], _) -> Nothing
+             Just (_, ns, _) -> Just ns
 
 -- | Clear a user's messages.
 clearMessages :: Nick -> Cmd Tell ()
