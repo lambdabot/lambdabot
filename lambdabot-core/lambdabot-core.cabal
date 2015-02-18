@@ -81,7 +81,7 @@ library
                         hslogger                >= 1.2.1,
                         HTTP                    >= 4000,
                         lifted-base             >= 0.2,
-                        monad-control           >= 0.3,
+                        monad-control           >= 0.3 && < 1,
                         mtl                     >= 2,
                         network                 >= 2.3.0.13,
                         time                    >= 1.4,
