@@ -95,6 +95,8 @@ library
                         template-haskell        >= 2.7,
                         transformers            >= 0.2,
                         transformers-base       >= 0.4,
-                        unix                    >= 2.5,
                         utf8-string             >= 0.3,
                         zlib                    >= 0.5
+
+  if !os(windows)
+    build-depends:      unix                    >= 2.5
