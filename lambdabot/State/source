@@ -2,6 +2,10 @@ asTypeIn
 a `asTypeIn` f = a where _ = f a
 infixl 0 `asTypeIn`
 
+asAppliedTo
+f `asAppliedTo` a = f where _ = f a
+infixl 0 `asAppliedTo`
+
 Mu
 newtype Mu f = In { out :: f (Mu f) }
 
@@ -22,6 +26,46 @@ newtype Rec a = InR { outR :: Rec a -> a }
 
 (=<<)
 f =<< x = x >>= f
+
+Reader
+type Reader r = ReaderT r Identity
+--OR
+data Reader r a = Reader { runReader :: r -> a }
+
+Reader return
+return a = Reader $ \_ -> a
+
+Reader (>>=)
+m >>= k = Reader $ \r ->
+  let a = runReader m r
+  in  runReader (k a) r
+
+Writer
+type Writer w = WriterT w Identity
+--OR
+data Writer w a = Writer { runWriter :: (a, w) }
+
+Writer return
+return a = Writer (a, mempty)
+
+Writer (>>=)
+m >>= k = Writer $
+  let (a, w)  = runWriter m
+      (b, w') = runWriter (k a)
+  in  (b, w <> w')
+
+State
+type State s = StateT s Identity
+--OR
+data State s a = State { runState :: s -> (a, s) }
+
+State return
+return a = State $ \s -> (a, s)
+
+State (>>=)
+m >>= k = State $ \s ->
+  let (a, s') = runState m s
+  in  runState (k a) s'
 
 sequence
 sequence []     = return []
@@ -54,6 +98,12 @@ msum = foldr mplus mzero
 join
 join x = x >>= id
 
+forever
+forever a = let a' = a >> a' in a'
+
+void
+void = fmap (const ())
+
 mapAndUnzipM
 mapAndUnzipM f xs = sequence (map f xs) >>= return . unzip
 
@@ -83,16 +133,30 @@ unless
 unless p s = if p then return () else s
 
 liftM
-liftM f m1 = do { x1 <- m1; return (f x1) }
+liftM f m1 = do
+    x1 <- m1
+    return (f x1)
 
 liftM2
-liftM2 f m1 m2 = do { x1 <- m1; x2 <- m2; return (f x1 x2) }
+liftM2 f m1 m2 = do
+    x1 <- m1
+    x2 <- m2
+    return (f x1 x2)
 
 liftM3
-liftM3 f m1 m2 m3 = do { x1 <- m1; x2 <- m2; x3 <- m3; return (f x1 x2 x3) }
+liftM3 f m1 m2 m3 = do
+    x1 <- m1
+    x2 <- m2
+    x3 <- m3
+    return (f x1 x2 x3)
 
 liftM4
-liftM4 f m1 m2 m3 m4 = do { x1 <- m1; x2 <- m2; x3 <- m3; x4 <- m4; return (f x1 x2 x3 x4) }
+liftM4 f m1 m2 m3 m4 = do
+    x1 <- m1
+    x2 <- m2
+    x3 <- m3
+    x4 <- m4
+    return (f x1 x2 x3 x4)
 
 ap
 ap = liftM2 id
@@ -108,6 +172,9 @@ compare x y | x == y    = EQ
             | x <= y    = LT
             | otherwise = GT
 
+comparing
+comparing p x y = compare (p x) (p y)
+
 (/=)
 x /= y = not (x == y)
 
@@ -115,16 +182,24 @@ x /= y = not (x == y)
 x == y = not (x /= y)
 
 (<)
-x < y = case compare x y of { LT -> True; _other -> False }
+x < y = case compare x y of
+          LT -> True
+          _  -> False
 
 (<=)
-x <= y = case compare x y of { GT -> False; _other -> True }
+x <= y = case compare x y of
+           GT -> False
+           _  -> True
 
 (>)
-x > y = case compare x y of { GT -> True; _other -> False }
+x > y = case compare x y of
+          GT -> True
+          _  -> False
 
 (>=)
-x >= y = case compare x y of { LT -> False; _other -> True }
+x >= y = case compare x y of
+           LT -> False
+           _  -> True
 
 max
 max x y = if x <= y then y else x
@@ -163,15 +238,19 @@ True  && x = x
 False && _ = False
 
 (||)
-True  || _ =  True
-False || x =  x
+True  || _ = True
+False || x = x
 
 not
-not True   =  False
-not False  =  True
+not True  = False
+not False = True
 
 otherwise
 otherwise = True
+
+bool
+bool f _ False = f
+bool _ t True  = t
 
 ()
 data () = ()
@@ -215,25 +294,25 @@ asTypeOf = const
 
 head
 head (x:_) = x
-head []    = undefined
+head []    = error "Prelude.head: empty list"
 
 tail
 tail (_:xs) = xs
-tail []     = undefined
+tail []     = error "Prelude.tail: empty list"
 
 last
 last [x]    = x
 last (_:xs) = last xs
-last []     = undefined
+last []     = error "Prelude.last: empty list"
 
 init
 init [x]    = []
 init (x:xs) = x : init xs
-init []     = undefined
+init []     = error "Prelude.init: empty list"
 
 null
-null []     = True
-null (_:_)  = False
+null []    = True
+null (_:_) = False
 
 filter
 filter _ []     = []
@@ -246,8 +325,8 @@ foldl f z []     = z
 foldl f z (x:xs) = foldl f (f z x) xs
 
 scanr
-scanr _ q0 []     =  [q0]
-scanr f q0 (x:xs) =  f x q : qs
+scanr _ q0 []     = [q0]
+scanr f q0 (x:xs) = f x q : qs
     where qs@(q:_) = scanr f q0 xs
 
 iterate
@@ -273,10 +352,20 @@ take n _      | n <= 0 = []
 take _ []              = []
 take n (x:xs)          = x : take (n-1) xs
 
+dropWhile
+dropWhile _ []                 = []
+dropWhile p (x:xs) | p x       = dropWhile p xs
+                   | otherwise = x:xs
+
 drop
 drop n xs     | n <= 0 = xs
 drop _ []              = []
 drop n (_:xs)          = drop (n-1) xs
+
+stripPrefix
+stripPrefix []     ys              = Just ys
+stripPrefix (x:xs) (y:ys) | x == y = stripPrefix xs ys
+stripPrefix _      _               = Nothing
 
 splitAt
 splitAt n xs = (take n xs, drop n xs)
@@ -293,7 +382,7 @@ reverse
 reverse = foldl (flip (:)) []
 
 and
-and  = foldr (&&) True
+and = foldr (&&) True
 
 or
 or = foldr (||) False
@@ -370,6 +459,12 @@ isInfixOf needle haystack = any (isPrefixOf needle) (tails haystack)
 
 nub
 nub = nubBy (==)
+--OR
+nub l = go l []
+  where go []     _       = []
+        go (x:xs) ls
+            | x `elem` ls = go xs ls
+            | otherwise   = x : go xs (x:ls)
 
 nubBy
 nubBy eq []     = []
@@ -446,9 +541,9 @@ group
 group = groupBy (==)
 
 groupBy
-groupBy _  []     =  []
-groupBy eq (x:xs) =  (x:ys) : groupBy eq zs
-    where (ys,zs) = span (eq x) xs
+groupBy _  []     = []
+groupBy eq (x:xs) = (x:ys) : groupBy eq zs
+    where (ys, zs) = span (eq x) xs
 
 inits
 inits []     = [[]]
@@ -462,12 +557,22 @@ sort
 sort = sortBy compare
 
 sortBy
+-- The actual definition used by GHC is an optimised mergesort.
 sortBy cmp = foldr (insertBy cmp) []
+
+sortWith
+sortWith f = sortBy (\x y -> compare (f x) (f y))
+
+the
+the (x:xs)
+  | all (x ==) xs = x
+  | otherwise     = error "GHC.Exts.the: non-identical elements"
+the []            = error "GHC.Exts.the: empty list"
 
 unfoldr
 unfoldr f b = case f b of
-   Just (a,new_b) -> a : unfoldr f new_b
-   Nothing        -> []
+    Just (a, b') -> a : unfoldr f b'
+    Nothing      -> []
 
 foldl'
 foldl' f a []     = a
@@ -515,11 +620,12 @@ fromJust Nothing  = undefined
 fromJust (Just x) = x
 
 fromMaybe
-fromMaybe d x = case x of {Nothing -> d;Just v  -> v}
+fromMaybe d Nothing  = d
+fromMaybe _ (Just v) = v
 
 maybeToList
-maybeToList  Nothing   = []
-maybeToList  (Just x)  = [x]
+maybeToList Nothing  = []
+maybeToList (Just x) = [x]
 
 listToMaybe
 listToMaybe []    = Nothing
@@ -533,6 +639,20 @@ data Either a b = Left a | Right b
 either
 either f _ (Left x)  = f x
 either _ g (Right y) = g y
+
+lefts
+lefts x = [a | Left a <- x]
+
+rights
+rights x = [a | Right a <- x]
+
+isLeft
+isLeft (Left  _) = True
+isLeft (Right _) = False
+
+isRight
+isRight (Left  _) = False
+isRight (Right _) = True
 
 fst
 fst (x,_) = x
@@ -575,7 +695,7 @@ polar z = (magnitude z, phase z)
 
 phase
 phase (0 :+ 0) = 0
-phase (x:+y)   = atan2 y x
+phase (x :+ y) = atan2 y x
 
 toDyn
 toDyn v = Dynamic (typeOf v) (unsafeCoerce v)
@@ -695,13 +815,13 @@ try a = catch (a >>= \ v -> return (Right v)) (\e -> return (Left e))
 bracket
 bracket before after thing = block $ do
     a <- before
-    r <- catch (unblock (thing a)) (\e -> do { after a; throw e })
+    r <- catch (unblock (thing a)) (\e -> after a >> throw e)
     after a
     return r
 
 finally
 a `finally` sequel = block $ do
-    r <- catch (unblock a) (\e -> do { sequel; throw e })
+    r <- catch (unblock a) (\e -> sequel >> throw e)
     sequel
     return r
 
@@ -776,6 +896,20 @@ read s = either error id (readEither s)
 
 reads
 reads = readsPrec minPrec
+
+readMaybe
+readMaybe s = case readEither s of
+                Left _  -> Nothing
+                Right a -> Just a
+
+readEither
+-- The old-style Read definition. The real one uses readPrec instead.
+readEither s =
+  let s' = dropWhile isSpace s
+  in  case [x | (x, rest) <- reads s', all isSpace rest] of
+        [x] -> Right x
+        []  -> Left "Prelude.read: no parse"
+        _   -> Left "Prelude.read: ambiguous parse"
 
 IOArray
 newtype IOArray i e = IOArray (STArray RealWorld i e)
@@ -888,7 +1022,7 @@ reduce x y = (x `quot` d) :% (y `quot` d)
 x % y = reduce (x * signum y) (abs y)
 
 numerator
-numerator   (x :% _) = x
+numerator (x :% _) = x
 
 denominator
 denominator (_ :% y) = y
@@ -906,16 +1040,17 @@ odd
 odd = not . even
 
 (^)
-x ^ 0            =  1
-x ^ n | n > 0    =  f x (n-1) x
-  where f _ 0 y = y
-        f x n y = g x n
-          where g x n | even n    = g (x*x) (n `quot` 2)
-                      | otherwise = f x (n-1) (x*y)
+x ^ 0            = 1
+x ^ n | n > 0    = f x (n-1) x
+  where
+    f _ 0 y = y
+    f x n y = g x n
+        where g x n | even n    = g (x*x) (n `quot` 2)
+                    | otherwise = f x (n-1) (x*y)
 _ ^ _            = error "Prelude.^: negative exponent"
 
 (^^)
-x ^^ n      =  if n >= 0 then x^n else recip (x^(negate n))
+x ^^ n = if n >= 0 then x^n else recip (x^(negate n))
 
 gcd
 gcd 0 0 = error "Prelude.gcd: gcd 0 0 is undefined"
@@ -990,15 +1125,16 @@ data STRef s a = STRef (MutVar# s a)
 
 newSTRef
 newSTRef init = ST $ \s1# ->
-    case newMutVar# init s1# of { (# s2#, var# #) -> (# s2#, STRef var# #) }
+    case newMutVar# init s1# of
+      (# s2#, var# #) -> (# s2#, STRef var# #)
 
 readSTRef
 readSTRef (STRef var#) = ST $ \s1# -> readMutVar# var# s1#
 
 writeSTRef
 writeSTRef (STRef var#) val = ST $ \s1# ->
-    case writeMutVar# var# val s1#      of { s2# ->
-        (# s2#, () #) }
+    case writeMutVar# var# val s1# of
+      s2# -> (# s2#, () #)
 
 STRef (==)
 STRef v1# == STRef v2# = sameMutVar# v1# v2#
@@ -1015,10 +1151,10 @@ class (Eq a) => Ord a where
 
 Ix
 class (Ord a) => Ix a where
-    range     :: (a,a) -> [a]
-    index     :: (a,a) -> a -> Int
-    inRange   :: (a,a) -> a -> Bool
-    rangeSize :: (a,a) -> Int
+    range     :: (a, a) -> [a]
+    index     :: (a, a) -> a -> Int
+    inRange   :: (a, a) -> a -> Bool
+    rangeSize :: (a, a) -> Int
 
 Bounded
 class Bounded a where
@@ -1031,8 +1167,8 @@ class (Num a, Ord a) => Real a where
 Integral
 class (Real a, Enum a) => Integral a where
     quot, rem, div, mod :: a -> a -> a
-    quotRem, divMod :: a -> a -> (a,a)
-    toInteger       :: a -> Integer
+    quotRem, divMod     :: a -> a -> (a, a)
+    toInteger           :: a -> Integer
 
 Fractional
 class (Num a) => Fractional a where
@@ -1042,19 +1178,18 @@ class (Num a) => Fractional a where
 
 RealFrac
 class (Real a, Fractional a) => RealFrac a where
-    properFraction                  :: (Integral b) => a -> (b,a)
+    properFraction                  :: (Integral b) => a -> (b, a)
     truncate, round, ceiling, floor :: (Integral b) => a -> b
 
 Show
-class  Show a  where
+class Show a where
     showsPrec :: Int -> a -> ShowS
-    show      :: a   -> String
+    show      :: a -> String
     showList  :: [a] -> ShowS
 
 Enum
-class  Enum a   where
-    succ                     :: a -> a
-    pred                     :: a -> a
+class Enum a where
+    succ, pred               :: a -> a
     toEnum                   :: Int -> a
     fromEnum                 :: a -> Int
     enumFrom                 :: a -> [a]
@@ -1066,14 +1201,18 @@ class Splittable t where
     split :: t -> (t,t)
 
 Floating
-class  (Fractional a) => Floating a  where
-    pi                                                      :: a
-    exp, log, sqrt, sin, cos, tan                           :: a -> a
-    asin, acos, atan, sinh, cosh, tanh, asinh, acosh, atanh :: a -> a
-    (**), logBase                                           :: a -> a -> a
+class (Fractional a) => Floating a where
+    pi                  :: a
+    exp, log, sqrt      :: a -> a
+    sin, cos, tan       :: a -> a
+    asin, acos, atan    :: a -> a
+    sinh, cosh, tanh    :: a -> a
+    asinh, acosh, atanh :: a -> a
+    (**), logBase       :: a -> a -> a
 
 Num
-class  (Eq a, Show a) => Num a  where
+-- Doesn't require (Eq a, Show a) in newer GHC.
+class (Eq a, Show a) => Num a where
     (+), (-), (*)       :: a -> a -> a
     negate, abs, signum :: a -> a
     fromInteger         :: Integer -> a
@@ -1082,20 +1221,20 @@ RandomGen
 class RandomGen g where
    next     :: g -> (Int, g)
    split    :: g -> (g, g)
-   genRange :: g -> (Int,Int)
+   genRange :: g -> (Int, Int)
 
 Random
 class Random a where
   random    :: RandomGen g => g -> (a, g)
   randoms   :: RandomGen g => g -> [a]
-  randomR   :: RandomGen g => (a,a) -> g -> (a,g)
-  randomRs  :: RandomGen g => (a,a) -> g -> [a]
-  randomRIO :: (a,a) -> IO a
+  randomR   :: RandomGen g => (a, a) -> g -> (a, g)
+  randomRs  :: RandomGen g => (a, a) -> g -> [a]
+  randomRIO :: (a, a) -> IO a
   randomIO  :: IO a
 
 Functor
-class  Functor f  where
-    fmap        :: (a -> b) -> f a -> f b
+class Functor f where
+    fmap :: (a -> b) -> f a -> f b
 
 Read
 class Read a where
@@ -1115,7 +1254,7 @@ class Applicative f => Alternative f where
     (<|>) :: f a -> f a -> f a
 
 Monad
-class  Monad m  where
+class Monad m where
     (>>=)  :: forall a b. m a -> (a -> m b) -> m b
     (>>)   :: forall a b. m a -> m b -> m b
     return :: a -> m a
@@ -1126,6 +1265,107 @@ class Monoid a where
     mempty  :: a
     mappend :: a -> a -> a
     mconcat :: [a] -> a
+
+(<>)
+(<>) = mappend
+
+Dual
+newtype Dual a = Dual { getDual :: a }
+
+getDual
+newtype Dual a = Dual { getDual :: a }
+
+Dual mempty
+mempty = Dual mempty
+
+Dual mappend
+Dual x `mappend` Dual y = Dual (y `mappend` x)
+
+Endo
+newtype Endo a = Endo { appEndo :: a -> a }
+
+appEndo
+newtype Endo a = Endo { appEndo :: a -> a }
+
+Endo mempty
+mempty = Endo id
+
+Endo mappend
+Endo f `mappend` Endo g = Endo (f . g)
+
+All
+newtype All = All { getAll :: Bool }
+
+getAll
+newtype All = All { getAll :: Bool }
+
+All mempty
+mempty = All True
+
+All mappend
+All x `mappend` All y = All (x && y)
+
+Any
+newtype Any = Any { getAny :: Bool }
+
+getAny
+newtype Any = Any { getAny :: Bool }
+
+Any mempty
+mempty = Any False
+
+Any mappend
+Any x `mappend` Any y = Any (x || y)
+
+Sum
+newtype Sum a = Sum { getSum :: a }
+
+getSum
+newtype Sum a = Sum { getSum :: a }
+
+Sum mempty
+mempty = Sum 0
+
+Sum mappend
+Sum x `mappend` Sum y = Sum (x + y)
+
+Product
+newtype Product a = Product { getProduct :: a }
+
+getProduct
+newtype Product a = Product { getProduct :: a }
+
+Product mempty
+mempty = Product 1
+
+Product mappend
+Product x `mappend` Product y = Product (x * y)
+
+First
+newtype First a = First { getFirst :: Maybe a }
+
+getFirst
+newtype First a = First { getFirst :: Maybe a }
+
+First mempty
+mempty = First Nothing
+
+First mappend
+r@(First (Just _)) `mappend` _ = r
+First Nothing      `mappend` r = r
+
+Last
+newtype Last a = Last { getLast :: Maybe a }
+
+getLast
+newtype Last a = Last { getLast :: Maybe a }
+
+Last mempty
+mempty = Last Nothing
+
+Last mappend
+_ `mappend` r@(Last (Just _)) = r
+r `mappend`    Last Nothing   = r
 
 Arrow
 class Arrow a where
@@ -1195,8 +1435,8 @@ Maybe (>>=)
 Nothing  >>= _ = Nothing
 
 Maybe (>>)
-(Just _) >>  k = k
-Nothing  >>  _ = Nothing
+(Just _) >> k = k
+Nothing  >> _ = Nothing
 
 Maybe return
 return = Just
@@ -1397,7 +1637,7 @@ ErrorT return
 return a = ErrorT $ return (Right a)
 
 ErrorT (>>=)
-m >>= k  = ErrorT $ do
+m >>= k = ErrorT $ do
     a <- runErrorT m
     case a of Left  l -> return (Left l)
               Right r -> runErrorT (k r)
@@ -1406,7 +1646,7 @@ ErrorT fail
 fail msg = ErrorT $ return (Left (strMsg msg))
 
 ErrorT mzero
-mzero       = ErrorT $ return (Left noMsg)
+mzero = ErrorT $ return (Left noMsg)
 
 ErrorT mplus
 m `mplus` n = ErrorT $ do
