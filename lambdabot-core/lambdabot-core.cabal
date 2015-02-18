@@ -84,6 +84,7 @@ library
                         monad-control           >= 0.3 && < 1,
                         mtl                     >= 2,
                         network                 >= 2.3.0.13,
+                        network-uri             >= 2.6,
                         time                    >= 1.4,
                         parsec                  >= 3,
                         random                  >= 1,
