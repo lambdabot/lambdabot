@@ -2,7 +2,4 @@
 
 set -e
 
-cd lambdabot-core
-cabal install --only-dependencies --enable-tests
-
-# can't really do the others since they depend on the core...
+cabal install --only-dependencies --enable-tests lambdabot-core/ lambdabot-trusted/ lambdabot-*-plugins/ lambdabot/
