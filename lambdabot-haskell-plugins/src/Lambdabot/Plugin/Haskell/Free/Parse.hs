@@ -142,7 +142,7 @@ lexer (']':cs)
 lexer (c@':':cs)
     = lexerConSym [c] cs
     where
-        lexerConSym con (c:cs)                
+        lexerConSym con (c:cs)
             | c == ':'
                 || c `elem` ascSymbol
                 = lexerConSym (c:con) cs
