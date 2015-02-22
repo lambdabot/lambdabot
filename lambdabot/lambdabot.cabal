@@ -19,7 +19,7 @@ homepage:               http://haskell.org/haskellwiki/Lambdabot
 
 build-type:             Simple
 cabal-version:          >= 1.8
-tested-with:            GHC==7.4.1, GHC == 7.6.3
+tested-with:            GHC == 7.6.3, GHC == 7.8.3
 
 extra-source-files:     src/Modules.hs
                         scripts/ghci.sh
@@ -39,18 +39,18 @@ data-files:             scripts/online.rc,
 
 source-repository head
   type:                 git
-  location:             https://github.com/mokus0/lambdabot.git
+  location:             https://github.com/lambdabot/lambdabot.git
 
 executable lambdabot
   hs-source-dirs:       src
   main-is:              Main.hs
 
   ghc-options:          -Wall -threaded
-  build-depends:        base                 >= 3 && < 5,
-                        lambdabot-core,
-                        lambdabot-haskell-plugins,
-                        lambdabot-irc-plugins,
-                        lambdabot-misc-plugins,
-                        lambdabot-novelty-plugins,
-                        lambdabot-reference-plugins,
-                        lambdabot-social-plugins
+  build-depends:        base                         >= 3 && < 5,
+                        lambdabot-core               >= 5 && < 5.1,
+                        lambdabot-haskell-plugins    >= 5 && < 5.1,
+                        lambdabot-irc-plugins        >= 5 && < 5.1,
+                        lambdabot-misc-plugins       >= 5 && < 5.1,
+                        lambdabot-novelty-plugins    >= 5 && < 5.1,
+                        lambdabot-reference-plugins  >= 5 && < 5.1,
+                        lambdabot-social-plugins     >= 5 && < 5.1

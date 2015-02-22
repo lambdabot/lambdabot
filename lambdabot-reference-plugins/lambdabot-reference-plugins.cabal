@@ -8,22 +8,30 @@ author:                 Don Stewart
 maintainer:             James Cook <mokus@deepbondi.net>
 
 category:               Development, Web
-synopsis:               Lambdabot is a development tool and advanced IRC bot
+synopsis:               Lambdabot reference plugins.
 description:            Lambdabot is an IRC bot written over several years by
                         those on the #haskell IRC channel.
                         .
-                        It operates as a command line tool, embedded in an editor,
-                        embedded in GHCi, via internet relay chat and on the web.
+                        Provided plugins:
+                        .
+                        [dict] Query various dictionaries.
+                        [metar] Look up avian weather reports.
+                        [oeis] Look up number sequences on OEIS.
+                        [search] Query search engines.
+                        [spell] Check spelling of wrods.
+                        [ticker] Look up stock quotes.
+                        [url] Display titles of URLs on channels.
+                        [where] Manage and query a key-URL list.
 
 homepage:               http://haskell.org/haskellwiki/Lambdabot
 
 build-type:             Simple
 cabal-version:          >= 1.8
-tested-with:            GHC==7.4.1, GHC == 7.6.3
+tested-with:            GHC == 7.6.3, GHC == 7.8.3
 
 source-repository head
   type:                 git
-  location:             https://github.com/mokus0/lambdabot.git
+  location:             https://github.com/lambdabot/lambdabot.git
 
 flag network-uri
   description: Get Network.URI from the network-uri package
@@ -48,11 +56,11 @@ library
   other-modules:        Lambdabot.Config.Reference
                         Lambdabot.Plugin.Reference.Dict.DictLookup
 
-  build-depends:        base                    >= 4.4,
+  build-depends:        base                    >= 4.4 && < 5,
                         bytestring              >= 0.9,
                         containers              >= 0.4,
                         HTTP                    >= 4000,
-                        lambdabot-core          >= 5,
+                        lambdabot-core          >= 5 && < 5.1,
                         mtl                     >= 2,
                         oeis                    >= 0.3.1,
                         process                 >= 1.1,

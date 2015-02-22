@@ -8,22 +8,22 @@ author:                 Bertram Felgenhauer
 maintainer:             Bertram Felgenhauer <int-e@gmx.de>
 
 category:               Development, Web
-synopsis:               Lambdabot is a development tool and advanced IRC bot
+synopsis:               Lambdabot trusted code.
 description:            Lambdabot is an IRC bot written over several years by
                         those on the #haskell IRC channel.
                         .
-                        It operates as a command line tool, embedded in an editor,
-                        embedded in GHCi, via internet relay chat and on the web.
+                        This small package provides functions used by
+                        the \@run command.
 
 homepage:               http://haskell.org/haskellwiki/Lambdabot
 
 build-type:             Simple
 cabal-version:          >= 1.8
-tested-with:            GHC==7.4.1, GHC == 7.6.3
+tested-with:            GHC == 7.6.3, GHC == 7.8.3
 
 source-repository head
   type:                 git
-  location:             https://github.com/mokus0/lambdabot.git
+  location:             https://github.com/lambdabot/lambdabot.git
 
 library
   hs-source-dirs:       src
@@ -34,6 +34,6 @@ library
 
   other-modules:        Lambdabot.Plugin.Haskell.Check.ShowQ
 
-  build-depends:        base                    >= 4.4,
+  build-depends:        base                    >= 4.4 && < 5,
                         oeis                    >= 0.3.1,
                         QuickCheck              >= 2

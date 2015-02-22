@@ -8,22 +8,27 @@ author:                 Don Stewart
 maintainer:             James Cook <mokus@deepbondi.net>
 
 category:               Development, Web
-synopsis:               Lambdabot is a development tool and advanced IRC bot
+synopsis:               Social plugins for Lambdabot
 description:            Lambdabot is an IRC bot written over several years by
                         those on the #haskell IRC channel.
                         .
-                        It operates as a command line tool, embedded in an editor,
-                        embedded in GHCi, via internet relay chat and on the web.
+                        Provided plugins:
+                        .
+                        [activity] Check where and how much is lambdabot used.
+                        [karma] Track who's been good and who's been naughty.
+                        [poll] Let the people vote.
+                        [seen] Track who was around when.
+                        [tell] Leave messages for other users.
 
 homepage:               http://haskell.org/haskellwiki/Lambdabot
 
 build-type:             Simple
 cabal-version:          >= 1.8
-tested-with:            GHC==7.4.1, GHC == 7.6.3
+tested-with:            GHC == 7.6.3, GHC == 7.8.3
 
 source-repository head
   type:                 git
-  location:             https://github.com/mokus0/lambdabot.git
+  location:             https://github.com/lambdabot/lambdabot.git
 
 library
   hs-source-dirs:       src
@@ -41,11 +46,11 @@ library
                         Lambdabot.Plugin.Social.Tell
                         Lambdabot.Util.NickEq
 
-  build-depends:        base                    >= 4.4,
+  build-depends:        base                    >= 4.4 && < 5,
                         binary                  >= 0.5,
                         bytestring              >= 0.9,
                         containers              >= 0.4,
-                        lambdabot-core          >= 5,
+                        lambdabot-core          >= 5 && < 5.1,
                         mtl                     >= 2,
                         split                   >= 0.2,
                         time                    >= 1.4

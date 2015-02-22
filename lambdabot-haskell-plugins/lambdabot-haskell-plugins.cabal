@@ -8,24 +8,38 @@ author:                 Don Stewart
 maintainer:             James Cook <mokus@deepbondi.net>
 
 category:               Development, Web
-synopsis:               Lambdabot is a development tool and advanced IRC bot
+synopsis:               Lambdabot Haskell plugins
 description:            Lambdabot is an IRC bot written over several years by
                         those on the #haskell IRC channel.
                         .
-                        It operates as a command line tool, embedded in an editor,
-                        embedded in GHCi, via internet relay chat and on the web.
+                        Provided plugins:
+                        .
+                        [check] Quick, check!
+                        [djinn] Derive implementations from types intuitinistically.
+                        [eval] Run Haskell code.
+                        [free] Theorems for free.
+                        [haddock] Find modules implementing a function.
+                        [hoogle] Search for functions by type using hoogle.
+                        [instances] Query instances of type classes.
+                        [pl] Produce point-less code.
+                        [pointful] Produce point-ful code.
+                        [pretty] Print code prettily.
+                        [source] Show implementations of standard functions.
+                        [type] Query type of expressions.
+                        [undo] Unfold do notation.
+                        [unmtl] Expand monad transformers stacks.
 
 homepage:               http://haskell.org/haskellwiki/Lambdabot
 
 build-type:             Simple
 cabal-version:          >= 1.8
-tested-with:            GHC==7.4.1, GHC == 7.6.3
+tested-with:            GHC == 7.6.3, GHC == 7.8.3
 
 extra-source-files:     src/Lambdabot/Plugin/Haskell/Free/Test.hs
 
 source-repository head
   type:                 git
-  location:             https://github.com/mokus0/lambdabot.git
+  location:             https://github.com/lambdabot/lambdabot.git
 
 library
   hs-source-dirs:       src
@@ -66,13 +80,14 @@ library
                         Lambdabot.Util.Parser
 
   build-depends:        array                   >= 0.4,
-                        base                    >= 4.4,
+                        base                    >= 4.4 && < 5,
                         bytestring              >= 0.9,
                         containers              >= 0.4,
                         directory               >= 1.1,
                         filepath                >= 1.3,
                         haskell-src-exts        >= 1.16.0,
-                        lambdabot-core          >= 5,
+                        lambdabot-core          >= 5 && < 5.1,
+                        lambdabot-reference-plugins >= 5 && < 5.1,
                         lifted-base             >= 0.2,
                         mtl                     >= 2,
                         oeis                    >= 0.3.1,
@@ -91,7 +106,7 @@ library
                         data-memocombinators    >= 0.4,
                         hoogle                  >= 4.2,
                         IOSpec                  >= 0.2,
-                        lambdabot-trusted       >= 5,
+                        lambdabot-trusted       >= 5 && < 5.1,
                         logict                  >= 0.5,
                         MonadRandom             >= 0.1,
                         mueval                  >= 0.9,
@@ -99,5 +114,4 @@ library
                         show                    >= 0.4,
                         vector-space            >= 0.8,
                         HTTP                    >= 4000,
-                        network                 >= 2.3.0.13,
-                        lambdabot-reference-plugins
+                        network                 >= 2.3.0.13
