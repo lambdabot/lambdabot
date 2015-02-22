@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE TemplateHaskell #-}
 -- | Extensible configuration system for lambdabot
@@ -97,7 +98,7 @@ configWithMerge mergeQ nameStr tyQ defValQ = do
     ty          <- tyQ
     defVal      <- defValQ
     mergeExpr   <- mergeQ
-    let tyDec   = DataD [] tyName [PlainTV tyVarName] [ForallC [] [EqualP (VarT tyVarName) ty] (NormalC conName [])] [''Typeable]
+    let tyDec   = DataD [] tyName [PlainTV tyVarName] [ForallC [] [mkEqualP (VarT tyVarName) ty] (NormalC conName [])] [''Typeable]
         keyDecs =
             [ SigD keyName (AppT (ConT ''Config) ty)
             , ValD (VarP keyName) (NormalB (ConE 'Config `AppE` ConE conName `AppE` defVal `AppE` mergeExpr)) []
@@ -109,3 +110,10 @@ configWithMerge mergeQ nameStr tyQ defValQ = do
         , deriveGEq tyDec
         , deriveGCompare tyDec
         ]
+
+mkEqualP :: Type -> Type -> Pred
+#if __GLASGOW_HASKELL__ > 708
+mkEqualP t1 t2 = EqualityT `AppT` t1 `AppT` t2
+#else
+mkEqualP = EqualP
+#endif

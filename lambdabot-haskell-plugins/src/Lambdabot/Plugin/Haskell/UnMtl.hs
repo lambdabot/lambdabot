@@ -14,6 +14,7 @@ import Lambdabot.Plugin
 import qualified Lambdabot.Plugin as Lmb (Module)
 import Lambdabot.Util.Parser (prettyPrintInLine)
 
+import Control.Applicative
 import Control.Monad
 import Language.Haskell.Exts as Hs hiding (tuple, var)
 
@@ -37,6 +38,13 @@ data PMonad a = PMonad
        }
 
 type PType = PMonad Type
+
+instance Functor PMonad where
+    fmap = liftM
+
+instance Applicative PMonad where
+    pure = return
+    (<*>) = ap
 
 -- A monad instance so we get things like liftM and sequence for free
 instance Monad PMonad where

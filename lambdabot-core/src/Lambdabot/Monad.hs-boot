@@ -9,4 +9,6 @@ module Lambdabot.Monad where
 type role LB nominal
 #endif
 data LB a
+instance Applicative LB
+instance Functor LB
 instance Monad LB

@@ -1,4 +1,6 @@
-{-# LANGUAGE CPP, PatternGuards #-}
+{-# LANGUAGE CPP #-}
+{-# LANGUAGE PatternGuards #-}
+{-# LANGUAGE FlexibleContexts #-}
 -- | Support for quotes
 module Lambdabot.Plugin.Novelty.Quote (quotePlugin) where
 

@@ -1,4 +1,5 @@
 {-# LANGUAGE PatternGuards #-}
+{-# LANGUAGE FlexibleContexts #-}
 module Lambdabot.Plugin.Haskell.Pl.Transform (
     transform,
   ) where

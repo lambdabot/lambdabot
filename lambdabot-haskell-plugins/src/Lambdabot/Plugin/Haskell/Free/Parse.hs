@@ -2,6 +2,7 @@
 
 module Lambdabot.Plugin.Haskell.Free.Parse where
 
+import Control.Applicative
 import Control.Monad
 
 data Token
@@ -62,12 +63,23 @@ data ParseResult a
 
 newtype ParseS a = ParseS { parse :: [Token] -> ParseResult a }
 
+instance Functor ParseS where
+    fmap = liftM
+
+instance Applicative ParseS where
+    pure = return
+    (<*>) = ap
+
 instance Monad ParseS where
     return x = ParseS (\ts -> ParseSuccess x ts)
     m >>= k = ParseS (\ts -> case parse m ts of
                                 ParseSuccess x ts' -> parse (k x) ts'
                                 ParseError s       -> ParseError s)
     fail str = ParseS (\_ -> ParseError str)
+
+instance Alternative ParseS where
+    empty = mzero
+    (<|>) = mplus
 
 instance MonadPlus ParseS where
     mzero = ParseS (\ts -> ParseError "parse error")
