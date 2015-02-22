@@ -1,5 +1,5 @@
 name:                   lambdabot-misc-plugins
-version:                5.0
+version:                5.0.1
 
 license:                GPL
 license-file:           LICENSE
@@ -15,10 +15,15 @@ description:            Lambdabot is an IRC bot written over several years by
                         Provided plugins:
                         .
                         [dummy] Many commands with fixed replies.
+                        .
                         [error] Debug error handling.
+                        .
                         [fresh] Generate Haskell project names.
+                        .
                         [hello] Hello, world.
+                        .
                         [stats] Ad-hoc statsd queries.
+                        .
                         [todo] A to-do list for lambdabot.
 
 homepage:               http://haskell.org/haskellwiki/Lambdabot

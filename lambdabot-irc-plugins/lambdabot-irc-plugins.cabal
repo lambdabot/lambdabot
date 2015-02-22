@@ -1,5 +1,5 @@
 name:                   lambdabot-irc-plugins
-version:                5.0
+version:                5.0.1
 
 license:                GPL
 license-file:           LICENSE
@@ -15,8 +15,11 @@ description:            Lambdabot is an IRC bot written over several years by
                         Provided plugins:
                         .
                         [irc] Lets lambdabot connect to IRC.
+                        .
                         [localtime] Check user's local time.
+                        .
                         [log] Log IRC channels.
+                        .
                         [topic] Modify channel topics.
 
 homepage:               http://haskell.org/haskellwiki/Lambdabot

@@ -1,5 +1,5 @@
 name:                   lambdabot-novelty-plugins
-version:                5.0
+version:                5.0.1
 
 license:                GPL
 license-file:           LICENSE
@@ -15,13 +15,21 @@ description:            Lambdabot is an IRC bot written over several years by
                         Provided plugins:
                         .
                         [bf] Run Brainf*ck code.
+                        .
                         [dice] Roll some dice.
+                        .
                         [elite] zPEak Gib8erI$|-|.
+                        .
                         [filter] More gibberish.
+                        .
                         [numberwang] Sorry, that's not Numberwang.
+                        .
                         [quote] Parrot profound wisdom.
+                        .
                         [slap] Delegate punishment.
+                        .
                         [unlambda] Run Unlambda code.
+                        .
                         [vixen] Let's chat, honey.
 
 homepage:               http://haskell.org/haskellwiki/Lambdabot

@@ -1,5 +1,5 @@
 name:                   lambdabot-social-plugins
-version:                5.0
+version:                5.0.1
 
 license:                GPL
 license-file:           LICENSE
@@ -15,9 +15,13 @@ description:            Lambdabot is an IRC bot written over several years by
                         Provided plugins:
                         .
                         [activity] Check where and how much is lambdabot used.
+                        .
                         [karma] Track who's been good and who's been naughty.
+                        .
                         [poll] Let the people vote.
+                        .
                         [seen] Track who was around when.
+                        .
                         [tell] Leave messages for other users.
 
 homepage:               http://haskell.org/haskellwiki/Lambdabot
