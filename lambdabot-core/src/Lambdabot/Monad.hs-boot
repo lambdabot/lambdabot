@@ -5,6 +5,8 @@
 #endif
 module Lambdabot.Monad where
 
+import Control.Applicative
+
 #if __GLASGOW_HASKELL__ > 706
 type role LB nominal
 #endif
