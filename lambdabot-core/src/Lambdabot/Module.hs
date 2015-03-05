@@ -99,18 +99,18 @@ instance MonadBase b m => MonadBase b (ModuleT st m) where
     liftBase = lift . liftBase
 
 instance MonadTransControl (ModuleT st) where
-    newtype StT (ModuleT st) a = StModule {unStModule :: a}
+    type StT (ModuleT st) a = a
     liftWith f = do
         r <- ModuleT ask
-        lift $ f $ \t -> liftM StModule (runReaderT (runModuleT t) r)
-    restoreT = lift . liftM unStModule
+        lift $ f $ \t -> runReaderT (runModuleT t) r
+    restoreT = lift
     {-# INLINE liftWith #-}
     {-# INLINE restoreT #-}
 
 instance MonadBaseControl b m => MonadBaseControl b (ModuleT st m) where
-    newtype StM (ModuleT st m) a = StMModule {unStMModule :: ComposeSt (ModuleT st) m a}
-    liftBaseWith = defaultLiftBaseWith StMModule
-    restoreM     = defaultRestoreM     unStMModule
+    type StM (ModuleT st m) a = ComposeSt (ModuleT st) m a
+    liftBaseWith = defaultLiftBaseWith
+    restoreM     = defaultRestoreM
     {-# INLINE liftBaseWith #-}
     {-# INLINE restoreM #-}
 

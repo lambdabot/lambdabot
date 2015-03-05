@@ -62,7 +62,7 @@ library
                         hstatsd                 >= 0.1,
                         lambdabot-core          >= 5 && < 5.1,
                         lifted-base             >= 0.2,
-                        monad-control           >= 0.3 && < 1,
+                        monad-control           >= 1.0,
                         mtl                     >= 2,
                         time                    >= 1.4,
                         parsec                  >= 3,

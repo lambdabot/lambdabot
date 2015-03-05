@@ -5,6 +5,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE UndecidableInstances #-}
 module Lambdabot.Monad
     ( IRCRState
     , initRoState
@@ -204,9 +205,9 @@ instance MonadBase IO LB where
     liftBase = LB . liftBase
 
 instance MonadBaseControl IO LB where
-    newtype StM LB a = StLB { unStLB :: StM (ReaderT (IRCRState,IORef IRCRWState) IO) a }
-    liftBaseWith action = LB (liftBaseWith (\run -> action (fmap StLB . run . runLB)))
-    restoreM = LB . restoreM . unStLB
+    type StM LB a = StM (ReaderT (IRCRState,IORef IRCRWState) IO) a
+    liftBaseWith action = LB (liftBaseWith (\run -> action (run . runLB)))
+    restoreM = LB . restoreM
 
 class (MonadIO m, MonadBaseControl IO m, MonadConfig m, MonadLogging m, Applicative m) => MonadLB m where
     lb :: LB a -> m a

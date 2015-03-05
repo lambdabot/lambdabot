@@ -57,17 +57,17 @@ instance MonadBase b m => MonadBase b (Cmd m) where
 instance MonadTrans Cmd where
     lift = Cmd . lift . lift
 instance MonadTransControl Cmd where
-    newtype StT Cmd a = StCmd {unStCmd :: (a, [String])}
+    type StT Cmd a = (a, [String])
     liftWith f = do
         r <- Cmd ask
-        lift $ f $ \t -> liftM StCmd (runWriterT (runReaderT (unCmd t) r))
-    restoreT = Cmd . lift . WriterT . liftM unStCmd
+        lift $ f $ \t -> runWriterT (runReaderT (unCmd t) r)
+    restoreT = Cmd . lift . WriterT
     {-# INLINE liftWith #-}
     {-# INLINE restoreT #-}
 instance MonadBaseControl b m => MonadBaseControl b (Cmd m) where
-    newtype StM (Cmd m) a = StMCmd {unStMCmd :: ComposeSt Cmd m a}
-    liftBaseWith = defaultLiftBaseWith StMCmd
-    restoreM     = defaultRestoreM     unStMCmd
+    type StM (Cmd m) a = ComposeSt Cmd m a
+    liftBaseWith = defaultLiftBaseWith
+    restoreM     = defaultRestoreM
     {-# INLINE liftBaseWith #-}
     {-# INLINE restoreM #-}
 instance MonadConfig m => MonadConfig (Cmd m) where
