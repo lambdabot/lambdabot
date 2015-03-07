@@ -81,8 +81,8 @@ runGHC src = do
     case (out,err) of
         ([],[]) -> return "Terminated\n"
         _       -> do
-            let o = munge out
-                e = munge err
+            let o = mungeEnc out
+                e = mungeEnc err
             return $ case () of {_
                 | null o && null e -> "Terminated\n"
                 | null o           -> e
