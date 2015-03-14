@@ -17,7 +17,7 @@ versionPlugin = newModule
                 "and git repo of this bot"
             , process = const $ do
                 say $ "lambdabot " ++ showVersion version
-                say "git clone git://github.com/lambdabot/lambdabot.git"
+                say "git clone https://github.com/lambdabot/lambdabot"
             }
         ]
     }
