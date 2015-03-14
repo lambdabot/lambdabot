@@ -4,3 +4,4 @@ install: .travis/install-deps
 branches:
   only:
     - master
+    - travis-test
