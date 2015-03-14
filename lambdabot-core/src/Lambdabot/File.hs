@@ -46,20 +46,16 @@ lookHome f = do
     state   <- stateDir
     io (maybeFileExists $ home </> state </> f)
 
--- | Do ~/.lambdabot & ~/.lambdabot/State exist?
-isHome :: LB Bool
-isHome = do
-    home  <- io getHomeDirectory
-    state <- stateDir
-    io . fmap and . mapM (doesDirectoryExist . (home </>)) $ [lambdabot, state]
-
 -- | Create ~/.lambdabot and ~/.lambdabot/State
-mkdirL :: LB ()
-mkdirL = do
+mkDirHome :: LB ()
+mkDirHome = do
     home  <- io getHomeDirectory
     state <- stateDir
     
-    io . mapM_ (createDirectory . (home </>)) $ [lambdabot, state]
+    io . createDirectoryIfMissing True $ home </> state
+    success <- io $ doesDirectoryExist $ home </> state
+
+    when (not success) $ fail $ concat ["Unable to create directory ", home </> state]
 
 -- | Ask Cabal for the read-only copy of a file, and copy it into ~/.lambdabot/State.
 -- if there isn't a read-only copy, create an empty file.
@@ -107,8 +103,7 @@ findOrCreateLBFile f = do
         -- find it in ~/.lambdabot/State. So now we
         -- need to make ~/.lambdabot/State and copy it in.
         Nothing -> do
-            exists <- isHome
-            when (not exists) mkdirL
+            mkDirHome
             cpDataToHome f
             -- With the file copied/created,
             -- a second attempt should work.
