@@ -6,6 +6,7 @@ module Main where
 import Lambdabot.Main
 import Lambdabot.Plugin.Haskell
 import Modules      (modulesInfo)
+import Paths_lambdabot (getDataDir)
 
 import Control.Applicative
 import Control.Monad
@@ -68,8 +69,12 @@ main :: IO ()
 main = do
     (config, nonOpts, errors) <- getOpt Permute flags <$> getArgs
     when (not (null errors && null nonOpts)) (usage errors)
-    exitWith =<< lambdabotMain modulesInfo =<< sequence config
+    config' <- sequence config
+    dir <- getDataDir
+    exitWith =<< lambdabotMain modulesInfo ([dataDir :=> dir] ++ config')
 
 -- special online target for ghci use
 online :: [String] -> IO ()
-online strs = void (lambdabotMain modulesInfo [onStartupCmds :=> strs])
+online strs = do
+    dir <- getDataDir
+    void (lambdabotMain modulesInfo [dataDir :=> dir, onStartupCmds :=> strs])

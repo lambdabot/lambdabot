@@ -10,7 +10,6 @@ import Lambdabot.Util
 
 import Control.Applicative
 import Control.Monad
-import Paths_lambdabot_core
 import System.Directory
 import System.FilePath
 
@@ -69,7 +68,8 @@ cpDataToHome f = do
     local   <- getConfig outputDir
     state   <- stateDir
     
-    rofile  <- io (getDataFileName (local </> f))
+    rodir   <- getConfig dataDir
+    let rofile = rodir </> local </> f
     home    <- io getHomeDirectory
     -- cp /.../lambdabot-4.foo/State/foo ~/.lambdabot/State/foo
     

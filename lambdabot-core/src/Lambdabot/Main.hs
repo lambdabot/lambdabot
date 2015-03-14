@@ -29,7 +29,7 @@ import Data.List
 import Data.Typeable
 import Data.Version
 import Language.Haskell.TH
-import Paths_lambdabot_core
+import Paths_lambdabot_core (version)
 import System.Exit
 import System.Log.Formatter
 import qualified System.Log.Logger as L
