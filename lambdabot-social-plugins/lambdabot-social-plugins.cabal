@@ -54,7 +54,7 @@ library
                         binary                  >= 0.5,
                         bytestring              >= 0.9,
                         containers              >= 0.4,
-                        lambdabot-core          >= 5 && < 5.1,
+                        lambdabot-core          >= 5.0.1 && < 5.1,
                         mtl                     >= 2,
                         split                   >= 0.2,
                         time                    >= 1.4

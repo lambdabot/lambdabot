@@ -67,7 +67,7 @@ library
                         bytestring              >= 0.9,
                         containers              >= 0.4,
                         HTTP                    >= 4000,
-                        lambdabot-core          >= 5 && < 5.1,
+                        lambdabot-core          >= 5.0.1 && < 5.1,
                         mtl                     >= 2,
                         oeis                    >= 0.3.1,
                         process                 >= 1.1,
