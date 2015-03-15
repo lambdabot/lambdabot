@@ -1,6 +1,19 @@
+-- | Manage lambdabot's state files. There are three relevant directories:
+--
+-- * local: @./State/@ (configurable, see `outputDir`)
+-- * home:  @~/.lambdabot/State/@
+-- * data:  relative to the data directory of the @lambdabot@ package.
+--
+-- Files are stored locally if the directory exists; otherwise, in the home
+-- directory. When reading a state file, and the file exists in the data
+-- directory but nowhere else, then it is picked up from the data directory.
+
 module Lambdabot.File
-    ( findLBFile
+    ( stateDir
+    , findLBFileForReading
+    , findLBFileForWriting
     , findOrCreateLBFile
+    , findLBFile -- deprecated
     , outputDir
     ) where
 
@@ -13,105 +26,73 @@ import Control.Monad
 import System.Directory
 import System.FilePath
 
--- | Constants.
 lambdabot :: FilePath
 lambdabot = ".lambdabot"
 
+-- | Locate state directory. Returns the local directory if it exists,
+-- and the home directory otherwise.
 stateDir :: LB FilePath
-stateDir = (lambdabot </>) <$> getConfig outputDir
+stateDir = do
+    -- look locally
+    output <- getConfig outputDir
+    b <- io $ doesDirectoryExist output
+    if b then return output else homeDir
 
-maybeFileExists :: FilePath -> IO (Maybe FilePath)
-maybeFileExists path = do
-    b <- doesFileExist path
-    return $! if b then Just path else Nothing
+homeDir :: LB FilePath
+homeDir = do
+    output <- getConfig outputDir
+    home <- io getHomeDirectory
+    return $ home </> lambdabot </> output
 
--- | For a given file, look locally under State/. That is, suppose one is
--- running out of a Lambdabot darcs repository in /home/cale/lambdabot. Then
---
--- > lookLocally "fact" ~> "/home/cale/lambdabot/State/fact"
-lookLocally :: FilePath -> LB (Maybe String)
-lookLocally file = do
-    local <- getConfig outputDir
-    io $ maybeFileExists (local </> file)
-
--- | For a given file, look at the home directory. By default, we stash files in
--- ~/.lambdabot. So, running Lambdabot normally would let us do:
---
--- > lookHome "fact" ~> "/home/cale/lambdabot/State/fact"
---
--- (Note that for convenience we preserve the "State/foo" address pattern.)
-lookHome :: FilePath -> LB (Maybe String)
-lookHome f = do
-    home    <- io getHomeDirectory
-    state   <- stateDir
-    io (maybeFileExists $ home </> state </> f)
-
--- | Create ~/.lambdabot and ~/.lambdabot/State
-mkDirHome :: LB ()
-mkDirHome = do
-    home  <- io getHomeDirectory
+-- | Look for the file in the local, home, and data directories.
+findLBFileForReading :: FilePath -> LB (Maybe FilePath)
+findLBFileForReading f = do
     state <- stateDir
-    
-    io . createDirectoryIfMissing True $ home </> state
-    success <- io $ doesDirectoryExist $ home </> state
+    home  <- homeDir
+    output <- getConfig outputDir
+    rodir <- getConfig dataDir
+    findFirstFile [state </> f, home </> f, rodir </> output </> f]
 
-    when (not success) $ fail $ concat ["Unable to create directory ", home </> state]
+-- | Return file name for writing state. The file will reside in the
+-- state directory (`stateDir`), and `findLBFileForWriting` ensures that
+-- the state directory exists.
+findLBFileForWriting :: FilePath -> LB FilePath
+findLBFileForWriting f = do
+    state <- stateDir
+    -- ensure that the directory exists
+    io $ createDirectoryIfMissing True state
+    success <- io $ doesDirectoryExist state
+    when (not success) $ fail $ concat ["Unable to create directory ", state]
+    return $ state </> f
 
--- | Ask Cabal for the read-only copy of a file, and copy it into ~/.lambdabot/State.
--- if there isn't a read-only copy, create an empty file.
-cpDataToHome :: FilePath -> LB ()
-cpDataToHome f = do 
-    local   <- getConfig outputDir
-    state   <- stateDir
-    
-    rodir   <- getConfig dataDir
-    let rofile = rodir </> local </> f
-    home    <- io getHomeDirectory
-    -- cp /.../lambdabot-4.foo/State/foo ~/.lambdabot/State/foo
-    
-    let outFile = home </> state </> f
-    exists  <- io (doesFileExist rofile)
-    if exists
-        then io (copyFile rofile outFile)
-        else io (writeFile outFile "")
+findFirstFile :: [FilePath] -> LB (Maybe FilePath)
+findFirstFile [] = return Nothing
+findFirstFile (path:ps) = do
+    b <- io $ doesFileExist path
+    if b then return (Just path) else findFirstFile ps
 
--- | Try to find a pre-existing file, searching first in ./State and then in 
--- ~/.lambdabot/State
+{-# DEPRECATED findLBFile
+ "Use `findLBFileForReading` or `findLBFileForWriting` instead" #-}
+-- | Try to find a pre-existing file, searching first in the local or home
+-- directory (but not in the data directory)
 findLBFile :: FilePath -> LB (Maybe String)
 findLBFile f = do
-    first <- lookLocally f
-    case first of
-        -- With any luck we can exit quickly
-        Just a -> return (Just a)
-        -- OK, we didn't get lucky with local, so
-        -- hopefully it's in ~/.lambdabot
-        Nothing -> lookHome f
+    state <- stateDir
+    home  <- homeDir
+    findFirstFile [state </> f, home </> f]
 
--- | Complicated. If a file exists locally, we return that. If a file exists in
--- ~/lambdabot/State, we return that. If neither the file nor ~/lambdabot/State
--- exist, we create the directories and then copy the file into it if a template
--- exists, or create an empty file if it does not.
--- Note that the return type is simple so we can just do a binding and stuff it
--- into the conventional functions easily; unfortunately, this removes
--- error-checking, as an error is now just \"\".
+-- | This returns the same file name as `findLBFileForWriting`.
+-- If the file does not exist, it is either copied from the data (or home)
+-- directory, if a copy is found there; otherwise, an empty file is
+-- created instead.
 findOrCreateLBFile :: FilePath -> LB String
 findOrCreateLBFile f = do
-    mbFile <- findLBFile f
-    case mbFile of
-        Just file   -> return file
-        -- Uh oh. We didn't find it locally, nor did we
-        -- find it in ~/.lambdabot/State. So now we
-        -- need to make ~/.lambdabot/State and copy it in.
-        Nothing -> do
-            mkDirHome
-            cpDataToHome f
-            -- With the file copied/created,
-            -- a second attempt should work.
-            g <- lookHome f
-            case g of
-                Just a -> return a
-                Nothing -> do
-                    home  <- io getHomeDirectory 
-                    state <- stateDir
-                    fail $ "findOrCreateLBFile: couldn't find file " 
-                        ++ f ++ " in " ++ home </> state
+    outFile <- findLBFileForWriting f
+    b <- io $ doesFileExist outFile
+    when (not b) $ do
+        -- the file does not exist; populate it from home or data directory
+        b <- findLBFileForReading f
+        case b of
+            Nothing      -> io $ writeFile outFile ""
+            Just roFile  -> io $ copyFile roFile outFile
+    return outFile
