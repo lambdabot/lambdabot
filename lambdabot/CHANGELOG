@@ -1,4 +1,4 @@
 lambdabot 5.0.1
 	* update to monad-control-1.0
-	* state files are now stored locally (in ./State/) even if a
+	* if ./State/ exists, then state files are stored there even if a
 	  corresponding file exists in ~/.lambdabot/State
