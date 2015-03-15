@@ -29,6 +29,7 @@ extra-source-files:     src/Modules.hs
                         scripts/vim/run
                         scripts/vim/runwith
                         scripts/vim/typeOf
+                        CHANGELOG
 
 data-files:             scripts/online.rc,
                         State/haddock,
