@@ -12,6 +12,7 @@ import Control.Arrow ((***))
 import Control.Monad
 import Data.Binary
 import qualified Data.ByteString.Char8 as P
+import qualified Data.ByteString.Lazy as L
 import System.Directory
 import Text.Regex.TDFA
 
@@ -52,14 +53,10 @@ vixenPlugin = newModule
 
     -- suck in our (read only) regex state from disk
     -- compile it, and stick it in the plugin state
-    , moduleInit = do
-        vixenFile <- lb (findOrCreateLBFile "vixen")
-        b <- io (doesFileExist vixenFile)
-        when b $ do
-            st <- io (decodeFile vixenFile)
-            let compiled = map (makeRegex *** id) (st :: [(String, WTree)])
-                s = vixen (mkResponses compiled)
-            modifyMS $ \(v,_) -> (v, s)
+    , moduleSerialize = Just $ readOnly $ \bs ->
+         let st = decode (L.fromStrict bs)
+             compiled = map (makeRegex *** id) (st :: [(String, WTree)])
+         in  (True, vixen (mkResponses compiled))
     }
 
 ------------------------------------------------------------------------

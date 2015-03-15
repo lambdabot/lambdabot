@@ -163,7 +163,7 @@ comp src = do
                     io (removeFile ".L.hs")
                     return "Error."
                 | otherwise -> do
-                    l <- lb (findOrCreateLBFile "L.hs")
+                    l <- lb (findLBFileForWriting "L.hs")
                     io (renameFile ".L.hs" l)
                     return "Defined."
         (ee,[]) -> return ee
@@ -203,6 +203,8 @@ fetchLPaste num = browseLB $
 
 reset :: MonadLB m => m ()
 reset = do
-    l <- lb (findOrCreateLBFile "L.hs")
+    -- Note: We use `findOrCreateLBFile` instead of `findLBFileForReading`
+    -- here to make @Pristine.hs@ easier to find.
     p <- lb (findOrCreateLBFile "Pristine.hs")
+    l <- lb (findLBFileForWriting "L.hs")
     io (copyFile p l)

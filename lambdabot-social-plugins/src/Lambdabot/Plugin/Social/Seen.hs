@@ -60,9 +60,9 @@ seenPlugin = newModule
                 [joinCB, partCB, quitCB, nickCB, joinChanCB, msgCB]
             ]
 
-        c <- lb $ findOrCreateLBFile "seen"
-        s <- io $ P.readFile c
-        let ls = L.fromChunks [s]
+        c <- lb $ findLBFileForReading "seen"
+        s <- maybe (return (P.pack "")) (io . P.readFile) c
+        let ls = L.fromStrict s
         mbDecoded <- io . try . evaluate $ decode ls
         case mbDecoded of
             Left exc@SomeException{} -> do
@@ -82,7 +82,7 @@ seenPlugin = newModule
             modifyMS $ \(n,m) -> (n, botPart ct (map packNick chans) m)
 
         -- and write out our state:
-        withMS $ \s _ -> lb (findOrCreateLBFile "seen") >>= \ c -> io (encodeFile c s)
+        withMS $ \s _ -> lb (findLBFileForWriting "seen") >>= \ c -> io (encodeFile c s)
     }
 
 lcNick :: Nick -> Nick

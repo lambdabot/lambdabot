@@ -188,7 +188,7 @@ writeGlobalState module' name = do
             case serialize ser state' of
                 Nothing  -> return ()   -- do not write any state
                 Just out -> do
-                    stateFile <- lb (findOrCreateLBFile name)
+                    stateFile <- lb (findLBFileForWriting name)
                     io (P.writeFile stateFile out)
 
 -- | Read it in
@@ -197,7 +197,7 @@ readGlobalState module' name = do
     debugM ("loading state for module " ++ show name)
     case moduleSerialize module' of
         Just ser -> do
-            mbStateFile <- findLBFile name
+            mbStateFile <- findLBFileForReading name
             case mbStateFile of
                 Nothing         -> return Nothing
                 Just stateFile  -> io $ do

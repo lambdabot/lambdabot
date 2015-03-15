@@ -134,9 +134,9 @@ fetchInstancesImporting args = fetchInstances' cls mdls
 --   the parser.
 fetchInstances' :: MonadLB m => String -> [ModuleName] -> m String
 fetchInstances' cls mdls = do
-    stateDir <- getConfig outputDir
+    load <- lb $ findOrCreateLBFile "L.hs"
     let s = unlines $ map unwords
-            [ [":l", show (stateDir </> "L")]
+            [ [":l", load]
             ,  ":m" : "+" : mdls
             , [":i", cls]
             ]

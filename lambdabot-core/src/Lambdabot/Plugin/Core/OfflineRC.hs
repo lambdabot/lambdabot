@@ -41,7 +41,7 @@ offlineRCPlugin = newModule
             , help = say "offline. Start a repl"
             , process = const . lift $ do
                 lockRC
-                histFile <- lb $ findOrCreateLBFile "offlinerc"
+                histFile <- lb $ findLBFileForWriting "offlinerc"
                 let settings = defaultSettings { historyFile = Just histFile }
                 _ <- fork (runInputT settings replLoop `finally` unlockRC)
                 return ()
