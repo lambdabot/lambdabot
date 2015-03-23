@@ -200,6 +200,10 @@ getMessages sender = do
              Just (_, [], _) -> Nothing
              Just (_, ns, _) -> Just ns
 
+-- | Set a user's messages.
+setMessages :: Nick -> [Note] -> Cmd Tell ()
+setMessages sender msgs = modEntry sender $ \(t, _, a) -> (t, msgs, a)
+
 -- | Clear a user's messages.
 clearMessages :: Nick -> Cmd Tell ()
 clearMessages sender = modEntry sender $ \(_, _, a) -> (Nothing, [], a)
@@ -232,17 +236,23 @@ doMessages :: Bool -> Cmd Tell ()
 doMessages loud = do
     sender <- getSender
     msgs <- getMessages sender
-    clearMessages sender
 
     let tellNote = if loud
             then say
             else lb . ircPrivmsg sender
 
+    let loop [] = clearMessages sender
+        loop (msg : msgs) = do
+            time <- io getClockTime
+            -- Note that 'showNote' may block and thus run into a timeout.
+            -- Hence we update the list of pending messages after each message.
+            showNote time msg >>= tellNote
+            setMessages sender msgs
+            loop msgs
+
     case msgs of
         Nothing -> say "You don't have any messages"
-        Just mesgs -> do
-            time <- io getClockTime
-            mapM_ (showNote time >=> tellNote) mesgs
+        Just msgs -> loop msgs
 
 verb :: NoteType -> String
 verb Ask = "ask"
