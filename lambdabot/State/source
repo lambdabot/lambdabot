@@ -1254,15 +1254,15 @@ class Applicative f => Alternative f where
 
 Monad
 class Applicative m => Monad m where
-    -- Note: Alternative wasn't a superclass until GHC 7.10
+    -- Note: Applicative wasn't a superclass before GHC 7.10
     (>>=)  :: m a -> (a -> m b) -> m b
-    (>>) :: m a -> m b -> m b
+    (>>)   :: m a -> m b -> m b
     return :: a -> m a
     fail   :: String -> m a
 
 MonadPlus
 class Alternative m => MonadPlus m where
-    -- Note: Alternative wasn't a superclass until GHC 7.10
+    -- Note: Alternative wasn't a superclass before GHC 7.10
     mzero :: m a
     mplus :: m a -> m a -> m a
 
