@@ -83,8 +83,8 @@ mapM_
 mapM_ f as = sequence_ (map f as)
 
 guard
-guard True  = return ()
-guard False = mzero
+guard True  = pure ()
+guard False = empty
 
 forM
 forM = flip mapM
@@ -1211,8 +1211,7 @@ class (Fractional a) => Floating a where
     (**), logBase       :: a -> a -> a
 
 Num
--- Doesn't require (Eq a, Show a) in newer GHC.
-class (Eq a, Show a) => Num a where
+class Num a where
     (+), (-), (*)       :: a -> a -> a
     negate, abs, signum :: a -> a
     fromInteger         :: Integer -> a
@@ -1254,11 +1253,18 @@ class Applicative f => Alternative f where
     (<|>) :: f a -> f a -> f a
 
 Monad
-class Monad m where
-    (>>=)  :: forall a b. m a -> (a -> m b) -> m b
-    (>>)   :: forall a b. m a -> m b -> m b
+class Applicative m => Monad m where
+    -- Note: Applicative wasn't a superclass before GHC 7.10
+    (>>=)  :: m a -> (a -> m b) -> m b
+    (>>)   :: m a -> m b -> m b
     return :: a -> m a
     fail   :: String -> m a
+
+MonadPlus
+class Alternative m => MonadPlus m where
+    -- Note: Alternative wasn't a superclass before GHC 7.10
+    mzero :: m a
+    mplus :: m a -> m a -> m a
 
 Monoid
 class Monoid a where
@@ -1382,6 +1388,14 @@ class (Functor t, Foldable t) => Traversable t where
     sequenceA :: Applicative f => t (f a) -> f (t a)
     mapM      :: Monad m => (a -> m b) -> t a -> m (t b)
     sequence  :: Monad m => t (m a) -> m (t a)
+
+traverse_
+traverse_ h xs = foldr (\fx fxs -> h fx *> fxs) (pure ())
+--OR
+traverse_ h xs = traverse h xs *> pure ()
+
+map_
+map_ = flip traverse_
 
 IO fmap
 fmap f x = x >>= (return . f)
