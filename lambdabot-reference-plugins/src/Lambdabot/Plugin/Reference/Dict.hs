@@ -24,7 +24,8 @@ dictPlugin = newModule
             { help = getHelp [name]
             , process = \args -> case parseTerms args of
                 [] -> getHelp [name]
-                s  -> mapM_ (doLookup >=> sayResult) s
+                [s]  -> doLookup s >=> sayResult
+                _ -> say "Sorry, look up one word at a time please."
             }
         | (name, (srv, db, _)) <- dictTable
         , let doLookup  = io . Dict.simpleDictLookup srv db
