@@ -1,5 +1,5 @@
 name:                   lambdabot-novelty-plugins
-version:                5.0.1
+version:                5.0.1.1
 
 license:                GPL
 license-file:           LICENSE
@@ -74,5 +74,5 @@ library
                         regex-tdfa              >= 1.1,
 
                         -- runtime dependencies
-                        brainfuck               == 0.1,
+                        brainfuck               >= 0.1,
                         unlambda                >= 0.1
