@@ -34,8 +34,9 @@ extra-source-files:     src/Modules.hs
 
 data-files:             scripts/online.rc,
                         State/haddock,
-                        State/L.hs,
-                        State/Pristine.hs,
+                        State/Pristine.hs.706,
+                        State/Pristine.hs.708,
+                        State/Pristine.hs.default,
                         State/source,
                         State/vixen
 

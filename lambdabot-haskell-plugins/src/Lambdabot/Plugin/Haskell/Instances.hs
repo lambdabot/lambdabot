@@ -23,6 +23,7 @@ import Text.ParserCombinators.Parsec
 import Lambdabot.Config.Haskell
 import Lambdabot.Plugin
 import Lambdabot.Util
+import Lambdabot.Plugin.Haskell.Eval (findL_hs)
 
 import Control.Applicative ((*>))
 import Control.Monad
@@ -134,13 +135,13 @@ fetchInstancesImporting args = fetchInstances' cls mdls
 --   the parser.
 fetchInstances' :: MonadLB m => String -> [ModuleName] -> m String
 fetchInstances' cls mdls = do
-    load <- lb $ findOrCreateLBFile "L.hs"
+    load <- findL_hs
     let s = unlines $ map unwords
             [ [":l", load]
             ,  ":m" : "+" : mdls
             , [":i", cls]
             ]
-    
+
     ghci <- getConfig ghciBinary
     (_, out, err) <- io $ readProcessWithExitCode ghci ["-ignore-dot-ghci","-fglasgow-exts"] s
     let is = getInstances out cls

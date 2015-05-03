@@ -1,8 +1,10 @@
+{-# LANGUAGE CPP #-}
+
 -- Copyright (c) 2004-6 Donald Bruce Stewart - http://www.cse.unsw.edu.au/~dons
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
 
 -- | A Haskell evaluator for the pure part, using mueval
-module Lambdabot.Plugin.Haskell.Eval (evalPlugin, runGHC) where
+module Lambdabot.Plugin.Haskell.Eval (evalPlugin, runGHC, findL_hs) where
 
 import Lambdabot.Config.Haskell
 import Lambdabot.Plugin
@@ -42,7 +44,7 @@ evalPlugin = newModule
             , process = \s ->
                 if null s
                     then do
-                        reset
+                        resetL_hs
                         say "Undefined."
                     else say "There's currently no way to undefine just one thing.  Say @undefine (with no extra words) to undefine everything."
             }
@@ -73,7 +75,7 @@ dropPrefix = dropWhile (' ' ==) . drop 2
 
 runGHC :: MonadLB m => String -> m String
 runGHC src = do
-    load    <- lb (findOrCreateLBFile "L.hs")
+    load    <- findL_hs
     binary  <- getConfig muevalBinary
     exts    <- getConfig languageExts
     trusted <- getConfig trustedPackages
@@ -99,7 +101,7 @@ define src = do
     let mode = Hs.defaultParseMode{ Hs.extensions = map Hs.classifyExtension exts }
     case Hs.parseModuleWithMode mode (decodeString src) of
         Hs.ParseOk srcModule -> do
-            l <- lb (findOrCreateLBFile "L.hs")
+            l <- findL_hs
             res <- io (Hs.parseFile l)
             case res of
                 Hs.ParseFailed loc err -> return (Hs.prettyPrint loc ++ ':' : err)
@@ -201,10 +203,37 @@ fetchLPaste num = browseLB $
 ------------------------------
 -- reset all bindings
 
-reset :: MonadLB m => m ()
-reset = do
-    -- Note: We use `findOrCreateLBFile` instead of `findLBFileForReading`
-    -- here to make @Pristine.hs@ easier to find.
-    p <- lb (findOrCreateLBFile "Pristine.hs")
+resetL_hs :: MonadLB m => m ()
+resetL_hs = do
+    p <- findPristine_hs
     l <- lb (findLBFileForWriting "L.hs")
     io (copyFile p l)
+
+-- find Pristine.hs; if not found, we try to install a compiler-specific
+-- version from lambdabot's data directory, and finally the default one.
+findPristine_hs :: MonadLB m => m FilePath
+findPristine_hs = do
+    p <- lb (findLBFileForReading "Pristine.hs")
+    case p of
+        Nothing -> do
+            p <- lb (findOrCreateLBFile "Pristine.hs")
+            p0 <- lb (findLBFileForReading ("Pristine.hs." ++ show __GLASGOW_HASKELL__))
+            p0 <- case p0 of
+                Nothing -> lb (findLBFileForReading "Pristine.hs.default")
+                p0 -> return p0
+            case p0 of
+                Just p0 -> do
+                    p <- lb (findLBFileForWriting "Pristine.hs")
+                    io (copyFile p0 p)
+                _ -> return ()
+            return p
+        Just p -> return p
+
+-- find L.hs; if not found, we copy it from Pristine.hs
+findL_hs :: MonadLB m => m FilePath
+findL_hs = do
+    file <- lb (findLBFileForReading "L.hs")
+    case file of
+        -- if L.hs
+        Nothing -> resetL_hs >> lb (findOrCreateLBFile "L.hs")
+        Just file -> return file
