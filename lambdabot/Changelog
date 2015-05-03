@@ -1,3 +1,11 @@
+lambdabot 5.0.2.2
+	* update Changelog
+
+lambdabot 5.0.2.1
+	* use QuickCheck-safe for @check command
+	* ship ghc version specific Pristen.hs files
+	* the dict plugin no longer looks up more than one word at a time
+
 lambdabot 5.0.1
 	* update to monad-control-1.0
 	* if ./State/ exists, then state files are stored there even if a
