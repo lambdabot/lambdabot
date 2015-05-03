@@ -24,7 +24,7 @@ check :: MonadLB m => String -> m String
 check src =
     case Hs.parseExp src of
         Hs.ParseFailed l e  -> return (Hs.prettyPrint l ++ ':' : e)
-        Hs.ParseOk{}        -> postProcess `fmap` runGHC ("myquickcheck (" ++ src ++ ") `seq` hsep[]")
+        Hs.ParseOk{}        -> postProcess `fmap` runGHC ("text (myquickcheck (" ++ src ++ "))")
 
 postProcess xs =
     let (first, rest) = splitAt 1 (map (unwords . words) (lines xs))

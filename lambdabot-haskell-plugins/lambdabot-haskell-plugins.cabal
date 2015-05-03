@@ -1,5 +1,5 @@
 name:                   lambdabot-haskell-plugins
-version:                5.0.1
+version:                5.0.2
 
 license:                GPL
 license-file:           LICENSE
@@ -119,7 +119,7 @@ library
                         data-memocombinators    >= 0.4,
                         hoogle                  >= 4.2,
                         IOSpec                  >= 0.2,
-                        lambdabot-trusted       >= 5 && < 5.1,
+                        lambdabot-trusted       >= 5.0.2 && < 5.1,
                         logict                  >= 0.5,
                         MonadRandom             >= 0.1,
                         mueval                  >= 0.9,
