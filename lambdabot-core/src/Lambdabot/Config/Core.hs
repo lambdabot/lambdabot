@@ -10,6 +10,7 @@ module Lambdabot.Config.Core
     , onStartupCmds
     , outputDir
     , dataDir
+    , lbVersion
     , uncaughtExceptionHandler
     
     , replaceRootLogger
@@ -24,6 +25,7 @@ import Lambdabot.Logging
 
 import Control.Exception
 import System.IO
+import Data.Version
 
 -------------------------------------
 -- Core configuration variables
@@ -34,8 +36,10 @@ config "editDistanceLimit"  [t| Int                     |] [| 3 :: Int      |]
 config "enableInsults"      [t| Bool                    |] [| True          |]
 configWithMerge [| (++) |] "onStartupCmds" [t| [String] |] [| ["offline"]   |]
 config "outputDir"          [t| FilePath                |] [| "State/"      |]
--- The dataDir variable will be filled by lambdabot's executable
+-- the dataDir variable will be filled by lambdabot's executable
 config "dataDir"            [t| FilePath                |] [| "."           |]
+-- ditto for lbVersion
+config "lbVersion"          [t| Version                 |] [| Version [] [] |]
 
 -- basic logging.  for more complex setups, configure directly using System.Log.Logger
 config "replaceRootLogger"  [t| Bool                    |] [| True                        |]

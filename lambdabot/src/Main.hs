@@ -6,7 +6,7 @@ module Main where
 import Lambdabot.Main
 import Lambdabot.Plugin.Haskell
 import Modules      (modulesInfo)
-import Paths_lambdabot (getDataDir)
+import qualified Paths_lambdabot as P
 
 import Control.Applicative
 import Control.Monad
@@ -42,7 +42,7 @@ flags =
         noinsult = return (enableInsults :=> False)
 
 versionString :: String
-versionString = ("lambdabot version " ++ showVersion lambdabotVersion)
+versionString = ("lambdabot version " ++ showVersion P.version)
 
 version :: IO a
 version = do
@@ -70,11 +70,13 @@ main = do
     (config, nonOpts, errors) <- getOpt Permute flags <$> getArgs
     when (not (null errors && null nonOpts)) (usage errors)
     config' <- sequence config
-    dir <- getDataDir
-    exitWith =<< lambdabotMain modulesInfo ([dataDir :=> dir] ++ config')
+    dir <- P.getDataDir
+    exitWith <=< lambdabotMain modulesInfo $
+        [dataDir :=> dir, lbVersion :=> P.version] ++ config'
 
 -- special online target for ghci use
 online :: [String] -> IO ()
 online strs = do
-    dir <- getDataDir
-    void (lambdabotMain modulesInfo [dataDir :=> dir, onStartupCmds :=> strs])
+    dir <- P.getDataDir
+    void $ lambdabotMain modulesInfo
+        [dataDir :=> dir, lbVersion :=> P.version, onStartupCmds :=> strs]

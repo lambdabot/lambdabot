@@ -5,7 +5,6 @@
 module Lambdabot.Plugin.Core.Version (versionPlugin) where
 
 import Lambdabot.Plugin
-import Paths_lambdabot_core (version)
 import Data.Version (showVersion)
 
 versionPlugin :: Module ()
@@ -16,7 +15,8 @@ versionPlugin = newModule
                 "version/source. Report the version " ++
                 "and git repo of this bot"
             , process = const $ do
-                say $ "lambdabot " ++ showVersion version
+                ver <- getConfig lbVersion
+                say $ "lambdabot " ++ showVersion ver
                 say "git clone https://github.com/lambdabot/lambdabot"
             }
         ]
