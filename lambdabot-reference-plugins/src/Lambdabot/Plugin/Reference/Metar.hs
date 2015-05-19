@@ -25,7 +25,7 @@ metarPlugin = newModule
 
 addsUri :: String
 addsUri =
-    "http://aviationweather.gov/adds/dataserver_current/httpparam"
+    "http://www.aviationweather.gov/adds/dataserver_current/httpparam"
 
 addsSrc :: String -> String
 addsSrc code = addsUri ++
