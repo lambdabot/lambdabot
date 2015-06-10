@@ -133,7 +133,7 @@ query_ghci cmd expr = do
         extFlags = ["-X" ++ ext | ext <- exts]
     ghci <- getConfig ghciBinary
     (_, output, errors) <- io $ readProcessWithExitCode ghci
-        ("-v0":"-fforce-recomp":"-iState":extFlags)
+        ("-v0":"-fforce-recomp":"-iState":"-ignore-dot-ghci":extFlags)
         (context ++ theCommand cmd (stripComments (decodeString expr)))
     let ls = extract_signatures output
     return $ case ls of
