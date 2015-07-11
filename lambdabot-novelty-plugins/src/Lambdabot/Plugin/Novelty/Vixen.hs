@@ -56,7 +56,7 @@ vixenPlugin = newModule
     , moduleSerialize = Just $ readOnly $ \bs ->
          let st = decode (L.fromStrict bs)
              compiled = map (makeRegex *** id) (st :: [(String, WTree)])
-         in  (True, vixen (mkResponses compiled))
+         in  (False, vixen (mkResponses compiled))
     }
 
 ------------------------------------------------------------------------
