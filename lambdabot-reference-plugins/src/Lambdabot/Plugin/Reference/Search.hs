@@ -125,5 +125,12 @@ doHTTP request handler = do
 extractConversion :: String -> Maybe String
 extractConversion (parseTags -> tags) = listToMaybe [txt |
     section <- sections (tagOpen ("h2"==) (anyAttr (\(name, value) -> name == "class" && value == "r"))) tags,
-    txt <- [strip isSpace $ drop 1 $ dropWhile (/= '=') t | TagText t <- section],
+    let txt = take 80 $ strip isSpace $ drop 1 $ dropWhile (/= '=') $ extractText section,
     not (null txt)]
+
+extractText :: [Tag String] -> String
+extractText (TagText t : ts) = t ++ extractText ts
+extractText (TagOpen "sup" _ : TagText t : TagClose "sup" : ts) = "^" ++ t ++ extractText ts
+extractText (TagClose "h2" : _) = ""
+extractText (_ : ts) = extractText ts
+extractText _ = ""
