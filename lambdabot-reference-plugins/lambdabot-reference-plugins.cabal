@@ -74,7 +74,7 @@ library
                         regex-tdfa              >= 1.1,
                         split                   >= 0.2,
                         tagsoup                 >= 0.12,
-                        utf8-string             >= 0.3 && < 1
+                        utf8-string             >= 0.3
 
   if flag(network-uri)
     build-depends: network-uri >= 2.6, network >= 2.6
