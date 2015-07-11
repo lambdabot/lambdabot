@@ -141,8 +141,8 @@ putHdlAndDS c hdl ds =
 -- | Open a file to write the log to.
 openChannelFile :: Channel -> UTCTime -> Log Handle
 openChannelFile chan ct = do
-    stateDir <- getConfig outputDir
-    let dir  = stateDir </> "Log" </> nTag chan </> nName chan
+    logDir <- lb $ findLBFileForWriting "Log"
+    let dir  = logDir </> nTag chan </> nName chan
         file = dir </> (dateToString date) <.> "txt"
     io $ createDirectoryIfMissing True dir >> openFile file AppendMode
     where date = dateStamp ct
