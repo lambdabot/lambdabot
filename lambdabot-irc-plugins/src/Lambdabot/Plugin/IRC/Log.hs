@@ -39,6 +39,7 @@ data Event =
     | Parted Nick String UTCTime -- covers quitting as well
     | Kicked Nick Nick String UTCTime String
     | Renick Nick String UTCTime Nick
+    | Mode Nick String UTCTime String
     deriving (Eq)
 
 instance Show Event where
@@ -50,8 +51,10 @@ instance Show Event where
     show (Kicked nick op usrop ct reason) = timeStamp ct ++ " " ++ show (FreenodeNick nick)
                                             ++ " was kicked by " ++ show (FreenodeNick op)
                                             ++ " (" ++ usrop ++ "): " ++ reason ++ "."
-    show (Renick nick usr ct new) = timeStamp ct ++ " " ++ show  (FreenodeNick nick)
+    show (Renick nick usr ct new) = timeStamp ct ++ " " ++ show (FreenodeNick nick)
                                     ++ " (" ++ usr ++ ") is now " ++ show (FreenodeNick new) ++ "."
+    show (Mode nick usr ct mode)  = timeStamp ct ++ " " ++ show (FreenodeNick nick)
+                                    ++ " (" ++ usr ++ ") changed mode to " ++ mode ++ "."
 
 -- * Dispatchers and Module instance declaration
 --
@@ -73,6 +76,7 @@ logPlugin = newModule
         connect "PART"    partCB
         connect "KICK"    kickCB
         connect "NICK"    nickCB
+        connect "MODE"    modeCB
     }
 
 -- * Logging helpers
@@ -208,6 +212,11 @@ kickCB msg ct = Kicked (Msg.nick msg) { nName = head $ tail $ ircMsgParams msg }
 nickCB :: IrcMessage -> UTCTime -> Event
 nickCB msg ct = Renick (Msg.nick msg) (Msg.fullName msg) ct
                        (parseNick (Msg.server msg) $ drop 1 $ head $ ircMsgParams msg)
+
+-- | When somebody changes channel mode.
+modeCB :: IrcMessage -> UTCTime -> Event
+modeCB msg ct = Mode (Msg.nick msg) (Msg.fullName msg) ct
+                     (unwords $ tail $ ircMsgParams msg)
 
 -- | When somebody speaks.
 msgCB :: IrcMessage -> UTCTime -> Event
