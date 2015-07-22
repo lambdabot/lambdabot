@@ -166,13 +166,20 @@ online tag hostn portnum nickn ui = do
           void $ lb $ remServer tag
           let retry = do
               continue <- lift $ gets (M.member tag . ircPersists)
-              when continue $ do
-                  E.catch online'
-                      (\e@SomeException{} -> do
-                          errorM (show e)
-                          io $ threadDelay 10000000
-                          retry
-                      )
+              if continue
+                  then do
+                      E.catch online'
+                          (\e@SomeException{} -> do
+                              errorM (show e)
+                              io $ threadDelay 10000000
+                              retry
+                          )
+                  else do
+                      chans <- lift $ gets ircChannels
+                      forM_ (M.keys chans) $ \chan ->
+                          when (nTag (getCN chan) == tag) $
+                          lift $ modify $ \state' -> state' { ircChannels = M.delete chan $ ircChannels state' }
+
           retry
 
   online'
