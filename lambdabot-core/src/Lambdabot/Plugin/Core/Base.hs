@@ -139,6 +139,12 @@ doRPL_WELCOME msg
                                             then ircPersists state'
                                             else M.delete (server msg) $ ircPersists state'
                              in state' { ircPersists = persists }
+         chans <- gets ircChannels
+         forM_ (M.keys chans) $ \chan -> do
+             let cn = getCN chan
+             when (nTag cn == server msg) $ do
+                 modify $ \state' -> state' { ircChannels = M.delete chan $ ircChannels state' }
+                 lb $ send $ joinChannel cn
 
 doQUIT :: Callback
 doQUIT msg = doIGNORE msg
