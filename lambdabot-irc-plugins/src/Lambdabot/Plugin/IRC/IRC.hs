@@ -151,9 +151,10 @@ online tag hostn portnum nickn ui = do
           (\err@SomeException{} -> io (hClose sock) >> E.throwIO err)
       lb $ ircSignOn hostn (Nick tag nickn) pwd ui
       fin <- io $ SSem.new 0
+      ready <- io $ SSem.new 0
       lb $ void $ forkFinally
           (E.catch
-              (readerLoop tag nickn pongref sock)
+              (readerLoop tag nickn pongref sock ready)
               (\e@SomeException{} -> errorM (show e)))
           (const $ io $ SSem.signal fin)
       lb $ void $ forkFinally
@@ -164,6 +165,7 @@ online tag hostn portnum nickn ui = do
       void $ fork $ do
           io $ SSem.wait fin
           void $ lb $ remServer tag
+          io $ SSem.signal ready
           let retry = do
               continue <- lift $ gets (M.member tag . ircPersists)
               if continue
@@ -181,6 +183,12 @@ online tag hostn portnum nickn ui = do
                           lift $ modify $ \state' -> state' { ircChannels = M.delete chan $ ircChannels state' }
 
           retry
+      watch <- io $ fork $ do
+          threadDelay 10000000
+          errorM "Welcome timeout!"
+          hClose sock
+      io $ SSem.wait ready
+      killThread watch
 
   online'
 
@@ -197,8 +205,8 @@ pingPongLoop tag hostn pongref sock = do
         then pingPongLoop tag hostn pongref sock
         else errorM "Ping timeout."
 
-readerLoop :: String -> String -> IORef Bool -> Handle -> LB ()
-readerLoop tag nickn pongref sock = forever $ do
+readerLoop :: String -> String -> IORef Bool -> Handle -> SSem.SSem -> LB ()
+readerLoop tag nickn pongref sock ready = forever $ do
     line <- io $ hGetLine sock
     let line' = filter (`notElem` "\r\n") line
     if "PING " `isPrefixOf` line'
@@ -207,7 +215,9 @@ readerLoop tag nickn pongref sock = forever $ do
             let msg = decodeMessage tag nickn line'
             if ircMsgCommand msg == "PONG"
                 then io $ writeIORef pongref True
-                else received msg
+                else do
+                    when (ircMsgCommand msg == "001") $ io $ SSem.signal ready
+                    received msg
 
 sendMsg :: Handle -> MVar () -> IrcMessage -> IO ()
 sendMsg sock mv msg =
