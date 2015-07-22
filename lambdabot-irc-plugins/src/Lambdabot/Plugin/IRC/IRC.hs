@@ -13,9 +13,11 @@ import qualified Control.Concurrent.SSem as SSem
 import Control.Exception.Lifted as E (SomeException(..), throwIO, catch)
 import Control.Monad
 import Control.Monad.Trans
+import Control.Monad.State
 import qualified Data.ByteString.Char8 as P
 import Data.List
 import Data.List.Split
+import qualified Data.Map as M
 import Network( connectTo, PortID(..) )
 import System.IO
 import System.Timeout.Lifted
@@ -125,37 +127,55 @@ ircSignOn svr nickn pwd ircname = do
 
 online :: String -> String -> PortID -> String -> String -> IRC ()
 online tag hostn portnum nickn ui = do
-    sock    <- io $ connectTo hostn portnum
-    io $ hSetBuffering sock NoBuffering
-    -- Implements flood control: RFC 2813, section 5.8
-    sem1    <- io $ SSem.new 0
-    sem2    <- io $ SSem.new 4 -- one extra token stays in the MVar
-    sendmv  <- io newEmptyMVar
-    pongref <- io $ newIORef False
-    io . void . fork . forever $ do
-        SSem.wait sem1
-        threadDelay 2000000
-        SSem.signal sem2
-    io . void . fork . forever $ do
-        SSem.wait sem2
-        putMVar sendmv ()
-        SSem.signal sem1
-    E.catch 
-        (addServer tag (io . sendMsg sock sendmv))
-        (\err@SomeException{} -> io (hClose sock) >> E.throwIO err)
-    pwd <- password `fmap` readMS
-    modifyMS $ \ms -> ms{ password = Nothing }
-    lb $ ircSignOn hostn (Nick tag nickn) pwd ui
-    lb . void . fork $ E.catch
-        (readerLoop tag nickn pongref sock)
-        (\e@SomeException{} -> do
-            errorM (show e)
-            remServer tag)
-    lb . void . fork $ E.catch
-        (pingPongDelay >> pingPongLoop tag hostn pongref sock)
-        (\e@SomeException{} -> do
-            errorM (show e)
-            remServer tag)
+  pwd <- password `fmap` readMS
+  modifyMS $ \ms -> ms{ password = Nothing }
+
+  let online' = do
+      sock    <- io $ connectTo hostn portnum
+      io $ hSetBuffering sock NoBuffering
+      -- Implements flood control: RFC 2813, section 5.8
+      sem1    <- io $ SSem.new 0
+      sem2    <- io $ SSem.new 4 -- one extra token stays in the MVar
+      sendmv  <- io newEmptyMVar
+      pongref <- io $ newIORef False
+      io . void . fork . forever $ do
+          SSem.wait sem1
+          threadDelay 2000000
+          SSem.signal sem2
+      io . void . fork . forever $ do
+          SSem.wait sem2
+          putMVar sendmv ()
+          SSem.signal sem1
+      E.catch
+          (addServer tag (io . sendMsg sock sendmv))
+          (\err@SomeException{} -> io (hClose sock) >> E.throwIO err)
+      lb $ ircSignOn hostn (Nick tag nickn) pwd ui
+      fin <- io $ SSem.new 0
+      lb $ void $ forkFinally
+          (E.catch
+              (readerLoop tag nickn pongref sock)
+              (\e@SomeException{} -> errorM (show e)))
+          (const $ io $ SSem.signal fin)
+      lb $ void $ forkFinally
+          (E.catch
+              (pingPongDelay >> pingPongLoop tag hostn pongref sock)
+              (\e@SomeException{} -> errorM (show e)))
+          (const $ io $ SSem.signal fin)
+      void $ fork $ do
+          io $ SSem.wait fin
+          void $ lb $ remServer tag
+          let retry = do
+              continue <- lift $ gets (M.member tag . ircPersists)
+              when continue $ do
+                  E.catch online'
+                      (\e@SomeException{} -> do
+                          errorM (show e)
+                          io $ threadDelay 10000000
+                          retry
+                      )
+          retry
+
+  online'
 
 pingPongDelay :: LB ()
 pingPongDelay = io $ threadDelay 120000000
@@ -168,7 +188,7 @@ pingPongLoop tag hostn pongref sock = do
     pong <- io $ readIORef pongref
     if pong
         then pingPongLoop tag hostn pongref sock
-        else errorM "Ping timeout." >> remServer tag
+        else errorM "Ping timeout."
 
 readerLoop :: String -> String -> IORef Bool -> Handle -> LB ()
 readerLoop tag nickn pongref sock = forever $ do
