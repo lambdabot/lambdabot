@@ -43,6 +43,17 @@ ircPlugin = newModule
                         lift (online tag hostn pn nickn (intercalate " " uix))
                     _ -> say "Not enough parameters!"
             }
+        , (command "irc-persist-connect")
+            { privileged = True
+            , help = say "irc-persist-connect tag host portnum nickname userinfo.  connect to an irc server and reconnect on network failures"
+            , process = \rest ->
+                case splitOn " " rest of
+                    tag:hostn:portn:nickn:uix -> do
+                        pn <- (PortNumber . fromInteger) `fmap` readM portn
+                        lift (online tag hostn pn nickn (intercalate " " uix))
+                        lift $ lift $ modify $ \state' -> state' { ircPersists = M.insert tag True $ ircPersists state' }
+                    _ -> say "Not enough parameters!"
+            }
         , (command "irc-password")
             { privileged = True
             , help = say "irc-password pwd.  set password for next irc-connect command"
