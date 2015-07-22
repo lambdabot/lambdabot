@@ -123,7 +123,7 @@ systemPlugin = newModule
             , help = say "reconnect to server"
             , process = \rest -> do
                 server <- getServer
-                lb (ircReconnect server $ if null rest then "requested" else rest)
+                lb (ircReconnect server $ if null rest then "reconnect requested" else rest)
             }
         ]
     }

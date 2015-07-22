@@ -161,6 +161,7 @@ ircQuit svr msg = do
 
 ircReconnect :: String -> String -> LB ()
 ircReconnect svr msg = do
+    modify $ \state' -> state' { ircPersists = M.insertWith (flip const) svr False $ ircPersists state' }
     send $ quit svr msg
     liftIO $ threadDelay 1000
 
