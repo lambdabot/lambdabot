@@ -12,9 +12,10 @@ import Lambdabot.Util
 import Control.Concurrent.Lifted
 import Control.Exception.Lifted ( evaluate, finally )
 import Control.Monad( void, when )
-import Control.Monad.State( gets )
+import Control.Monad.State( gets, modify )
 import Control.Monad.Trans( lift, liftIO )
 import Data.Char
+import qualified Data.Map as M
 import System.Console.Haskeline (InputT, Settings(..), runInputT, defaultSettings, getInputLine)
 import System.IO
 import System.Timeout.Lifted
@@ -90,13 +91,16 @@ replLoop = do
             let s' = dropWhile isSpace x
             when (not $ null s') $ do
                 lift $ feed s'
-            continue <- lift (lift (gets ircStayConnected))
+            continue <- lift $ lift $ gets (M.member "offlinerc" . ircPersists)
             when continue replLoop
 
 lockRC :: OfflineRC ()
 lockRC = do
     withMS $ \ cur writ -> do
-        when (cur == 0) (addServer "offlinerc" handleMsg)
+        when (cur == 0) $ do
+          addServer "offlinerc" handleMsg
+          lift $ modify $ \state' ->
+              state' { ircPersists = M.insert "offlinerc" True $ ircPersists state' }
         writ (cur + 1)
 
 unlockRC :: OfflineRC ()

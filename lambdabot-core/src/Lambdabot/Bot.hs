@@ -154,7 +154,7 @@ ircGetChannels = (map getCN . M.keys) `fmap` gets ircChannels
 -- exceptoin, we clean up and go home
 ircQuit :: String -> String -> LB ()
 ircQuit svr msg = do
-    modify $ \state' -> state' { ircStayConnected = False }
+    modify $ \state' -> state' { ircPersists = M.delete svr $ ircPersists state' }
     send  $ quit svr msg
     liftIO $ threadDelay 1000
     noticeM "Quitting"
