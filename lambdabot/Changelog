@@ -1,3 +1,7 @@
+lambdabot 5.0.3
+	* compatibility with ghc-7.10: relax utf8-string upper bound
+	* numerous bugfixes (#121, #122, #123, #117, #98)
+
 lambdabot 5.0.2.2
 	* update Changelog
 

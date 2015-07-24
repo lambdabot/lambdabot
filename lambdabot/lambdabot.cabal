@@ -16,6 +16,7 @@ description:            Lambdabot is an IRC bot written over several years by
                         embedded in GHCi, via internet relay chat and on the web.
 
 homepage:               http://haskell.org/haskellwiki/Lambdabot
+bug-reports:            https://github.com/lambdabot/lambdabot/issues
 
 build-type:             Simple
 cabal-version:          >= 1.8
