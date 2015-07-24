@@ -37,7 +37,9 @@ data Event =
     Said Nick UTCTime String
     | Joined Nick String UTCTime
     | Parted Nick String UTCTime -- covers quitting as well
+    | Kicked Nick Nick String UTCTime String
     | Renick Nick String UTCTime Nick
+    | Mode Nick String UTCTime String
     deriving (Eq)
 
 instance Show Event where
@@ -46,8 +48,13 @@ instance Show Event where
                                     ++ " (" ++ usr ++ ") joined."
     show (Parted nick usr ct)     = timeStamp ct ++ " " ++ show (FreenodeNick nick)
                                     ++ " (" ++ usr ++ ") left."
-    show (Renick nick usr ct new) = timeStamp ct ++ " " ++ show  (FreenodeNick nick)
+    show (Kicked nick op usrop ct reason) = timeStamp ct ++ " " ++ show (FreenodeNick nick)
+                                            ++ " was kicked by " ++ show (FreenodeNick op)
+                                            ++ " (" ++ usrop ++ "): " ++ reason ++ "."
+    show (Renick nick usr ct new) = timeStamp ct ++ " " ++ show (FreenodeNick nick)
                                     ++ " (" ++ usr ++ ") is now " ++ show (FreenodeNick new) ++ "."
+    show (Mode nick usr ct mode)  = timeStamp ct ++ " " ++ show (FreenodeNick nick)
+                                    ++ " (" ++ usr ++ ") changed mode to " ++ mode ++ "."
 
 -- * Dispatchers and Module instance declaration
 --
@@ -67,7 +74,9 @@ logPlugin = newModule
         connect "PRIVMSG" msgCB
         connect "JOIN"    joinCB
         connect "PART"    partCB
+        connect "KICK"    kickCB
         connect "NICK"    nickCB
+        connect "MODE"    modeCB
     }
 
 -- * Logging helpers
@@ -190,11 +199,24 @@ joinCB msg ct = Joined (Msg.nick msg) (Msg.fullName msg) ct
 partCB :: IrcMessage -> UTCTime -> Event
 partCB msg ct = Parted (Msg.nick msg) (Msg.fullName msg) ct
 
+-- | When somebody is kicked.
+kickCB :: IrcMessage -> UTCTime -> Event
+kickCB msg ct = Kicked (Msg.nick msg) { nName = head $ tail $ ircMsgParams msg }
+                       (Msg.nick msg)
+                       (Msg.fullName msg)
+                       ct
+                       (tail . concat . tail . tail $ ircMsgParams msg)
+
 -- | When somebody changes his\/her name.
 -- TODO:  We should only do this for channels that the user is currently on.
 nickCB :: IrcMessage -> UTCTime -> Event
 nickCB msg ct = Renick (Msg.nick msg) (Msg.fullName msg) ct
                        (parseNick (Msg.server msg) $ drop 1 $ head $ ircMsgParams msg)
+
+-- | When somebody changes channel mode.
+modeCB :: IrcMessage -> UTCTime -> Event
+modeCB msg ct = Mode (Msg.nick msg) (Msg.fullName msg) ct
+                     (unwords $ tail $ ircMsgParams msg)
 
 -- | When somebody speaks.
 msgCB :: IrcMessage -> UTCTime -> Event
