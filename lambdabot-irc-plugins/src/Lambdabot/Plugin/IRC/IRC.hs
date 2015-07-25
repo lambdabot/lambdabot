@@ -180,7 +180,7 @@ online tag hostn portnum nickn ui = do
           io $ SSem.signal ready
           delay <- getConfig reconnectDelay
           let retry = do
-              continue <- lift $ gets (M.member tag . ircPersists)
+              continue <- lift $ gets $ \st -> (M.member tag $ ircPersists st) && not (M.member tag $ ircServerMap st)
               if continue
                   then do
                       E.catch online'
