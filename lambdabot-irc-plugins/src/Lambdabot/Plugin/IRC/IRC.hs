@@ -158,11 +158,11 @@ online tag hostn portnum nickn ui = do
           SSem.wait sem2
           putMVar sendmv ()
           SSem.signal sem1
+      fin <- io $ SSem.new 0
       E.catch
-          (addServer tag (io . sendMsg sock sendmv))
+          (addServer tag (io . sendMsg sock sendmv fin))
           (\err@SomeException{} -> io (hClose sock) >> E.throwIO err)
       lb $ ircSignOn hostn (Nick tag nickn) pwd ui
-      fin <- io $ SSem.new 0
       ready <- io $ SSem.new 0
       lb $ void $ forkFinally
           (E.catch
@@ -176,7 +176,8 @@ online tag hostn portnum nickn ui = do
           (const $ io $ SSem.signal fin)
       void $ fork $ do
           io $ SSem.wait fin
-          void $ lb $ remServer tag
+          lb $ remServer tag
+          io $ hClose sock
           io $ SSem.signal ready
           delay <- getConfig reconnectDelay
           let retry = do
@@ -199,7 +200,7 @@ online tag hostn portnum nickn ui = do
       watch <- io $ fork $ do
           threadDelay 10000000
           errorM "Welcome timeout!"
-          hClose sock
+          SSem.signal fin
       io $ SSem.wait ready
       killThread watch
 
@@ -232,9 +233,9 @@ readerLoop tag nickn pongref sock ready = forever $ do
                     when (ircMsgCommand msg == "001") $ io $ SSem.signal ready
                     received msg
 
-sendMsg :: Handle -> MVar () -> IrcMessage -> IO ()
-sendMsg sock mv msg =
+sendMsg :: Handle -> MVar () -> SSem.SSem -> IrcMessage -> IO ()
+sendMsg sock mv fin msg =
     E.catch (do takeMVar mv
                 P.hPut sock $ P.pack $ encodeMessage msg "\r\n")
             (\err -> do errorM (show (err :: IOError))
-                        hClose sock)
+                        SSem.signal fin)
