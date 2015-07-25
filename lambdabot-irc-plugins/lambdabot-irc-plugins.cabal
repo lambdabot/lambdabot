@@ -39,7 +39,8 @@ library
 
   exposed-modules:      Lambdabot.Plugin.IRC
 
-  other-modules:        Lambdabot.Plugin.IRC.IRC
+  other-modules:        Lambdabot.Config.IRC
+                        Lambdabot.Plugin.IRC.IRC
                         Lambdabot.Plugin.IRC.Localtime
                         Lambdabot.Plugin.IRC.Log
                         Lambdabot.Plugin.IRC.Topic

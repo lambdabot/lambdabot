@@ -7,6 +7,7 @@ import Lambdabot.Logging
 import Lambdabot.Monad
 import Lambdabot.Plugin
 import Lambdabot.Util
+import Lambdabot.Config.IRC
 
 import Control.Concurrent.Lifted
 import qualified Control.Concurrent.SSem as SSem
@@ -177,6 +178,7 @@ online tag hostn portnum nickn ui = do
           io $ SSem.wait fin
           void $ lb $ remServer tag
           io $ SSem.signal ready
+          delay <- getConfig reconnectDelay
           let retry = do
               continue <- lift $ gets (M.member tag . ircPersists)
               if continue
@@ -184,7 +186,7 @@ online tag hostn portnum nickn ui = do
                       E.catch online'
                           (\e@SomeException{} -> do
                               errorM (show e)
-                              io $ threadDelay 10000000
+                              io $ threadDelay delay
                               retry
                           )
                   else do
