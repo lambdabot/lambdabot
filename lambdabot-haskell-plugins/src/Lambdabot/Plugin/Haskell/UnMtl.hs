@@ -177,6 +177,7 @@ mtlParser' t@(TyCon (UnQual (Ident v))) = case lookup v types of
      Just pt -> pt t
      Nothing -> return t
 mtlParser' (TyApp a b) = mtlParser' a $$ mtlParser' b
+mtlParser' (TyParen t) = mtlParser' t
 mtlParser' t = return t
 
 -----------------------------------------------------------
