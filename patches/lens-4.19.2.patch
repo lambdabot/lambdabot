@@ -1,0 +1,20 @@
+commit 0160d7d93ce82ac3d1862788bf22e90daa1fb3a0
+Author: Bertram Felgenhauer <int-e@gmx.de>
+Date:   Mon May 25 14:08:28 2020 +0200
+
+    Safe Haskell support: Mark Control.Lens.Equality as Trustworthy
+    
+    The module imports TYPE (which is harmess) from GHC.Exts (which is unsafe).
+
+diff --git a/src/Control/Lens/Equality.hs b/src/Control/Lens/Equality.hs
+index 0be0face..09e844f6 100644
+--- a/src/Control/Lens/Equality.hs
++++ b/src/Control/Lens/Equality.hs
+@@ -8,6 +8,7 @@
+ #endif
+ #if __GLASGOW_HASKELL__ >= 800
+ {-# LANGUAGE TypeInType #-}
++{-# LANGUAGE Trustworthy #-}
+ #endif
+ 
+ -----------------------------------------------------------------------------

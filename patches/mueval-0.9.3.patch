@@ -1,0 +1,90 @@
+commit d09ef96373a7de825b9a78412a6aab4f4609a91b
+Author: Bertram Felgenhauer <int-e@gmx.de>
+Date:   Sun Aug 21 20:57:11 2016 +0200
+
+    tweaks
+    
+    - don't compile with -static
+    - filter locations from ErrorCall exceptions
+
+diff --git a/Mueval/ArgsParse.hs b/Mueval/ArgsParse.hs
+index a55b0d1..4c52816 100644
+--- a/Mueval/ArgsParse.hs
++++ b/Mueval/ArgsParse.hs
+@@ -26,7 +26,7 @@ data Options = Options
+ defaultOptions :: Options
+ defaultOptions = Options { expression = ""
+                            , modules = Just defaultModules
+-                           , timeLimit = 5
++                           , timeLimit = 8
+                            , user = ""
+                            , loadFile = ""
+                            , printType = False
+diff --git a/Mueval/Interpreter.hs b/Mueval/Interpreter.hs
+index ebec943..326458a 100644
+--- a/Mueval/Interpreter.hs
++++ b/Mueval/Interpreter.hs
+@@ -3,7 +3,7 @@
+ -- TODO: suggest the convenience functions be put into Hint proper?
+ module Mueval.Interpreter where
+ 
+-import qualified Control.Exception.Extensible as E (evaluate,catch,SomeException(..))
++import qualified Control.Exception.Extensible as E
+ import           Control.Monad (forM_,guard,mplus,unless,when)
+ import           Control.Monad.Trans (MonadIO)
+ import           Control.Monad.Writer (Any(..),runWriterT,tell)
+@@ -174,10 +174,14 @@ data Stream = Cons Char (IO Stream) | Exception (IO Stream) | End
+ 
+ toStream :: String -> IO Stream
+ toStream str = E.evaluate (uncons str) `E.catch`
+-                \(E.SomeException e) -> return . Exception . toStream . show $ e
++                \e -> return . Exception . toStream . show $ patchException e
+     where uncons [] = End
+           uncons (x:xs) = x `seq` Cons x (toStream xs)
+ 
++          patchException e = case E.fromException e of
++              Just (E.ErrorCallWithLocation s _) -> E.toException (E.ErrorCall s)
++              _ -> e
++
+ -- Copied from old hint, removed from hint since 0.5.0.
+ glasgowExtensions :: [Extension]
+ glasgowExtensions = intersect availableExtensions exts612 -- works also for 608 and 610
+diff --git a/mueval.cabal b/mueval.cabal
+index f801e39..3f1c098 100644
+--- a/mueval.cabal
++++ b/mueval.cabal
+@@ -34,17 +34,17 @@ library
+         build-depends:       base>= 4.5 && < 5, containers, directory, mtl>2, filepath, unix, process,
+                              hint>=0.3.1, show>=0.3, Cabal, extensible-exceptions, simple-reflect,
+                              QuickCheck
+-        ghc-options:         -Wall -static
++        ghc-options:         -Wall
+ 
+ executable mueval-core
+            main-is:       main.hs
+            build-depends: base
+-           ghc-options:   -Wall -static -threaded
++           ghc-options:   -Wall -threaded
+ 
+-executable mueval
++executable mueval.real
+            main-is:       watchdog.hs
+            build-depends: base
+-           ghc-options:   -Wall -static -threaded
++           ghc-options:   -Wall -threaded
+ 
+ source-repository head
+   type:     git
+diff --git a/watchdog.hs b/watchdog.hs
+index eddec90..52768aa 100644
+--- a/watchdog.hs
++++ b/watchdog.hs
+@@ -17,7 +17,7 @@ main :: IO ()
+ main = do args <- getArgs
+           hdl <- runProcess "mueval-core" args Nothing Nothing Nothing Nothing Nothing
+           _ <- forkIO $ do
+-                     threadDelay (7 * 700000)
++                     threadDelay (10 * 700000)
+                      status <- getProcessExitCode hdl
+                      case status of 
+                          Nothing -> do terminateProcess hdl
