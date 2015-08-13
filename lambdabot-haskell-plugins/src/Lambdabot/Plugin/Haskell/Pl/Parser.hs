@@ -11,6 +11,7 @@ import Text.ParserCombinators.Parsec
 import Text.ParserCombinators.Parsec.Expr
 import Text.ParserCombinators.Parsec.Language
 import qualified Text.ParserCombinators.Parsec.Token as T
+import Control.Applicative ((<*))
 import Data.List
 
 -- is that supposed to be done that way?
