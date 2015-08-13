@@ -121,7 +121,7 @@ instance Show Pattern where
     showsPrec 6 p1 . (':':) . showsPrec 5 p2
 
 isOperator :: String -> Bool
-isOperator = all (`elem` opchars)
+isOperator str = last str `elem` opchars
 
 getInfName :: String -> String
 getInfName str = if isOperator str then str else "`"++str++"`"

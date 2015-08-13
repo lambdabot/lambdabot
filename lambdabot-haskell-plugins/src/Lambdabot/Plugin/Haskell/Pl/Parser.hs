@@ -11,9 +11,10 @@ import Text.ParserCombinators.Parsec
 import Text.ParserCombinators.Parsec.Expr
 import Text.ParserCombinators.Parsec.Language
 import qualified Text.ParserCombinators.Parsec.Token as T
+import Data.List
 
 -- is that supposed to be done that way?
-tp :: T.TokenParser ()
+tp :: T.TokenParser st
 tp = T.makeTokenParser $ haskellStyle {
   reservedNames = ["if","then","else","let","in"]
 }
@@ -27,14 +28,20 @@ brackets = T.brackets tp
 symbol :: String -> Parser String
 symbol = T.symbol tp
 
-modIdentifier :: Parser String
-modIdentifier = T.lexeme tp $ do
+modName :: CharParser st String
+modName = do
   c <- oneOf ['A'..'Z']
-  cs <- many ( alphaNum <|> oneOf "_'.")
+  cs <- many (alphaNum <|> oneOf "_'")
   return (c:cs)
 
+qualified :: CharParser st String -> CharParser st String
+qualified p = do
+  qs <- many $ try $ modName <* char '.' <* lookAhead (letter <|> oneOf opchars)
+  nm <- p
+  return $ intercalate "." (qs ++ [nm])
+
 atomic :: Parser String
-atomic = try (string "()") <|> try (show `fmap` T.natural tp) <|> modIdentifier <|> T.identifier tp
+atomic = try (string "()") <|> try (show `fmap` T.natural tp) <|> qualified (T.identifier tp)
 
 reserved :: String -> Parser ()
 reserved = T.reserved tp
@@ -71,9 +78,9 @@ table = addToFirst def $ map (map inf) operators where
 
 
 parseOp :: CharParser st String
-parseOp = (between (char '`') (char '`') $ many1 (letter <|> digit))
+parseOp = (between (char '`') (char '`') $ qualified (T.identifier tp))
   <|> try (do
-    op <- many1 $ oneOf opchars
+    op <- qualified $ many1 $ oneOf opchars
     guard $ not $ op `elem` reservedOps
     return op)
 
