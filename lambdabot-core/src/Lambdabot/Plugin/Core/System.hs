@@ -103,6 +103,13 @@ systemPlugin = newModule
                 server <- getServer
                 lb (ircQuit server $ if null rest then "requested" else rest)
             }
+        , (command "disconnect")
+            { privileged = True
+            , help = say "disconnect <server> [msg], disconnect from a server with msg"
+            , process = \rest -> do
+                let (server, msg) = splitFirstWord rest
+                lb (ircQuit server $ if null msg then "requested" else msg)
+            }
         , (command "flush")
             { privileged = True
             , help = say "flush. flush state to disk"
@@ -123,7 +130,7 @@ systemPlugin = newModule
             , help = say "reconnect to server"
             , process = \rest -> do
                 server <- getServer
-                lb (ircReconnect server $ if null rest then "requested" else rest)
+                lb (ircReconnect server $ if null rest then "reconnect requested" else rest)
             }
         ]
     }
