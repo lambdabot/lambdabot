@@ -1,0 +1,22 @@
+diff --git a/unlambda.cabal b/unlambda.cabal
+index 39716b2..1ee4a6c 100644
+--- a/unlambda.cabal
++++ b/unlambda.cabal
+@@ -13,7 +13,7 @@ description:         This is an interpreter of the Unlambda language,
+                      written in the pure, lazy, functional language Haskell.
+ 
+ build-type:          Simple
+-cabal-version:       >= 1.6
++cabal-version:       >= 1.8
+ tested-with:         GHC==8.0.1
+ 
+ source-repository head
+@@ -22,7 +22,7 @@ source-repository head
+ 
+ executable              unlambda
+    main-is:             Main.hs
+-   build-depends:       base>3 && <5, unix
++   build-depends:       base>3 && <5, unix, unlambda
+ 
+ library
+    exposed-modules:     Language.Unlambda

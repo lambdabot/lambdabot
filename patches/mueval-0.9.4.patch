@@ -1,0 +1,144 @@
+diff --git a/mueval.cabal b/mueval.cabal
+index e4cfab4..b6fa279 100644
+--- a/mueval.cabal
++++ b/mueval.cabal
+@@ -38,24 +38,23 @@ library
+         -Wall -Wcompat -Widentities -Wincomplete-record-updates
+         -Wincomplete-uni-patterns -Wmissing-export-lists
+         -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
+-        -static
+ 
+     build-depends:
+-        Cabal >=3.8.1.0 && <3.15,
++        Cabal >=3.0 && <3.15,
+         QuickCheck >=2.14.3 && <2.16,
+         base >=4.5 && <5,
+-        containers >=0.6.7 && <0.8,
+-        directory >=1.3.7.1 && <1.4,
++        containers >=0.5 && <0.9,
++        directory >=1.3 && <1.4,
+         extensible-exceptions >=0.1.1.4 && <0.2,
+-        filepath >=1.4.2.2 && <1.6,
+-        hint >=0.9.0.7 && <0.10,
++        filepath >=1.4 && <1.6,
++        hint >=0.9 && <0.10,
+         mtl >=2.2.2 && <2.4,
+-        process >=1.6.16.0 && <1.7,
++        process >=1.6 && <1.7,
+         show >=0.6 && <0.7,
+         simple-reflect >=0.3.3 && <0.4,
+-        unix >=2.7.3 && <2.9
++        unix >=2.7 && <2.9
+ 
+-executable mueval
++executable mueval.real
+     main-is:          Main.hs
+     hs-source-dirs:   app
+     other-modules:    Paths_mueval
+@@ -64,23 +63,23 @@ executable mueval
+         -Wall -Wcompat -Widentities -Wincomplete-record-updates
+         -Wincomplete-uni-patterns -Wmissing-export-lists
+         -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
+-        -static -threaded -rtsopts -with-rtsopts=-N
++        -rtsopts -threaded
+ 
+     build-depends:
+-        Cabal >=3.8.1.0 && <3.15,
++        Cabal >=3.0 && <3.15,
+         QuickCheck >=2.14.3 && <2.16,
+         base >=4.5 && <5,
+-        containers >=0.6.7 && <0.8,
+-        directory >=1.3.7.1 && <1.4,
++        containers >=0.5 && <0.9,
++        directory >=1.3 && <1.4,
+         extensible-exceptions >=0.1.1.4 && <0.2,
+-        filepath >=1.4.2.2 && <1.6,
+-        hint >=0.9.0.7 && <0.10,
++        filepath >=1.4 && <1.6,
++        hint >=0.9 && <0.10,
+         mtl >=2.2.2 && <2.4,
+         mueval,
+-        process >=1.6.16.0 && <1.7,
++        process >=1.6 && <1.7,
+         show >=0.6 && <0.7,
+         simple-reflect >=0.3.3 && <0.4,
+-        unix >=2.7.3 && <2.9
++        unix >=2.7 && <2.9
+ 
+ test-suite mueval-test
+     type:             exitcode-stdio-1.0
+@@ -92,20 +91,20 @@ test-suite mueval-test
+         -Wall -Wcompat -Widentities -Wincomplete-record-updates
+         -Wincomplete-uni-patterns -Wmissing-export-lists
+         -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
+-        -static -threaded -rtsopts -with-rtsopts=-N
++        -rtsopts -threaded
+ 
+     build-depends:
+-        Cabal >=3.8.1.0 && <3.15,
++        Cabal >=3.0 && <3.15,
+         QuickCheck >=2.14.3 && <2.16,
+         base >=4.5 && <5,
+-        containers >=0.6.7 && <0.8,
+-        directory >=1.3.7.1 && <1.4,
++        containers >=0.5 && <0.9,
++        directory >=1.3 && <1.4,
+         extensible-exceptions >=0.1.1.4 && <0.2,
+-        filepath >=1.4.2.2 && <1.6,
+-        hint >=0.9.0.7 && <0.10,
++        filepath >=1.4 && <1.6,
++        hint >=0.9 && <0.10,
+         mtl >=2.2.2 && <2.4,
+         mueval,
+-        process >=1.6.16.0 && <1.7,
++        process >=1.6 && <1.7,
+         show >=0.6 && <0.7,
+         simple-reflect >=0.3.3 && <0.4,
+-        unix >=2.7.3 && <2.9
++        unix >=2.7 && <2.9
+diff --git a/src/Mueval/ArgsParse.hs b/src/Mueval/ArgsParse.hs
+index 6894fe9..8627867 100644
+--- a/src/Mueval/ArgsParse.hs
++++ b/src/Mueval/ArgsParse.hs
+@@ -29,7 +29,7 @@ defaultOptions =
+     Options
+         { expression = ""
+         , modules = Just defaultModules
+-        , timeLimit = 5
++        , timeLimit = 7
+         , user = ""
+         , loadFile = ""
+         , printType = False
+diff --git a/src/Mueval/Interpreter.hs b/src/Mueval/Interpreter.hs
+index 9151d45..2796842 100644
+--- a/src/Mueval/Interpreter.hs
++++ b/src/Mueval/Interpreter.hs
+@@ -4,7 +4,7 @@
+ -- TODO: suggest the convenience functions be put into Hint proper?
+ module Mueval.Interpreter where
+ 
+-import qualified Control.Exception.Extensible as E (SomeException (..), catch, evaluate)
++import qualified Control.Exception.Extensible as E
+ import Control.Monad (forM_, guard, mplus, unless, when)
+ import Control.Monad.Trans (MonadIO)
+ import Control.Monad.Writer (runWriterT, tell)
+@@ -221,11 +221,18 @@ data Stream = Cons Char (IO Stream) | Exception (IO Stream) | End
+ toStream :: String -> IO Stream
+ toStream str =
+     E.evaluate (uncons str)
+-        `E.catch` \(E.SomeException e) -> return . Exception . toStream . show $ e
++        `E.catch` (handleException . patchException)
+   where
+     uncons [] = End
+     uncons (x : xs) = x `seq` Cons x (toStream xs)
+ 
++    patchException e = case E.fromException (E.SomeException e) of
++        Just (E.ErrorCallWithLocation s _) -> E.toException (E.ErrorCall s)
++        _ -> e
++
++    handleException (E.SomeException e) =
++        return . Exception . toStream . show $ e
++
+ -- Copied from old hint, removed from hint since 0.5.0.
+ glasgowExtensions :: [Extension]
+ glasgowExtensions = intersect availableExtensions exts612 -- works also for 608 and 610

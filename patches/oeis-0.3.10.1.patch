@@ -1,0 +1,37 @@
+diff --git a/Math/OEIS/Internal.hs b/Math/OEIS/Internal.hs
+index d4750fd..e47f594 100644
+--- a/Math/OEIS/Internal.hs
++++ b/Math/OEIS/Internal.hs
+@@ -14,6 +14,7 @@ import qualified Network.HTTP.Client       as HTTP
+ import qualified Network.HTTP.Client.TLS   as HTTP
+ import qualified Network.HTTP.Types        as HTTP
+ import qualified Data.ByteString.Lazy.UTF8 as U
++import qualified Data.ByteString.Char8     as C
+ 
+ import Math.OEIS.Types
+ 
+@@ -39,7 +40,11 @@ getOEIS toURI key =
+ get :: URI -> IO (Maybe String)
+ get uri = do
+     httpman <- HTTP.newManager HTTP.tlsManagerSettings
+-    let request = HTTP.requestFromURI_ uri
++    let request = (HTTP.requestFromURI_ uri) {
++            HTTP.requestHeaders = [
++                (HTTP.hUserAgent, C.pack "lambdabot (for Libera IRC)")
++            ]
++        }
+     response <- HTTP.httpLbs request httpman
+     return $ case HTTP.statusIsSuccessful (HTTP.responseStatus response) of
+         False -> Nothing
+diff --git a/oeis.cabal b/oeis.cabal
+index 1b52dab..d03b649 100644
+--- a/oeis.cabal
++++ b/oeis.cabal
+@@ -56,6 +56,7 @@ library
+     http-client-tls >= 0.3 && < 0.4,
+     http-types >= 0.12 && < 0.13,
+     utf8-string >= 1.0 && < 1.1,
++    bytestring,
+     base    >= 3 && < 5
+ 
+   if flag(network-uri)

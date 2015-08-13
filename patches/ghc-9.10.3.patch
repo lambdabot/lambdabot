@@ -1,0 +1,77 @@
+diff --git a/libraries/base/src/GHC/ArrayArray.hs b/libraries/base/src/GHC/ArrayArray.hs
+index 1c81e549eb..2964ed2056 100644
+--- a/libraries/base/src/GHC/ArrayArray.hs
++++ b/libraries/base/src/GHC/ArrayArray.hs
+@@ -1,4 +1,4 @@
+-{-# LANGUAGE Safe #-}
++{-# LANGUAGE Unsafe #-}
+ 
+ {-# LANGUAGE MagicHash #-}
+ 
+diff --git a/libraries/base/src/GHC/TypeNats.hs b/libraries/base/src/GHC/TypeNats.hs
+index d16d6fc954..c89ecdb57f 100644
+--- a/libraries/base/src/GHC/TypeNats.hs
++++ b/libraries/base/src/GHC/TypeNats.hs
+@@ -1,4 +1,4 @@
+-{-# LANGUAGE Safe #-}
++{-# LANGUAGE Trustworthy #-}
+ {-# LANGUAGE ExplicitNamespaces #-}
+ {-# LANGUAGE PatternSynonyms #-}
+ {-# LANGUAGE TypeOperators #-}
+diff --git a/libraries/ghc-internal/src/GHC/Internal/ArrayArray.hs b/libraries/ghc-internal/src/GHC/Internal/ArrayArray.hs
+index d0d758be97..26d8b96bde 100644
+--- a/libraries/ghc-internal/src/GHC/Internal/ArrayArray.hs
++++ b/libraries/ghc-internal/src/GHC/Internal/ArrayArray.hs
+@@ -1,4 +1,4 @@
+-{-# LANGUAGE Trustworthy #-}
++{-# LANGUAGE Unsafe #-}
+ {-# LANGUAGE DataKinds #-}
+ {-# LANGUAGE KindSignatures #-}
+ {-# LANGUAGE NoImplicitPrelude #-}
+diff --git a/libraries/ghc-internal/src/GHC/Internal/TypeNats.hs b/libraries/ghc-internal/src/GHC/Internal/TypeNats.hs
+index 7d7ab6cd84..eb134d7ba4 100644
+--- a/libraries/ghc-internal/src/GHC/Internal/TypeNats.hs
++++ b/libraries/ghc-internal/src/GHC/Internal/TypeNats.hs
+@@ -1,4 +1,4 @@
+-{-# LANGUAGE Trustworthy #-}
++{-# LANGUAGE Unsafe #-}
+ {-# LANGUAGE DataKinds #-}
+ {-# LANGUAGE TypeFamilies #-}
+ {-# LANGUAGE TypeOperators #-}
+diff --git a/libraries/ghc-prim/GHC/Magic.hs b/libraries/ghc-prim/GHC/Magic.hs
+index 5513d7bbe4..0c681bbb01 100644
+--- a/libraries/ghc-prim/GHC/Magic.hs
++++ b/libraries/ghc-prim/GHC/Magic.hs
+@@ -1,4 +1,4 @@
+-{-# LANGUAGE Trustworthy #-}
++{-# LANGUAGE Unsafe #-}
+ {-# LANGUAGE NoImplicitPrelude #-}
+ {-# LANGUAGE MagicHash #-}
+ {-# LANGUAGE DataKinds #-}
+Submodule libraries/text contains modified content
+diff --git a/libraries/text/src/Data/Text.hs b/libraries/text/src/Data/Text.hs
+index 0fb19c4..a0eec52 100644
+--- a/libraries/text/src/Data/Text.hs
++++ b/libraries/text/src/Data/Text.hs
+@@ -217,8 +217,6 @@ module Data.Text
+ 
+     -- * Low level operations
+     , copy
+-    , unpackCString#
+-    , unpackCStringAscii#
+ 
+     , measureOff
+     ) where
+diff --git a/libraries/text/src/Data/Text/Show.hs b/libraries/text/src/Data/Text/Show.hs
+index 6a0efe7..ba03ab9 100644
+--- a/libraries/text/src/Data/Text/Show.hs
++++ b/libraries/text/src/Data/Text/Show.hs
+@@ -2,7 +2,7 @@
+ {-# LANGUAGE CApiFFI #-}
+ {-# LANGUAGE CPP #-}
+ {-# LANGUAGE MagicHash #-}
+-{-# LANGUAGE Trustworthy #-}
++{-# LANGUAGE Unsafe #-}
+ {-# LANGUAGE ViewPatterns #-}
+ 
+ {-# OPTIONS_GHC -fno-warn-orphans #-}

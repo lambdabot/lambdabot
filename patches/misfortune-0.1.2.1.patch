@@ -1,0 +1,35 @@
+diff --git a/misfortune.cabal b/misfortune.cabal
+index 8df609f..0ab676c 100644
+--- a/misfortune.cabal
++++ b/misfortune.cabal
+@@ -142,7 +142,7 @@ executable misfortune
+   other-modules:        Data.Fortune
+   build-depends:        monad-loops,
+                         regex-base,
+-                        regex-pcre
++                        regex-pcre2
+ 
+ executable misfortune-strfile
+   import:               main
+diff --git a/src/Fortune.hs b/src/Fortune.hs
+index bda6576..f18c5fc 100644
+--- a/src/Fortune.hs
++++ b/src/Fortune.hs
+@@ -23,7 +23,7 @@ import System.IO
+ import System.Random.Stateful (newIOGenM, newStdGen)
+ import Text.Printf
+ import Text.Regex.Base
+-import Text.Regex.PCRE
++import Text.Regex.PCRE2
+ 
+ versionString = "misfortune " ++ showVersion version
+ printVersion = do
+@@ -144,7 +144,7 @@ parseFilter opts opt = case opt of
+         filterRegex   _  _ Nothing       = return True
+         
+         mkRegex :: String -> Regex
+-        mkRegex = makeRegexOpts (compUTF8 + caseOpt) execBlank
++        mkRegex = makeRegexOpts (compUTF + caseOpt) blankExecOpt
+         
+         caseOpt = if I `elem` opts then compCaseless else 0
+         threshold = fromMaybe defaultThreshold (listToMaybe (opts >>= f))
