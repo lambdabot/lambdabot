@@ -122,7 +122,7 @@ library
                         lambdabot-trusted       >= 5.0.2 && < 5.1,
                         logict                  >= 0.5,
                         MonadRandom             >= 0.1,
-                        mueval                  >= 0.9,
+                        mueval                  >= 0.9.1.1.2,
                         numbers                 >= 3000,
                         show                    >= 0.4,
                         vector-space            >= 0.8,
