@@ -139,77 +139,77 @@ ircSignOn svr nickn pwd ircname = do
 
 online :: String -> String -> PortID -> String -> String -> IRC ()
 online tag hostn portnum nickn ui = do
-  pwd <- password `fmap` readMS
-  modifyMS $ \ms -> ms{ password = Nothing }
+    pwd <- password `fmap` readMS
+    modifyMS $ \ms -> ms{ password = Nothing }
 
-  let online' = do
-      sock    <- io $ connectTo hostn portnum
-      io $ hSetBuffering sock NoBuffering
-      -- Implements flood control: RFC 2813, section 5.8
-      sem1    <- io $ SSem.new 0
-      sem2    <- io $ SSem.new 4 -- one extra token stays in the MVar
-      sendmv  <- io newEmptyMVar
-      pongref <- io $ newIORef False
-      io . void . fork . forever $ do
-          SSem.wait sem1
-          threadDelay 2000000
-          SSem.signal sem2
-      io . void . fork . forever $ do
-          SSem.wait sem2
-          putMVar sendmv ()
-          SSem.signal sem1
-      fin <- io $ SSem.new 0
-      E.catch
-          (addServer tag (io . sendMsg sock sendmv fin))
-          (\err@SomeException{} -> io (hClose sock) >> E.throwIO err)
-      lb $ ircSignOn hostn (Nick tag nickn) pwd ui
-      ready <- io $ SSem.new 0
-      lb $ void $ forkFinally
-          (E.catch
-              (readerLoop tag nickn pongref sock ready)
-              (\e@SomeException{} -> errorM (show e)))
-          (const $ io $ SSem.signal fin)
-      lb $ void $ forkFinally
-          (E.catch
-              (pingPongDelay >> pingPongLoop tag hostn pongref sock)
-              (\e@SomeException{} -> errorM (show e)))
-          (const $ io $ SSem.signal fin)
-      void $ fork $ do
-          io $ SSem.wait fin
-          lb $ remServer tag
-          io $ hClose sock
-          io $ SSem.signal ready
-          delay <- getConfig reconnectDelay
-          let retry = do
-              continue <- lift $ gets $ \st -> (M.member tag $ ircPersists st) && not (M.member tag $ ircServerMap st)
-              if continue
-                  then do
-                      E.catch online'
-                          (\e@SomeException{} -> do
-                              errorM (show e)
-                              io $ threadDelay delay
-                              retry
-                          )
-                  else do
-                      chans <- lift $ gets ircChannels
-                      forM_ (M.keys chans) $ \chan ->
-                          when (nTag (getCN chan) == tag) $
-                          lift $ modify $ \state' -> state' { ircChannels = M.delete chan $ ircChannels state' }
+    let online' = do
+        sock    <- io $ connectTo hostn portnum
+        io $ hSetBuffering sock NoBuffering
+        -- Implements flood control: RFC 2813, section 5.8
+        sem1    <- io $ SSem.new 0
+        sem2    <- io $ SSem.new 4 -- one extra token stays in the MVar
+        sendmv  <- io newEmptyMVar
+        pongref <- io $ newIORef False
+        io . void . fork . forever $ do
+            SSem.wait sem1
+            threadDelay 2000000
+            SSem.signal sem2
+        io . void . fork . forever $ do
+            SSem.wait sem2
+            putMVar sendmv ()
+            SSem.signal sem1
+        fin <- io $ SSem.new 0
+        E.catch
+            (registerServer tag (io . sendMsg sock sendmv fin))
+            (\err@SomeException{} -> io (hClose sock) >> E.throwIO err)
+        lb $ ircSignOn hostn (Nick tag nickn) pwd ui
+        ready <- io $ SSem.new 0
+        lb $ void $ forkFinally
+            (E.catch
+                (readerLoop tag nickn pongref sock ready)
+                (\e@SomeException{} -> errorM (show e)))
+            (const $ io $ SSem.signal fin)
+        void $ forkFinally
+            (E.catch
+                (pingPongDelay >> pingPongLoop tag hostn pongref sock)
+                (\e@SomeException{} -> errorM (show e)))
+            (const $ io $ SSem.signal fin)
+        void $ fork $ do
+            io $ SSem.wait fin
+            unregisterServer tag
+            io $ hClose sock
+            io $ SSem.signal ready
+            delay <- getConfig reconnectDelay
+            let retry = do
+                continue <- lift $ gets $ \st -> (M.member tag $ ircPersists st) && not (M.member tag $ ircServerMap st)
+                if continue
+                    then do
+                        E.catch online'
+                            (\e@SomeException{} -> do
+                                errorM (show e)
+                                io $ threadDelay delay
+                                retry
+                            )
+                    else do
+                        chans <- lift $ gets ircChannels
+                        forM_ (M.keys chans) $ \chan ->
+                            when (nTag (getCN chan) == tag) $
+                            lift $ modify $ \state' -> state' { ircChannels = M.delete chan $ ircChannels state' }
 
-          retry
-      watch <- io $ fork $ do
-          threadDelay 10000000
-          errorM "Welcome timeout!"
-          SSem.signal fin
-      io $ SSem.wait ready
-      killThread watch
+            retry
+        watch <- io $ fork $ do
+            threadDelay 10000000
+            errorM "Welcome timeout!"
+            SSem.signal fin
+        io $ SSem.wait ready
+        killThread watch
 
-  online'
+    online'
 
-pingPongDelay :: LB ()
+pingPongDelay :: IRC ()
 pingPongDelay = io $ threadDelay 120000000
 
-pingPongLoop :: String -> String -> IORef Bool -> Handle -> LB ()
+pingPongLoop :: String -> String -> IORef Bool -> Handle -> IRC ()
 pingPongLoop tag hostn pongref sock = do
     io $ writeIORef pongref False
     io $ P.hPut sock $ P.pack $ "PING " ++ hostn ++ "\r\n"

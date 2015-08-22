@@ -7,9 +7,9 @@
 --
 module Lambdabot.Plugin.IRC.Log (logPlugin) where
 
-import Lambdabot.Bot
 import Lambdabot.Compat.FreenodeNick
 import Lambdabot.IRC
+import Lambdabot.Monad
 import qualified Lambdabot.Message as Msg
 import Lambdabot.Nick
 import Lambdabot.Plugin
@@ -64,12 +64,11 @@ logPlugin = newModule
     , moduleExit      = cleanLogState
     , moduleInit      = do
         let doLog f m hdl = logString hdl . show . f m
-            wrapCB f = bindModule1 $ \msg -> do
+            connect signal cb = registerCallback signal $ \msg -> do
                 now <- io getCurrentTime
                 -- map over the channels this message was directed to, adding to each
                 -- of their log files.
-                mapM_ (withValidLog (doLog f msg) now) (Msg.channels msg)
-            connect signal cb = ircSignalConnect signal =<< wrapCB cb
+                mapM_ (withValidLog (doLog cb msg) now) (Msg.channels msg)
 
         connect "PRIVMSG" msgCB
         connect "JOIN"    joinCB

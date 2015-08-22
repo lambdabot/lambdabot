@@ -22,7 +22,6 @@ module Lambdabot.State
     , writeGS
     
     -- ** Handling global state
-    , flushModuleState
     , readGlobalState
     , writeGlobalState
   ) where
@@ -38,7 +37,7 @@ import Lambdabot.Util.Serial
 
 import Control.Concurrent.Lifted
 import Control.Exception.Lifted as E
-import Control.Monad.Trans
+import Control.Monad.Reader
 import Control.Monad.Trans.Control
 import qualified Data.ByteString.Char8 as P
 import Data.IORef.Lifted
@@ -69,7 +68,7 @@ class MonadLB m => MonadLBState m where
 instance MonadLB m => MonadLBState (ModuleT st m) where
     type LBState (ModuleT st m) = st
     withMS f = do
-        ref <- getRef
+        ref <- asks moduleState
         withMWriter ref f
 
 instance MonadLBState m => MonadLBState (Cmd m) where
@@ -173,22 +172,21 @@ writeGS g = withGS (\_ writer -> writer g)
 -- Handling global state
 --
 
--- | flush state of modules
-flushModuleState :: LB ()
-flushModuleState = withAllModules (\m -> getModuleName >>= writeGlobalState m)
-
 -- | Peristence: write the global state out
-writeGlobalState :: Module st -> String -> ModuleT st LB ()
-writeGlobalState module' name = do
-    debugM ("saving state for module " ++ show name)
-    case moduleSerialize module' of
+writeGlobalState :: ModuleT st LB ()
+writeGlobalState = do
+    m     <- asks theModule
+    mName <- asks moduleName
+    
+    debugM ("saving state for module " ++ show mName)
+    case moduleSerialize m of
         Nothing  -> return ()
         Just ser -> do
             state' <- readMS
             case serialize ser state' of
                 Nothing  -> return ()   -- do not write any state
                 Just out -> do
-                    stateFile <- lb (findLBFileForWriting name)
+                    stateFile <- lb (findLBFileForWriting mName)
                     io (P.writeFile stateFile out)
 
 -- | Read it in

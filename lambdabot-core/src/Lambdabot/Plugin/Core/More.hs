@@ -1,8 +1,9 @@
 -- | Support for more(1) buffering
 module Lambdabot.Plugin.Core.More (morePlugin) where
 
-import Lambdabot.Plugin
 import Lambdabot.Bot
+import Lambdabot.Monad
+import Lambdabot.Plugin
 
 import Control.Monad.Trans
 
@@ -13,9 +14,10 @@ type More = ModuleT MoreState LB
 morePlugin :: Module (GlobalPrivate () [String])
 morePlugin = newModule
     { moduleDefState = return $ mkGlobalPrivate 20 ()
-    , moduleInit
-        =   bindModule2 moreFilter
-        >>= ircInstallOutputFilter
+    , moduleInit = registerOutputFilter moreFilter
+        -- TODO: improve output filter system...
+        -- currently, @more output will bypass any filters in the
+        -- chain after 'moreFilter'
 
     , moduleCmds = return
         [ (command "more")

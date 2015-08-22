@@ -10,11 +10,6 @@ module Lambdabot.Plugin
     , ModuleT
     , newModule
     
-    , getModuleName
-    , bindModule0
-    , bindModule1
-    , bindModule2
-    
     , LB
     , MonadLB(..)
     , lim80

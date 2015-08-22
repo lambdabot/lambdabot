@@ -7,13 +7,12 @@ module Lambdabot.Module
     ( Module(..)
     , newModule
     
-    , ModuleT(..)
-
-    , getRef
-    , getModuleName
-    , bindModule0
-    , bindModule1
-    , bindModule2
+    , ModuleID
+    , newModuleID
+    
+    , ModuleInfo(..)
+    , ModuleT
+    , runModuleT
     ) where
 
 import qualified Lambdabot.Command as Cmd
@@ -26,9 +25,10 @@ import Control.Applicative
 import Control.Concurrent (MVar)
 import Control.Monad
 import Control.Monad.Base
-import Control.Monad.Reader (MonadReader(..), ReaderT(..))
+import Control.Monad.Reader (MonadReader(..), ReaderT(..), asks)
 import Control.Monad.Trans (MonadTrans(..), MonadIO(..))
 import Control.Monad.Trans.Control
+import Data.Unique.Tag
 import System.Console.Haskeline.MonadException (MonadException)
 
 ------------------------------------------------------------------------
@@ -81,17 +81,33 @@ newModule = Module
     , moduleDefState     = return $ error "state not initialized"
     }
 
---
+newtype ModuleID st = ModuleID (Tag RealWorld st)
+    deriving (GEq, GCompare)
+
+newModuleID :: IO (ModuleID st)
+newModuleID = ModuleID <$> newTag
+
+-- |Info about a running module.
+data ModuleInfo st = ModuleInfo
+    { moduleName   :: !String
+    , moduleID     :: !(ModuleID st)
+    , theModule    :: !(Module st)
+    , moduleState  :: !(MVar st)
+    }
+
 -- | This transformer encodes the additional information a module might
 --   need to access its name or its state.
---
-newtype ModuleT st m a = ModuleT { runModuleT :: ReaderT (MVar st, String) m a }
-    deriving (Applicative, Functor, Monad, MonadTrans, MonadIO, MonadException, MonadConfig)
+newtype ModuleT st m a = ModuleT { unModuleT :: ReaderT (ModuleInfo st) m a }
+    deriving (Applicative, Functor, Monad, MonadReader (ModuleInfo st), 
+        MonadTrans, MonadIO, MonadException, MonadConfig)
+
+runModuleT :: ModuleT st m a -> ModuleInfo st -> m a
+runModuleT = runReaderT . unModuleT
 
 instance MonadLogging m => MonadLogging (ModuleT st m) where
     getCurrentLogger = do
         parent <- lift getCurrentLogger
-        self   <- getModuleName
+        self   <- asks moduleName
         return (parent ++ ["Plugin", self])
     logM a b c = lift (logM a b c)
 
@@ -102,7 +118,7 @@ instance MonadTransControl (ModuleT st) where
     type StT (ModuleT st) a = a
     liftWith f = do
         r <- ModuleT ask
-        lift $ f $ \t -> runReaderT (runModuleT t) r
+        lift $ f $ \t -> runModuleT t r
     restoreT = lift
     {-# INLINE liftWith #-}
     {-# INLINE restoreT #-}
@@ -113,23 +129,3 @@ instance MonadBaseControl b m => MonadBaseControl b (ModuleT st m) where
     restoreM     = defaultRestoreM
     {-# INLINE liftBaseWith #-}
     {-# INLINE restoreM #-}
-
-getRef :: Monad m => ModuleT st m (MVar st)
-getRef  = ModuleT $ ask >>= return . fst
-
-getModuleName :: Monad m => ModuleT mod m String
-getModuleName = ModuleT $ ask >>= return . snd
-
--- | bind an action to the current module so it can be run from the plain
---   `LB' monad.
-bindModule0 :: ModuleT mod LB a -> ModuleT mod LB (LB a)
-bindModule0 act = bindModule1 (const act) >>= return . ($ ())
-
--- | variant of `bindModule0' for monad actions with one argument
-bindModule1 :: (a -> ModuleT mod LB b) -> ModuleT mod LB (a -> LB b)
-bindModule1 act = ModuleT $
-    ask >>= \st -> return (\val -> runReaderT (runModuleT $ act val) st)
-
--- | variant of `bindModule0' for monad actions with two arguments
-bindModule2 :: (a -> b -> ModuleT mod LB c) -> ModuleT mod LB (a -> b -> LB c)
-bindModule2 act = bindModule1 (uncurry act) >>= return . curry

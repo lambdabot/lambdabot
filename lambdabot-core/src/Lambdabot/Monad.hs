@@ -14,24 +14,35 @@ module Lambdabot.Monad
     , waitForQuit
     
     , Callback
-    , ModuleRef(..)
-    , CommandRef(..)
+    , OutputFilter
+    , Server
     , IRCRWState(..)
     , initRwState
     
-    , LB(..)
-    , MonadLB(..)
-    , evalLB
+    , LB
+    , runLB
     
-    , addServer
-    , remServer
+    , MonadLB(..)
+    
+    , registerModule
+    , registerCommands
+    , registerCallback
+    , registerOutputFilter
+    , unregisterModule
+    
+    , registerServer
+    , unregisterServer
     , send
     , received
     
-    , getConfig
+    , applyOutputFilters
     
-    , withModule
+    , inModuleNamed
+    , inModuleWithID
+    
     , withCommand
+    
+    , listModules
     , withAllModules
     ) where
 
@@ -44,18 +55,20 @@ import           Lambdabot.Logging
 import           Lambdabot.Module
 import qualified Lambdabot.Message as Msg
 import           Lambdabot.Nick
-import           Lambdabot.OutputFilter
 import           Lambdabot.Util
 
 import Control.Applicative
 import Control.Concurrent.Lifted
 import Control.Exception.Lifted as E (catch)
 import Control.Monad.Base
+import Control.Monad.Identity
 import Control.Monad.Reader
 import Control.Monad.State
 import Control.Monad.Trans.Control
 import qualified Data.Dependent.Map as D
+import Data.Dependent.Sum
 import Data.IORef
+import Data.Some
 import qualified Data.Map as M
 import qualified Data.Set as S
 import System.Console.Haskeline.MonadException (MonadException)
@@ -69,23 +82,27 @@ import System.Console.Haskeline.MonadException (MonadException)
 data IRCRState = IRCRState
     { ircInitDoneMVar   :: MVar ()
     , ircQuitMVar       :: MVar ()
-    , ircConfig         :: D.DMap Config
+    , ircConfig         :: D.DMap Config Identity
     }
 
 -- | Default ro state
-initRoState :: [D.DSum Config] -> IO IRCRState
+initRoState :: [D.DSum Config Identity] -> IO IRCRState
 initRoState configuration = do
     quitMVar     <- newEmptyMVar
     initDoneMVar <- newEmptyMVar
     
+    let mergeConfig' k (Identity x) (Identity y) = Identity (mergeConfig k y x)
+    
     return IRCRState 
         { ircQuitMVar       = quitMVar
         , ircInitDoneMVar   = initDoneMVar
-        , ircConfig         = D.fromListWithKey (flip . mergeConfig) configuration
+        , ircConfig         = D.fromListWithKey mergeConfig' configuration
         }
 
-reportInitDone :: MonadIO m => IRCRState -> m ()
-reportInitDone = io . flip putMVar () . ircInitDoneMVar
+reportInitDone :: LB ()
+reportInitDone = do
+    mvar <- LB (asks (ircInitDoneMVar . fst))
+    io $ putMVar mvar ()
 
 askLB :: MonadLB m => (IRCRState -> a) -> m a
 askLB f  = lb . LB $ asks (f . fst)
@@ -96,17 +113,18 @@ waitForInit = readMVar =<< askLB ircInitDoneMVar
 waitForQuit :: MonadLB m => m ()
 waitForQuit = readMVar =<< askLB ircQuitMVar
 
-type Callback = IrcMessage -> LB ()
+type Callback     st = IrcMessage -> ModuleT st LB ()
+type OutputFilter st = Nick -> [String] -> ModuleT st LB [String]
+type Server       st = IrcMessage -> ModuleT st LB ()
 
-data ModuleRef = forall st.
-    ModuleRef (Module st) (MVar st) String
-
-data CommandRef = forall st.
-    CommandRef (Module st) (MVar st) String (Command (ModuleT st LB))
+newtype CallbackRef     st = CallbackRef     (Callback st)
+newtype CommandRef      st = CommandRef      (Command (ModuleT st LB))
+newtype OutputFilterRef st = OutputFilterRef (OutputFilter st)
+newtype ServerRef       st = ServerRef       (Server st)
 
 -- | Global read\/write state.
 data IRCRWState = IRCRWState
-    { ircServerMap       :: M.Map String (String, IrcMessage -> LB ())
+    { ircServerMap       :: M.Map String (DSum ModuleID ServerRef)
     , ircPrivilegedUsers :: S.Set Nick
     , ircIgnoredUsers    :: S.Set Nick
     
@@ -115,78 +133,29 @@ data IRCRWState = IRCRWState
     , ircPersists        :: M.Map String Bool
     -- ^ lists servers to which to reconnect on failure (one-time or always)
     
-    , ircModules         :: M.Map String ModuleRef
-    , ircCallbacks       :: M.Map String [(String,Callback)]
-    , ircOutputFilters   :: [(String, OutputFilter LB)]
+    , ircModulesByName   :: M.Map String (Some ModuleInfo)
+    , ircModulesByID     :: D.DMap ModuleID ModuleInfo
+    , ircCallbacks       :: M.Map String (D.DMap ModuleID CallbackRef)
+    , ircOutputFilters   :: [DSum ModuleID OutputFilterRef]
     -- ^ Output filters, invoked from right to left
     
-    , ircCommands        :: M.Map String CommandRef
+    , ircCommands        :: M.Map String (DSum ModuleID CommandRef)
     }
 
 -- | Default rw state
 initRwState :: IRCRWState
 initRwState = IRCRWState
-    { ircPrivilegedUsers = S.singleton (Nick "offlinerc" "null")
+    { ircPrivilegedUsers = S.empty
     , ircIgnoredUsers    = S.empty
     , ircChannels        = M.empty
     , ircPersists        = M.empty
-    , ircModules         = M.empty
+    , ircModulesByName   = M.empty
+    , ircModulesByID     = D.empty
     , ircServerMap       = M.empty
     , ircCallbacks       = M.empty
-    , ircOutputFilters   = 
-        [ ([],cleanOutput)
-        , ([],lineify)
-        , ([],cleanOutput)
-        ]
+    , ircOutputFilters   = []
     , ircCommands        = M.empty
     }
-
-
--- The virtual chat system.
---
--- The virtual chat system sits between the chat drivers and the rest of
--- Lambdabot.  It provides a mapping between the String server "tags" and
--- functions which are able to handle sending messages.
---
--- When a message is recieved, the chat module is expected to call
--- `Lambdabot.Main.received'.  This is not ideal.
-
-addServer :: String -> (IrcMessage -> LB ()) -> ModuleT mod LB ()
-addServer tag sendf = do
-    s <- lift get
-    let svrs = ircServerMap s
-    name <- getModuleName
-    case M.lookup tag svrs of
-        Nothing -> lift (put s { ircServerMap = M.insert tag (name,sendf) svrs})
-        Just _ -> fail $ "attempted to create two servers named " ++ tag
-
-remServer :: String -> LB ()
-remServer tag = do
-    s <- get
-    let svrs = ircServerMap s
-    case M.lookup tag svrs of
-        Just _ -> do
-            let svrs' = M.delete tag svrs
-            put (s { ircServerMap = svrs' })
-            when (M.null svrs') $ do
-                quitMVar <- askLB ircQuitMVar
-                io $ putMVar quitMVar ()
-        Nothing -> fail $ "attempted to delete nonexistent servers named " ++ tag
-
-send :: IrcMessage -> LB ()
-send msg = do
-    s <- gets ircServerMap
-    case M.lookup (Msg.server msg) s of
-        Just (_, sendf) -> sendf msg
-        Nothing -> warningM $ "sending message to bogus server: " ++ show msg
-
-received :: IrcMessage -> LB ()
-received msg = do
-    s       <- get
-    handler <- getConfig uncaughtExceptionHandler
-    case M.lookup (ircMsgCommand msg) (ircCallbacks s) of
-        Just cbs -> mapM_ (\(_, cb) -> cb msg `E.catch` (liftIO . handler)) cbs
-        _        -> return ()
 
 -- ---------------------------------------------------------------------
 --
@@ -198,16 +167,18 @@ received msg = do
 --
 -- instances Monad, Functor, MonadIO, MonadState, MonadError
 
-
-newtype LB a = LB { runLB :: ReaderT (IRCRState,IORef IRCRWState) IO a }
+newtype LB a = LB { unLB :: ReaderT (IRCRState, IORef IRCRWState) IO a }
     deriving (Functor, Applicative, Monad, MonadIO, MonadException)
+
+runLB :: LB a -> (IRCRState, IORef IRCRWState) -> IO a
+runLB = runReaderT . unLB
 
 instance MonadBase IO LB where
     liftBase = LB . liftBase
 
 instance MonadBaseControl IO LB where
     type StM LB a = StM (ReaderT (IRCRState,IORef IRCRWState) IO) a
-    liftBaseWith action = LB (liftBaseWith (\run -> action (run . runLB)))
+    liftBaseWith action = LB (liftBaseWith (\run -> action (run . unLB)))
     restoreM = LB . restoreM
 
 class (MonadIO m, MonadBaseControl IO m, MonadConfig m, MonadLogging m, Applicative m) => MonadLB m where
@@ -218,68 +189,177 @@ instance MonadLB m => MonadLB (ModuleT st m) where lb = lift . lb
 instance MonadLB m => MonadLB (Cmd m)        where lb = lift . lb
 
 instance MonadState IRCRWState LB where
-    get = LB $ do
+    state f = LB $ do
         ref <- asks snd
-        lift $ readIORef ref
-    put x = LB $ do
-        ref <- asks snd
-        lift $ writeIORef ref x
+        lift . atomicModifyIORef ref $ \s -> 
+            let (s', x) = f s
+             in seq s' (x, s')
 
 instance MonadConfig LB where
-    getConfig k = liftM (maybe (getConfigDefault k) id . D.lookup k) (lb (askLB ircConfig))
+    getConfig k = liftM (maybe (getConfigDefault k) runIdentity . D.lookup k) (lb (askLB ircConfig))
 
 instance MonadLogging LB where
     getCurrentLogger = getConfig lbRootLoggerPath
     logM a b c = io (logM a b c)
 
--- | run a computation in the LB monad
-evalLB :: LB a -> IRCRState -> IRCRWState -> IO a
-evalLB (LB lb') rs rws = do
-    ref  <- newIORef rws
-    lb' `runReaderT` (rs,ref)
+---------------
+-- state management (registering/unregistering various things)
+
+registerModule :: String -> Module st -> st -> LB (ModuleInfo st)
+registerModule mName m mState = do
+    mTag    <- io newModuleID
+    mInfo   <- ModuleInfo mName mTag m <$> newMVar mState
+    
+    modify $ \s -> s
+        { ircModulesByName  = M.insert mName (This mInfo) (ircModulesByName s)
+        , ircModulesByID    = D.insert mTag        mInfo  (ircModulesByID   s)
+        }
+    
+    return mInfo
+
+registerCommands :: [Command (ModuleT st LB)] -> ModuleT st LB ()
+registerCommands cmds = do
+    mTag <- asks moduleID
+    let taggedCmds = 
+            [ (cName, mTag :=> CommandRef cmd)
+            | cmd   <- cmds
+            , cName <- cmdNames cmd
+            ]
+    
+    lift $ modify $ \s -> s
+        { ircCommands = M.union (M.fromList taggedCmds) (ircCommands s)
+        }
+
+registerCallback :: String -> Callback st -> ModuleT st LB ()
+registerCallback str f = do
+    mTag <- asks moduleID
+    
+    lift . modify $ \s -> s
+        { ircCallbacks = M.insertWith D.union str
+            (D.singleton mTag (CallbackRef f))
+            (ircCallbacks s)
+        }
+
+registerOutputFilter :: OutputFilter st -> ModuleT st LB ()
+registerOutputFilter f = do
+    mTag <- asks moduleID
+    lift . modify $ \s -> s
+        { ircOutputFilters = (mTag :=> OutputFilterRef f) : ircOutputFilters s
+        }
+
+unregisterModule :: String -> LB ()
+unregisterModule mName = maybe (return ()) warningM <=< state $ \s -> 
+    case M.lookup mName (ircModulesByName s) of
+        Nothing                 -> (Just $ "Tried to unregister module that wasn't registered: " ++ show mName, s)
+        Just (This modInfo)     ->
+            let mTag = moduleID modInfo
+                
+                notThisTag :: DSum ModuleID f -> Bool
+                notThisTag (tag :=> _) = This tag /= This mTag
+                s' = s
+                    { ircModulesByName  = M.delete mName        (ircModulesByName s)
+                    , ircModulesByID    = D.delete mTag         (ircModulesByID   s)
+                    , ircCommands       = M.filter notThisTag   (ircCommands      s)
+                    , ircCallbacks      = M.map (D.delete mTag) (ircCallbacks     s)
+                    , ircServerMap      = M.filter notThisTag   (ircServerMap     s)
+                    , ircOutputFilters  =   filter notThisTag   (ircOutputFilters s)
+                    }
+             in (Nothing, s')
+
+-- The virtual chat system.
+--
+-- The virtual chat system sits between the chat drivers and the rest of
+-- Lambdabot.  It provides a mapping between the String server "tags" and
+-- functions which are able to handle sending messages.
+--
+-- When a message is recieved, the chat module is expected to call
+-- `Lambdabot.Main.received'.  This is not ideal.
+
+registerServer :: String -> Server st -> ModuleT st LB ()
+registerServer sName sendf = do
+    mTag <- asks moduleID
+    maybe (return ()) fail <=< lb . state $ \s ->
+        case M.lookup sName (ircServerMap s) of
+            Just _  -> (Just $ "attempted to create two servers named " ++ sName, s)
+            Nothing -> 
+                let s' = s { ircServerMap = M.insert sName (mTag :=> ServerRef sendf) (ircServerMap s)}
+                 in (Nothing, s')
+
+-- TODO: fix race condition
+unregisterServer :: String -> ModuleT mod LB ()
+unregisterServer tag = lb $ do
+    s <- get
+    let svrs = ircServerMap s
+    case M.lookup tag svrs of
+        Just _ -> do
+            let svrs' = M.delete tag svrs
+            put (s { ircServerMap = svrs' })
+            when (M.null svrs') $ do
+                quitMVar <- askLB ircQuitMVar
+                io $ putMVar quitMVar ()
+        Nothing -> fail $ "attempted to delete nonexistent servers named " ++ tag
+
+withUEHandler :: LB () -> LB ()
+withUEHandler f = do
+    handler <- getConfig uncaughtExceptionHandler
+    E.catch f (io . handler)
+
+send :: IrcMessage -> LB ()
+send msg = do
+    s <- gets ircServerMap
+    let bogus = warningM $ "sending message to bogus server: " ++ show msg
+    case M.lookup (Msg.server msg) s of
+        Just (mTag :=> ServerRef sendf) -> 
+            withUEHandler (inModuleWithID mTag bogus (sendf msg))
+        Nothing -> bogus
+
+received :: IrcMessage -> LB ()
+received msg = do
+    s       <- get
+    case M.lookup (ircMsgCommand msg) (ircCallbacks s) of
+        Just cbs -> forM_ (D.toList cbs) $ \(tag :=> CallbackRef cb) ->
+            withUEHandler (inModuleWithID tag (return ()) (cb msg))
+        _        -> return ()
+
+applyOutputFilter :: Nick -> DSum ModuleID OutputFilterRef -> [String] -> LB [String]
+applyOutputFilter who (mTag :=> OutputFilterRef f) msg =
+    inModuleWithID mTag (return msg) (f who msg)
+
+applyOutputFilters :: Nick -> String -> LB [String]
+applyOutputFilters who msg = do
+    filters   <- gets ircOutputFilters
+    foldr (\a x -> applyOutputFilter who a =<< x) ((return . lines) msg) filters
 
 ------------------------------------------------------------------------
 -- Module handling
 
 -- | Interpret an expression in the context of a module.
--- Arguments are which map to use (@ircModules@ and @ircCommands@ are
--- the only sensible arguments here), the name of the module\/command,
--- action for the case that the lookup fails, action if the lookup
--- succeeds.
---
-withModule :: String
-           -> LB a
-           -> (forall st. Module st -> ModuleT st LB a)
-           -> LB a
+inModuleNamed :: String -> LB a -> (forall st. ModuleT st LB a) -> LB a
+inModuleNamed name nothing just = do
+    mbMod <- gets (M.lookup name . ircModulesByName)
+    case mbMod of
+        Nothing             -> nothing
+        Just (This modInfo) -> runModuleT just modInfo
 
-withModule modname def f = do
-    maybemod <- gets (M.lookup modname . ircModules)
-    case maybemod of
-      -- TODO stick this ref stuff in a monad instead. more portable in
-      -- the long run.
-      Just (ModuleRef m ref name) -> do
-          runReaderT (runModuleT $ f m) (ref, name)
-      _                           -> def
+inModuleWithID :: ModuleID st -> LB a -> (ModuleT st LB a) -> LB a
+inModuleWithID tag nothing just = do
+    mbMod <- gets (D.lookup tag . ircModulesByID )
+    case mbMod of
+        Nothing         -> nothing
+        Just modInfo    -> runModuleT just modInfo
 
-withCommand :: String
-            -> LB a
-            -> (forall st. Module st
-                        -> Command (ModuleT st LB)
-                        -> ModuleT st LB a)
-            -> LB a
-
+withCommand :: String -> LB a -> (forall st. Command (ModuleT st LB) -> ModuleT st LB a) -> LB a
 withCommand cmdname def f = do
-    maybecmd <- gets (M.lookup cmdname . ircCommands)
-    case maybecmd of
-      -- TODO stick this ref stuff in a monad instead. more portable in
-      -- the long run.
-      Just (CommandRef m ref name cmd) -> do
-          runReaderT (runModuleT $ f m cmd) (ref, name)
-      _                           -> def
+    mbCmd <- gets (M.lookup cmdname . ircCommands)
+    case mbCmd of
+        Just (tag :=> CommandRef cmd)   -> inModuleWithID tag def (f cmd)
+        _                               -> def
+
+listModules :: LB [String]
+listModules = gets (M.keys . ircModulesByName)
 
 -- | Interpret a function in the context of all modules
-withAllModules :: (forall st. Module st -> ModuleT st LB a) -> LB ()
+withAllModules :: (forall st. ModuleT st LB a) -> LB ()
 withAllModules f = do
-    mods <- gets $ M.elems . ircModules :: LB [ModuleRef]
-    (`mapM_` mods) $ \(ModuleRef m ref name) -> do
-        runReaderT (runModuleT $ f m) (ref, name)
+    mods <- gets $ M.elems . ircModulesByName
+    forM_ mods $ \(This modInfo) -> runModuleT f modInfo

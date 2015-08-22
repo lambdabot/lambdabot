@@ -7,12 +7,13 @@
 module Lambdabot.Plugin.Core.Compose (composePlugin) where
 
 import Lambdabot.Command
+import Lambdabot.Module
 import Lambdabot.Monad
 import Lambdabot.Plugin
 
 import Control.Arrow (first)
 import Control.Monad
-import Control.Monad.Trans
+import Control.Monad.Reader
 import Data.Char
 import Data.List
 import Data.List.Split
@@ -64,11 +65,11 @@ lookupP :: String -> Cmd Compose (String -> LB [String])
 lookupP cmd = withMsg $ \a -> do
     b <- getTarget
     lb $ withCommand cmd
-        (error $ "Unknown command: " ++ show cmd)
-        (\_m theCmd -> do
-            when (privileged theCmd) $ error "Privileged commands cannot be composed"
-            bindModule1 (runCommand theCmd a b cmd))
-
+        (fail $ "Unknown command: " ++ show cmd)
+        (\theCmd -> do
+            when (privileged theCmd) $ fail "Privileged commands cannot be composed"
+            mTag <- asks moduleID
+            return (inModuleWithID mTag (return []) . runCommand theCmd a b cmd))
 
 ------------------------------------------------------------------------
 
