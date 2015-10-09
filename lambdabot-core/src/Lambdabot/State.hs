@@ -8,19 +8,19 @@ module Lambdabot.State
     , readMS
     , writeMS
     , modifyMS
-    
+
     -- ** Utility functions for modules that need state for each target.
     , GlobalPrivate -- (global)
     , mkGlobalPrivate
-    
+
     , withPS
     , readPS
     , writePS
-    
+
     , withGS
     , readGS
     , writeGS
-    
+
     -- ** Handling global state
     , readGlobalState
     , writeGlobalState
@@ -51,7 +51,7 @@ withMWriter mvar f = bracket
 
 class MonadLB m => MonadLBState m where
     type LBState m
-    
+
     -- | Update the module's private state.
     -- This is the preferred way of changing the state. The state will be locked
     -- until the body returns. The function is exception-safe, i.e. even if
@@ -74,8 +74,8 @@ instance MonadLB m => MonadLBState (ModuleT st m) where
 instance MonadLBState m => MonadLBState (Cmd m) where
     type LBState (Cmd m) = LBState m
     withMS f = do
-        x <- liftWith $ \run -> 
-            withMS $ \st wr -> 
+        x <- liftWith $ \run ->
+            withMS $ \st wr ->
                 run (f st (lift . wr))
         restoreT (return x)
 
@@ -172,12 +172,18 @@ writeGS g = withGS (\_ writer -> writer g)
 -- Handling global state
 --
 
+writeStateToFile :: String -> P.ByteString -> ModuleT st LB ()
+writeStateToFile mName state = do
+  stateFile <- lb (findLBFileForWriting mName)
+  io (P.writeFile stateFile state)
+
+
 -- | Peristence: write the global state out
 writeGlobalState :: ModuleT st LB ()
 writeGlobalState = do
     m     <- asks theModule
     mName <- asks moduleName
-    
+
     debugM ("saving state for module " ++ show mName)
     case moduleSerialize m of
         Nothing  -> return ()
@@ -185,9 +191,15 @@ writeGlobalState = do
             state' <- readMS
             case serialize ser state' of
                 Nothing  -> return ()   -- do not write any state
-                Just out -> do
-                    stateFile <- lb (findLBFileForWriting mName)
-                    io (P.writeFile stateFile out)
+                Just out -> writeStateToFile mName out
+
+readStateFromFile :: String -> LB (Maybe P.ByteString)
+readStateFromFile mName = do
+    mbStateFile <- findLBFileForReading mName
+    case mbStateFile of
+        Nothing         -> return Nothing
+        Just stateFile  -> io $ do
+            Just `fmap` P.readFile stateFile `E.catch` \SomeException{} -> return Nothing
 
 -- | Read it in
 readGlobalState :: Module st -> String -> LB (Maybe st)
@@ -195,15 +207,11 @@ readGlobalState module' name = do
     debugM ("loading state for module " ++ show name)
     case moduleSerialize module' of
         Just ser -> do
-            mbStateFile <- findLBFileForReading name
-            case mbStateFile of
-                Nothing         -> return Nothing
-                Just stateFile  -> io $ do
-                    state' <- Just `fmap` P.readFile stateFile `E.catch` \SomeException{} -> return Nothing
-                    E.catch (evaluate $ maybe Nothing (Just $!) (deserialize ser =<< state')) -- Monad Maybe)
-                        (\e -> do
-                            errorM $ "Error parsing state file for: "
-                                ++ name ++ ": " ++ show (e :: SomeException)
-                            errorM $ "Try removing: "++ show stateFile
-                            return Nothing) -- proceed regardless
+            state' <- readStateFromFile name
+            E.catch (evaluate $ maybe Nothing (Just $!) (deserialize ser =<< state')) -- Monad Maybe)
+                (\e -> do
+                    errorM $ "Error parsing state file for: "
+                        ++ name ++ ": " ++ show (e :: SomeException)
+                    errorM "Try removing the state file"
+                    return Nothing) -- proceed regardless
         Nothing -> return Nothing
