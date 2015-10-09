@@ -99,7 +99,7 @@ changeKarma km sender nick
     | sender == nick = return "You can't change your own karma, silly."
     | otherwise      = do
         nickStr <- showNick nick
-        withMS $ \fm write -> do
+        withMSSync $ \fm write -> do
             let fm' = M.insertWith (+) nick km fm
             let karma = fromMaybe 0 $ M.lookup nick fm'
             write fm'

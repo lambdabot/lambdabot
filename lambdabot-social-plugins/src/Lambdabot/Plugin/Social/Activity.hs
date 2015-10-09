@@ -53,7 +53,7 @@ activity full args = do
 activityFilter :: Nick -> [String] -> Activity [String]
 activityFilter target lns = do
     io $ evaluate $ foldr seq () $ map (foldr seq ()) $ lns
-    withMS $ \ st wr -> do
+    withMSSync $ \ st wr -> do
         now <- io getCurrentTime
         wr (map (const (now,target)) lns ++ st)
     return lns

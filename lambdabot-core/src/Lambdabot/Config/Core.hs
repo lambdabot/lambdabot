@@ -13,16 +13,20 @@ module Lambdabot.Config.Core
     , lbVersion
     , textWidth
     , uncaughtExceptionHandler
-    
+
     , replaceRootLogger
     , lbRootLoggerPath
     , consoleLogHandle
     , consoleLogLevel
     , consoleLogFormat
+    , readState
+    , writeState
+    , saveOnModify
     ) where
 
 import Lambdabot.Config
 import Lambdabot.Logging
+import qualified Data.ByteString.Char8 as P
 
 import Control.Exception
 import System.IO
@@ -51,6 +55,10 @@ config "lbRootLoggerPath"   [t| [String]                |] [| []                
 config "consoleLogHandle"   [t| Handle                  |] [| stderr                      |]
 config "consoleLogLevel"    [t| Priority                |] [| NOTICE                      |]
 config "consoleLogFormat"   [t| String                  |] [| "[$prio] $loggername: $msg" |]
+-- hooks into state modification
+config "writeState"         [t| Maybe (String -> P.ByteString -> IO ()) |] [| Nothing |]
+config "readState"          [t| Maybe (String -> IO (Maybe P.ByteString)) |] [| Nothing |]
+config "saveOnModify"       [t| Bool |] [| False |]
 
 --------------------------------------------
 -- Default values with longer definitions

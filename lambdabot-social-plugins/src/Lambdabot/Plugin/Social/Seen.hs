@@ -83,7 +83,7 @@ seenPlugin = newModule
             modifyMS $ \(n,m) -> (n, botPart ct (map packNick chans) m)
 
         -- and write out our state:
-        withMS $ \s _ -> lb (findLBFileForWriting "seen") >>= \ c -> io (encodeFile c s)
+        withMSSync $ \s _ -> lb (findLBFileForWriting "seen") >>= \ c -> io (encodeFile c s)
     }
 
 lcNick :: Nick -> Nick
@@ -315,7 +315,7 @@ withSeenFM f msg = do
     let chan = packNick . lcNick . head . G.channels $! msg
         nick = packNick . lcNick . G.nick $ msg
 
-    withMS $ \(maxUsers,state) writer -> do
+    withMSSync $ \(maxUsers,state) writer -> do
         ct <- io getClockTime
         case f msg ct nick state of
             Left _         -> return ()

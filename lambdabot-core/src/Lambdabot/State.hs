@@ -5,6 +5,7 @@
 module Lambdabot.State
     ( -- ** Functions to access the module's state
       MonadLBState(..)
+    , withMSSync
     , readMS
     , writeMS
     , modifyMS
@@ -31,9 +32,11 @@ import Lambdabot.Logging
 import Lambdabot.Monad
 import Lambdabot.Module
 import Lambdabot.Nick
+import Lambdabot.Config.Core
 import Lambdabot.Command
 import Lambdabot.Util
 import Lambdabot.Util.Serial
+import Lambdabot.Config
 
 import Control.Concurrent.Lifted
 import Control.Exception.Lifted as E
@@ -64,12 +67,14 @@ class MonadLB m => MonadLBState m where
     -- that came to my mind had even more serious deficiencies such as being prone
     -- to race conditions or semantic obscurities.
     withMS :: (LBState m -> (LBState m -> m ()) -> m a) -> m a
+    sync :: m ()
 
 instance MonadLB m => MonadLBState (ModuleT st m) where
     type LBState (ModuleT st m) = st
     withMS f = do
         ref <- asks moduleState
         withMWriter ref f
+    sync = writeGlobalState
 
 instance MonadLBState m => MonadLBState (Cmd m) where
     type LBState (Cmd m) = LBState m
@@ -78,6 +83,14 @@ instance MonadLBState m => MonadLBState (Cmd m) where
             withMS $ \st wr ->
                 run (f st (lift . wr))
         restoreT (return x)
+    sync = lift sync
+
+withMSSync :: MonadLBState m => (LBState m -> (LBState m -> m ()) -> m a) -> m a
+withMSSync f = do
+  res <- withMS f
+  save <- getConfig saveOnModify
+  when save sync
+  return res
 
 -- | Read the module's private state.
 readMS :: MonadLBState m => m (LBState m)
@@ -85,7 +98,8 @@ readMS = withMS (\st _ -> return st)
 
 -- | Modify the module's private state.
 modifyMS :: MonadLBState m => (LBState m -> LBState m) -> m ()
-modifyMS f = withMS $ \st wr -> wr (f st)
+modifyMS f = do
+  withMSSync $ \st wr -> wr (f st)
 
 -- | Write the module's private state. Try to use withMS instead.
 writeMS :: MonadLBState m => LBState m -> m ()
@@ -172,14 +186,13 @@ writeGS g = withGS (\_ writer -> writer g)
 -- Handling global state
 --
 
-writeStateToFile :: String -> P.ByteString -> ModuleT st LB ()
+writeStateToFile :: String -> P.ByteString -> LB ()
 writeStateToFile mName state = do
-  stateFile <- lb (findLBFileForWriting mName)
+  stateFile <- findLBFileForWriting mName
   io (P.writeFile stateFile state)
 
-
 -- | Peristence: write the global state out
-writeGlobalState :: ModuleT st LB ()
+writeGlobalState :: MonadLB m => ModuleT st m ()
 writeGlobalState = do
     m     <- asks theModule
     mName <- asks moduleName
@@ -191,7 +204,11 @@ writeGlobalState = do
             state' <- readMS
             case serialize ser state' of
                 Nothing  -> return ()   -- do not write any state
-                Just out -> writeStateToFile mName out
+                Just out -> do
+                  ws <- getConfig writeState
+                  case ws of
+                    Just ws' -> io $ ws' mName out
+                    Nothing -> lb $ writeStateToFile mName out
 
 readStateFromFile :: String -> LB (Maybe P.ByteString)
 readStateFromFile mName = do
@@ -207,7 +224,10 @@ readGlobalState module' name = do
     debugM ("loading state for module " ++ show name)
     case moduleSerialize module' of
         Just ser -> do
-            state' <- readStateFromFile name
+            rs <- getConfig readState
+            state' <- case rs of
+                        Just rs' -> io $ rs' name
+                        Nothing -> readStateFromFile name
             E.catch (evaluate $ maybe Nothing (Just $!) (deserialize ser =<< state')) -- Monad Maybe)
                 (\e -> do
                     errorM $ "Error parsing state file for: "
