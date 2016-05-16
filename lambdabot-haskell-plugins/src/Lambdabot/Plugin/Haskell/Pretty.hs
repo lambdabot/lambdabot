@@ -73,7 +73,7 @@ doPretty (Hs.Module _ _ _ _ _ _ decls) =
             caseIndent   = 4,
             onsideIndent = 0
         }
-        prettyDecl (PatBind _ (PVar (Ident "__expr__")) (UnGuardedRhs e) (BDecls [])) -- pretty printing an expression
+        prettyDecl (PatBind _ (PVar (Ident "__expr__")) (UnGuardedRhs e) Nothing) -- pretty printing an expression
                      = prettyPrintWithMode (makeModeExp e) e
         prettyDecl d = prettyPrintWithMode (makeMode d) d
     -- TODO: prefixing with hashes is done, because i didn't find a way
