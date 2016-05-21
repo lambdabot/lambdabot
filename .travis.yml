@@ -33,7 +33,8 @@ matrix:
 
 before_install:
   - unset CC
-  - export PATH=$HOME/.cabal/bin:/opt/ghc/$GHCVER/bin:/opt/cabal/$CABALVER/bin:$PATH
+  - export HAPPYVER=1.19.5
+  - export PATH=$HOME/.cabal/bin:/opt/ghc/$GHCVER/bin:/opt/cabal/$CABALVER/bin:/opt/happy/$HAPPYVER/bin:$PATH
   - export PACKAGES="lambdabot-core/ lambdabot-trusted/ lambdabot-*-plugins/ lambdabot/"
   - function cabal_uninstall() {
       echo Uninstalling $1;
