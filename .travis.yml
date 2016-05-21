@@ -10,7 +10,6 @@ cache:
     - $HOME/.cabal
 
 before_cache:
-  - for pkg in $PACKAGES; do cabal_uninstall $pkg; done
   - rm -fv $HOME/.cabal/packages/hackage.haskell.org/build-reports.log
   - rm -fv $HOME/.cabal/packages/hackage.haskell.org/00-index.tar
 
@@ -24,6 +23,7 @@ matrix:
       compiler: ": #GHC 7.10.3"
       addons: {apt: {packages: [cabal-install-1.22,ghc-7.10.3,happy-1.19.5], sources: [hvr-ghc]}}
 
+  exclude:
     - env: CABALVER=1.24 GHCVER=8.0.1
       compiler: ": #GHC 8.0.1"
       addons: {apt: {packages: [cabal-install-1.24,ghc-8.0.1,happy-1.19.5], sources: [hvr-ghc]}}
@@ -40,6 +40,9 @@ before_install:
       rm -rf $(ghc-pkg describe $1 | sed -En 's/^(library-dirs|data-dir|haddock-html)..//p');
       ghc-pkg unregister --force $1 2>/dev/null;
     }
+  - if [ "$GHCVER" = "8.0.1" ]; then
+      CABAL_INSTALL_FLAGS="--allow-newer=$(ghc-pkg list --global --names-only --simple-output | sed 's/ /,/g')";
+    fi
 
 install:
   - travis_retry cabal update
@@ -48,12 +51,12 @@ install:
            $HOME/.cabal/packages/hackage.haskell.org/00-index.tar;
     fi
   - for pkg in $(ghc-pkg list --user --simple-output); do echo $pkg; done | sort | tee packages-installed
-  - cabal install --only-dependencies --global --dry-run $PACKAGES | tee packages-needed
+  - cabal install $CABAL_INSTALL_FLAGS --only-dependencies --global --dry-run $PACKAGES | tee packages-needed
   - sed 's/ (.*)//' packages-needed | grep -v ' ' | sort > packages-needed-sorted
   - for pkg in $(comm -23 packages-installed packages-needed-sorted); do cabal_uninstall $pkg; done
   - for pkg in $(ghc-pkg check --simple-output); do cabal_uninstall $pkg; done
   - echo "broken packages $(ghc-pkg check --simple-output) (should be empty)"
-  - cabal install --only-dependencies --enable-tests $PACKAGES
+  - cabal install $CABAL_INSTALL_FLAGS --only-dependencies --enable-tests $PACKAGES
 
 script:
   - cabal install lambdabot-core/ lambdabot-trusted/ lambdabot-*-plugins/ lambdabot/
