@@ -1,7 +1,63 @@
-language: haskell
-script: .travis/build
+# for reference:
+# https://github.com/ekmett/lens/blob/master/.travis.yml
+
+language: c
 sudo: false
-install: .travis/install-deps
+
+cache:
+  directories:
+    - $HOME/.ghc
+    - $HOME/.cabal
+
+before_cache:
+  - for pkg in $PACKAGES; do cabal_uninstall $pkg; done
+  - rm -fv $HOME/.cabal/packages/hackage.haskell.org/build-reports.log
+  - rm -fv $HOME/.cabal/packages/hackage.haskell.org/00-index.tar
+
+matrix:
+  include:
+    - env: CABALVER=1.18 GHCVER=7.8.4
+      compiler: ": #GHC 7.8.4"
+      addons: {apt: {packages: [cabal-install-1.18,ghc-7.8.4,happy-1.19.5], sources: [hvr-ghc]}}
+
+    - env: CABALVER=1.22 GHCVER=7.10.3
+      compiler: ": #GHC 7.10.3"
+      addons: {apt: {packages: [cabal-install-1.22,ghc-7.10.3,happy-1.19.5], sources: [hvr-ghc]}}
+
+    - env: CABALVER=1.24 GHCVER=8.0.1
+      compiler: ": #GHC 8.0.1"
+      addons: {apt: {packages: [cabal-install-1.24,ghc-8.0.1,happy-1.19.5], sources: [hvr-ghc]}}
+
+  allow_failures:
+    - env: CABALVER=1.24 GHCVER=8.0.1
+
+before_install:
+  - unset CC
+  - export PATH=$HOME/.cabal/bin:/opt/ghc/$GHCVER/bin:/opt/cabal/$CABALVER/bin:$PATH
+  - export PACKAGES="lambdabot-core/ lambdabot-trusted/ lambdabot-*-plugins/ lambdabot/"
+  - function cabal_uninstall() {
+      echo Uninstalling $1;
+      rm -rf $(ghc-pkg describe $1 | sed -En 's/^(library-dirs|data-dir|haddock-html)..//p');
+      ghc-pkg unregister --force $1 2>/dev/null;
+    }
+
+install:
+  - travis_retry cabal update
+  - if [ -f $HOME/.cabal/packages/hackage.haskell.org/00-index.tar.gz ]; then
+      zcat $HOME/.cabal/packages/hackage.haskell.org/00-index.tar.gz >
+           $HOME/.cabal/packages/hackage.haskell.org/00-index.tar;
+    fi
+  - for pkg in $(ghc-pkg list --user --simple-output); do echo $pkg; done | sort | tee packages-installed
+  - cabal install --only-dependencies --global --dry-run $PACKAGES | tee packages-needed
+  - sed 's/ (.*)//' packages-needed | grep -v ' ' | sort > packages-needed-sorted
+  - for pkg in $(comm -23 packages-installed packages-needed-sorted); do cabal_uninstall $pkg; done
+  - for pkg in $(ghc-pkg check --simple-output); do cabal_uninstall $pkg; done
+  - echo "broken packages $(ghc-pkg check --simple-output) (should be empty)"
+  - cabal install --only-dependencies --enable-tests $PACKAGES
+
+script:
+  - cabal install lambdabot-core/ lambdabot-trusted/ lambdabot-*-plugins/ lambdabot/
+
 branches:
   only:
     - master

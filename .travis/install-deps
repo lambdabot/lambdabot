@@ -1,5 +1,0 @@
-#!/usr/bin/env bash
-
-set -e
-
-cabal install --only-dependencies --enable-tests lambdabot-core/ lambdabot-trusted/ lambdabot-*-plugins/ lambdabot/
