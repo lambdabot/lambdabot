@@ -66,7 +66,7 @@ foldFreeVars var sum e = runReader (go e) S.empty where
     go d = collect (gmapQ go d)
 
     collect :: forall m. Monad m => [m a] -> m a
-    collect ms = sum <$> sequence ms
+    collect ms = sum `liftM` sequence ms
 
     bind :: forall a b. Ord a => [S.Set a] -> Reader (S.Set a) b -> Reader (S.Set a) b
     bind ss = local (S.unions ss `S.union`)
@@ -121,7 +121,7 @@ renameBinds subst bv d = (subst', bv', d') where
     go = base `extM` pat `extM` match `extM` decl `extM` exp
     base d = gmapM go d
 
-    pat (PVar name) = PVar <$> rename name
+    pat (PVar name) = PVar `fmap` rename name
     pat d = base d
 
     match (Match sloc name ps typ exp bs) = do
@@ -158,7 +158,7 @@ freshNameAvoiding name forbidden  = con (pre ++ suf) where
          Symbol n -> (Symbol, n, "?#")
     pre = reverse . dropWhile (`elem` cs) . reverse $ nm
     sufs = [1..] >>= flip replicateM cs
-    suf = head $ dropWhile (\suf -> con (pre ++ suf) `elem` forbidden) sufs
+    suf = head $ dropWhile (\suf -> con (pre ++ suf) `S.member` forbidden) sufs
 
 ---- Optimization (removing explicit lambdas) and restoration of infix ops ----
 
