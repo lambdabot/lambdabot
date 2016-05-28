@@ -3,15 +3,15 @@
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE TemplateHaskell #-}
 -- | Extensible configuration system for lambdabot
--- 
+--
 -- TODO: there's notthing lambdabot-specific about this, it could be a useful standalone library.
 module Lambdabot.Config
     ( Config
     , getConfigDefault
     , mergeConfig
-    
+
     , MonadConfig(..)
-    
+
     , config
     , configWithMerge
     ) where
@@ -40,7 +40,7 @@ instance GEq Config where
         geq k1 k2'
 
 instance GCompare Config where
-    gcompare (Config k1 _ _) (Config k2 _ _) = 
+    gcompare (Config k1 _ _) (Config k2 _ _) =
         case compare t1 t2 of
             LT -> GLT
             EQ -> fromMaybe typeErr $ do
@@ -50,7 +50,7 @@ instance GCompare Config where
         where
             t1 = typeOf1 k1
             t2 = typeOf1 k2
-            
+
             typeErr = error "TypeReps claim to be equal but cast failed"
 
 getConfigDefault :: Config t -> t
@@ -66,9 +66,9 @@ instance  MonadConfig m            => MonadConfig (ReaderT r m) where getConfig 
 instance (MonadConfig m, Monoid w) => MonadConfig (WriterT w m) where getConfig = lift . getConfig
 instance  MonadConfig m            => MonadConfig (StateT  s m) where getConfig = lift . getConfig
 
--- |Define a new configuration key with the specified name, type and 
+-- |Define a new configuration key with the specified name, type and
 -- default value
--- 
+--
 -- You should probably also provide an explicit export list for any
 -- module that defines config keys, because the definition introduces
 -- a few extra types that will clutter up the export list otherwise.
@@ -77,7 +77,7 @@ config = configWithMerge [| flip const |]
 
 -- |Like 'config', but also allowing you to specify a \"merge rule\"
 -- that will be used to combine multiple bindings of the same key.
--- 
+--
 -- For example, in "Lambdabot.Config.Core", 'onStartupCmds' is
 -- defined as a list of commands to execute on startup.  Its default
 -- value is ["offlinerc"], so if a user invokes the default lambdabot
@@ -85,7 +85,7 @@ config = configWithMerge [| flip const |]
 -- of "-e" on the command-line adds a binding of the form:
 --
 -- > onStartupCmds :=> [command]
--- 
+--
 -- So if they give one "-e", it replaces the default (note that it
 -- is _not_ merged with the default - the default is discarded), and
 -- if they give more than one they are merged using the specified
