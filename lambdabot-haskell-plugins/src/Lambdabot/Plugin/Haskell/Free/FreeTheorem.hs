@@ -51,7 +51,9 @@ extractTypes env (TyCons c ts)
 freeTheoremStr :: (Monad m) => (String -> m String) -> String -> m String
 freeTheoremStr tf s
     = case parse (do
-                    Just (QVarId v) <- getToken
+                    v <- getToken >>= \v -> case v of
+                       Just (QVarId v) -> return v
+                       _ -> fail "Try `free <ident>` or `free <ident> :: <type>`"
                     (mplus (do match OpColonColon
                                t <- parseType
                                return $ Left (v,t))
@@ -289,5 +291,7 @@ freeTheorem' env e1 e2 t'@(TyCons c@"Either" ts@[_,_])
                             (EBuiltin $ BMap c) fts) e1) e2
         return (foldr (\((f,t),e1) e2 -> ThForall f t (ThImplies e1 e2))
                 thf fts)
+
+freeTheorem' env e1 e2 t'@_ = fail "Sorry, this type is too difficult for me."
 
 -- vim: ts=4:sts=4:expandtab:ai
