@@ -105,10 +105,8 @@ configWithMerge mergeQ nameStr tyQ defValQ = do
 
             keyName :: Config $(tyQ)
             keyName = Config ConName $(defValQ) $(mergeQ) |]
-    ts <- concat <$> sequence
+    concat <$> sequence
         [ return decs
         , deriveGEq (head decs)
         , deriveGCompare (head decs)
         ]
-    runIO $ print ts
-    return ts
