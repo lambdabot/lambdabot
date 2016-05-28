@@ -92,6 +92,7 @@ library
                         regex-tdfa              >= 1.1,
                         SafeSemaphore           >= 0.9,
                         split                   >= 0.2,
+                        syb                     >= 0.3,
                         template-haskell        >= 2.7,
                         transformers            >= 0.2,
                         transformers-base       >= 0.4,

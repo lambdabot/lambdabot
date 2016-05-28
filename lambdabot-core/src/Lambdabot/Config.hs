@@ -1,5 +1,6 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE GADTs #-}
+{-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE TemplateHaskell #-}
 -- | Extensible configuration system for lambdabot
 -- 
@@ -25,6 +26,7 @@ import Data.GADT.Compare
 import Data.GADT.Compare.TH
 import Data.Maybe
 import Data.Typeable
+import Data.Generics (everywhere, mkT)
 import Language.Haskell.TH
 
 data Config t where Config :: (Typeable1 k, GCompare k) => !(k t) -> t -> (t -> t -> t) -> Config t
@@ -93,27 +95,20 @@ configWithMerge mergeQ nameStr tyQ defValQ = do
     let keyName = mkName nameStr
     tyName      <- newName (map toUpper nameStr)
     conName     <- newName (map toUpper nameStr)
-    tyVarName   <- newName "a'"
-    
-    ty          <- tyQ
-    defVal      <- defValQ
-    mergeExpr   <- mergeQ
-    let tyDec   = DataD [] tyName [PlainTV tyVarName] [ForallC [] [mkEqualP (VarT tyVarName) ty] (NormalC conName [])] [''Typeable]
-        keyDecs =
-            [ SigD keyName (AppT (ConT ''Config) ty)
-            , ValD (VarP keyName) (NormalB (ConE 'Config `AppE` ConE conName `AppE` defVal `AppE` mergeExpr)) []
-            ]
-    
-    concat <$> sequence
-        [ return [tyDec]
-        , return keyDecs
-        , deriveGEq tyDec
-        , deriveGCompare tyDec
-        ]
+    let patchNames :: Name -> Name
+        patchNames (nameBase -> "keyName") = keyName
+        patchNames (nameBase -> "TyName")  = tyName
+        patchNames (nameBase -> "ConName") = conName
+        patchNames d = d
+    decs <- everywhere (mkT patchNames) <$>
+        [d| data TyName a = a ~ $(tyQ) => ConName deriving Typeable
 
-mkEqualP :: Type -> Type -> Pred
-#if __GLASGOW_HASKELL__ > 708
-mkEqualP t1 t2 = EqualityT `AppT` t1 `AppT` t2
-#else
-mkEqualP = EqualP
-#endif
+            keyName :: Config $(tyQ)
+            keyName = Config ConName $(defValQ) $(mergeQ) |]
+    ts <- concat <$> sequence
+        [ return decs
+        , deriveGEq (head decs)
+        , deriveGCompare (head decs)
+        ]
+    runIO $ print ts
+    return ts
