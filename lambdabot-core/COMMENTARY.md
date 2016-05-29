@@ -2,7 +2,7 @@ COMMENTARY ON LAMBDABOT
 =======================
 
 Basic concepts
-------------
+--------------
 
 Lambdabot's functionality is provided by a "core" that provides message routing and some basic infrastructure for several "plugins", which implement specific user-facing behaviors.  The core makes some assumptions about the nature of those behaviors.  The following, in no particular order, are some of the central concepts of the lambdabot design:
 
@@ -19,7 +19,7 @@ Lambdabot's functionality is provided by a "core" that provides message routing 
 - Callbacks.  Plugins can register callbacks to react to non-chat messages such as nick changes, join/part events, etc.
 
 User code execution
---------------------
+-------------------
 
 Lambdabot provides the ability to execute user-supplied Haskell code.  This is obviously a somewhat risky thing to do.  We use 2 main mechanisms to mitigate this risk:
 
@@ -52,37 +52,39 @@ To set a config value, add a binding to the configuration parameter of `lambdabo
     {- import your plugins here -}
     
     main = lambdabotMain myPlugins 
-        [ configKey  :=> value
-        , anotherKey :=> anotherValue
+        [ configKey  ==> value
+        , anotherKey ==> anotherValue
         ]
 
 Any key not listed will be assigned the default value specified in its original declaration.
 
-Source layout and module heirarchy
+Source layout and module hierarchy
 ----------------------------------
 
+**outdated**: this section predates the split of lambdabot into several subpackages
+
 - src/
--- Lambdabot.Compat.*
+  - Lambdabot.Compat.*
 
-Modules supporting backward-compatibility with older versions of lambdabot (mostly functions to read old serialization formats)
+    Modules supporting backward-compatibility with older versions of lambdabot (mostly functions to read old serialization formats)
 
--- Lambdabot.Config.*
+  - Lambdabot.Config.*
 
-Currently only "Core", this module defines the configuration keys for the lambdabot core system.  Packages providing additional plugins are encouraged to use this namespace (or the module in which they are used, if they prefer) for additional configuration key definitions.  The configuration system is described above.
+    Currently only "Core", this module defines the configuration keys for the lambdabot core system.  Packages providing additional plugins are encouraged to use this namespace (or the module in which they are used, if they prefer) for additional configuration key definitions.  The configuration system is described above.
 
--- Lambdabot.Plugin.*
+  - Lambdabot.Plugin.*
 
-As the name suggests, all lambdabot plugins are defined in modules under this namespace.
+    As the name suggests, all lambdabot plugins are defined in modules under this namespace.
 
--- Lambdabot.Util.*
+  - Lambdabot.Util.*
 
-Utility functions for use by lambdabot plugins.  This is not considered a stable public interface; I am actively working on eliminating them in favor of external libraries that provide equivalent functionality.
+    Utility functions for use by lambdabot plugins.  This is not considered a stable public interface; I am actively working on eliminating them in favor of external libraries that provide equivalent functionality.
 
--- Lambdabot, Lambdabot.*
+  - Lambdabot, Lambdabot.*
 
-The core lambdabot system.  Like the Util namespace, these are not especially stable right now.
+    The core lambdabot system.  Like the Util namespace, these are not especially stable right now.
 
 - main/
 
-Defines the main lambdabot executable, usable either as-is or as a template for a customized executable.
+  Defines the main lambdabot executable, usable either as-is or as a template for a customized executable.
 
