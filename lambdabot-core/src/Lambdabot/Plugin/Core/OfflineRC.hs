@@ -20,6 +20,7 @@ import qualified Data.Set as S
 import System.Console.Haskeline (InputT, Settings(..), runInputT, defaultSettings, getInputLine)
 import System.IO
 import System.Timeout.Lifted
+import Codec.Binary.UTF8.String
 
 -- We need to track the number of active sourcings so that we can
 -- unregister the server (-> allow the bot to quit) when it is not
@@ -72,19 +73,21 @@ feed msg = do
             '>':xs -> cmdPrefix ++ "run " ++ xs
             '!':xs -> xs
             _      -> cmdPrefix ++ dropWhile (== ' ') msg
+    -- note that `msg'` is unicode, but lambdabot wants utf-8 lists of bytes
     lb . void . timeout (15 * 1000 * 1000) . received $
               IrcMessage { ircMsgServer = "offlinerc"
                          , ircMsgLBName = "offline"
                          , ircMsgPrefix = "null!n=user@null"
                          , ircMsgCommand = "PRIVMSG"
-                         , ircMsgParams = ["offline", ":" ++ msg' ] }
+                         , ircMsgParams = ["offline", ":" ++ encodeString msg' ] }
 
 handleMsg :: IrcMessage -> OfflineRC ()
 handleMsg msg = liftIO $ do
     let str = case (tail . ircMsgParams) msg of
             []    -> []
             (x:_) -> tail x
-    hPutStrLn stdout str
+    -- str contains utf-8 list of bytes; convert to unicode
+    hPutStrLn stdout (decodeString str)
     hFlush stdout
 
 replLoop :: InputT OfflineRC ()

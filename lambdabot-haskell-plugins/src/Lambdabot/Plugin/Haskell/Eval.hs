@@ -61,7 +61,7 @@ args load src exts trusted = concat
     , map ("-s" ++) trusted
     , map ("-X" ++) exts
     , ["--no-imports", "-l", load]
-    , ["--expression=" ++ src]
+    , ["--expression=" ++ decodeString src]
     , ["+RTS", "-N", "-RTS"]
     ]
 

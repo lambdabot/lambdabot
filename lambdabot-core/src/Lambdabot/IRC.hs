@@ -26,6 +26,8 @@ import Data.List.Split
 import Control.Monad (liftM2)
 
 -- | An IRC message is a server, a prefix, a command and a list of parameters.
+--
+-- Note that the strings here are treated as lists of bytes!
 data IrcMessage
   = IrcMessage {
         ircMsgServer   :: !String,
