@@ -1,5 +1,5 @@
 name:                   lambdabot-reference-plugins
-version:                5.0.3
+version:                5.1
 
 license:                GPL
 license-file:           LICENSE
@@ -34,7 +34,7 @@ homepage:               http://haskell.org/haskellwiki/Lambdabot
 
 build-type:             Simple
 cabal-version:          >= 1.8
-tested-with:            GHC == 7.6.3, GHC == 7.8.3
+tested-with:            GHC == 7.8.4, GHC == 7.10.3
 
 source-repository head
   type:                 git
@@ -67,7 +67,7 @@ library
                         bytestring              >= 0.9,
                         containers              >= 0.4,
                         HTTP                    >= 4000,
-                        lambdabot-core          >= 5.0.3 && < 5.1,
+                        lambdabot-core          >= 5.1 && < 5.2,
                         mtl                     >= 2,
                         oeis                    >= 0.3.1,
                         process                 >= 1.1,

@@ -1,5 +1,5 @@
 name:                   lambdabot-trusted
-version:                5.0.2.1
+version:                5.1
 
 license:                GPL
 license-file:           LICENSE
@@ -19,7 +19,7 @@ homepage:               http://haskell.org/haskellwiki/Lambdabot
 
 build-type:             Simple
 cabal-version:          >= 1.8
-tested-with:            GHC == 7.6.3, GHC == 7.8.3
+tested-with:            GHC == 7.8.4, GHC == 7.10.3
 
 source-repository head
   type:                 git
