@@ -81,12 +81,18 @@ encodeMessage msg
           . encodeParams (ircMsgParams msg)
   where
     encodePrefix [] = id
-    encodePrefix prefix = showChar ':' . showString prefix . showChar ' '
+    encodePrefix prefix = showChar ':' . showString' prefix . showChar ' '
 
     encodeCommand cmd = showString cmd
 
     encodeParams [] = id
-    encodeParams (p:ps) = showChar ' ' . showString p . encodeParams ps
+    encodeParams (p:ps) = showChar ' ' . showString' p . encodeParams ps
+
+    -- IrcMessage is supposed to contain strings that are lists of bytes, but
+    -- if a plugin messes up the encoding then we may end up with arbitrary
+    -- Unicode codepoints. This is dangerous (\x10a would produce a newline!),
+    -- so we sanitize the message here.
+    showString' = showString . map (\c -> if c > '\xFF' then '?' else c)
 
 -- | 'decodeMessage' Takes an input line from the IRC protocol stream
 --   and decodes it into a message.  TODO: this has too many parameters.
