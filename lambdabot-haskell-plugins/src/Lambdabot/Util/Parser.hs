@@ -8,7 +8,7 @@ module Lambdabot.Util.Parser
     ) where
 
 import Data.Generics
-import Language.Haskell.Exts
+import Language.Haskell.Exts.Simple
 
 -- |Parse a string as an 'Exp' or a 'Decl', apply the given generic transformation to it,
 -- and re-render it back to text.

@@ -9,7 +9,7 @@ import Lambdabot.Util.Parser (withParsed)
 import Control.Monad
 import Data.Generics
 import qualified Data.Set as Set
-import Language.Haskell.Exts.Syntax hiding (Module)
+import Language.Haskell.Exts.Simple.Syntax hiding (Module)
 
 undoPlugin :: Module ()
 undoPlugin = newModule
@@ -43,10 +43,10 @@ undo v (Do stms) = f stms
     f [Qualifier e]          = e
     f (Qualifier e     : xs) = infixed e ">>" $ f xs
     f (LetStmt   ds    : xs) = Let ds $ f xs
-    f (Generator s p e : xs)
-        | irrefutable p = infixed e ">>=" $ Lambda s [p] $ f xs
+    f (Generator p e : xs)
+        | irrefutable p = infixed e ">>=" $ Lambda [p] $ f xs
         | otherwise     = infixed e ">>=" $
-                            Lambda s [pvar v] $
+                            Lambda [pvar v] $
                                 Case (var v)
                                     [ alt p (f xs)
                                     , alt PWildCard $
@@ -54,22 +54,22 @@ undo v (Do stms) = f stms
                                             (var "fail")
                                             (Lit $ String "")
                                     ]
-        where alt pat x = Alt s pat (UnGuardedRhs x) Nothing
+        where alt pat x = Alt pat (UnGuardedRhs x) Nothing
     f _ = error "Undo plugin error: can't undo!"
 undo v (ListComp e stms) = f stms
  where
     f []                                = List [e]
     f (QualStmt (Qualifier g    ) : xs) = If g (f xs) nil
     f (QualStmt (LetStmt   ds   ) : xs) = Let ds $ f xs
-    f (QualStmt (Generator s p l) : xs)
-        | irrefutable p = concatMap' $ Lambda s [p] $ f xs
+    f (QualStmt (Generator p l) : xs)
+        | irrefutable p = concatMap' $ Lambda [p] $ f xs
         | otherwise     = concatMap' $
-                            Lambda s [pvar v] $
+                            Lambda [pvar v] $
                                 Case (var v)
                                     [ alt p (f xs)
                                     , alt PWildCard nil
                                     ]
-        where alt pat x = Alt s pat (UnGuardedRhs x) Nothing
+        where alt pat x = Alt pat (UnGuardedRhs x) Nothing
               concatMap' fun = App (App (var "concatMap") (Paren fun)) l
     f _ = error "Undo plugin error: can't undo!"
 undo _ x           = x
@@ -101,16 +101,16 @@ do' v e@(InfixApp l (QVarOp (UnQual (Symbol op))) r) =
      case op of
          ">>=" ->
              case r of
-                 (Lambda loc [p] (Do stms)) -> Do (Generator loc p l : stms)
-                 (Lambda loc [PVar v1] (Case (Var (UnQual v2))
-                                            [ Alt _ p (UnGuardedRhs s) Nothing
-                                            , Alt _ PWildCard (UnGuardedRhs (App (Var (UnQual (Ident "fail"))) _)) Nothing
+                 (Lambda [p] (Do stms)) -> Do (Generator p l : stms)
+                 (Lambda [PVar v1] (Case (Var (UnQual v2))
+                                            [ Alt p (UnGuardedRhs s) Nothing
+                                            , Alt PWildCard (UnGuardedRhs (App (Var (UnQual (Ident "fail"))) _)) Nothing
                                             ]))
                            | v1 == v2           -> case s of
-                                                       Do stms -> Do (Generator loc p l : stms)
-                                                       _         -> Do [Generator loc p l, Qualifier s]
-                 (Lambda loc [p] s)           -> Do [Generator loc p l, Qualifier s]
-                 _ -> Do [ Generator undefined (pvar v) l
+                                                       Do stms -> Do (Generator p l : stms)
+                                                       _         -> Do [Generator p l, Qualifier s]
+                 (Lambda [p] s)           -> Do [Generator p l, Qualifier s]
+                 _ -> Do [ Generator (pvar v) l
                            , Qualifier . app r $ var v]
          ">>" ->
              case r of

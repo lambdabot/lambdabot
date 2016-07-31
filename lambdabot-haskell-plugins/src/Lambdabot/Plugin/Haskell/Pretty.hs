@@ -17,8 +17,8 @@ module Lambdabot.Plugin.Haskell.Pretty (prettyPlugin) where
 import Lambdabot.Plugin
 
 import Data.List
-import qualified Language.Haskell.Exts as Hs
-import Language.Haskell.Exts hiding (Module, Pretty)
+import qualified Language.Haskell.Exts.Simple as Hs
+import Language.Haskell.Exts.Simple hiding (Module, Pretty)
 
 type Pretty = ModuleT () LB
 
@@ -51,16 +51,16 @@ prettyCmd rest =
 -- the indentation calculations are still pretty much rough guesswork.
 -- i'll have to figure out a way to do some _reliable_ pretty-printing!
 doPretty :: Hs.Module -> [String]
-doPretty (Hs.Module _ _ _ _ _ _ decls) =
+doPretty (Hs.Module _ _ _ decls) =
     let defaultLen = 4
         declLen (FunBind mtches)   = maximum $ map matchLen mtches
-        declLen (PatBind _ pat _ _) = patLen pat
+        declLen (PatBind pat _ _) = patLen pat
         declLen _  = defaultLen
         patLen (PVar nm) = nameLen nm
         patLen  _  = defaultLen
         nameLen (Ident s)  = length s + 1
         nameLen _  = defaultLen
-        matchLen (Match _ nm pats _ _ _) =
+        matchLen (Match nm pats _ _) =
             let l = (nameLen nm + sum (map patLen pats) + 1)
             in if l > 16 then defaultLen else l
         makeMode decl = defaultMode {
@@ -73,7 +73,7 @@ doPretty (Hs.Module _ _ _ _ _ _ decls) =
             caseIndent   = 4,
             onsideIndent = 0
         }
-        prettyDecl (PatBind _ (PVar (Ident "__expr__")) (UnGuardedRhs e) Nothing) -- pretty printing an expression
+        prettyDecl (PatBind (PVar (Ident "__expr__")) (UnGuardedRhs e) Nothing) -- pretty printing an expression
                      = prettyPrintWithMode (makeModeExp e) e
         prettyDecl d = prettyPrintWithMode (makeMode d) d
     -- TODO: prefixing with hashes is done, because i didn't find a way

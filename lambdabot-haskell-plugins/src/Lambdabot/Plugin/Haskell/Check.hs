@@ -6,7 +6,7 @@ module Lambdabot.Plugin.Haskell.Check (checkPlugin) where
 
 import Lambdabot.Plugin
 import Lambdabot.Plugin.Haskell.Eval (runGHC)
-import qualified Language.Haskell.Exts as Hs
+import qualified Language.Haskell.Exts.Simple as Hs
 
 checkPlugin :: Module ()
 checkPlugin = newModule

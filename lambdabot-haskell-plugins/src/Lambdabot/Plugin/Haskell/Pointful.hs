@@ -15,7 +15,7 @@ import qualified Data.Set as S
 import qualified Data.Map as M
 import Data.List
 import Data.Maybe
-import Language.Haskell.Exts as Hs
+import Language.Haskell.Exts.Simple as Hs
 
 pointfulPlugin :: Lmb.Module ()
 pointfulPlugin = newModule
@@ -30,17 +30,14 @@ pointfulPlugin = newModule
 
 ---- Utilities ----
 
-unkLoc :: SrcLoc
-unkLoc = SrcLoc "<new>" 1 1
-
 stabilize :: Eq a => (a -> a) -> a -> a
 stabilize f x = let x' = f x in if x' == x then x else stabilize f x'
 
 -- varsBoundHere returns variables bound by top patterns or binders
 varsBoundHere :: Data d => d -> S.Set Name
 varsBoundHere (cast -> Just (PVar name)) = S.singleton name
-varsBoundHere (cast -> Just (Match _ name _ _ _ _)) = S.singleton name
-varsBoundHere (cast -> Just (PatBind _ pat _ _)) = varsBoundHere pat
+varsBoundHere (cast -> Just (Match name _ _ _)) = S.singleton name
+varsBoundHere (cast -> Just (PatBind pat _ _)) = varsBoundHere pat
 varsBoundHere (cast -> Just (_ :: Exp)) = S.empty
 varsBoundHere d = S.unions (gmapQ varsBoundHere d)
 
@@ -53,15 +50,15 @@ foldFreeVars var sum e = runReader (go e) S.empty where
     go :: forall d. Data d => d -> Reader (S.Set Name) a
     go (cast -> Just (Var (UnQual name))) =
         asks (var name)
-    go (cast -> Just (Lambda _ ps exp)) =
+    go (cast -> Just (Lambda ps exp)) =
         bind [varsBoundHere ps] $ go exp
     go (cast -> Just (Let bs exp)) =
         bind [varsBoundHere bs] $ collect [go bs, go exp]
-    go (cast -> Just (Alt _ pat exp bs)) =
+    go (cast -> Just (Alt pat exp bs)) =
         bind [varsBoundHere pat, varsBoundHere bs] $ collect [go exp, go bs]
-    go (cast -> Just (PatBind _ pat exp bs)) =
+    go (cast -> Just (PatBind pat exp bs)) =
         bind [varsBoundHere pat, varsBoundHere bs] $ collect [go exp, go bs]
-    go (cast -> Just (Match _ _ ps _ exp bs)) =
+    go (cast -> Just (Match _ ps exp bs)) =
         bind [varsBoundHere ps, varsBoundHere bs] $ collect [go exp, go bs]
     go d = collect (gmapQ go d)
 
@@ -89,28 +86,28 @@ substAvoiding subst bv = base `extT` exp `extT` alt `extT` decl `extT` match whe
 
     exp e@(Var (UnQual name)) =
         fromMaybe e (M.lookup name subst)
-    exp (Lambda sloc ps exp) =
+    exp (Lambda ps exp) =
         let (subst', bv', ps') = renameBinds subst bv ps
-        in  Lambda sloc ps' (substAvoiding subst' bv' exp)
+        in  Lambda ps' (substAvoiding subst' bv' exp)
     exp (Let bs exp) =
         let (subst', bv', bs') = renameBinds subst bv bs
         in  Let (substAvoiding subst' bv' bs') (substAvoiding subst' bv' exp)
     exp d = base d
 
-    alt (Alt sloc pat exp bs) =
+    alt (Alt pat exp bs) =
         let (subst1, bv1, pat') = renameBinds subst bv pat
             (subst', bv', bs') = renameBinds subst1 bv1 bs
-        in  Alt sloc pat' (substAvoiding subst' bv' exp) (substAvoiding subst' bv' bs')
+        in  Alt pat' (substAvoiding subst' bv' exp) (substAvoiding subst' bv' bs')
 
-    decl (PatBind sloc pat exp bs) =
+    decl (PatBind pat exp bs) =
         let (subst', bv', bs') = renameBinds subst bv bs in
-        PatBind sloc pat (substAvoiding subst' bv' exp) (substAvoiding subst' bv' bs')
+        PatBind pat (substAvoiding subst' bv' exp) (substAvoiding subst' bv' bs')
     decl d = base d
 
-    match (Match sloc name ps typ exp bs) =
+    match (Match name ps exp bs) =
         let (subst1, bv1, ps') = renameBinds subst bv ps
             (subst', bv', bs') = renameBinds subst1 bv1 bs
-        in  Match sloc name ps' typ (substAvoiding subst' bv' exp) (substAvoiding subst' bv' bs')
+        in  Match name ps' (substAvoiding subst' bv' exp) (substAvoiding subst' bv' bs')
 
 -- rename local binders (but not the nested expressions)
 renameBinds :: Data d => M.Map Name Exp -> S.Set Name -> d -> (M.Map Name Exp, S.Set Name, d)
@@ -124,13 +121,13 @@ renameBinds subst bv d = (subst', bv', d') where
     pat (PVar name) = PVar `fmap` rename name
     pat d = base d
 
-    match (Match sloc name ps typ exp bs) = do
+    match (Match name ps exp bs) = do
         name' <- rename name
-        return $ Match sloc name' ps typ exp bs
+        return $ Match name' ps exp bs
 
-    decl (PatBind sloc pat exp bs) = do
+    decl (PatBind pat exp bs) = do
         pat' <- go pat
-        return $ PatBind sloc pat' exp bs
+        return $ PatBind pat' exp bs
     decl d = base d
 
     exp (e :: Exp) = return e
@@ -164,15 +161,15 @@ freshNameAvoiding name forbidden  = con (pre ++ suf) where
 
 -- move lambda patterns into LHS
 optimizeD :: Decl -> Decl
-optimizeD (PatBind locat (PVar fname) (UnGuardedRhs (Lambda _ pats rhs)) Nothing) =
+optimizeD (PatBind (PVar fname) (UnGuardedRhs (Lambda pats rhs)) Nothing) =
     let (subst, bv, pats') = renameBinds M.empty (S.singleton fname) pats
         rhs' = substAvoiding subst bv rhs
-    in  FunBind [Match locat fname pats' Nothing (UnGuardedRhs rhs') Nothing]
+    in  FunBind [Match fname pats' (UnGuardedRhs rhs') Nothing]
 ---- combine function binding and lambda
-optimizeD (FunBind [Match locat fname pats1 Nothing (UnGuardedRhs (Lambda _ pats2 rhs)) Nothing]) =
+optimizeD (FunBind [Match fname pats1 (UnGuardedRhs (Lambda pats2 rhs)) Nothing]) =
     let (subst, bv, pats2') = renameBinds M.empty (varsBoundHere pats1) pats2
         rhs' = substAvoiding subst bv rhs
-    in  FunBind [Match locat fname (pats1 ++ pats2') Nothing (UnGuardedRhs rhs') Nothing]
+    in  FunBind [Match fname (pats1 ++ pats2') (UnGuardedRhs rhs') Nothing]
 optimizeD x = x
 
 -- remove parens
@@ -182,23 +179,23 @@ optimizeRhs x = x
 
 optimizeE :: Exp -> Exp
 -- apply ((\x z -> ...x...) y) yielding (\z -> ...y...) if there is only one x or y is simple
-optimizeE (App (Lambda locat (PVar ident : pats) body) arg) | single || simple arg =
+optimizeE (App (Lambda (PVar ident : pats) body) arg) | single || simple arg =
      let (subst, bv, pats') = renameBinds (M.singleton ident arg) (freeVars arg) pats
-     in  Paren (Lambda locat pats' (substAvoiding subst bv body))
+     in  Paren (Lambda pats' (substAvoiding subst bv body))
   where
     single = countOcc ident body <= 1
     simple e = case e of Var _ -> True; Lit _ -> True; Paren e' -> simple e'; _ -> False
 -- apply ((\_ z -> ...) y) yielding (\z -> ...)
-optimizeE (App (Lambda locat (PWildCard : pats) body) _) =
-    Paren (Lambda locat pats body)
+optimizeE (App (Lambda (PWildCard : pats) body) _) =
+    Paren (Lambda pats body)
 -- remove 0-arg lambdas resulting from application rules
-optimizeE (Lambda _ [] b) =
+optimizeE (Lambda [] b) =
     b
 -- replace (\x -> \y -> z) with (\x y -> z)
-optimizeE (Lambda locat p1 (Lambda _ p2 body)) =
+optimizeE (Lambda p1 (Lambda p2 body)) =
     let (subst, bv, p2') = renameBinds M.empty (varsBoundHere p1) p2
         body' = substAvoiding subst bv body
-    in  Lambda locat (p1 ++ p2') body'
+    in  Lambda (p1 ++ p2') body'
 -- remove double parens
 optimizeE (Paren (Paren x)) =
     Paren x
@@ -206,15 +203,15 @@ optimizeE (Paren (Paren x)) =
 optimizeE (App (Paren (x@Lambda{})) y) =
     App x y
 -- remove lambda body parens
-optimizeE (Lambda l p (Paren x)) =
-    Lambda l p x
+optimizeE (Lambda p (Paren x)) =
+    Lambda p x
 -- remove var, lit parens
 optimizeE (Paren x@(Var _)) =
     x
 optimizeE (Paren x@(Lit _)) =
     x
 -- remove infix+lambda parens
-optimizeE (InfixApp a o (Paren l@(Lambda _ _ _))) =
+optimizeE (InfixApp a o (Paren l@(Lambda _ _))) =
     InfixApp a o l
 -- remove infix+app aprens
 optimizeE (InfixApp (Paren a@App{}) o l) =
@@ -228,8 +225,8 @@ optimizeE (App (Paren (App a b)) c) =
 optimizeE (App (App (Var name'@(UnQual (Symbol _))) l) r) =
     (InfixApp l (QVarOp name') r)
 -- eta reduce
-optimizeE (Lambda l ps@(_:_) (App e (Var (UnQual v))))
-    | free && last ps == PVar v = Lambda l (init ps) e
+optimizeE (Lambda ps@(_:_) (App e (Var (UnQual v))))
+    | free && last ps == PVar v = Lambda (init ps) e
   where free = countOcc v e == 0
 -- fail
 optimizeE x = x
@@ -243,10 +240,10 @@ uncomb' (Paren (Paren e)) = Paren e
 -- eliminate sections
 uncomb' (RightSection op' arg) =
     let a = freshNameAvoiding (Ident "a") (freeVars arg)
-    in  (Paren (Lambda unkLoc [PVar a] (InfixApp (Var (UnQual a)) op' arg)))
+    in  (Paren (Lambda [PVar a] (InfixApp (Var (UnQual a)) op' arg)))
 uncomb' (LeftSection arg op') =
     let a = freshNameAvoiding (Ident "a") (freeVars arg)
-    in  (Paren (Lambda unkLoc [PVar a] (InfixApp arg op' (Var (UnQual a)))))
+    in  (Paren (Lambda [PVar a] (InfixApp arg op' (Var (UnQual a)))))
 -- infix to prefix for canonicality
 uncomb' (InfixApp lf (QVarOp name') rf) =
     (Paren (App (App (Var name') (Paren lf)) (Paren rf)))
@@ -258,13 +255,13 @@ uncomb' (InfixApp lf (QVarOp name') rf) =
 uncomb' (App (Var (UnQual (Symbol ">>="))) (Paren lam@Lambda{})) =
    let a = freshNameAvoiding (Ident "a") (freeVars lam)
        b = freshNameAvoiding (Ident "b") (freeVars lam)
-   in  (Paren (Lambda unkLoc [PVar a, PVar b]
+   in  (Paren (Lambda [PVar a, PVar b]
            (App (App (Var (UnQual a)) (Paren (App lam (Var (UnQual b))))) (Var (UnQual b)))))
 -- rewrite: ((>>=) e1) (\x y -> e2)
 -- to:      (\a -> (\x y -> e2) (e1 a) a)
-uncomb' (App (App (Var (UnQual (Symbol ">>="))) e1) (Paren lam@(Lambda _ (_:_:_) _))) =
+uncomb' (App (App (Var (UnQual (Symbol ">>="))) e1) (Paren lam@(Lambda (_:_:_) _))) =
     let a = freshNameAvoiding (Ident "a") (freeVars [e1,lam])
-    in  (Paren (Lambda unkLoc [PVar a]
+    in  (Paren (Lambda [PVar a]
             (App (App lam (App e1 (Var (UnQual a)))) (Var (UnQual a)))))
 
 -- fail
@@ -274,9 +271,9 @@ uncomb' expr = expr
 combinators :: M.Map Name Exp
 combinators = M.fromList $ map declToTuple defs
   where defs = case parseModule combinatorModule of
-          ParseOk (Hs.Module _ _ _ _ _ _ d) -> d
+          ParseOk (Hs.Module _ _ _ d) -> d
           f@(ParseFailed _ _) -> error ("Combinator loading: " ++ show f)
-        declToTuple (PatBind _ (PVar fname) (UnGuardedRhs body) Nothing)
+        declToTuple (PatBind (PVar fname) (UnGuardedRhs body) Nothing)
           = (fname, Paren body)
         declToTuple _ = error "Pointful Plugin error: can't convert declaration to tuple"
 

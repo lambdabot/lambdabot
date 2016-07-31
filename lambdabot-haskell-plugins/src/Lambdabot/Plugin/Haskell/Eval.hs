@@ -15,7 +15,7 @@ import Control.Exception (try, SomeException)
 import Control.Monad
 import Data.List
 import Data.Ord
-import qualified Language.Haskell.Exts as Hs
+import qualified Language.Haskell.Exts.Simple as Hs
 import System.Directory
 import System.Exit
 import System.Process
@@ -115,9 +115,9 @@ define src = do
 -- merge the second module _into_ the first - meaning where merging doesn't
 -- make sense, the field from the first will be used
 mergeModules :: Hs.Module -> Hs.Module -> Hs.Module
-mergeModules (Hs.Module loc1 name1 pragmas1 warnings1  exports1 imports1 decls1)
-             (Hs.Module    _     _        _         _ _exports2 imports2 decls2)
-    = Hs.Module loc1 name1 pragmas1 warnings1 exports1
+mergeModules (Hs.Module  head1  exports1 imports1 decls1)
+             (Hs.Module _head2 _exports2 imports2 decls2)
+    = Hs.Module head1 exports1
         (mergeImports imports1 imports2)
         (mergeDecls   decls1   decls2)
     where
@@ -127,18 +127,18 @@ mergeModules (Hs.Module loc1 name1 pragmas1 warnings1  exports1 imports1 decls1)
         -- this is a very conservative measure... we really only even care about function names,
         -- because we just want to sort those together so clauses can be added in the right places
         -- TODO: find out whether the [Hs.Match] can contain clauses for more than one function (e,g. might it be a whole binding group?)
-        funcNamesBound (Hs.FunBind ms) = nub $ sort [ n | Hs.Match _ n _ _ _ _ <- ms]
+        funcNamesBound (Hs.FunBind ms) = nub $ sort [ n | Hs.Match n _ _ _ <- ms]
         funcNamesBound _ = []
 
 moduleProblems :: Hs.Module -> Maybe [Char]
-moduleProblems (Hs.Module _ _ pragmas _ _ _imports _decls)
+moduleProblems (Hs.Module _head pragmas _imports _decls)
     | safe `notElem` langs  = Just "Module has no \"Safe\" language pragma"
     | trusted `elem` langs  = Just "\"Trustworthy\" language pragma is set"
     | otherwise             = Nothing
     where
         safe    = Hs.name "Safe"
         trusted = Hs.name "Trustworthy"
-        langs = concat [ ls | Hs.LanguagePragma _ ls <- pragmas ]
+        langs = concat [ ls | Hs.LanguagePragma ls <- pragmas ]
 
 -- It parses. then add it to a temporary L.hs and typecheck
 comp :: MonadLB m => Hs.Module -> m String

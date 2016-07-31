@@ -16,14 +16,14 @@ import Lambdabot.Util.Parser (prettyPrintInLine)
 
 import Control.Applicative
 import Control.Monad
-import Language.Haskell.Exts as Hs hiding (tuple, var)
+import Language.Haskell.Exts.Simple as Hs hiding (tuple, var)
 
 unmtlPlugin :: Lmb.Module ()
 unmtlPlugin = newModule
     { moduleCmds = return
         [ (command "unmtl")
             { help = say "unroll mtl monads"
-            , process = say . either ("err: "++) prettyPrintInLine . mtlParser
+            , process = say . either ("err: " ++) prettyPrintInLine . mtlParser
             }
         ]
     }
@@ -125,7 +125,7 @@ tuple = liftM (TyTuple Boxed . concatMap unpack) . sequence
 
 -- a bit of a hack
 forall_ :: String -> (PType -> PType) -> PType
-forall_ x f = var ("forall "++x++".") $$ f (var x)
+forall_ x f = var ("forall " ++ x ++ ".") $$ f (var x)
 
 -----------------------------------------------------------
 -- Definitions from the MTL library
@@ -160,9 +160,9 @@ types =
 
 mtlParser :: String -> Either String Type
 mtlParser input = do
-    Hs.Module _ _ _ _ _ _ decls <- liftE $ parseModule ("type X = "++input++"\n")
+    Hs.Module _ _ _ decls <- liftE $ parseModule ("type X = " ++ input ++ "\n")
     hsType <- case decls of
-        (TypeDecl _ _ _ hsType:_) -> return hsType
+        (TypeDecl _ hsType:_) -> return hsType
         _ -> fail "No parse?"
     let result = mtlParser' hsType
     case pError result of
