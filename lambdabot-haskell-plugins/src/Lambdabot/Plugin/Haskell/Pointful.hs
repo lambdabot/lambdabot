@@ -1,4 +1,5 @@
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE ViewPatterns #-}
 -- Undo pointfree transformations. Plugin code derived from Pl.hs.
 module Lambdabot.Plugin.Haskell.Pointful (pointfulPlugin) where

@@ -1,3 +1,4 @@
+{-# LANGUAGE PatternSynonyms #-}
 {- | Pretty-Printing echo
 
 example:
