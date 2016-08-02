@@ -1,3 +1,4 @@
+{-# LANGUAGE PatternSynonyms #-}
 -- Copyright (c) 2006 Spencer Janssen
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
 
@@ -52,7 +53,7 @@ undo v (Do stms) = f stms
                                     , alt PWildCard $
                                         App
                                             (var "fail")
-                                            (Lit $ String "")
+                                            (Lit $ stringL "")
                                     ]
         where alt pat x = Alt pat (UnGuardedRhs x) Nothing
     f _ = error "Undo plugin error: can't undo!"
