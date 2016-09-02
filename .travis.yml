@@ -42,9 +42,6 @@ before_install:
       rm -rf $(ghc-pkg describe $1 | sed -En 's/^(library-dirs|data-dir|haddock-html)..//p');
       ghc-pkg unregister --force $1 2>/dev/null;
     }
-  - if [ "$GHCVER" = "8.0.1" ]; then
-      CABAL_INSTALL_FLAGS="--allow-newer=$(ghc-pkg list --global --names-only --simple-output | sed 's/ /,/g')";
-    fi
 
 install:
   - travis_retry cabal update
