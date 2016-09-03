@@ -55,7 +55,7 @@ offlineRCPlugin = newModule
             }
         , (command "rc")
             { privileged = True
-            , help = say "rc name. Read a file of commands (asynchonously). TODO: better name."
+            , help = say "rc name. Read a file of commands (asynchronously). TODO: better name."
             , process = \fn -> lift $ do
                 txt <- io $ readFile fn
                 io $ evaluate $ foldr seq () txt
