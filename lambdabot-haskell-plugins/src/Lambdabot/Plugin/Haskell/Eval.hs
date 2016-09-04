@@ -168,7 +168,6 @@ mergeModules (Hs.Module  head1  exports1 imports1 decls1)
         -- this is a very conservative measure... we really only even care about function names (FunBind),
         -- because we just want to sort those together so clauses can be added in the right places
         -- TODO: find out whether the [Hs.Match] can contain clauses for more than one function (e,g. might it be a whole binding group?)
-        funcNamesBound (Hs.TypeSig ms _) = ms
         funcNamesBound (Hs.FunBind ms) = nub $ sort [ n | Hs.Match n _ _ _ <- ms]
         funcNamesBound _ = []
 
