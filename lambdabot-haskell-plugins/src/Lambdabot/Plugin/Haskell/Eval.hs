@@ -33,7 +33,7 @@ evalPlugin = newModule
             }
         , (command "let")
             { aliases = ["define"] -- because @define always gets "corrected" to @undefine
-            , help = say "let <x> = <e>. Add a binding"
+            , help = say "let <x> = <e>. Add a binding."
             , process = lim80 . define
             }
         , (command "letlpaste")
@@ -41,13 +41,8 @@ evalPlugin = newModule
             , process = lim80 . defineFromLPaste
             }
         , (command "undefine")
-            { help = say "undefine. Reset evaluator local bindings"
-            , process = \s ->
-                if null s
-                    then do
-                        resetL_hs
-                        say "Undefined."
-                    else say "There's currently no way to undefine just one thing.  Say @undefine (with no extra words) to undefine everything."
+            { help = say "undefine [binding names]. Remove specific bindings by name or all of them when omitted."
+            , process = lim80 . undefine
             }
         ]
 
@@ -113,6 +108,51 @@ define src = do
                         Nothing  -> comp merged
         Hs.ParseFailed _loc err -> return ("Parse failed: " ++ err)
 
+undefine :: MonadLB m => String -> m String
+undefine [] = resetL_hs >> return "Undefined everything."
+undefine str = do
+    l <- findL_hs
+    res <- io (Hs.parseFile l)
+    case res of
+        Hs.ParseFailed loc err -> return (Hs.prettyPrint loc ++ ':' : err)
+        Hs.ParseOk lModule -> do
+            let newModule = foldr removeFromModule lModule names
+            comp newModule
+            artifact <- io (doesFileExist ".L.hs")
+            return $ if artifact
+                     then "Cannot undefine because " ++ (if length names == 1 then "it is" else "some are") ++ " needed elsewhere."
+                     else (if newModule == lModule then "Already undefined." else "Undefined.")
+    where
+        names = words str
+
+removeFromModule :: String -> Hs.Module -> Hs.Module
+removeFromModule name (Hs.Module head exports imports decls) = Hs.Module head exports imports $
+    filter (not . namedDecl) decls
+    where
+        namedDecl     (Hs.FunBind xs)             = any namedName [x | Hs.Match x _ _ _ <- xs]
+        namedDecl     (Hs.TypeSig xs _)           = any namedName xs
+        namedDecl     (Hs.TypeDecl x _)           = namedDeclHead x
+        namedDecl     (Hs.DataDecl _ _ x _ _)     = namedDeclHead x
+        namedDecl     (Hs.ClassDecl _ x _ _)      = namedDeclHead x
+        namedDecl     (Hs.InstDecl _ x _)         = namedInstRule x
+        namedDecl     _                           = False
+        namedPart     _                           = False
+        namedDeclHead (Hs.DHead x)                = namedName x
+        namedDeclHead (Hs.DHApp x _)              = namedDeclHead x
+        namedDeclHead _                           = False
+        namedInstRule (Hs.IParen x)               = namedInstRule x
+        namedInstRule (Hs.IRule _ _ x)            = namedInstHead x
+        namedInstRule _                           = False
+        namedInstHead (Hs.IHApp x _)              = namedInstHead x
+        namedInstHead (Hs.IHParen x)              = namedInstHead x
+        namedInstHead (Hs.IHCon x)                = namedQName x
+        namedInstHead (Hs.IHInfix _ x)            = namedQName x
+        namedInstHead _                           = False
+        namedQName    (Hs.Qual _ x)               = namedName x
+        namedQName    (Hs.UnQual x)               = namedName x
+        namedName     (Hs.Ident x)                = x == name
+        namedName     _                           = False
+
 -- merge the second module _into_ the first - meaning where merging doesn't
 -- make sense, the field from the first will be used
 mergeModules :: Hs.Module -> Hs.Module -> Hs.Module
@@ -125,9 +165,10 @@ mergeModules (Hs.Module  head1  exports1 imports1 decls1)
         mergeImports x y = nub (sortBy (comparing Hs.importModule) (x ++ y))
         mergeDecls x y = sortBy (comparing funcNamesBound) (x ++ y)
 
-        -- this is a very conservative measure... we really only even care about function names,
+        -- this is a very conservative measure... we really only even care about function names (FunBind),
         -- because we just want to sort those together so clauses can be added in the right places
         -- TODO: find out whether the [Hs.Match] can contain clauses for more than one function (e,g. might it be a whole binding group?)
+        funcNamesBound (Hs.TypeSig ms _) = ms
         funcNamesBound (Hs.FunBind ms) = nub $ sort [ n | Hs.Match n _ _ _ <- ms]
         funcNamesBound _ = []
 
