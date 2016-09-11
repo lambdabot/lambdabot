@@ -29,7 +29,7 @@ browseLB act = lb $ do
     liftIO . browse $ do
         setOutHandler (const (return ()))
         setErrHandler (const (return ()))
-        
+
         setAllowRedirects True
         setMaxRedirects (Just 5)
         setProxy proxy'

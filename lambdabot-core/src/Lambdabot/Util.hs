@@ -12,9 +12,9 @@ module Lambdabot.Util (
         expandTab,
         arePrefixesWithSpaceOf,
         arePrefixesOf,
-        
+
         io,
-        
+
         random,
         randomFailureMsg,
         randomSuccessMsg

@@ -31,7 +31,7 @@ djinnPlugin :: Module (Maybe DjinnEnv)
 djinnPlugin = newModule
     { moduleSerialize = Nothing
     , moduleDefState = return Nothing
-    
+
     -- gratuitous invocation at startup to let the user know if the command is missing
     , moduleInit = void (djinn [] "")
 
@@ -40,7 +40,7 @@ djinnPlugin = newModule
             { help = mapM_ say
                 [ "djinn <type>."
                 , "Generates Haskell code from a type."
-                , "http://darcs.augustsson.net/Darcs/Djinn"
+                , "https://github.com/augustss/djinn"
                 ]
             , process = rejectingCmds djinnCmd
             }

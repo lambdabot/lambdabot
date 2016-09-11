@@ -42,7 +42,7 @@ description:            Lambdabot is an IRC bot written over several years by
                         .
                         [unmtl] Expand monad transformers stacks.
 
-homepage:               http://haskell.org/haskellwiki/Lambdabot
+homepage:               https://wiki.haskell.org/Lambdabot
 
 build-type:             Simple
 cabal-version:          >= 1.8

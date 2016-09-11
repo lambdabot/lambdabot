@@ -24,7 +24,7 @@ filterPlugin = newModule
                 Just (name, path, descr)
         | (name, descr) <- filters
         ]
-        
+
     , moduleCmds = do
         activeFilters <- readMS
         return

@@ -24,7 +24,6 @@ elitePlugin = newModule
                  [] -> say "Say again?"
                  wds -> do let instr = map toLower (unwords wds)
                            say =<< io (translateLine instr)
-                           
             }
         ]
     }

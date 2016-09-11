@@ -9,19 +9,19 @@ module Lambdabot.Plugin
     ( Module(..)
     , ModuleT
     , newModule
-    
+
     , LB
     , MonadLB(..)
     , lim80
     , ios80
-    
+
     , ChanName
     , mkCN
     , getCN
-    
+
     , Nick(..)
     , ircPrivmsg
-    
+
     , module Lambdabot.Config
     , module Lambdabot.Config.Core
     , module Lambdabot.Command

@@ -1,7 +1,7 @@
-lambdabot ![Build Status](https://travis-ci.org/mokus0/lambdabot.png)
+lambdabot ![Build Status](https://travis-ci.org/lambdabot/lambdabot.png)
 ===============
 
-Lambdabot is an IRC bot written over several years by those on freenode's #haskell [IRC channel](http://www.haskell.org/haskellwiki/IRC_channel). It also operates in an offline mode as a Haskell development tool, and embedded as an extension to ghci.
+Lambdabot is an IRC bot written over several years by those on freenode's #haskell [IRC channel](https://wiki.haskell.org/IRC_channel). It also operates in an offline mode as a Haskell development tool, and embedded as an extension to ghci.
 
 PREREQUISITES
 -------------
@@ -90,7 +90,7 @@ Bug reports, patches, new modules etc., open issues on GitHub or contact:
 REPOSITORY
 ==========
 
-    git clone https://github.com/mokus0/lambdabot
+    git clone https://github.com/lambdabot/lambdabot
 
 CONTRIBUTING
 ============

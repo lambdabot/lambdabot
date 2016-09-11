@@ -34,7 +34,7 @@ type Pl = ModuleT PlState LB
 plPlugin :: Module (GlobalPrivate () (Int, TopLevel))
 plPlugin = newModule
     { moduleDefState = return $ mkGlobalPrivate 15 ()
-    
+
     , moduleCmds = return
         [ (command "pointless")
             { aliases = ["pl"]

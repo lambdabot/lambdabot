@@ -58,7 +58,7 @@ dummyHelp s = case s of
 dummylst :: [(String, String -> String)]
 dummylst =
     [("dummy"      , const "dummy")
-    ,("bug"        , const "http://hackage.haskell.org/trac/ghc/newticket?type=bug")
+    ,("bug"        , const "https://hackage.haskell.org/trac/ghc/newticket?type=bug")
     ,("id"         , (' ' :) . id)
     ,("show"       , show)
     ,("wiki"       , lookupWiki)
@@ -66,11 +66,11 @@ dummylst =
     ,("docs"       , \x -> if null x
                            then docPrefix </> "index.html"
                            else lookupPackage docPrefix '-' "html" x)
-    ,("learn"      , const "http://www.haskell.org/haskellwiki/Learning_Haskell")
+    ,("learn"      , const "https://wiki.haskell.org/Learning_Haskell")
     ,("haskellers" , const "http://www.haskellers.com/")
     ,("botsnack"   , const ":)")
     ,("get-shapr"  , const "shapr!!")
-    ,("shootout"   , const "http://shootout.alioth.debian.org/gp4/benchmark.php?test=all&lang=all")
+    ,("shootout"   , const "http://benchmarksgame.alioth.debian.org/")
     ,("faq"        , const "The answer is: Yes! Haskell can do that.")
     ,("googleit"   , lookupGoogle)
     ,("hackage"    , lookupHackage)
@@ -82,7 +82,7 @@ dummylst =
     ]
 
 lookupWiki :: String -> String
-lookupWiki page = "http://www.haskell.org/haskellwiki" </> spacesToUnderscores page
+lookupWiki page = "https://wiki.haskell.org" </> spacesToUnderscores page
   where spacesToUnderscores = map (\c -> if c == ' ' then '_' else c)
 
 lookupHackage :: String -> String

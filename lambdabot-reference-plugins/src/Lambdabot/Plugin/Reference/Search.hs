@@ -26,7 +26,7 @@ engines =
    [("google", (googleUri, (\s -> "?hl=en&q="++s++"&btnI=I'm+Feeling+Lucky"), googleHeaders)),
     -- ("wikipedia", (wikipediaUri, ("?search="++), [])), -- this has changed and Wikipedia requires a User-Agent string
     ("gsite", (googleUri, (\s -> "?hl=en&q=site%3A"++s++"&btnI=I'm+Feeling+Lucky"), googleHeaders)),
-    ("gwiki", (googleUri, (\s -> "?hl=en&q=site%3Ahaskell.org/haskellwiki+" ++s++"&btnI=I'm+Feeling+Lucky"), googleHeaders))
+    ("gwiki", (googleUri, (\s -> "?hl=en&q=site%3Awiki.haskell.org+" ++s++"&btnI=I'm+Feeling+Lucky"), googleHeaders))
    ]
 
 googleHeaders :: [Header]
