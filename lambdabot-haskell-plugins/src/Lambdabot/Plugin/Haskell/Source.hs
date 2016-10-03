@@ -16,7 +16,7 @@ sourcePlugin = newModule
     { moduleCmds = return
         [ (command "src")
             { help = say helpStr
-            , process = \key -> readMS >>= \env -> case M.lookup (normalize key) env of
+            , process = \key -> readMS >>= \env -> case M.lookup (normalize (P.pack key)) env of
                 _ | M.null env -> say "No source in the environment yet"
                 _ |   null key -> say helpStr
                 Nothing        -> say . ("Source not found. " ++) =<< randomFailureMsg
