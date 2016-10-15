@@ -141,6 +141,11 @@ moduleProblems (Hs.Module _head pragmas _imports _decls)
         trusted = Hs.name "Trustworthy"
         langs = concat [ ls | Hs.LanguagePragma ls <- pragmas ]
 
+moveFile :: FilePath -> FilePath -> IO ()
+moveFile from to = do
+  copyFile from to
+  removeFile from
+
 -- It parses. then add it to a temporary L.hs and typecheck
 comp :: MonadLB m => Hs.Module -> m String
 comp src = do
@@ -167,7 +172,7 @@ comp src = do
                     return "Error."
                 | otherwise -> do
                     l <- lb (findLBFileForWriting "L.hs")
-                    io (renameFile ".L.hs" l)
+                    io (moveFile ".L.hs" l)
                     return "Defined."
         (ee,[]) -> return ee
         (_ ,ee) -> return ee
