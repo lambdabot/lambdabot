@@ -84,6 +84,10 @@ pollPlugin = newModule
             { help = say "poll-remove <poll>          Removes a poll"
             , process = process_ "poll-remove"
             }
+        , (command "poll-reset")
+            { help = say "poll-reset <poll>           Resets votes and reopens a poll"
+            , process = process_ "poll-reset"
+            }
         ]
 
     , moduleDefState  = return M.empty
@@ -134,6 +138,9 @@ processCommand fm writer cmd dat = case cmd of
                         1 -> removePoll fm writer (head dat)
                         _ -> return "usage: @poll-remove <poll>"
 
+    "poll-reset"    -> case length dat of
+                        1 -> resetPoll fm writer (head dat)
+                        _ -> return "usage: @poll-reset <poll>"
     _ -> return "Unknown command."
 
 ------------------------------------------------------------------------
@@ -192,3 +199,10 @@ closePoll fm writer poll = case M.lookup (P.pack poll) fm of
     Nothing     -> return $ "No such poll: " ++ show poll
     Just (_,p)  -> do writer $ M.update (const (Just (False,p))) (P.pack poll) fm
                       return $ "Poll " ++ show poll ++ " closed."
+
+resetPoll :: VoteState -> VoteWriter -> String -> Cmd Vote String
+resetPoll fm writer poll = case M.lookup (P.pack poll) fm of
+    Just (_, vs)   -> do let np = (True, map (\(c, _) -> (c, 0)) vs)
+                         writer $ M.update (const (Just np)) (P.pack poll) fm
+                         return $ "Poll " ++ show poll ++ " reset."
+    Nothing        -> return $ "No such poll: " ++ show poll
