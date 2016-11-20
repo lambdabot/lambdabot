@@ -265,7 +265,7 @@ docmd msg towhere rest cmd' = withPS towhere $ \_ _ -> do
             
             -- send off our response strings
             -- TODO: expandTab here should probably be an OutputFilter
-            lift $ mapM_ (ircPrivmsg towhere . expandTab 8) response
+            lift $ ircPrivmsg towhere $ intercalate "\n" $ map (expandTab 8) response
         )
 
 --
@@ -289,7 +289,7 @@ doContextualMsg msg target towhere r = lb (withAllModules (withHandler invokeCon
         invokeContextual = do
             m       <- asks theModule
             reply   <- execCmd (contextual m r) msg target "contextual"
-            lb $ mapM_ (ircPrivmsg towhere) reply
+            lb $ ircPrivmsg towhere $ intercalate "\n" reply
 
 ------------------------------------------------------------------------
 
