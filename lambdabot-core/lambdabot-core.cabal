@@ -1,5 +1,5 @@
 name:                   lambdabot-core
-version:                5.1
+version:                5.1.0.1
 
 license:                GPL
 license-file:           LICENSE
@@ -71,7 +71,7 @@ library
                         bytestring              >= 0.9,
                         containers              >= 0.4,
                         dependent-map           == 0.2.*,
-                        dependent-sum           == 0.3.*,
+                        dependent-sum           >= 0.3 && < 0.5,
                         dependent-sum-template  >= 0.0.0.1,
                         directory               >= 1.1,
                         edit-distance           >= 0.2,
