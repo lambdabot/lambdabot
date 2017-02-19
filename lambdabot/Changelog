@@ -1,3 +1,15 @@
+lambdabot 5.1.0.1
+	* support ghc-8.0
+	* support haskell-src-exts 1.18+
+	* better oeis output
+	* #141, #149
+
+lambdabot 5.1
+	* support for dependent-sum 0.3 (#130)
+	* IRC reconnect support (#125, by Nikolay Amiantov)
+	* unmtl parsing fix (#129, by Daniel Wagner)
+	* #131, #138, #139, #140, #142, #143
+
 lambdabot 5.0.3
 	* compatibility with ghc-7.10: relax utf8-string upper bound
 	* numerous bugfixes (#121, #122, #123, #117, #98)
