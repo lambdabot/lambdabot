@@ -70,7 +70,7 @@ library
                         lambdabot-core          >= 5.1 && < 5.2,
                         misfortune              >= 0.1,
                         process                 >= 1.1,
-                        random-fu               >= 0.2,
+                        random-fu               >= 0.2.6.2,
                         regex-tdfa              >= 1.1,
 
                         -- runtime dependencies
