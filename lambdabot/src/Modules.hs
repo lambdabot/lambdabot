@@ -13,11 +13,15 @@ import Lambdabot.Plugin.Novelty
 import Lambdabot.Plugin.Reference
 import Lambdabot.Plugin.Social
 
-modulesInfo :: Modules
-modulesInfo = $(modules $ corePlugins
+defaultModules :: [String]
+defaultModules =
+    corePlugins
     ++ haskellPlugins
     ++ ["irc", "localtime", "topic"] -- ircPlugins
     ++ ["dummy", "fresh", "todo"] -- miscPlugins
     ++ ["bf", "dice", "elite", "filter", "quote", "slap", "unlambda", "vixen"] -- noveltyPlugins
     ++ referencePlugins
-    ++ socialPlugins)
+    ++ socialPlugins
+
+modulesInfo :: Modules
+modulesInfo = $(modules defaultModules)
