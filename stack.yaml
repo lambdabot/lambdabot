@@ -1,0 +1,36 @@
+resolver: lts-2.13
+packages:
+- lambdabot/
+- lambdabot-novelty-plugins/
+- lambdabot-irc-plugins/
+- lambdabot-social-plugins/
+- lambdabot-haskell-plugins/
+- lambdabot-core/
+- lambdabot-reference-plugins/
+- lambdabot-trusted/
+- lambdabot-misc-plugins/
+extra-deps:
+# direct deps
+- IOSpec-0.2.5
+- QuickCheck-safe-0.1.0.1
+- SafeSemaphore-0.10.1
+- arrows-0.4.4.1
+- brainfuck-0.1.0.2
+- dependent-map-0.1.1.3
+- dependent-sum-0.2.1.0
+- dependent-sum-template-0.0.0.3
+- dice-0.1
+- hstatsd-0.1
+- misfortune-0.1.1.1
+- mueval-0.9.1.1
+- oeis-0.3.6
+- show-0.6
+- unlambda-0.1.4.1
+# secondy deps
+- Stream-0.4.7.2
+- knob-0.1.1
+- regex-pcre-0.94.4
+# tertiary deps
+- lazysmallcheck-0.6
+# override stackage deps
+- utf8-string-0.3.8
