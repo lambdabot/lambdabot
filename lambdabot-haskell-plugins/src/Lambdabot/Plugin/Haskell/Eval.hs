@@ -14,6 +14,7 @@ import Lambdabot.Util.Browser
 
 import Control.Exception (try, SomeException)
 import Control.Monad
+import Data.Char
 import Data.List
 import Data.Ord
 import qualified Language.Haskell.Exts.Simple as Hs
@@ -41,13 +42,13 @@ evalPlugin = newModule
             , process = lim80 . defineFromLPaste
             }
         , (command "undefine")
-            { help = say "undefine. Reset evaluator local bindings"
+            { help = say "undefine [<f1> <f2> .. <fn>]. Undefine evaluator bindings"
             , process = \s ->
                 if null s
                     then do
                         resetL_hs
                         say "Undefined."
-                    else say "There's currently no way to undefine just one thing.  Say @undefine (with no extra words) to undefine everything."
+                    else mapM_ (say <=< undefine) (words s)
             }
         ]
 
@@ -65,6 +66,31 @@ args load src exts trusted = concat
     , ["--expression=" ++ decodeString src]
     , ["+RTS", "-N", "-RTS"]
     ]
+
+undefine :: MonadLB m => String -> m String
+undefine f
+  | not (all isAlphaNum f) = return "Invalid function name."
+  | otherwise = do
+      res <- io . Hs.parseFile =<< findL_hs
+      case res of
+        Hs.ParseFailed loc err -> return (Hs.prettyPrint loc ++ ':' : err)
+        Hs.ParseOk mod -> case mod of
+          Hs.Module a b c decls -> do
+            let newMod = Hs.Module a b c $ concatMap (ignoreDecl f) decls
+            comp newMod
+            return $ "Undefined " ++ f ++ "."
+          _ -> return "L.hs does not compile."
+
+ignoreDecl :: String -> Hs.Decl -> [Hs.Decl]
+ignoreDecl f p@(Hs.PatBind (Hs.PVar (Hs.Ident n)) _ _)
+  | f == n = []
+  | otherwise = [p]
+ignoreDecl f (Hs.FunBind ms) = case filter (not . isMatch) ms of
+                                 [] -> []
+                                 xs -> [Hs.FunBind xs]
+  where isMatch (Hs.Match (Hs.Ident n) ps rhs binds) = n == f
+        isMatch _ = False
+ignoreDecl f x = [x]
 
 isEval :: MonadLB m => String -> m Bool
 isEval str = do
