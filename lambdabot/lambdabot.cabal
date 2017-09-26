@@ -22,8 +22,7 @@ build-type:             Simple
 cabal-version:          >= 1.8
 tested-with:            GHC == 7.8.4, GHC == 7.10.3
 
-extra-source-files:     src/Modules.hs
-                        scripts/ghci.sh
+extra-source-files:     scripts/ghci.sh
                         scripts/genhaddock.sh
                         scripts/GenHaddock.hs
                         scripts/vim/bot
@@ -50,6 +49,7 @@ source-repository head
 executable lambdabot
   hs-source-dirs:       src
   main-is:              Main.hs
+  other-modules:        Modules
 
   ghc-options:          -Wall -threaded
   build-depends:        base                         >= 3 && < 5,
