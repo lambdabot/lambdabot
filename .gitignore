@@ -18,6 +18,7 @@ Icon?
 ###########
 
 dist
+dist-newstyle
 *.o
 *.hi
 *.chi
@@ -25,6 +26,8 @@ dist
 .cabal-sandbox
 cabal.sandbox.config
 cabal.config
+.*.environment.*
+/cabal.project.local
 
 ###########
 # Editors #
