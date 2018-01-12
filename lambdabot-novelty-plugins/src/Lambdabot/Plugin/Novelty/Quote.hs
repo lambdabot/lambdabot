@@ -95,10 +95,6 @@ quotePlugin = newModule
             { help = say "protontorpedo is silly"
             , process = const (fortune ["protontorpedo"])
             }
-        , (command "nixon")
-            { help = say "Richard Nixon's finest."
-            , process = const (fortune ["nixon"])
-            }
         , (command "farber")
             { help = say "Farberisms in the style of David Farber."
             , process = const (fortune ["farber"])
