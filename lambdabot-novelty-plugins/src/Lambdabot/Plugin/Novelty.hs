@@ -7,7 +7,6 @@ module Lambdabot.Plugin.Novelty
     , quotePlugin
     , slapPlugin
     , unlambdaPlugin
-    , vixenPlugin
     
     , noveltyPlugins
     
@@ -23,7 +22,6 @@ import Lambdabot.Plugin.Novelty.Numberwang
 import Lambdabot.Plugin.Novelty.Quote
 import Lambdabot.Plugin.Novelty.Slap
 import Lambdabot.Plugin.Novelty.Unlambda
-import Lambdabot.Plugin.Novelty.Vixen
 
 noveltyPlugins :: [String]
-noveltyPlugins = ["bf", "dice", "elite", "filter", "numberwang", "quote", "slap", "unlambda", "vixen"]
+noveltyPlugins = ["bf", "dice", "elite", "filter", "numberwang", "quote", "slap", "unlambda"]
