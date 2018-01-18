@@ -1,0 +1,3 @@
+-- cabal.project
+
+packages: */*.cabal
