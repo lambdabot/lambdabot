@@ -46,7 +46,6 @@ before_install:
     }
 
 install:
-  - travis_retry cabal update
   - if [ -f $HOME/.cabal/packages/hackage.haskell.org/00-index.tar.gz ]; then
       zcat $HOME/.cabal/packages/hackage.haskell.org/00-index.tar.gz >
            $HOME/.cabal/packages/hackage.haskell.org/00-index.tar;
@@ -55,6 +54,7 @@ install:
       zcat $HOME/.cabal/packages/hackage.haskell.org/01-index.tar.gz >
            $HOME/.cabal/packages/hackage.haskell.org/01-index.tar;
     fi
+  - travis_retry cabal update
   - for pkg in $(ghc-pkg list --user --simple-output); do echo $pkg; done | sort | tee packages-installed
   - cabal install $CABAL_INSTALL_FLAGS --only-dependencies --global --dry-run $PACKAGES | tee packages-needed
   - sed 's/ (.*)//' packages-needed | grep -v ' ' | sort > packages-needed-sorted
