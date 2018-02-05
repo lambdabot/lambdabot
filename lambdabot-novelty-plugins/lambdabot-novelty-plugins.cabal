@@ -29,8 +29,6 @@ description:            Lambdabot is an IRC bot written over several years by
                         [slap] Delegate punishment.
                         .
                         [unlambda] Run Unlambda code.
-                        .
-                        [vixen] Let's chat, honey.
 
 homepage:               https://wiki.haskell.org/Lambdabot
 
@@ -57,7 +55,6 @@ library
                         Lambdabot.Plugin.Novelty.Quote
                         Lambdabot.Plugin.Novelty.Slap
                         Lambdabot.Plugin.Novelty.Unlambda
-                        Lambdabot.Plugin.Novelty.Vixen
 
   other-modules:        Lambdabot.Util.Process
 
