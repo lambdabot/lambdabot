@@ -6,11 +6,13 @@
 module Lambdabot.Plugin.Reference.Metar (metarPlugin) where
 
 import Lambdabot.Plugin
-import Lambdabot.Util.Browser (browseLB)
+-- import Lambdabot.Util.Browser (browseLB)
 
-import Network.Browser (request)
-import Network.HTTP (getRequest, rspCode, rspBody)
+import Network.HTTP.Types.Status (statusIsSuccessful)
+import Network.HTTP.Simple
 import Data.Char (isAlpha, toUpper)
+import Control.Monad.IO.Class
+import qualified Data.ByteString.Lazy.Char8 as BL
 
 metarPlugin :: Module ()
 metarPlugin = newModule
@@ -25,7 +27,7 @@ metarPlugin = newModule
 
 addsUri :: String
 addsUri =
-    "http://www.aviationweather.gov/adds/dataserver_current/httpparam"
+    "https://www.aviationweather.gov/adds/dataserver_current/httpparam"
 
 addsSrc :: String -> String
 addsSrc code = addsUri ++
@@ -34,12 +36,13 @@ addsSrc code = addsUri ++
 
 doMetar :: MonadLB m => String -> Cmd m ()
 doMetar code | length code == 4 && all isAlpha code = do
-    msg <- browseLB $ do
-        let src = addsSrc (map toUpper code)
-        (uri, resp) <- request $ getRequest src
-        case rspCode resp of
-            (2,_,_) -> return $ extractMetar (rspBody resp)
-            _ -> return $ "Request failed."
+    msg <- liftIO $ do
+       let src = addsSrc (map toUpper code)
+       req <- parseRequest src
+       resp <- httpLBS req
+       if statusIsSuccessful (getResponseStatus resp)
+           then return $ extractMetar $ BL.unpack $ getResponseBody resp
+           else return $ "Request failed."
     say msg
 doMetar _ = return ()
 
