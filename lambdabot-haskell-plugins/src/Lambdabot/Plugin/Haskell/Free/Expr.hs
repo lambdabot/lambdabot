@@ -5,6 +5,8 @@ module Lambdabot.Plugin.Haskell.Free.Expr where
 import Lambdabot.Plugin.Haskell.Free.Type
 import Lambdabot.Plugin.Haskell.Free.Util
 
+import Prelude hiding ((<>))
+
 varInExpr :: Var -> Expr -> Bool
 varInExpr v (EBuiltin _)
     = False

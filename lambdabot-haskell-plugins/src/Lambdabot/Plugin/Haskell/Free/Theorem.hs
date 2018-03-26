@@ -6,6 +6,8 @@ import Lambdabot.Plugin.Haskell.Free.Type
 import Lambdabot.Plugin.Haskell.Free.Expr
 import Lambdabot.Plugin.Haskell.Free.Util
 
+import Prelude hiding ((<>))
+
 data Theorem
     = ThForall Var Type Theorem
     | ThImplies Theorem Theorem

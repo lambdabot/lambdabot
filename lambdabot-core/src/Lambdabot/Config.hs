@@ -29,9 +29,9 @@ import Data.Typeable
 import Data.Generics (everywhere, mkT)
 import Language.Haskell.TH
 
-data Config t where Config :: (Typeable1 k, GCompare k) => !(k t) -> t -> (t -> t -> t) -> Config t
+data Config t where Config :: (Typeable k, GCompare k) => !(k t) -> t -> (t -> t -> t) -> Config t
 
-cast1 :: (Typeable1 f, Typeable1 g) => f a -> Maybe (g a)
+cast1 :: (Typeable f, Typeable g) => f a -> Maybe (g a)
 cast1 = fmap runIdentity . gcast1 . Identity
 
 instance GEq Config where
