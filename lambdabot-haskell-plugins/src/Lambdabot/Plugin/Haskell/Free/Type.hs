@@ -6,6 +6,7 @@ import Control.Monad
 import Lambdabot.Plugin.Haskell.Free.Parse
 import Data.List
 import Lambdabot.Plugin.Haskell.Free.Util
+import Prelude hiding ((<>))
 
 type TyVar = String
 type TyName = String
