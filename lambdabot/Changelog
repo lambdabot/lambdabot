@@ -1,3 +1,7 @@
+lambdabot 5.1.0.2
+	* support ghc-8.4
+	* #155, #163, #164, #168, #169, #170
+
 lambdabot 5.1.0.1
 	* support ghc-8.0
 	* support haskell-src-exts 1.18+
