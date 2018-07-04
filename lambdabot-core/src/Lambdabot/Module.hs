@@ -52,7 +52,7 @@ data Module st = Module {
         --   unloaded. By default, modules are not sticky.
         moduleSticky    :: !Bool,
 
-        -- | The commands the module listenes to.
+        -- | The commands the module listens to.
         moduleCmds      :: !(ModuleT st LB [Cmd.Command (ModuleT st LB)]),
 
         -- | Initialize the module. The default implementation does nothing.

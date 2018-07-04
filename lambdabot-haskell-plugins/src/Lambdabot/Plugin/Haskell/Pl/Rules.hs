@@ -414,7 +414,7 @@ rules = Or [
      (\p q -> extE `a` (constE `a` q) `a` p),
 
   -- experimental support for Control.Arrow stuff
-  -- (costs quite a bit of performace)
+  -- (costs quite a bit of performance)
   -- uncurry ((. g) . (,) . f) --> f *** g
   rr (\f g -> uncurryE `a` ((flipE `a` compE `a` g) `c` commaE `c` f))
      (\f g -> crossE `a` f `a` g),

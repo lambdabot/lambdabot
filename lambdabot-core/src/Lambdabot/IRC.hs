@@ -1,6 +1,6 @@
 --
 -- | The IRC module processes the IRC protocol and provides a nice API for sending
---   and recieving IRC messages with an IRC server.
+--   and receiving IRC messages with an IRC server.
 --
 module Lambdabot.IRC
     ( IrcMessage(..)
@@ -76,7 +76,7 @@ setTopic :: Nick -> String -> IrcMessage
 setTopic chan topic = mkMessage (nTag chan) "TOPIC" [nName chan, ':' : topic]
 
 -- | 'privmsg' creates a private message to the person designated.
-privmsg :: Nick -- ^ Who should recieve the message (nick)
+privmsg :: Nick -- ^ Who should receive the message (nick)
         -> String -- ^ What is the message?
         -> IrcMessage -- ^ Constructed message
 privmsg who msg = if action then mk [nName who, ':':(chr 0x1):("ACTION " ++ clean_msg ++ ((chr 0x1):[]))]

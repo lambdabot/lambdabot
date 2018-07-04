@@ -53,7 +53,7 @@ dummyHelp s = case s of
     "faq"         -> "faq. Answer frequently asked questions about Haskell"
     "googleit"    -> "letmegooglethatforyou."
     "hackage"     -> "find stuff on hackage"
-    _             -> "I'm sorry Dave, I'm affraid I don't know that command"
+    _             -> "I'm sorry Dave, I'm afraid I don't know that command"
 
 dummylst :: [(String, String -> String)]
 dummylst =

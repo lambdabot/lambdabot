@@ -16,7 +16,7 @@ import qualified Data.Set as S
 
 import Control.Monad.Fix (fix)
 
--- Next time I do somthing like this, I'll actually think about the combinator
+-- Next time I do something like this, I'll actually think about the combinator
 -- language before, instead of producing something ad-hoc like this:
 data RewriteRule
   = RR     Rewrite Rewrite           -- ^ A 'Rewrite' rule, rewrite the first to the second

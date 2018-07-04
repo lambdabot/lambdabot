@@ -57,7 +57,7 @@ unLet (Var f x) = Var f x
 
 type Env = M.Map String String
 
--- | Rename all variables to (locally) unqiue fresh ones
+-- | Rename all variables to (locally) unique fresh ones
 --
 -- It's a pity we still need that for the pointless transformation.
 -- Otherwise a newly created id/const/... could be bound by a lambda
