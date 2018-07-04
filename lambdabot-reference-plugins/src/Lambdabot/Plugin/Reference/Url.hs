@@ -119,7 +119,7 @@ ignoredStrings =
 ignoredUrlSuffixes :: [String]
 ignoredUrlSuffixes = [".", ",", ";", ")", "\"", "\1", "\n"]
 
--- | Searches a string for an embeddded URL and returns it.
+-- | Searches a string for an embedded URL and returns it.
 containsUrl :: String -> Maybe String
 containsUrl text = do
     mr <- matchM begreg text

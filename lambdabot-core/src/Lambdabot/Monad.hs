@@ -272,7 +272,7 @@ unregisterModule mName = maybe (return ()) warningM <=< state $ \s ->
 -- Lambdabot.  It provides a mapping between the String server "tags" and
 -- functions which are able to handle sending messages.
 --
--- When a message is recieved, the chat module is expected to call
+-- When a message is received, the chat module is expected to call
 -- `Lambdabot.Main.received'.  This is not ideal.
 
 registerServer :: String -> Server st -> ModuleT st LB ()

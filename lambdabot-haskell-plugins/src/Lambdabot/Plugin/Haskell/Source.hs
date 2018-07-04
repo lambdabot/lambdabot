@@ -24,7 +24,7 @@ sourcePlugin = newModule
         ]
 
     -- all the hard work is done to build the src map.
-    -- uses a slighly custom Map format
+    -- uses a slightly custom Map format
     , moduleSerialize = Just . readOnly $ M.fromList . map pair . splat . P.lines
     }
         where

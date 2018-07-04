@@ -138,7 +138,7 @@ ircSignOn svr nickn pwd ircname = do
 ------------------------------------------------------------------------
 --
 -- Lambdabot is mostly synchronous.  We have a main loop, which reads
--- messages and forks threads to execute commands (which write responces).
+-- messages and forks threads to execute commands (which write responses).
 -- OR
 -- We have a main loop which reads offline commands, and synchronously
 -- interprets them.

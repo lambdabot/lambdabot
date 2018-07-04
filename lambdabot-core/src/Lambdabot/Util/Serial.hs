@@ -72,7 +72,7 @@ stdSerial = Serial (Just. P.pack.show) (readM.P.unpack)
 -- | Serializes a 'Map' type if both the key and the value are instances
 -- of Read and Show. The serialization is done by converting the map to
 -- and from lists. Results are saved line-wise, for better editing and
--- revison control.
+-- revision control.
 --
 mapSerial :: (Ord k, Show k, Show v, Read k, Read v) => Serial (Map k v)
 mapSerial = Serial {
