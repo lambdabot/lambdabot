@@ -2,7 +2,7 @@
 #
 #   runghc make_travis_yml_2.hs '-o' '.travis.yml' 'cabal.project'
 #
-# For more information, see https://github.com/hvr/multi-ghc-travis
+# For more information, see https://github.com/haskell-CI/haskell-ci
 #
 language: c
 sudo: false
@@ -64,63 +64,63 @@ install:
   - "sed -i.bak 's/^jobs:/-- jobs:/' ${HOME}/.cabal/config"
   - rm -fv cabal.project cabal.project.local
   - grep -Ev -- '^\s*--' ${HOME}/.cabal/config | grep -Ev '^\s*$'
-  - "printf 'packages: \"lambdabot-misc-plugins\" \"lambdabot-reference-plugins\" \"lambdabot-core\" \"lambdabot-trusted\" \"lambdabot\" \"lambdabot-novelty-plugins\" \"lambdabot-irc-plugins\" \"lambdabot-social-plugins\" \"lambdabot-haskell-plugins\"\\n' > cabal.project"
+  - "printf 'packages: \"lambdabot-haskell-plugins\" \"lambdabot-novelty-plugins\" \"lambdabot-social-plugins\" \"lambdabot\" \"lambdabot-trusted\" \"lambdabot-irc-plugins\" \"lambdabot-reference-plugins\" \"lambdabot-misc-plugins\" \"lambdabot-core\"\\n' > cabal.project"
   - touch cabal.project.local
-  - "if ! $NOINSTALLEDCONSTRAINTS; then for pkg in $($HCPKG list --simple-output); do echo $pkg | sed 's/^/constraints: /' | sed 's/-[^-]*$/ installed/' >> cabal.project.local; done; fi"
+  - "if ! $NOINSTALLEDCONSTRAINTS; then for pkg in $($HCPKG list --simple-output); do echo $pkg  | grep -vw -- lambdabot-haskell-plugins | grep -vw -- lambdabot-novelty-plugins | grep -vw -- lambdabot-social-plugins | grep -vw -- lambdabot | grep -vw -- lambdabot-trusted | grep -vw -- lambdabot-irc-plugins | grep -vw -- lambdabot-reference-plugins | grep -vw -- lambdabot-misc-plugins | grep -vw -- lambdabot-core | sed 's/^/constraints: /' | sed 's/-[^-]*$/ installed/' >> cabal.project.local; done; fi"
   - cat cabal.project || true
   - cat cabal.project.local || true
-  - if [ -f "lambdabot-misc-plugins/configure.ac" ]; then
-      (cd "lambdabot-misc-plugins" && autoreconf -i);
-    fi
-  - if [ -f "lambdabot-reference-plugins/configure.ac" ]; then
-      (cd "lambdabot-reference-plugins" && autoreconf -i);
-    fi
-  - if [ -f "lambdabot-core/configure.ac" ]; then
-      (cd "lambdabot-core" && autoreconf -i);
-    fi
-  - if [ -f "lambdabot-trusted/configure.ac" ]; then
-      (cd "lambdabot-trusted" && autoreconf -i);
-    fi
-  - if [ -f "lambdabot/configure.ac" ]; then
-      (cd "lambdabot" && autoreconf -i);
+  - if [ -f "lambdabot-haskell-plugins/configure.ac" ]; then
+      (cd "lambdabot-haskell-plugins" && autoreconf -i);
     fi
   - if [ -f "lambdabot-novelty-plugins/configure.ac" ]; then
       (cd "lambdabot-novelty-plugins" && autoreconf -i);
     fi
-  - if [ -f "lambdabot-irc-plugins/configure.ac" ]; then
-      (cd "lambdabot-irc-plugins" && autoreconf -i);
-    fi
   - if [ -f "lambdabot-social-plugins/configure.ac" ]; then
       (cd "lambdabot-social-plugins" && autoreconf -i);
     fi
-  - if [ -f "lambdabot-haskell-plugins/configure.ac" ]; then
-      (cd "lambdabot-haskell-plugins" && autoreconf -i);
+  - if [ -f "lambdabot/configure.ac" ]; then
+      (cd "lambdabot" && autoreconf -i);
+    fi
+  - if [ -f "lambdabot-trusted/configure.ac" ]; then
+      (cd "lambdabot-trusted" && autoreconf -i);
+    fi
+  - if [ -f "lambdabot-irc-plugins/configure.ac" ]; then
+      (cd "lambdabot-irc-plugins" && autoreconf -i);
+    fi
+  - if [ -f "lambdabot-reference-plugins/configure.ac" ]; then
+      (cd "lambdabot-reference-plugins" && autoreconf -i);
+    fi
+  - if [ -f "lambdabot-misc-plugins/configure.ac" ]; then
+      (cd "lambdabot-misc-plugins" && autoreconf -i);
+    fi
+  - if [ -f "lambdabot-core/configure.ac" ]; then
+      (cd "lambdabot-core" && autoreconf -i);
     fi
   - rm -f cabal.project.freeze
   - cabal new-build -w ${HC} ${TEST} ${BENCH} --project-file="cabal.project" --dep -j2 all
   - cabal new-build -w ${HC} --disable-tests --disable-benchmarks --project-file="cabal.project" --dep -j2 all
-  - rm -rf .ghc.environment.* "lambdabot-misc-plugins"/dist "lambdabot-reference-plugins"/dist "lambdabot-core"/dist "lambdabot-trusted"/dist "lambdabot"/dist "lambdabot-novelty-plugins"/dist "lambdabot-irc-plugins"/dist "lambdabot-social-plugins"/dist "lambdabot-haskell-plugins"/dist
+  - rm -rf .ghc.environment.* "lambdabot-haskell-plugins"/dist "lambdabot-novelty-plugins"/dist "lambdabot-social-plugins"/dist "lambdabot"/dist "lambdabot-trusted"/dist "lambdabot-irc-plugins"/dist "lambdabot-reference-plugins"/dist "lambdabot-misc-plugins"/dist "lambdabot-core"/dist
   - DISTDIR=$(mktemp -d /tmp/dist-test.XXXX)
 
 # Here starts the actual work to be performed for the package under test;
 # any command which exits with a non-zero exit code causes the build to fail.
 script:
   # test that source-distributions can be generated
-  - (cd "lambdabot-misc-plugins" && cabal sdist)
-  - (cd "lambdabot-reference-plugins" && cabal sdist)
-  - (cd "lambdabot-core" && cabal sdist)
-  - (cd "lambdabot-trusted" && cabal sdist)
-  - (cd "lambdabot" && cabal sdist)
-  - (cd "lambdabot-novelty-plugins" && cabal sdist)
-  - (cd "lambdabot-irc-plugins" && cabal sdist)
-  - (cd "lambdabot-social-plugins" && cabal sdist)
   - (cd "lambdabot-haskell-plugins" && cabal sdist)
-  - mv "lambdabot-misc-plugins"/dist/lambdabot-misc-plugins-*.tar.gz "lambdabot-reference-plugins"/dist/lambdabot-reference-plugins-*.tar.gz "lambdabot-core"/dist/lambdabot-core-*.tar.gz "lambdabot-trusted"/dist/lambdabot-trusted-*.tar.gz "lambdabot"/dist/lambdabot-*.tar.gz "lambdabot-novelty-plugins"/dist/lambdabot-novelty-plugins-*.tar.gz "lambdabot-irc-plugins"/dist/lambdabot-irc-plugins-*.tar.gz "lambdabot-social-plugins"/dist/lambdabot-social-plugins-*.tar.gz "lambdabot-haskell-plugins"/dist/lambdabot-haskell-plugins-*.tar.gz ${DISTDIR}/
+  - (cd "lambdabot-novelty-plugins" && cabal sdist)
+  - (cd "lambdabot-social-plugins" && cabal sdist)
+  - (cd "lambdabot" && cabal sdist)
+  - (cd "lambdabot-trusted" && cabal sdist)
+  - (cd "lambdabot-irc-plugins" && cabal sdist)
+  - (cd "lambdabot-reference-plugins" && cabal sdist)
+  - (cd "lambdabot-misc-plugins" && cabal sdist)
+  - (cd "lambdabot-core" && cabal sdist)
+  - mv "lambdabot-haskell-plugins"/dist/lambdabot-haskell-plugins-*.tar.gz "lambdabot-novelty-plugins"/dist/lambdabot-novelty-plugins-*.tar.gz "lambdabot-social-plugins"/dist/lambdabot-social-plugins-*.tar.gz "lambdabot"/dist/lambdabot-*.tar.gz "lambdabot-trusted"/dist/lambdabot-trusted-*.tar.gz "lambdabot-irc-plugins"/dist/lambdabot-irc-plugins-*.tar.gz "lambdabot-reference-plugins"/dist/lambdabot-reference-plugins-*.tar.gz "lambdabot-misc-plugins"/dist/lambdabot-misc-plugins-*.tar.gz "lambdabot-core"/dist/lambdabot-core-*.tar.gz ${DISTDIR}/
   - cd ${DISTDIR} || false
   - find . -maxdepth 1 -name '*.tar.gz' -exec tar -xvf '{}' \;
-  - "printf 'packages: lambdabot-misc-plugins-*/*.cabal lambdabot-reference-plugins-*/*.cabal lambdabot-core-*/*.cabal lambdabot-trusted-*/*.cabal lambdabot-*/*.cabal lambdabot-novelty-plugins-*/*.cabal lambdabot-irc-plugins-*/*.cabal lambdabot-social-plugins-*/*.cabal lambdabot-haskell-plugins-*/*.cabal\\n' > cabal.project"
+  - "printf 'packages: lambdabot-haskell-plugins-*/*.cabal lambdabot-novelty-plugins-*/*.cabal lambdabot-social-plugins-*/*.cabal lambdabot-*/*.cabal lambdabot-trusted-*/*.cabal lambdabot-irc-plugins-*/*.cabal lambdabot-reference-plugins-*/*.cabal lambdabot-misc-plugins-*/*.cabal lambdabot-core-*/*.cabal\\n' > cabal.project"
   - touch cabal.project.local
-  - "if ! $NOINSTALLEDCONSTRAINTS; then for pkg in $($HCPKG list --simple-output); do echo $pkg | sed 's/^/constraints: /' | sed 's/-[^-]*$/ installed/' >> cabal.project.local; done; fi"
+  - "if ! $NOINSTALLEDCONSTRAINTS; then for pkg in $($HCPKG list --simple-output); do echo $pkg  | grep -vw -- lambdabot-haskell-plugins | grep -vw -- lambdabot-novelty-plugins | grep -vw -- lambdabot-social-plugins | grep -vw -- lambdabot | grep -vw -- lambdabot-trusted | grep -vw -- lambdabot-irc-plugins | grep -vw -- lambdabot-reference-plugins | grep -vw -- lambdabot-misc-plugins | grep -vw -- lambdabot-core | sed 's/^/constraints: /' | sed 's/-[^-]*$/ installed/' >> cabal.project.local; done; fi"
   - cat cabal.project || true
   - cat cabal.project.local || true
   # this builds all libraries and executables (without tests/benchmarks)
@@ -130,15 +130,15 @@ script:
   - cabal new-build -w ${HC} ${TEST} ${BENCH} all
 
   # cabal check
-  - (cd lambdabot-misc-plugins-* && cabal check)
-  - (cd lambdabot-reference-plugins-* && cabal check)
-  - (cd lambdabot-core-* && cabal check)
-  - (cd lambdabot-trusted-* && cabal check)
-  - (cd lambdabot-* && cabal check)
-  - (cd lambdabot-novelty-plugins-* && cabal check)
-  - (cd lambdabot-irc-plugins-* && cabal check)
-  - (cd lambdabot-social-plugins-* && cabal check)
   - (cd lambdabot-haskell-plugins-* && cabal check)
+  - (cd lambdabot-novelty-plugins-* && cabal check)
+  - (cd lambdabot-social-plugins-* && cabal check)
+  - (cd lambdabot-* && cabal check)
+  - (cd lambdabot-trusted-* && cabal check)
+  - (cd lambdabot-irc-plugins-* && cabal check)
+  - (cd lambdabot-reference-plugins-* && cabal check)
+  - (cd lambdabot-misc-plugins-* && cabal check)
+  - (cd lambdabot-core-* && cabal check)
 
   # haddock
   - rm -rf ./dist-newstyle
