@@ -117,7 +117,7 @@ dateStamp (UTCTime day _) = (d, m, y)
 cleanLogState :: Log ()
 cleanLogState =
     withMS $ \state writer -> do
-      io $ M.fold (\cs iom -> iom >> hClose (chanHandle cs)) (return ()) state
+      io $ M.foldr (\cs iom -> iom >> hClose (chanHandle cs)) (return ()) state
       writer M.empty
 
 -- | Fetch a channel from the internal map. Uses LB's fail if not found.
