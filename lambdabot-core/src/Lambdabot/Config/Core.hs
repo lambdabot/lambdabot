@@ -58,4 +58,8 @@ config "consoleLogFormat"   [t| String                  |] [| "[$prio] $loggerna
 defaultIrcHandler :: SomeException -> IO ()
 defaultIrcHandler = errorM . ("Main: caught (and ignoring) "++) . show
 
-config "uncaughtExceptionHandler" [t| SomeException -> IO () |] [| defaultIrcHandler |]
+type DIH = SomeException -> IO ()
+-- work around a TemplateHaskell bug in ghc-8.6.1
+-- see https://ghc.haskell.org/trac/ghc/ticket/15815
+
+config "uncaughtExceptionHandler" [t| DIH |] [| defaultIrcHandler |]
