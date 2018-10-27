@@ -161,7 +161,10 @@ types =
 
 mtlParser :: String -> Either String Type
 mtlParser input = do
-    Hs.Module _ _ _ decls <- liftE $ parseModule ("type X = " ++ input ++ "\n")
+    hsMod <- liftE $ parseModule ("type X = " ++ input ++ "\n")
+    decls <- case hsMod of
+        (Hs.Module _ _ _ decls) -> return decls
+        _ -> fail "Not a module?"
     hsType <- case decls of
         (TypeDecl _ hsType:_) -> return hsType
         _ -> fail "No parse?"
