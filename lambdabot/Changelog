@@ -1,3 +1,7 @@
+lambdabot 5.1.0.4
+	* support ghc-8.6 (#174, #175)
+	* @pl timeout works again (#173)
+
 lambdabot 5.1.0.2
 	* support ghc-8.4
 	* #155, #163, #164, #168, #169, #170
