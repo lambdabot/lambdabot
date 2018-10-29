@@ -32,6 +32,10 @@ matrix:
       compiler: ": #GHC 8.4.3"
       addons: {apt: {packages: [cabal-install-2.2,ghc-8.4.3,happy-1.19.5], sources: [hvr-ghc]}}
 
+    - env: CABALVER=2.4 GHCVER=8.6.1 CABAL_PREFIX=v1-
+      compiler: ": #GHC 8.6.1"
+      addons: {apt: {packages: [cabal-install-2.4,ghc-8.6.1,happy-1.19.5], sources: [hvr-ghc]}}
+
 #  exclude:
 #    - env: CABALVER=1.18 GHCVER=7.8.4
 
@@ -58,18 +62,18 @@ install:
       zcat $HOME/.cabal/packages/hackage.haskell.org/01-index.tar.gz >
            $HOME/.cabal/packages/hackage.haskell.org/01-index.tar;
     fi
-  - travis_retry cabal update
+  - travis_retry cabal ${CABAL_PREFIX}update
   - "sed -i.bak 's/^jobs:/-- jobs:/' ${HOME}/.cabal/config"
   - for pkg in $(ghc-pkg list --user --simple-output); do echo $pkg; done | sort | tee packages-installed
-  - cabal install $CABAL_INSTALL_FLAGS --only-dependencies --global --dry-run $PACKAGES | tee packages-needed
+  - cabal ${CABAL_PREFIX}install $CABAL_INSTALL_FLAGS --only-dependencies --global --dry-run $PACKAGES | tee packages-needed
   - sed 's/ (.*)//' packages-needed | grep -v ' ' | sort > packages-needed-sorted
   - for pkg in $(comm -23 packages-installed packages-needed-sorted); do cabal_uninstall $pkg; done
   - for pkg in $(ghc-pkg check --simple-output); do cabal_uninstall $pkg; done
   - echo "broken packages $(ghc-pkg check --simple-output) (should be empty)"
-  - cabal install $CABAL_INSTALL_FLAGS --only-dependencies --enable-tests $PACKAGES
+  - cabal ${CABAL_PREFIX}install $CABAL_INSTALL_FLAGS --only-dependencies --enable-tests $PACKAGES
 
 script:
-  - cabal install lambdabot-core/ lambdabot-trusted/ lambdabot-*-plugins/ lambdabot/
+  - cabal ${CABAL_PREFIX}install lambdabot-core/ lambdabot-trusted/ lambdabot-*-plugins/ lambdabot/
 
 branches:
   only:
