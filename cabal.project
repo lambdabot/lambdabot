@@ -1,3 +1,12 @@
 -- cabal.project
 
-packages: */*.cabal
+packages:
+    lambdabot-core/lambdabot-core.cabal
+    lambdabot-haskell-plugins/lambdabot-haskell-plugins.cabal
+    lambdabot-irc-plugins/lambdabot-irc-plugins.cabal
+    lambdabot-misc-plugins/lambdabot-misc-plugins.cabal
+    lambdabot-novelty-plugins/lambdabot-novelty-plugins.cabal
+    lambdabot-reference-plugins/lambdabot-reference-plugins.cabal
+    lambdabot-social-plugins/lambdabot-social-plugins.cabal
+    lambdabot-trusted/lambdabot-trusted.cabal
+    lambdabot/lambdabot.cabal
