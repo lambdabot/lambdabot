@@ -35,8 +35,8 @@ offlineRCPlugin = newModule
         lb . modify $ \s -> s
             { ircPrivilegedUsers = S.insert (Nick "offlinerc" "null") (ircPrivilegedUsers s)
             }
-        
-        void . fork $ do
+        -- note: moduleInit is invoked with exceptions masked
+        void . forkUnmasked $ do
             waitForInit
             lockRC
             cmds <- getConfig onStartupCmds

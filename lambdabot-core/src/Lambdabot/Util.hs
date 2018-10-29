@@ -1,6 +1,8 @@
 -- Copyright (c) 2006 Don Stewart - http://www.cse.unsw.edu.au/~dons
 -- GPL version 2 or later (see http://www.gnu.org/copyleft/gpl.html)
 
+{-# LANGUAGE FlexibleContexts #-}
+
 -- | String and other utilities
 module Lambdabot.Util (
         strip,
@@ -14,6 +16,7 @@ module Lambdabot.Util (
         arePrefixesOf,
 
         io,
+        forkUnmasked,
 
         random,
         randomFailureMsg,
@@ -24,6 +27,8 @@ import Control.Monad.Trans
 import Data.Char
 import Data.List
 import Data.Random
+import Control.Concurrent.Lifted
+import Control.Monad.Trans.Control
 import Lambdabot.Config
 import Lambdabot.Config.Core
 
@@ -96,6 +101,9 @@ expandTab w = go 0
 io :: MonadIO m => IO a -> m a
 io = liftIO
 {-# INLINE io #-}
+
+forkUnmasked :: MonadBaseControl IO m => m () -> m ThreadId
+forkUnmasked m = forkWithUnmask $ \unmask -> unmask m
 
 arePrefixesWithSpaceOf :: [String] -> String -> Bool
 arePrefixesWithSpaceOf = arePrefixesOf . map (++ " ")
