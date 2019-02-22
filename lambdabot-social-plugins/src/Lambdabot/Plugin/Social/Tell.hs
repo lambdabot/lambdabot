@@ -108,7 +108,7 @@ tellPlugin = newModule
                 say "Messages cleared."
             }
         , (command "auto-reply")
-            { help = say "auto-reply. Lets lambda-bot auto-reply if someone sends you a message"
+            { help = say "auto-reply. Lets lambdabot auto-reply if someone sends you a message"
             , process = doAutoReply
             }
         , (command "auto-reply?")
