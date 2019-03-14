@@ -1053,7 +1053,6 @@ _ ^ _            = error "Prelude.^: negative exponent"
 x ^^ n = if n >= 0 then x^n else recip (x^(negate n))
 
 gcd
-gcd 0 0 = error "Prelude.gcd: gcd 0 0 is undefined"
 gcd x y = gcd' (abs x) (abs y)
    where gcd' a 0 = a
          gcd' a b = gcd' b (a `rem` b)
