@@ -77,6 +77,6 @@ library
                         utf8-string             >= 0.3
 
   if flag(network-uri)
-    build-depends: network-uri >= 2.6, network >= 2.6
+    build-depends: network-uri >= 2.6 && < 2.7, network >= 2.6 && < 2.7
   else
     build-depends: network-uri < 2.6, network < 2.6

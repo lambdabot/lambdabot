@@ -82,7 +82,7 @@ library
                         lifted-base             >= 0.2,
                         monad-control           >= 1.0,
                         mtl                     >= 2,
-                        network                 >= 2.3.0.13,
+                        network                 >= 2.3.0.13 && < 2.7,
                         time                    >= 1.4,
                         parsec                  >= 3,
                         prim-uniq               == 0.1.*,
