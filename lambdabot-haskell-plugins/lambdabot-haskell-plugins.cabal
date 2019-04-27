@@ -98,7 +98,7 @@ library
                         containers              >= 0.4,
                         directory               >= 1.1,
                         filepath                >= 1.3,
-                        haskell-src-exts-simple >= 1.18.0.1 && < 1.20.1,
+                        haskell-src-exts-simple >= 1.18.0.0 && < 1.22,
                         lambdabot-core          >= 5.1 && < 5.2,
                         lambdabot-reference-plugins >= 5.1 && < 5.2,
                         lifted-base             >= 0.2,
@@ -127,4 +127,4 @@ library
                         show                    >= 0.4,
                         vector-space            >= 0.8,
                         HTTP                    >= 4000,
-                        network                 >= 2.3.0.13 && < 2.7
+                        network                 >= 2.4 && < 3.1

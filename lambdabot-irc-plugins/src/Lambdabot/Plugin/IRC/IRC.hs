@@ -19,7 +19,8 @@ import qualified Data.ByteString.Char8 as P
 import Data.List
 import Data.List.Split
 import qualified Data.Map as M
-import Network( connectTo, PortID(..) )
+import Lambdabot.Util.Network (connectTo')
+import Network.Socket (PortNumber)
 import System.IO
 import System.Timeout.Lifted
 import Data.IORef
@@ -40,7 +41,7 @@ ircPlugin = newModule
             , process = \rest ->
                 case splitOn " " rest of
                     tag:hostn:portn:nickn:uix -> do
-                        pn <- (PortNumber . fromInteger) `fmap` readM portn
+                        pn <- fromInteger `fmap` readM portn
                         lift (online tag hostn pn nickn (intercalate " " uix))
                     _ -> say "Not enough parameters!"
             }
@@ -50,7 +51,7 @@ ircPlugin = newModule
             , process = \rest ->
                 case splitOn " " rest of
                     tag:hostn:portn:nickn:uix -> do
-                        pn <- (PortNumber . fromInteger) `fmap` readM portn
+                        pn <- fromInteger `fmap` readM portn
                         lift (online tag hostn pn nickn (intercalate " " uix))
                         lift $ lift $ modify $ \state' -> state' { ircPersists = M.insert tag True $ ircPersists state' }
                     _ -> say "Not enough parameters!"
@@ -143,13 +144,13 @@ ircSignOn svr nickn pwd ircname = do
 -- We have a main loop which reads offline commands, and synchronously
 -- interprets them.
 
-online :: String -> String -> PortID -> String -> String -> IRC ()
+online :: String -> String -> PortNumber -> String -> String -> IRC ()
 online tag hostn portnum nickn ui = do
     pwd <- password `fmap` readMS
     modifyMS $ \ms -> ms{ password = Nothing }
 
     let online' = do
-        sock    <- io $ connectTo hostn portnum
+        sock    <- io $ connectTo' hostn portnum
         io $ hSetBuffering sock NoBuffering
         -- Implements flood control: RFC 2813, section 5.8
         sem1    <- io $ SSem.new 0
