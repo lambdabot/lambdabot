@@ -50,7 +50,6 @@ library
                         Lambdabot.Plugin.Misc.Error
                         Lambdabot.Plugin.Misc.Fresh
                         Lambdabot.Plugin.Misc.Hello
-                        Lambdabot.Plugin.Misc.Stats
                         Lambdabot.Plugin.Misc.Todo
 
   other-modules:        Lambdabot.Plugin.Misc.Dummy.DocAssocs
@@ -59,7 +58,6 @@ library
                         bytestring              >= 0.9,
                         containers              >= 0.4,
                         filepath                >= 1.3,
-                        hstatsd                 >= 0.1,
                         lambdabot-core          >= 5.1 && < 5.2,
                         lifted-base             >= 0.2,
                         mtl                     >= 2,
