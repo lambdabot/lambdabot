@@ -20,7 +20,8 @@ module Lambdabot.Plugin.Reference.Dict.DictLookup ( simpleDictLookup, QueryConfi
 import Data.List
 import System.IO
 import Control.Exception (SomeException, handle)
-import Network
+import Network.Socket
+import Lambdabot.Util.Network
 
 data QueryConfig    = QC { host :: String, port :: Int }
 type DictConnection = Handle
@@ -38,12 +39,12 @@ simpleDictLookup config dictnm query =
 
 openDictConnection :: QueryConfig -> IO DictConnection
 openDictConnection config = do
-    hDictServer <- connectTo (host config) (mkPortNumber $ port config)
+    hDictServer <- connectTo' (host config) (mkPortNumber $ port config)
     hSetBuffering hDictServer LineBuffering
     _ <- readResponseLine hDictServer -- ignore response
     return hDictServer
     where
-    mkPortNumber = PortNumber . fromIntegral
+    mkPortNumber = fromIntegral
 
 closeDictConnection :: DictConnection -> IO ()
 closeDictConnection conn = do
