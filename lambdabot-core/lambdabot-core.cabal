@@ -29,6 +29,10 @@ source-repository head
   type:                 git
   location:             https://github.com/lambdabot/lambdabot.git
 
+flag network-bsd
+  description: Get Network.BSD from the network-uri package
+  default: True
+
 library
   hs-source-dirs:       src
   ghc-options:          -Wall
@@ -53,6 +57,7 @@ library
                         Lambdabot.Plugin.Core
                         Lambdabot.State
                         Lambdabot.Util
+                        Lambdabot.Util.Network
 
   other-modules:        Paths_lambdabot_core
                         Lambdabot.Config.Core
@@ -82,7 +87,7 @@ library
                         lifted-base             >= 0.2,
                         monad-control           >= 1.0,
                         mtl                     >= 2,
-                        network                 >= 2.3.0.13 && < 3.2,
+                        network                 >= 2.4 && < 3.2,
                         time                    >= 1.4,
                         parsec                  >= 3,
                         prim-uniq               == 0.1.*,
@@ -98,6 +103,10 @@ library
                         transformers-base       >= 0.4,
                         utf8-string             >= 0.3,
                         zlib                    >= 0.5
+
+  if flag(network-bsd)
+    build-depends:      network-bsd             >= 2.7 && < 2.9,
+                        network                 >= 2.7
 
   if !os(windows)
     build-depends:      unix                    >= 2.5
