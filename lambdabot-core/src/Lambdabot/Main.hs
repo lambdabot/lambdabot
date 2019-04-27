@@ -36,7 +36,7 @@ import System.Exit
 import System.Log.Formatter
 import qualified System.Log.Logger as L
 import System.Log.Handler.Simple
-import Network (withSocketsDo)
+import Network.Socket (withSocketsDo)
 
 lambdabotVersion :: Version
 lambdabotVersion = version
