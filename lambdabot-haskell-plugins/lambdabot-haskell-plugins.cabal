@@ -117,7 +117,7 @@ library
                         -- runtime dependencies - for eval etc.
                         arrows                  >= 0.4,
                         data-memocombinators    >= 0.4,
-                        hoogle                  >= 4.2,
+                        hoogle                  >= 5.0.17.1,
                         IOSpec                  >= 0.2,
                         lambdabot-trusted       >= 5.1 && < 5.2,
                         logict                  >= 0.5,
