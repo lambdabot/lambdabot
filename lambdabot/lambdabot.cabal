@@ -1,5 +1,5 @@
 name:                   lambdabot
-version:                5.1.0.4
+version:                5.2
 
 license:                GPL
 license-file:           LICENSE
@@ -20,7 +20,7 @@ bug-reports:            https://github.com/lambdabot/lambdabot/issues
 
 build-type:             Simple
 cabal-version:          >= 1.8
-tested-with:            GHC == 7.10.3, GHC == 8.0.2, GHC == 8.2.2, GHC == 8.4.4, GHC == 8.6.1
+tested-with:            GHC == 7.10.3, GHC == 8.0.2, GHC == 8.2.2, GHC == 8.4.4, GHC == 8.6.5
 
 extra-source-files:     scripts/ghci.sh
                         scripts/genhaddock.sh
@@ -54,11 +54,11 @@ executable lambdabot
 
   ghc-options:          -Wall -threaded
   build-depends:        base                         >= 3 && < 5,
-                        lambdabot-core               >= 5.1.0.1 && < 5.2,
-                        lambdabot-haskell-plugins    >= 5.1.0.1 && < 5.2,
-                        lambdabot-irc-plugins        >= 5.1.0.1 && < 5.2,
-                        lambdabot-misc-plugins       >= 5.1.0.1 && < 5.2,
-                        lambdabot-novelty-plugins    >= 5.1.0.1 && < 5.2,
-                        lambdabot-reference-plugins  >= 5.1.0.1 && < 5.2,
-                        lambdabot-social-plugins     >= 5.1.0.1 && < 5.2,
+                        lambdabot-core               >= 5.2 && < 5.3,
+                        lambdabot-haskell-plugins    >= 5.2 && < 5.3,
+                        lambdabot-irc-plugins        >= 5.2 && < 5.3,
+                        lambdabot-misc-plugins       >= 5.2 && < 5.3,
+                        lambdabot-novelty-plugins    >= 5.2 && < 5.3,
+                        lambdabot-reference-plugins  >= 5.2 && < 5.3,
+                        lambdabot-social-plugins     >= 5.2 && < 5.3,
                         mtl                          >= 2

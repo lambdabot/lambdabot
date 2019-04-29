@@ -1,5 +1,5 @@
 name:                   lambdabot-core
-version:                5.1.0.4
+version:                5.2
 
 license:                GPL
 license-file:           LICENSE
@@ -19,7 +19,7 @@ homepage:               https://wiki.haskell.org/Lambdabot
 
 build-type:             Simple
 cabal-version:          >= 1.8
-tested-with:            GHC == 7.10.3, GHC == 8.0.2, GHC == 8.2.2, GHC == 8.4.4, GHC == 8.6.1
+tested-with:            GHC == 7.10.3, GHC == 8.0.2, GHC == 8.2.2, GHC == 8.4.4, GHC == 8.6.5
 
 extra-source-files:     AUTHORS.md
                         COMMENTARY.md
@@ -28,10 +28,6 @@ extra-source-files:     AUTHORS.md
 source-repository head
   type:                 git
   location:             https://github.com/lambdabot/lambdabot.git
-
-flag network-bsd
-  description: Get Network.BSD from the network-uri package
-  default: True
 
 library
   hs-source-dirs:       src
@@ -76,7 +72,7 @@ library
                         bytestring              >= 0.9,
                         containers              >= 0.4,
                         dependent-map           == 0.2.*,
-                        dependent-sum           >= 0.3 && < 0.5,
+                        dependent-sum           >= 0.3 && < 0.6,
                         dependent-sum-template  >= 0.0.0.1,
                         directory               >= 1.1,
                         edit-distance           >= 0.2,
@@ -87,8 +83,8 @@ library
                         lifted-base             >= 0.2,
                         monad-control           >= 1.0,
                         mtl                     >= 2,
-                        network                 >= 2.4 && < 3.2,
-                        time                    >= 1.4,
+                        network                 >= 2.7 && < 3.2,
+                        network-bsd             >= 2.8 && < 2.9,
                         parsec                  >= 3,
                         prim-uniq               == 0.1.*,
                         random                  >= 1,
@@ -99,14 +95,11 @@ library
                         split                   >= 0.2,
                         syb                     >= 0.3,
                         template-haskell        >= 2.7,
+                        time                    >= 1.4,
                         transformers            >= 0.2,
                         transformers-base       >= 0.4,
                         utf8-string             >= 0.3,
                         zlib                    >= 0.5
-
-  if flag(network-bsd)
-    build-depends:      network-bsd             >= 2.7 && < 2.9,
-                        network                 >= 2.7
 
   if !os(windows)
     build-depends:      unix                    >= 2.5

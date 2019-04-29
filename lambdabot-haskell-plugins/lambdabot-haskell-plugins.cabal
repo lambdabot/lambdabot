@@ -1,5 +1,5 @@
 name:                   lambdabot-haskell-plugins
-version:                5.1.0.4
+version:                5.2
 
 license:                GPL
 license-file:           LICENSE
@@ -46,7 +46,7 @@ homepage:               https://wiki.haskell.org/Lambdabot
 
 build-type:             Simple
 cabal-version:          >= 1.8
-tested-with:            GHC == 7.10.3, GHC == 8.0.2, GHC == 8.2.2, GHC == 8.4.4, GHC == 8.6.1
+tested-with:            GHC == 7.10.3, GHC == 8.0.2, GHC == 8.2.2, GHC == 8.4.4, GHC == 8.6.5
 
 extra-source-files:     src/Lambdabot/Plugin/Haskell/Free/Test.hs
 
@@ -99,8 +99,8 @@ library
                         directory               >= 1.1,
                         filepath                >= 1.3,
                         haskell-src-exts-simple >= 1.18.0.0 && < 1.22,
-                        lambdabot-core          >= 5.1 && < 5.2,
-                        lambdabot-reference-plugins >= 5.1 && < 5.2,
+                        lambdabot-core          >= 5.2 && < 5.3,
+                        lambdabot-reference-plugins >= 5.2 && < 5.3,
                         lifted-base             >= 0.2,
                         mtl                     >= 2,
                         oeis                    >= 0.3.1,
@@ -119,7 +119,7 @@ library
                         data-memocombinators    >= 0.4,
                         hoogle                  >= 5.0.17.1,
                         IOSpec                  >= 0.2,
-                        lambdabot-trusted       >= 5.1 && < 5.2,
+                        lambdabot-trusted       >= 5.2 && < 5.3,
                         logict                  >= 0.5,
                         MonadRandom             >= 0.1,
                         mueval                  >= 0.9.3,
@@ -127,4 +127,4 @@ library
                         show                    >= 0.4,
                         vector-space            >= 0.8,
                         HTTP                    >= 4000,
-                        network                 >= 2.4 && < 3.1
+                        network                 >= 2.7 && < 3.2

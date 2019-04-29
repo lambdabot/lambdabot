@@ -1,5 +1,5 @@
 name:                   lambdabot-reference-plugins
-version:                5.1.0.4
+version:                5.2
 
 license:                GPL
 license-file:           LICENSE
@@ -34,15 +34,11 @@ homepage:               https://wiki.haskell.org/Lambdabot
 
 build-type:             Simple
 cabal-version:          >= 1.8
-tested-with:            GHC == 7.10.3, GHC == 8.0.2, GHC == 8.2.2, GHC == 8.4.4, GHC == 8.6.1
+tested-with:            GHC == 7.10.3, GHC == 8.0.2, GHC == 8.2.2, GHC == 8.4.4, GHC == 8.6.5
 
 source-repository head
   type:                 git
   location:             https://github.com/lambdabot/lambdabot.git
-
-flag network-uri
-  description: Get Network.URI from the network-uri package
-  default: True
 
 library
   hs-source-dirs:       src
@@ -67,16 +63,13 @@ library
                         bytestring              >= 0.9,
                         containers              >= 0.4,
                         HTTP                    >= 4000,
-                        lambdabot-core          >= 5.1 && < 5.2,
+                        lambdabot-core          >= 5.2 && < 5.3,
                         mtl                     >= 2,
+                        network                 >= 2.7 && < 3.2,
+                        network-uri             >= 2.6 && < 2.7, 
                         oeis                    >= 0.3.1,
                         process                 >= 1.1,
                         regex-tdfa              >= 1.1,
                         split                   >= 0.2,
                         tagsoup                 >= 0.12,
                         utf8-string             >= 0.3
-
-  if flag(network-uri)
-    build-depends: network-uri >= 2.6 && < 2.7, network >= 2.6 && < 3.1
-  else
-    build-depends: network-uri < 2.6, network < 2.6

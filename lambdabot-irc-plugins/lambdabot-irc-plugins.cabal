@@ -1,5 +1,5 @@
 name:                   lambdabot-irc-plugins
-version:                5.1.0.4
+version:                5.2
 
 license:                GPL
 license-file:           LICENSE
@@ -50,10 +50,10 @@ library
                         containers              >= 0.4,
                         directory               >= 1.1,
                         filepath                >= 1.3,
-                        lambdabot-core          >= 5.1 && < 5.2,
+                        lambdabot-core          >= 5.2 && < 5.3,
                         lifted-base             >= 0.2,
                         mtl                     >= 2,
-                        network                 >= 2.4 && < 3.2,
-                        time                    >= 1.4,
+                        network                 >= 2.7 && < 3.2,
                         SafeSemaphore           >= 0.9,
-                        split                   >= 0.2
+                        split                   >= 0.2,
+                        time                    >= 1.4
