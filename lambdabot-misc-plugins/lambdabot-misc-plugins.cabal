@@ -22,8 +22,6 @@ description:            Lambdabot is an IRC bot written over several years by
                         .
                         [hello] Hello, world.
                         .
-                        [stats] Ad-hoc statsd queries.
-                        .
                         [todo] A to-do list for lambdabot.
 
 homepage:               https://wiki.haskell.org/Lambdabot
