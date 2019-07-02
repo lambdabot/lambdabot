@@ -55,7 +55,9 @@ unLet (Let ds e) = unLet $
 unLet (Lambda v e) = Lambda v (unLet e)
 unLet (Var f x) = Var f x
 
-type Env = M.Map String String
+type Env = (M.Map String String, Int)
+-- note: The second component is the environment size, counting duplicate
+-- variables.
 
 -- | Rename all variables to (locally) unique fresh ones
 --
@@ -63,9 +65,9 @@ type Env = M.Map String String
 -- Otherwise a newly created id/const/... could be bound by a lambda
 -- e.g. transform' (\id x -> x) ==> transform' (\id -> id) ==> id
 alphaRename :: Expr -> Expr
-alphaRename e = alpha e `evalState` M.empty where
+alphaRename e = alpha e `evalState` (M.empty, 0) where
   alpha :: Expr -> State Env Expr
-  alpha (Var f v)     = do fm <- get; return $ Var f $ maybe v id (M.lookup v fm)
+  alpha (Var f v)     = do (fm, _) <- get; return $ Var f $ maybe v id (M.lookup v fm)
   alpha (App e1 e2)   = liftM2 App (alpha e1) (alpha e2)
   alpha (Let _ _)     = assert False undefined
   alpha (Lambda v e') = inEnv $ liftM2 Lambda (alphaPat v) (alpha e')
@@ -75,9 +77,9 @@ alphaRename e = alpha e `evalState` M.empty where
   inEnv f = state $ \s -> (fst $ runState f s, s)
 
   alphaPat (PVar v) = do
-    fm <- get
-    let v' = "$" ++ show (M.size fm)
-    put $ M.insert v v' fm
+    (fm, i) <- get
+    let v' = "$" ++ show i
+    put (M.insert v v' fm, i+1)
     return $ PVar v'
   alphaPat (PTuple p1 p2) = liftM2 PTuple (alphaPat p1) (alphaPat p2)
   alphaPat (PCons  p1 p2) = liftM2 PCons  (alphaPat p1) (alphaPat p2)
