@@ -194,7 +194,7 @@ optimizeE (Lambda [] b) =
     b
 -- replace (\x -> \y -> z) with (\x y -> z)
 optimizeE (Lambda p1 (Lambda p2 body)) =
-    let (subst, bv, p2') = renameBinds M.empty (varsBoundHere p1) p2
+    let (subst, bv, p2') = renameBinds M.empty (freeVars (Lambda p2 body)) p2
         body' = substAvoiding subst bv body
     in  Lambda (p1 ++ p2') body'
 -- remove double parens
