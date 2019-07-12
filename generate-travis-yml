@@ -1,6 +1,6 @@
 #! /bin/sh
 
-make-travis-yml -j 1:2 -o .travis.yml cabal.project
+haskell-ci --jobs 1:2 -o .travis.yml cabal.project
 
 cat >> .travis.yml <<__EOF__
 
