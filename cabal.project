@@ -10,6 +10,3 @@ packages:
     lambdabot-social-plugins/lambdabot-social-plugins.cabal
     lambdabot-trusted/lambdabot-trusted.cabal
     lambdabot/lambdabot.cabal
-
-allow-newer:
-     vault:hashable

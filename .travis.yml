@@ -110,7 +110,6 @@ install:
     echo 'packages: "lambdabot-trusted"' >> cabal.project
     echo 'packages: "lambdabot"' >> cabal.project
   - |
-    echo "allow-newer: vault:hashable" >> cabal.project
   - "for pkg in $($HCPKG list --simple-output); do echo $pkg | sed 's/-[^-]*$//' | (grep -vE -- '^(lambdabot|lambdabot-core|lambdabot-haskell-plugins|lambdabot-irc-plugins|lambdabot-misc-plugins|lambdabot-novelty-plugins|lambdabot-reference-plugins|lambdabot-social-plugins|lambdabot-trusted)$' || true) | sed 's/^/constraints: /' | sed 's/$/ installed/' >> cabal.project.local; done"
   - cat cabal.project || true
   - cat cabal.project.local || true
@@ -150,7 +149,6 @@ script:
     echo 'packages: "lambdabot-trusted-*/*.cabal"' >> cabal.project
     echo 'packages: "lambdabot-*/*.cabal"' >> cabal.project
   - |
-    echo "allow-newer: vault:hashable" >> cabal.project
   - "for pkg in $($HCPKG list --simple-output); do echo $pkg | sed 's/-[^-]*$//' | (grep -vE -- '^(lambdabot|lambdabot-core|lambdabot-haskell-plugins|lambdabot-irc-plugins|lambdabot-misc-plugins|lambdabot-novelty-plugins|lambdabot-reference-plugins|lambdabot-social-plugins|lambdabot-trusted)$' || true) | sed 's/^/constraints: /' | sed 's/$/ installed/' >> cabal.project.local; done"
   - cat cabal.project || true
   - cat cabal.project.local || true
