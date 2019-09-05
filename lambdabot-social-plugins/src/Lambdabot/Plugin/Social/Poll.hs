@@ -25,8 +25,8 @@ voteOnPoll (o,poll) choice =
         then ((o,map (\(c,n) ->
                     if c == choice then (c,n+1)
                                    else (c,n)) poll)
-                                        ,"voted on " ++ show choice)
-        else ((o,poll),show choice ++ " is not currently a candidate in this poll")
+                                        ,"voted on " ++ choice)
+        else ((o,poll), choice ++ " is not currently a candidate in this poll")
 
 ------------------------------------------------------------------------
 
@@ -144,35 +144,35 @@ listPolls fm = show $ map fst (M.toList fm)
 showPoll :: VoteState -> String -> String
 showPoll fm poll =
     case M.lookup (P.pack poll) fm of
-        Nothing -> "No such poll: " ++ show poll ++ " Use @poll-list to see the available polls."
+        Nothing -> "No such poll: " ++ poll ++ " Use @poll-list to see the available polls."
         Just p  -> show $ map fst (snd p)
 
 addPoll :: VoteState -> VoteWriter -> String -> Cmd Vote String
 addPoll fm writer poll =
     case M.lookup (P.pack poll) fm of
         Nothing -> do writer $ M.insert (P.pack poll) newPoll fm
-                      return $ "Added new poll: " ++ show poll
-        Just _  -> return $ "Poll " ++ show poll ++
+                      return $ "Added new poll: " ++ poll
+        Just _  -> return $ "Poll " ++ poll ++
                             " already exists, choose another name for your poll"
 
 addChoice :: VoteState -> VoteWriter -> String -> String -> Cmd Vote String
 addChoice fm writer poll choice = case M.lookup (P.pack poll) fm of
-    Nothing -> return $ "No such poll: " ++ show poll
+    Nothing -> return $ "No such poll: " ++ poll
     Just _  -> do writer $ M.update (appendPoll choice) (P.pack poll) fm
-                  return $ "New candidate " ++ show choice ++
-                           ", added to poll " ++ show poll ++ "."
+                  return $ "New candidate " ++ choice ++
+                           ", added to poll " ++ poll ++ "."
 
 vote :: VoteState -> VoteWriter -> String -> String -> Cmd Vote String
 vote fm writer poll choice = case M.lookup (P.pack poll) fm of
-    Nothing          -> return $ "No such poll:" ++ show poll
-    Just (False,_)   -> return $ "The "++ show poll ++ " poll is closed, sorry !"
+    Nothing          -> return $ "No such poll:" ++ poll
+    Just (False,_)   -> return $ "The "++ poll ++ " poll is closed, sorry !"
     Just p@(True,_)  -> do let (np,msg) = voteOnPoll p choice
                            writer $ M.update (const (Just np)) (P.pack poll) fm
                            return msg
 
 showResult :: VoteState -> String -> String
 showResult fm poll = case M.lookup (P.pack poll) fm of
-    Nothing     -> "No such poll: "  ++ show poll
+    Nothing     -> "No such poll: "  ++ poll
     Just (o,p)  -> "Poll results for " ++ poll ++ " (" ++ (status o) ++ "): "
                    ++ (concat $ intersperse ", " $ map ppr p)
         where
@@ -184,11 +184,11 @@ removePoll :: VoteState -> VoteWriter -> String -> Cmd Vote String
 removePoll fm writer poll = case M.lookup (P.pack poll) fm of
     Just (True,_)  -> return "Poll should be closed before you can remove it."
     Just (False,_) -> do writer $ M.delete (P.pack poll) fm
-                         return $ "poll " ++ show poll ++ " removed."
-    Nothing        -> return $ "No such poll: " ++ show poll
+                         return $ "poll " ++ poll ++ " removed."
+    Nothing        -> return $ "No such poll: " ++ poll
 
 closePoll :: VoteState -> VoteWriter -> String -> Cmd Vote String
 closePoll fm writer poll = case M.lookup (P.pack poll) fm of
-    Nothing     -> return $ "No such poll: " ++ show poll
+    Nothing     -> return $ "No such poll: " ++ poll
     Just (_,p)  -> do writer $ M.update (const (Just (False,p))) (P.pack poll) fm
-                      return $ "Poll " ++ show poll ++ " closed."
+                      return $ "Poll " ++ poll ++ " closed."
