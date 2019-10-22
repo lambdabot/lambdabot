@@ -30,10 +30,6 @@ dummyPlugin = newModule
             }
           | (cmd, op) <- dummylst
           ]
-
-    , contextual = \msg -> case msg of
-        "lisppaste2: url"  -> say "Haskell pastebin: http://lpaste.net/"
-        _                  -> return ()
     }
 
 dummyHelp :: String -> String
@@ -58,19 +54,19 @@ dummyHelp s = case s of
 dummylst :: [(String, String -> String)]
 dummylst =
     [("dummy"      , const "dummy")
-    ,("bug"        , const "https://hackage.haskell.org/trac/ghc/newticket?type=bug")
+    ,("bug"        , const "https://gitlab.haskell.org/ghc/ghc/issues")
     ,("id"         , (' ' :) . id)
     ,("show"       , show)
     ,("wiki"       , lookupWiki)
-    ,("paste"      , const "Haskell pastebin: http://lpaste.net/")
+    ,("paste"      , const "A pastebin: https://paste.debian.net/")
     ,("docs"       , \x -> if null x
                            then docPrefix </> "index.html"
                            else lookupPackage docPrefix '-' "html" x)
     ,("learn"      , const "https://wiki.haskell.org/Learning_Haskell")
-    ,("haskellers" , const "http://www.haskellers.com/")
+    ,("haskellers" , const "https://www.haskellers.com/")
     ,("botsnack"   , const ":)")
     ,("get-shapr"  , const "shapr!!")
-    ,("shootout"   , const "http://benchmarksgame.alioth.debian.org/")
+    ,("shootout"   , const "https://benchmarksgame-team.pages.debian.net/benchmarksgame/")
     ,("faq"        , const "The answer is: Yes! Haskell can do that.")
     ,("googleit"   , lookupGoogle)
     ,("hackage"    , lookupHackage)
@@ -86,11 +82,11 @@ lookupWiki page = "https://wiki.haskell.org" </> spacesToUnderscores page
   where spacesToUnderscores = map (\c -> if c == ' ' then '_' else c)
 
 lookupHackage :: String -> String
-lookupHackage "" = "http://hackage.haskell.org"
-lookupHackage xs = "http://hackage.haskell.org/package" </> xs
+lookupHackage "" = "https://hackage.haskell.org"
+lookupHackage xs = "https://hackage.haskell.org/package" </> xs
 
 googlePrefix :: String
-googlePrefix = "http://letmegooglethatforyou.com"
+googlePrefix = "https://lmgtfy.com"
 
 lookupGoogle :: String -> String
 lookupGoogle "" = googlePrefix
@@ -99,7 +95,7 @@ lookupGoogle xs = googlePrefix </> "?q=" ++ quote xs
     quote = map (\x -> if x == ' ' then '+' else x)
 
 docPrefix :: String
-docPrefix = "http://haskell.org/ghc/docs/latest/html/libraries"
+docPrefix = "https://haskell.org/ghc/docs/latest/html/libraries"
 
 lookupPackage :: String -> Char -> String -> String -> String
 lookupPackage begin sep end x'' = 
