@@ -24,6 +24,8 @@ import Lambdabot.Util.Serial
 import Control.Applicative
 import Control.Concurrent (MVar)
 import Control.Monad
+import Control.Monad.Fail (MonadFail)
+import qualified Control.Monad.Fail
 import Control.Monad.Base
 import Control.Monad.Reader (MonadReader(..), ReaderT(..), asks)
 import Control.Monad.Trans (MonadTrans(..), MonadIO(..))
@@ -99,7 +101,7 @@ data ModuleInfo st = ModuleInfo
 --   need to access its name or its state.
 newtype ModuleT st m a = ModuleT { unModuleT :: ReaderT (ModuleInfo st) m a }
     deriving (Applicative, Functor, Monad, MonadReader (ModuleInfo st), 
-        MonadTrans, MonadIO, MonadException, MonadConfig)
+        MonadTrans, MonadIO, MonadException, MonadConfig, MonadFail)
 
 runModuleT :: ModuleT st m a -> ModuleInfo st -> m a
 runModuleT = runReaderT . unModuleT

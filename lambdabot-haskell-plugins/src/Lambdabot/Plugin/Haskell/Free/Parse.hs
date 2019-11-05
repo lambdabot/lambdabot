@@ -4,6 +4,8 @@ module Lambdabot.Plugin.Haskell.Free.Parse where
 
 import Control.Applicative
 import Control.Monad
+import Control.Monad.Fail (MonadFail)
+import qualified Control.Monad.Fail
 
 data Token
     = QVarId String
@@ -75,6 +77,8 @@ instance Monad ParseS where
     m >>= k = ParseS (\ts -> case parse m ts of
                                 ParseSuccess x ts' -> parse (k x) ts'
                                 ParseError s       -> ParseError s)
+
+instance MonadFail ParseS where
     fail str = ParseS (\_ -> ParseError str)
 
 instance Alternative ParseS where

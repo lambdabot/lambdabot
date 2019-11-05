@@ -164,17 +164,17 @@ mtlParser input = do
     hsMod <- liftE $ parseModule ("type X = " ++ input ++ "\n")
     decls <- case hsMod of
         (Hs.Module _ _ _ decls) -> return decls
-        _ -> fail "Not a module?"
+        _ -> Left "Not a module?"
     hsType <- case decls of
         (TypeDecl _ hsType:_) -> return hsType
-        _ -> fail "No parse?"
+        _ -> Left "No parse?"
     let result = mtlParser' hsType
     case pError result of
-        Just e  -> fail e
+        Just e  -> Left e
         Nothing -> return (pResult result)
   where
     liftE (ParseOk a) = return a
-    liftE (ParseFailed _src str) = fail str
+    liftE (ParseFailed _src str) = Left str
 
 mtlParser' :: Type -> PType
 mtlParser' t@(TyCon (UnQual (Ident v))) = case lookup v types of
