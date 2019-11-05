@@ -9,6 +9,7 @@ import Lambdabot.Plugin.Haskell.Free.Parse
 import Lambdabot.Plugin.Haskell.Free.Util
 
 import Control.Monad
+import Control.Monad.Fail (MonadFail)
 import Control.Monad.State
 import Control.Monad.Identity
 
@@ -48,7 +49,7 @@ extractTypes env (TyCons c ts)
     = let ts12 = map (extractTypes env) ts
       in (TyCons c (map fst ts12), TyCons c (map snd ts12))
 
-freeTheoremStr :: (Monad m) => (String -> m String) -> String -> m String
+freeTheoremStr :: (MonadFail m) => (String -> m String) -> String -> m String
 freeTheoremStr tf s
     = case parse (do
                     v <- getToken >>= \v -> case v of
@@ -292,6 +293,6 @@ freeTheorem' env e1 e2 t'@(TyCons c@"Either" ts@[_,_])
         return (foldr (\((f,t),e1) e2 -> ThForall f t (ThImplies e1 e2))
                 thf fts)
 
-freeTheorem' env e1 e2 t'@_ = fail "Sorry, this type is too difficult for me."
+freeTheorem' env e1 e2 t'@_ = error "Sorry, this type is too difficult for me."
 
 -- vim: ts=4:sts=4:expandtab:ai

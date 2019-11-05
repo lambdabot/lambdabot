@@ -31,6 +31,8 @@ module Lambdabot.Util.Serial
     , readOnly
     ) where
 
+import Control.Monad.Fail (MonadFail)
+
 import Data.Maybe               (mapMaybe)
 
 import Data.Map (Map)
@@ -84,7 +86,7 @@ mapSerial = Serial {
 
 -- | 'readM' behaves like read, but catches failure in a monad.
 -- this allocates a 20-30 M on startup...
-readM :: (Monad m, Read a) => String -> m a
+readM :: (MonadFail m, Read a) => String -> m a
 readM s = case [x | (x,t) <- {-# SCC "Serial.readM.reads" #-} reads s    -- bad!
                , ("","")  <- lex t] of
         [x] -> return x

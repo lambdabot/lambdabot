@@ -28,6 +28,8 @@ import qualified Lambdabot.Message as Msg
 import Lambdabot.Nick
 
 import Control.Applicative
+import Control.Monad.Fail (MonadFail)
+import qualified Control.Monad.Fail
 import Control.Monad.Base
 import Control.Monad.Identity
 import Control.Monad.Reader
@@ -49,6 +51,7 @@ instance Applicative f => Applicative (Cmd f) where
 instance Monad m => Monad (Cmd m) where
     return = Cmd . return
     Cmd x >>= f = Cmd (x >>= (unCmd . f))
+instance MonadFail m => MonadFail (Cmd m) where
     fail = lift . fail
 instance MonadIO m => MonadIO (Cmd m) where
     liftIO = lift . liftIO

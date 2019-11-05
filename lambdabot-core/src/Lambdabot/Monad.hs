@@ -60,6 +60,8 @@ import           Lambdabot.Util
 import Control.Applicative
 import Control.Concurrent.Lifted
 import Control.Exception.Lifted as E (catch)
+import Control.Monad.Fail (MonadFail)
+import qualified Control.Monad.Fail
 import Control.Monad.Base
 import Control.Monad.Identity
 import Control.Monad.Reader
@@ -168,7 +170,7 @@ initRwState = IRCRWState
 -- instances Monad, Functor, MonadIO, MonadState, MonadError
 
 newtype LB a = LB { unLB :: ReaderT (IRCRState, IORef IRCRWState) IO a }
-    deriving (Functor, Applicative, Monad, MonadIO, MonadException)
+    deriving (Functor, Applicative, Monad, MonadIO, MonadException, MonadFail)
 
 runLB :: LB a -> (IRCRState, IORef IRCRWState) -> IO a
 runLB = runReaderT . unLB
@@ -181,7 +183,7 @@ instance MonadBaseControl IO LB where
     liftBaseWith action = LB (liftBaseWith (\run -> action (run . unLB)))
     restoreM = LB . restoreM
 
-class (MonadIO m, MonadBaseControl IO m, MonadConfig m, MonadLogging m, Applicative m) => MonadLB m where
+class (MonadIO m, MonadBaseControl IO m, MonadConfig m, MonadLogging m, Applicative m, MonadFail m) => MonadLB m where
     lb :: LB a -> m a
 
 instance MonadLB LB where lb = id
