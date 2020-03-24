@@ -211,7 +211,7 @@ registerModule mName m mState = do
     mInfo   <- ModuleInfo mName mTag m <$> newMVar mState
     
     modify $ \s -> s
-        { ircModulesByName  = M.insert mName (This mInfo) (ircModulesByName s)
+        { ircModulesByName  = M.insert mName (Some mInfo) (ircModulesByName s)
         , ircModulesByID    = D.insert mTag        mInfo  (ircModulesByID   s)
         }
     
@@ -251,18 +251,18 @@ unregisterModule :: String -> LB ()
 unregisterModule mName = maybe (return ()) warningM <=< state $ \s -> 
     case M.lookup mName (ircModulesByName s) of
         Nothing                 -> (Just $ "Tried to unregister module that wasn't registered: " ++ show mName, s)
-        Just (This modInfo)     ->
+        Just (Some modInfo)     ->
             let mTag = moduleID modInfo
                 
-                notThisTag :: DSum ModuleID f -> Bool
-                notThisTag (tag :=> _) = This tag /= This mTag
+                notSomeTag :: DSum ModuleID f -> Bool
+                notSomeTag (tag :=> _) = Some tag /= Some mTag
                 s' = s
                     { ircModulesByName  = M.delete mName        (ircModulesByName s)
                     , ircModulesByID    = D.delete mTag         (ircModulesByID   s)
-                    , ircCommands       = M.filter notThisTag   (ircCommands      s)
+                    , ircCommands       = M.filter notSomeTag   (ircCommands      s)
                     , ircCallbacks      = M.map (D.delete mTag) (ircCallbacks     s)
-                    , ircServerMap      = M.filter notThisTag   (ircServerMap     s)
-                    , ircOutputFilters  =   filter notThisTag   (ircOutputFilters s)
+                    , ircServerMap      = M.filter notSomeTag   (ircServerMap     s)
+                    , ircOutputFilters  =   filter notSomeTag   (ircOutputFilters s)
                     }
              in (Nothing, s')
 
@@ -339,7 +339,7 @@ inModuleNamed name nothing just = do
     mbMod <- gets (M.lookup name . ircModulesByName)
     case mbMod of
         Nothing             -> nothing
-        Just (This modInfo) -> runModuleT just modInfo
+        Just (Some modInfo) -> runModuleT just modInfo
 
 inModuleWithID :: ModuleID st -> LB a -> (ModuleT st LB a) -> LB a
 inModuleWithID tag nothing just = do
@@ -362,4 +362,4 @@ listModules = gets (M.keys . ircModulesByName)
 withAllModules :: (forall st. ModuleT st LB a) -> LB ()
 withAllModules f = do
     mods <- gets $ M.elems . ircModulesByName
-    forM_ mods $ \(This modInfo) -> runModuleT f modInfo
+    forM_ mods $ \(Some modInfo) -> runModuleT f modInfo

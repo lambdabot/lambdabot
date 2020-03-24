@@ -102,11 +102,11 @@ modules xs = [| $(listE $ map instalify (nub xs)) |]
     where
         instalify x =
             let module' = varE $ mkName (x ++ "Plugin")
-             in [| (x, This $module') |]
+             in [| (x, Some $module') |]
 
 withModules :: Modules -> LB a -> LB a
 withModules []      = id
-withModules ((n, This m):ms)  = withModule n m . withModules ms
+withModules ((n, Some m):ms)  = withModule n m . withModules ms
 
 withModule :: String -> Module st -> LB a -> LB a
 withModule name m = bracket_ (ircLoadModule name m) (ircUnloadModule name)
