@@ -7,6 +7,7 @@ module Lambdabot.Plugin.Haskell.Check (checkPlugin) where
 import Lambdabot.Plugin
 import Lambdabot.Plugin.Haskell.Eval (runGHC)
 import qualified Language.Haskell.Exts.Simple as Hs
+import Codec.Binary.UTF8.String
 
 checkPlugin :: Module ()
 checkPlugin = newModule
@@ -22,7 +23,7 @@ checkPlugin = newModule
 
 check :: MonadLB m => String -> m String
 check src =
-    case Hs.parseExp src of
+    case Hs.parseExp (decodeString src) of
         Hs.ParseFailed l e  -> return (Hs.prettyPrint l ++ ':' : e)
         Hs.ParseOk{}        -> postProcess `fmap` runGHC ("text (myquickcheck (" ++ src ++ "))")
 
