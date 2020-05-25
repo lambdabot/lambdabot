@@ -1,5 +1,5 @@
 name:                   lambdabot-novelty-plugins
-version:                5.2
+version:                5.3
 
 license:                GPL
 license-file:           LICENSE
@@ -67,7 +67,7 @@ library
                         containers              >= 0.4,
                         dice                    >= 0.1,
                         directory               >= 1.1,
-                        lambdabot-core          >= 5.2 && < 5.3,
+                        lambdabot-core          >= 5.3 && < 5.4,
                         misfortune              >= 0.1,
                         process                 >= 1.1,
                         random-fu               >= 0.2.6.2,

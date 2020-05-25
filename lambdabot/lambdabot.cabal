@@ -1,5 +1,5 @@
 name:                   lambdabot
-version:                5.2
+version:                5.3
 
 license:                GPL
 license-file:           LICENSE
@@ -54,11 +54,11 @@ executable lambdabot
 
   ghc-options:          -Wall -threaded
   build-depends:        base                         >= 3 && < 5,
-                        lambdabot-core               >= 5.2 && < 5.3,
-                        lambdabot-haskell-plugins    >= 5.2 && < 5.3,
-                        lambdabot-irc-plugins        >= 5.2 && < 5.3,
-                        lambdabot-misc-plugins       >= 5.2 && < 5.3,
-                        lambdabot-novelty-plugins    >= 5.2 && < 5.3,
-                        lambdabot-reference-plugins  >= 5.2 && < 5.3,
-                        lambdabot-social-plugins     >= 5.2 && < 5.3,
+                        lambdabot-core               >= 5.3 && < 5.4,
+                        lambdabot-haskell-plugins    >= 5.3 && < 5.4,
+                        lambdabot-irc-plugins        >= 5.3 && < 5.4,
+                        lambdabot-misc-plugins       >= 5.3 && < 5.4,
+                        lambdabot-novelty-plugins    >= 5.3 && < 5.4,
+                        lambdabot-reference-plugins  >= 5.3 && < 5.4,
+                        lambdabot-social-plugins     >= 5.3 && < 5.4,
                         mtl                          >= 2

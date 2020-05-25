@@ -1,5 +1,5 @@
 name:                   lambdabot-haskell-plugins
-version:                5.2
+version:                5.3
 
 license:                GPL
 license-file:           LICENSE
@@ -99,8 +99,8 @@ library
                         directory               >= 1.1,
                         filepath                >= 1.3,
                         haskell-src-exts-simple >= 1.18 && < 1.24,
-                        lambdabot-core          >= 5.2 && < 5.3,
-                        lambdabot-reference-plugins >= 5.2 && < 5.3,
+                        lambdabot-core          >= 5.3 && < 5.4,
+                        lambdabot-reference-plugins >= 5.3 && < 5.4,
                         lifted-base             >= 0.2,
                         mtl                     >= 2,
                         oeis                    >= 0.3.1,
@@ -119,7 +119,7 @@ library
                         data-memocombinators    >= 0.4,
                         hoogle                  >= 5.0.17.1,
                         IOSpec                  >= 0.2,
-                        lambdabot-trusted       >= 5.2 && < 5.3,
+                        lambdabot-trusted       >= 5.3 && < 5.4,
                         logict                  >= 0.5,
                         MonadRandom             >= 0.1,
                         mueval                  >= 0.9.3,

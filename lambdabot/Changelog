@@ -1,3 +1,12 @@
+lambdabot 5.3
+	* support ghc-8.8 (#186, #187)
+	* fix Setup.hs files for Cabal 3.0 (#188, #189)
+	* fix alpha renaming in @pl
+	* fix variable capture in @unpl
+
+lambdabot 5.2
+	* remove stats plugin (for network-3.0 support)
+
 lambdabot 5.1.0.4
 	* support ghc-8.6 (#174, #175)
 	* @pl timeout works again (#173)

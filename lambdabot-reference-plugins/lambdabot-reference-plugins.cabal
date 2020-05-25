@@ -1,5 +1,5 @@
 name:                   lambdabot-reference-plugins
-version:                5.2
+version:                5.3
 
 license:                GPL
 license-file:           LICENSE
@@ -63,7 +63,7 @@ library
                         bytestring              >= 0.9,
                         containers              >= 0.4,
                         HTTP                    >= 4000,
-                        lambdabot-core          >= 5.2 && < 5.3,
+                        lambdabot-core          >= 5.3 && < 5.4,
                         mtl                     >= 2,
                         network                 >= 2.7 && < 3.2,
                         network-uri             >= 2.6 && < 2.7, 
