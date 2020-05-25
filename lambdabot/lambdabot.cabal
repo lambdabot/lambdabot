@@ -19,7 +19,7 @@ homepage:               https://wiki.haskell.org/Lambdabot
 bug-reports:            https://github.com/lambdabot/lambdabot/issues
 
 build-type:             Simple
-cabal-version:          >= 1.8
+cabal-version:          >= 1.10
 tested-with:            GHC == 8.2.2, GHC == 8.4.4, GHC == 8.6.5, GHC == 8.8.3
 
 extra-source-files:     scripts/ghci.sh
@@ -53,6 +53,7 @@ executable lambdabot
   other-modules:        Modules
 
   ghc-options:          -Wall -threaded
+  default-language:     Haskell98
   build-depends:        base                         >= 3 && < 5,
                         lambdabot-core               >= 5.3 && < 5.4,
                         lambdabot-haskell-plugins    >= 5.3 && < 5.4,
