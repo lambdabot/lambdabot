@@ -21,8 +21,6 @@ import System.Directory
 import System.Exit
 import System.Process
 import Codec.Binary.UTF8.String
-import Network.Browser (request)
-import Network.HTTP (getRequest, rspBody)
 
 evalPlugin :: Module ()
 evalPlugin = newModule
@@ -35,10 +33,6 @@ evalPlugin = newModule
             { aliases = ["define"] -- because @define always gets "corrected" to @undefine
             , help = say "let <x> = <e>. Add a binding"
             , process = lim80 . define
-            }
-        , (command "letlpaste")
-            { help = say "letlpaste <paste_id>. Import the contents of an lpaste."
-            , process = lim80 . defineFromLPaste
             }
         , (command "undefine")
             { help = say "undefine. Reset evaluator local bindings"
@@ -180,31 +174,6 @@ comp src = do
 munge, mungeEnc :: String -> String
 munge = expandTab 8 . strip (=='\n')
 mungeEnc = encodeString . munge
-
-------------------------------
--- define from lpaste
-
-defineFromLPaste :: MonadLB m => String -> m String
-defineFromLPaste num = do
-  maxlen <- getConfig maxPasteLength
-  mcode <- fetchLPaste num
-  case mcode of
-    Left err   -> return err
-    Right code
-     | length code < maxlen -> define code
-     | otherwise            -> return $
-       "That paste is too long! (maximum length: " ++ show maxlen ++ ")"
-
-fetchLPaste :: MonadLB m => String -> m (Either String String)
-fetchLPaste num = browseLB $
-  if any (`notElem` ['0'..'9']) num
-    then return $ Left "Invalid paste ID."
-    else do
-      let src = "http://lpaste.net/raw/" ++ num
-      (uri, resp) <- request $ getRequest src
-      return $ if show uri == src
-        then Right $ rspBody resp
-        else Left "I couldn't find any paste under that ID."
 
 ------------------------------
 -- reset all bindings
