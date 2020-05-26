@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE GADTs #-}
@@ -73,7 +74,10 @@ import Data.IORef
 import Data.Some
 import qualified Data.Map as M
 import qualified Data.Set as S
+import Control.Monad.Catch (MonadThrow, MonadCatch, MonadMask)
+#if !defined(MIN_VERSION_haskeline) || !MIN_VERSION_haskeline(0,8,0)
 import System.Console.Haskeline.MonadException (MonadException)
+#endif
 
 ------------------------------------------------------------------------
 --
@@ -170,7 +174,11 @@ initRwState = IRCRWState
 -- instances Monad, Functor, MonadIO, MonadState, MonadError
 
 newtype LB a = LB { unLB :: ReaderT (IRCRState, IORef IRCRWState) IO a }
-    deriving (Functor, Applicative, Monad, MonadIO, MonadException, MonadFail)
+    deriving (Functor, Applicative, Monad, MonadIO, MonadFail,
+#if !defined(MIN_VERSION_haskeline) || !MIN_VERSION_haskeline(0,8,0)
+        MonadException,
+#endif
+        MonadThrow, MonadCatch, MonadMask)
 
 runLB :: LB a -> (IRCRState, IORef IRCRWState) -> IO a
 runLB = runReaderT . unLB
