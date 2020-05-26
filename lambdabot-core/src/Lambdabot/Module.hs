@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
@@ -31,7 +32,10 @@ import Control.Monad.Reader (MonadReader(..), ReaderT(..), asks)
 import Control.Monad.Trans (MonadTrans(..), MonadIO(..))
 import Control.Monad.Trans.Control
 import Data.Unique.Tag
+import Control.Monad.Catch (MonadThrow, MonadCatch, MonadMask)
+#if !defined(MIN_VERSION_haskeline) || !MIN_VERSION_haskeline(0,8,0)
 import System.Console.Haskeline.MonadException (MonadException)
+#endif
 
 ------------------------------------------------------------------------
 
@@ -101,7 +105,11 @@ data ModuleInfo st = ModuleInfo
 --   need to access its name or its state.
 newtype ModuleT st m a = ModuleT { unModuleT :: ReaderT (ModuleInfo st) m a }
     deriving (Applicative, Functor, Monad, MonadReader (ModuleInfo st), 
-        MonadTrans, MonadIO, MonadException, MonadConfig, MonadFail)
+        MonadTrans, MonadIO, MonadConfig, MonadFail,
+#if !defined(MIN_VERSION_haskeline) || !MIN_VERSION_haskeline(0,8,0)
+        MonadException,
+#endif
+        MonadThrow, MonadCatch, MonadMask)
 
 runModuleT :: ModuleT st m a -> ModuleInfo st -> m a
 runModuleT = runReaderT . unModuleT
