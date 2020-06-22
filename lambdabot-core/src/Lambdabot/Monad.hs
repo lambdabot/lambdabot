@@ -88,7 +88,7 @@ data IRCRState = IRCRState
     }
 
 -- | Default ro state
-initRoState :: [D.DSum Config Identity] -> IO IRCRState
+initRoState :: [DSum Config Identity] -> IO IRCRState
 initRoState configuration = do
     quitMVar     <- newEmptyMVar
     initDoneMVar <- newEmptyMVar
