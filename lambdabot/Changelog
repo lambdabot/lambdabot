@@ -1,3 +1,7 @@
+lambdabot 5.3.0.1
+	* support ghc-8.10 (#192)
+	* support dependent-map 0.4 (#193)
+
 lambdabot 5.3
 	* support ghc-8.8 (#186, #187)
 	* fix Setup.hs files for Cabal 3.0 (#188, #189)
