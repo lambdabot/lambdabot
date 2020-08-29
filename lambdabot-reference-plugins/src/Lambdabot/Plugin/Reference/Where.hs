@@ -69,6 +69,10 @@ getWhere fm fact =
         Just x  -> P.unpack x
 
 updateWhere :: Bool -> WhereState -> WhereWriter -> String -> String -> Cmd Where String
-updateWhere _guard factFM writer fact dat = do
+updateWhere _guard factFM writer fact dat
+    | null dat = do
+        writer $ M.delete (P.pack fact) factFM
+        return "It is forgotten."
+    | otherwise = do
         writer $ M.insert (P.pack fact) (P.pack dat) factFM
         randomSuccessMsg
