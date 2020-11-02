@@ -137,6 +137,7 @@ types =
     [ ("Cont",     lift2 $ \r       a -> (a -->      r) -->      r)
     , ("ContT",    lift3 $ \r     m a -> (a --> m $$ r) --> m $$ r)
     , ("ErrorT",   lift3 $ \e     m a -> m $$ (con "Either" $$ e $$ a))
+    , ("ExceptT",  lift3 $ \e     m a -> m $$ (con "Either" $$ e $$ a))
     , ("Identity", lift1 $ \        a -> a)
     , ("ListT",    lift2 $ \      m a -> m $$ (return list_tycon $$ a))
     , ("RWS",      lift4 $ \r w s   a -> r --> s -->      tuple [a, s, w])
