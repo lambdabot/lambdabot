@@ -119,7 +119,7 @@ runRemember :: String -> Cmd Quote ()
 runRemember str
     | null rest = say "Incorrect arguments to quote"
     | otherwise = do
-        withMS $ \fm writer -> do
+        withMSSync $ \fm writer -> do
             let ss  = fromMaybe [] (M.lookup (P.pack nm) fm)
                 fm' = M.insert (P.pack nm) (P.pack q : ss) fm
             writer fm'
@@ -133,7 +133,7 @@ runForget :: String -> Cmd Quote ()
 runForget str
     | null rest = say "Incorrect arguments to quote"
     | otherwise = do
-        ss <- withMS $ \fm writer -> do
+        ss <- withMSSync $ \fm writer -> do
             let ss  = fromMaybe [] (M.lookup (P.pack nm) fm)
                 fm' = case delete (P.pack q) ss of
                     []  -> M.delete (P.pack nm)     fm

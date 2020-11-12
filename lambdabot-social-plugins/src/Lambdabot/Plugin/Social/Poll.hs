@@ -52,7 +52,7 @@ pollPlugin = newModule
         [ (command "poll-list")
             { help = say "poll-list                   Shows all current polls"
             , process = \_ -> do
-                result <- withMS $ \factFM writer -> processCommand factFM writer "poll-list" []
+                result <- withMSSync $ \factFM writer -> processCommand factFM writer "poll-list" []
                 say result
             }
         , (command "poll-show")
@@ -93,7 +93,7 @@ pollPlugin = newModule
 process_ :: [Char] -> [Char] -> Cmd Vote ()
 process_ cmd [] = say ("Missing argument. Check @help " ++ cmd ++ " for info.")
 process_ cmd dat = do
-    result <- withMS $ \fm writer -> processCommand fm writer cmd (words dat)
+    result <- withMSSync $ \fm writer -> processCommand fm writer cmd (words dat)
     say result
 
 ------------------------------------------------------------------------
