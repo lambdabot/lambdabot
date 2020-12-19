@@ -27,7 +27,6 @@
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE TypeSynonymInstances #-}
-{-# LANGUAGE UnboxedTuples #-}
 {-# LANGUAGE UnicodeSyntax #-}
 module L where
 import Control.Applicative
