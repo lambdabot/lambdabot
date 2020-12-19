@@ -37,8 +37,6 @@ extra-source-files:     scripts/ghci.sh
 data-files:             scripts/online.rc,
                         scripts/passwd.rc.sample,
                         State/haddock,
-                        State/Pristine.hs.706,
-                        State/Pristine.hs.708,
                         State/Pristine.hs.default,
                         State/source,
                         State/vixen
