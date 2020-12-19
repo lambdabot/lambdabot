@@ -1,0 +1,10 @@
+#! /bin/sh
+
+haskell-ci --jobs 1:2 github cabal.project
+
+# for pushes, only rebuild when pushing to the master branch
+
+sed -i .github/workflows/haskell-ci.yml -e '
+    s/- push/push:\n    branches:\n      master/;
+    s/- pull_request/pull_request:/
+'

@@ -1,6 +1,6 @@
 # Lambdabot: A friendly IRC bot and apprentice coder, written in Haskell.
 
-[![Build Status](https://secure.travis-ci.org/lambdabot/lambdabot.svg)](http://travis-ci.org/lambdabot/lambdabot/)
+![Haskell-CI](https://github.com/lambdabot/lambdabot/workflows/Haskell-CI/badge.svg)
 
 Lambdabot is an IRC bot written over several years by those on the #haskell
 IRC channel.
