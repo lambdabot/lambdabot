@@ -132,10 +132,12 @@ instance Packable ([(ByteString,ByteString)]) where
 
         showPacked = gzip . P.unlines . concatMap (\(k,v) -> [k,v])
 
-instance Packable (M.Map P.ByteString (Bool, [(String, Int)])) where
+-- The following instance is used by the `poll` plugin.
+-- The `read` and `show` are there for backward compatibility.
+instance Packable (M.Map P.ByteString (Bool, [(P.ByteString, Int)])) where
     readPacked = M.fromList . readKV . P.lines
         where
-          readKV :: [P.ByteString] -> [(P.ByteString,(Bool, [(String, Int)]))]
+          readKV :: [P.ByteString] -> [(P.ByteString,(Bool, [(P.ByteString, Int)]))]
           readKV []         = []
           readKV (k:v:rest) = (k, (read . P.unpack) v) : readKV rest
           readKV _          = error "Vote.readPacked: parse failed"
