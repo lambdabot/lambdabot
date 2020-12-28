@@ -25,8 +25,8 @@ voteOnPoll (o,poll) choice =
         then ((o,map (\(c,n) ->
                     if c == choice then (c,n+1)
                                    else (c,n)) poll)
-                                        ,"voted on " ++ show choice)
-        else ((o,poll),show choice ++ " is not currently a candidate in this poll")
+                                        ,"voted on " ++ pprChoice choice)
+        else ((o,poll),pprChoice choice ++ " is not currently a candidate in this poll")
 
 ------------------------------------------------------------------------
 
@@ -96,6 +96,9 @@ pollPlugin = newModule
 
 process_ :: [Char] -> [Char] -> Cmd Vote ()
 process_ cmd [] = say ("Missing argument. Check @help " ++ cmd ++ " for info.")
+process_ cmd dat
+    | any (\c -> c < ' ' || c == '"') dat
+    = say "Please do not use control characters or double quotes in polls."
 process_ cmd dat = do
     result <- withMS $ \fm writer ->
         processCommand fm writer cmd (map P.pack (words dat))
@@ -147,63 +150,79 @@ processCommand fm writer cmd dat = case cmd of
 ------------------------------------------------------------------------
 
 listPolls :: VoteState -> String
-listPolls fm = show $ map fst (M.toList fm)
+listPolls fm = pprList pprPoll $ map fst (M.toList fm)
 
 showPoll :: VoteState -> PollName -> String
 showPoll fm poll =
     case M.lookup poll fm of
-        Nothing -> "No such poll: " ++ show poll ++ " Use @poll-list to see the available polls."
-        Just p  -> show $ map fst (snd p)
+        Nothing -> "No such poll: " ++ pprPoll poll ++ " Use @poll-list to see the available polls."
+        Just p  -> pprList pprChoice $ map fst (snd p)
 
 addPoll :: VoteState -> VoteWriter -> PollName -> Cmd Vote String
 addPoll fm writer poll =
     case M.lookup poll fm of
         Nothing -> do writer $ M.insert poll newPoll fm
-                      return $ "Added new poll: " ++ show poll
-        Just _  -> return $ "Poll " ++ show poll ++
+                      return $ "Added new poll: " ++ pprPoll poll
+        Just _  -> return $ "Poll " ++ pprPoll poll ++
                             " already exists, choose another name for your poll"
 
 addChoice :: VoteState -> VoteWriter -> PollName -> Choice -> Cmd Vote String
 addChoice fm writer poll choice = case M.lookup poll fm of
-    Nothing -> return $ "No such poll: " ++ show poll
+    Nothing -> return $ "No such poll: " ++ pprPoll poll
     Just _  -> do writer $ M.update (appendPoll choice) poll fm
-                  return $ "New candidate " ++ show choice ++
-                           ", added to poll " ++ show poll ++ "."
+                  return $ "New candidate " ++ pprChoice choice ++
+                           ", added to poll " ++ pprPoll poll ++ "."
 
 vote :: VoteState -> VoteWriter -> PollName -> Choice -> Cmd Vote String
 vote fm writer poll choice = case M.lookup poll fm of
-    Nothing          -> return $ "No such poll:" ++ show poll
-    Just (False,_)   -> return $ "The "++ show poll ++ " poll is closed, sorry !"
+    Nothing          -> return $ "No such poll: " ++ pprPoll poll
+    Just (False,_)   -> return $ "The "++ pprPoll poll ++ " poll is closed, sorry !"
     Just p@(True,_)  -> do let (np,msg) = voteOnPoll p choice
                            writer $ M.update (const (Just np)) poll fm
                            return msg
 
 showResult :: VoteState -> PollName -> String
 showResult fm poll = case M.lookup poll fm of
-    Nothing     -> "No such poll: "  ++ show poll
-    Just (o,p)  -> "Poll results for " ++ show poll ++ " (" ++ status o ++ "): "
+    Nothing     -> "No such poll: "  ++ pprPoll poll
+    Just (o,p)  -> "Poll results for " ++ pprPoll poll ++ " (" ++ status o ++ "): "
                    ++ (concat $ intersperse ", " $ map ppr p)
         where
             status s | s         = "Open"
                      | otherwise = "Closed"
-            ppr (x,y) = show x ++ "=" ++ show y
+            ppr (x,y) = pprChoice x ++ "=" ++ show y
 
 removePoll :: VoteState -> VoteWriter -> PollName -> Cmd Vote String
 removePoll fm writer poll = case M.lookup poll fm of
     Just (True,_)  -> return "Poll should be closed before you can remove it."
     Just (False,_) -> do writer $ M.delete poll fm
-                         return $ "poll " ++ show poll ++ " removed."
-    Nothing        -> return $ "No such poll: " ++ show poll
+                         return $ "poll " ++ pprPoll poll ++ " removed."
+    Nothing        -> return $ "No such poll: " ++ pprPoll poll
 
 closePoll :: VoteState -> VoteWriter -> PollName -> Cmd Vote String
 closePoll fm writer poll = case M.lookup poll fm of
-    Nothing     -> return $ "No such poll: " ++ show poll
+    Nothing     -> return $ "No such poll: " ++ pprPoll poll
     Just (_,p)  -> do writer $ M.update (const (Just (False,p))) poll fm
-                      return $ "Poll " ++ show poll ++ " closed."
+                      return $ "Poll " ++ pprPoll poll ++ " closed."
 
 resetPoll :: VoteState -> VoteWriter -> PollName -> Cmd Vote String
 resetPoll fm writer poll = case M.lookup poll fm of
     Just (_, vs)   -> do let np = (True, map (\(c, _) -> (c, 0)) vs)
                          writer $ M.update (const (Just np)) poll fm
-                         return $ "Poll " ++ show poll ++ " reset."
-    Nothing        -> return $ "No such poll: " ++ show poll
+                         return $ "Poll " ++ pprPoll poll ++ " reset."
+    Nothing        -> return $ "No such poll: " ++ pprPoll poll
+
+------------------------------------------------------------------------
+
+-- we render strings verbatim but surround them with quotes,
+-- relying on previous sanitization to disallow control characters
+pprBS :: P.ByteString -> String
+pprBS p = "\"" ++ P.unpack p ++ "\""
+
+pprPoll :: PollName -> String
+pprPoll = pprBS
+
+pprChoice :: Choice -> String
+pprChoice = pprBS
+
+pprList :: (a -> String) -> [a] -> String
+pprList f as = "[" ++ concat (intersperse "," (map f as)) ++ "]"
