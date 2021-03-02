@@ -27,7 +27,7 @@ import qualified Data.ByteString.Char8 as P
 import qualified Data.ByteString.Lazy as L
 import Data.Char
 import Data.List
-import qualified Data.Map as M
+import qualified Data.Map.Strict as M
 import Text.Printf
 
 type SeenState = (MaxMap, SeenMap)
@@ -55,7 +55,7 @@ seenPlugin = newModule
 
     , moduleInit = do
         sequence_
-            [ registerCallback signal (withSeenFM cb)
+            [ registerCallback signal (withSeenFM signal cb)
             | (signal, cb) <- zip
                 ["JOIN", "PART", "QUIT", "NICK", "353",      "PRIVMSG"]
                 [joinCB, partCB, quitCB, nickCB, joinChanCB, msgCB]
@@ -308,10 +308,11 @@ msgCB _ ct nick fm =
 --   'ReaderT IRC.Message (Seen IRC)'
 -- monad.
 withSeenFM :: G.Message a
-           => (a -> ClockTime -> PackedNick -> SeenMap -> Either String SeenMap)
+           => String
+           -> (a -> ClockTime -> PackedNick -> SeenMap -> Either String SeenMap)
            -> (a -> Seen ())
 
-withSeenFM f msg = do
+withSeenFM signal f msg = do
     let chan = packNick . lcNick . head . G.channels $! msg
         nick = packNick . lcNick . G.nick $ msg
 
@@ -324,10 +325,14 @@ withSeenFM f msg = do
                         [ () | (_,Present _ chans) <- M.toList state
                         , chan `elem` chans ]
 
-                    newMax = case M.lookup chan maxUsers of
-                        Nothing -> M.insert chan curUsers maxUsers
-                        Just  n -> if n < curUsers
-                            then M.insert chan curUsers maxUsers
-                            else maxUsers
+                    newMax
+                        | signal `elem` ["JOIN", "353"]
+                        = case M.lookup chan maxUsers of
+                            Nothing -> M.insert chan curUsers maxUsers
+                            Just  n -> if n < curUsers
+                                then M.insert chan curUsers maxUsers
+                                else maxUsers
+                        | otherwise -- ["PART", "QUIT", "NICK", "PRIVMSG"]
+                        = maxUsers
 
                 newMax `seq` newstate `seq` writer (newMax, newstate)
