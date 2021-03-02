@@ -20,4 +20,4 @@ modulesInfo = $(modules $ corePlugins
     ++ ["dummy", "fresh", "todo"] -- miscPlugins
     ++ ["bf", "dice", "elite", "filter", "quote", "slap", "unlambda"] -- noveltyPlugins
     ++ ["dict", "metar", "oeis", "search", "spell", "ticker", "where"] -- referencePlugins
-    ++ ["activity", "karma", "poll", "tell"]) -- socialPlugins
+    ++ ["activity", "karma", "poll", "seen", "tell"]) -- socialPlugins
