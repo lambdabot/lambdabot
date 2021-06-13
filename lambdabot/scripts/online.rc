@@ -1,46 +1,5 @@
-irc-connect freenode chat.freenode.net 6667 lambdabot Lambda_Robots:_100%_Loyal
+irc-connect libera irc.libera.chat 6667 lambdabot Lambda_Robots:_100%_Loyal
 rc passwd.rc
-admin + freenode:Cale
-admin + freenode:Igloo
-admin + freenode:Lemmih
-admin + freenode:Pseudonym
-admin + freenode:mauke
-admin + freenode:dons
-admin + freenode:gwern
-admin + freenode:igli
-admin + freenode:int-e
-admin + freenode:musasabi
-admin + freenode:shapr
-admin + freenode:sjanssen
-admin + freenode:sorear
-admin + freenode:vincenz
-join freenode:##logic
-join freenode:#arch-haskell
-join freenode:#darcs
-join freenode:#debian-es
-join freenode:#friendly-coders
-join freenode:#gentoo-haskell
-join freenode:#ghc
-join freenode:#happs
-join freenode:#haskell
-join freenode:#haskell-blah
-join freenode:#haskell-books
-join freenode:#haskell-overflow
-join freenode:#haskell-soc
-join freenode:#haskell.cz
-join freenode:#haskell.de
-join freenode:#haskell.dut
-join freenode:#haskell.es
-join freenode:#haskell.fi
-join freenode:#haskell.fr
-join freenode:#haskell.it
-join freenode:#haskell.jp
-join freenode:#haskell.se
-join freenode:#haskell_ru
-join freenode:#lessswrong
-join freenode:#macosx
-join freenode:#perl6
-join freenode:#rosettacode
-join freenode:#scala
-join freenode:#unicycling
-join freenode:#xmonad
+rc admins.rc
+rc channels.rc
+rc ignores.rc

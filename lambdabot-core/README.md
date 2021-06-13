@@ -1,12 +1,12 @@
 lambdabot ![Build Status](https://travis-ci.org/lambdabot/lambdabot.png)
 ===============
 
-Lambdabot is an IRC bot written over several years by those on freenode's #haskell [IRC channel](https://wiki.haskell.org/IRC_channel). It also operates in an offline mode as a Haskell development tool, and embedded as an extension to ghci.
+Lambdabot is an IRC bot written over several years by those on Libera's (formerly freenode's) #haskell [IRC channel](https://wiki.haskell.org/IRC_channel). It also operates in an offline mode as a Haskell development tool, and embedded as an extension to ghci.
 
 PREREQUISITES
 -------------
 
-You'll need GHC >= 7.4.  cabal-install is highly recommended.
+You'll need GHC >= 8.2.  cabal-install is highly recommended.
 
 External executable dependencies:
 
@@ -65,7 +65,7 @@ Lambdabot uses an extensible configuration system which allows plugins to define
 
 When doing so, configuration is passed in to the `lambdabotMain` function as a list of bindings.  Configuration variables are bound using the `:=>` operator (actually the data constructor of the `DSum` type), for example:
 
-    ghcBinary :=> "ghc-7.4.2"
+    ghcBinary :=> "ghc-8.10.5"
 
 So a typical custom lambdabot executable might look something like:
 

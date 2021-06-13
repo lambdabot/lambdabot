@@ -1,7 +1,7 @@
 # About Lambdabot
 
-Lambdabot is an IRC bot written over several years by those on the Freenode
-`#haskell` IRC channel.
+Lambdabot is an IRC bot written over several years by those on the Libera's
+(formerly freenode's) `#haskell` IRC channel.
 
 It operates as a command line tool, embedded in an editor, embedded in GHCi,
 via internet relay chat and on the web.
