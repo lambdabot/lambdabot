@@ -1,11 +1,11 @@
 name:                   lambdabot-social-plugins
-version:                5.3
+version:                5.3.0.2
 
 license:                GPL
 license-file:           LICENSE
 
 author:                 Don Stewart
-maintainer:             James Cook <mokus@deepbondi.net>
+maintainer:             Bertram Felgenhauer <int-e@gmx.de>
 
 category:               Development, Web
 synopsis:               Social plugins for Lambdabot
@@ -28,7 +28,7 @@ homepage:               https://wiki.haskell.org/Lambdabot
 
 build-type:             Simple
 cabal-version:          >= 1.10
-tested-with:            GHC == 8.2.2, GHC == 8.4.4, GHC == 8.6.5, GHC == 8.8.4, GHC == 8.10.2
+tested-with:            GHC == 8.2.2, GHC == 8.4.4, GHC == 8.6.5, GHC == 8.8.4, GHC == 8.10.4
 
 source-repository head
   type:                 git

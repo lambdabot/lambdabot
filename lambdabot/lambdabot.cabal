@@ -1,11 +1,11 @@
 name:                   lambdabot
-version:                5.3.0.1
+version:                5.3.0.2
 
 license:                GPL
 license-file:           LICENSE
 
 author:                 James Cook
-maintainer:             James Cook <mokus@deepbondi.net>
+maintainer:             Bertram Felgenhauer <int-e@gmx.de>
 
 category:               Development, Web
 synopsis:               Lambdabot is a development tool and advanced IRC bot
@@ -20,7 +20,7 @@ bug-reports:            https://github.com/lambdabot/lambdabot/issues
 
 build-type:             Simple
 cabal-version:          >= 1.10
-tested-with:            GHC == 8.2.2, GHC == 8.4.4, GHC == 8.6.5, GHC == 8.8.4, GHC == 8.10.2
+tested-with:            GHC == 8.2.2, GHC == 8.4.4, GHC == 8.6.5, GHC == 8.8.4, GHC == 8.10.4
 
 extra-source-files:     scripts/ghci.sh
                         scripts/genhaddock.sh
