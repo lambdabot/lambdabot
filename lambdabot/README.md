@@ -9,10 +9,16 @@ via internet relay chat and on the web.
 ## Installation
 
 The easiest way to install `lambdabot` is from hackage, by the following
-commands:
+commands,
 
-    cabal install --constraint 'transformers installed' lambdabot djinn
+    cabal v1-install lambdabot
     hoogle data
+
+or, using v2 commands:
+
+    cabal v2-install lambdabot hoogle misfortune mueval unlambda dice
+    hoogle data
+    cabal v2-install --lib lambdabot-trusted random mtl show
 
 The second command fetches the data for Lambdabot's `@hoogle` command, which
 is a thin wrapper around the [`hoogle`](https://www.haskell.org/hoogle/)
