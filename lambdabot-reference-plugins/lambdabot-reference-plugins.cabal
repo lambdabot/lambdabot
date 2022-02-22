@@ -34,7 +34,7 @@ homepage:               https://wiki.haskell.org/Lambdabot
 
 build-type:             Simple
 cabal-version:          >= 1.10
-tested-with:            GHC == 8.2.2, GHC == 8.4.4, GHC == 8.6.5, GHC == 8.8.4, GHC == 8.10.4
+tested-with:            GHC == 8.2.2, GHC == 8.4.4, GHC == 8.6.5, GHC == 8.8.4, GHC == 8.10.4, GHC == 9.0.2
 
 source-repository head
   type:                 git
@@ -67,7 +67,7 @@ library
                         lambdabot-core          >= 5.3 && < 5.4,
                         mtl                     >= 2,
                         network                 >= 2.7 && < 3.2,
-                        network-uri             >= 2.6 && < 2.7, 
+                        network-uri             >= 2.6 && < 2.7,
                         oeis                    >= 0.3.1,
                         process                 >= 1.1,
                         regex-tdfa              >= 1.1,

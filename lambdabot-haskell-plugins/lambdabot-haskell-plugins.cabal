@@ -46,7 +46,7 @@ homepage:               https://wiki.haskell.org/Lambdabot
 
 build-type:             Simple
 cabal-version:          >= 1.10
-tested-with:            GHC == 8.2.2, GHC == 8.4.4, GHC == 8.6.5, GHC == 8.8.4, GHC == 8.10.4
+tested-with:            GHC == 8.2.2, GHC == 8.4.4, GHC == 8.6.5, GHC == 8.8.4, GHC == 8.10.4, GHC == 9.0.2
 
 extra-source-files:     src/Lambdabot/Plugin/Haskell/Free/Test.hs
 
@@ -122,7 +122,6 @@ library
                         IOSpec                  >= 0.2,
                         lambdabot-trusted       >= 5.3 && < 5.4,
                         logict                  >= 0.5,
-                        MonadRandom             >= 0.1,
                         mueval                  >= 0.9.3,
                         numbers                 >= 3000,
                         show                    >= 0.4,

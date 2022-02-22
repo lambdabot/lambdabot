@@ -19,7 +19,7 @@ homepage:               https://wiki.haskell.org/Lambdabot
 
 build-type:             Simple
 cabal-version:          >= 1.10
-tested-with:            GHC == 8.2.2, GHC == 8.4.4, GHC == 8.6.5, GHC == 8.8.4, GHC == 8.10.4
+tested-with:            GHC == 8.2.2, GHC == 8.4.4, GHC == 8.6.5, GHC == 8.8.4, GHC == 8.10.4, GHC == 9.0.2
 
 extra-source-files:     AUTHORS.md
                         COMMENTARY.md
@@ -89,9 +89,8 @@ library
                         network-bsd             >= 2.7 && < 2.9,
                         parsec                  >= 3,
                         prim-uniq               >= 0.2 && < 0.4,
-                        random                  >= 1,
-                        random-fu               >= 0.2.6.2,
-                        random-source           >= 0.3,
+                        random                  >= 1.2,
+                        random-fu               >= 0.3.0.0,
                         regex-tdfa              >= 1.1 && < 1.4,
                         SafeSemaphore           >= 0.9,
                         split                   >= 0.2,

@@ -8,7 +8,7 @@ author:                 Don Stewart
 maintainer:             Bertram Felgenhauer <int-e@gmx.de>
 
 category:               Development, Web
-synopsis:               Lambdabot miscellaneous plugins 
+synopsis:               Lambdabot miscellaneous plugins
 description:            Lambdabot is an IRC bot written over several years by
                         those on the #haskell IRC channel.
                         .
@@ -28,7 +28,7 @@ homepage:               https://wiki.haskell.org/Lambdabot
 
 build-type:             Simple
 cabal-version:          >= 1.10
-tested-with:            GHC == 8.2.2, GHC == 8.4.4, GHC == 8.6.5, GHC == 8.8.4, GHC == 8.10.4
+tested-with:            GHC == 8.2.2, GHC == 8.4.4, GHC == 8.6.5, GHC == 8.8.4, GHC == 8.10.4, GHC == 9.0.2
 
 source-repository head
   type:                 git
@@ -57,12 +57,9 @@ library
                         lifted-base             >= 0.2,
                         mtl                     >= 2,
                         network                 >= 2.7 && < 3.2,
-                        network-uri             >= 2.6 && < 2.7, 
+                        network-uri             >= 2.6 && < 2.7,
                         parsec                  >= 3,
                         process                 >= 1.1,
-                        random                  >= 1,
-                        random-fu               >= 0.2.6.2,
-                        random-source           >= 0.3,
                         regex-tdfa              >= 1.1,
                         SafeSemaphore           >= 0.9,
                         split                   >= 0.2,
