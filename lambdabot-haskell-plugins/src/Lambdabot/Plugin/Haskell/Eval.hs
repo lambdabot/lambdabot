@@ -144,7 +144,7 @@ moveFile from to = do
 comp :: MonadLB m => Hs.Module -> m String
 comp src = do
     -- Note we copy to .L.hs, not L.hs. This hides the temporary files as dot-files
-    io (writeFile ".L.hs" (Hs.prettyPrint src))
+    io (writeFile "/sandbox/tmp/.L.hs" (Hs.prettyPrint src))
 
     -- and compile .L.hs
     -- careful with timeouts here. need a wrapper.
@@ -152,21 +152,21 @@ comp src = do
     let ghcArgs = concat
             [ ["-O", "-v0", "-c", "-Werror", "-fpackage-trust"]
             , concat [["-trust", pkg] | pkg <- trusted]
-            , [".L.hs"]
+            , ["/sandbox/tmp/.L.hs"]
             ]
     ghc <- getConfig ghcBinary
     (c, o',e') <- io (readProcessWithExitCode ghc ghcArgs "")
     -- cleanup, 'try' because in case of error the files are not generated
-    _ <- io (try (removeFile ".L.hi") :: IO (Either SomeException ()))
-    _ <- io (try (removeFile ".L.o")  :: IO (Either SomeException ()))
+    _ <- io (try (removeFile "/sandbox/tmp/.L.hi") :: IO (Either SomeException ()))
+    _ <- io (try (removeFile "/sandbox/tmp/.L.o")  :: IO (Either SomeException ()))
 
     case (mungeEnc o', mungeEnc e') of
         ([],[]) | c /= ExitSuccess -> do
-                    io (removeFile ".L.hs")
+                    io (removeFile "/sandbox/tmp/.L.hs")
                     return "Error."
                 | otherwise -> do
                     l <- lb (findLBFileForWriting "L.hs")
-                    io (moveFile ".L.hs" l)
+                    io (moveFile "/sandbox/tmp/.L.hs" l)
                     return "Defined."
         (ee,[]) -> return ee
         (_ ,ee) -> return ee
