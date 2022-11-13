@@ -1,3 +1,6 @@
+lambdabot 5.3.1
+	* support ghc-9.2
+
 lambdabot 5.3.0.1
 	* support ghc-8.10 (#192)
 	* support dependent-map 0.4 (#193)
