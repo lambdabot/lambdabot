@@ -5,7 +5,7 @@ license:                GPL
 license-file:           LICENSE
 
 author:                 Bertram Felgenhauer
-maintainer:             Bertram Felgenhauer <int-e@gmx.de>
+maintainer:             Naïm Favier <n@monade.li>
 
 category:               Development, Web
 synopsis:               Lambdabot trusted code.

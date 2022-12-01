@@ -5,7 +5,7 @@ license:                GPL
 license-file:           LICENSE
 
 author:                 James Cook
-maintainer:             Bertram Felgenhauer <int-e@gmx.de>
+maintainer:             Naïm Favier <n@monade.li>
 
 category:               Development, Web
 synopsis:               Lambdabot is a development tool and advanced IRC bot
