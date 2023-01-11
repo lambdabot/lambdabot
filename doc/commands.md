@@ -13,6 +13,14 @@ their option, to `/kick` the offending user).
 ## User commands:
 
 ```
+@@ TEXT
+```
+- Send TEXT to the channel, with an embedded command expanded
+in place. Everything following the command is passed to it,
+since it doesn't know how much of what follows should be
+parameters.
+
+```
 @activity [TIME]
 ```
 - Show bot activity within the past TIME seconds.
