@@ -32,8 +32,8 @@ doDice printErrs text = do
         Left err    -> if printErrs
             then say (trimError err)
             else return ()
-        Right str   -> 
+        Right str   ->
             say (limitStr 75 (user ++ ": " ++ str))
-    
+
     where
         trimError = concat . intersperse ": " . tail . lines . show

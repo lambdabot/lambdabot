@@ -1,6 +1,5 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TemplateHaskell #-}
 -- | The guts of lambdabot.
 --
 -- The LB/Lambdabot monad
@@ -11,7 +10,7 @@ module Lambdabot.Bot
     , ircUnloadModule
     , checkPrivs
     , checkIgnore
-    
+
     , ircCodepage
     , ircGetChannels
     , ircQuit
@@ -37,7 +36,6 @@ import Control.Monad.Error
 import Control.Monad.Reader
 import Control.Monad.State
 import qualified Data.Map as M
-import Data.Random.Source
 import qualified Data.Set as S
 
 ------------------------------------------------------------------------
@@ -47,18 +45,18 @@ import qualified Data.Set as S
 ircLoadModule :: String -> Module st -> LB ()
 ircLoadModule mName m = do
     infoM ("Loading module " ++ show mName)
-    
+
     savedState <- readGlobalState m mName
     mState     <- maybe (moduleDefState m) return savedState
-    
+
     mInfo       <- registerModule mName m mState
-    
+
     flip runModuleT mInfo (do
             moduleInit m
             registerCommands =<< moduleCmds m)
         `E.catch` \e@SomeException{} -> do
             errorM ("Module " ++ show mName ++ " failed to load.  Exception thrown: " ++ show e)
-            
+
             unregisterModule mName
             fail "Refusing to load due to a broken plugin"
 
@@ -68,17 +66,17 @@ ircLoadModule mName m = do
 ircUnloadModule :: String -> LB ()
 ircUnloadModule mName = do
     infoM ("Unloading module " ++ show mName)
-    
+
     inModuleNamed mName (fail "module not loaded") $ do
         m <- asks theModule
         when (moduleSticky m) $ fail "module is sticky"
-        
+
         moduleExit m
-            `E.catch` \e@SomeException{} -> 
+            `E.catch` \e@SomeException{} ->
                 errorM ("Module " ++ show mName ++ " threw the following exception in moduleExit: " ++ show e)
-        
+
         writeGlobalState
-    
+
     unregisterModule mName
 
 ------------------------------------------------------------------------
@@ -136,17 +134,3 @@ ircPrivmsg who msg = do
 ircPrivmsg' :: Nick -> String -> LB ()
 ircPrivmsg' who ""  = ircPrivmsg' who " "
 ircPrivmsg' who msg = send $ privmsg who msg
-
-------------------------------------------------------------------------
-
-monadRandom [d|
-
-    instance MonadRandom LB where
-        getRandomWord8          = liftIO getRandomWord8
-        getRandomWord16         = liftIO getRandomWord16
-        getRandomWord32         = liftIO getRandomWord32
-        getRandomWord64         = liftIO getRandomWord64
-        getRandomDouble         = liftIO getRandomDouble
-        getRandomNByteInteger n = liftIO (getRandomNByteInteger n)
-
- |]

@@ -23,14 +23,15 @@ module Lambdabot.Util (
         randomSuccessMsg
     ) where
 
+import Control.Concurrent.Lifted
 import Control.Monad.Trans
+import Control.Monad.Trans.Control
 import Data.Char
 import Data.List
 import Data.Random
-import Control.Concurrent.Lifted
-import Control.Monad.Trans.Control
 import Lambdabot.Config
 import Lambdabot.Config.Core
+import System.Random.Stateful (newIOGenM, newStdGen)
 
 ------------------------------------------------------------------------
 
@@ -63,7 +64,9 @@ listToStr conj (item:items) =
 
 -- | Pick a random element of the list.
 random :: MonadIO m => [a] -> m a
-random = io . sample . randomElement
+random l = do
+  g <- newIOGenM =<< newStdGen
+  sampleFrom g (randomElement l)
 
 ------------------------------------------------------------------------
 

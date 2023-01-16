@@ -7,7 +7,9 @@ import Control.Monad
 import Data.Random
 import Data.Random.Distribution.Poisson
 import Lambdabot.Plugin
+import Lambdabot.Util
 import Numeric
+import System.Random.Stateful (newIOGenM, newStdGen)
 
 
 data NumberwangState = State
@@ -23,7 +25,9 @@ conDist = poisson (32  :: Double)
 
 numberwangPlugin :: Module NumberwangState
 numberwangPlugin = newModule
-    { moduleDefState = sample (State <$> cmdDist <*> conDist)
+    { moduleDefState = do
+        g <- newIOGenM =<< newStdGen
+        sampleFrom g (State <$> cmdDist <*> conDist)
     , moduleCmds = return
         [ (command "numberwang")
             { help = say "@numberwang <number>: Determines if it is Numberwang."
@@ -61,7 +65,8 @@ checkNumberwang :: (MonadLBState m, LBState m ~ NumberwangState) =>
 checkNumberwang cmd l = withState cmd $ \ n setN nDist -> do
     if n <= l
         then do
-            setN =<< lb (sample nDist)
+            g <- newIOGenM =<< newStdGen
+            setN =<< sampleFrom g nDist
             return True
         else do
             setN (n - l)
