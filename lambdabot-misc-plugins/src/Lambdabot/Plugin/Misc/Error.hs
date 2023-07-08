@@ -1,6 +1,7 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TypeOperators #-}
 {-# OPTIONS_GHC -fno-warn-overlapping-patterns #-}
 module Lambdabot.Plugin.Misc.Error (errorPlugin, failOnLoad, errorOnLoad) where
 
@@ -27,7 +28,7 @@ errorPlugin = newModule
     , moduleInit = do
         shouldFail <- getConfig failOnLoad
         when shouldFail (fail "Error module hates the world!")
-        
+
         shouldError <- getConfig errorOnLoad
         when shouldError (error "Error module hates the world!")
     }
