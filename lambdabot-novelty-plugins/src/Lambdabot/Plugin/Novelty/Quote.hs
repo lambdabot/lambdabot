@@ -179,6 +179,7 @@ search key pat db
     mquotes   = M.lookup key db
     allquotes = concat [ zip (repeat who) qs | (who, qs) <- M.assocs db ]
 
+    match' :: RegexMaker Regex CompOption ExecOption source => source -> [(P.ByteString, P.ByteString)] -> Cmd Quote String
     match' p ss = do
         re <- makeRegexOptsM defaultCompOpt {caseSensitive = False, newSyntax = True}
                              defaultExecOpt {captureGroups = False} p
