@@ -1,6 +1,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeOperators #-}
 -- | Support for the LB (LambdaBot) monad
 module Lambdabot.State
     ( -- ** Functions to access the module's state
@@ -8,19 +9,19 @@ module Lambdabot.State
     , readMS
     , writeMS
     , modifyMS
-    
+
     -- ** Utility functions for modules that need state for each target.
     , GlobalPrivate -- (global)
     , mkGlobalPrivate
-    
+
     , withPS
     , readPS
     , writePS
-    
+
     , withGS
     , readGS
     , writeGS
-    
+
     -- ** Handling global state
     , readGlobalState
     , writeGlobalState
@@ -51,7 +52,7 @@ withMWriter mvar f = bracket
 
 class MonadLB m => MonadLBState m where
     type LBState m
-    
+
     -- | Update the module's private state.
     -- This is the preferred way of changing the state. The state will be locked
     -- until the body returns. The function is exception-safe, i.e. even if
@@ -74,8 +75,8 @@ instance MonadLB m => MonadLBState (ModuleT st m) where
 instance MonadLBState m => MonadLBState (Cmd m) where
     type LBState (Cmd m) = LBState m
     withMS f = do
-        x <- liftWith $ \run -> 
-            withMS $ \st wr -> 
+        x <- liftWith $ \run ->
+            withMS $ \st wr ->
                 run (f st (lift . wr))
         restoreT (return x)
 
@@ -177,7 +178,7 @@ writeGlobalState :: ModuleT st LB ()
 writeGlobalState = do
     m     <- asks theModule
     mName <- asks moduleName
-    
+
     debugM ("saving state for module " ++ show mName)
     case moduleSerialize m of
         Nothing  -> return ()

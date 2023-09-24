@@ -1,6 +1,7 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TypeOperators #-}
 {-# OPTIONS_GHC -fno-warn-overlapping-patterns #-}
 module Lambdabot.Config.Core
     ( commandPrefixes
@@ -13,7 +14,7 @@ module Lambdabot.Config.Core
     , lbVersion
     , textWidth
     , uncaughtExceptionHandler
-    
+
     , replaceRootLogger
     , lbRootLoggerPath
     , consoleLogHandle

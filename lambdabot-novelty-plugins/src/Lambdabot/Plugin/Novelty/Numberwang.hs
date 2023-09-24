@@ -1,4 +1,5 @@
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeOperators #-}
 
 module Lambdabot.Plugin.Novelty.Numberwang (numberwangPlugin) where
 

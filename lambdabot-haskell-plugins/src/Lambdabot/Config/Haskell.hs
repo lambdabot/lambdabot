@@ -1,12 +1,13 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TypeOperators #-}
 {-# OPTIONS_GHC -fno-warn-overlapping-patterns #-}
 module Lambdabot.Config.Haskell
     ( evalPrefixes
     , languageExts
     , trustedPackages
-    
+
     , djinnBinary
     , ghcBinary
     , ghciBinary

@@ -2,6 +2,7 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TypeOperators #-}
 -- | Extensible configuration system for lambdabot
 --
 -- TODO: there's notthing lambdabot-specific about this, it could be a useful standalone library.
