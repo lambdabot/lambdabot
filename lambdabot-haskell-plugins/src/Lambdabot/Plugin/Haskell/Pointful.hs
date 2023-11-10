@@ -8,6 +8,7 @@ import Lambdabot.Module as Lmb (Module)
 import Lambdabot.Plugin
 import Lambdabot.Util.Parser (withParsed, prettyPrintInLine)
 
+import Control.Monad
 import Control.Monad.Reader
 import Control.Monad.State
 import Data.Functor.Identity (Identity)

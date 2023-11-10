@@ -63,6 +63,7 @@ import Control.Concurrent.Lifted
 import Control.Exception.Lifted as E (catch)
 import Control.Monad.Fail (MonadFail)
 import qualified Control.Monad.Fail
+import Control.Monad
 import Control.Monad.Base
 import Control.Monad.Identity
 import Control.Monad.Reader

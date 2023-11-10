@@ -32,7 +32,7 @@ import Lambdabot.State
 
 import Control.Concurrent
 import Control.Exception.Lifted as E
-import Control.Monad.Error
+import Control.Monad
 import Control.Monad.Reader
 import Control.Monad.State
 import qualified Data.Map as M
