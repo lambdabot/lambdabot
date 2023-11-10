@@ -1,3 +1,6 @@
+lambdabot 5.3.1.2
+	* support ghc-9.6
+
 lambdabot 5.3.1.1
 	* support ghc-9.4
 
