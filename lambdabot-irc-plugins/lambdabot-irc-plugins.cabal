@@ -54,7 +54,7 @@ library
                         lambdabot-core          >= 5.3 && < 5.4,
                         lifted-base             >= 0.2,
                         mtl                     >= 2,
-                        network                 >= 2.7 && < 3.2,
+                        network                 >= 2.7 && < 3.3,
                         SafeSemaphore           >= 0.9,
                         split                   >= 0.2,
                         time                    >= 1.4

@@ -56,7 +56,7 @@ library
                         lambdabot-core          >= 5.3 && < 5.4,
                         lifted-base             >= 0.2,
                         mtl                     >= 2,
-                        network                 >= 2.7 && < 3.2,
+                        network                 >= 2.7 && < 3.3,
                         network-uri             >= 2.6 && < 2.7,
                         parsec                  >= 3,
                         process                 >= 1.1,

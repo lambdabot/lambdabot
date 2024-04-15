@@ -66,7 +66,7 @@ library
                         HTTP                    >= 4000,
                         lambdabot-core          >= 5.3 && < 5.4,
                         mtl                     >= 2,
-                        network                 >= 2.7 && < 3.2,
+                        network                 >= 2.7 && < 3.3,
                         network-uri             >= 2.6 && < 2.7,
                         oeis                    >= 0.3.1,
                         process                 >= 1.1,
