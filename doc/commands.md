@@ -667,7 +667,8 @@ Haskell's default "letrec".
 ```
 @where+ THING TEXT
 ```
-- Add an entry to the `@url`/`@where` database.
+- Add an entry to the `@url`/`@where` database. If TEXT
+is omitted, remove THING instead.
 
 ```
 @wiki
