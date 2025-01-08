@@ -74,7 +74,7 @@ library
                         containers              >= 0.4,
                         dependent-map           >= 0.2 && < 0.5,
                         dependent-sum           >= 0.7 && < 0.8,
-                        dependent-sum-template  >= 0.1.0.2 && < 0.2,
+                        dependent-sum-template  >= 0.1.0.2 && < 0.3,
                         directory               >= 1.1,
                         edit-distance           >= 0.2,
                         exceptions              >= 0.10 && < 0.11,
