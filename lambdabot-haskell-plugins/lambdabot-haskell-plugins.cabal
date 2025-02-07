@@ -104,27 +104,10 @@ library
                         lambdabot-reference-plugins >= 5.3 && < 5.4,
                         lifted-base             >= 0.2,
                         mtl                     >= 2,
-                        oeis                    >= 0.3.1,
                         parsec                  >= 3,
                         pretty                  >= 1.1,
                         process                 >= 1.1,
-                        QuickCheck              >= 2,
                         regex-tdfa              >= 1.1,
                         split                   >= 0.2,
                         syb                     >= 0.3,
-                        transformers            >= 0.2,
-                        utf8-string             >= 0.3,
-
-                        -- runtime dependencies - for eval etc.
-                        arrows                  >= 0.4,
-                        data-memocombinators    >= 0.4,
-                        hoogle                  >= 5.0.17.1,
-                        IOSpec                  >= 0.2,
-                        lambdabot-trusted       >= 5.3 && < 5.4,
-                        logict                  >= 0.5,
-                        mueval                  >= 0.9.3,
-                        numbers                 >= 3000,
-                        show                    >= 0.4,
-                        vector-space            >= 0.8,
-                        HTTP                    >= 4000,
-                        network                 >= 2.7 && < 3.3
+                        utf8-string             >= 0.3

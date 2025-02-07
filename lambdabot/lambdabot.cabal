@@ -58,8 +58,4 @@ executable lambdabot
                         lambdabot-novelty-plugins    >= 5.3 && < 5.4,
                         lambdabot-reference-plugins  >= 5.3 && < 5.4,
                         lambdabot-social-plugins     >= 5.3 && < 5.4,
-                        mtl                          >= 2,
-                        -- more runtime dependencies
-                        -- djinn,
-                        lens,
-                        data-default
+                        mtl                          >= 2

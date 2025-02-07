@@ -36,6 +36,5 @@ library
   other-modules:        Lambdabot.Plugin.Haskell.Check.ShowQ
 
   build-depends:        base                    >= 4.4 && < 5,
-                        -- oeis                    >= 0.3.1,
                         QuickCheck-safe         >= 0.1,
                         QuickCheck              >= 2
