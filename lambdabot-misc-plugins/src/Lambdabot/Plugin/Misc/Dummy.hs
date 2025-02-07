@@ -18,6 +18,10 @@ dummyPlugin = newModule
             { help = say "eval. Do nothing (perversely)"
             , process = const (return ())
             }
+        : (command "sm")
+            { help = say "no-op"
+            , process = const (return ())
+            }
         : (command "choose")
             { help = say "choose. Lambdabot featuring AI power"
             , process = \args ->
