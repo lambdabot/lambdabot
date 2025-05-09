@@ -1,4 +1,5 @@
 {-# LANGUAGE Safe #-}
+{-# LANGUAGE NoGeneralizedNewtypeDeriving #-} -- necessary with Safe, see ghc#19605
 
 {-# LANGUAGE ConstrainedClassMethods #-}
 {-# LANGUAGE DeriveDataTypeable #-}
