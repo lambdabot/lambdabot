@@ -3,6 +3,7 @@
 ## Contents
 
 - [startup.md](startup.md): lambdabot initialization
+- [commands.md](commands.md): command documentation
 
 ## Further documentation
 
