@@ -19,7 +19,7 @@ homepage:               https://wiki.haskell.org/Lambdabot
 
 build-type:             Simple
 cabal-version:          >= 1.10
-tested-with:            GHC == 8.2.2, GHC == 8.4.4, GHC == 8.6.5, GHC == 8.8.4, GHC == 8.10.4, GHC == 9.0.2, GHC == 9.2.4, GHC == 9.4.5, GHC == 9.6.3
+tested-with:            GHC == 8.2.2, GHC == 8.4.4, GHC == 8.6.5, GHC == 8.8.4, GHC == 8.10.4, GHC == 9.0.2, GHC == 9.2.4, GHC == 9.4.5, GHC == 9.6.6, GHC == 9.8.4, GHC == 9.10.1
 
 extra-source-files:     AUTHORS.md
                         COMMENTARY.md
@@ -74,7 +74,7 @@ library
                         containers              >= 0.4,
                         dependent-map           >= 0.2 && < 0.5,
                         dependent-sum           >= 0.7 && < 0.8,
-                        dependent-sum-template  >= 0.1.0.2 && < 0.2,
+                        dependent-sum-template  >= 0.1.0.2 && < 0.3,
                         directory               >= 1.1,
                         edit-distance           >= 0.2,
                         exceptions              >= 0.10 && < 0.11,
