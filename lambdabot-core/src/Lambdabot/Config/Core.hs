@@ -20,6 +20,7 @@ module Lambdabot.Config.Core
     , consoleLogHandle
     , consoleLogLevel
     , consoleLogFormat
+    , consoleUser
     ) where
 
 import Lambdabot.Config
@@ -52,6 +53,7 @@ config "lbRootLoggerPath"   [t| [String]                |] [| []                
 config "consoleLogHandle"   [t| Handle                  |] [| stderr                      |]
 config "consoleLogLevel"    [t| Priority                |] [| NOTICE                      |]
 config "consoleLogFormat"   [t| String                  |] [| "[$prio] $loggername: $msg" |]
+config "consoleUser"        [t| String                  |] [| "user" |]
 
 --------------------------------------------
 -- Default values with longer definitions
