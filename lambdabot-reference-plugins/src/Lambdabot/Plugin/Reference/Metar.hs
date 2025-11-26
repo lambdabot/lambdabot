@@ -6,10 +6,7 @@
 module Lambdabot.Plugin.Reference.Metar (metarPlugin) where
 
 import Lambdabot.Plugin
-import Lambdabot.Util.Browser (browseLB)
-
-import Network.Browser (request)
-import Network.HTTP (getRequest, rspCode, rspBody)
+import Lambdabot.Util.Browser
 import Data.Char (isAlpha, toUpper)
 
 metarPlugin :: Module ()
@@ -34,13 +31,10 @@ addsSrc code = addsUri ++
 
 doMetar :: MonadLB m => String -> Cmd m ()
 doMetar code | length code == 4 && all isAlpha code = do
-    msg <- browseLB $ do
-        let src = addsSrc (map toUpper code)
-        (uri, resp) <- request $ getRequest src
-        case rspCode resp of
-            (2,_,_) -> return $ extractMetar (rspBody resp)
-            _ -> return $ "Request failed."
-    say msg
+    res <- fetchPage (addsSrc (map toUpper code))
+    case res of
+        Just body -> say $ extractMetar body
+        Nothing   -> say $ "Request failed."
 doMetar _ = return ()
 
 extractMetar :: String -> String

@@ -9,8 +9,6 @@ import Control.Monad
 import Control.Monad.Trans
 import Data.List
 import Data.Maybe
-import Network.Browser
-import Network.HTTP
 import Text.Regex.TDFA
 
 urlPlugin :: Module Bool
@@ -69,10 +67,6 @@ mbSay = maybe (return ()) say
 urlTitlePrompt :: String
 urlTitlePrompt = "Title: "
 
--- | Fetch the title of the specified URL.
-fetchTitle :: MonadLB m => String -> m (Maybe String)
-fetchTitle url = fmap (fmap (urlTitlePrompt ++)) (browseLB (urlPageTitle url))
-
 -- | base url for fetching tiny urls
 tinyurl :: String
 tinyurl = "http://tinyurl.com/api-create.php?url="
@@ -80,10 +74,10 @@ tinyurl = "http://tinyurl.com/api-create.php?url="
 -- | Fetch the title of the specified URL.
 fetchTiny :: MonadLB m => String -> m (Maybe String)
 fetchTiny url = do
-    (_, response) <- browseLB (request (getRequest (tinyurl ++ url)))
-    case rspCode response of
-      (2,0,0) -> return $ findTiny (rspBody response)
-      _       -> return Nothing
+    res <- fetchPage (tinyurl ++ url)
+    case res of
+      Just body -> return $ findTiny body
+      Nothing   -> return Nothing
 
 -- | Tries to find the start of a tinyurl
 findTiny :: String -> Maybe String

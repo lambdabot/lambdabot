@@ -6,8 +6,6 @@ import Lambdabot.Util.Browser
 
 import Control.Applicative
 import Data.List
-import Network.Browser (request)
-import Network.HTTP
 import Text.Printf
 
 type Ticker = ModuleT () LB
@@ -106,12 +104,10 @@ calcBids ticks = do
 getPage :: MonadLB m => String -> m [String]
 getPage url = do
     let cleanup = (map (filter (/= '\r'))) . lines
-    
-    browseLB $ do
-        (_, result) <- request (getRequest url)
-        case rspCode result of
-          (2,0,0) -> return (cleanup (rspBody result))
-          (x,y,z) -> return ["Connection error: " ++ ([x,y,z] >>= show) ++ show (rspReason result)]
+    res <- fetchPage url
+    case res of
+        Just body -> return (cleanup body)
+        Nothing   -> return ["Connection error"]
 
 -- | Return a list of comma-separated values.
 -- Quotes allowed in CSV if it's the first character of a field.

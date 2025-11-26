@@ -9,7 +9,7 @@ module Lambdabot.Config.Reference
     ) where
 
 import Lambdabot.Config
-import Network.HTTP.Proxy
+import Network.HTTP.Client (ProxyOverride, defaultProxy)
 
-config "proxy"              [t| Proxy                   |] [| NoProxy       |]
+config "proxy"              [t| ProxyOverride           |] [| defaultProxy  |]
 config "aspellBinary"       [t| String                  |] [| "aspell"      |]

@@ -13,10 +13,14 @@ import Lambdabot.Plugin
 import Lambdabot.Util
 import Lambdabot.Util.Browser
 
+searchPlugin :: Module ()
+searchPlugin = newModule
+    { moduleCmds = return []
+    }
+
+{-
 import Data.Char
 import Data.Maybe
-import Network.HTTP
-import Network.HTTP.Proxy
 import Network.URI hiding (path, query)
 import Text.HTML.TagSoup
 import Text.HTML.TagSoup.Match (anyAttr, tagOpen)
@@ -84,6 +88,7 @@ searchCmd engineName (urlEncode -> query)
         request <- request'
         doHTTP request $ \response ->
             case response of
+-- < location: https://www.google.com/url?q=https://en.wikipedia.org/wiki/Pythagoras
                 Response { rspCode = (3,0,2), rspHeaders = (lookupHeader HdrLocation -> Just url) } ->
                     doGoogle >>=  handleUrl url
                 _ -> fmap (\extra -> if null extra then ["No Result Found."] else extra) doGoogle
@@ -95,7 +100,7 @@ searchCmd engineName (urlEncode -> query)
                     handleUrl url []
                 _ -> return ["No Result Found."]
   where handleUrl url extra = do
-            title <- browseLB (urlPageTitle url)
+            title <- fetchTitle url
             return $ extra ++ maybe [url] (\t -> [url, "Title: " ++ t]) title
         Just (uri, makeQuery, headers) = lookup engineName engines
         request' = do
@@ -134,3 +139,4 @@ extractText (TagOpen "sup" _ : TagText t : TagClose "sup" : ts) = "^" ++ t ++ ex
 extractText (TagClose "h2" : _) = ""
 extractText (_ : ts) = extractText ts
 extractText _ = ""
+-}
