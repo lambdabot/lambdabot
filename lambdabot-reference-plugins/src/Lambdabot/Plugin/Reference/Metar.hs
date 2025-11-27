@@ -20,18 +20,16 @@ metarPlugin = newModule
         ]
     }
 
-addsUri :: String
-addsUri =
-    "http://www.aviationweather.gov/adds/dataserver_current/httpparam"
+metarUri :: String
+metarUri =
+    "https://aviationweather.gov/api/data/metar"
 
-addsSrc :: String -> String
-addsSrc code = addsUri ++
-    "?dataSource=metars&requestType=retrieve&format=csv&hoursBeforeNow=2\
-    \&mostRecentForEachStation=true&stationString=" ++ code
+metarSrc :: String -> String
+metarSrc code = metarUri ++ "?ids=" ++ code
 
 doMetar :: MonadLB m => String -> Cmd m ()
 doMetar code | length code == 4 && all isAlpha code = do
-    res <- fetchPage (addsSrc (map toUpper code))
+    res <- fetchPage (metarSrc (map toUpper code))
     case res of
         Just body -> say $ extractMetar body
         Nothing   -> say $ "Request failed."
@@ -39,7 +37,5 @@ doMetar _ = return ()
 
 extractMetar :: String -> String
 extractMetar body = case lines body of
-    ls@("No errors" : _) -> case takeWhile (/= ',') (last ls) of
-        "raw_text" -> "No result."
-        l          -> l
+    [l] -> l
     _ -> "Request failed."
